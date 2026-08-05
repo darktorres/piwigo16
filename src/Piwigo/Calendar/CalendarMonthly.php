@@ -484,7 +484,7 @@ final class CalendarMonthly extends CalendarBase
             // includes days with at least one image, so this LIMIT 1
             // query always finds a row
             assert(is_array($row));
-            $derivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage($row));
+            $derivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage($row), $this->currentConfig);
             $items[$day]['derivative'] = $derivative;
             $items[$day]['file'] = $row['file'];
             // dow is DAYOFWEEK(date_field)-1, a numeric SQL expression, so
@@ -503,7 +503,7 @@ final class CalendarMonthly extends CalendarBase
             // first_day_dow = week day corresponding to the first day of this month
             $wday_labels = $this->lang->days();
 
-            if (\Piwigo\Config\CurrentConfig::weekStartsOn() === 'monday') {
+            if ($this->currentConfig->weekStartsOn() === 'monday') {
                 if ($first_day_dow === 0) {
                     $first_day_dow = 6;
                 } else {

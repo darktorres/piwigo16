@@ -121,18 +121,22 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         // See CategoryDefaultRendererTest's identical comment: skips
         // Template's own data_dir_checked write, which would otherwise
         // reach for a full RequestBootstrap dependency this test never
         // boots.
-        CurrentConfig::setDataDirChecked('1');
+        $currentConfig->setDataDirChecked('1');
 
         $this->conn = DbConnection::build();
 
-        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
+        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current());
         $configService->loadConfFromDb();
         ImageStdParams::current()->load_from_db();
 
@@ -155,7 +159,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $em->getRepository(GroupEntity::class),
             $categoryRepo
         );
-        $this->categoryService = new CategoryService(\Piwigo\Core\Lang::current(), $categoryRepo, $permissionService);
+        $this->categoryService = new CategoryService(\Piwigo\Core\Lang::current(), $categoryRepo, $permissionService, \Piwigo\Config\CurrentConfig::current());
 
         $htmlService = new HtmlService();
         // mainpage_categories.tpl's own {assign var=derivative
@@ -190,6 +194,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             EventDispatcher::get(),
             ImageStdParams::current(),
             \Piwigo\Users\CurrentUser::current(),
+            \Piwigo\Config\CurrentConfig::current(),
         );
     }
 
@@ -323,7 +328,11 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
     public function test_render_picks_a_random_representative_when_allow_random_representative_is_enabled(): void
     {
         $this->seedUser();
-        CurrentConfig::setAllowRandomRepresentative(true);
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setAllowRandomRepresentative(true);
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id = 2');
 
         try {
@@ -379,7 +388,11 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
     public function test_render_shows_the_date_range_when_display_fromto_is_enabled(): void
     {
         $this->seedUser();
-        CurrentConfig::setDisplayFromto(true);
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setDisplayFromto(true);
         // Only image 1's date_creation is set -- the other 2 direct images
         // of category 1 stay NULL, so MIN/MAX both resolve to this single
         // real value rather than just echoing back a NULL.

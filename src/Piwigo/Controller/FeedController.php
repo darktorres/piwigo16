@@ -41,6 +41,7 @@ final class FeedController implements ControllerInterface
         private readonly \Piwigo\Notification\NotificationService $notificationService,
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -75,7 +76,7 @@ final class FeedController implements ControllerInterface
         } else {
             $image_only = true;
             if (! $this->accessControl->isAGuest()) {// auto session was created - so switch to guest
-                $guest_id = \Piwigo\Config\CurrentConfig::guestId();
+                $guest_id = $this->currentConfig->guestId();
                 $guest_user = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
                 $this->currentUser->set(\Piwigo\Users\User::fromUserArray($guest_user));
             }
@@ -94,8 +95,8 @@ final class FeedController implements ControllerInterface
 
         $rss_encoding = \Piwigo\Core\CharsetHelper::getPwgCharset();
 
-        $conf_gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
-        $conf_rss_feed_author = \Piwigo\Config\CurrentConfig::rssReedAuthor();
+        $conf_gallery_title = $this->currentConfig->galleryTitle();
+        $conf_rss_feed_author = $this->currentConfig->rssReedAuthor();
         $user_username = $this->currentUser->get()
             ->username;
 
@@ -156,7 +157,8 @@ final class FeedController implements ControllerInterface
         // checked is_array() against it -- always false, so RSS recent-post-
         // date limits always fell back to getRecentPostDatesArray()'s own
         // hardcoded 3/3/3 defaults, ignoring any configured values.
-        $rss_config = \Piwigo\Config\CurrentConfig::recentPostDates()->rss;
+        $rss_config = $this->currentConfig->recentPostDates()
+            ->rss;
         $rss_recent_post_dates_args = [
             'max_dates' => $rss_config->maxDates,
             'max_elements' => $rss_config->maxElements,
@@ -207,7 +209,7 @@ final class FeedController implements ControllerInterface
             $rss_items
         );
 
-        $data_location = \Piwigo\Config\CurrentConfig::dataLocation();
+        $data_location = $this->currentConfig->dataLocation();
 
         $fileName = \Piwigo\Core\CurrentPaths::get()->root . $data_location . 'tmp';
         \Piwigo\Core\FilesystemHelper::mkgetdir($fileName); // just in case

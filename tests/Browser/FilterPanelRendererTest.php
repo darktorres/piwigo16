@@ -43,7 +43,7 @@ it('shows the missing-checksum counter when at least one photo has no md5sum', f
     $db->query("UPDATE {$prefix}images SET md5sum = NULL WHERE id = 1");
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=batch_manager');
         $page->assertNoJavaScriptErrors();
 

@@ -44,13 +44,14 @@ final class UpdatesPwgPageRenderer
         private readonly CoreUpdateService $coreUpdateService,
         private readonly ExtensionUpdateChecker $extensionUpdateChecker,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void
     {
         $template = $this->currentTemplate->get();
 
-        if (! \Piwigo\Config\CurrentConfig::enableCoreUpdate()) {
+        if (! $this->currentConfig->enableCoreUpdate()) {
             $this->htmlRenderer
                 ->fatalError('Piwigo core update system is disabled');
         }

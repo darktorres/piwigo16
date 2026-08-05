@@ -42,7 +42,7 @@ $paths = Paths::fromRoot(dirname(__DIR__));
 // nb_image_page has exactly this one reader repo-wide, under User's own
 // documented promotion bar for a named property -- read via
 // rawAttributes, same as every other low-frequency legacy $user key.
-$top_number = CurrentConfig::topNumber();
+$top_number = CurrentConfig::current()->topNumber();
 $rawNbImagePage = CurrentUser::current()->get()->rawAttributes['nb_image_page'] ?? null;
 $nb_image_page = is_numeric($rawNbImagePage) ? (int) $rawNbImagePage : 15;
 

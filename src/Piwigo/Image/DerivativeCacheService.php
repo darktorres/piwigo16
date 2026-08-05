@@ -19,6 +19,10 @@ use Piwigo\Core\CurrentPaths;
  */
 final class DerivativeCacheService
 {
+    public function __construct(
+        private readonly CurrentConfig $currentConfig,
+    ) {}
+
     /**
      * Deletes all cached derivative files for one or several types.
      *
@@ -56,7 +60,7 @@ final class DerivativeCacheService
         }
         $pattern .= '\.[a-zA-Z0-9]{3,4}$#';
 
-        $root = CurrentPaths::get()->root . CurrentConfig::derivativeDir();
+        $root = CurrentPaths::get()->root . $this->currentConfig->derivativeDir();
         $contents = @opendir($root);
         if ($contents !== false) {
             while (($node = readdir($contents)) !== false) {
@@ -95,7 +99,7 @@ final class DerivativeCacheService
         }
         $path = substr_replace($path, $pattern, $dot, 0);
 
-        $glob = glob(CurrentPaths::get()->root . CurrentConfig::derivativeDir() . $path);
+        $glob = glob(CurrentPaths::get()->root . $this->currentConfig->derivativeDir() . $path);
         if ($glob !== false) {
             foreach ($glob as $file) {
                 @unlink($file);

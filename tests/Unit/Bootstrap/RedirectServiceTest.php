@@ -51,7 +51,7 @@ use Piwigo\Users\UserService;
  */
 function redirect_service_test_lang(): Lang
 {
-    return new Lang(new Translator(), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new \Piwigo\Config\CurrentConfig()), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 function redirect_service_test_user_service(): UserService
@@ -66,10 +66,11 @@ function redirect_service_test_user_service(): UserService
         new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
         new HtmlService(),
         $conn,
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class)),
+        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class),new \Piwigo\Config\CurrentConfig()),
         new EventDispatcher(),
         new DeploymentPolicy(),
-        new CurrentUser(),
+        new CurrentUser(new \Piwigo\Config\CurrentConfig()),
+        new \Piwigo\Config\CurrentConfig(),
     );
 }
 

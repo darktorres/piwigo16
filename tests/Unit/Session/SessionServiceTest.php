@@ -18,13 +18,20 @@ use Piwigo\Session\SessionService;
 // constructed here without a live database (confirmed empirically: an
 // unreachable db_host never triggers a connection attempt for these
 // specific call paths).
-function makeSessionService(): SessionService
+// Optional $currentConfig lets a test build (and keep a reference to) its
+// own CurrentConfig instance *before* handing it to the SessionService
+// under test -- SessionService is constructor-injected with this
+// collaborator (not the CurrentConfig::current() bridge), so a test that
+// needs to control e.g. sessionUseIpAddress() must set it on the exact
+// same instance the service reads, not on some unrelated bridge-resolved
+// object.
+function makeSessionService(?CurrentConfig $currentConfig = null): SessionService
 {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     ConfigLoader::applyDefaults();
     putenv('PIWIGO_DB_HOST=unit-test-should-never-connect.invalid');
 
-    return new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class));
+    return new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), $currentConfig ?? new \Piwigo\Config\CurrentConfig());
 }
 
 // tests/bootstrap.php loads real PIWIGO_DB_* vars for the whole Pest
@@ -108,8 +115,9 @@ test('sessionOpen and sessionClose always return true', function (): void {
 });
 
 test('getRemoteAddrSessionHash returns empty string when session_use_ip_address is off', function (): void {
-    $service = makeSessionService();
-    CurrentConfig::setSessionUseIpAddress(false);
+    $currentConfig = new CurrentConfig();
+    $currentConfig->setSessionUseIpAddress(false);
+    $service = makeSessionService($currentConfig);
 
     expect($service->getRemoteAddrSessionHash())->toBe('');
 });
@@ -119,16 +127,18 @@ test('getRemoteAddrSessionHash hashes only the first two octets of an ipv4 REMOT
     // octets -- this is the original get_remote_addr_session_hash()'s real,
     // long-standing behavior (also present unchanged in the reference
     // implementation), not something this migration should silently widen.
-    $service = makeSessionService();
-    CurrentConfig::setSessionUseIpAddress(true);
+    $currentConfig = new CurrentConfig();
+    $currentConfig->setSessionUseIpAddress(true);
+    $service = makeSessionService($currentConfig);
     $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 
     expect($service->getRemoteAddrSessionHash())->toBe('7F00');
 });
 
 test('getRemoteAddrSessionHash returns empty string for an ipv6 REMOTE_ADDR', function (): void {
-    $service = makeSessionService();
-    CurrentConfig::setSessionUseIpAddress(true);
+    $currentConfig = new CurrentConfig();
+    $currentConfig->setSessionUseIpAddress(true);
+    $service = makeSessionService($currentConfig);
     $_SERVER['REMOTE_ADDR'] = '::1';
 
     expect($service->getRemoteAddrSessionHash())->toBe('');
@@ -144,8 +154,9 @@ test('getRemoteAddrSessionHash returns empty string instead of throwing when REM
     // to the same "no real IP" empty-string result this method already
     // returns for ipv6.
     unset($_SERVER['REMOTE_ADDR']);
-    $service = makeSessionService();
-    CurrentConfig::setSessionUseIpAddress(true);
+    $currentConfig = new CurrentConfig();
+    $currentConfig->setSessionUseIpAddress(true);
+    $service = makeSessionService($currentConfig);
 
     expect($service->getRemoteAddrSessionHash())->toBe('');
 });

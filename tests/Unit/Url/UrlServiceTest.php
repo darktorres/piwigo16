@@ -36,7 +36,7 @@ beforeEach(function (): void {
     // runner's ambient $_SERVER happens to contain.
     unset($_SERVER['REDIRECT_SCRIPT_NAME'], $_SERVER['REDIRECT_URL'], $_SERVER['PATH_INFO']);
     $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
-    CurrentConfig::setUrlPort('none');
+    CurrentConfig::current()->setUrlPort('none');
     // getRootUrl()/paramsForDuplication() read SectionContextRegistry
     // through the transitional currentStatic() shim (singleton/
     // service-locator elimination campaign, Phase 2 -- see that method's
@@ -47,7 +47,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     Kernel::reset();
 });
 
@@ -88,21 +88,21 @@ test('getActionUrl builds action.php with id/part, adding a bare download flag w
 });
 
 test('getGalleryHomeUrl returns a remote gallery_url unchanged', function (): void {
-    CurrentConfig::setGalleryUrl('https://elsewhere.example.test/gallery/');
+    CurrentConfig::current()->setGalleryUrl('https://elsewhere.example.test/gallery/');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     expect($service->getGalleryHomeUrl())->toBe('https://elsewhere.example.test/gallery/');
 });
 
 test('getGalleryHomeUrl prefixes a relative gallery_url with the root URL', function (): void {
-    CurrentConfig::setGalleryUrl('my-gallery/');
+    CurrentConfig::current()->setGalleryUrl('my-gallery/');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     expect($service->getGalleryHomeUrl())->toBe('my-gallery/');
 });
 
 test('getGalleryHomeUrl falls back to makeIndexUrl when gallery_url is unset', function (): void {
-    CurrentConfig::setGalleryUrl(null);
+    CurrentConfig::current()->setGalleryUrl(null);
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     expect($service->getGalleryHomeUrl())->toBe($service->makeIndexUrl());
@@ -274,8 +274,8 @@ test('getAbsoluteRootUrl trusts the Host header when allowed_hosts is unconfigur
 });
 
 test('getAbsoluteRootUrl uses gallery_url\'s host, ignoring the Host header entirely', function (): void {
-    CurrentConfig::setUrlPort('none');
-    CurrentConfig::setGalleryUrl('https://canonical.example.test/gallery/');
+    CurrentConfig::current()->setUrlPort('none');
+    CurrentConfig::current()->setGalleryUrl('https://canonical.example.test/gallery/');
     $_SERVER['HTTP_HOST'] = 'evil.test';
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
@@ -283,15 +283,15 @@ test('getAbsoluteRootUrl uses gallery_url\'s host, ignoring the Host header enti
 });
 
 test('getAbsoluteRootUrl keeps gallery_url\'s configured port', function (): void {
-    CurrentConfig::setUrlPort('none');
-    CurrentConfig::setGalleryUrl('https://canonical.example.test:8080/gallery/');
+    CurrentConfig::current()->setUrlPort('none');
+    CurrentConfig::current()->setGalleryUrl('https://canonical.example.test:8080/gallery/');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     expect($service->getAbsoluteRootUrl())->toBe('http://canonical.example.test:8080/piwigo/');
 });
 
 test('getAbsoluteRootUrl accepts a Host that matches the allowed_hosts list', function (): void {
-    CurrentConfig::setUrlPort('none');
+    CurrentConfig::current()->setUrlPort('none');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
 
     KernelContainerOverride::with([DeploymentPolicy::class => new DeploymentPolicy(allowedHosts: ['gallery.example.test'])], function (): void {
@@ -302,7 +302,7 @@ test('getAbsoluteRootUrl accepts a Host that matches the allowed_hosts list', fu
 });
 
 test('getAbsoluteRootUrl [SEC-29] falls back to the first allowed host when Host is forged', function (): void {
-    CurrentConfig::setUrlPort('none');
+    CurrentConfig::current()->setUrlPort('none');
     $_SERVER['HTTP_HOST'] = 'evil.test';
 
     KernelContainerOverride::with([DeploymentPolicy::class => new DeploymentPolicy(allowedHosts: ['gallery.example.test', 'gallery-alt.example.test'])], function (): void {
@@ -313,7 +313,7 @@ test('getAbsoluteRootUrl [SEC-29] falls back to the first allowed host when Host
 });
 
 test('getAbsoluteRootUrl [SEC-29] falls back for a forged X-Forwarded-Host too', function (): void {
-    CurrentConfig::setUrlPort('none');
+    CurrentConfig::current()->setUrlPort('none');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $_SERVER['HTTP_X_FORWARDED_HOST'] = 'evil.test';
 
@@ -331,8 +331,8 @@ test('getAbsoluteRootUrl [SEC-29] reflects a real DB-persisted gallery_url the w
     // via CurrentConfig::setGalleryUrl() the same way
     // ConfigService::loadConfFromDb() now populates CurrentConfig's own
     // properties, must be reflected by getAbsoluteRootUrl().
-    CurrentConfig::setUrlPort('none');
-    CurrentConfig::setGalleryUrl('https://real-admin-configured.example.test/');
+    CurrentConfig::current()->setUrlPort('none');
+    CurrentConfig::current()->setGalleryUrl('https://real-admin-configured.example.test/');
     $_SERVER['HTTP_HOST'] = 'evil.test';
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
@@ -366,7 +366,7 @@ test('getAbsoluteRootUrl detects HTTPS from $_SERVER[\'HTTPS\']=1', function ():
 });
 
 test('getAbsoluteRootUrl appends a non-standard auto-detected port', function (): void {
-    CurrentConfig::setUrlPort('auto');
+    CurrentConfig::current()->setUrlPort('auto');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $_SERVER['SERVER_PORT'] = '8080';
     $service = new UrlService(new HtmlService(), new RootPathOverride());
@@ -375,7 +375,7 @@ test('getAbsoluteRootUrl appends a non-standard auto-detected port', function ()
 });
 
 test('getAbsoluteRootUrl omits the standard auto-detected port 80 for http', function (): void {
-    CurrentConfig::setUrlPort('auto');
+    CurrentConfig::current()->setUrlPort('auto');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $_SERVER['SERVER_PORT'] = '80';
     $service = new UrlService(new HtmlService(), new RootPathOverride());
@@ -384,7 +384,7 @@ test('getAbsoluteRootUrl omits the standard auto-detected port 80 for http', fun
 });
 
 test('getAbsoluteRootUrl appends an explicitly configured custom port', function (): void {
-    CurrentConfig::setUrlPort('9000');
+    CurrentConfig::current()->setUrlPort('9000');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
@@ -392,8 +392,8 @@ test('getAbsoluteRootUrl appends an explicitly configured custom port', function
 });
 
 test('getAbsoluteRootUrl falls back to the Host header when gallery_url has no parseable host', function (): void {
-    CurrentConfig::setUrlPort('none');
-    CurrentConfig::setGalleryUrl('not-a-real-url-at-all');
+    CurrentConfig::current()->setUrlPort('none');
+    CurrentConfig::current()->setGalleryUrl('not-a-real-url-at-all');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
@@ -421,9 +421,9 @@ test('makePictureUrl uses the id-file style, appending a slugified filename', fu
     // 'picture.php?' -- disabled here to isolate the picture_url_style
     // switch itself, already covered separately for makeIndexUrl-adjacent
     // behavior elsewhere.
-    CurrentConfig::setPhpExtensionInUrls(false);
-    CurrentConfig::setQuestionMarkInUrls(false);
-    CurrentConfig::setPictureUrlStyle('id-file');
+    CurrentConfig::current()->setPhpExtensionInUrls(false);
+    CurrentConfig::current()->setQuestionMarkInUrls(false);
+    CurrentConfig::current()->setPictureUrlStyle('id-file');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     $url = $service->makePictureUrl(['image_id' => 42, 'image_file' => 'Summer Trip.jpg']);
@@ -435,9 +435,9 @@ test('makePictureUrl uses the id-file style, appending a slugified filename', fu
 });
 
 test('makePictureUrl uses the file style directly when the filename does not start with a digit', function (): void {
-    CurrentConfig::setPhpExtensionInUrls(false);
-    CurrentConfig::setQuestionMarkInUrls(false);
-    CurrentConfig::setPictureUrlStyle('file');
+    CurrentConfig::current()->setPhpExtensionInUrls(false);
+    CurrentConfig::current()->setQuestionMarkInUrls(false);
+    CurrentConfig::current()->setPictureUrlStyle('file');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     $url = $service->makePictureUrl(['image_id' => 42, 'image_file' => 'sunset.jpg']);
@@ -446,9 +446,9 @@ test('makePictureUrl uses the file style directly when the filename does not sta
 });
 
 test('makePictureUrl falls through the file style to the bare id when the filename starts with digits', function (): void {
-    CurrentConfig::setPhpExtensionInUrls(false);
-    CurrentConfig::setQuestionMarkInUrls(false);
-    CurrentConfig::setPictureUrlStyle('file');
+    CurrentConfig::current()->setPhpExtensionInUrls(false);
+    CurrentConfig::current()->setQuestionMarkInUrls(false);
+    CurrentConfig::current()->setPictureUrlStyle('file');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     // '42-something.jpg' matches /^\d+(-|$)/ -- falls through (no break) to
@@ -489,7 +489,7 @@ test('getAbsoluteRootUrl detects HTTPS from a case-insensitive $_SERVER[\'HTTPS\
 });
 
 test('getAbsoluteRootUrl omits the standard auto-detected port 443 for https', function (): void {
-    CurrentConfig::setUrlPort('auto');
+    CurrentConfig::current()->setUrlPort('auto');
     $_SERVER['HTTPS'] = 'on';
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $_SERVER['SERVER_PORT'] = '443';
@@ -506,7 +506,7 @@ test('getAbsoluteRootUrl trusts a forwarded host header when allowed_hosts is un
 });
 
 test('getAbsoluteRootUrl falls back to an empty host segment when no host header, forwarded host, or gallery_url is present', function (): void {
-    CurrentConfig::setUrlPort('none');
+    CurrentConfig::current()->setUrlPort('none');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     expect($service->getAbsoluteRootUrl())->toBe('http:///piwigo/');
@@ -520,7 +520,7 @@ test('getAbsoluteRootUrl omits the port segment entirely when the auto-detected 
     // defaulting to 80, matching 16.x-rewrite's own UrlService -- a
     // missing SERVER_PORT should behave like the default HTTP port, i.e.
     // no port segment at all for a non-HTTPS request.
-    CurrentConfig::setUrlPort('auto');
+    CurrentConfig::current()->setUrlPort('auto');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     unset($_SERVER['SERVER_PORT']);
     $service = new UrlService(new HtmlService(), new RootPathOverride());
@@ -529,7 +529,7 @@ test('getAbsoluteRootUrl omits the port segment entirely when the auto-detected 
 });
 
 test('getAbsoluteRootUrl does not duplicate a port already present via the Host header', function (): void {
-    CurrentConfig::setUrlPort('auto');
+    CurrentConfig::current()->setUrlPort('auto');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test:8080';
     $_SERVER['SERVER_PORT'] = '8080';
     $service = new UrlService(new HtmlService(), new RootPathOverride());
@@ -538,8 +538,8 @@ test('getAbsoluteRootUrl does not duplicate a port already present via the Host 
 });
 
 test('getAbsoluteRootUrl falls back to the Host header when gallery_url is an empty string', function (): void {
-    CurrentConfig::setUrlPort('none');
-    CurrentConfig::setGalleryUrl('');
+    CurrentConfig::current()->setUrlPort('none');
+    CurrentConfig::current()->setGalleryUrl('');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
@@ -564,8 +564,8 @@ test('getAbsoluteRootUrl falls back to the Host header when gallery_url has an e
     // || ===''" early-return in configuredHost(), covering the '! is_string'
     // operand specifically (host is bool false here, never the empty
     // string) rather than the "===''" operand.
-    CurrentConfig::setUrlPort('none');
-    CurrentConfig::setGalleryUrl('http:///x');
+    CurrentConfig::current()->setUrlPort('none');
+    CurrentConfig::current()->setGalleryUrl('http:///x');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
@@ -674,9 +674,9 @@ test('paramsForDuplication removes listed keys and applies redefinitions', funct
  */
 test('makePictureUrl prefixes the root URL before the picture path segment', function (): void {
     urlServiceTestWithMountDepth(1, function (): void {
-        CurrentConfig::setPhpExtensionInUrls(false);
-        CurrentConfig::setQuestionMarkInUrls(false);
-        CurrentConfig::setPictureUrlStyle('id-file');
+        CurrentConfig::current()->setPhpExtensionInUrls(false);
+        CurrentConfig::current()->setQuestionMarkInUrls(false);
+        CurrentConfig::current()->setPictureUrlStyle('id-file');
         $service = new UrlService(new HtmlService(), new RootPathOverride());
 
         $url = $service->makePictureUrl(['image_id' => 5]);
@@ -686,7 +686,7 @@ test('makePictureUrl prefixes the root URL before the picture path segment', fun
 });
 
 test('makePictureUrl appends the php extension and question mark by default, preserving the picture prefix', function (): void {
-    CurrentConfig::setPictureUrlStyle('id-file');
+    CurrentConfig::current()->setPictureUrlStyle('id-file');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     $url = $service->makePictureUrl(['image_id' => 5]);
@@ -695,9 +695,9 @@ test('makePictureUrl appends the php extension and question mark by default, pre
 });
 
 test('makePictureUrl in id-file style uses an empty id segment when image_id is absent', function (): void {
-    CurrentConfig::setPhpExtensionInUrls(false);
-    CurrentConfig::setQuestionMarkInUrls(false);
-    CurrentConfig::setPictureUrlStyle('id-file');
+    CurrentConfig::current()->setPhpExtensionInUrls(false);
+    CurrentConfig::current()->setQuestionMarkInUrls(false);
+    CurrentConfig::current()->setPictureUrlStyle('id-file');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     $url = $service->makePictureUrl([]);
@@ -706,9 +706,9 @@ test('makePictureUrl in id-file style uses an empty id segment when image_id is 
 });
 
 test('makePictureUrl in id-file style omits the filename suffix when image_file is not a string', function (): void {
-    CurrentConfig::setPhpExtensionInUrls(false);
-    CurrentConfig::setQuestionMarkInUrls(false);
-    CurrentConfig::setPictureUrlStyle('id-file');
+    CurrentConfig::current()->setPhpExtensionInUrls(false);
+    CurrentConfig::current()->setQuestionMarkInUrls(false);
+    CurrentConfig::current()->setPictureUrlStyle('id-file');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     $url = $service->makePictureUrl(['image_id' => 5, 'image_file' => 123]);
@@ -717,9 +717,9 @@ test('makePictureUrl in id-file style omits the filename suffix when image_file 
 });
 
 test('makePictureUrl in file style falls through to the bare id when image_file is not a string', function (): void {
-    CurrentConfig::setPhpExtensionInUrls(false);
-    CurrentConfig::setQuestionMarkInUrls(false);
-    CurrentConfig::setPictureUrlStyle('file');
+    CurrentConfig::current()->setPhpExtensionInUrls(false);
+    CurrentConfig::current()->setQuestionMarkInUrls(false);
+    CurrentConfig::current()->setPictureUrlStyle('file');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     $url = $service->makePictureUrl(['image_id' => 5, 'image_file' => 123]);
@@ -728,9 +728,9 @@ test('makePictureUrl in file style falls through to the bare id when image_file 
 });
 
 test('makePictureUrl in file style respects the ord(\'9\') boundary exactly (a lone leading 9 still falls through)', function (): void {
-    CurrentConfig::setPhpExtensionInUrls(false);
-    CurrentConfig::setQuestionMarkInUrls(false);
-    CurrentConfig::setPictureUrlStyle('file');
+    CurrentConfig::current()->setPhpExtensionInUrls(false);
+    CurrentConfig::current()->setQuestionMarkInUrls(false);
+    CurrentConfig::current()->setPictureUrlStyle('file');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     // '9-something' starts with '9' (ord 57, not > ord('9')) and matches
@@ -743,9 +743,9 @@ test('makePictureUrl in file style respects the ord(\'9\') boundary exactly (a l
 });
 
 test('makePictureUrl in file style uses the filename when it starts with digits but does not match the id-like pattern', function (): void {
-    CurrentConfig::setPhpExtensionInUrls(false);
-    CurrentConfig::setQuestionMarkInUrls(false);
-    CurrentConfig::setPictureUrlStyle('file');
+    CurrentConfig::current()->setPhpExtensionInUrls(false);
+    CurrentConfig::current()->setQuestionMarkInUrls(false);
+    CurrentConfig::current()->setPictureUrlStyle('file');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     // '42abc' starts with a digit (first operand false) but does not match
@@ -757,9 +757,9 @@ test('makePictureUrl in file style uses the filename when it starts with digits 
 });
 
 test('makePictureUrl uses an empty id segment in the default style branch when image_id is absent', function (): void {
-    CurrentConfig::setPhpExtensionInUrls(false);
-    CurrentConfig::setQuestionMarkInUrls(false);
-    CurrentConfig::setPictureUrlStyle('unrecognized-style');
+    CurrentConfig::current()->setPhpExtensionInUrls(false);
+    CurrentConfig::current()->setQuestionMarkInUrls(false);
+    CurrentConfig::current()->setPictureUrlStyle('unrecognized-style');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     $url = $service->makePictureUrl([]);
@@ -768,9 +768,9 @@ test('makePictureUrl uses an empty id segment in the default style branch when i
 });
 
 test('makePictureUrl drops the flat param when no category is given (shorter urls)', function (): void {
-    CurrentConfig::setPhpExtensionInUrls(false);
-    CurrentConfig::setQuestionMarkInUrls(false);
-    CurrentConfig::setPictureUrlStyle('id-file');
+    CurrentConfig::current()->setPhpExtensionInUrls(false);
+    CurrentConfig::current()->setQuestionMarkInUrls(false);
+    CurrentConfig::current()->setPictureUrlStyle('id-file');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     $url = $service->makePictureUrl(['image_id' => 5, 'flat' => true]);
@@ -815,7 +815,7 @@ test('makeSectionInUrl uses the category permalink directly when set', function 
 });
 
 test('makeSectionInUrl appends the slugified name in id-name style', function (): void {
-    CurrentConfig::setCategoryUrlStyle('id-name');
+    CurrentConfig::current()->setCategoryUrlStyle('id-name');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     $result = $service->makeSectionInUrl(['section' => 'categories', 'category' => ['id' => 7, 'name' => 'Vacation Photos', 'permalink' => null]]);
@@ -824,7 +824,7 @@ test('makeSectionInUrl appends the slugified name in id-name style', function ()
 });
 
 test('makeSectionInUrl appends combined categories, defaulting a non-array entry gracefully', function (): void {
-    CurrentConfig::setCategoryUrlStyle('id-name');
+    CurrentConfig::current()->setCategoryUrlStyle('id-name');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     $result = $service->makeSectionInUrl([
@@ -843,7 +843,7 @@ test('makeSectionInUrl appends combined categories, defaulting a non-array entry
 });
 
 test('makeSectionInUrl builds a tags section in the "id" style', function (): void {
-    CurrentConfig::setTagUrlStyle('id');
+    CurrentConfig::current()->setTagUrlStyle('id');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [['id' => 3, 'url_name' => 'nature'], ['id' => 5, 'url_name' => 'travel']]]);
@@ -852,7 +852,7 @@ test('makeSectionInUrl builds a tags section in the "id" style', function (): vo
 });
 
 test('makeSectionInUrl builds a tags section in the "tag" style using url_name', function (): void {
-    CurrentConfig::setTagUrlStyle('tag');
+    CurrentConfig::current()->setTagUrlStyle('tag');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [['id' => 3, 'url_name' => 'nature']]]);
@@ -861,7 +861,7 @@ test('makeSectionInUrl builds a tags section in the "tag" style using url_name',
 });
 
 test('makeSectionInUrl falls through the "tag" style to id-name when url_name is absent', function (): void {
-    CurrentConfig::setTagUrlStyle('tag');
+    CurrentConfig::current()->setTagUrlStyle('tag');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     // No url_name -- falls through (no break) to the default arm.
@@ -871,7 +871,7 @@ test('makeSectionInUrl falls through the "tag" style to id-name when url_name is
 });
 
 test('makeSectionInUrl builds a tags section in the default id-name style', function (): void {
-    CurrentConfig::setTagUrlStyle('id-tag');
+    CurrentConfig::current()->setTagUrlStyle('id-tag');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [['id' => 3, 'url_name' => 'nature']]]);
@@ -880,7 +880,7 @@ test('makeSectionInUrl builds a tags section in the default id-name style', func
 });
 
 test('makeSectionInUrl defaults a non-array tags entry gracefully', function (): void {
-    CurrentConfig::setTagUrlStyle('id-tag');
+    CurrentConfig::current()->setTagUrlStyle('id-tag');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     // Same "reset to []" defaulting as the analogous combined_categories
@@ -914,7 +914,7 @@ test('makeSectionInUrl infers the categories section from a bare category param 
 });
 
 test('makeSectionInUrl infers the tags section from a bare tags param when section is unset', function (): void {
-    CurrentConfig::setTagUrlStyle('id');
+    CurrentConfig::current()->setTagUrlStyle('id');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     $result = $service->makeSectionInUrl(['tags' => [['id' => 3, 'url_name' => 'nature']]]);
@@ -947,7 +947,7 @@ test('makeSectionInUrl treats an explicit empty-string permalink the same as uns
 });
 
 test('makeSectionInUrl falls back to an empty slugified name when the name key is absent in id-name style', function (): void {
-    CurrentConfig::setCategoryUrlStyle('id-name');
+    CurrentConfig::current()->setCategoryUrlStyle('id-name');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     // 'name' is absent (only 'permalink' is present, as null) -- triggers
@@ -1000,7 +1000,7 @@ test('makeSectionInUrl falls back to an empty combined-category permalink string
 });
 
 test('makeSectionInUrl appends an empty id segment for a tag missing its id, in "id" style', function (): void {
-    CurrentConfig::setTagUrlStyle('id');
+    CurrentConfig::current()->setTagUrlStyle('id');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [[]]]);
@@ -1009,7 +1009,7 @@ test('makeSectionInUrl appends an empty id segment for a tag missing its id, in 
 });
 
 test('makeSectionInUrl falls through the "tag" style to default when url_name is present but non-scalar', function (): void {
-    CurrentConfig::setTagUrlStyle('tag');
+    CurrentConfig::current()->setTagUrlStyle('tag');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     // url_name is set (non-null) but not scalar -- the "isset && is_scalar"
@@ -1021,7 +1021,7 @@ test('makeSectionInUrl falls through the "tag" style to default when url_name is
 });
 
 test('makeSectionInUrl omits the tag name suffix in the default style when url_name is non-scalar', function (): void {
-    CurrentConfig::setTagUrlStyle('id-tag');
+    CurrentConfig::current()->setTagUrlStyle('id-tag');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     // Reaches the default arm directly (not via the "tag" style fallthrough)
@@ -1353,7 +1353,7 @@ test('embellishUrl resolves a /../ immediately following a leading slash', funct
 });
 
 test('getGalleryHomeUrl falls back to makeIndexUrl for an empty-string gallery_url', function (): void {
-    CurrentConfig::setGalleryUrl('');
+    CurrentConfig::current()->setGalleryUrl('');
     $service = new UrlService(new HtmlService(), new RootPathOverride());
 
     expect($service->getGalleryHomeUrl())->toBe($service->makeIndexUrl());
@@ -1361,7 +1361,7 @@ test('getGalleryHomeUrl falls back to makeIndexUrl for an empty-string gallery_u
 
 test('getGalleryHomeUrl returns a root-relative gallery_url unchanged, ignoring a non-empty root URL', function (): void {
     urlServiceTestWithMountDepth(1, function (): void {
-        CurrentConfig::setGalleryUrl('/my-gallery');
+        CurrentConfig::current()->setGalleryUrl('/my-gallery');
         $service = new UrlService(new HtmlService(), new RootPathOverride());
 
         expect($service->getGalleryHomeUrl())->toBe('/my-gallery');
@@ -1370,7 +1370,7 @@ test('getGalleryHomeUrl returns a root-relative gallery_url unchanged, ignoring 
 
 test('getGalleryHomeUrl prefixes a relative gallery_url with a non-empty root URL', function (): void {
     urlServiceTestWithMountDepth(1, function (): void {
-        CurrentConfig::setGalleryUrl('my-gallery/');
+        CurrentConfig::current()->setGalleryUrl('my-gallery/');
         $service = new UrlService(new HtmlService(), new RootPathOverride());
 
         expect($service->getGalleryHomeUrl())->toBe('../my-gallery/');

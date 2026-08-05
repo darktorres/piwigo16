@@ -41,13 +41,17 @@ beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-current-template-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::setDataLocation('data/');
-    CurrentConfig::setDataDirChecked('1');
+    $currentConfig = Kernel::container()->get(CurrentConfig::class);
+    if (! $currentConfig instanceof CurrentConfig) {
+        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+    }
+    $currentConfig->setDataLocation('data/');
+    $currentConfig->setDataDirChecked('1');
 });
 
 afterEach(function (): void {
     current_template_test_rrmdir(CurrentPaths::get()->root);
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     Kernel::reset();
 });
 

@@ -43,7 +43,7 @@ final class CatModifyPageRenderer
      *
      * @param array<string, mixed> $category
      */
-    public function render(Lang $lang, UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
@@ -173,7 +173,7 @@ final class CatModifyPageRenderer
             ]
         );
 
-        if (\Piwigo\Config\CurrentConfig::activateComments()) {
+        if ($currentConfig->activateComments()) {
             $template->assign('CAT_COMMENTABLE', SqlDialect::booleanToString((bool) $category['commentable']));
         }
 
@@ -293,7 +293,7 @@ final class CatModifyPageRenderer
             $template->assign('CAT_DIR_NAME', basename((string) $category_full_dir));
             $template->assign('CAT_MIN_DIR', $this->getMinLocalDir($category_full_dir));
 
-            if (\Piwigo\Config\CurrentConfig::enableSynchronization()) {
+            if ($currentConfig->enableSynchronization()) {
                 $category_site_id = $category['site_id'];
                 $category_site_id = (is_int($category_site_id) || is_string($category_site_id)) ? $category_site_id : '';
                 $template->assign(
@@ -331,7 +331,7 @@ final class CatModifyPageRenderer
             // has_images-or-!empty(...) condition could be true here.
             if (
                 ($category['has_images']
-                 and \Piwigo\Config\CurrentConfig::allowRandomRepresentative())
+                 and $currentConfig->allowRandomRepresentative())
                 or ! $category['has_images']) {
                 $tpl_representant['ALLOW_DELETE'] = true;
             }

@@ -59,12 +59,16 @@ final class ConfigLoader
      */
     public static function validateRequired(): void
     {
-        $reflection = new \ReflectionClass(CurrentConfig::class);
-        foreach ($reflection->getProperties(\ReflectionProperty::IS_STATIC | \ReflectionProperty::IS_PRIVATE) as $property) {
+        $currentConfig = CurrentConfig::current();
+        $reflection = new \ReflectionClass($currentConfig);
+        foreach ($reflection->getProperties(\ReflectionProperty::IS_PRIVATE) as $property) {
+            if ($property->isStatic()) {
+                continue;
+            }
             if ($property->getAttributes(Required::class) === []) {
                 continue;
             }
-            $value = $property->getValue();
+            $value = $property->getValue($currentConfig);
             if ($value === null || $value === '') {
                 throw new MissingRequiredConfigException(
                     "Required config property '{$property->getName()}' is missing or empty."

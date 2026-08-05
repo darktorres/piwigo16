@@ -42,8 +42,8 @@ beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-picture-rate-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::setDataLocation('data/');
-    CurrentConfig::setDataDirChecked('1');
+    CurrentConfig::current()->setDataLocation('data/');
+    CurrentConfig::current()->setDataDirChecked('1');
     CurrentTemplate::current()->set(new Template());
 });
 
@@ -51,12 +51,12 @@ afterEach(function (): void {
     picture_rate_test_rrmdir(CurrentPaths::get()->root);
     CurrentTemplate::current()->reset();
     Kernel::reset();
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
 });
 
 test('render does nothing when rating is disabled', function (): void {
-    CurrentConfig::setRateEnabled(false);
-    $renderer = new PictureRateRenderer(\Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Rate\RateEntity::class), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
+    CurrentConfig::current()->setRateEnabled(false);
+    $renderer = new PictureRateRenderer(\Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Rate\RateEntity::class), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current());
 
     $renderer->render(42, new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), [], '/picture.php');
 

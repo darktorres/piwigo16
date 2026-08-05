@@ -12,7 +12,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * (curl-based login) don't exercise.
  */
 it('creates an album via the web service API using the browser session', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $response = H::wsCall($page, 'pwg.categories.add', ['name' => 'Browser Test Album ' . uniqid()]);
 

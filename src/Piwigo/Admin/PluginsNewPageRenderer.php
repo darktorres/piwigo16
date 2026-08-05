@@ -42,6 +42,7 @@ final class PluginsNewPageRenderer
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -59,7 +60,7 @@ final class PluginsNewPageRenderer
     {
         $template = $this->currentTemplate->get();
 
-        if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
+        if (! $this->currentConfig->enableExtensionsInstall()) {
             $this->htmlRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }

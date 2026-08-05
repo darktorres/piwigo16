@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -23,7 +24,7 @@ use Piwigo\PluginConfig\EventDispatcher;
  */
 function current_config_service_test_config_service(): ConfigService
 {
-    return new ConfigService(EntityManagerFactory::build()->getRepository(ConfigEntry::class), new EventDispatcher());
+    return new ConfigService(EntityManagerFactory::build()->getRepository(ConfigEntry::class), new EventDispatcher(), new CurrentConfig());
 }
 
 afterEach(function (): void {

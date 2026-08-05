@@ -51,6 +51,7 @@ final class ProfileFormHandler
         private readonly AuthService $authService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Mail\MailService $mailService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     // ------------------------------------------------------ update & customization
@@ -88,9 +89,9 @@ final class ProfileFormHandler
         // string=>string map at runtime (same invariant documented in
         // validate_mail_address(), functions_user.inc.php).
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = $this->currentConfig->userFields();
 
-        $special_user = in_array($userdata['id'], [\Piwigo\Config\CurrentConfig::guestId(), \Piwigo\Config\CurrentConfig::defaultUserId()], true);
+        $special_user = in_array($userdata['id'], [$this->currentConfig->guestId(), $this->currentConfig->defaultUserId()], true);
         if ($special_user) {
             unset(
                 $post['username'],
@@ -109,7 +110,7 @@ final class ProfileFormHandler
             unset($post['username']);
         }
 
-        if (\Piwigo\Config\CurrentConfig::allowUserCustomization() or $this->adminContext->isActive()) {
+        if ($this->currentConfig->allowUserCustomization() or $this->adminContext->isActive()) {
             $int_pattern = '/^\d+$/';
             // $_POST values are always strings or arrays -- never a real
             // PHP int/float/bool -- so only the null/string/array-emptiness
@@ -227,7 +228,7 @@ final class ProfileFormHandler
                                 $this->lang->buildArgs('Your username has been successfully changed to : %s', $username),
                             ];
 
-                            $gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
+                            $gallery_title = $this->currentConfig->galleryTitle();
                             $this->mailService
                                 ->mail(
                                     $mail_address,
@@ -257,14 +258,14 @@ final class ProfileFormHandler
                 $activity_details_tables[] = 'users';
             }
 
-            if (\Piwigo\Config\CurrentConfig::allowUserCustomization() or $this->adminContext->isActive()) {
+            if ($this->currentConfig->allowUserCustomization() or $this->adminContext->isActive()) {
                 // update user "additional" informations (specific to Piwigo)
                 $fields = [
                     'nb_image_page', 'language',
                     'expand', 'show_nb_hits', 'recent_period', 'theme',
                 ];
 
-                if (\Piwigo\Config\CurrentConfig::activateComments()) {
+                if ($this->currentConfig->activateComments()) {
                     $fields[] = 'show_nb_comments';
                 }
 
@@ -336,8 +337,8 @@ final class ProfileFormHandler
             [
                 $template_prefixe . 'USERNAME' => stripslashes(is_string($userdata['username']) ? $userdata['username'] : ''),
                 $template_prefixe . 'EMAIL' => @$userdata['email'],
-                $template_prefixe . 'ALLOW_USER_CUSTOMIZATION' => \Piwigo\Config\CurrentConfig::allowUserCustomization(),
-                $template_prefixe . 'ACTIVATE_COMMENTS' => \Piwigo\Config\CurrentConfig::activateComments(),
+                $template_prefixe . 'ALLOW_USER_CUSTOMIZATION' => $this->currentConfig->allowUserCustomization(),
+                $template_prefixe . 'ACTIVATE_COMMENTS' => $this->currentConfig->activateComments(),
                 $template_prefixe . 'NB_IMAGE_PAGE' => $userdata['nb_image_page'],
                 $template_prefixe . 'RECENT_PERIOD' => $userdata['recent_period'],
                 $template_prefixe . 'EXPAND' => (bool) $userdata['expand'] ? 'true' : 'false',
@@ -363,7 +364,7 @@ final class ProfileFormHandler
 
         $template->assign('language_options', $language_options);
 
-        $special_user = in_array($userdata['id'], [\Piwigo\Config\CurrentConfig::guestId(), \Piwigo\Config\CurrentConfig::defaultUserId()], true);
+        $special_user = in_array($userdata['id'], [$this->currentConfig->guestId(), $this->currentConfig->defaultUserId()], true);
         $template->assign('SPECIAL_USER', $special_user);
         $template->assign('IN_ADMIN', $this->adminContext->isActive());
 
@@ -375,7 +376,7 @@ final class ProfileFormHandler
 
         $display_duration = [];
         $has_custom = false;
-        $api_key_duration = \Piwigo\Config\CurrentConfig::apiKeyDuration();
+        $api_key_duration = $this->currentConfig->apiKeyDuration();
         $duration_days = [];
         foreach ($api_key_duration as $day) {
             if ($day === 'custom') {

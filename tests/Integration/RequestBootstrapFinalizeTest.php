@@ -67,7 +67,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
         // footer.tpl (reached via CurrentTemplate's parse()) needs this --
         // same as PageTailTest/RedirectServiceTest's own identical setup.
 
@@ -89,7 +89,11 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         CurrentTemplate::current()->reset();
         EventDispatcher::get()->reset();
         PageState::current()->reset();
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         parent::tearDown();
     }
 
@@ -111,7 +115,11 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
 
     public function test_finalize_uses_the_mobile_theme_when_the_session_mobile_theme_flag_is_set(): void
     {
-        CurrentConfig::setMobilTheme('mobile-theme-name');
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setMobilTheme('mobile-theme-name');
         $_SESSION['pwg_mobile_theme'] = true;
 
         try {
@@ -136,7 +144,11 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         // all, so CurrentConfig::$noPhotoYet stays at its own class
         // property default (null) -- the honest equivalent of a genuinely
         // fresh install where this key has never been written yet.
-        self::assertNull(CurrentConfig::noPhotoYet());
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        self::assertNull($currentConfig->noPhotoYet());
 
         // regular_user is neither guest nor admin, so
         // NoPhotoYetRenderer::render()'s own outer guard is false and it
@@ -146,7 +158,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         // internal branches are NoPhotoYetRendererTest.php's job.
         RequestBootstrap::finalize();
 
-        self::assertNull(CurrentConfig::noPhotoYet());
+        self::assertNull($currentConfig->noPhotoYet());
     }
 
     public function test_finalize_adds_a_header_warning_when_guest_must_be_guest_is_flagged(): void
@@ -176,7 +188,11 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
 
     public function test_finalize_throws_a_503_when_the_gallery_is_locked_for_a_non_admin_non_identification_request(): void
     {
-        CurrentConfig::setGalleryLocked(true);
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setGalleryLocked(true);
 
         try {
             RequestBootstrap::finalize();
@@ -194,7 +210,11 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
 
     public function test_finalize_registers_the_url_protection_handlers_when_originalUrlProtection_is_configured(): void
     {
-        CurrentConfig::setOriginalUrlProtection('all');
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setOriginalUrlProtection('all');
 
         RequestBootstrap::finalize();
 

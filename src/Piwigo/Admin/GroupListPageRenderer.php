@@ -26,6 +26,7 @@ final class GroupListPageRenderer
         private readonly Translator $translator,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void
@@ -75,7 +76,7 @@ final class GroupListPageRenderer
         $group_counter = 0;
 
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = $this->currentConfig->userFields();
 
         foreach ($groups as $row) {
             $members = $group_repo->findMemberUsernames($row->id, $user_fields['username'], $user_fields['id']);

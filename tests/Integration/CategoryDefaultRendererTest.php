@@ -60,14 +60,18 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         // See PictureCommentRendererTest's identical comment: skips
         // Template's own data_dir_checked write, which would otherwise
         // reach for a full RequestBootstrap dependency this test never
         // boots.
-        CurrentConfig::setDataDirChecked('1');
+        $currentConfig->setDataDirChecked('1');
         // thumbnails.tpl reads $derivative_params (assigned from
         // ImageStdParams::get_by_type() by CategoryDefaultRenderer::render()
         // itself) -- ImageStdParams::$all_type_map starts empty until
@@ -80,7 +84,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // loadConfFromDb() below is unrelated to ImageStdParams -- it's
         // this test's own way of seeding every other real config-backed
         // display flag CategoryDefaultRenderer/thumbnails.tpl reads.
-        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
+        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current());
         $configService->loadConfFromDb();
         ImageStdParams::current()->load_from_db();
 
@@ -105,7 +109,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         }
         $urlService = new UrlService($htmlService, $rootPathOverride);
 
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class)), EventDispatcher::get(), ImageStdParams::current(), \Piwigo\Users\CurrentUser::current());
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), \Piwigo\Config\CurrentConfig::current()), EventDispatcher::get(), ImageStdParams::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
     }
 
     #[\Override]

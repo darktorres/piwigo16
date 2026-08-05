@@ -6,50 +6,50 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\NotificationConfig;
 
 beforeEach(function (): void {
-    CurrentConfig::reset();
+    CurrentConfig::current()->reset();
 });
 
 afterEach(function (): void {
-    CurrentConfig::reset();
+    CurrentConfig::current()->reset();
 });
 
 test('a bool accessor reads the property and falls back to its default', function (): void {
-    expect(CurrentConfig::activateComments())->toBeTrue(); // property default
+    expect(CurrentConfig::current()->activateComments())->toBeTrue(); // property default
 
-    CurrentConfig::setActivateComments(false);
-    expect(CurrentConfig::activateComments())->toBeFalse();
+    CurrentConfig::current()->setActivateComments(false);
+    expect(CurrentConfig::current()->activateComments())->toBeFalse();
 });
 
 test('an int accessor reads the property and falls back to its default', function (): void {
-    expect(CurrentConfig::webmasterId())->toBe(1);
+    expect(CurrentConfig::current()->webmasterId())->toBe(1);
 
-    CurrentConfig::setWebmasterId(42);
-    expect(CurrentConfig::webmasterId())->toBe(42);
+    CurrentConfig::current()->setWebmasterId(42);
+    expect(CurrentConfig::current()->webmasterId())->toBe(42);
 });
 
 test('a string accessor reads the property and falls back to its default', function (): void {
-    expect(CurrentConfig::galleryTitle())->toBe('Piwigo');
+    expect(CurrentConfig::current()->galleryTitle())->toBe('Piwigo');
 
-    CurrentConfig::setGalleryTitle('Custom');
-    expect(CurrentConfig::galleryTitle())->toBe('Custom');
+    CurrentConfig::current()->setGalleryTitle('Custom');
+    expect(CurrentConfig::current()->galleryTitle())->toBe('Custom');
 });
 
 test('a nullable string accessor returns null when unset', function (): void {
-    expect(CurrentConfig::galleryUrl())->toBeNull();
+    expect(CurrentConfig::current()->galleryUrl())->toBeNull();
 
-    CurrentConfig::setGalleryUrl('https://example.test');
-    expect(CurrentConfig::galleryUrl())->toBe('https://example.test');
+    CurrentConfig::current()->setGalleryUrl('https://example.test');
+    expect(CurrentConfig::current()->galleryUrl())->toBe('https://example.test');
 });
 
 test('a custom array accessor coerces and falls back to its hardcoded default', function (): void {
-    expect(CurrentConfig::pictureExtensions())->toBe(['jpg', 'jpeg', 'png', 'gif', 'webp']);
+    expect(CurrentConfig::current()->pictureExtensions())->toBe(['jpg', 'jpeg', 'png', 'gif', 'webp']);
 
-    CurrentConfig::setPictureExtensions(['jpg', 'png']);
-    expect(CurrentConfig::pictureExtensions())->toBe(['jpg', 'png']);
+    CurrentConfig::current()->setPictureExtensions(['jpg', 'png']);
+    expect(CurrentConfig::current()->pictureExtensions())->toBe(['jpg', 'png']);
 });
 
 test('the recentPostDates custom accessor returns a NotificationConfig VO', function (): void {
-    $config = CurrentConfig::recentPostDates();
+    $config = CurrentConfig::current()->recentPostDates();
 
     expect($config)->toBeInstanceOf(NotificationConfig::class)
         ->and($config->rss->maxDates)->toBe(5)
@@ -57,7 +57,7 @@ test('the recentPostDates custom accessor returns a NotificationConfig VO', func
 });
 
 test('the userFields custom accessor returns the simplified array shape, not a VO', function (): void {
-    expect(CurrentConfig::userFields())->toBe([
+    expect(CurrentConfig::current()->userFields())->toBe([
         'id' => 'id',
         'username' => 'username',
         'password' => 'password',
@@ -66,20 +66,20 @@ test('the userFields custom accessor returns the simplified array shape, not a V
 });
 
 test('orderBy is a plain raw SQL-fragment string, not a structured {field,dir}[] shape', function (): void {
-    expect(CurrentConfig::orderBy())->toBe('ORDER BY date_available DESC, file ASC, id ASC');
+    expect(CurrentConfig::current()->orderBy())->toBe('ORDER BY date_available DESC, file ASC, id ASC');
 
-    CurrentConfig::setOrderBy('ORDER BY id ASC');
-    expect(CurrentConfig::orderBy())->toBe('ORDER BY id ASC');
+    CurrentConfig::current()->setOrderBy('ORDER BY id ASC');
+    expect(CurrentConfig::current()->orderBy())->toBe('ORDER BY id ASC');
 });
 
 test('dumpForLog redacts sensitive properties', function (): void {
-    CurrentConfig::setSmtpPassword('super-secret');
-    CurrentConfig::setGalleryTitle('Visible');
+    CurrentConfig::current()->setSmtpPassword('super-secret');
+    CurrentConfig::current()->setGalleryTitle('Visible');
 
     // Keyed by property name (smtpPassword/galleryTitle), not the DB param
     // name (smtp_password/gallery_title) -- CurrentConfig::all()'s own
     // docblock: reflection-based, replacing the former SCHEMA-driven all().
-    $dump = CurrentConfig::dumpForLog();
+    $dump = CurrentConfig::current()->dumpForLog();
 
     expect($dump['smtpPassword'])->toBe('********')
         ->and($dump['galleryTitle'])->toBe('Visible');
@@ -99,13 +99,13 @@ test('chmodValue defaults to 0777 in test mode regardless of SAPI, overridable v
     // suite run this way). chmodValue() now special-cases test mode to
     // 0777 unconditionally, since Env::testModeIsActive() is true on both
     // sides here (CLI always; Apache via loopback + header).
-    expect(CurrentConfig::chmodValue())->toBe(0777);
+    expect(CurrentConfig::current()->chmodValue())->toBe(0777);
 
-    CurrentConfig::setChmodValue(0700);
-    expect(CurrentConfig::chmodValue())->toBe(0700);
+    CurrentConfig::current()->setChmodValue(0700);
+    expect(CurrentConfig::current()->chmodValue())->toBe(0700);
 
-    CurrentConfig::setChmodValue(null);
-    expect(CurrentConfig::chmodValue())->toBe(0777);
+    CurrentConfig::current()->setChmodValue(null);
+    expect(CurrentConfig::current()->chmodValue())->toBe(0777);
 });
 
 test('chmodValue falls back to the plain SAPI-dependent default outside test mode', function (): void {
@@ -117,7 +117,7 @@ test('chmodValue falls back to the plain SAPI-dependent default outside test mod
         // own docblock) -- with the test-mode header cleared,
         // Env::testModeIsActive() is false, so this reaches the original
         // SAPI-only heuristic unchanged.
-        expect(CurrentConfig::chmodValue())->toBe(0755);
+        expect(CurrentConfig::current()->chmodValue())->toBe(0755);
     } finally {
         if ($original !== null) {
             $_SERVER['HTTP_X_PIWIGO_ENV'] = $original;
@@ -126,59 +126,59 @@ test('chmodValue falls back to the plain SAPI-dependent default outside test mod
 });
 
 test('orderByCustom/orderByInsideCategoryCustom are plain nullable raw-SQL-fragment strings', function (): void {
-    expect(CurrentConfig::orderByCustom())->toBeNull()
-        ->and(CurrentConfig::orderByInsideCategoryCustom())->toBeNull();
+    expect(CurrentConfig::current()->orderByCustom())->toBeNull()
+        ->and(CurrentConfig::current()->orderByInsideCategoryCustom())->toBeNull();
 
-    CurrentConfig::setOrderByCustom('ORDER BY hit DESC');
-    CurrentConfig::setOrderByInsideCategoryCustom('ORDER BY file ASC');
+    CurrentConfig::current()->setOrderByCustom('ORDER BY hit DESC');
+    CurrentConfig::current()->setOrderByInsideCategoryCustom('ORDER BY file ASC');
 
-    expect(CurrentConfig::orderByCustom())->toBe('ORDER BY hit DESC')
-        ->and(CurrentConfig::orderByInsideCategoryCustom())->toBe('ORDER BY file ASC');
+    expect(CurrentConfig::current()->orderByCustom())->toBe('ORDER BY hit DESC')
+        ->and(CurrentConfig::current()->orderByInsideCategoryCustom())->toBe('ORDER BY file ASC');
 });
 
 test('setAvailablePermissionLevels falls back to the hardcoded default set when given an empty list', function (): void {
-    CurrentConfig::setAvailablePermissionLevels([2, 4]);
-    expect(CurrentConfig::availablePermissionLevels())->toBe([2, 4]);
+    CurrentConfig::current()->setAvailablePermissionLevels([2, 4]);
+    expect(CurrentConfig::current()->availablePermissionLevels())->toBe([2, 4]);
 
-    CurrentConfig::setAvailablePermissionLevels([]);
-    expect(CurrentConfig::availablePermissionLevels())->toBe([0, 1, 2, 4, 8]);
+    CurrentConfig::current()->setAvailablePermissionLevels([]);
+    expect(CurrentConfig::current()->availablePermissionLevels())->toBe([0, 1, 2, 4, 8]);
 });
 
 test('setDefaultFiltersViews replaces only well-shaped entries, falling back per-key for anything else', function (): void {
-    CurrentConfig::setDefaultFiltersViews([
+    CurrentConfig::current()->setDefaultFiltersViews([
         'words' => ['access' => 'admin_only', 'default' => false],
         'tags' => 'not-an-array', // invalid shape -> falls back to the hardcoded default
     ]);
 
-    $result = CurrentConfig::defaultFiltersViews();
+    $result = CurrentConfig::current()->defaultFiltersViews();
 
     expect($result['words'])->toBe(['access' => 'admin_only', 'default' => false])
         ->and($result['tags'])->toBe(['access' => 'everybody', 'default' => false]);
 
-    CurrentConfig::setDefaultFiltersViews(null);
-    expect(CurrentConfig::defaultFiltersViews()['words'])->toBe(['access' => 'everybody', 'default' => true]);
+    CurrentConfig::current()->setDefaultFiltersViews(null);
+    expect(CurrentConfig::current()->defaultFiltersViews()['words'])->toBe(['access' => 'everybody', 'default' => true]);
 });
 
 test('setRandomIndexRedirect keeps only scalar values, stringified, keyed by stringified key', function (): void {
-    CurrentConfig::setRandomIndexRedirect([
+    CurrentConfig::current()->setRandomIndexRedirect([
         'random' => 'random.php',
         7 => 42,
         'bad' => ['not', 'scalar'],
     ]);
 
-    expect(CurrentConfig::randomIndexRedirect())->toBe([
+    expect(CurrentConfig::current()->randomIndexRedirect())->toBe([
         'random' => 'random.php',
         '7' => '42',
     ]);
 });
 
 test('setRecentPostDates coerces valid fields and falls back per-field and per-channel', function (): void {
-    CurrentConfig::setRecentPostDates([
+    CurrentConfig::current()->setRecentPostDates([
         'RSS' => ['max_dates' => 10, 'max_elements' => 'not-an-int', 'max_cats' => 20],
         // NBM entirely omitted -> the whole channel falls back to its own hardcoded default
     ]);
 
-    $config = CurrentConfig::recentPostDates();
+    $config = CurrentConfig::current()->recentPostDates();
 
     expect($config->rss->maxDates)->toBe(10)
         ->and($config->rss->maxElements)->toBe(6) // fallback: source value wasn't an int
@@ -189,11 +189,11 @@ test('setRecentPostDates coerces valid fields and falls back per-field and per-c
 });
 
 test('setUpdateNotifyLastNotification keeps only the recognized keys and clears with null', function (): void {
-    expect(CurrentConfig::updateNotifyLastNotification())->toBeNull();
+    expect(CurrentConfig::current()->updateNotifyLastNotification())->toBeNull();
 
-    CurrentConfig::setUpdateNotifyLastNotification(['version' => '17.1.0', 'notified_on' => '2026-07-01', 'unexpected' => 'ignored']);
-    expect(CurrentConfig::updateNotifyLastNotification())->toBe(['version' => '17.1.0', 'notified_on' => '2026-07-01']);
+    CurrentConfig::current()->setUpdateNotifyLastNotification(['version' => '17.1.0', 'notified_on' => '2026-07-01', 'unexpected' => 'ignored']);
+    expect(CurrentConfig::current()->updateNotifyLastNotification())->toBe(['version' => '17.1.0', 'notified_on' => '2026-07-01']);
 
-    CurrentConfig::setUpdateNotifyLastNotification(null);
-    expect(CurrentConfig::updateNotifyLastNotification())->toBeNull();
+    CurrentConfig::current()->setUpdateNotifyLastNotification(null);
+    expect(CurrentConfig::current()->updateNotifyLastNotification())->toBeNull();
 });

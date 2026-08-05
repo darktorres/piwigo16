@@ -58,8 +58,9 @@ final class Translator
      */
     private array $mirror = [];
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+    ) {
         $this->inner = new GettextTranslator();
     }
 
@@ -103,7 +104,7 @@ final class Translator
             return $translator;
         }
 
-        return self::$fallback ??= new self();
+        return self::$fallback ??= new self(new \Piwigo\Config\CurrentConfig());
     }
 
     /**
@@ -195,7 +196,7 @@ final class Translator
         // check (which only ever looked at the fallback array), and this
         // way every Lang::t() caller gets the diagnostic too, not just
         // former l10n() callers.
-        if (\Piwigo\Config\CurrentConfig::debugL10n() && $val === $key && $key !== '') {
+        if ($this->currentConfig->debugL10n() && $val === $key && $key !== '') {
             trigger_error('[l10n] language key "' . $key . '" not defined', E_USER_WARNING);
         }
 

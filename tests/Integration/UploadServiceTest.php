@@ -145,6 +145,8 @@ final class UploadServiceTest extends IntegrationTestCase
 
     private \Piwigo\Image\ImageService $imageService;
 
+    private CurrentConfig $currentConfig;
+
     private string $marker;
 
     /** @var list<int> */
@@ -162,7 +164,11 @@ final class UploadServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
@@ -215,6 +221,12 @@ final class UploadServiceTest extends IntegrationTestCase
         }
         $this->imageService = $imageService;
 
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        }
+        $this->currentConfig = $currentConfig;
+
         // Kernel::reset() above also discards the container-shared
         // CurrentUser instance parent::setUp()'s own attachGlobals() seed
         // populated (singleton/service-locator elimination campaign, Phase
@@ -231,7 +243,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         // Deliberately not followed by $configService->loadConfFromDb() --
         // see this class's own docblock.
-        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
+        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current());
         CurrentConfigService::current()->set($configService);
         $this->configService = $configService;
         // Needed for DerivativeImage::url()'s own ImageStdParams::
@@ -248,8 +260,8 @@ final class UploadServiceTest extends IntegrationTestCase
         // stops the fixture's pre-existing 5 images from tripping
         // addUploadedFileAddToCategories()'s own count check by accident in
         // every other test.
-        CurrentConfig::setLoungeActive(false);
-        CurrentConfig::setLoungeActivateThreshold(1_000_000);
+        CurrentConfig::current()->setLoungeActive(false);
+        CurrentConfig::current()->setLoungeActivateThreshold(1_000_000);
 
         $htmlService = new HtmlService();
         // RootPathOverride must be the one real, container-shared instance
@@ -411,7 +423,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $expectedMd5 = md5_file($source);
         self::assertIsString($expectedMd5);
 
-        $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)->addUploadedFile($source, $this->urlService, 'holiday.png');
+        $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig)->addUploadedFile($source, $this->urlService, 'holiday.png');
         $id = $imageId;
         self::assertGreaterThan(0, $id);
         $this->imageIdsToDelete[] = $id;
@@ -445,7 +457,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
 
-        $result = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)->addUploadedFile(
+        $result = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig)->addUploadedFile(
             $source,
             $this->urlService,
             'dup.jpg',
@@ -481,7 +493,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function test_addUploadedFile_updates_an_existing_photo_in_place(): void
     {
-        $service = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService);
+        $service = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig);
 
         $firstSource = $this->marker . '/first.png';
         $this->makeImage($firstSource, 'png', 40, 30);
@@ -530,7 +542,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)->addUploadedFile($source, $this->urlService, 'orphan.png', image_id: 999_999);
+            new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig)->addUploadedFile($source, $this->urlService, 'orphan.png', image_id: 999_999);
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -548,7 +560,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_updates_the_level_when_given_on_the_update_branch(): void
     {
-        $service = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService);
+        $service = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig);
 
         $first = $this->marker . '/lvl-first.png';
         $this->makeImage($first, 'png', 20, 20);
@@ -574,7 +586,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_dispatches_the_correct_extension_for_each_raster_image_type(): void
     {
-        $service = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService);
+        $service = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig);
         $cases = [
             'png' => 'png',
             'jpeg' => 'jpg',
@@ -601,7 +613,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_resolves_a_non_standard_extension_via_the_finfo_fallback_when_all_types_allowed(): void
     {
-        CurrentConfig::setUploadFormAllTypes(true);
+        CurrentConfig::current()->setUploadFormAllTypes(true);
 
         // Since 'zip' has no representative_ext (no upload_file_* handler
         // matches it) and isn't a picture extension either,
@@ -621,7 +633,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/archive.zip';
         file_put_contents($source, "PK\x03\x04" . str_repeat('x', 32));
 
-        $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)->addUploadedFile($source, $this->urlService, 'archive.zip');
+        $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig)->addUploadedFile($source, $this->urlService, 'archive.zip');
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
@@ -650,15 +662,15 @@ final class UploadServiceTest extends IntegrationTestCase
             self::markTestSkipped('No non-GD image library (ext_imagick/imagick) available in this environment -- addUploadedFile() never reaches its own originalResize()/needResize()/pwg_resize() block when PwgImage::get_library() is gd.');
         }
 
-        CurrentConfig::setOriginalResize(true);
-        CurrentConfig::setOriginalResizeMaxwidth(50);
-        CurrentConfig::setOriginalResizeMaxheight(50);
-        CurrentConfig::setOriginalResizeQuality(90);
+        CurrentConfig::current()->setOriginalResize(true);
+        CurrentConfig::current()->setOriginalResizeMaxwidth(50);
+        CurrentConfig::current()->setOriginalResizeMaxheight(50);
+        CurrentConfig::current()->setOriginalResizeQuality(90);
 
         $source = $this->marker . '/big.jpg';
         $this->makeImage($source, 'jpeg', 200, 150);
 
-        $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)->addUploadedFile($source, $this->urlService, 'big.jpg');
+        $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig)->addUploadedFile($source, $this->urlService, 'big.jpg');
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
@@ -692,7 +704,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function test_addUploadedFile_stores_the_representative_ext_when_an_upload_file_handler_matches(): void
     {
-        CurrentConfig::setUploadFormAllTypes(true);
+        CurrentConfig::current()->setUploadFormAllTypes(true);
 
         EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFilePdf(...));
 
@@ -706,7 +718,7 @@ final class UploadServiceTest extends IntegrationTestCase
                 self::markTestSkipped('ImageMagick convert failed to build a PDF fixture: ' . implode("\n", $out));
             }
 
-            $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)->addUploadedFile($pdf, $this->urlService, 'document.pdf');
+            $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig)->addUploadedFile($pdf, $this->urlService, 'document.pdf');
             $id = $imageId;
             $this->imageIdsToDelete[] = $id;
 
@@ -719,7 +731,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_rejects_a_mismatched_svg_mime_type_and_deletes_the_source_file(): void
     {
-        CurrentConfig::setUploadFormAllTypes(true);
+        CurrentConfig::current()->setUploadFormAllTypes(true);
 
         // Genuine SVG content (finfo sniffs 'image/svg+xml'), but the
         // original filename claims '.png' -- the exact mismatch
@@ -733,7 +745,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)->addUploadedFile($source, $this->urlService, 'fake.png');
+            new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig)->addUploadedFile($source, $this->urlService, 'fake.png');
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -748,7 +760,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_rejects_an_extension_absent_from_fileExtensions_even_when_all_types_are_allowed(): void
     {
-        CurrentConfig::setUploadFormAllTypes(true);
+        CurrentConfig::current()->setUploadFormAllTypes(true);
 
         // Real, non-image bytes with an extension that is NOT one of
         // CurrentConfig::fileExtensions()'s own default entries -- unlike
@@ -765,7 +777,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)->addUploadedFile($source, $this->urlService, 'payload.exe');
+            new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig)->addUploadedFile($source, $this->urlService, 'payload.exe');
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -780,7 +792,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_rejects_a_forbidden_file_type_and_deletes_the_source_file(): void
     {
-        CurrentConfig::setUploadFormAllTypes(false);
+        CurrentConfig::current()->setUploadFormAllTypes(false);
 
         $source = $this->marker . '/notes.txt';
         file_put_contents($source, 'just some plain text, not an image at all');
@@ -789,7 +801,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)->addUploadedFile($source, $this->urlService, 'notes.txt');
+            new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig)->addUploadedFile($source, $this->urlService, 'notes.txt');
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -811,19 +823,19 @@ final class UploadServiceTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = 'false' WHERE param = 'lounge_active'");
 
         $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
-        CurrentConfig::setLoungeActivateThreshold($countBefore + 1);
-        self::assertFalse(CurrentConfig::loungeActive());
+        CurrentConfig::current()->setLoungeActivateThreshold($countBefore + 1);
+        self::assertFalse(CurrentConfig::current()->loungeActive());
 
         $source = $this->marker . '/threshold.png';
         $this->makeImage($source, 'png', 10, 8);
 
-        $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)->addUploadedFile($source, $this->urlService, 'threshold.png');
+        $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig)->addUploadedFile($source, $this->urlService, 'threshold.png');
         $this->imageIdsToDelete[] = $imageId;
 
         // addUploadedFileAddToCategories()'s own COUNT(*) check (running
         // right after the insert, so it already sees the new row) now
         // meets the threshold set above.
-        self::assertTrue(CurrentConfig::loungeActive());
+        self::assertTrue(CurrentConfig::current()->loungeActive());
 
         $dbValue = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'lounge_active'");
         self::assertSame('true', $dbValue);
@@ -834,14 +846,14 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/associate.png';
         $this->makeImage($source, 'png', 10, 8);
 
-        $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)->addUploadedFile($source, $this->urlService, 'associate.png', categories: [1]);
+        $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig)->addUploadedFile($source, $this->urlService, 'associate.png', categories: [1]);
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
         // setUp()'s own high default threshold keeps the lounge inactive
         // here, so this exercises associateImagesToCategories(), not
         // fillLounge().
-        self::assertFalse(CurrentConfig::loungeActive());
+        self::assertFalse(CurrentConfig::current()->loungeActive());
 
         $linked = $this->countRows('SELECT COUNT(*) FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $id . ' AND category_id = 1');
         self::assertSame(1, $linked);
@@ -886,11 +898,11 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addFormat_throws_when_the_format_of_image_does_not_exist(): void
     {
-        CurrentConfig::setIsFormatsEnabled(true);
-        CurrentConfig::setFormatExtensions(['tif']);
+        CurrentConfig::current()->setIsFormatsEnabled(true);
+        CurrentConfig::current()->setFormatExtensions(['tif']);
 
         try {
-            $service = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService);
+            $service = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig);
             $source = $this->marker . '/orphan-format.tif';
             file_put_contents($source, 'not a real tiff, just needs bytes on disk');
 
@@ -904,8 +916,8 @@ final class UploadServiceTest extends IntegrationTestCase
             self::assertNotNull($threw, 'addFormat() should have thrown for a nonexistent format_of image id');
             self::assertStringContainsString('this photo does not exist in the database', $threw->getMessage());
         } finally {
-            CurrentConfig::setIsFormatsEnabled(false);
-            CurrentConfig::setFormatExtensions(['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd']);
+            CurrentConfig::current()->setIsFormatsEnabled(false);
+            CurrentConfig::current()->setFormatExtensions(['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd']);
         }
     }
 
@@ -921,11 +933,11 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function test_addFormat_inserts_then_updates_the_same_format_row_on_a_second_call(): void
     {
-        CurrentConfig::setIsFormatsEnabled(true);
-        CurrentConfig::setFormatExtensions(['tif']);
+        CurrentConfig::current()->setIsFormatsEnabled(true);
+        CurrentConfig::current()->setFormatExtensions(['tif']);
 
         try {
-            $service = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService);
+            $service = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig);
 
             $sourceV1 = $this->marker . '/format-v1.tif';
             file_put_contents($sourceV1, str_repeat('a', 128));
@@ -940,8 +952,8 @@ final class UploadServiceTest extends IntegrationTestCase
             $count = $this->countRows('SELECT COUNT(*) FROM ' . Tables::imageFormat() . " WHERE image_id = 1 AND ext = 'tif'");
             self::assertSame(1, $count, 'a second addFormat() call for the same image/ext should UPDATE, not duplicate, the row');
         } finally {
-            CurrentConfig::setIsFormatsEnabled(false);
-            CurrentConfig::setFormatExtensions(['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd']);
+            CurrentConfig::current()->setIsFormatsEnabled(false);
+            CurrentConfig::current()->setFormatExtensions(['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd']);
         }
     }
 

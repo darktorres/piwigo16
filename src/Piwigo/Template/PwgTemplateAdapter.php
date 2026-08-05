@@ -50,7 +50,7 @@ final class PwgTemplateAdapter
         // Mirrors derivative_url()/DerivativeImage::url()'s own
         // is_object($infos) ? $infos : new SrcImage($infos) handling — the
         // constructor itself only accepts a real SrcImage.
-        return new DerivativeImage($type, is_object($img) ? $img : new SrcImage($img));
+        return new DerivativeImage($type, is_object($img) ? $img : new SrcImage($img), \Piwigo\Config\CurrentConfig::current());
     }
 
     /**

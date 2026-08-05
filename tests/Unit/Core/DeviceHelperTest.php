@@ -37,17 +37,17 @@ test('getDevice returns an existing session value as-is', function (): void {
 });
 
 test('mobileTheme is false when the mobile_theme config is empty or "0", without touching the session', function (): void {
-    CurrentConfig::setMobilTheme('');
+    CurrentConfig::current()->setMobilTheme('');
     expect(DeviceHelper::mobileTheme())->toBeFalse();
     expect($_SESSION)->toBe([]);
 
-    CurrentConfig::setMobilTheme('0');
+    CurrentConfig::current()->setMobilTheme('0');
     expect(DeviceHelper::mobileTheme())->toBeFalse();
     expect($_SESSION)->toBe([]);
 });
 
 test('mobileTheme falls back to getDevice() === "mobile" when no GET override or session value exists', function (): void {
-    CurrentConfig::setMobilTheme('mobile');
+    CurrentConfig::current()->setMobilTheme('mobile');
 
     // getDevice() itself defaults to "desktop" with an empty session.
     expect(DeviceHelper::mobileTheme())->toBeFalse();
@@ -55,7 +55,7 @@ test('mobileTheme falls back to getDevice() === "mobile" when no GET override or
 });
 
 test('mobileTheme returns an existing session value directly, without calling getDevice()', function (): void {
-    CurrentConfig::setMobilTheme('mobile');
+    CurrentConfig::current()->setMobilTheme('mobile');
     $_SESSION['pwg_mobile_theme'] = true;
 
     expect(DeviceHelper::mobileTheme())->toBeTrue();
@@ -64,7 +64,7 @@ test('mobileTheme returns an existing session value directly, without calling ge
 });
 
 test('mobileTheme honors a ?mobile= GET override, persisting it to the session', function (): void {
-    CurrentConfig::setMobilTheme('mobile');
+    CurrentConfig::current()->setMobilTheme('mobile');
 
     $_GET['mobile'] = '1';
     expect(DeviceHelper::mobileTheme())->toBeTrue();

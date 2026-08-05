@@ -64,7 +64,8 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),
             new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
-            new SessionService($this->em->getRepository(SessionEntity::class)),
+            new SessionService($this->em->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
+            \Piwigo\Config\CurrentConfig::current(),
         );
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);

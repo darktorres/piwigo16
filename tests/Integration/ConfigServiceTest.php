@@ -37,11 +37,15 @@ final class ConfigServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->service = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
+        $this->service = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), $currentConfig);
     }
 
     public function test_loadConfFromDb_merges_every_row_with_json_decoding(): void
@@ -51,9 +55,10 @@ final class ConfigServiceTest extends IntegrationTestCase
         // Real fixture rows: 'true' (a bare JSON bool literal) for
         // activate_comments, and a JSON-quoted string for both secret_key
         // and gallery_title.
-        self::assertTrue(CurrentConfig::activateComments());
-        self::assertNotSame('', CurrentConfig::secretKey());
-        self::assertSame('Fixture Gallery', CurrentConfig::galleryTitle());
+        $currentConfig = CurrentConfig::current();
+        self::assertTrue($currentConfig->activateComments());
+        self::assertNotSame('', $currentConfig->secretKey());
+        self::assertSame('Fixture Gallery', $currentConfig->galleryTitle());
     }
 
     public function test_loadConfFromDb_with_a_param_loads_only_that_row(): void
@@ -65,8 +70,9 @@ final class ConfigServiceTest extends IntegrationTestCase
         // fixture's actual DB value ('Fixture Gallery').
         $this->service->loadConfFromDb('secret_key');
 
-        self::assertNotSame('', CurrentConfig::secretKey());
-        self::assertSame('Piwigo', CurrentConfig::galleryTitle());
+        $currentConfig = CurrentConfig::current();
+        self::assertNotSame('', $currentConfig->secretKey());
+        self::assertSame('Piwigo', $currentConfig->galleryTitle());
     }
 
     public function test_loadConfFromDb_throws_when_param_not_found_and_dieIfNotFound_is_true(): void
@@ -107,7 +113,7 @@ final class ConfigServiceTest extends IntegrationTestCase
 
         // Prime the cache with the fixture's own value.
         $this->service->loadConfFromDb();
-        self::assertSame('Fixture Gallery', CurrentConfig::galleryTitle());
+        self::assertSame('Fixture Gallery', CurrentConfig::current()->galleryTitle());
 
         // Write directly through the repository, bypassing ConfigService's
         // own cache-clearing (and its encode() -- json_encode() the value
@@ -121,18 +127,26 @@ final class ConfigServiceTest extends IntegrationTestCase
         // A second bulk load still returns the stale cached snapshot --
         // proves allRowsFromCacheOrDb() is actually caching, not
         // re-querying every time.
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         $this->service->loadConfFromDb();
-        self::assertSame('Fixture Gallery', CurrentConfig::galleryTitle());
+        self::assertSame('Fixture Gallery', $currentConfig->galleryTitle());
 
         // A real ConfigService write clears the cache; the next bulk load
         // picks up the fresh value.
         $this->service->confUpdateParam('gallery_title', 'Fresh After Invalidation');
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         $this->service->loadConfFromDb();
-        self::assertSame('Fresh After Invalidation', CurrentConfig::galleryTitle());
+        self::assertSame('Fresh After Invalidation', $currentConfig->galleryTitle());
 
         // Restore the fixture's own value -- confUpdateParam() also clears
         // the cache again, so later tests in this file don't inherit
@@ -164,11 +178,12 @@ final class ConfigServiceTest extends IntegrationTestCase
         // it, no restore needed.
         $this->service->confUpdateParam('session_length', 9999);
         $this->service->loadConfFromDb('session_length');
-        self::assertSame(9999, CurrentConfig::sessionLength());
+        $currentConfig = CurrentConfig::current();
+        self::assertSame(9999, $currentConfig->sessionLength());
 
         $this->service->confDeleteParam('session_length');
 
-        self::assertSame(3600, CurrentConfig::sessionLength());
+        self::assertSame(3600, $currentConfig->sessionLength());
     }
 
     public function test_confUpdateParam_encodes_arrays_via_json(): void
@@ -224,13 +239,14 @@ final class ConfigServiceTest extends IntegrationTestCase
         // not just ConfigService's own generic bool-encoding mechanism
         // (already covered above).
         try {
+            $currentConfig = CurrentConfig::current();
             $this->service->confUpdateParam('gallery_locked', true);
             $this->service->loadConfFromDb('gallery_locked');
-            self::assertTrue(CurrentConfig::galleryLocked());
+            self::assertTrue($currentConfig->galleryLocked());
 
             $this->service->confUpdateParam('gallery_locked', false);
             $this->service->loadConfFromDb('gallery_locked');
-            self::assertFalse(CurrentConfig::galleryLocked());
+            self::assertFalse($currentConfig->galleryLocked());
         } finally {
             $this->service->confUpdateParam('gallery_locked', false);
         }
@@ -246,7 +262,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         try {
             $this->service->confUpdateParam('data_dir_checked', '1');
             $this->service->loadConfFromDb('data_dir_checked');
-            self::assertSame('1', CurrentConfig::dataDirChecked());
+            self::assertSame('1', CurrentConfig::current()->dataDirChecked());
         } finally {
             $this->service->confDeleteParam('data_dir_checked');
         }

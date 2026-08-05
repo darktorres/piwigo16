@@ -45,6 +45,7 @@ final class PopuphelpController implements ControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -76,7 +77,7 @@ final class PopuphelpController implements ControllerInterface
             'nofollow' => 1,
         ]);
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
 
         if (! is_string($rawPage) || ! (bool) preg_match('/^[a-z_]*$/', $rawPage)) {
             throw new ResponseReadyException(ResponseFactory::text('Hacking attempt!', 400));

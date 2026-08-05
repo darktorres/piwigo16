@@ -6,12 +6,12 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Csrf\CsrfService;
 
 beforeEach(function (): void {
-    CurrentConfig::setSecretKey('test-secret-key');
+    CurrentConfig::current()->setSecretKey('test-secret-key');
     unset($_REQUEST['pwg_token']);
 });
 
 afterEach(function (): void {
-    CurrentConfig::reset();
+    CurrentConfig::current()->reset();
 });
 
 // getToken()'s `session_id() === false` guard is preserved from the
@@ -40,7 +40,7 @@ test('getToken is stable for the same session id and secret key', function (): v
 // SEC-27/SEC-28 fix.
 test('getToken uses sha256, not md5', function (): void {
     session_id('fixed-test-session-id');
-    CurrentConfig::setSecretKey('test-secret-key');
+    CurrentConfig::current()->setSecretKey('test-secret-key');
 
     $expected = hash_hmac('sha256', 'fixed-test-session-id', 'test-secret-key');
 
@@ -52,7 +52,7 @@ test('getToken changes when the secret key changes', function (): void {
     $service = new CsrfService();
     $first = $service->getToken();
 
-    CurrentConfig::setSecretKey('a-different-secret');
+    CurrentConfig::current()->setSecretKey('a-different-secret');
 
     expect($service->getToken())->not->toBe($first);
 });

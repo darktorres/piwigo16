@@ -31,14 +31,15 @@ final class LocalSiteReader
 
     public function __construct(
         public string $site_url,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly ?MetadataService $metadataService = null,
     ) {
         // Legacy Coupling Retirement Track A batch A4: was memoized on the
         // $conf global (flip_file_ext/flip_picture_ext never DB-persist --
         // pure per-instance derived state), now a private property computed
         // once per instance instead.
-        $this->flip_file_ext = array_flip(\Piwigo\Config\CurrentConfig::fileExtensions());
-        $this->flip_picture_ext = array_flip(\Piwigo\Config\CurrentConfig::pictureExtensions());
+        $this->flip_file_ext = array_flip($this->currentConfig->fileExtensions());
+        $this->flip_picture_ext = array_flip($this->currentConfig->pictureExtensions());
     }
 
     /**
@@ -49,7 +50,7 @@ final class LocalSiteReader
     private function metadataService(): MetadataService
     {
         return $this->metadataService
-            ?? new MetadataService(\Piwigo\Core\Lang::current(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), new \Piwigo\Core\CurrentLogger(), \Piwigo\PluginConfig\EventDispatcher::get());
+            ?? new MetadataService(\Piwigo\Core\Lang::current(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), new \Piwigo\Core\CurrentLogger(), \Piwigo\PluginConfig\EventDispatcher::get(), $this->currentConfig);
     }
 
     /**
@@ -109,7 +110,7 @@ final class LocalSiteReader
                             'representative_ext' => $representative_ext,
                         ];
 
-                        if (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
+                        if ($this->currentConfig->isFormatsEnabled()) {
                             $fs[$path . '/' . $node]['formats'] = $this->get_formats($path, $filename_wo_ext);
                         }
                     }
@@ -192,7 +193,7 @@ final class LocalSiteReader
     public function get_representative_ext(string $path, string $filename_wo_ext): ?string
     {
         $base_test = $path . '/pwg_representative/' . $filename_wo_ext . '.';
-        foreach (\Piwigo\Config\CurrentConfig::pictureExtensions() as $ext) {
+        foreach ($this->currentConfig->pictureExtensions() as $ext) {
             $test = $base_test . $ext;
             if (is_file($test)) {
                 return $ext;
@@ -210,7 +211,7 @@ final class LocalSiteReader
 
         $base_test = $path . '/pwg_format/' . $filename_wo_ext . '.';
 
-        foreach (\Piwigo\Config\CurrentConfig::formatExtensions() as $ext) {
+        foreach ($this->currentConfig->formatExtensions() as $ext) {
             $test = $base_test . $ext;
 
             if (is_file($test)) {

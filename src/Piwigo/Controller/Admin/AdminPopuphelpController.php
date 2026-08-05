@@ -49,6 +49,7 @@ final class AdminPopuphelpController implements ControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -86,7 +87,7 @@ final class AdminPopuphelpController implements ControllerInterface
             );
 
             new \Piwigo\Page\PageHeaderRenderer()
-                ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
+                ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         }
 
         if (! is_string($rawPage) || ! (bool) preg_match('/^[a-z_]*$/', $rawPage)) {

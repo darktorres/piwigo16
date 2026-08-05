@@ -63,7 +63,11 @@ final class PluginLoaderTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
@@ -140,9 +144,9 @@ final class PluginLoaderTest extends IntegrationTestCase
 
     public function test_load_plugins_stays_empty_and_skips_the_db_query_when_plugins_are_disabled(): void
     {
-        CurrentConfig::setEnablePlugins(false);
+        CurrentConfig::current()->setEnablePlugins(false);
 
-        PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService);
+        PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService, CurrentConfig::current());
 
         expect($this->loadedPlugins->get())->toBe([]);
     }
@@ -151,14 +155,14 @@ final class PluginLoaderTest extends IntegrationTestCase
     {
         $root = $this->pluginLoaderTestMarker() . '/no-file/';
         mkdir($root . 'plugins', 0o777, true);
-        CurrentConfig::setEnablePlugins(true);
+        CurrentConfig::current()->setEnablePlugins(true);
 
         DbConnection::build()->executeStatement(
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES ('ghost-plugin', 'active', '1.0')"
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService);
+            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService, CurrentConfig::current());
 
             expect($this->loadedPlugins->get())->toBe([]);
         });
@@ -174,14 +178,14 @@ final class PluginLoaderTest extends IntegrationTestCase
             $pluginDir . '/main.inc.php',
             "<?php file_put_contents(" . var_export($marker, true) . ", 'loaded');"
         );
-        CurrentConfig::setEnablePlugins(true);
+        CurrentConfig::current()->setEnablePlugins(true);
 
         DbConnection::build()->executeStatement(
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES ('loadable-plugin', 'active', '1.0')"
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($marker): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService);
+            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService, CurrentConfig::current());
 
             expect($this->loadedPlugins->get())->toHaveKey('loadable-plugin');
             expect($this->loadedPlugins->get()['loadable-plugin']['version'])->toBe('1.0');
@@ -195,14 +199,14 @@ final class PluginLoaderTest extends IntegrationTestCase
         $pluginDir = $root . 'plugins/inactive-plugin';
         mkdir($pluginDir, 0o777, true);
         file_put_contents($pluginDir . '/main.inc.php', '<?php');
-        CurrentConfig::setEnablePlugins(true);
+        CurrentConfig::current()->setEnablePlugins(true);
 
         DbConnection::build()->executeStatement(
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES ('inactive-plugin', 'inactive', '1.0')"
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService);
+            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService, CurrentConfig::current());
 
             expect($this->loadedPlugins->get())->toBe([]);
         });
@@ -225,7 +229,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         $errors[] = "updated from {$old_version} to {$new_version}";
     }
 PHP);
-        CurrentConfig::setEnablePlugins(true);
+        CurrentConfig::current()->setEnablePlugins(true);
 
         DbConnection::build()->executeStatement(
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', '1.0')",
@@ -233,7 +237,7 @@ PHP);
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($id): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService);
+            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService, CurrentConfig::current());
 
             expect(PageState::current()->errors)->toBe(['updated from 1.0 to 2.0']);
             expect($this->loadedPlugins->get()[$id]['version'])->toBe('2.0');
@@ -282,7 +286,7 @@ PHP);
         $this->writeVersionedPluginMainFile($root, $id, '2.0');
         $this->writePluginMaintainClass($root, $id, extendsBase: false);
         $classname = str_replace('-', '_', $id . '_maintain');
-        CurrentConfig::setEnablePlugins(true);
+        CurrentConfig::current()->setEnablePlugins(true);
 
         DbConnection::build()->executeStatement(
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', '1.0')",
@@ -293,7 +297,7 @@ PHP);
         $this->expectExceptionMessage("PluginLoader::autoupdatePlugin(): {$classname} does not extend PluginMaintain");
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService);
+            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService, CurrentConfig::current());
         });
     }
 
@@ -310,7 +314,7 @@ PHP);
         $id = 'pl-autoauto-' . bin2hex(random_bytes(4));
         $root = $this->pluginLoaderTestMarker() . '/autoupdate-auto-to-auto/';
         $this->writeVersionedPluginMainFile($root, $id, 'auto');
-        CurrentConfig::setEnablePlugins(true);
+        CurrentConfig::current()->setEnablePlugins(true);
 
         DbConnection::build()->executeStatement(
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', 'auto')",
@@ -318,7 +322,7 @@ PHP);
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($id): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService);
+            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService, CurrentConfig::current());
 
             $storedVersion = DbConnection::build()->fetchOne(
                 'SELECT version FROM ' . Tables::plugins() . ' WHERE id = ?',

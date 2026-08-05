@@ -144,6 +144,7 @@ final class MailService implements MailerInterface
                 \Piwigo\PluginConfig\EventDispatcher::get(),
                 \Piwigo\Core\PageState::current(),
                 \Piwigo\Users\CurrentUser::current(),
+                \Piwigo\Config\CurrentConfig::current(),
             );
     }
 
@@ -199,6 +200,7 @@ final class MailService implements MailerInterface
             \Piwigo\PluginConfig\EventDispatcher::get(),
             \Piwigo\Config\DeploymentPolicy::current(),
             \Piwigo\Users\CurrentUser::current(),
+            \Piwigo\Config\CurrentConfig::current(),
         );
     }
 
@@ -244,24 +246,24 @@ final class MailService implements MailerInterface
      */
     private static function userFields(): array
     {
-        return \Piwigo\Config\CurrentConfig::userFields();
+        return \Piwigo\Config\CurrentConfig::current()->userFields();
     }
 
     public function getMailSenderName(): string
     {
-        $senderName = \Piwigo\Config\CurrentConfig::mailSenderName();
+        $senderName = \Piwigo\Config\CurrentConfig::current()->mailSenderName();
         if ($senderName !== '') {
             return $senderName;
         }
 
-        $galleryTitle = \Piwigo\Config\CurrentConfig::galleryTitle();
+        $galleryTitle = \Piwigo\Config\CurrentConfig::current()->galleryTitle();
 
         return $galleryTitle;
     }
 
     public function getMailSenderEmail(): string
     {
-        $senderEmail = \Piwigo\Config\CurrentConfig::mailSenderEmail();
+        $senderEmail = \Piwigo\Config\CurrentConfig::current()->mailSenderEmail();
         if ($senderEmail !== '') {
             return $senderEmail;
         }
@@ -274,17 +276,17 @@ final class MailService implements MailerInterface
      */
     public function getMailConfiguration(): array
     {
-        $smtpHost = \Piwigo\Config\CurrentConfig::smtpHost();
+        $smtpHost = \Piwigo\Config\CurrentConfig::current()->smtpHost();
 
         return [
-            'send_bcc_mail_webmaster' => \Piwigo\Config\CurrentConfig::sendBccMailWebmaster(),
-            'mail_allow_html' => \Piwigo\Config\CurrentConfig::mailAllowHtml(),
-            'mail_theme' => \Piwigo\Config\CurrentConfig::mailTheme(),
+            'send_bcc_mail_webmaster' => \Piwigo\Config\CurrentConfig::current()->sendBccMailWebmaster(),
+            'mail_allow_html' => \Piwigo\Config\CurrentConfig::current()->mailAllowHtml(),
+            'mail_theme' => \Piwigo\Config\CurrentConfig::current()->mailTheme(),
             'use_smtp' => $smtpHost !== '',
             'smtp_host' => $smtpHost,
-            'smtp_user' => \Piwigo\Config\CurrentConfig::smtpUser(),
-            'smtp_password' => \Piwigo\Config\CurrentConfig::smtpPassword(),
-            'smtp_secure' => is_string(\Piwigo\Config\CurrentConfig::smtpSecure() ?? null) ? \Piwigo\Config\CurrentConfig::smtpSecure() : null,
+            'smtp_user' => \Piwigo\Config\CurrentConfig::current()->smtpUser(),
+            'smtp_password' => \Piwigo\Config\CurrentConfig::current()->smtpPassword(),
+            'smtp_secure' => is_string(\Piwigo\Config\CurrentConfig::current()->smtpSecure() ?? null) ? \Piwigo\Config\CurrentConfig::current()->smtpSecure() : null,
             'email_webmaster' => $this->getMailSenderEmail(),
             'name_webmaster' => $this->getMailSenderName(),
         ];
@@ -571,7 +573,7 @@ final class MailService implements MailerInterface
             ];
         }
 
-        $galleryTitle = \Piwigo\Config\CurrentConfig::galleryTitle();
+        $galleryTitle = \Piwigo\Config\CurrentConfig::current()->galleryTitle();
 
         return $this->mailAdmins(
             [
@@ -827,7 +829,7 @@ final class MailService implements MailerInterface
             }
         }
         if (! isset($args['mail_title'])) {
-            $args['mail_title'] = \Piwigo\Config\CurrentConfig::galleryTitle();
+            $args['mail_title'] = \Piwigo\Config\CurrentConfig::current()->galleryTitle();
         }
         if (! isset($args['mail_subtitle'])) {
             $args['mail_subtitle'] = $args['subject'];
@@ -887,8 +889,8 @@ final class MailService implements MailerInterface
                     [
                         'GALLERY_URL' => $this->urlService()
                             ->addUrlParams($galleryHomeUrl, $addUrlParams),
-                        'GALLERY_TITLE' => \Piwigo\Config\CurrentConfig::galleryTitle(),
-                        'VERSION' => \Piwigo\Config\CurrentConfig::showVersion() ? AppInfo::VERSION : '',
+                        'GALLERY_TITLE' => \Piwigo\Config\CurrentConfig::current()->galleryTitle(),
+                        'VERSION' => \Piwigo\Config\CurrentConfig::current()->showVersion() ? AppInfo::VERSION : '',
                         'PHPWG_URL' => AppInfo::URL,
                         'CONTENT_ENCODING' => \Piwigo\Core\CharsetHelper::getPwgCharset(),
                         'CONTACT_MAIL' => $confMail['email_webmaster'],
@@ -1023,7 +1025,7 @@ final class MailService implements MailerInterface
             if (! $ret && (! (bool) ini_get('display_errors') || \Piwigo\Auth\AccessControl::current()->isAdmin())) {
                 trigger_error('Mailer Error: ' . $errorMessage, \E_USER_WARNING);
             }
-            if (\Piwigo\Config\CurrentConfig::debugMail()) {
+            if (\Piwigo\Config\CurrentConfig::current()->debugMail()) {
                 $this->sendMailTest($ret, $email, $args, $errorMessage);
             }
         }
@@ -1086,7 +1088,7 @@ final class MailService implements MailerInterface
      */
     public function sendMailTest(bool $success, Email $mail, array $args, ?string $errorMessage = null): void
     {
-        $dataLocation = \Piwigo\Config\CurrentConfig::dataLocation();
+        $dataLocation = \Piwigo\Config\CurrentConfig::current()->dataLocation();
 
         $dir = CurrentPaths::get()->root . $dataLocation . 'tmp';
         if (\Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
@@ -1190,7 +1192,7 @@ final class MailService implements MailerInterface
         $this->urlService()
             ->unsetMakeFullUrl();
 
-        $galleryTitle = \Piwigo\Config\CurrentConfig::galleryTitle();
+        $galleryTitle = \Piwigo\Config\CurrentConfig::current()->galleryTitle();
 
         return [
             'subject' => '[' . $galleryTitle . '] ' . Lang::current()->t('Your verification code'),
@@ -1229,7 +1231,7 @@ final class MailService implements MailerInterface
         $this->urlService()
             ->unsetMakeFullUrl();
 
-        $galleryTitle = \Piwigo\Config\CurrentConfig::galleryTitle();
+        $galleryTitle = \Piwigo\Config\CurrentConfig::current()->galleryTitle();
 
         return [
             'subject' => '[' . $galleryTitle . '] ' . Lang::current()->t('Your password has been reset'),

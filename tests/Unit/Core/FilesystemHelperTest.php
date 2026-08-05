@@ -147,12 +147,12 @@ function filesystemHelperTestMakeFatalRenderer(\stdClass $capture): HtmlRenderin
 beforeEach(function (): void {
     $this->root = sys_get_temp_dir() . '/piwigo-filesystemhelper-test-' . bin2hex(random_bytes(8));
     mkdir($this->root, 0o777, true);
-    CurrentConfig::reset();
+    CurrentConfig::current()->reset();
 });
 
 afterEach(function (): void {
     filesystemHelperTestRrmdir(is_string($this->root) ? $this->root : '');
-    CurrentConfig::reset();
+    CurrentConfig::current()->reset();
 });
 
 test('mkgetdir applies the requested mode exactly, via a real umask(0) during creation', function (): void {
@@ -160,7 +160,7 @@ test('mkgetdir applies the requested mode exactly, via a real umask(0) during cr
     // non-zero process umask strips bits from the requested mode during
     // mkdir() -- a chmod value with every bit set is the only way to
     // observe ANY stripped bit, regardless of which specific one.
-    CurrentConfig::setChmodValue(0o777);
+    CurrentConfig::current()->setChmodValue(0o777);
     $dir = $this->root . '/full-perms';
 
     FilesystemHelper::mkgetdir($dir);
@@ -287,7 +287,7 @@ test('mkgetdir delegates the fatal message to the installed HtmlRenderingInterfa
 });
 
 test('mkgetdir returns false when a freshly-created directory ends up non-writable and MKGETDIR_DIE_ON_ERROR is not set', function (): void {
-    CurrentConfig::setChmodValue(0o500);
+    CurrentConfig::current()->setChmodValue(0o500);
     $dir = $this->root . '/read-only-new';
 
     $result = FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_RECURSIVE);

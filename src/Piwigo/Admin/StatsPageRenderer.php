@@ -35,7 +35,7 @@ final class StatsPageRenderer
      * shared 'history' tabsheet group (see HistoryPageRenderer, its
      * sibling in that same group).
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\History\HistoryService $historyService): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\History\HistoryService $historyService): void
     {
         $template = $currentTemplate->get();
 
@@ -124,7 +124,7 @@ final class StatsPageRenderer
         // CurrentConfig::statCompareYearDisplayed() is SCHEMA-typed 'int' only (no
         // 'all' sentinel) -- getMonthOfLastYears()'s own 'all' default is
         // unreachable from this call site, not dead code to resurrect here.
-        $stat_compare_year_displayed = \Piwigo\Config\CurrentConfig::statCompareYearDisplayed();
+        $stat_compare_year_displayed = $currentConfig->statCompareYearDisplayed();
 
         $template->assign([
             'compareYears' => self::getMonthOfLastYears($historyService, $stat_compare_year_displayed),

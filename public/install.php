@@ -68,7 +68,7 @@ $dbCredentials->seed([
 \Piwigo\Bootstrap\SessionBootstrap::register();
 
 // ---------------------------------------------------------------- orchestration
-$wizard = new InstallWizard(\Piwigo\Bootstrap\RequestBootstrap::lang(), $prefixeTable, $paths, $dbCredentials, \Piwigo\Config\CurrentConfigService::current());
+$wizard = new InstallWizard(\Piwigo\Bootstrap\RequestBootstrap::lang(), $prefixeTable, $paths, $dbCredentials, \Piwigo\Config\CurrentConfigService::current(), \Piwigo\Bootstrap\RequestBootstrap::currentConfig());
 
 // Found live while verifying Part II's public/ relocation, unrelated to the
 // move itself: InstallWizard::boot()'s own "PHP extension mysqli is not

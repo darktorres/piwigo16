@@ -155,9 +155,9 @@ final class PwgCore
 
         $uid = '&b=' . time();
 
-        \Piwigo\Config\CurrentConfig::setQuestionMarkInUrls(true);
-        \Piwigo\Config\CurrentConfig::setPhpExtensionInUrls(true);
-        \Piwigo\Config\CurrentConfig::setDerivativeUrlStyle(2); // script
+        \Piwigo\Config\CurrentConfig::current()->setQuestionMarkInUrls(true);
+        \Piwigo\Config\CurrentConfig::current()->setPhpExtensionInUrls(true);
+        \Piwigo\Config\CurrentConfig::current()->setDerivativeUrlStyle(2); // script
 
         $qlimit = (int) min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
         $filterCondition = WsHelper::stdImageSqlFilter($params, $service, '');
@@ -184,7 +184,7 @@ final class PwgCore
                 }
 
                 foreach ($types as $type) {
-                    $derivative = new DerivativeImage($type, $src_image);
+                    $derivative = new DerivativeImage($type, $src_image, \Piwigo\Config\CurrentConfig::current());
                     if ($type !== $derivative->get_type()) {
                         continue;
                     }
@@ -283,7 +283,7 @@ final class PwgCore
      */
     public static function getCacheSize(array $params, PwgServer &$service): array
     {
-        $data_location = \Piwigo\Config\CurrentConfig::dataLocation();
+        $data_location = \Piwigo\Config\CurrentConfig::current()->dataLocation();
         // Real bug fix, not just a straight port: $data_location ('_data/')
         // is a path relative to the install root, not to whatever the PHP
         // process's CWD happens to be -- every other real call site of
@@ -518,7 +518,7 @@ final class PwgCore
         }
 
         if (\Piwigo\Auth\AccessControl::current()->isAdmin()) {
-            $upload_ext_list = (\Piwigo\Config\CurrentConfig::uploadFormAllTypes()) ? \Piwigo\Config\CurrentConfig::fileExtensions() : \Piwigo\Config\CurrentConfig::pictureExtensions();
+            $upload_ext_list = (\Piwigo\Config\CurrentConfig::current()->uploadFormAllTypes()) ? \Piwigo\Config\CurrentConfig::current()->fileExtensions() : \Piwigo\Config\CurrentConfig::current()->pictureExtensions();
 
             $res['upload_file_types'] = implode(
                 ',',
@@ -530,7 +530,7 @@ final class PwgCore
                 )
             );
 
-            $chunk_size = \Piwigo\Config\CurrentConfig::uploadFormChunkSize();
+            $chunk_size = \Piwigo\Config\CurrentConfig::current()->uploadFormChunkSize();
             $res['upload_form_chunk_size'] = $chunk_size;
         }
 
@@ -656,9 +656,9 @@ final class PwgCore
             ]);
         }
 
-        if (\Piwigo\Config\CurrentConfig::activityDisplayConnections() === 'none') {
+        if (\Piwigo\Config\CurrentConfig::current()->activityDisplayConnections() === 'none') {
             $conditions[] = new SqlCondition("action NOT IN ('login', 'logout')");
-        } elseif (\Piwigo\Config\CurrentConfig::activityDisplayConnections() === 'admins_only') {
+        } elseif (\Piwigo\Config\CurrentConfig::current()->activityDisplayConnections() === 'admins_only') {
             $admin_ids = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class)->findAdminIds();
             $conditions[] = new SqlCondition(
                 "NOT (action IN ('login', 'logout') AND object_id NOT IN (:adminIds))",
@@ -1173,7 +1173,7 @@ final class PwgCore
 
         $page_start = $page['start'];
 
-        $nb_logs_page = \Piwigo\Config\CurrentConfig::nbLogsPage();
+        $nb_logs_page = \Piwigo\Config\CurrentConfig::current()->nbLogsPage();
 
         $i = 0;
         $first_line = $page_start + 1;
@@ -1226,7 +1226,7 @@ final class PwgCore
                 $summary['total_filesize'] = $running_total_filesize + (is_scalar($filesize_value) ? intval($filesize_value) : 0);
             }
 
-            if (is_numeric($line_user_id) and (int) $line_user_id === \Piwigo\Config\CurrentConfig::guestId()) {
+            if (is_numeric($line_user_id) and (int) $line_user_id === \Piwigo\Config\CurrentConfig::current()->guestId()) {
                 $ip_key = $line_ip ?? '';
                 // 'guests_IP' is only ever set to array by this same loop
                 // (initialized to [] above, then always reassigned as array below).
@@ -1405,8 +1405,8 @@ final class PwgCore
 
             // we delete the "guest" from the $username_of hash so that it is
             // avoided in next steps
-            // CurrentConfig::guestId() is SCHEMA-typed 'int' only.
-            $guest_id_key = (string) \Piwigo\Config\CurrentConfig::guestId();
+            // CurrentConfig::current()->guestId() is SCHEMA-typed 'int' only.
+            $guest_id_key = (string) \Piwigo\Config\CurrentConfig::current()->guestId();
             $username_of = array_diff_key($username_of, [
                 $guest_id_key => true,
             ]);

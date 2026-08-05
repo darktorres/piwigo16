@@ -48,6 +48,7 @@ final class RegisterController implements ControllerInterface
         private readonly \Piwigo\Audit\AuditService $auditService,
         private readonly \Piwigo\Auth\AuthService $authService,
         private readonly \Piwigo\Html\HtmlService $htmlService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -74,7 +75,7 @@ final class RegisterController implements ControllerInterface
 
         $this->accessControl->checkStatus(AccessLevel::Free);
 
-        if (! \Piwigo\Config\CurrentConfig::allowUserRegistration()) {
+        if (! $this->currentConfig->allowUserRegistration()) {
             $this->htmlService
                 ->pageForbidden($this->redirectService, 'User registration closed');
         }
@@ -84,7 +85,7 @@ final class RegisterController implements ControllerInterface
         $registerSubmit = Request\RegisterSubmitRequest::fromGlobals();
 
         if ($registerSubmit->isSubmitted) {
-            if (! new \Piwigo\Auth\EphemeralKeyService()->verify($registerSubmit->key)) {
+            if (! new \Piwigo\Auth\EphemeralKeyService($this->currentConfig)->verify($registerSubmit->key)) {
                 $status = 403;
                 $errors['register_page_error'] = $this->lang->t('Invalid/expired form key');
             }
@@ -187,10 +188,10 @@ final class RegisterController implements ControllerInterface
                     $this->redirectService->redirect($this->urlService->makeIndexUrl());
                 }
             }
-            $registration_post_key = new \Piwigo\Auth\EphemeralKeyService()
+            $registration_post_key = new \Piwigo\Auth\EphemeralKeyService($this->currentConfig)
                 ->generate(2);
         } else {
-            $registration_post_key = new \Piwigo\Auth\EphemeralKeyService()
+            $registration_post_key = new \Piwigo\Auth\EphemeralKeyService($this->currentConfig)
                 ->generate(6);
         }
 
@@ -217,14 +218,14 @@ final class RegisterController implements ControllerInterface
             'F_ACTION' => 'register.php',
             'F_LOGIN' => $login,
             'F_EMAIL' => $email,
-            'obligatory_user_mail_address' => \Piwigo\Config\CurrentConfig::obligatoryUserMailAddress(),
+            'obligatory_user_mail_address' => $this->currentConfig->obligatoryUserMailAddress(),
         ]);
 
         $themeconf = $template->get_template_vars('themeconf');
         $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
         if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig);
         }
 
         // Load language if cookie is set from login/register/password
@@ -266,7 +267,7 @@ final class RegisterController implements ControllerInterface
         $template->assign('HELP_LINK', $help_link);
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatchNotify(new LocEndRegister());
         $this->htmlService
             ->flushPageMessages();

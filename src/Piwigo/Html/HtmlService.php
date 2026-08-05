@@ -114,7 +114,7 @@ final class HtmlService implements HtmlRenderingInterface
     #[\Override]
     public function getCatDisplayName(array $catInformations, ?string $url = ''): string
     {
-        $level_separator = \Piwigo\Config\CurrentConfig::levelSeparator();
+        $level_separator = \Piwigo\Config\CurrentConfig::current()->levelSeparator();
 
         $output = '';
         $is_first = true;
@@ -162,7 +162,7 @@ final class HtmlService implements HtmlRenderingInterface
         ?string $linkClass = null,
         ?string $authKey = null,
     ): string {
-        $level_separator = \Piwigo\Config\CurrentConfig::levelSeparator();
+        $level_separator = \Piwigo\Config\CurrentConfig::current()->levelSeparator();
 
         $add_url_params = [];
         if (isset($authKey)) {
@@ -259,7 +259,8 @@ final class HtmlService implements HtmlRenderingInterface
                 new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)),
                 \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class),
                 \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class)
-            )
+            ),
+            \Piwigo\Config\CurrentConfig::current()
         )->getCategoryInfo($catId);
         // $catId isn't existence-validated by callers (WS/URL param) -- a
         // stale/forged id falls back to an empty breadcrumb.
@@ -749,7 +750,7 @@ final class HtmlService implements HtmlRenderingInterface
             $details[] = Lang::current()->t('%d visits', $info['hit']);
         }
 
-        if (\Piwigo\Config\CurrentConfig::rateEnabled() and isset($info['rating_score']) && is_numeric($info['rating_score']) && (float) $info['rating_score'] !== 0.0) {
+        if (\Piwigo\Config\CurrentConfig::current()->rateEnabled() and isset($info['rating_score']) && is_numeric($info['rating_score']) && (float) $info['rating_score'] !== 0.0) {
             $details[] = Lang::current()->t('rating score %s', $info['rating_score']);
         }
 
@@ -793,10 +794,10 @@ final class HtmlService implements HtmlRenderingInterface
     public function getElementUrlProtectionHandler(GetElementUrl $event): GetElementUrl
     {
         $infos = $event->elementInfo;
-        if (\Piwigo\Config\CurrentConfig::originalUrlProtection() === 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
+        if (\Piwigo\Config\CurrentConfig::current()->originalUrlProtection() === 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
             $path = $infos['path'] ?? null;
             $ext = \Piwigo\Core\StringHelper::getExtension(is_string($path) ? $path : null);
-            $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
+            $picture_ext = \Piwigo\Config\CurrentConfig::current()->pictureExtensions();
             if (! in_array($ext, $picture_ext, true)) {
                 return $event;
             }

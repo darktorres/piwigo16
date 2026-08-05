@@ -52,6 +52,7 @@ final readonly class PageTailRenderer
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Core\PageState $pageState,
         private \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     public function render(float $startTime): void
@@ -88,7 +89,7 @@ final readonly class PageTailRenderer
 
         $template->assign(
             [
-                'VERSION' => \Piwigo\Config\CurrentConfig::showVersion() ? AppInfo::VERSION : '',
+                'VERSION' => $this->currentConfig->showVersion() ? AppInfo::VERSION : '',
                 'PHPWG_URL' => AppInfo::URL,
                 // web-vitals RUM beacon (docs/PLAN.md P1, item 11b) --
                 // fixed, non-hashed filename (vite.config.ts), so no
@@ -111,13 +112,13 @@ final readonly class PageTailRenderer
         // ------------------------------------------------------------- generation time
         $debug_vars = [];
 
-        if (\Piwigo\Config\CurrentConfig::showQueries()) {
+        if ($this->currentConfig->showQueries()) {
             $debug_vars = array_merge($debug_vars, [
                 'QUERIES_LIST' => $this->pageState->debugOutput,
             ]);
         }
 
-        if (\Piwigo\Config\CurrentConfig::showGt()) {
+        if ($this->currentConfig->showGt()) {
             $count_queries = $this->pageState->countQueries;
             $queries_time = $this->pageState->queriesTime;
 
@@ -136,7 +137,7 @@ final readonly class PageTailRenderer
         $template->assign('debug', $debug_vars);
 
         // ------------------------------------------------------------- mobile version
-        if (! self::emptyValue(\Piwigo\Config\CurrentConfig::mobilTheme()) && (\Piwigo\Core\DeviceHelper::getDevice() !== 'desktop' || \Piwigo\Core\DeviceHelper::mobileTheme())) {
+        if (! self::emptyValue($this->currentConfig->mobilTheme()) && (\Piwigo\Core\DeviceHelper::getDevice() !== 'desktop' || \Piwigo\Core\DeviceHelper::mobileTheme())) {
             $request_uri = $_SERVER['REQUEST_URI'] ?? '';
             $template->assign(
                 'TOGGLE_MOBILE_THEME_URL',

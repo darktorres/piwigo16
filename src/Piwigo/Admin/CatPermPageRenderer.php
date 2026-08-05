@@ -32,6 +32,7 @@ final class CatPermPageRenderer
         private readonly \Piwigo\Group\GroupService $groupService,
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Html\HtmlService $htmlService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -135,7 +136,7 @@ final class CatPermPageRenderer
         // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific column
         // names (see include/config_default.inc.php); every value is a plain
         // string.
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = $this->currentConfig->userFields();
         $user_field_id = $user_fields['id'];
         $user_field_username = $user_fields['username'];
 
@@ -208,7 +209,7 @@ final class CatPermPageRenderer
         $template->assign([
             'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                 ->getToken(),
-            'INHERIT' => \Piwigo\Config\CurrentConfig::inheritanceByDefault(),
+            'INHERIT' => $this->currentConfig->inheritanceByDefault(),
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
         ]);
 

@@ -13,6 +13,7 @@ final class SessionService
 {
     public function __construct(
         private readonly SessionRepository $repo,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -42,7 +43,7 @@ final class SessionService
             return $sessionService;
         }
 
-        return new self(EntityManagerFactory::build()->getRepository(SessionEntity::class));
+        return new self(EntityManagerFactory::build()->getRepository(SessionEntity::class), new CurrentConfig());
     }
 
     /**
@@ -84,7 +85,7 @@ final class SessionService
      */
     public function getRemoteAddrSessionHash(): string
     {
-        return self::remoteAddrHash(CurrentConfig::sessionUseIpAddress());
+        return self::remoteAddrHash($this->currentConfig->sessionUseIpAddress());
     }
 
     /**
@@ -172,7 +173,7 @@ final class SessionService
      */
     public function sessionGc(): int
     {
-        return $this->repo->gc(CurrentConfig::sessionLength());
+        return $this->repo->gc($this->currentConfig->sessionLength());
     }
 
     /**

@@ -25,6 +25,7 @@ final class PictureCoiPageRenderer
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void
@@ -61,17 +62,17 @@ final class PictureCoiPageRenderer
 
             foreach ($this->imageStdParams->get_defined_type_map() as $params) {
                 if ($params->sizing->max_crop !== 0.0) {
-                    new DerivativeCacheService()
+                    new DerivativeCacheService($this->currentConfig)
                         ->deleteElementDerivatives($derivative_infos, $params->type);
                 }
             }
-            new DerivativeCacheService()
+            new DerivativeCacheService($this->currentConfig)
                 ->deleteElementDerivatives($derivative_infos, ImageStdParams::CUSTOM);
             $uid = '&b=' . time();
-            \Piwigo\Config\CurrentConfig::setQuestionMarkInUrls(true);
-            \Piwigo\Config\CurrentConfig::setPhpExtensionInUrls(true);
-            if (\Piwigo\Config\CurrentConfig::derivativeUrlStyle() === 1) {
-                \Piwigo\Config\CurrentConfig::setDerivativeUrlStyle(0); // auto
+            $this->currentConfig->setQuestionMarkInUrls(true);
+            $this->currentConfig->setPhpExtensionInUrls(true);
+            if ($this->currentConfig->derivativeUrlStyle() === 1) {
+                $this->currentConfig->setDerivativeUrlStyle(0); // auto
             }
         } else {
             $uid = '';
@@ -96,7 +97,7 @@ final class PictureCoiPageRenderer
 
         foreach ($this->imageStdParams->get_defined_type_map() as $params) {
             if ($params->sizing->max_crop !== 0.0) {
-                $derivative = new DerivativeImage($params, new SrcImage($row));
+                $derivative = new DerivativeImage($params, new SrcImage($row), $this->currentConfig);
                 $template->append('cropped_derivatives', [
                     'U_IMG' => $derivative->get_url() . $uid,
                     'HTM_SIZE' => $derivative->get_size_htm(),

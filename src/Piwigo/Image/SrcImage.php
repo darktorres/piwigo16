@@ -70,6 +70,29 @@ final class SrcImage
         return $urlService;
     }
 
+    /**
+     * Singleton/service-locator elimination campaign, Phase 9: same
+     * "~20 real raw `new SrcImage($infos)` construction sites, no DI
+     * involved" constraint as the other collaborator methods above rules
+     * out real constructor injection for CurrentConfig too -- resolves
+     * fresh from the container on every call, same as urlService()/
+     * imageRepository() rather than through the `CurrentConfig::current()`
+     * transitional bridge (that shim is Phase-10-locked to the Ws/Pwg*.php
+     * dispatch layer -- see its own arch-test allow-list).
+     */
+    private static function currentConfig(): \Piwigo\Config\CurrentConfig
+    {
+        if (! Kernel::isBooted()) {
+            throw new \RuntimeException('SrcImage: no CurrentConfig set (RequestBootstrap not run yet?)');
+        }
+        $currentConfig = Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \RuntimeException('SrcImage: no CurrentConfig set (RequestBootstrap not run yet?)');
+        }
+
+        return $currentConfig;
+    }
+
     public const int IS_ORIGINAL = 0x01;
 
     public const int IS_MIMETYPE = 0x02;
@@ -131,7 +154,7 @@ final class SrcImage
         $representative_ext_raw = $infos['representative_ext'] ?? null;
         $representative_ext = is_string($representative_ext_raw) ? $representative_ext_raw : '';
         // \Piwigo\Config\CurrentConfig::pictureExtensions() is always a string[] set by config_default.inc.php.
-        $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
+        $picture_ext = self::currentConfig()->pictureExtensions();
         if (in_array($ext, $picture_ext, true)) {
             $this->rel_path = $path;
             $this->flags |= self::IS_ORIGINAL;

@@ -57,8 +57,8 @@ function makePictureCommentTestTemplate(): Template
     $root = sys_get_temp_dir() . '/piwigo-picture-comment-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::setDataLocation('data/');
-    CurrentConfig::setDataDirChecked('1');
+    CurrentConfig::current()->setDataLocation('data/');
+    CurrentConfig::current()->setDataDirChecked('1');
 
     return new Template();
 }
@@ -90,7 +90,7 @@ afterEach(function (): void {
     CurrentTemplate::current()->reset();
     Kernel::reset();
     CurrentUser::current()->reset();
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     unset($_POST['content'], $_POST['author'], $_POST['website_url'], $_POST['email'], $_POST['key']);
 });
 
@@ -110,7 +110,7 @@ test('render does nothing when no related category is commentable', function ():
     $renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
         ['commentable' => false],
         ['commentable' => 0],
-    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService());
+    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), new \Piwigo\Mail\MailService());
 
     expect(CurrentTemplate::current()->get()->get_template_vars('comments'))->toBeNull()
         ->and(CurrentTemplate::current()->get()->get_template_vars('comment_add'))->toBeNull();
@@ -166,7 +166,7 @@ test('render only counts the first commentable related category then stops (`bre
         status: UserStatus::Guest,
         enabledHigh: false,
     ));
-    CurrentConfig::setCommentsForall(false);
+    CurrentConfig::current()->setCommentsForall(false);
     $_POST['content'] = 'nice photo!';
     $renderer = new PictureCommentRenderer();
 
@@ -182,7 +182,7 @@ test('render only counts the first commentable related category then stops (`bre
         $renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => true],
             ['id' => 999], // no 'commentable' key -- only reached by `continue`
-        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService());
+        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), new \Piwigo\Mail\MailService());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     } finally {
@@ -207,7 +207,7 @@ test('render rejects a posted comment as "ugly spammer" when no related category
     try {
         $renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => false],
-        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService());
+        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), new \Piwigo\Mail\MailService());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
@@ -231,7 +231,7 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
         status: UserStatus::Guest,
         enabledHigh: false,
     ));
-    CurrentConfig::setCommentsForall(false);
+    CurrentConfig::current()->setCommentsForall(false);
     $_POST['content'] = 'nice photo!';
     $renderer = new PictureCommentRenderer();
 
@@ -239,7 +239,7 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
     try {
         $renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => true],
-        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService());
+        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), new \Piwigo\Mail\MailService());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
@@ -263,7 +263,7 @@ test('render lets a guest post a comment when comments_forall is on', function (
         status: UserStatus::Guest,
         enabledHigh: false,
     ));
-    CurrentConfig::setCommentsForall(true);
+    CurrentConfig::current()->setCommentsForall(true);
     // No $_POST['content'] set -- verifies the guest-reject guard itself
     // is what's gated on comments_forall, not that render() is unusable
     // for a guest altogether (the real insertComment() path needs a DB
@@ -272,7 +272,7 @@ test('render lets a guest post a comment when comments_forall is on', function (
     $renderer = new PictureCommentRenderer();
     $renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
         ['commentable' => false],
-    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService());
+    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), new \Piwigo\Mail\MailService());
 
     expect(CurrentTemplate::current()->get()->get_template_vars('comments'))->toBeNull();
 });
@@ -303,7 +303,7 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     // Live-verified: mutating line 97's `and` to `or` makes this exact
     // scenario throw ResponseReadyException("Session expired") instead of
     // completing, confirming this test distinguishes the two operators.
-    CurrentConfig::setCommentsForall(false);
+    CurrentConfig::current()->setCommentsForall(false);
     $_POST['content'] = 'nice photo!';
     file_put_contents(CurrentPaths::get()->root . '/comment_list.tpl', 'STATIC-COMMENT-LIST-CONTENT');
     CurrentTemplate::current()->get()->set_template_dir(CurrentPaths::get()->root);
@@ -315,7 +315,7 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     // is never entered either.
     $renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, 999999999, 0, makePictureCommentUrlService(), [
         ['commentable' => true],
-    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService());
+    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), new \Piwigo\Mail\MailService());
 
     expect(CurrentTemplate::current()->get()->get_template_vars('COMMENT_LIST'))->toBe('STATIC-COMMENT-LIST-CONTENT')
         ->and(CurrentTemplate::current()->get()->get_template_vars('comments'))->toBe([]);

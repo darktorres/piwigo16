@@ -51,14 +51,18 @@ final class PictureRateRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        CurrentConfig::setRateEnabled(true);
+        $currentConfig->setRateEnabled(true);
 
         $this->conn = DbConnection::build();
         $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class);
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
         CurrentTemplate::current()->set(new Template());
 
         // The fixture itself seeds rate rows for element_id=1 (real
@@ -70,7 +74,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // regardless of run order.
         $this->conn->executeStatement('DELETE FROM ' . Tables::rate() . ' WHERE element_id = 1');
 
-        $this->renderer = new PictureRateRenderer(\Piwigo\Auth\AccessControl::current(), $this->repo, \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
+        $this->renderer = new PictureRateRenderer(\Piwigo\Auth\AccessControl::current(), $this->repo, \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current());
     }
 
     #[\Override]
@@ -130,8 +134,12 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
     public function test_render_computes_the_current_anonymous_guests_own_rate_from_the_trimmed_ip(): void
     {
-        CurrentConfig::setRateAnonymous(true);
-        CurrentConfig::setGuestId(2);
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setRateAnonymous(true);
+        $currentConfig->setGuestId(2);
         $_SERVER['REMOTE_ADDR'] = '203.0.113.42';
 
         // guestId (2) voted 5, keyed by the trimmed (3-octet) IP prefix --
@@ -161,7 +169,11 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
     public function test_render_leaves_user_rate_null_when_the_summary_has_no_votes_yet(): void
     {
-        CurrentConfig::setRateAnonymous(true);
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setRateAnonymous(true);
         // rating_score=0.0 is still a real, non-null score (the `!== null`
         // guard doesn't treat 0.0 as absent) -- findRateSummaryForElement()
         // still runs its real COUNT/AVG query, just against zero matching

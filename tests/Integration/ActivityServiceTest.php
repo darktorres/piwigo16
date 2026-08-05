@@ -11,7 +11,6 @@ namespace Piwigo\Tests\Integration {
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Db\DbConnection;
@@ -40,11 +39,15 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        CurrentConfig::setPhpExtensionInUrls(false);
+        $currentConfig->setPhpExtensionInUrls(false);
         CurrentUser::current()->set(User::fromUserArray(['id' => 1]));
         CurrentUser::current()->markRealUserResolved();
         unset($_REQUEST['method'], $_REQUEST['action'], $_GET['page'], $_POST['destination_tag'], $_SESSION['connected_with']);

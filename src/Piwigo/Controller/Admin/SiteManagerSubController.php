@@ -63,6 +63,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Category\CategoryService $categoryService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -70,7 +71,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
     {
         $template = $this->currentTemplate->get();
 
-        if (! \Piwigo\Config\CurrentConfig::enableSynchronization()) {
+        if (! $this->currentConfig->enableSynchronization()) {
             $this->htmlRenderer
                 ->fatalError('synchronization is disabled');
         }

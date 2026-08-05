@@ -101,7 +101,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         // flow reaches CurrentConfigService::current()->get() -- same wiring every
         // other Integration test constructing a real Template directly
         // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
         CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $_GET = [];
@@ -166,7 +166,12 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Html\HtmlService::class);
         }
 
-        new UserActivityPageRenderer()->render(Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->coreTabs, CurrentTemplate::current(), $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService);
+        $currentConfig = Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+
+        new UserActivityPageRenderer()->render(Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->coreTabs, CurrentTemplate::current(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService);
 
         $template = CurrentTemplate::current()->get();
         self::assertSame([], $template->get_template_vars('ulist'));

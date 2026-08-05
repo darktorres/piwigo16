@@ -29,6 +29,7 @@ final class FilterService implements FilterUpdaterInterface
         private readonly SessionService $sessionService,
         private readonly Translator $translator,
         private readonly Lang $lang,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private ?Connection $conn = null,
     ) {}
 
@@ -163,7 +164,8 @@ final class FilterService implements FilterUpdaterInterface
                 $computedCategories = new CategoryService(
                     $this->lang,
                     \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class),
-                    new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class))
+                    new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class)),
+                    $this->currentConfig
                 )->getComputedCategories($user->toUserArray(), $filter_recent_period);
                 $filter['categories'] = $computedCategories['categories'];
                 $currentUser->set($user->withRawAttribute('last_photo_date', $computedCategories['lastPhotoDate']));

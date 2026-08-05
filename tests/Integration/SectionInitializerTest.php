@@ -63,11 +63,15 @@ final class SectionInitializerTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        CurrentConfig::setQuestionMarkInUrls(false);
+        $currentConfig->setQuestionMarkInUrls(false);
 
         unset($_SERVER['SCRIPT_NAME'], $_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
@@ -110,17 +114,17 @@ final class SectionInitializerTest extends IntegrationTestCase
     private function bootRedirectPreconditions(): void
     {
         Kernel::boot();
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current()));
         Lang::current()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
         CurrentTemplate::current()->set(new Template(\Piwigo\Core\CurrentPaths::get()->root . 'themes', 'default'));
-        CurrentConfig::setSendPiwigoInfos(false);
+        CurrentConfig::current()->setSendPiwigoInfos(false);
     }
 
     public function test_parse_computes_root_path_from_path_info_depth(): void
     {
         $_SERVER['PATH_INFO'] = '/category/1';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth(), CurrentConfig::current())
             ->parse();
 
         self::assertSame('../../', $context->rootPath);
@@ -132,7 +136,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1/start-20';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth(), CurrentConfig::current())
             ->parse();
 
         self::assertSame('../../../', $context->rootPath);
@@ -142,7 +146,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth(), CurrentConfig::current())
             ->parse();
 
         self::assertNull($context->imageId);
@@ -154,7 +158,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/42';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth(), CurrentConfig::current())
             ->parse();
 
         self::assertSame('42', $context->imageId);
@@ -167,7 +171,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/42-my-photo';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth(), CurrentConfig::current())
             ->parse();
 
         self::assertSame('42', $context->imageId);
@@ -182,7 +186,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         // happened rather than this being a hardcoded default.
         $_SERVER['PATH_INFO'] = '/most_visited';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth(), CurrentConfig::current())
             ->parse();
 
         self::assertSame('most_visited', $context->parsed['section'] ?? null);
@@ -199,7 +203,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $body = null;
         $status = null;
         try {
-            new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+            new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth(), CurrentConfig::current())
                 ->parse();
         } catch (ResponseReadyException $e) {
             $response = $e->response();
@@ -229,7 +233,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $body = null;
         $status = null;
         try {
-            new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+            new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth(), CurrentConfig::current())
                 ->parse();
         } catch (ResponseReadyException $e) {
             $response = $e->response();

@@ -42,7 +42,11 @@ final class ReindexImagesHandlerTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
@@ -52,13 +56,17 @@ final class ReindexImagesHandlerTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         parent::tearDown();
     }
 
     public function test_invoke_delegates_to_metadata_service_sync_metadata(): void
     {
-        $handler = new ReindexImagesHandler(new MetadataService(\Piwigo\Core\Lang::current(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher()));
+        $handler = new ReindexImagesHandler(new MetadataService(\Piwigo\Core\Lang::current(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\CurrentConfig()));
 
         // no exception/fatal is the real assertion here -- see the class
         // docblock for why a full real EXIF-sync side effect isn't

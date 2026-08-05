@@ -51,7 +51,7 @@ final class PluginsInstalledPageRenderer
      * slug statically (it's the only class registered for the 'plugins'
      * slug in config/admin_pages.php).
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Users\PreferencesService $preferencesService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Users\PreferencesService $preferencesService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer, \Piwigo\Config\CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
 
@@ -259,7 +259,7 @@ final class PluginsInstalledPageRenderer
                 'ADMIN_PAGE_TITLE' => $lang->t('Plugins'),
                 'view_selector' => $preferencesService
                     ->getParam('plugin-manager-view', 'classic'),
-                'CONF_ENABLE_EXTENSIONS_INSTALL' => \Piwigo\Config\CurrentConfig::enableExtensionsInstall(),
+                'CONF_ENABLE_EXTENSIONS_INSTALL' => $currentConfig->enableExtensionsInstall(),
             ]
         );
 

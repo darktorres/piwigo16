@@ -52,6 +52,7 @@ final class LanguagesInstalledPageRenderer
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly UserService $userService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -82,7 +83,7 @@ final class LanguagesInstalledPageRenderer
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer);
+        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig);
 
         $fs_languages = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang);
         $db_languages = $extension_repository->findAll(ExtensionType::Language);
@@ -163,7 +164,7 @@ final class LanguagesInstalledPageRenderer
 
         $template->assign('isWebmaster', ($this->accessControl->isWebmaster()) ? 1 : 0);
         $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Languages'));
-        $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', \Piwigo\Config\CurrentConfig::enableExtensionsInstall());
+        $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', $this->currentConfig->enableExtensionsInstall());
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');
     }

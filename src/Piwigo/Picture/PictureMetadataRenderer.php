@@ -26,14 +26,14 @@ final class PictureMetadataRenderer
     /**
      * @param array<string, array{src_image: SrcImage, ...}> $picture
      */
-    public function render(Lang $lang, array $picture, \Piwigo\Core\CurrentLogger $currentLogger, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, array $picture, \Piwigo\Core\CurrentLogger $currentLogger, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
 
-        $metadataService = new MetadataService(Lang::current(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $currentLogger, $eventDispatcher);
+        $metadataService = new MetadataService(Lang::current(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $currentLogger, $eventDispatcher, $currentConfig);
 
-        if ((\Piwigo\Config\CurrentConfig::showExif()) and function_exists('exif_read_data')) {
-            $showExifFields = \Piwigo\Config\CurrentConfig::showExifFields();
+        if (($currentConfig->showExif()) and function_exists('exif_read_data')) {
+            $showExifFields = $currentConfig->showExifFields();
 
             $exifMapping = [];
             foreach ($showExifFields as $field) {
@@ -72,8 +72,8 @@ final class PictureMetadataRenderer
             }
         }
 
-        if (\Piwigo\Config\CurrentConfig::showIptc()) {
-            $showIptcMapping = \Piwigo\Config\CurrentConfig::showIptcMapping();
+        if ($currentConfig->showIptc()) {
+            $showIptcMapping = $currentConfig->showIptcMapping();
 
             $iptc = $metadataService->getIptcData($picture['current']['src_image']->get_path(), $showIptcMapping, ', ');
 

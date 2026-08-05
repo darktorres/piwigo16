@@ -116,11 +116,12 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly CategoryService $categoryService,
         private readonly \Piwigo\Tag\TagService $tagService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     private function imageService(Connection $conn): ImageService
     {
-        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
+        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig);
     }
 
     #[\Override]
@@ -133,7 +134,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         // | Check Access and exit when user status is not ok                      |
         // +-----------------------------------------------------------------------+
 
-        if (! \Piwigo\Config\CurrentConfig::enableSynchronization()) {
+        if (! $this->currentConfig->enableSynchronization()) {
             $this->htmlRenderer
                 ->fatalError('synchronization is disabled');
         }
@@ -201,7 +202,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             $this->htmlRenderer
                 ->fatalError('remote sites not supported');
         } else {
-            $site_reader = new LocalSiteReader($site_url, new \Piwigo\Metadata\MetadataService($this->lang, new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher));
+            $site_reader = new LocalSiteReader($site_url, $this->currentConfig, new \Piwigo\Metadata\MetadataService($this->lang, new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig));
         }
 
         if ($this->pageState->noMd5sumNumber !== null) {
@@ -366,16 +367,16 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             // new categories are the directories not present yet in the database
             foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
                 $dir = basename($fulldir);
-                $sync_chars_regex = \Piwigo\Config\CurrentConfig::syncCharsRegex();
+                $sync_chars_regex = $this->currentConfig->syncCharsRegex();
                 if ($sync_chars_regex !== '' && (bool) preg_match($sync_chars_regex, $dir)) {
                     $insert = [
                         'id' => $next_id++,
                         'dir' => $dir,
                         'name' => str_replace('_', ' ', $dir),
                         'site_id' => $site_id,
-                        'commentable' => \Piwigo\Config\CurrentConfig::newcatDefaultCommentable(),
-                        'status' => \Piwigo\Config\CurrentConfig::newcatDefaultStatus(),
-                        'visible' => \Piwigo\Config\CurrentConfig::newcatDefaultVisible(),
+                        'commentable' => $this->currentConfig->newcatDefaultCommentable(),
+                        'status' => $this->currentConfig->newcatDefaultStatus(),
+                        'visible' => $this->currentConfig->newcatDefaultVisible(),
                     ];
 
                     if (isset($db_fulldirs[dirname($fulldir)])) {
@@ -460,7 +461,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     ]);
 
                     $category_up = array_values(array_unique($category_up));
-                    if (\Piwigo\Config\CurrentConfig::inheritanceByDefault() and $category_up !== []) {
+                    if ($this->currentConfig->inheritanceByDefault() and $category_up !== []) {
                         $granted_grps = new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn))
                             ->findGrantedGroupIdsByCategory($category_up);
                         $granted_users = new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn))
@@ -527,7 +528,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 if (substr_compare($fulldir, '../', 0, 3) === 0) {
                     $fulldir = substr($fulldir, 3);
                 }
-                $to_delete_derivative_dirs[] = \Piwigo\Core\CurrentPaths::get()->root . CurrentConfig::derivativeDir() . $fulldir;
+                $to_delete_derivative_dirs[] = \Piwigo\Core\CurrentPaths::get()->root . $this->currentConfig->derivativeDir() . $fulldir;
             }
 
             if (count($to_delete) > 0) {
@@ -535,7 +536,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     $this->categoryService->deleteCategories($to_delete, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher);
                     foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                         if (is_dir($to_delete_dir)) {
-                            new DerivativeCacheService()
+                            new DerivativeCacheService($this->currentConfig)
                                 ->clearDerivativeCacheRecursive($to_delete_dir, '#.+#');
                         }
                     }
@@ -590,7 +591,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     continue;
                 }
                 $filename = basename($path);
-                $sync_chars_regex = \Piwigo\Config\CurrentConfig::syncCharsRegex();
+                $sync_chars_regex = $this->currentConfig->syncCharsRegex();
                 if ($sync_chars_regex === '' || ! (bool) preg_match($sync_chars_regex, $filename)) {
                     $errors[] = [
                         'path' => $path,
@@ -628,7 +629,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     'info' => $this->lang->t('added'),
                 ];
 
-                if (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
+                if ($this->currentConfig->isFormatsEnabled()) {
                     $element_formats = $fs[$path]['formats'] ?? null;
                     if ($element_formats !== null) {
                         foreach ($element_formats as $ext => $filesize) {
@@ -650,7 +651,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             }
 
             // search new/removed formats on photos already registered in database
-            if (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
+            if ($this->currentConfig->isFormatsEnabled()) {
                 $db_elements_flip = array_flip($db_elements);
 
                 $existing_ids = [];

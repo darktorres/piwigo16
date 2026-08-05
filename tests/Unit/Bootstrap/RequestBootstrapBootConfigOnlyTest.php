@@ -30,7 +30,7 @@ use Sentry\SentrySdk;
  */
 beforeEach(function (): void {
     Kernel::reset();
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     CurrentUser::current()->reset();
     // Legacy Coupling Retirement Phase 8, 8d: bootConfigOnly() now reuses
     // an already-set CurrentConfigService instead of always resolving+
@@ -53,7 +53,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     CurrentUser::current()->reset();
     CurrentConfigService::current()->reset();
     // Lang::current() has no memoized pre-boot fallback (see beforeEach's
@@ -101,7 +101,7 @@ test('bootConfigOnly seeds CurrentConfig from its own property defaults (P13)', 
     // since a real config-table row (this test's own DB connection, shared
     // with whatever fixture state other suites left behind) can legitimately
     // override it.
-    expect(CurrentConfig::galleryTitle())->not->toBe('');
+    expect(CurrentConfig::current()->galleryTitle())->not->toBe('');
 });
 
 test('bootConfigOnly merges DB-persisted config overrides into CurrentConfig (P23 batch 1)', function (): void {
@@ -110,7 +110,7 @@ test('bootConfigOnly merges DB-persisted config overrides into CurrentConfig (P2
     // ran, not just that the property exists.
     RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
 
-    expect(CurrentConfig::galleryTitle())->toBe('Fixture Gallery');
+    expect(CurrentConfig::current()->galleryTitle())->toBe('Fixture Gallery');
 });
 
 test('bootConfigOnly attaches a guest CurrentUser', function (): void {
@@ -192,7 +192,7 @@ test('bootConfigOnly reuses an already-set CurrentConfigService instead of resol
     $ormConfig->enableNativeLazyObjects(true);
     $em = new \Doctrine\ORM\EntityManager($conn, $ormConfig);
     $em->getEventManager()->addEventListener(\Doctrine\ORM\Events::loadClassMetadata, new \Piwigo\Db\TablePrefixListener(\Piwigo\Db\DbCredentials::current()));
-    $preSetService = new \Piwigo\Config\ConfigService($em->getRepository(\Piwigo\Config\ConfigEntry::class), new \Piwigo\PluginConfig\EventDispatcher());
+    $preSetService = new \Piwigo\Config\ConfigService($em->getRepository(\Piwigo\Config\ConfigEntry::class), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current());
     CurrentConfigService::current()->set($preSetService);
 
     RequestBootstrap::bootConfigOnly($paths);

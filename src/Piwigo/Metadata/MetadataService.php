@@ -35,6 +35,7 @@ final readonly class MetadataService
         private MetadataRepository $repo,
         private \Piwigo\Core\CurrentLogger $currentLogger,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -70,7 +71,7 @@ final readonly class MetadataService
                     foreach (array_keys($map, $iptcKey, true) as $pwgKey) {
                         $result[$pwgKey] = $value;
 
-                        if (! \Piwigo\Config\CurrentConfig::allowHtmlInMetadata()) {
+                        if (! $this->currentConfig->allowHtmlInMetadata()) {
                             // photo origin is unsecured (user upload) --
                             // strip HTML to avoid XSS.
                             $result[$pwgKey] = strip_tags($result[$pwgKey]);
@@ -211,7 +212,7 @@ final readonly class MetadataService
             }
         }
 
-        if (! \Piwigo\Config\CurrentConfig::allowHtmlInMetadata()) {
+        if (! $this->currentConfig->allowHtmlInMetadata()) {
             foreach ($result as $key => $value) {
                 // photo origin is unsecured (user upload) -- strip HTML to
                 // avoid XSS.
@@ -261,7 +262,7 @@ final readonly class MetadataService
     public function getSyncIptcData(string $file): array
     {
 
-        $map = $this->stringMap(\Piwigo\Config\CurrentConfig::useIptcMapping());
+        $map = $this->stringMap($this->currentConfig->useIptcMapping());
 
         $iptc = $this->getIptcData($file, $map);
 
@@ -300,7 +301,7 @@ final readonly class MetadataService
     public function getSyncExifData(string $file): array
     {
 
-        $map = $this->stringMap(\Piwigo\Config\CurrentConfig::useExifMapping());
+        $map = $this->stringMap($this->currentConfig->useExifMapping());
 
         $exif = $this->getExifData($file, $map);
         $result = [];
@@ -345,18 +346,18 @@ final readonly class MetadataService
 
         $updateFields = ['filesize', 'width', 'height'];
 
-        if (\Piwigo\Config\CurrentConfig::useExif()) {
+        if ($this->currentConfig->useExif()) {
             $updateFields = array_merge(
                 $updateFields,
-                array_map(strval(...), array_keys($this->stringMap(\Piwigo\Config\CurrentConfig::useExifMapping()))),
+                array_map(strval(...), array_keys($this->stringMap($this->currentConfig->useExifMapping()))),
                 ['latitude', 'longitude']
             );
         }
 
-        if (\Piwigo\Config\CurrentConfig::useIptc()) {
+        if ($this->currentConfig->useIptc()) {
             $updateFields = array_merge(
                 $updateFields,
-                array_map(strval(...), array_keys($this->stringMap(\Piwigo\Config\CurrentConfig::useIptcMapping())))
+                array_map(strval(...), array_keys($this->stringMap($this->currentConfig->useIptcMapping())))
             );
         }
 
@@ -444,11 +445,11 @@ final readonly class MetadataService
             $file = $originalFile;
         }
 
-        if (\Piwigo\Config\CurrentConfig::useExif()) {
+        if ($this->currentConfig->useExif()) {
             $infos = array_merge($infos, $this->getSyncExifData($file));
         }
 
-        if (\Piwigo\Config\CurrentConfig::useIptc()) {
+        if ($this->currentConfig->useIptc()) {
             $infos = array_merge($infos, $this->getSyncIptcData($file));
         }
 
@@ -548,7 +549,7 @@ final readonly class MetadataService
         // one-method-only TagService dependency, avoiding touching every
         // existing `new MetadataService(...)` call site for zero benefit.
         $tagConn = DbConnection::build();
-        $tagService = new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Category\CategoryEntity::class)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, \Piwigo\Users\CurrentUser::current());
+        $tagService = new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Category\CategoryEntity::class)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, \Piwigo\Users\CurrentUser::current(), $this->currentConfig);
 
         foreach ($this->repo->findImagesByIds($ids) as $row) {
             $data = $this->getSyncMetadata($row->toArray());
@@ -626,7 +627,7 @@ final readonly class MetadataService
     public function metadataNormalizeKeywordsString(string $keywordsString): string
     {
 
-        $separatorRegex = \Piwigo\Config\CurrentConfig::metadataKeywordSeparatorRegex();
+        $separatorRegex = $this->currentConfig->metadataKeywordSeparatorRegex();
 
         $keywordsString = $separatorRegex === '' ? $keywordsString : preg_replace($separatorRegex, ',', $keywordsString);
         assert($keywordsString !== null);

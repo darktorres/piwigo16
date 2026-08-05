@@ -135,7 +135,11 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
@@ -150,7 +154,8 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         $categoryService = new CategoryService(
             \Piwigo\Core\Lang::current(),
             \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
-            $permissionService
+            $permissionService,
+            \Piwigo\Config\CurrentConfig::current()
         );
         $this->service = new CategoryAdminService($categoryService, $permissionService, new \Piwigo\Html\HtmlService());
     }

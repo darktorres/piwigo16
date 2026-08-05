@@ -45,8 +45,8 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         $this->originalDateAvailable = $dateAvailable;
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::lounge());
-        CurrentConfig::setLoungeActive(false);
-        CurrentConfig::setLoungeMaxDuration(300);
+        $this->currentConfig()->setLoungeActive(false);
+        $this->currentConfig()->setLoungeMaxDuration(300);
         unset($_REQUEST['method']);
     }
 
@@ -58,10 +58,25 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
             'UPDATE ' . Tables::images() . ' SET date_available = ? WHERE id = 1',
             [$this->originalDateAvailable]
         );
-        CurrentConfig::setLoungeActive(false);
-        CurrentConfig::setLoungeMaxDuration(300);
+        $this->currentConfig()->setLoungeActive(false);
+        $this->currentConfig()->setLoungeMaxDuration(300);
         unset($_REQUEST['method']);
         parent::tearDown();
+    }
+
+    private function currentConfig(): CurrentConfig
+    {
+        // Kernel is already booted by parent::setUp() -- resolve the same
+        // container-shared instance a real request would get, matching
+        // this suite's own userService()/accessControl() private-helper
+        // convention (singleton/service-locator elimination campaign,
+        // Phase 9).
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        }
+
+        return $currentConfig;
     }
 
     public function test_needsEmptying_is_false_when_lounge_active_is_disabled(): void
@@ -71,7 +86,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
 
     public function test_needsEmptying_is_false_when_the_lounge_is_empty(): void
     {
-        CurrentConfig::setLoungeActive(true);
+        $this->currentConfig()->setLoungeActive(true);
 
         self::assertFalse(LoungeMaintenance::needsEmptying());
     }
@@ -84,7 +99,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         // sources agreed only as long as real wall-clock time stayed close
         // to a frozen PIWIGO_TEST_NOW, and drifted apart the moment it
         // didn't.
-        CurrentConfig::setLoungeActive(true);
+        $this->currentConfig()->setLoungeActive(true);
         $anHourAgo = Env::now()->modify('-1 hour')->format('Y-m-d H:i:s');
         $this->conn->executeStatement(
             'UPDATE ' . Tables::images() . ' SET date_available = ? WHERE id = 1',
@@ -97,7 +112,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
 
     public function test_needsEmptying_is_false_when_the_oldest_lounge_photo_is_still_within_the_max_duration(): void
     {
-        CurrentConfig::setLoungeActive(true);
+        $this->currentConfig()->setLoungeActive(true);
         $this->conn->executeStatement(
             'UPDATE ' . Tables::images() . ' SET date_available = ? WHERE id = 1',
             [Env::now()->format('Y-m-d H:i:s')]
@@ -109,7 +124,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
 
     public function test_needsEmptying_skips_the_check_during_an_active_upload_request(): void
     {
-        CurrentConfig::setLoungeActive(true);
+        $this->currentConfig()->setLoungeActive(true);
         $anHourAgo = Env::now()->modify('-1 hour')->format('Y-m-d H:i:s');
         $this->conn->executeStatement(
             'UPDATE ' . Tables::images() . ' SET date_available = ? WHERE id = 1',

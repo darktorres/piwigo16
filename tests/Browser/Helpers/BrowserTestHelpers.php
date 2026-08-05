@@ -478,6 +478,150 @@ final class BrowserTestHelpers
         return $page;
     }
 
+    /** @var list<array{name: string, value: string, domain: string, path: string, httpOnly: bool, secure: bool}>|null */
+    private static ?array $adminSessionCookies = null;
+
+    /**
+     * Parses a curl cookie jar (Netscape format: tab-separated domain /
+     * includeSubdomains / path / secure / expiry / name / value, with an
+     * optional "#HttpOnly_" prefix on the domain field for httpOnly
+     * cookies) into Playwright storageState's cookie shape. Whatever
+     * cookie(s) the server actually set -- name, domain, path -- are read
+     * straight from the file rather than assumed, so this doesn't need to
+     * know Piwigo's configured session cookie name (CurrentConfig::
+     * sessionName()) or cookie path (CookieService::cookiePath()) up front.
+     *
+     * @return list<array{name: string, value: string, domain: string, path: string, httpOnly: bool, secure: bool}>
+     */
+    private static function parseCookieJar(string $cookieJar): array
+    {
+        $lines = file($cookieJar, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($lines === false) {
+            throw new ExpectationFailedException('Could not read cookie jar: ' . $cookieJar);
+        }
+
+        $cookies = [];
+        foreach ($lines as $line) {
+            $httpOnly = str_starts_with($line, '#HttpOnly_');
+            if ($line === '' || ($line[0] === '#' && !$httpOnly)) {
+                continue;
+            }
+
+            $fields = explode("\t", $httpOnly ? substr($line, strlen('#HttpOnly_')) : $line);
+            if (count($fields) !== 7) {
+                continue;
+            }
+
+            [$domain, , $path, $secure, , $name, $value] = $fields;
+
+            $cookies[] = [
+                'name'     => $name,
+                'value'    => $value,
+                'domain'   => $domain,
+                'path'     => $path,
+                'httpOnly' => $httpOnly,
+                'secure'   => $secure === 'TRUE',
+            ];
+        }
+
+        if ($cookies === []) {
+            throw new ExpectationFailedException('No cookies found in cookie jar: ' . $cookieJar);
+        }
+
+        return $cookies;
+    }
+
+    /**
+     * Logs in as fixture_admin exactly once per test process, via the same
+     * curlWs()+cookie-jar mechanism uploadPhotoViaApi() already uses for
+     * its own separate curl-based login -- no browser/UI interaction, no
+     * repeated page load. Caches the resulting cookie(s) so every later
+     * asAdmin() call reuses the SAME server-side session instead of
+     * logging in again. See asAdmin()'s own docblock for why this exists.
+     *
+     * @return list<array{name: string, value: string, domain: string, path: string, httpOnly: bool, secure: bool}>
+     */
+    private static function adminSessionCookies(): array
+    {
+        if (self::$adminSessionCookies !== null) {
+            return self::$adminSessionCookies;
+        }
+
+        self::clearLoginLockout();
+
+        $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_browser_admin_cookies_');
+        if ($cookieJar === false) {
+            throw new ExpectationFailedException('tempnam failed');
+        }
+
+        self::curlWs($cookieJar, [
+            'method'   => 'pwg.session.login',
+            'username' => self::ADMIN_USER,
+            'password' => self::ADMIN_PASS,
+        ]);
+
+        self::$adminSessionCookies = self::parseCookieJar($cookieJar);
+        @unlink($cookieJar);
+
+        return self::$adminSessionCookies;
+    }
+
+    /**
+     * Visits $path already authenticated as fixture_admin, without driving
+     * the real UI login form -- unlike loginAsAdmin(), which stays
+     * separate and unchanged for tests that specifically need to exercise
+     * that form (e.g. IdentificationControllerTest's own login-flow/
+     * lockout coverage).
+     *
+     * Most call sites don't care *how* the session got authenticated, only
+     * that it already is -- loginAsAdmin() pays for two full page loads
+     * (identification.php, then the post-submit redirect; this suite's own
+     * admin pages consistently take ~2-2.3s to load, see rawWebpage()'s
+     * docblock) plus a DB round-trip, on EVERY single call. This visits
+     * $path directly with adminSessionCookies()'s cached session seeded
+     * into the fresh Playwright browser context via the 'storageState'
+     * option -- confirmed by reading Browsable::visit() ->
+     * PendingAwaitablePage::buildAwaitablePage() -> Browser::newContext()
+     * that arbitrary $options keys passed to visit() are forwarded
+     * verbatim as RPC params to Playwright's real newContext call, which
+     * natively accepts a 'storageState' param shaped exactly like this
+     * (Playwright's own wire protocol, not a JS-SDK-only convenience). One
+     * page load instead of two, zero form interaction, and the DB
+     * lockout-clearing round-trip happens once per test process instead of
+     * once per test.
+     *
+     * Still asserts the logout link is present, exactly like
+     * loginAsAdmin() -- if the cookie-based auth ever silently failed, the
+     * very first test using this fails loudly here instead of masking it.
+     */
+    public static function asAdmin(object $test, string $path = '/admin.php'): Webpage|PendingAwaitablePage|AwaitableWebpage
+    {
+        $options = self::testModeOptions();
+        $options['storageState'] = [
+            'cookies' => self::adminSessionCookies(),
+            'origins' => [],
+        ];
+
+        // @phpstan-ignore method.notFound
+        $result = $test->visit(self::baseUrl() . $path, $options);
+
+        if (
+            !$result instanceof Webpage
+            && !$result instanceof PendingAwaitablePage
+            && !$result instanceof AwaitableWebpage
+        ) {
+            throw new ExpectationFailedException(
+                'visit() did not return a Webpage/PendingAwaitablePage/AwaitableWebpage — '
+                . 'pest-plugin-browser may have changed its return type.'
+            );
+        }
+
+        self::assertNoServerErrors($result, $path);
+        $result->assertPresent('a[href*="act=logout"]');
+
+        return $result;
+    }
+
     /**
      * Calls a WS API method through the SAME authenticated browser session,
      * via a same-origin fetch() POST executed in the page (script() awaits

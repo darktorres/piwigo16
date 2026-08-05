@@ -366,9 +366,9 @@ final class RequestBootstrap
         // ErrorCollector::installIfConfigured()'s own docblock).
         self::errorCollector()->installIfConfigured();
 
-        if (\Piwigo\Config\CurrentConfig::sessionGcProbability() > 0) {
+        if (self::currentConfig()->sessionGcProbability() > 0) {
             @ini_set('session.gc_divisor', 100);
-            $gc_probability = \Piwigo\Config\CurrentConfig::sessionGcProbability();
+            $gc_probability = self::currentConfig()->sessionGcProbability();
             @ini_set('session.gc_probability', min($gc_probability, 100));
         }
 
@@ -414,38 +414,38 @@ final class RequestBootstrap
         self::currentConfigService()->set($configService);
         $configService->loadConfFromDb();
 
-        $log_data_location = \Piwigo\Config\CurrentConfig::dataLocation();
-        $log_dir = \Piwigo\Config\CurrentConfig::logDir();
+        $log_data_location = self::currentConfig()->dataLocation();
+        $log_dir = self::currentConfig()->logDir();
 
         self::currentLogger()->set(new Logger([
             'directory' => CurrentPaths::get()->root . $log_data_location . $log_dir,
-            'severity' => \Piwigo\Config\CurrentConfig::logLevel(),
+            'severity' => self::currentConfig()->logLevel(),
             // we use an hashed filename to prevent direct file access, and we salt with
             // the db_password instead of secret_key because the log must be usable in i.php
             // (secret_key is in the database)
             'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $db_password) . '.txt',
             'globPattern' => 'log_*.txt',
-            'archiveDays' => \Piwigo\Config\CurrentConfig::logArchiveDays(),
+            'archiveDays' => self::currentConfig()->logArchiveDays(),
         ]));
 
         self::imageStdParams();
 
         session_start();
-        PluginLoader::loadPlugins(self::loadedPlugins(), \Piwigo\PluginConfig\EventDispatcher::get(), self::activityService($conn));
+        PluginLoader::loadPlugins(self::loadedPlugins(), \Piwigo\PluginConfig\EventDispatcher::get(), self::activityService($conn), self::currentConfig());
 
-        if (\Piwigo\Config\CurrentConfig::piwigoInstalledVersion() === null) {
+        if (self::currentConfig()->piwigoInstalledVersion() === null) {
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
-        } elseif (\Piwigo\Config\CurrentConfig::piwigoInstalledVersion() !== AppInfo::VERSION) {
+        } elseif (self::currentConfig()->piwigoInstalledVersion() !== AppInfo::VERSION) {
             // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
             self::activityService($conn)->record('system', ActivitySystem::Core, 'autoupdate', [
-                'from_version' => \Piwigo\Config\CurrentConfig::piwigoInstalledVersion(),
+                'from_version' => self::currentConfig()->piwigoInstalledVersion(),
                 'to_version' => AppInfo::VERSION,
             ]);
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         }
 
         // Check if last major update conf is set if not set it
-        if (\Piwigo\Config\CurrentConfig::lastMajorUpdate() === null) {
+        if (self::currentConfig()->lastMajorUpdate() === null) {
             $dbnow = Env::now()->format('Y-m-d H:i:s');
             $configService->confUpdateParam('last_major_update', $dbnow, updateGlobal: true);
         }
@@ -456,17 +456,17 @@ final class RequestBootstrap
         // themselves (not the structured {field,dir}[] shape the old SCHEMA
         // entry implied) -- CurrentConfig::orderByCustom()/
         // orderByInsideCategoryCustom() are real typed (nullable) accessors now.
-        $orderByCustom = \Piwigo\Config\CurrentConfig::orderByCustom();
+        $orderByCustom = self::currentConfig()->orderByCustom();
         if ($orderByCustom !== null) {
-            \Piwigo\Config\CurrentConfig::setOrderBy($orderByCustom);
+            self::currentConfig()->setOrderBy($orderByCustom);
         }
-        $orderByInsideCategoryCustom = \Piwigo\Config\CurrentConfig::orderByInsideCategoryCustom();
+        $orderByInsideCategoryCustom = self::currentConfig()->orderByInsideCategoryCustom();
         if ($orderByInsideCategoryCustom !== null) {
-            \Piwigo\Config\CurrentConfig::setOrderByInsideCategory($orderByInsideCategoryCustom);
+            self::currentConfig()->setOrderByInsideCategory($orderByInsideCategoryCustom);
         }
 
         if (\Piwigo\Image\LoungeMaintenance::needsEmptying()) {
-            new ImageService(self::lang(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService($conn), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get())
+            new ImageService(self::lang(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService($conn), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::currentConfig())
                 ->emptyLounge();
         }
 
@@ -511,6 +511,7 @@ final class RequestBootstrap
             \Piwigo\PluginConfig\EventDispatcher::get(),
             self::pageState(),
             self::currentUser(),
+            self::currentConfig(),
         )->pwgLogin(...));
         new UserBootstrap(
             \Piwigo\Auth\AccessControl::current(),
@@ -535,8 +536,8 @@ final class RequestBootstrap
     public static function pemUrl(): string
     {
 
-        if (\Piwigo\Config\CurrentConfig::alternativePemUrl() !== '') {
-            return \Piwigo\Config\CurrentConfig::alternativePemUrl();
+        if (self::currentConfig()->alternativePemUrl() !== '') {
+            return self::currentConfig()->alternativePemUrl();
         }
 
         return AppInfo::URL . '/ext';
@@ -568,6 +569,7 @@ final class RequestBootstrap
             \Piwigo\PluginConfig\EventDispatcher::get(),
             self::deploymentPolicy(),
             self::currentUser(),
+            self::currentConfig(),
         ));
         self::lang()->load('common.lang');
         if (\Piwigo\Auth\AccessControl::current()->isAdmin() || self::adminContext()->isActive()) {
@@ -610,7 +612,7 @@ final class RequestBootstrap
             $notify_username = self::currentUser()->get()->username;
             $notify_email = self::currentUser()->get()->email;
             $apiKeyRepo = new \Piwigo\Auth\ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
-            $is_mail_send = new \Piwigo\Auth\ApiKeyService(self::lang(), self::mailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn), self::deploymentPolicy()), self::urlService(), self::sessionService())
+            $is_mail_send = new \Piwigo\Auth\ApiKeyService(self::lang(), self::mailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn), self::deploymentPolicy()), self::urlService(), self::sessionService(), self::currentConfig())
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
 
             if ($is_mail_send) {
@@ -632,13 +634,13 @@ final class RequestBootstrap
             // mixed; narrow to the same CurrentConfig::adminTheme() fallback
             // already passed as the default value.
             $admin_theme = new \Piwigo\Users\PreferencesService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), self::currentUser())
-                ->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
-            $admin_theme = is_string($admin_theme) ? $admin_theme : \Piwigo\Config\CurrentConfig::adminTheme();
+                ->getParam('admin_theme', self::currentConfig()->adminTheme());
+            $admin_theme = is_string($admin_theme) ? $admin_theme : self::currentConfig()->adminTheme();
             $template = new Template(CurrentPaths::get()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = self::currentUser()->get()->theme;
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws' and \Piwigo\Core\DeviceHelper::mobileTheme()) {
-                $theme = \Piwigo\Config\CurrentConfig::mobilTheme();
+                $theme = self::currentConfig()->mobilTheme();
             }
             $template = new Template(CurrentPaths::get()->root . 'themes', $theme);
         }
@@ -665,13 +667,13 @@ final class RequestBootstrap
         }
         $currentThemeConfProvider->set($template);
 
-        if (\Piwigo\Config\CurrentConfig::noPhotoYet() === null) {
+        if (self::currentConfig()->noPhotoYet() === null) {
             // Formerly include/no_photo_yet.inc.php, a seam of exactly this
             // one call (deleted, P23 sub-batch 8f-5). render() exits itself
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(self::lang(), \Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService()), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService())
+            new NoPhotoYetRenderer(self::lang(), \Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService()), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService(), self::currentConfig())
                 ->render();
         }
 
@@ -680,7 +682,7 @@ final class RequestBootstrap
             $pageState->addHeaderMessage(self::lang()->t('Bad status for user "guest", using default status. Please notify the webmaster.'));
         }
 
-        if (\Piwigo\Config\CurrentConfig::galleryLocked()) {
+        if (self::currentConfig()->galleryLocked()) {
             $pageState->addHeaderMessage(self::lang()->t('The gallery is locked for maintenance. Please, come back later.'));
 
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'identification' and ! \Piwigo\Auth\AccessControl::current()->isAdmin()) {
@@ -703,20 +705,20 @@ final class RequestBootstrap
             $pageState->headerMessages = [];
         }
 
-        if (\Piwigo\Config\CurrentConfig::filterPages() !== [] and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
+        if (self::currentConfig()->filterPages() !== [] and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
             // Formerly a conditional `include PHPWG_ROOT_PATH .
             // 'include/filter.inc.php';` (deleted, P23 sub-batch 8f-5).
-            new FilterService(self::filterState(), self::sessionService(), self::translator(), self::lang(), $conn)
+            new FilterService(self::filterState(), self::sessionService(), self::translator(), self::lang(), self::currentConfig(), $conn)
                 ->initializeFromRequest(self::pageState(), self::currentUser());
         } else {
             self::filterState()->set(false);
         }
 
-        $pageState->headerNotes = array_merge($pageState->headerNotes, \Piwigo\Config\CurrentConfig::headerNotes());
+        $pageState->headerNotes = array_merge($pageState->headerNotes, self::currentConfig()->headerNotes());
 
         // default event handlers
         \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(RenderCategoryLiteralDescription::class, new HtmlService()->renderCategoryLiteralDescription(...));
-        if (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions()) {
+        if (! self::currentConfig()->allowHtmlDescriptions()) {
             // pwgNl2br() is a generic string transform reused by
             // RenderElementDescription's own default handler too -- a thin
             // adapter closure per event, leaving pwgNl2br() itself untouched,
@@ -773,7 +775,7 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), self::mailService(), new HtmlService(), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentUser())->checkForSpam(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), new HtmlService(), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentUser(), self::currentConfig())->checkForSpam(...));
         // try_log_user's own handler is registered in connect() instead,
         // before UserBootstrap::initialize() -- see that registration's
         // own comment for why.
@@ -803,7 +805,7 @@ final class RequestBootstrap
         \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileVideo(...));
         \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFilePsd(...));
         \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileEps(...));
-        if (\Piwigo\Config\CurrentConfig::originalUrlProtection() !== '') {
+        if (self::currentConfig()->originalUrlProtection() !== '') {
             \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(GetElementUrl::class, new HtmlService()->getElementUrlProtectionHandler(...));
             \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(GetSrcImageUrl::class, new HtmlService()->getSrcImageUrlProtectionHandler(...));
         }
@@ -1047,6 +1049,16 @@ final class RequestBootstrap
         }
 
         return $currentTemplate;
+    }
+
+    public static function currentConfig(): \Piwigo\Config\CurrentConfig
+    {
+        $currentConfig = Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+
+        return $currentConfig;
     }
 
     /**

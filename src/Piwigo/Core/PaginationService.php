@@ -21,6 +21,10 @@ namespace Piwigo\Core;
  */
 final class PaginationService
 {
+    public function __construct(
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+    ) {}
+
     /**
      * @param int|string $nbElement real callers pass numeric strings too
      *   (see docblock on the original create_navigation_bar())
@@ -51,7 +55,7 @@ final class PaginationService
         $start = (int) $start;
 
         $navbar = [];
-        $pages_around = \Piwigo\Config\CurrentConfig::paginatePagesAround();
+        $pages_around = $this->currentConfig->paginatePagesAround();
         $start_str = $cleanUrl ? '/' . $paramName . '-' : (! str_contains($url, '?') ? '?' : '&amp;') . $paramName . '=';
 
         if ($start < 0) {

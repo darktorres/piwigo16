@@ -44,7 +44,7 @@ final class PwgUsers
 {
     private static function userService(): UserService
     {
-        return new UserService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), DbConnection::build(), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\DeploymentPolicy::current(), \Piwigo\Users\CurrentUser::current());
+        return new UserService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), DbConnection::build(), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\DeploymentPolicy::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
     }
 
     /**
@@ -113,16 +113,16 @@ final class PwgUsers
         // the whole method, not DbConnection::build() per query.
         $conn = DbConnection::build();
 
-        // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific DB
+        // \Piwigo\Config\CurrentConfig::current()->userFields() maps generic field names to table-specific DB
         // column names (see Piwigo\Users\UserService for the same pattern);
         // extracted once here since this function reads id/username/
         // email repeatedly below.
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::current()->userFields();
         $user_field_id = $user_fields['id'];
         $user_field_username = $user_fields['username'];
         $user_field_email = $user_fields['email'];
 
-        $available_permission_levels = \Piwigo\Config\CurrentConfig::availablePermissionLevels();
+        $available_permission_levels = \Piwigo\Config\CurrentConfig::current()->availablePermissionLevels();
 
         if (! (bool) preg_match(ValidationPattern::ORDER, $params['order'])) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter order');
@@ -450,7 +450,7 @@ final class PwgUsers
             return new PwgError(WsError::INVALID_PARAM, 'Name field must not be empty');
         }
 
-        if (\Piwigo\Config\CurrentConfig::doublePasswordTypeInAdmin()) {
+        if (\Piwigo\Config\CurrentConfig::current()->doublePasswordTypeInAdmin()) {
             if (($params['password'] ?? '') !== ($params['password_confirm'] ?? '')) {
                 return new PwgError(WsError::INVALID_PARAM, Lang::current()->t('The passwords do not match'));
             }
@@ -543,9 +543,9 @@ final class PwgUsers
 
         $protected_users = [
             $currentUser->id->value,
-            \Piwigo\Config\CurrentConfig::guestId(),
-            \Piwigo\Config\CurrentConfig::defaultUserId(),
-            \Piwigo\Config\CurrentConfig::webmasterId(),
+            \Piwigo\Config\CurrentConfig::current()->guestId(),
+            \Piwigo\Config\CurrentConfig::current()->defaultUserId(),
+            \Piwigo\Config\CurrentConfig::current()->webmasterId(),
         ];
 
         // an admin can't delete other admin/webmaster
@@ -645,12 +645,12 @@ final class PwgUsers
         $currentUser = \Piwigo\Users\CurrentUser::current()->get();
 
         // ACTIVATE_COMMENTS
-        if (! \Piwigo\Config\CurrentConfig::activateComments()) {
+        if (! \Piwigo\Config\CurrentConfig::current()->activateComments()) {
             unset($params['show_nb_comments']);
         }
 
         // ALLOW_USER_CUSTOMIZATION
-        if (! \Piwigo\Config\CurrentConfig::allowUserCustomization()) {
+        if (! \Piwigo\Config\CurrentConfig::current()->allowUserCustomization()) {
             unset(
                 $params['nb_image_page'],
                 $params['theme'],
@@ -663,7 +663,7 @@ final class PwgUsers
         }
 
         // SPECIAL_USER
-        $special_user = in_array($currentUser->id->value, [\Piwigo\Config\CurrentConfig::guestId(), \Piwigo\Config\CurrentConfig::defaultUserId()], true);
+        $special_user = in_array($currentUser->id->value, [\Piwigo\Config\CurrentConfig::current()->guestId(), \Piwigo\Config\CurrentConfig::current()->defaultUserId()], true);
         if ($special_user) {
             unset(
                 $params['password'],
@@ -677,10 +677,10 @@ final class PwgUsers
                 return new PwgError(403, Lang::current()->t('The passwords do not match'));
             }
 
-            // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific
+            // \Piwigo\Config\CurrentConfig::current()->userFields() maps generic field names to table-specific
             // DB column names (see Piwigo\Users\UserService for the same
             // pattern).
-            $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+            $user_fields = \Piwigo\Config\CurrentConfig::current()->userFields();
 
             $current_password = self::authService()->getPasswordHash($currentUser->id->value, $user_fields['id'], $user_fields['username'], $user_fields['password']);
             $current_password ??= '';
@@ -823,7 +823,7 @@ final class PwgUsers
         self::userService()->checkUserFavorites();
 
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
-        $order_by = $order_by === '' ? \Piwigo\Config\CurrentConfig::orderBy() : 'ORDER BY ' . $order_by;
+        $order_by = $order_by === '' ? \Piwigo\Config\CurrentConfig::current()->orderBy() : 'ORDER BY ' . $order_by;
 
         $permission_condition = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class))->getSqlConditionFandFAsCondition([
             'visible_images' => 'id',
@@ -917,10 +917,10 @@ final class PwgUsers
 
         $user_lost_email = is_string($user_lost['email']) ? $user_lost['email'] : null;
 
-        // \Piwigo\Config\CurrentConfig::galleryTitle() is a raw config string; pwg_generate_set/
+        // \Piwigo\Config\CurrentConfig::current()->galleryTitle() is a raw config string; pwg_generate_set/
         // reset_password_mail() both require a real string for their 3rd
         // parameter.
-        $gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
+        $gallery_title = \Piwigo\Config\CurrentConfig::current()->galleryTitle();
 
         if ($params['send_by_mail'] and ! in_array($user_lost_email, [null, ''], true)) {
             $user_lost_username = is_string($user_lost['username']) ? $user_lost['username'] : '';

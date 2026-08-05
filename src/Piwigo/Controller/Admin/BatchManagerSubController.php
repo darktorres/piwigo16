@@ -90,6 +90,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly TagService $tagService,
         private readonly CategoryService $categoryService,
         private readonly \Piwigo\Html\HtmlService $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -102,8 +103,8 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         $user_id = $this->currentUser->get()
             ->id->value;
 
-        $available_permission_levels = \Piwigo\Config\CurrentConfig::availablePermissionLevels();
-        $conf_order_by = \Piwigo\Config\CurrentConfig::orderBy();
+        $available_permission_levels = $this->currentConfig->availablePermissionLevels();
+        $conf_order_by = $this->currentConfig->orderBy();
 
         // used both for the action-specific redirects below and for the
         // "category no longer exists" redirect further down
@@ -175,7 +176,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             $this->batchManagerUnitPageRenderer
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer)
+            new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }

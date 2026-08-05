@@ -117,6 +117,7 @@ final class ImageDerivativeController implements ControllerInterface
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Permission\ImageVisibilityChecker $imageVisibilityChecker,
         private readonly \Piwigo\Core\UrlServiceInterface $urlService,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -271,7 +272,7 @@ final class ImageDerivativeController implements ControllerInterface
         ignore_user_abort(true);
         @set_time_limit(0);
 
-        $image = new PwgImage($this->srcPath, $this->currentLogger, $this->eventDispatcher);
+        $image = new PwgImage($this->srcPath, $this->currentLogger, $this->eventDispatcher, $this->currentConfig);
         $timing['load'] = $this->timeStep($step);
 
         $changes = 0;
@@ -313,7 +314,7 @@ final class ImageDerivativeController implements ControllerInterface
 
         if ($params->will_watermark($d_size)) {
             $wm = $this->imageStdParams->get_watermark();
-            $wm_image = new PwgImage($this->paths->root . $wm->file, $this->currentLogger, $this->eventDispatcher);
+            $wm_image = new PwgImage($this->paths->root . $wm->file, $this->currentLogger, $this->eventDispatcher, $this->currentConfig);
             $wm_size = [(int) $wm_image->get_width(), (int) $wm_image->get_height()];
             if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
                 $wm_scaling_params = SizingParams::classic($d_size[0], $d_size[1]);
@@ -395,7 +396,7 @@ final class ImageDerivativeController implements ControllerInterface
             ]);
         }
 
-        if (\Piwigo\Config\CurrentConfig::derivativesStripMetadataThreshold() > $d_size[0] * $d_size[1]) {// strip metadata for small images
+        if ($this->currentConfig->derivativesStripMetadataThreshold() > $d_size[0] * $d_size[1]) {// strip metadata for small images
             $image->strip();
         }
 
@@ -561,7 +562,7 @@ final class ImageDerivativeController implements ControllerInterface
         // this exact class's own CookieService dependency uses elsewhere in
         // this codebase -- so building $this->srcUrl from it needs no
         // depth computation of any kind, in either URL style below.
-        if (\Piwigo\Config\CurrentConfig::questionMarkInUrls() === false and
+        if ($this->currentConfig->questionMarkInUrls() === false and
              isset($_SERVER['PATH_INFO']) and ! in_array($_SERVER['PATH_INFO'], [null, false, 0, '0', '', []], true)) {
             $req = $_SERVER['PATH_INFO'];
             // PHPStan types superglobal reads as mixed; PATH_INFO is only ever
@@ -585,12 +586,12 @@ final class ImageDerivativeController implements ControllerInterface
         if ($req_tokens === false) {
             $this->ierror('Invalid request', 400);
         }
-        $sync_chars_regex = \Piwigo\Config\CurrentConfig::syncCharsRegex();
+        $sync_chars_regex = $this->currentConfig->syncCharsRegex();
         foreach ($req_tokens as $token) {
             ($sync_chars_regex !== '' && (bool) preg_match($sync_chars_regex, $token)) or $this->ierror('Invalid chars in request', 400);
         }
 
-        $this->derivativePath = $this->paths->root . CurrentConfig::derivativeDir() . $req;
+        $this->derivativePath = $this->paths->root . $this->currentConfig->derivativeDir() . $req;
         $this->derivativeUrlSuffix = $req;
 
         $pos = strrpos($req, '.');
@@ -793,7 +794,7 @@ final class ImageDerivativeController implements ControllerInterface
             // $req lost its extension/type token) instead of to a
             // filesystem path -- still routes through this same
             // permission-checked controller, at a different derivative type.
-            $rel_url = self::derivativeUrlPath($this->derivativeUrlSuffix, $params->type, $candidate->type);
+            $rel_url = self::derivativeUrlPath($this->derivativeUrlSuffix, $params->type, $candidate->type, $this->currentConfig);
             $this->srcUrl = $this->urlService
                 ->getAbsoluteRootUrl(false) . '/' . $rel_url;
             $this->rotationAngle = 0;
@@ -815,14 +816,14 @@ final class ImageDerivativeController implements ControllerInterface
      * code this method introduces -- is directly unit-testable without the
      * rest of this class's DB/filesystem dependencies.
      */
-    private static function derivativeUrlPath(string $urlSuffix, string $fromType, string $toType): string
+    private static function derivativeUrlPath(string $urlSuffix, string $fromType, string $toType, CurrentConfig $currentConfig): string
     {
         $suffix = str_replace('-' . DerivativeUrlCodec::derivativeToUrl($fromType), '-' . DerivativeUrlCodec::derivativeToUrl($toType), $urlSuffix);
         $rel_url = 'i';
-        if (\Piwigo\Config\CurrentConfig::phpExtensionInUrls()) {
+        if ($currentConfig->phpExtensionInUrls()) {
             $rel_url .= '.php';
         }
-        if (\Piwigo\Config\CurrentConfig::questionMarkInUrls()) {
+        if ($currentConfig->questionMarkInUrls()) {
             $rel_url .= '?';
         }
 

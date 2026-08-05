@@ -72,23 +72,27 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
-            CurrentConfig::reset();
+            $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+            if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+            }
+            $currentConfig->reset();
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            CurrentConfig::setUserFields(['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address']);
-            CurrentConfig::setObligatoryUserMailAddress(false);
-            CurrentConfig::setInsensitiveCaseLogon(false);
-            CurrentConfig::setBrowserLanguage(false);
-            CurrentConfig::setEmailAdminOnNewUser('none');
-            CurrentConfig::setGalleryTitle('Test Gallery');
-            CurrentConfig::setWebmasterId(999999);
-            CurrentConfig::setGuestId(2);
-            CurrentConfig::setDefaultUserId(2);
-            CurrentConfig::setAvailablePermissionLevels([0, 1, 2, 4, 8]);
+            $currentConfig->setUserFields(['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address']);
+            $currentConfig->setObligatoryUserMailAddress(false);
+            $currentConfig->setInsensitiveCaseLogon(false);
+            $currentConfig->setBrowserLanguage(false);
+            $currentConfig->setEmailAdminOnNewUser('none');
+            $currentConfig->setGalleryTitle('Test Gallery');
+            $currentConfig->setWebmasterId(999999);
+            $currentConfig->setGuestId(2);
+            $currentConfig->setDefaultUserId(2);
+            $currentConfig->setAvailablePermissionLevels([0, 1, 2, 4, 8]);
 
             $this->conn = DbConnection::build();
-            $this->service = new UserService(Lang::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current());
+            $this->service = new UserService(Lang::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
@@ -98,7 +102,7 @@ namespace Piwigo\Tests\Integration {
             // initialised" LogicException is the real failure mode
             // without this, since no other test in this file previously
             // reached that call chain.
-            CurrentConfigService::current()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new \Piwigo\PluginConfig\EventDispatcher()));
+            CurrentConfigService::current()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new \Piwigo\PluginConfig\EventDispatcher(), $currentConfig));
         }
 
         /** @param array<int<0, max>|string, mixed> $params */
@@ -750,9 +754,10 @@ namespace Piwigo\Tests\Integration {
             // fixture user (1, fixture_admin) just for this one call.
             // setUp() re-applies the fake default before every other
             // test, so no restore is needed.
-            CurrentConfig::setEmailAdminOnNewUser('all');
-            CurrentConfig::setWebmasterId(1);
-            CurrentConfig::setSmtpHost('127.0.0.1:1');
+            $currentConfig = CurrentConfig::current();
+            $currentConfig->setEmailAdminOnNewUser('all');
+            $currentConfig->setWebmasterId(1);
+            $currentConfig->setSmtpHost('127.0.0.1:1');
             $login = 'reg-notify-' . bin2hex(random_bytes(4));
 
             // notifyAdminsOfNewRegistration()'s own mail send
@@ -792,9 +797,10 @@ namespace Piwigo\Tests\Integration {
             // above, but with the 'group:N' form of email_admin_on_new_user
             // -- exercises notifyAdminsOfNewRegistration()'s own
             // preg_match('/^group:(\d+)$/', ...) capture into $groupId.
-            CurrentConfig::setEmailAdminOnNewUser('group:5');
-            CurrentConfig::setWebmasterId(1);
-            CurrentConfig::setSmtpHost('127.0.0.1:1');
+            $currentConfig = CurrentConfig::current();
+            $currentConfig->setEmailAdminOnNewUser('group:5');
+            $currentConfig->setWebmasterId(1);
+            $currentConfig->setSmtpHost('127.0.0.1:1');
             $login = 'reg-notify-group-' . bin2hex(random_bytes(4));
 
             set_error_handler(static fn (): bool => true);
@@ -880,7 +886,7 @@ namespace Piwigo\Tests\Integration {
             // does. Reuses 'guest' specifically because it has no email on
             // file (same determinism reasoning as the existing
             // test_register_user_sets_duplicate_username_without_revealing_it_in_errors).
-            CurrentConfig::setInsensitiveCaseLogon(true);
+            CurrentConfig::current()->setInsensitiveCaseLogon(true);
 
             $result = $this->service->registerUser('GUEST', 'password123', null, new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()));
 
@@ -904,7 +910,7 @@ namespace Piwigo\Tests\Integration {
                 "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('temp-webmaster-target', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
-            CurrentConfig::setWebmasterId($tempId);
+            CurrentConfig::current()->setWebmasterId($tempId);
 
             try {
                 $this->service->createUserInfos([UserId::from($tempId)]);
@@ -925,12 +931,13 @@ namespace Piwigo\Tests\Integration {
                 "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('temp-webmaster-target-2', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
-            CurrentConfig::setWebmasterId($tempId);
+            $currentConfig = CurrentConfig::current();
+            $currentConfig->setWebmasterId($tempId);
             // setAvailablePermissionLevels([]) itself treats an empty array
             // as "reset to the built-in default" ([0,1,2,4,8]) -- confirmed
             // live, not a real empty state -- so a genuinely empty list can
             // only be reached by seeding the backing property directly.
-            new \ReflectionProperty(CurrentConfig::class, 'availablePermissionLevels')->setValue(null, []);
+            new \ReflectionProperty(CurrentConfig::class, 'availablePermissionLevels')->setValue($currentConfig, []);
 
             try {
                 $this->service->createUserInfos([UserId::from($tempId)]);
@@ -941,7 +948,7 @@ namespace Piwigo\Tests\Integration {
                 );
                 self::assertSame(['status' => 'webmaster', 'level' => 0], $row);
             } finally {
-                CurrentConfig::setAvailablePermissionLevels([0, 1, 2, 4, 8]);
+                $currentConfig->setAvailablePermissionLevels([0, 1, 2, 4, 8]);
                 $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$tempId]);
             }
         }
@@ -1040,7 +1047,7 @@ namespace Piwigo\Tests\Integration {
             // DeploymentPolicy is now a real constructor dependency, not a
             // mutable static, so this test can no longer flip it on the
             // shared instance.
-            $service = new UserService(Lang::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(externalAuthentification: true), \Piwigo\Users\CurrentUser::current());
+            $service = new UserService(Lang::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(externalAuthentification: true), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
 
             try {
                 self::assertSame(0, $this->fetchOneInt(

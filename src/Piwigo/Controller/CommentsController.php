@@ -67,6 +67,7 @@ final class CommentsController implements ControllerInterface
         private readonly CategoryService $categoryService,
         private readonly \Piwigo\Html\HtmlService $htmlService,
         private readonly \Piwigo\Core\MailerInterface $mailer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -80,7 +81,7 @@ final class CommentsController implements ControllerInterface
         // in earlier construction-chain debt (Phase 1d finding).
         $conn = DbConnection::build();
 
-        if (! \Piwigo\Config\CurrentConfig::activateComments()) {
+        if (! $this->currentConfig->activateComments()) {
             $this->htmlService
                 ->pageNotFound($this->redirectService, null);
         }
@@ -108,7 +109,7 @@ final class CommentsController implements ControllerInterface
         // include/config_default.inc.php); $conf itself is only known as
         // array<string, mixed>, so narrow with a fallback matching the
         // shipped default rather than trust the shape blindly.
-        $comments_page_nb_comments = \Piwigo\Config\CurrentConfig::commentsPageNbComments();
+        $comments_page_nb_comments = $this->currentConfig->commentsPageNbComments();
 
         // if the default value is not in the expected values, we add it in
         // the $items_number array (only compare against the numeric options
@@ -198,7 +199,7 @@ final class CommentsController implements ControllerInterface
             );
         }
 
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = $this->currentConfig->userFields();
         $username_field = $user_fields['username'];
         $email_field = $user_fields['email'];
         $id_field = $user_fields['id'];
@@ -295,7 +296,7 @@ final class CommentsController implements ControllerInterface
         $comment_id = $commentsRequest->actionCommentId;
         $edit_comment = null;
 
-        $commentService = new CommentService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser);
+        $commentService = new CommentService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig);
 
         if (isset($action) and $comment_id !== null) {
             $commentIdVo = CommentId::from($comment_id);
@@ -489,7 +490,7 @@ final class CommentsController implements ControllerInterface
         // rendered (matching the 'all' UX intent).
         $items_number_for_navbar = is_numeric($selected_items_number) ? (int) $selected_items_number : PHP_INT_MAX;
 
-        $navbar = new \Piwigo\Core\PaginationService()
+        $navbar = new \Piwigo\Core\PaginationService($this->currentConfig)
             ->createNavigationBar($url, $counter, $start, $items_number_for_navbar);
 
         $template->assign('navbar', $navbar);
@@ -608,7 +609,7 @@ final class CommentsController implements ControllerInterface
                     $comment_id_str = is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '';
                     if ($edit_comment !== null and $comment_id_str === (string) $edit_comment) {
                         $tpl_comment['IN_EDIT'] = true;
-                        $key = new \Piwigo\Auth\EphemeralKeyService()
+                        $key = new \Piwigo\Auth\EphemeralKeyService($this->currentConfig)
                             ->generate(2, $image_id);
                         $tpl_comment['KEY'] = $key;
                         $tpl_comment['IMAGE_ID'] = $image_id;
@@ -642,14 +643,14 @@ final class CommentsController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theCommentsPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig);
         }
 
         // +---------------------------------------------------------------+
         // |                      html code display                        |
         // +---------------------------------------------------------------+
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatchNotify(new LocEndComments());
         $this->htmlService
             ->flushPageMessages();

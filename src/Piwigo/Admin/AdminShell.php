@@ -69,6 +69,7 @@ final class AdminShell
         private readonly \Piwigo\Users\PreferencesService $preferencesService,
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Html\HtmlService $htmlService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -113,7 +114,7 @@ final class AdminShell
         // | Filesystem checks                                                 |
         // +-------------------------------------------------------------------+
 
-        if (\Piwigo\Config\CurrentConfig::fsQuickCheckPeriod() > 0) {
+        if ($this->currentConfig->fsQuickCheckPeriod() > 0) {
             $perform_fsqc = false;
 
             // Real invariant: fs_quick_check_last_check is only written (as an ISO
@@ -121,10 +122,10 @@ final class AdminShell
             // least once — on a fresh install it's genuinely still null, so this
             // is a real "has it ever run" guard, not just type-narrowing
             // boilerplate.
-            $fs_quick_check_last_check = \Piwigo\Config\CurrentConfig::fsQuickCheckLastCheck();
+            $fs_quick_check_last_check = $this->currentConfig->fsQuickCheckLastCheck();
 
             if ($fs_quick_check_last_check !== null) {
-                $fs_quick_check_period = \Piwigo\Config\CurrentConfig::fsQuickCheckPeriod();
+                $fs_quick_check_period = $this->currentConfig->fsQuickCheckPeriod();
                 if (strtotime($fs_quick_check_last_check) < strtotime($fs_quick_check_period . ' seconds ago')) {
                     $perform_fsqc = true;
                 }
@@ -151,8 +152,8 @@ final class AdminShell
         if ($adminShellRequest->changeThemePresent) {
             $admin_themes = ['roma', 'clear'];
             $admin_theme_param = $this->preferencesService
-                ->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
-            $admin_theme_array = [is_string($admin_theme_param) ? $admin_theme_param : \Piwigo\Config\CurrentConfig::adminTheme()];
+                ->getParam('admin_theme', $this->currentConfig->adminTheme());
+            $admin_theme_array = [is_string($admin_theme_param) ? $admin_theme_param : $this->currentConfig->adminTheme()];
             $result = array_diff(
                 $admin_themes,
                 $admin_theme_array
@@ -277,7 +278,7 @@ final class AdminShell
             [
                 'USERNAME' => $this->currentUser->get()
                     ->username,
-                'ENABLE_SYNCHRONIZATION' => \Piwigo\Config\CurrentConfig::enableSynchronization(),
+                'ENABLE_SYNCHRONIZATION' => $this->currentConfig->enableSynchronization(),
                 'U_SITE_MANAGER' => $link_start . 'site_manager',
                 'U_HISTORY_STAT' => $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
                 'U_FAQ' => $link_start . 'help',
@@ -307,16 +308,16 @@ final class AdminShell
                 'U_CHANGE_THEME' => $change_theme_url,
                 'ADMIN_PAGE_TITLE' => 'Piwigo Administration Page',
                 'ADMIN_PAGE_OBJECT_ID' => '',
-                'U_SHOW_TEMPLATE_TAB' => \Piwigo\Config\CurrentConfig::showTemplateInSideMenu(),
-                'SHOW_RATING' => \Piwigo\Config\CurrentConfig::rateEnabled(),
+                'U_SHOW_TEMPLATE_TAB' => $this->currentConfig->showTemplateInSideMenu(),
+                'SHOW_RATING' => $this->currentConfig->rateEnabled(),
             ]
         );
 
-        if (\Piwigo\Config\CurrentConfig::enableCoreUpdate()) {
+        if ($this->currentConfig->enableCoreUpdate()) {
             $template->assign('U_UPDATES', $link_start . 'updates');
         }
 
-        if (\Piwigo\Config\CurrentConfig::activateComments()) {
+        if ($this->currentConfig->activateComments()) {
             $template->assign('U_COMMENTS', $link_start . 'comments');
 
             // pending comments
@@ -413,7 +414,7 @@ final class AdminShell
         $whats_new_major_version = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION);
 
         if ((bool) $this->preferencesService->getParam('show_whats_new_' . $whats_new_major_version, true) and $this->configService->pwgIsDbconfWriteable()) {
-            if ($this->currentUser->get()->rawAttributes['registration_date'] > \Piwigo\Config\CurrentConfig::lastMajorUpdate()) {
+            if ($this->currentUser->get()->rawAttributes['registration_date'] > $this->currentConfig->lastMajorUpdate()) {
                 $this->preferencesService
                     ->updateParam('show_whats_new_' . $whats_new_major_version, false);
             } else {
@@ -450,7 +451,7 @@ final class AdminShell
         // a DB NOW() string (see the `\Piwigo\Config\CurrentConfig::lastMajorUpdate() === null`
         // block there) before this shell runs.
         $display_bell = false;
-        $last_major_update = \Piwigo\Config\CurrentConfig::lastMajorUpdate();
+        $last_major_update = $this->currentConfig->lastMajorUpdate();
         if (is_string($last_major_update) and strtotime($last_major_update) > strtotime('1 month ago')) {
             $display_bell = true;
         }
@@ -485,7 +486,7 @@ final class AdminShell
         $template->assign('pwgmenu', AdminUiHelper::pwgUrl());
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
 
         $this->eventDispatcher->dispatchNotify(new LocEndAdmin());
 

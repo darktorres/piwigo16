@@ -105,14 +105,15 @@ final class NotificationByMailSender
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly MailService $mailer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {
-        $nbmMaxTreatmentTimeoutPercent = \Piwigo\Config\CurrentConfig::nbmMaxTreatmentTimeoutPercent();
+        $nbmMaxTreatmentTimeoutPercent = $this->currentConfig->nbmMaxTreatmentTimeoutPercent();
 
         $this->startTime = \Piwigo\Core\TimingHelper::getMoment();
         $this->sendmailTimeout = (float) intval(ini_get('max_execution_time')) * $nbmMaxTreatmentTimeoutPercent;
 
         if ($this->sendmailTimeout <= 0) {
-            $this->sendmailTimeout = \Piwigo\Config\CurrentConfig::nbmTreatmentTimeoutDefault();
+            $this->sendmailTimeout = $this->currentConfig->nbmTreatmentTimeoutDefault();
         }
     }
 
@@ -165,11 +166,11 @@ final class NotificationByMailSender
 
         if ($isToSendMail) {
             $this->emailFormat = $this->mailer
-                ->getStrEmailFormat(\Piwigo\Db\SqlDialect::getBoolean(\Piwigo\Config\CurrentConfig::nbmSendHtmlMail()));
+                ->getStrEmailFormat(\Piwigo\Db\SqlDialect::getBoolean($this->currentConfig->nbmSendHtmlMail()));
 
             // \Piwigo\Config\CurrentConfig::nbmSendMailAs() is admin-submitted free text (see
             // NotificationByMailSubController), always a string when set.
-            $nbmSendMailAs = \Piwigo\Config\CurrentConfig::nbmSendMailAs();
+            $nbmSendMailAs = $this->currentConfig->nbmSendMailAs();
             $sendAsName = $nbmSendMailAs !== ''
                 ? $nbmSendMailAs
                 : $this->mailer
@@ -326,7 +327,7 @@ final class NotificationByMailSender
 
         // \Piwigo\Config\CurrentConfig::galleryTitle() is always a string (config_default.inc.php),
         // but that isn't visible through $conf's own array<string, mixed> type.
-        $galleryTitle = \Piwigo\Config\CurrentConfig::galleryTitle();
+        $galleryTitle = $this->currentConfig->galleryTitle();
 
         $checkKeyTreated = [];
         $updatedDataCount = 0;
@@ -482,7 +483,7 @@ final class NotificationByMailSender
             $dataUsers = $this->getUserNotifications('send', $checkKeyList);
 
             // List all if it's define on options or on timeout
-            $isListAllWithoutTest = ($this->isSendmailTimeout or \Piwigo\Config\CurrentConfig::nbmListAllEnabledUsersToSend());
+            $isListAllWithoutTest = ($this->isSendmailTimeout or $this->currentConfig->nbmListAllEnabledUsersToSend());
 
             // Check if exist news to list user or send mails
             if ((! $isListAllWithoutTest) or ($isActionSend)) {
@@ -490,7 +491,7 @@ final class NotificationByMailSender
                     $datas = [];
 
                     if ($customizeMailContent === '') {
-                        $customizeMailContent = \Piwigo\Config\CurrentConfig::nbmComplementaryMailContent();
+                        $customizeMailContent = $this->currentConfig->nbmComplementaryMailContent();
                     }
 
                     $customizeMailContent =
@@ -537,8 +538,8 @@ final class NotificationByMailSender
                             // These nbm_* flags are plain booleans in
                             // include/config_default.inc.php; (bool) is always a
                             // safe, non-failing cast for a mixed config value.
-                            $nbmSendDetailedContent = \Piwigo\Config\CurrentConfig::nbmSendDetailedContent();
-                            $nbmSendHtmlMail = \Piwigo\Config\CurrentConfig::nbmSendHtmlMail();
+                            $nbmSendDetailedContent = $this->currentConfig->nbmSendDetailedContent();
+                            $nbmSendHtmlMail = $this->currentConfig->nbmSendHtmlMail();
 
                             // Only ever read below inside `if
                             // ($nbmSendDetailedContent)` (where it's also
@@ -555,7 +556,7 @@ final class NotificationByMailSender
                             if ($existData) {
                                 // gallery_title is always a configured string
                                 // (see include/config_default.inc.php).
-                                $galleryTitle = \Piwigo\Config\CurrentConfig::galleryTitle();
+                                $galleryTitle = $this->currentConfig->galleryTitle();
                                 $subject = '[' . $galleryTitle . '] ' . $this->lang->t('New photos added');
 
                                 $mailEmailFormat = $this->emailFormat ?? $this->mailer
@@ -598,7 +599,7 @@ final class NotificationByMailSender
                                     );
                                 }
 
-                                $nbmSendRecentPostDates = \Piwigo\Config\CurrentConfig::nbmSendRecentPostDates();
+                                $nbmSendRecentPostDates = $this->currentConfig->nbmSendRecentPostDates();
                                 if ($nbmSendHtmlMail and $nbmSendRecentPostDates) {
                                     // Real bug found via PHPStan (same shape as
                                     // FeedController's RSS equivalent):
@@ -608,7 +609,8 @@ final class NotificationByMailSender
                                     // false, so NBM recent-post-date limits always
                                     // fell back to getRecentPostDatesArray()'s own
                                     // hardcoded 3/3/3 defaults.
-                                    $nbmConfig = \Piwigo\Config\CurrentConfig::recentPostDates()->nbm;
+                                    $nbmConfig = $this->currentConfig->recentPostDates()
+                                        ->nbm;
                                     $nbmRecentPostDatesArgs = [
                                         'max_dates' => $nbmConfig->maxDates,
                                         'max_elements' => $nbmConfig->maxElements,

@@ -23,6 +23,7 @@ final readonly class NotificationByMailService
     public function __construct(
         private NotificationByMailRepository $repo,
         private SessionService $sessionService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     public function findAvailableCheckKey(): string
@@ -47,7 +48,7 @@ final readonly class NotificationByMailService
             return [];
         }
 
-        $userFields = \Piwigo\Config\CurrentConfig::userFields();
+        $userFields = $this->currentConfig->userFields();
         $usernameField = $userFields['username'];
         $emailField = $userFields['email'];
         $idField = $userFields['id'];

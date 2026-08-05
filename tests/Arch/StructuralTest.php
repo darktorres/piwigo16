@@ -256,6 +256,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Auth/AccessControl.php',
         '/src/Piwigo/Core/Lang.php',
+        '/src/Piwigo/Config/CurrentConfig.php',
     ];
 
     $hits = [
@@ -328,6 +329,12 @@ test('ShutdownHandler::reset() is only called from tests/', function (): void {
 test('CurrentConfig::reset() is only called from tests/', function (): void {
     // Mirrors the Kernel::reset() rule above -- reset() exists purely for
     // test isolation between cases; production code must never touch it.
+    // Singleton/service-locator elimination campaign, Phase 9: reset() is
+    // now a real instance method, not a static call -- this static-call-
+    // syntax string literal can never match real code again, so this test
+    // is now permanently, deliberately vacuous (same accepted shape as
+    // MailService::reset()'s own equivalent test after its Phase 6
+    // conversion), not an oversight.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [
@@ -337,6 +344,99 @@ test('CurrentConfig::reset() is only called from tests/', function (): void {
     ];
 
     expect(describeCallSites($hits))->toBe([]);
+});
+
+test('CurrentConfig::current() transitional bridge has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 9: current()
+    // kept its original name (no `Static` suffix, matching CurrentUser/
+    // CurrentTemplate/Lang's own precedent -- no competing real instance
+    // method to disambiguate from). Ws/Pwg*.php (8 files) are Phase-10-
+    // locked static dispatch (Phase 10 empties that portion completely).
+    // Every other entry below is a PERMANENT exception, individually
+    // verified (not assumed from a Workflow agent's own choice) against
+    // one of 3 categories:
+    //
+    // (a) Purely static utility classes/methods with no instance/`$this`
+    // to receive CurrentConfig via constructor injection through --
+    // Core/FilesystemHelper.php, Core/DeviceHelper.php,
+    // Image/LoungeMaintenance.php (same "no wrapper needed" precedent
+    // FilesystemHelper itself already established for SessionService::get()/
+    // Translator::get()), Config/ConfigLoader.php, Core/PageFilterHelper.php,
+    // Core/ThemeCatalog.php, Http/HttpClientService.php::guardedFetch(),
+    // Permission/PermissionService.php::getPrivacyLevelOptions() (5 real
+    // static callers), Admin/Image/PwgImage.php's 3 static ext-imagick
+    // helpers, Admin/Install/InstallService.php (matches InstallWizard's
+    // own established static-context precedent), Admin/Upload/
+    // UploadService.php's 9 static uploadFileXxx() event handlers (matches
+    // this same file's own established CurrentLogger::getStatic()
+    // precedent), Image/DerivativeImage.php's url()/get_all()/get_one()
+    // static factory entry points (its own constructor already takes
+    // real CurrentConfig DI -- only these static callers can't reach it).
+    //
+    // (b) Too many real raw `new X(...)` construction sites, no DI
+    // involved, matching the established HtmlService/MailService/
+    // UrlService/Template precedent from every prior phase -- Image/
+    // SrcImage.php (~20 sites, also its own class docblock), Csrf/
+    // CsrfService.php (~50 sites, no constructor at all), Html/HtmlService.php,
+    // Mail/MailService.php, Url/UrlService.php, Template/Template.php,
+    // Template/CssLoader.php, Template/ScriptLoader.php,
+    // Template/FileCombiner.php, Template/PwgTemplateAdapter.php (the
+    // Template-family group).
+    //
+    // (c) Structural exceptions -- Auth/AccessControl.php's one site is
+    // inside currentForCaching()'s own designed degraded-fallback object
+    // graph (never touches the real container, safe pre-boot read by
+    // design -- see that method's own docblock); Users/UserRepository.php
+    // is a Doctrine repository with an ORM-fixed constructor, matching
+    // EventDispatcher's own established "Doctrine repositories" category
+    // from its Phase 4 conversion.
+    $repoRoot = __DIR__ . '/../..';
+
+    $allowedFiles = [
+        '/src/Piwigo/Admin/Extensions/ExtensionScanner.php',
+        '/src/Piwigo/Admin/Extensions/ExtensionType.php',
+        '/src/Piwigo/Admin/Image/PwgImage.php',
+        '/src/Piwigo/Admin/Install/InstallService.php',
+        '/src/Piwigo/Admin/Upload/UploadService.php',
+        '/src/Piwigo/Auth/AccessControl.php',
+        '/src/Piwigo/Config/ConfigLoader.php',
+        '/src/Piwigo/Core/DeviceHelper.php',
+        '/src/Piwigo/Core/FilesystemHelper.php',
+        '/src/Piwigo/Core/PageFilterHelper.php',
+        '/src/Piwigo/Core/ThemeCatalog.php',
+        '/src/Piwigo/Csrf/CsrfService.php',
+        '/src/Piwigo/Html/HtmlService.php',
+        '/src/Piwigo/Http/HttpClientService.php',
+        '/src/Piwigo/Image/DerivativeImage.php',
+        '/src/Piwigo/Image/LoungeMaintenance.php',
+        '/src/Piwigo/Image/SrcImage.php',
+        '/src/Piwigo/Mail/MailService.php',
+        '/src/Piwigo/Permission/PermissionService.php',
+        '/src/Piwigo/Template/CssLoader.php',
+        '/src/Piwigo/Template/FileCombiner.php',
+        '/src/Piwigo/Template/PwgTemplateAdapter.php',
+        '/src/Piwigo/Template/ScriptLoader.php',
+        '/src/Piwigo/Template/Template.php',
+        '/src/Piwigo/Url/UrlService.php',
+        '/src/Piwigo/Users/UserRepository.php',
+        '/src/Piwigo/Ws/PwgCategories.php',
+        '/src/Piwigo/Ws/PwgComments.php',
+        '/src/Piwigo/Ws/PwgCore.php',
+        '/src/Piwigo/Ws/PwgExtensions.php',
+        '/src/Piwigo/Ws/PwgImages.php',
+        '/src/Piwigo/Ws/PwgServer.php',
+        '/src/Piwigo/Ws/PwgUsers.php',
+        '/src/Piwigo/Ws/WsDefaultMethods.php',
+    ];
+
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentConfig::current(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('SessionService::reset() is only called from tests/', function (): void {

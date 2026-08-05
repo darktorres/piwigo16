@@ -78,6 +78,15 @@ final class RedirectService implements RedirectServiceInterface
         return $currentTemplate;
     }
 
+    private static function currentConfig(): CurrentConfig
+    {
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        }
+        return $currentConfig;
+    }
+
     #[\Override]
     public function redirectHttp(string $url, int $status = 302): never
     {
@@ -105,7 +114,7 @@ final class RedirectService implements RedirectServiceInterface
 
         if (! $this->lang->isLangInfoInitialized() || ! isset($template)) {
             $paths = CurrentPaths::get();
-            $guest_id = CurrentConfig::guestId();
+            $guest_id = self::currentConfig()->guestId();
             $user = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
             self::currentUser()->set(User::fromUserArray($user));
             $this->lang->load('common.lang');
@@ -143,7 +152,7 @@ final class RedirectService implements RedirectServiceInterface
 
         $refresh_str = (string) $refresh_time;
         new PageHeaderRenderer()
-            ->render($title, \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), self::currentTemplate(), $refresh_str, $url_link);
+            ->render($title, \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), self::currentTemplate(), self::currentConfig(), $refresh_str, $url_link);
 
         $template->set_filenames([
             'redirect' => 'redirect.tpl',
@@ -160,7 +169,7 @@ final class RedirectService implements RedirectServiceInterface
     public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
     {
         // with RefeshTime <> 0, only html must be used
-        if (CurrentConfig::defaultRedirectMethod() === 'http'
+        if (self::currentConfig()->defaultRedirectMethod() === 'http'
             and $refresh_time === 0
             and ! headers_sent()
         ) {

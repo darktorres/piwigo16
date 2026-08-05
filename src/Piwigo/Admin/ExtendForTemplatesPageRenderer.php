@@ -30,7 +30,7 @@ use Piwigo\Template\Template;
  */
 final class ExtendForTemplatesPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Category\CategoryService $categoryService): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Config\CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
 
@@ -40,7 +40,7 @@ final class ExtendForTemplatesPageRenderer
         // extentsForTemplates() defaults to [] when never configured, so
         // this loop is naturally a no-op then -- no separate presence
         // check needed.
-        foreach (\Piwigo\Config\CurrentConfig::extentsForTemplates() as $tpl_extension_file => $tpl_extension_conditions) {
+        foreach ($currentConfig->extentsForTemplates() as $tpl_extension_file => $tpl_extension_conditions) {
             if (is_string($tpl_extension_file) && is_array($tpl_extension_conditions)
                 && isset($tpl_extension_conditions[0], $tpl_extension_conditions[1], $tpl_extension_conditions[2])
                 && is_string($tpl_extension_conditions[0]) && is_string($tpl_extension_conditions[1])
@@ -149,7 +149,7 @@ final class ExtendForTemplatesPageRenderer
                 }
                 $i++;
             }
-            \Piwigo\Config\CurrentConfig::setExtentsForTemplates($replacements);
+            $currentConfig->setExtentsForTemplates($replacements);
             $tpl_extension = $replacements;
             /* ecrire la nouvelle conf */
             $configService->confUpdateParam('extents_for_templates', $replacements);

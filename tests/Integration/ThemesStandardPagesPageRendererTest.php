@@ -193,7 +193,11 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         parent::setUp();
         $this->setUpConnectionFromEnv();
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         // Both save_error strings this file asserts on live in admin.po --
@@ -204,7 +208,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // setUp().
         Lang::current()->load('admin.lang');
 
-        $this->configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
+        $this->configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current());
         CurrentConfigService::current()->set($this->configService);
 
         // themes_standard_pages.tpl's own {combine_script}/{footer_script}
@@ -285,6 +289,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             \Piwigo\Core\PageState::current(),
             CurrentTemplate::current(),
             new HtmlService(),
+            \Piwigo\Config\CurrentConfig::current(),
         );
     }
 
@@ -467,7 +472,11 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // this isn't simply "every scanned theme gets pushed".
         $this->writeFixtureTheme($themesFixtureRoot, 'std-pages-no', 'Plain Theme', null);
 
-        CurrentConfig::setThemesDir(rtrim($themesFixtureRoot, '/') . '/themes');
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setThemesDir(rtrim($themesFixtureRoot, '/') . '/themes');
 
         $this->renderer->render();
 

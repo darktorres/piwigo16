@@ -200,7 +200,7 @@ abstract class IntegrationTestCase extends TestCase
                 $currentLogger->reset();
             }
         }
-        \Piwigo\Config\CurrentConfig::reset();
+        \Piwigo\Config\CurrentConfig::current()->reset();
         // Harmless even for test classes that never call
         // buildConfigRepository()/wire CurrentConfigService::current()->set() at
         // all -- reset() on an already-unset registry is a no-op.

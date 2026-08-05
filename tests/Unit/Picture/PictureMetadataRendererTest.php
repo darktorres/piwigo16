@@ -38,12 +38,22 @@ function picture_metadata_test_rrmdir(string $dir): void
     rmdir($dir);
 }
 
+function picture_metadata_test_current_config(): CurrentConfig
+{
+    $currentConfig = Kernel::container()->get(CurrentConfig::class);
+    if (! $currentConfig instanceof CurrentConfig) {
+        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+    }
+
+    return $currentConfig;
+}
+
 beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-picture-metadata-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::setDataLocation('data/');
-    CurrentConfig::setDataDirChecked('1');
+    picture_metadata_test_current_config()->setDataLocation('data/');
+    picture_metadata_test_current_config()->setDataDirChecked('1');
     CurrentTemplate::current()->set(new Template());
 });
 
@@ -51,15 +61,15 @@ afterEach(function (): void {
     picture_metadata_test_rrmdir(CurrentPaths::get()->root);
     CurrentTemplate::current()->reset();
     Kernel::reset();
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
 });
 
 test('render appends nothing when both show_exif and show_iptc are disabled', function (): void {
-    CurrentConfig::setShowExif(false);
-    CurrentConfig::setShowIptc(false);
+    picture_metadata_test_current_config()->setShowExif(false);
+    picture_metadata_test_current_config()->setShowIptc(false);
     $renderer = new PictureMetadataRenderer();
 
-    $renderer->render(\Piwigo\Core\Lang::current(), [], new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
+    $renderer->render(\Piwigo\Core\Lang::current(), [], new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current());
 
     expect(CurrentTemplate::current()->get()->get_template_vars('metadata'))->toBeNull();
 });

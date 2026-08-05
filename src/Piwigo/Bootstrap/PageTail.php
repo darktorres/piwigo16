@@ -44,7 +44,7 @@ final class PageTail
         // (L4) is the one place the concrete L4 implementation gets
         // constructed. Legacy Coupling Retirement Phase 4c: UrlServiceInterface
         // is wired the same way, see PageTailRenderer's own docblock.
-        new PageTailRenderer(\Piwigo\Auth\AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService()), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentTemplate())
+        new PageTailRenderer(\Piwigo\Auth\AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig()), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
             ->render(self::pageState()->requestStart);
     }
 
@@ -58,7 +58,7 @@ final class PageTail
     {
         self::checkForUpdates();
 
-        return new PageTailRenderer(\Piwigo\Auth\AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService()), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentTemplate())
+        return new PageTailRenderer(\Piwigo\Auth\AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig()), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
             ->renderToString(self::pageState()->requestStart);
     }
 
@@ -207,11 +207,11 @@ final class PageTail
     private static function checkForUpdates(): void
     {
         // ----------------------------------------------- update notification
-        $update_notify_check_period = \Piwigo\Config\CurrentConfig::updateNotifyCheckPeriod();
+        $update_notify_check_period = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->updateNotifyCheckPeriod();
         if ($update_notify_check_period > 0) {
             $check_for_updates = false;
 
-            $update_notify_last_check = \Piwigo\Config\CurrentConfig::updateNotifyLastCheck() ?? null;
+            $update_notify_last_check = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->updateNotifyLastCheck() ?? null;
             $update_notify_last_check = is_string($update_notify_last_check) ? $update_notify_last_check : null;
 
             if ($update_notify_last_check !== null) {
@@ -225,7 +225,7 @@ final class PageTail
             if ($check_for_updates) {
                 $exec_id = UniqueExecLock::begins('check_for_updates');
                 if ($exec_id !== false) {
-                    new CoreUpdateService(RequestBootstrap::lang(), new ZipExtractor(), new RedirectService(RequestBootstrap::lang(), self::userService()), self::urlService(), self::currentConfigService()->get(), \Piwigo\Core\CurrentPaths::get(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService())
+                    new CoreUpdateService(RequestBootstrap::lang(), new ZipExtractor(), new RedirectService(RequestBootstrap::lang(), self::userService()), self::urlService(), self::currentConfigService()->get(), \Piwigo\Core\CurrentPaths::get(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService(), RequestBootstrap::currentConfig())
                         ->notifyPiwigoNewVersions();
 
                     UniqueExecLock::ends('check_for_updates');

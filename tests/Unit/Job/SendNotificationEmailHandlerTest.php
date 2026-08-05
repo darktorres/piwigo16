@@ -40,27 +40,35 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
     // that real send -- this environment's own real sendmail_path
     // config means letting it proceed further would attempt a genuine
     // delivery, not a test double.
-    CurrentConfig::setMailSenderEmail('sender@example.test');
-    CurrentConfig::setMailSenderName('Test Sender');
-    // Skips the real theme's text/html mail templates -- header.tpl
-    // there reads lang_info['code'] directly, which needs a real
-    // Lang::load() to populate; the plain-text template mail() always
-    // also renders doesn't touch lang_info at all, and is sufficient to
-    // prove the real render+send pipeline genuinely ran.
-    CurrentConfig::setMailAllowHtml(false);
-    // Skips Template::__construct()'s own one-time data_dir_checked
-    // write (which otherwise needs a real, activated
-    // CurrentConfigService -- more bootstrap than this Unit test
-    // should need just to prove delegation).
-    CurrentConfig::setDataDirChecked('1');
     // The real project root, not a throwaway temp dir -- getMailTemplate()
     // needs the real themes/default/template/mail/text/plain/*.tpl files
     // to actually parse (Smarty throws "Unable to load" otherwise), and
     // fabricating stub templates would test Smarty's own file-loading
     // rather than this handler's delegation. Same real-root pattern
     // already used by ErrorCollectorTest/ShutdownHandlerTest/
-    // MessengerFactoryTest/ContainerDetectorTest.
+    // MessengerFactoryTest/ContainerDetectorTest. Booted BEFORE the
+    // CurrentConfig writes below so they land on the real container-shared
+    // instance MailService::mail() itself resolves via CurrentConfig::
+    // current() -- the pre-boot fallback is a different, memoized object
+    // (same "seed after boot, not before" fix shape as every other
+    // Current* wrapper in this campaign, e.g.
+    // RequestBootstrapBootConfigOnlyTest.php's own "reuses an
+    // already-set CurrentConfigService" test).
     \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+
+    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
+    CurrentConfig::current()->setMailSenderName('Test Sender');
+    // Skips the real theme's text/html mail templates -- header.tpl
+    // there reads lang_info['code'] directly, which needs a real
+    // Lang::load() to populate; the plain-text template mail() always
+    // also renders doesn't touch lang_info at all, and is sufficient to
+    // prove the real render+send pipeline genuinely ran.
+    CurrentConfig::current()->setMailAllowHtml(false);
+    // Skips Template::__construct()'s own one-time data_dir_checked
+    // write (which otherwise needs a real, activated
+    // CurrentConfigService -- more bootstrap than this Unit test
+    // should need just to prove delegation).
+    CurrentConfig::current()->setDataDirChecked('1');
 
     $capturedTo = null;
     $capturedArgs = null;
@@ -84,7 +92,7 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
         expect($capturedArgs['subject'] ?? null)->toBe('Test Subject');
     } finally {
         EventDispatcher::get()->removeEventHandler(BeforeSendMail::class, $eventHandler);
-        CurrentConfig::reset();
+        \Piwigo\Config\CurrentConfig::current()->reset();
         \Piwigo\Core\Kernel::reset();
     }
 });

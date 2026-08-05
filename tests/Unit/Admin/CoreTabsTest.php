@@ -41,7 +41,19 @@ function coreTabsUrlService(): UrlServiceInterface
  */
 function coreTabsLang(): Lang
 {
-    return new Lang(new Translator(), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig()), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+}
+
+/**
+ * CoreTabs gained a required CurrentConfig constructor collaborator
+ * (singleton/service-locator elimination campaign, Phase 9) -- same
+ * "fresh, DB-free instance, no Kernel booted" reasoning as coreTabsLang()
+ * above; CurrentConfig's own defaults are always the correct value to
+ * read before a real config table has loaded.
+ */
+function coreTabsCurrentConfig(): CurrentConfig
+{
+    return new CurrentConfig();
 }
 
 /**
@@ -71,7 +83,7 @@ function coreTabsTestAddCoreTabs(CoreTabs $coreTabs, array $sheets, ?string $tab
 }
 
 test('an unrecognized tab id returns the sheets unchanged', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
 
     expect(coreTabsTestAddCoreTabs($coreTabs, ['existing' => ['caption' => 'X', 'url' => '/x']], 'not-a-real-tab-id'))
         ->toBe(['existing' => ['caption' => 'X', 'url' => '/x']]);
@@ -79,7 +91,7 @@ test('an unrecognized tab id returns the sheets unchanged', function (): void {
 });
 
 test('admin_home needs no context and adds the Administration Home tab', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'admin_home');
 
@@ -88,7 +100,7 @@ test('admin_home needs no context and adds the Administration Home tab', functio
 });
 
 test('tags reads myBaseUrl and adds a single List tab', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext(myBaseUrl: '/admin.php?page='));
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'tags');
@@ -98,7 +110,7 @@ test('tags reads myBaseUrl and adds a single List tab', function (): void {
 });
 
 test('tags throws when myBaseUrl was not set in the context', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext());
 
     expect(fn () => coreTabsTestAddCoreTabs($coreTabs, [], 'tags'))->toThrow(RuntimeException::class);
@@ -111,14 +123,14 @@ test('a context-needing tab throws its own distinct exception when setContext() 
     // own $context starts at null, so this forces context()'s own "no
     // context set" guard instead, with no reflection needed at all now
     // that each test gets its own isolated instance.
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
 
     expect(fn () => coreTabsTestAddCoreTabs($coreTabs, [], 'tags'))
         ->toThrow(RuntimeException::class, 'CoreTabs: no context set (writer file forgot CoreTabs::setContext()?)');
 });
 
 test('album reads adminAlbumBaseUrl and adds properties/sort_order/permissions/notification', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext(adminAlbumBaseUrl: '/admin.php?page=album-5'));
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'album');
@@ -135,7 +147,7 @@ test('album reads adminAlbumBaseUrl and adds properties/sort_order/permissions/n
 });
 
 test('albums reads myBaseUrl and adds list/permalinks', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext(myBaseUrl: '/admin.php?page='));
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'albums');
@@ -148,7 +160,7 @@ test('albums reads myBaseUrl and adds list/permalinks', function (): void {
 });
 
 test('users reads myBaseUrl and adds user_list/user_activity, not the dead duplicate case', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext(myBaseUrl: '/admin.php?page='));
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'users');
@@ -161,7 +173,7 @@ test('users reads myBaseUrl and adds user_list/user_activity, not the dead dupli
 });
 
 test('batch_manager reads managerLink and adds global/unit', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext(managerLink: '/admin.php?page=batch_manager&mode='));
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'batch_manager');
@@ -173,10 +185,11 @@ test('batch_manager reads managerLink and adds global/unit', function (): void {
 });
 
 test('cat_options always adds status/visible, plus comments/representative only when their config is enabled', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $currentConfig = coreTabsCurrentConfig();
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), $currentConfig);
     $coreTabs->setContext(new CoreTabsContext(linkStart: '/admin.php?page='));
-    CurrentConfig::setActivateComments(false);
-    CurrentConfig::setAllowRandomRepresentative(false);
+    $currentConfig->setActivateComments(false);
+    $currentConfig->setAllowRandomRepresentative(false);
 
     try {
         $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'cat_options');
@@ -186,8 +199,8 @@ test('cat_options always adds status/visible, plus comments/representative only 
         expect($sheets['status']['caption'])->toBe('<span class="icon-lock"></span>' . coreTabsLang()->t('Public / Private'));
         expect($sheets['visible']['caption'])->toBe('<span class="icon-block"></span>' . coreTabsLang()->t('Lock'));
 
-        CurrentConfig::setActivateComments(true);
-        CurrentConfig::setAllowRandomRepresentative(true);
+        $currentConfig->setActivateComments(true);
+        $currentConfig->setAllowRandomRepresentative(true);
         $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'cat_options');
         expect(array_keys($sheets))->toBe(['status', 'visible', 'comments', 'representative']);
         expect($sheets['comments']['url'])->toBe('/admin.php?page=cat_options&amp;section=comments');
@@ -195,13 +208,13 @@ test('cat_options always adds status/visible, plus comments/representative only 
         expect($sheets['comments']['caption'])->toBe('<span class="icon-chat"></span>' . coreTabsLang()->t('Comments'));
         expect($sheets['representative']['caption'])->toBe(coreTabsLang()->t('Representative'));
     } finally {
-        CurrentConfig::setActivateComments(false);
-        CurrentConfig::setAllowRandomRepresentative(false);
+        $currentConfig->setActivateComments(false);
+        $currentConfig->setAllowRandomRepresentative(false);
     }
 });
 
 test('comments reads myBaseUrl and adds a single List tab', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext(myBaseUrl: '/admin.php?page='));
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'comments');
@@ -211,7 +224,7 @@ test('comments reads myBaseUrl and adds a single List tab', function (): void {
 });
 
 test('groups reads myBaseUrl and adds a single List tab pointing at group_list', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext(myBaseUrl: '/admin.php?page='));
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'groups');
@@ -221,7 +234,7 @@ test('groups reads myBaseUrl and adds a single List tab pointing at group_list',
 });
 
 test('configuration reads confLink and adds main/sizes/watermark/display/comments/search', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext(confLink: '/admin.php?page=configuration&section='));
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'configuration');
@@ -242,7 +255,7 @@ test('configuration reads confLink and adds main/sizes/watermark/display/comment
 });
 
 test('help reads helpLink and adds add_photos/permissions/groups/virtual_links/misc', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext(helpLink: '/admin.php?page=help&section='));
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'help');
@@ -261,7 +274,7 @@ test('help reads helpLink and adds add_photos/permissions/groups/virtual_links/m
 });
 
 test('history reads linkStart and adds stats/history', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext(linkStart: '/admin.php?page='));
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'history');
@@ -273,9 +286,10 @@ test('history reads linkStart and adds stats/history', function (): void {
 });
 
 test('languages always adds installed, plus update/new only when extension installs are enabled', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $currentConfig = coreTabsCurrentConfig();
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), $currentConfig);
     $coreTabs->setContext(new CoreTabsContext(myBaseUrl: '/admin.php?page=languages'));
-    CurrentConfig::setEnableExtensionsInstall(false);
+    $currentConfig->setEnableExtensionsInstall(false);
 
     try {
         $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'languages');
@@ -283,7 +297,7 @@ test('languages always adds installed, plus update/new only when extension insta
         expect($sheets['installed']['url'])->toBe('/admin.php?page=languages&amp;tab=installed');
         expect($sheets['installed']['caption'])->toBe('<span class="icon-menu"></span>' . coreTabsLang()->t('List'));
 
-        CurrentConfig::setEnableExtensionsInstall(true);
+        $currentConfig->setEnableExtensionsInstall(true);
         $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'languages');
         expect(array_keys($sheets))->toBe(['installed', 'update', 'new']);
         expect($sheets['update']['url'])->toBe('/admin.php?page=languages&amp;tab=update');
@@ -291,12 +305,12 @@ test('languages always adds installed, plus update/new only when extension insta
         expect($sheets['update']['caption'])->toBe('<span class="icon-arrows-cw"></span>' . coreTabsLang()->t('Check for updates'));
         expect($sheets['new']['caption'])->toBe('<span class="icon-plus-circled"></span>' . coreTabsLang()->t('Add New Language'));
     } finally {
-        CurrentConfig::setEnableExtensionsInstall(false);
+        $currentConfig->setEnableExtensionsInstall(false);
     }
 });
 
 test('menus reads myBaseUrl and adds a single List tab pointing at menubar', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext(myBaseUrl: '/admin.php?page='));
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'menus');
@@ -306,7 +320,7 @@ test('menus reads myBaseUrl and adds a single List tab pointing at menubar', fun
 });
 
 test('nbm reads baseUrl and adds param/subscribe/send', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext(baseUrl: '/root'));
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'nbm');
@@ -321,9 +335,10 @@ test('nbm reads baseUrl and adds param/subscribe/send', function (): void {
 });
 
 test('photo reads adminPhotoBaseUrl and adds properties/coi, plus formats only when the multi-format feature is enabled', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $currentConfig = coreTabsCurrentConfig();
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), $currentConfig);
     $coreTabs->setContext(new CoreTabsContext(adminPhotoBaseUrl: '/admin.php?page=photo-42'));
-    CurrentConfig::setIsFormatsEnabled(false);
+    $currentConfig->setIsFormatsEnabled(false);
 
     try {
         $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'photo');
@@ -333,19 +348,20 @@ test('photo reads adminPhotoBaseUrl and adds properties/coi, plus formats only w
         expect($sheets['properties']['caption'])->toBe('<span class="icon-file-image"></span>' . coreTabsLang()->t('Properties'));
         expect($sheets['coi']['caption'])->toBe('<span class="icon-crop"></span>' . coreTabsLang()->t('Center of interest'));
 
-        CurrentConfig::setIsFormatsEnabled(true);
+        $currentConfig->setIsFormatsEnabled(true);
         $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'photo');
         expect(array_keys($sheets))->toBe(['properties', 'coi', 'formats']);
         expect($sheets['formats']['url'])->toBe('/admin.php?page=photo-42-formats');
         expect($sheets['formats']['caption'])->toBe('<span class="icon-docs"></span>' . coreTabsLang()->t('Formats'));
     } finally {
-        CurrentConfig::setIsFormatsEnabled(false);
+        $currentConfig->setIsFormatsEnabled(false);
     }
 });
 
 test('photos_add needs no context, adds direct/applications, plus ftp only when synchronization is enabled', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
-    CurrentConfig::setEnableSynchronization(false);
+    $currentConfig = coreTabsCurrentConfig();
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), $currentConfig);
+    $currentConfig->setEnableSynchronization(false);
 
     try {
         $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'photos_add');
@@ -355,20 +371,21 @@ test('photos_add needs no context, adds direct/applications, plus ftp only when 
         expect($sheets['direct']['caption'])->toBe('<span class="icon-upload"></span>' . coreTabsLang()->t('Web Form'));
         expect($sheets['applications']['caption'])->toBe('<span class="icon-network"></span>' . coreTabsLang()->t('Applications'));
 
-        CurrentConfig::setEnableSynchronization(true);
+        $currentConfig->setEnableSynchronization(true);
         $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'photos_add');
         expect(array_keys($sheets))->toBe(['direct', 'applications', 'ftp']);
         expect($sheets['ftp']['url'])->toBe('admin.php?page=photos_add&amp;section=ftp');
         expect($sheets['ftp']['caption'])->toBe('<span class="icon-exchange"></span>' . coreTabsLang()->t('FTP + Synchronization'));
     } finally {
-        CurrentConfig::setEnableSynchronization(false);
+        $currentConfig->setEnableSynchronization(false);
     }
 });
 
 test('plugins always adds installed, plus update/new only when extension installs are enabled', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $currentConfig = coreTabsCurrentConfig();
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), $currentConfig);
     $coreTabs->setContext(new CoreTabsContext(myBaseUrl: '/admin.php?page=plugins'));
-    CurrentConfig::setEnableExtensionsInstall(true);
+    $currentConfig->setEnableExtensionsInstall(true);
 
     try {
         $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'plugins');
@@ -380,12 +397,12 @@ test('plugins always adds installed, plus update/new only when extension install
         expect($sheets['update']['caption'])->toBe('<span class="icon-arrows-cw"></span>' . coreTabsLang()->t('Check for updates'));
         expect($sheets['new']['caption'])->toBe('<span class="icon-plus-circled"></span>' . coreTabsLang()->t('Add New Plugin'));
     } finally {
-        CurrentConfig::setEnableExtensionsInstall(false);
+        $currentConfig->setEnableExtensionsInstall(false);
     }
 });
 
 test('rating needs no context and adds rating/rating_user', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'rating');
 
@@ -397,9 +414,10 @@ test('rating needs no context and adds rating/rating_user', function (): void {
 });
 
 test('themes always adds installed/standard_pages, plus update/new only when extension installs are enabled', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $currentConfig = coreTabsCurrentConfig();
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), $currentConfig);
     $coreTabs->setContext(new CoreTabsContext(myBaseUrl: '/admin.php?page=themes'));
-    CurrentConfig::setEnableExtensionsInstall(false);
+    $currentConfig->setEnableExtensionsInstall(false);
 
     try {
         $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'themes');
@@ -409,49 +427,50 @@ test('themes always adds installed/standard_pages, plus update/new only when ext
         expect($sheets['installed']['caption'])->toBe('<span class="icon-menu"></span>' . coreTabsLang()->t('List'));
         expect($sheets['standard_pages']['caption'])->toBe('<span class="icon-cog-alt"></span>' . coreTabsLang()->t('Standard pages'));
 
-        CurrentConfig::setEnableExtensionsInstall(true);
+        $currentConfig->setEnableExtensionsInstall(true);
         $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'themes');
         expect($sheets['update']['url'])->toBe('/admin.php?page=themes&amp;tab=update');
         expect($sheets['new']['url'])->toBe('/admin.php?page=themes&amp;tab=new');
         expect($sheets['update']['caption'])->toBe('<span class="icon-arrows-cw"></span>' . coreTabsLang()->t('Check for updates'));
         expect($sheets['new']['caption'])->toBe('<span class="icon-plus-circled"></span>' . coreTabsLang()->t('Add New Theme'));
     } finally {
-        CurrentConfig::setEnableExtensionsInstall(false);
+        $currentConfig->setEnableExtensionsInstall(false);
     }
 });
 
 test('updates adds pwg/ext independently, gated by their own separate config flags', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $currentConfig = coreTabsCurrentConfig();
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), $currentConfig);
     $coreTabs->setContext(new CoreTabsContext(myBaseUrl: '/admin.php?page=updates'));
-    CurrentConfig::setEnableCoreUpdate(false);
-    CurrentConfig::setEnableExtensionsInstall(false);
+    $currentConfig->setEnableCoreUpdate(false);
+    $currentConfig->setEnableExtensionsInstall(false);
 
     try {
         expect(array_keys(coreTabsTestAddCoreTabs($coreTabs, [], 'updates')))->toBe([]);
 
-        CurrentConfig::setEnableCoreUpdate(true);
+        $currentConfig->setEnableCoreUpdate(true);
         $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'updates');
         expect(array_keys($sheets))->toBe(['pwg']);
         expect($sheets['pwg']['url'])->toBe('/admin.php?page=updates');
         expect($sheets['pwg']['caption'])->toBe(coreTabsLang()->t('Piwigo core'));
 
-        CurrentConfig::setEnableCoreUpdate(false);
-        CurrentConfig::setEnableExtensionsInstall(true);
+        $currentConfig->setEnableCoreUpdate(false);
+        $currentConfig->setEnableExtensionsInstall(true);
         $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'updates');
         expect(array_keys($sheets))->toBe(['ext']);
         expect($sheets['ext']['url'])->toBe('/admin.php?page=updates&amp;tab=ext');
         expect($sheets['ext']['caption'])->toBe(coreTabsLang()->t('Extensions'));
 
-        CurrentConfig::setEnableCoreUpdate(true);
+        $currentConfig->setEnableCoreUpdate(true);
         expect(array_keys(coreTabsTestAddCoreTabs($coreTabs, [], 'updates')))->toBe(['pwg', 'ext']);
     } finally {
-        CurrentConfig::setEnableCoreUpdate(false);
-        CurrentConfig::setEnableExtensionsInstall(false);
+        $currentConfig->setEnableCoreUpdate(false);
+        $currentConfig->setEnableExtensionsInstall(false);
     }
 });
 
 test('site_update reads myBaseUrl and adds synchronization/site_maager', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext(myBaseUrl: '/admin.php?page='));
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'site_update');
@@ -464,7 +483,7 @@ test('site_update reads myBaseUrl and adds synchronization/site_maager', functio
 });
 
 test('maintenance reads myBaseUrl and adds actions/env/sys', function (): void {
-    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService());
+    $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext(myBaseUrl: '/admin.php?page='));
 
     $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'maintenance');

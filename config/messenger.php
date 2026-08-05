@@ -53,7 +53,7 @@ return [
         // one's.
         BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(
             new \Piwigo\Core\Lang(
-                new \Piwigo\Lang\Translator(),
+                new \Piwigo\Lang\Translator(\Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
                 new \Piwigo\Html\HtmlService(),
                 \Piwigo\Core\Paths::fromRoot(dirname(__DIR__)),
                 new \Piwigo\Core\InstallationFlag(),
@@ -62,24 +62,26 @@ return [
             \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(),
             \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(),
             \Piwigo\PluginConfig\EventDispatcher::get(),
-            new \Piwigo\Config\ConfigService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Config\ConfigEntry::class), \Piwigo\PluginConfig\EventDispatcher::get()),
+            new \Piwigo\Config\ConfigService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Config\ConfigEntry::class), \Piwigo\PluginConfig\EventDispatcher::get(), new \Piwigo\Config\CurrentConfig()),
             \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(),
             \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
             \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(),
-            \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
+            \Piwigo\Bootstrap\CoreDomainAccessor::imageService(),
+            \Piwigo\Bootstrap\RequestBootstrap::currentConfig()
         ),
-        GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService()),
-        RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService()),
+        GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService(\Piwigo\Bootstrap\RequestBootstrap::currentConfig())),
+        RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService(\Piwigo\Bootstrap\RequestBootstrap::currentConfig())),
         ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(new MetadataService(
             new \Piwigo\Core\Lang(
-                new \Piwigo\Lang\Translator(),
+                new \Piwigo\Lang\Translator(\Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
                 new \Piwigo\Html\HtmlService(),
                 \Piwigo\Core\Paths::fromRoot(dirname(__DIR__)),
                 new \Piwigo\Core\InstallationFlag(),
             ),
             new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
             \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(),
-            \Piwigo\PluginConfig\EventDispatcher::get()
+            \Piwigo\PluginConfig\EventDispatcher::get(),
+            \Piwigo\Bootstrap\RequestBootstrap::currentConfig()
         )),
         SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(new MailService()),
     ],

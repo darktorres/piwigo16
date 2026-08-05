@@ -63,6 +63,7 @@ final class ActionController implements ControllerInterface
         private readonly HistoryService $historyService,
         private readonly \Piwigo\Permission\PermissionService $permissionService,
         private readonly \Piwigo\Image\ImageService $imageService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -72,7 +73,7 @@ final class ActionController implements ControllerInterface
 
         $conn = DbConnection::build();
 
-        $actionRequest = Request\ActionRequest::fromGlobals(\Piwigo\Config\CurrentConfig::isFormatsEnabled());
+        $actionRequest = Request\ActionRequest::fromGlobals($this->currentConfig->isFormatsEnabled());
 
         $format = null;
         if ($actionRequest->formatRequested) {
@@ -139,7 +140,7 @@ final class ActionController implements ControllerInterface
         switch ($get_part) {
             case 'e':
                 if ($src_image->is_original() and ! $this->currentUser->get()->enabledHigh) {// we have a photo and the user has no access to HD
-                    $deriv = new DerivativeImage(ImageStdParams::XXLARGE, $src_image);
+                    $deriv = new DerivativeImage(ImageStdParams::XXLARGE, $src_image, $this->currentConfig);
                     if (! $deriv->same_as_source()) {
                         return $this->doError(401, 'Access denied e');
                     }

@@ -10,6 +10,15 @@ use Piwigo\Session\SessionService;
  * P23 batch 8d: device-type detection relocated from
  * include/functions.inc.php -- no natural existing class home, stateless
  * beyond the session it reads/writes through SessionService.
+ *
+ * Singleton/service-locator elimination campaign, Phase 9: purely static,
+ * no instance/constructor to receive CurrentConfig via constructor
+ * injection through (same shape as its own established SessionService::
+ * get() shim usage above, and the SessionService::get() arch test's own
+ * allow-list already documents this file as "a stateless static utility
+ * outside this campaign's own scope") -- reads via the CurrentConfig::
+ * current() transitional bridge instead, matching FilesystemHelper's own
+ * "no wrapper needed" precedent.
  */
 final class DeviceHelper
 {
@@ -42,7 +51,7 @@ final class DeviceHelper
         // CurrentConfig::mobilTheme() is SCHEMA-typed 'string' only (never null/int/
         // float/bool/array) -- '' and '0' are the only two of empty()'s
         // falsy cases a string value can actually satisfy.
-        $mobile_theme_conf = \Piwigo\Config\CurrentConfig::mobilTheme();
+        $mobile_theme_conf = \Piwigo\Config\CurrentConfig::current()->mobilTheme();
         if ($mobile_theme_conf === '' || $mobile_theme_conf === '0') {
             return false;
         }

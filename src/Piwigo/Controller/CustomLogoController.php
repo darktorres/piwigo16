@@ -45,6 +45,7 @@ final class CustomLogoController implements ControllerInterface
     public function __construct(
         private readonly AccessControl $accessControl,
         private readonly StorageRegistry $storageRegistry,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -52,7 +53,7 @@ final class CustomLogoController implements ControllerInterface
     {
         $this->accessControl->checkStatus(AccessLevel::Guest);
 
-        $path = CurrentConfig::standardPagesSelectedLogoPath();
+        $path = $this->currentConfig->standardPagesSelectedLogoPath();
         if (! is_string($path) || $path === '') {
             return ResponseFactory::text('Not found', 404);
         }

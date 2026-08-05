@@ -37,6 +37,7 @@ final readonly class CategoryDefaultRenderer
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Image\ImageStdParams $imageStdParams,
         private \Piwigo\Users\CurrentUser $currentUser,
+        private \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -113,7 +114,7 @@ final readonly class CategoryDefaultRenderer
                   ]
               );
 
-            if (\Piwigo\Config\CurrentConfig::activateComments() and (bool) $this->currentUser->get()->rawAttributes['show_nb_comments']) {
+            if ($this->currentConfig->activateComments() and (bool) $this->currentUser->get()->rawAttributes['show_nb_comments']) {
                 $nbCommentsOf = $this->commentCounter->countValidatedByImageIds($selection);
             }
         }
@@ -160,7 +161,7 @@ final readonly class CategoryDefaultRenderer
                 'file_ext' => strtolower(\Piwigo\Core\StringHelper::getExtension($rowFile)),
             ]);
 
-            if (\Piwigo\Config\CurrentConfig::indexNewIcon()) {
+            if ($this->currentConfig->indexNewIcon()) {
                 // '' falls through get_icon()'s own empty($date) guard
                 // exactly like a non-string/null column value would, so
                 // behavior is unchanged.
@@ -207,8 +208,8 @@ final readonly class CategoryDefaultRenderer
         $template->assign([
             'derivative_params' => $this->eventDispatcher->dispatchChange(new GetIndexDerivativeParams($this->imageStdParams->get_by_type($indexDeriv)))
                 ->params,
-            'maxRequests' => \Piwigo\Config\CurrentConfig::maxRequests(),
-            'SHOW_THUMBNAIL_CAPTION' => \Piwigo\Config\CurrentConfig::showThumbnailCaption(),
+            'maxRequests' => $this->currentConfig->maxRequests(),
+            'SHOW_THUMBNAIL_CAPTION' => $this->currentConfig->showThumbnailCaption(),
         ]);
         $tplThumbnailsVar = $this->eventDispatcher->dispatchChange(new LocEndIndexThumbnails($tplThumbnailsVar, $pictures))
             ->tplThumbnailsVar;

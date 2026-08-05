@@ -62,6 +62,7 @@ final class PasswordController implements ControllerInterface
         private readonly \Piwigo\Auth\ApiKeyService $apiKeyService,
         private readonly \Piwigo\Html\HtmlService $htmlService,
         private readonly \Piwigo\Mail\MailService $mailService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -239,7 +240,7 @@ final class PasswordController implements ControllerInterface
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! is_array($hide_menu_on) or ! in_array('thePasswordPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig);
         }
 
         // Load language if cookie is set from login/register/password
@@ -277,7 +278,7 @@ final class PasswordController implements ControllerInterface
         $template->assign('HELP_LINK', $help_link);
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatchNotify(new LocEndPassword());
         $this->htmlService
             ->flushPageMessages();
@@ -325,7 +326,7 @@ final class PasswordController implements ControllerInterface
         if ($user_id_raw !== null) {
             $user_id = $user_id_raw;
         } else {
-            $user_id = \Piwigo\Common\ValueObject\UserId::from(\Piwigo\Config\CurrentConfig::guestId());
+            $user_id = \Piwigo\Common\ValueObject\UserId::from($this->currentConfig->guestId());
         }
 
         $userdata = $this->userService->getUserData($user_id);
@@ -365,7 +366,7 @@ final class PasswordController implements ControllerInterface
         $language = is_string($language) ? $language : '';
         $this->mailService
             ->switchLangTo($language);
-        $user_code = \Piwigo\Auth\AuthService::generateUserCode();
+        $user_code = $this->authService->generateUserCode();
         $template_mail = $this->mailService
             ->generateCodeVerificationMail($user_code['code']);
         // $skip_mail already covers $email === null/''), so $email is
@@ -382,7 +383,7 @@ final class PasswordController implements ControllerInterface
             'attempts' => 0,
             'user_id' => $is_user_found ? $user_id->value : null,
             'created_at' => time(),
-            'ttl' => min(\Piwigo\Config\CurrentConfig::passwordResetCodeDuration(), 900), // max 15 min
+            'ttl' => min($this->currentConfig->passwordResetCodeDuration(), 900), // max 15 min
         ];
 
         return true;
@@ -433,7 +434,7 @@ final class PasswordController implements ControllerInterface
         if (
             $user_code === '' // empty user code
             || ! (bool) preg_match('/^\d{6}$/', $user_code) // check digit 6
-            || ! \Piwigo\Auth\AuthService::verifyUserCode($secret, $user_code)) { // verify user code
+            || ! $this->authService->verifyUserCode($secret, $user_code)) { // verify user code
             $is_valid = false;
         }
 
@@ -588,7 +589,7 @@ final class PasswordController implements ControllerInterface
 
         // see validate_mail_address() for why this is string=>string
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = $this->currentConfig->userFields();
 
         $conn = DbConnection::build();
 

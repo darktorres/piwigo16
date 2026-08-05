@@ -135,7 +135,7 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
 $fixtureRoot = null;
 
 beforeEach(function () use (&$fixtureRoot): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     ConfigLoader::applyDefaults();
 
     $fixtureRoot = sys_get_temp_dir() . '/piwigo-extension-update-checker-test-' . bin2hex(random_bytes(4)) . '/';
@@ -153,13 +153,13 @@ beforeEach(function () use (&$fixtureRoot): void {
     mkdir($fixtureRoot . 'plugins', 0o777, true);
     mkdir($fixtureRoot . 'themes', 0o777, true);
     mkdir($fixtureRoot . 'language', 0o777, true);
-    CurrentConfig::setThemesDir(rtrim($fixtureRoot, '/') . '/themes');
+    CurrentConfig::current()->setThemesDir(rtrim($fixtureRoot, '/') . '/themes');
 
     unset($_SESSION['extensions_need_update']);
 });
 
 afterEach(function () use (&$fixtureRoot): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     Kernel::reset();
     unset($_SESSION['extensions_need_update']);
     if (is_string($fixtureRoot) && is_dir($fixtureRoot)) {

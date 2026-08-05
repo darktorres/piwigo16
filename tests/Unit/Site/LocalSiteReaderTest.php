@@ -60,6 +60,23 @@ use Piwigo\Site\LocalSiteReader;
  * favor of a flaky test. Left untested on purpose; not claimed to be
  * equivalent.
  */
+// PHPStan can't see across the beforeEach()/test() closure boundary that
+// $this->currentConfig is always a real CurrentConfig by the time a test
+// body runs (Pest always runs beforeEach() first) -- same "narrow for
+// real rather than widen" reasoning as ExtensionUpdateCheckerTest.php's
+// own requireFixtureRoot() helper. Only needed at the 2 call sites below
+// that call a method on it directly (method.nonObject); the constructor
+// itself accepts $this->currentConfig unnarrowed like every other
+// site in this file already passes $this->root unnarrowed.
+function requireCurrentConfig(mixed $currentConfig): CurrentConfig
+{
+    if (! $currentConfig instanceof CurrentConfig) {
+        throw new \RuntimeException('currentConfig not initialized -- beforeEach() must run first');
+    }
+
+    return $currentConfig;
+}
+
 function lsrRrmdir(string $dir): void
 {
     if (! is_dir($dir)) {
@@ -86,19 +103,26 @@ function lsrRrmdir(string $dir): void
 beforeEach(function (): void {
     $this->root = sys_get_temp_dir() . '/piwigo-lsr-test-' . bin2hex(random_bytes(8));
     mkdir($this->root, 0o777, true);
-    CurrentConfig::reset();
+    CurrentConfig::current()->reset();
+    // LocalSiteReader now takes CurrentConfig as a real constructor
+    // collaborator (Legacy Coupling Retirement Track A batch A4) instead
+    // of reading it statically -- a fresh, per-test instance, since this
+    // file never boots the Kernel and every test constructs its own
+    // LocalSiteReader directly from it (not through CurrentConfig::current()'s
+    // pre-boot fallback).
+    $this->currentConfig = new CurrentConfig();
 });
 
 afterEach(function (): void {
     lsrRrmdir(is_string($this->root) ? $this->root : '');
-    CurrentConfig::reset();
+    CurrentConfig::current()->reset();
 });
 
 test('open returns true for an existing directory and false for a missing one', function (): void {
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
     expect($reader->open())->toBeTrue();
 
-    $missing = new LocalSiteReader($this->root . '/does-not-exist');
+    $missing = new LocalSiteReader($this->root . '/does-not-exist', $this->currentConfig);
     expect($missing->open())->toBeFalse();
 });
 
@@ -106,7 +130,7 @@ test('get_elements skips the . and .. readdir entries', function (): void {
     // An otherwise-empty directory only ever yields '.' and '..' from
     // readdir(), so a non-empty result here (rather than a fatal loop)
     // proves the skip branch ran without needing extra fixture files.
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
     expect($reader->get_elements($this->root))->toBe([]);
 });
@@ -116,7 +140,7 @@ test('get_elements looks up a representative extension for a non-picture file_ex
     file_put_contents($this->root . '/holiday-report.pdf', 'pdf-bytes');
     file_put_contents($this->root . '/pwg_representative/holiday-report.png', 'png-bytes');
 
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
     $elements = $reader->get_elements($this->root);
 
     expect($elements)->toBe([
@@ -127,7 +151,7 @@ test('get_elements looks up a representative extension for a non-picture file_ex
 test('get_elements looks up a representative extension for a non-picture file_ext element and finds none', function (): void {
     file_put_contents($this->root . '/podcast-episode.mp3', 'mp3-bytes');
 
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
     $elements = $reader->get_elements($this->root);
 
     expect($elements)->toBe([
@@ -138,7 +162,7 @@ test('get_elements looks up a representative extension for a non-picture file_ex
 test('get_elements does not look up a representative extension for a picture-extension element', function (): void {
     file_put_contents($this->root . '/family-photo.jpg', 'jpg-bytes');
 
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
     $elements = $reader->get_elements($this->root);
 
     expect($elements)->toBe([
@@ -147,14 +171,14 @@ test('get_elements does not look up a representative extension for a picture-ext
 });
 
 test('get_elements attaches per-format sizes under pwg_format when enable_formats is on', function (): void {
-    CurrentConfig::setIsFormatsEnabled(true);
+    requireCurrentConfig($this->currentConfig)->setIsFormatsEnabled(true);
 
     mkdir($this->root . '/pwg_format');
     file_put_contents($this->root . '/scan.jpg', 'jpg-bytes');
     file_put_contents($this->root . '/pwg_format/scan.cr2', str_repeat('x', 2048));
     file_put_contents($this->root . '/pwg_format/scan.tif', str_repeat('y', 5120));
 
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
     $elements = $reader->get_elements($this->root);
 
     expect($elements)->toBe([
@@ -166,10 +190,10 @@ test('get_elements attaches per-format sizes under pwg_format when enable_format
 });
 
 test('get_elements attaches an empty formats array when enable_formats is on but no pwg_format directory exists', function (): void {
-    CurrentConfig::setIsFormatsEnabled(true);
+    requireCurrentConfig($this->currentConfig)->setIsFormatsEnabled(true);
     file_put_contents($this->root . '/scan.jpg', 'jpg-bytes');
 
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
     $elements = $reader->get_elements($this->root);
 
     expect($elements)->toBe([
@@ -184,7 +208,7 @@ test('get_element_update_attributes finds a representative extension for a non-p
     mkdir($this->root . '/pwg_representative');
     file_put_contents($this->root . '/pwg_representative/document.gif', 'gif-bytes');
 
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
     expect($reader->get_element_update_attributes($this->root . '/document.pdf'))->toBe([
         'representative_ext' => 'gif',
@@ -192,7 +216,7 @@ test('get_element_update_attributes finds a representative extension for a non-p
 });
 
 test('get_element_update_attributes returns a null representative extension for a picture element', function (): void {
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
     expect($reader->get_element_update_attributes($this->root . '/photo.png'))->toBe([
         'representative_ext' => null,
@@ -203,7 +227,7 @@ test('get_representative_ext returns the first matching picture extension found 
     mkdir($this->root . '/pwg_representative');
     file_put_contents($this->root . '/pwg_representative/movie.jpg', 'jpg-bytes');
 
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
     expect($reader->get_representative_ext($this->root, 'movie'))->toBe('jpg');
 });
@@ -211,7 +235,7 @@ test('get_representative_ext returns the first matching picture extension found 
 test('get_representative_ext returns null when no representative file exists for any picture extension', function (): void {
     mkdir($this->root . '/pwg_representative');
 
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
     expect($reader->get_representative_ext($this->root, 'movie'))->toBeNull();
 });
@@ -221,7 +245,7 @@ test('get_formats returns the on-disk size in kilobytes for each matching format
     file_put_contents($this->root . '/pwg_format/negative.tif', str_repeat('a', 4096));
     file_put_contents($this->root . '/pwg_format/negative.psd', str_repeat('b', 1024));
 
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
     expect($reader->get_formats($this->root, 'negative'))->toBe([
         'tif' => 4.0,
@@ -230,7 +254,7 @@ test('get_formats returns the on-disk size in kilobytes for each matching format
 });
 
 test('get_formats returns an empty array when the pwg_format directory does not exist', function (): void {
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
     expect($reader->get_formats($this->root, 'negative'))->toBe([]);
 });
@@ -248,7 +272,7 @@ test('get_elements does not look up a representative extension for a picture-ext
     file_put_contents($this->root . '/family-photo.jpg', 'jpg-bytes');
     file_put_contents($this->root . '/pwg_representative/family-photo.png', 'png-bytes');
 
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
     $elements = $reader->get_elements($this->root);
 
     expect($elements)->toBe([
@@ -259,7 +283,7 @@ test('get_elements does not look up a representative extension for a picture-ext
 test('get_elements lower-cases the file extension before matching it against the configured extension lists', function (): void {
     file_put_contents($this->root . '/vacation.JPG', 'jpg-bytes');
 
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
     $elements = $reader->get_elements($this->root);
 
     expect($elements)->toBe([
@@ -295,7 +319,7 @@ test('get_elements recurses into ordinary subdirectories -- including names that
     mkdir($this->root . '/thumbnail');
     file_put_contents($this->root . '/thumbnail/hidden-4.jpg', 'h4-bytes');
 
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
     $elements = $reader->get_elements($this->root);
 
     expect($elements)->toBe([
@@ -314,7 +338,7 @@ test('get_elements returns keys in sorted order regardless of the on-disk readdi
     file_put_contents($this->root . '/mango.jpg', 'm-bytes');
     file_put_contents($this->root . '/apple.jpg', 'a-bytes');
 
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
     $elements = $reader->get_elements($this->root);
 
     expect(array_keys($elements))->toBe([
@@ -332,7 +356,7 @@ test('get_formats floors a non-multiple-of-1024 file size to kilobytes', functio
     mkdir($this->root . '/pwg_format');
     file_put_contents($this->root . '/pwg_format/negative.tif', str_repeat('a', 2047));
 
-    $reader = new LocalSiteReader($this->root);
+    $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
     expect($reader->get_formats($this->root, 'negative'))->toBe([
         'tif' => 1.0,

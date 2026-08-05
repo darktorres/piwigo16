@@ -60,6 +60,7 @@ final readonly class TagService
         private ActivityLoggerInterface $activityLogger,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Users\CurrentUser $currentUser,
+        private \Piwigo\Config\CurrentConfig $currentConfig,
     ) {
         $this->tagIdFromTagNameCache = new TagIdCache();
     }
@@ -79,7 +80,7 @@ final readonly class TagService
      */
     private function newImageService(): ImageService
     {
-        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityLogger, \Piwigo\Session\SessionService::get(), $this->eventDispatcher);
+        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityLogger, \Piwigo\Session\SessionService::get(), $this->eventDispatcher, $this->currentConfig);
     }
 
     /**
@@ -157,7 +158,7 @@ final readonly class TagService
 
         // tag levels threshold calculation: a tag with an average rate
         // must have the middle level.
-        $tagsLevels = \Piwigo\Config\CurrentConfig::tagsLevels();
+        $tagsLevels = $this->currentConfig->tagsLevels();
 
         $thresholdOfLevel = [];
         for ($i = 1; $i < $tagsLevels; $i++) {
@@ -371,7 +372,7 @@ final readonly class TagService
   HAVING COUNT(DISTINCT tag_id)=' . count($tagIds);
         }
 
-        $orderBySql = in_array($orderBy, [null, ''], true) ? \Piwigo\Config\CurrentConfig::orderBy() : $orderBy;
+        $orderBySql = in_array($orderBy, [null, ''], true) ? $this->currentConfig->orderBy() : $orderBy;
 
         return $this->repo->findImageIdsForTags($joinSql, $whereSql, $groupHavingSql, $orderBySql, $params, $types);
     }

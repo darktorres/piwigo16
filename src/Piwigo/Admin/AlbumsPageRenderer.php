@@ -35,7 +35,7 @@ use Piwigo\Template\Template;
  */
 final class AlbumsPageRenderer
 {
-    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, CategoryAdminService $categoryAdminService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, CategoryAdminService $categoryAdminService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
@@ -158,12 +158,12 @@ final class AlbumsPageRenderer
             ]
         );
 
-        $template->assign('delay_before_autoOpen', \Piwigo\Config\CurrentConfig::albumMoveDelayBeforeAutoOpening());
+        $template->assign('delay_before_autoOpen', $currentConfig->albumMoveDelayBeforeAutoOpening());
 
         // Known limitation: site-wide only -- Users\PreferencesService
         // could support a real per-user override of the default new-album
         // position, but none exists today.
-        $template->assign('POS_PREF', \Piwigo\Config\CurrentConfig::newcatDefaultPosition());
+        $template->assign('POS_PREF', $currentConfig->newcatDefaultPosition());
 
         // +-------------------------------------------------------------------+
         // |                          Album display                            |
@@ -265,7 +265,7 @@ final class AlbumsPageRenderer
                     ->getToken(),
                 'nb_albums' => count($allAlbum),
                 'ADMIN_PAGE_TITLE' => $lang->t('Albums'),
-                'light_album_manager' => ($albums_counter > \Piwigo\Config\CurrentConfig::lightAlbumManagerThreshold()) ? 1 : 0,
+                'light_album_manager' => ($albums_counter > $currentConfig->lightAlbumManagerThreshold()) ? 1 : 0,
             ]
         );
 

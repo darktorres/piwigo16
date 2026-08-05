@@ -72,8 +72,12 @@ final class InstallServiceTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         DbCredentials::current()->seed($this->originalDbEnv);
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         Kernel::reset();
-        CurrentConfig::reset();
         parent::tearDown();
     }
 
@@ -242,13 +246,27 @@ final class InstallServiceTest extends IntegrationTestCase
         return (int) $value;
     }
 
+    private function currentConfig(): CurrentConfig
+    {
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+
+        return $currentConfig;
+    }
+
     private function bootKernelAndConfigService(): void
     {
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot();
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
     }
 
     /**
@@ -275,7 +293,7 @@ final class InstallServiceTest extends IntegrationTestCase
             $themesDir . $themeId . '/themeconf.inc.php',
             "<?php\n/*\nTheme Name: Default Template Test Fixture\nVersion: 3.1.4\nDescription: synthetic fixture for InstallServiceTest\nAuthor: p17-test\n*/\n"
         );
-        CurrentConfig::setThemesDir($themesDir);
+        $this->currentConfig()->setThemesDir($themesDir);
 
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
@@ -301,7 +319,7 @@ final class InstallServiceTest extends IntegrationTestCase
         // An explicitly empty scan directory proves the "nothing found on
         // disk" branch directly, regardless of what this repo's own real
         // themes/ directory currently contains.
-        CurrentConfig::setThemesDir($emptyThemesDir);
+        $this->currentConfig()->setThemesDir($emptyThemesDir);
 
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());

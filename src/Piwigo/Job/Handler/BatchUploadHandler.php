@@ -42,11 +42,12 @@ final class BatchUploadHandler
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Metadata\MetadataService $metadataService,
         private readonly \Piwigo\Image\ImageService $imageService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     public function __invoke(BatchUploadJob $job): int
     {
-        return new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)
+        return new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig)
             ->addUploadedFile(
                 $job->sourceFilepath,
                 $this->urlService,

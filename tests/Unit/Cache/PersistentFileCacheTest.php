@@ -37,12 +37,29 @@ function persistentFileCacheTestRrmdir(string $dir): void
     rmdir($dir);
 }
 
+/**
+ * CurrentConfig is now a real, constructor-injected instance (no more
+ * static property bag) -- a plain top-level helper (rather than a
+ * `$this->currentConfig` built once in beforeEach) is used because
+ * PHPStan can't narrow a Pest-bound `$this->...` property's type across
+ * separate test closures (same rationale as
+ * tests/Unit/Lang/LangServiceTest.php's own langServiceTestNewLang()
+ * helper). dataLocation() is set identically ('data/') on every call, so
+ * a fresh instance per call is behaviorally equivalent to a shared one
+ * for this file's purposes.
+ */
+function persistentFileCacheTestNewCurrentConfig(): CurrentConfig
+{
+    $currentConfig = new CurrentConfig();
+    $currentConfig->setDataLocation('data/');
+
+    return $currentConfig;
+}
+
 beforeEach(function (): void {
-    CurrentConfig::reset();
     $root = sys_get_temp_dir() . '/piwigo-persistent-file-cache-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::setDataLocation('data/');
     // Pre-create the cache dir set() itself writes into: without this, its
     // first @file_put_contents() attempt against the not-yet-existing dir
     // legitimately fails (by design -- see its own mkgetdir()-then-retry
@@ -50,17 +67,16 @@ beforeEach(function (): void {
     // failOnWarning="true" even though it's `@`-suppressed (the "@
     // suppression doesn't hide warnings from PHPUnit" gotcha) -- not a bug
     // in the class under test, just a path this test doesn't need to take.
-    mkdir(CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/', 0o777, true);
+    mkdir(CurrentPaths::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation() . 'cache/', 0o777, true);
 });
 
 afterEach(function (): void {
     persistentFileCacheTestRrmdir(CurrentPaths::get()->root);
-    CurrentConfig::reset();
     Kernel::reset();
 });
 
 test('make_key hashes a scalar array key joined by & plus the instance key', function (): void {
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
 
     $key = $cache->make_key(['category', 12, 'thumbnails']);
 
@@ -68,7 +84,7 @@ test('make_key hashes a scalar array key joined by & plus the instance key', fun
 });
 
 test('make_key falls back to serialize() for a non-scalar array part', function (): void {
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
 
     $key = $cache->make_key(['category', ['nested' => true]]);
 
@@ -76,7 +92,7 @@ test('make_key falls back to serialize() for a non-scalar array part', function 
 });
 
 test('make_key hashes a bare string key plus the instance key, with no & joining', function (): void {
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
 
     $key = $cache->make_key('plain_string_key');
 
@@ -84,7 +100,7 @@ test('make_key hashes a bare string key plus the instance key, with no & joining
 });
 
 test('make_key on an empty array key still hashes just the instance key', function (): void {
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
 
     $key = $cache->make_key([]);
 
@@ -92,7 +108,7 @@ test('make_key on an empty array key still hashes just the instance key', functi
 });
 
 test('get returns false and leaves $value untouched for a never-cached key', function (): void {
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
     $value = 'sentinel-untouched';
 
     $found = $cache->get($cache->make_key('missing'), $value);
@@ -102,7 +118,7 @@ test('get returns false and leaves $value untouched for a never-cached key', fun
 });
 
 test('set then get round-trips the exact cached value', function (): void {
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
     $key = $cache->make_key(['round_trip']);
 
     $written = $cache->set($key, ['section' => 'best_rated', 'count' => 5]);
@@ -121,9 +137,9 @@ test('set self-heals by creating the missing cache dir when the first write atte
     // docblock) so the first @file_put_contents() attempt genuinely fails
     // against a not-yet-existing directory, reaching set()'s own
     // mkgetdir()-then-retry fallback for real.
-    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    $dir = CurrentPaths::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation() . 'cache/';
     rmdir($dir);
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
     $key = $cache->make_key(['self-heal']);
 
     set_error_handler(static fn (): bool => true);
@@ -148,11 +164,11 @@ test('set returns false when both the initial write and the mkgetdir-then-retry 
     // stripped from the flags passed here, so it returns false quietly
     // instead of throwing), and the retry file_put_contents() still
     // targets a directory that was never actually created.
-    $dataRoot = CurrentPaths::get()->root . CurrentConfig::dataLocation();
+    $dataRoot = CurrentPaths::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation();
     $dir = $dataRoot . 'cache/';
     rmdir($dir);
     chmod($dataRoot, 0o555);
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
     $key = $cache->make_key(['self-heal-fails']);
 
     set_error_handler(static fn (): bool => true);
@@ -173,9 +189,9 @@ test('get returns false at the exact expiry boundary (expire === now), not just 
     // second so `$expire > time()` (correct) and a mutated `>=` diverge
     // -- get()'s own internal time() call happens microseconds after
     // this one, on the same real clock tick in practice.
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
     $key = $cache->make_key(['exact-boundary-expiry']);
-    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    $dir = CurrentPaths::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation() . 'cache/';
     file_put_contents($dir . $key . '.cache', serialize(['expire' => time(), 'data' => 'boundary-value']));
 
     $value = 'sentinel-untouched';
@@ -186,7 +202,7 @@ test('get returns false at the exact expiry boundary (expire === now), not just 
 });
 
 test('get returns false for a value whose lifetime already expired', function (): void {
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
     $key = $cache->make_key(['already_expired']);
 
     $cache->set($key, 'stale-payload', -10);
@@ -199,7 +215,7 @@ test('get returns false for a value whose lifetime already expired', function ()
 });
 
 test('purge(true) deletes every cache file regardless of age', function (): void {
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
     $freshKey = $cache->make_key(['fresh']);
     $oldKey = $cache->make_key(['old']);
     $cache->set($freshKey, 'fresh-value');
@@ -214,13 +230,13 @@ test('purge(true) deletes every cache file regardless of age', function (): void
 });
 
 test('purge(false) deletes only files older than default_lifetime, keeping fresh ones', function (): void {
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
     $freshKey = $cache->make_key(['fresh_partial_purge']);
     $oldKey = $cache->make_key(['old_partial_purge']);
     $cache->set($freshKey, 'fresh-value');
     $cache->set($oldKey, 'old-value');
 
-    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    $dir = CurrentPaths::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation() . 'cache/';
     // Backdate the "old" file's mtime past default_lifetime (86400s) so
     // purge(false)'s own `filemtime($file) < $limit` cutoff catches it,
     // without waiting a real day for it to actually age out.
@@ -236,7 +252,7 @@ test('purge(false) deletes only files older than default_lifetime, keeping fresh
 });
 
 test('purge is a no-op on a directory with no .cache files at all (glob() returns an empty array)', function (): void {
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
 
     // No set() call has happened in this test, so the cache dir mkdir()ed
     // in beforeEach() is genuinely empty -- glob('*.cache') returns [],
@@ -244,7 +260,7 @@ test('purge is a no-op on a directory with no .cache files at all (glob() return
     $cache->purge(true);
     $cache->purge(false);
 
-    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    $dir = CurrentPaths::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation() . 'cache/';
     expect(glob($dir . '*.cache'))->toBe([]);
 });
 
@@ -254,9 +270,9 @@ test('get returns false when the file is unreadable despite existing (a Unix dom
     // (verified directly: "No such device or address") and returns false
     // rather than throwing -- the one realistic, deterministic way to
     // reach this branch without a genuine TOCTOU race.
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
     $key = $cache->make_key(['blocked-by-socket']);
-    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    $dir = CurrentPaths::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation() . 'cache/';
     $path = $dir . $key . '.cache';
 
     $socket = socket_create(AF_UNIX, SOCK_STREAM, 0);
@@ -287,9 +303,9 @@ test('get returns false when the file is unreadable despite existing (a Unix dom
 })->skip(! extension_loaded('sockets'), 'requires ext-sockets to create a Unix domain socket file');
 
 test('get returns false for a cache file whose payload is not an array at all', function (): void {
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
     $key = $cache->make_key(['scalar-payload']);
-    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    $dir = CurrentPaths::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation() . 'cache/';
     file_put_contents($dir . $key . '.cache', serialize('just-a-scalar-string'));
 
     $value = 'sentinel-untouched';
@@ -300,9 +316,9 @@ test('get returns false for a cache file whose payload is not an array at all', 
 });
 
 test('get returns false for a cache file whose payload array is missing the data key', function (): void {
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
     $key = $cache->make_key(['missing-data-key']);
-    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    $dir = CurrentPaths::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation() . 'cache/';
     file_put_contents($dir . $key . '.cache', serialize(['expire' => time() + 3600]));
 
     $value = 'sentinel-untouched';
@@ -313,9 +329,9 @@ test('get returns false for a cache file whose payload array is missing the data
 });
 
 test('get returns false when the stored expire value is not an int', function (): void {
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
     $key = $cache->make_key(['non-int-expire']);
-    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    $dir = CurrentPaths::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation() . 'cache/';
     file_put_contents($dir . $key . '.cache', serialize(['expire' => 'not-an-int', 'data' => 'some-value']));
 
     $value = 'sentinel-untouched';
@@ -333,8 +349,8 @@ test('set fires the opportunistic purge(false), not purge(true), on the exact 1-
     // coincidentally also fire), distinguishing the modulus/divisor
     // itself from the "fires at all" property the churn test below only
     // proves probabilistically over thousands of calls.
-    $cache = new PersistentFileCache();
-    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
+    $dir = CurrentPaths::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation() . 'cache/';
 
     $staleKey = $cache->make_key(['exact-seed-stale']);
     $freshKey = $cache->make_key(['exact-seed-fresh']);
@@ -360,8 +376,8 @@ test('set does not fire the opportunistic purge on an mt_rand() draw one past th
     // (`=== 0`) must NOT purge here, but a mutated `=== 1` (IncrementInteger
     // on the literal 0) would. Proves the exact target value, not just
     // that *some* modulus check exists.
-    $cache = new PersistentFileCache();
-    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
+    $dir = CurrentPaths::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation() . 'cache/';
 
     $staleKey = $cache->make_key(['off-by-one-seed-stale']);
     $cache->set($staleKey, 'stale-value');
@@ -389,7 +405,7 @@ test('purge is a no-op when glob() itself fails (an overlong pattern returns fal
     // and swallows only the expected glob() warning surfaces that.
     $originalRoot = CurrentPaths::get()->root;
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/' . str_repeat('a', 4100)));
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
 
     $unexpectedWarning = null;
     set_error_handler(function (int $errno, string $errstr) use (&$unexpectedWarning): bool {
@@ -416,10 +432,10 @@ test('purge(false) keeps a file exactly at the age cutoff boundary, not just str
     // and a mutated `<=` diverge; purge()'s own internal time() call
     // happens microseconds after this one, on the same real clock tick
     // in practice.
-    $cache = new PersistentFileCache();
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
     $key = $cache->make_key(['exact-purge-boundary']);
     $cache->set($key, 'boundary-value');
-    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    $dir = CurrentPaths::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation() . 'cache/';
     touch($dir . $key . '.cache', time() - $cache->default_lifetime);
 
     $cache->purge(false);
@@ -434,8 +450,8 @@ test('set eventually fires its opportunistic purge(false) over many calls, sweep
     // chance at least once a near-certainty ([96/97]^2000 ~= 2e-9) and the
     // real, observable effect (the stale file disappearing) is what
     // actually matters here.
-    $cache = new PersistentFileCache();
-    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig());
+    $dir = CurrentPaths::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation() . 'cache/';
 
     $staleKey = $cache->make_key(['stale-sentinel-for-opportunistic-purge']);
     $cache->set($staleKey, 'stale-value');

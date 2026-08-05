@@ -98,6 +98,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Mail\NotificationByMailSender $notificationByMailSender,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -132,7 +133,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         // | Add event handler                                                     |
         // +-----------------------------------------------------------------------+
-        $this->eventDispatcher->addTypedHandler(NbmRenderGlobalCustomizeMailContent::class, self::renderGlobalCustomizeMailContent(...));
+        $this->eventDispatcher->addTypedHandler(NbmRenderGlobalCustomizeMailContent::class, $this->renderGlobalCustomizeMailContent(...));
         $this->eventDispatcher->dispatchNotify(new NbmEventHandlerAdded());
 
         // +-----------------------------------------------------------------------+
@@ -140,7 +141,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         if (count($post) === 0) {
             // No insert data in post mode
-            self::insertNewDataUserMailNotification($this->lang, $nbmSender, $this->redirectService, $this->urlService, $this->sessionService);
+            self::insertNewDataUserMailNotification($this->lang, $nbmSender, $this->redirectService, $this->urlService, $this->sessionService, $this->currentConfig);
         }
 
         // +-----------------------------------------------------------------------+
@@ -267,11 +268,11 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 $template->assign(
                     $page_mode,
                     [
-                        'SEND_HTML_MAIL' => \Piwigo\Config\CurrentConfig::nbmSendHtmlMail(),
-                        'SEND_MAIL_AS' => \Piwigo\Config\CurrentConfig::nbmSendMailAs(),
-                        'SEND_DETAILED_CONTENT' => \Piwigo\Config\CurrentConfig::nbmSendDetailedContent(),
-                        'COMPLEMENTARY_MAIL_CONTENT' => \Piwigo\Config\CurrentConfig::nbmComplementaryMailContent(),
-                        'SEND_RECENT_POST_DATES' => \Piwigo\Config\CurrentConfig::nbmSendRecentPostDates(),
+                        'SEND_HTML_MAIL' => $this->currentConfig->nbmSendHtmlMail(),
+                        'SEND_MAIL_AS' => $this->currentConfig->nbmSendMailAs(),
+                        'SEND_DETAILED_CONTENT' => $this->currentConfig->nbmSendDetailedContent(),
+                        'COMPLEMENTARY_MAIL_CONTENT' => $this->currentConfig->nbmComplementaryMailContent(),
+                        'SEND_RECENT_POST_DATES' => $this->currentConfig->nbmSendRecentPostDates(),
                     ]
                 );
                 break;
@@ -328,7 +329,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 $tpl_var['CUSTOMIZE_MAIL_CONTENT'] =
                   (isset($post['send_customize_mail_content']) and is_string($post['send_customize_mail_content']))
                     ? stripslashes($post['send_customize_mail_content'])
-                    : \Piwigo\Config\CurrentConfig::nbmComplementaryMailContent();
+                    : $this->currentConfig->nbmComplementaryMailContent();
 
                 $post_send_selection = (isset($post['send_selection']) and is_array($post['send_selection']))
                     ? $post['send_selection']
@@ -358,7 +359,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
                 // auth_key_duration is a plain int config value (see
                 // include/config_default.inc.php).
-                $auth_key_duration = \Piwigo\Config\CurrentConfig::authKeyDuration();
+                $auth_key_duration = $this->currentConfig->authKeyDuration();
                 $auth_key_duration_num = $auth_key_duration;
                 if ($auth_key_duration_num > 0) {
                     $auth_key_since = strtotime('now -' . $auth_key_duration_num . ' second');
@@ -431,7 +432,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
     /**
      * Inserting News users
      */
-    private static function insertNewDataUserMailNotification(Lang $lang, NotificationByMailSender $nbmSender, RedirectServiceInterface $redirectService, UrlServiceInterface $urlService, SessionService $sessionService): void
+    private static function insertNewDataUserMailNotification(Lang $lang, NotificationByMailSender $nbmSender, RedirectServiceInterface $redirectService, UrlServiceInterface $urlService, SessionService $sessionService, \Piwigo\Config\CurrentConfig $currentConfig): void
     {
         // Recomputed rather than threaded from handle()'s own CoreTabs
         // value: this is the method's only real call site, and it already
@@ -440,11 +441,11 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         $base_url = $urlService->getRootUrl() . 'admin.php';
 
         $conn = DbConnection::build();
-        $notificationByMailService = new \Piwigo\Notification\NotificationByMailService(new \Piwigo\Notification\NotificationByMailRepository($conn), $sessionService);
+        $notificationByMailService = new \Piwigo\Notification\NotificationByMailService(new \Piwigo\Notification\NotificationByMailRepository($conn), $sessionService, $currentConfig);
 
         // user_fields maps generic field names to table-specific column names
         // (see include/config_default.inc.php); every value is a plain string.
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = $currentConfig->userFields();
         $user_field_email = $user_fields['email'];
         $user_field_id = $user_fields['id'];
         $user_field_username = $user_fields['username'];
@@ -487,7 +488,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             // Update field enabled with specific function
             $check_key_treated = $nbmSender->doSubscribeUnsubscribeNotificationByMail(
                 true,
-                \Piwigo\Config\CurrentConfig::nbmDefaultValueUserEnabled(),
+                $currentConfig->nbmDefaultValueUserEnabled(),
                 $check_key_list
             );
 
@@ -507,9 +508,9 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
      * Apply global functions to mail content
      * return customize mail content rendered
      */
-    private static function renderGlobalCustomizeMailContent(NbmRenderGlobalCustomizeMailContent $event): NbmRenderGlobalCustomizeMailContent
+    private function renderGlobalCustomizeMailContent(NbmRenderGlobalCustomizeMailContent $event): NbmRenderGlobalCustomizeMailContent
     {
-        if (\Piwigo\Config\CurrentConfig::nbmSendHtmlMail() and ! str_starts_with($event->customizeMailContent, '<')) {
+        if ($this->currentConfig->nbmSendHtmlMail() and ! str_starts_with($event->customizeMailContent, '<')) {
             // On HTML mail, detects if the content are HTML format.
             // If it's plain text format, convert content to readable HTML
             $event->customizeMailContent = nl2br(htmlspecialchars($event->customizeMailContent));

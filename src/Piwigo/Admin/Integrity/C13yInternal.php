@@ -28,6 +28,7 @@ final class C13yInternal
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly UserService $userService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -90,8 +91,8 @@ final class C13yInternal
     {
         $c13y = $event->value;
         $checks = [
-            'show_exif' => \Piwigo\Config\CurrentConfig::showExif(),
-            'use_exif' => \Piwigo\Config\CurrentConfig::useExif(),
+            'show_exif' => $this->currentConfig->showExif(),
+            'use_exif' => $this->currentConfig->useExif(),
         ];
         foreach ($checks as $value => $enabled) {
             if ($enabled and (! function_exists('exif_read_data'))) {
@@ -116,11 +117,11 @@ final class C13yInternal
 
         // guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // primary keys or config defaults, see include/config_default.inc.php).
-        $guest_id = \Piwigo\Config\CurrentConfig::guestId();
+        $guest_id = $this->currentConfig->guestId();
 
-        $default_user_id = \Piwigo\Config\CurrentConfig::defaultUserId();
+        $default_user_id = $this->currentConfig->defaultUserId();
 
-        $webmaster_id = \Piwigo\Config\CurrentConfig::webmasterId();
+        $webmaster_id = $this->currentConfig->webmasterId();
 
         $c13y_users = [];
         $c13y_users[$guest_id] = [
@@ -146,7 +147,7 @@ final class C13yInternal
         // column names (see include/config_default.inc.php); always a
         // string=>string map at runtime.
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = $this->currentConfig->userFields();
         $user_id_field = $user_fields['id'];
 
         $status = $this->userService->getStatusByIds($user_id_field, array_keys($c13y_users));
@@ -185,11 +186,11 @@ final class C13yInternal
     {
         // guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // primary keys or config defaults, see include/config_default.inc.php).
-        $guest_id = \Piwigo\Config\CurrentConfig::guestId();
+        $guest_id = $this->currentConfig->guestId();
 
-        $default_user_id = \Piwigo\Config\CurrentConfig::defaultUserId();
+        $default_user_id = $this->currentConfig->defaultUserId();
 
-        $webmaster_id = \Piwigo\Config\CurrentConfig::webmasterId();
+        $webmaster_id = $this->currentConfig->webmasterId();
 
         $result = false;
 

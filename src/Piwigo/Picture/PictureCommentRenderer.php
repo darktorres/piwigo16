@@ -75,12 +75,12 @@ final class PictureCommentRenderer
      *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
      *   genuinely string|null.
      */
-    public function render(Lang $lang, AccessControl $accessControl, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Core\MailerInterface $mailer): void
+    public function render(Lang $lang, AccessControl $accessControl, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Core\MailerInterface $mailer): void
     {
         $template = $currentTemplate->get();
 
         $commentRepository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class);
-        $commentService = new CommentService($lang, $commentRepository, new EphemeralKeyService(), $mailer, new HtmlService(), $urlService, $eventDispatcher, $pageState, $currentUser);
+        $commentService = new CommentService($lang, $commentRepository, new EphemeralKeyService($currentConfig), $mailer, new HtmlService(), $urlService, $eventDispatcher, $pageState, $currentUser, $currentConfig);
 
         $commentAction = null;
 
@@ -97,7 +97,7 @@ final class PictureCommentRenderer
         }
 
         if ($showComments and $pictureCommentSubmitRequest->contentPresent) {
-            if ($accessControl->isAGuest() and ! \Piwigo\Config\CurrentConfig::commentsForall()) {
+            if ($accessControl->isAGuest() and ! $currentConfig->commentsForall()) {
                 throw new ResponseReadyException(ResponseFactory::text('Session expired'));
             }
 
@@ -168,9 +168,9 @@ final class PictureCommentRenderer
         $nbComments = $commentRepository->countForImage($imageId, $onlyValidated);
 
         // navigation bar creation
-        $nbCommentPage = \Piwigo\Config\CurrentConfig::nbCommentPage();
+        $nbCommentPage = $currentConfig->nbCommentPage();
 
-        $navigationBar = new \Piwigo\Core\PaginationService()
+        $navigationBar = new \Piwigo\Core\PaginationService($currentConfig)
             ->createNavigationBar($urlService->duplicatePictureUrl([], ['start']), $nbComments, $start, $nbCommentPage, true);
 
         $template->assign(
@@ -187,7 +187,7 @@ final class PictureCommentRenderer
             if ($getCommentsOrder !== null && $getCommentsOrder !== '' && $getCommentsOrder !== '0' && in_array(strtoupper($getCommentsOrder), ['ASC', 'DESC'], true)) {
                 $sessionService->setSessionVar('comments_order', $getCommentsOrder);
             }
-            $commentsOrder = $sessionService->getSessionVar('comments_order', \Piwigo\Config\CurrentConfig::commentsOrder());
+            $commentsOrder = $sessionService->getSessionVar('comments_order', $currentConfig->commentsOrder());
             $commentsOrder = is_string($commentsOrder) ? $commentsOrder : 'ASC';
 
             $template->assign([
@@ -197,7 +197,7 @@ final class PictureCommentRenderer
                 'COMMENTS_ORDER_TITLE' => $commentsOrder === 'ASC' ? $lang->t('Show latest comments first') : $lang->t('Show oldest comments first'),
             ]);
 
-            $userFields = \Piwigo\Config\CurrentConfig::userFields();
+            $userFields = $currentConfig->userFields();
             $userFieldEmail = $userFields['email'];
             $userFieldId = $userFields['id'];
 
@@ -269,7 +269,7 @@ final class PictureCommentRenderer
                     );
                     if ($editCommentId !== null and $row->id->equals($editCommentId)) {
                         $tplComment['IN_EDIT'] = true;
-                        $key = new \Piwigo\Auth\EphemeralKeyService()
+                        $key = new \Piwigo\Auth\EphemeralKeyService($currentConfig)
                             ->generate(2, (string) $imageId);
                         $tplComment['KEY'] = $key;
                         $tplComment['CONTENT'] = $row->content;
@@ -300,12 +300,12 @@ final class PictureCommentRenderer
         if ($editCommentId !== null) {
             $showAddCommentForm = false;
         }
-        if ($accessControl->isAGuest() and ! \Piwigo\Config\CurrentConfig::commentsForall()) {
+        if ($accessControl->isAGuest() and ! $currentConfig->commentsForall()) {
             $showAddCommentForm = false;
         }
 
         if ($showAddCommentForm) {
-            $key = new \Piwigo\Auth\EphemeralKeyService()
+            $key = new \Piwigo\Auth\EphemeralKeyService($currentConfig)
                 ->generate(3, (string) $imageId);
 
             $userEmail = $currentUser->get()
@@ -317,13 +317,13 @@ final class PictureCommentRenderer
                 'KEY' => $key,
                 'CONTENT' => '',
                 'SHOW_AUTHOR' => ! $accessControl->isClassicUser(),
-                'AUTHOR_MANDATORY' => \Piwigo\Config\CurrentConfig::commentsAuthorMandatory(),
+                'AUTHOR_MANDATORY' => $currentConfig->commentsAuthorMandatory(),
                 'AUTHOR' => '',
                 'WEBSITE_URL' => '',
                 'SHOW_EMAIL' => ! $accessControl->isClassicUser() or $userEmailEmpty,
-                'EMAIL_MANDATORY' => \Piwigo\Config\CurrentConfig::commentsEmailMandatory(),
+                'EMAIL_MANDATORY' => $currentConfig->commentsEmailMandatory(),
                 'EMAIL' => '',
-                'SHOW_WEBSITE' => \Piwigo\Config\CurrentConfig::commentsEnableWebsite(),
+                'SHOW_WEBSITE' => $currentConfig->commentsEnableWebsite(),
             ];
 
             if ($commentAction === 'reject') {

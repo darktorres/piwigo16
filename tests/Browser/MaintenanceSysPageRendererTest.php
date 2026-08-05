@@ -11,7 +11,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * webmaster-required warning in the `else` of its own is_webmaster() gate.
  */
 it('shows the webmaster-required warning for a plain "admin"-status user', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $username = 'maint_sys_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
     $addResult = H::wsCall($page, 'pwg.users.add', [

@@ -112,7 +112,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     CurrentUser::current()->reset();
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     Lang::current()->reset();
     Translator::get()->reset();
     Kernel::reset();
@@ -364,7 +364,7 @@ test('getPrivacyLevelOptions labels level 0 as Everybody and stacks the rest', f
 });
 
 test('getPrivacyLevelOptions follows CurrentConfig::availablePermissionLevels when overridden', function (): void {
-    CurrentConfig::setAvailablePermissionLevels([0, 5]);
+    CurrentConfig::current()->setAvailablePermissionLevels([0, 5]);
 
     $options = PermissionService::getPrivacyLevelOptions();
 
@@ -383,7 +383,7 @@ test('getPrivacyLevelOptions does not prepend a stray separator before the very 
     // exactly 1 character can. `Lang::loadArray()` targets a translator
     // *output* key, so it maps the already-`sprintf()`-formatted 'Level 2'
     // string, not the 'Level %d' format string itself.
-    CurrentConfig::setAvailablePermissionLevels([0, 1, 2]);
+    CurrentConfig::current()->setAvailablePermissionLevels([0, 1, 2]);
     Lang::current()->loadArray(['Level 2' => 'X']);
 
     $options = PermissionService::getPrivacyLevelOptions();

@@ -113,6 +113,16 @@ function batch_upload_handler_test_image_service(): \Piwigo\Image\ImageService
     return $imageService;
 }
 
+function batch_upload_handler_test_current_config(): CurrentConfig
+{
+    $currentConfig = Kernel::container()->get(CurrentConfig::class);
+    if (! $currentConfig instanceof CurrentConfig) {
+        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+    }
+
+    return $currentConfig;
+}
+
 beforeEach(function (): void {
     // A real Paths is required, not a bare boot: batch_upload_handler_test_
     // storage_registry() resolves StorageRegistry::class from the
@@ -121,12 +131,12 @@ beforeEach(function (): void {
     // CurrentPaths::get().
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     batch_upload_handler_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
-    CurrentConfig::setLoungeActive(true);
+    batch_upload_handler_test_current_config()->setLoungeActive(true);
 });
 
 afterEach(function (): void {
     Kernel::reset();
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
 });
 
 test('__invoke returns the existing image id and deletes the newly uploaded file when its md5sum already exists (duplicate detection)', function (): void {
@@ -141,7 +151,7 @@ test('__invoke returns the existing image id and deletes the newly uploaded file
         $sourceFilepath = sys_get_temp_dir() . '/piwigo-batch-upload-handler-test-' . bin2hex(random_bytes(8)) . '.jpg';
         file_put_contents($sourceFilepath, 'duplicate-upload-bytes');
 
-        $handler = new BatchUploadHandler(\Piwigo\Core\Lang::current(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), \Piwigo\PluginConfig\EventDispatcher::get(), batch_upload_handler_test_config_service(), batch_upload_handler_test_entity_manager(), batch_upload_handler_test_activity_service(), batch_upload_handler_test_metadata_service(), batch_upload_handler_test_image_service());
+        $handler = new BatchUploadHandler(\Piwigo\Core\Lang::current(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), \Piwigo\PluginConfig\EventDispatcher::get(), batch_upload_handler_test_config_service(), batch_upload_handler_test_entity_manager(), batch_upload_handler_test_activity_service(), batch_upload_handler_test_metadata_service(), batch_upload_handler_test_image_service(), batch_upload_handler_test_current_config());
 
         $imageId = $handler(new BatchUploadJob(
             sourceFilepath: $sourceFilepath,

@@ -45,6 +45,7 @@ final class FilesystemIntegrityChecker
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Config\CurrentConfigService $currentConfigService,
         private readonly \Piwigo\Image\ImageService $imageService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -67,7 +68,7 @@ final class FilesystemIntegrityChecker
      */
     public function fsQuickCheck(): void
     {
-        $fs_quick_check_period = \Piwigo\Config\CurrentConfig::fsQuickCheckPeriod();
+        $fs_quick_check_period = $this->currentConfig->fsQuickCheckPeriod();
         if ($fs_quick_check_period === 0) {
             return;
         }

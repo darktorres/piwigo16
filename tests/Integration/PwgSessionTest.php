@@ -58,7 +58,12 @@ final class PwgSessionTest extends IntegrationTestCase
         $conn = DbConnection::build();
         $repo = EntityManagerFactory::build($conn)->getRepository(SessionEntity::class);
         self::assertInstanceOf(SessionRepository::class, $repo);
-        $service = new SessionService($repo);
+
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $service = new SessionService($repo, $currentConfig);
 
         $this->pwgSession = new PwgSession($service);
     }

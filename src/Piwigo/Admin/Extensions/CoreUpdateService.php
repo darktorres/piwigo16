@@ -46,6 +46,7 @@ final readonly class CoreUpdateService
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Mail\MailService $mailService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     public function checkPiwigoUpgrade(): void
@@ -89,7 +90,7 @@ final readonly class CoreUpdateService
         $url = AppInfo::URL . '/download/all_versions.php';
         $url .= '?rand=' . md5(uniqid((string) mt_rand(), true));
         $url .= $env === 'Official' ? '&docker' : '&show_requirements';
-        $secretKeyRaw = \Piwigo\Config\CurrentConfig::secretKey();
+        $secretKeyRaw = $this->currentConfig->secretKey();
         $secretKey = $secretKeyRaw;
         $url .= '&origin_hash=' . sha1($secretKey . $this->urlService->getAbsoluteRootUrl());
 
@@ -181,7 +182,7 @@ final readonly class CoreUpdateService
         }
 
         $notify = false;
-        $lastNotificationSetting = \Piwigo\Config\CurrentConfig::updateNotifyLastNotification();
+        $lastNotificationSetting = $this->currentConfig->updateNotifyLastNotification();
         if ($lastNotificationSetting === null) {
             $notify = true;
         } else {
@@ -189,7 +190,7 @@ final readonly class CoreUpdateService
             $lastNotification = $lastNotificationData['notified_on'] ?? null;
             $lastNotificationVersion = $lastNotificationData['version'] ?? null;
 
-            $reminderPeriodRaw = \Piwigo\Config\CurrentConfig::updateNotifyReminderPeriod();
+            $reminderPeriodRaw = $this->currentConfig->updateNotifyReminderPeriod();
             $reminderPeriod = $reminderPeriodRaw;
 
             if ($newVersionsString !== $lastNotificationVersion) {
@@ -250,7 +251,7 @@ final readonly class CoreUpdateService
     {
         $template = $this->currentTemplate->get();
 
-        $dataLocationRaw = \Piwigo\Config\CurrentConfig::dataLocation();
+        $dataLocationRaw = $this->currentConfig->dataLocation();
         $dataLocation = $dataLocationRaw;
 
         if ($checkCurrentVersion and ! version_compare($upgradeTo, AppInfo::VERSION, '>')) {

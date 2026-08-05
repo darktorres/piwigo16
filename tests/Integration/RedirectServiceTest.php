@@ -66,13 +66,13 @@ final class RedirectServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
         // Kernel is already booted by parent::setUp() with this exact same
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
 
         // footer.tpl's {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
 
-        CurrentConfig::setSendPiwigoInfos(false);
+        $this->currentConfig()->setSendPiwigoInfos(false);
 
         // Deliberately NOT initialised here: CurrentTemplate::current()->reset()/
         // Lang::reset() are the actual precondition the early-crash branch
@@ -87,8 +87,20 @@ final class RedirectServiceTest extends IntegrationTestCase
         UniqueExecLock::ends('check_for_updates');
         CurrentTemplate::current()->reset();
         Lang::current()->reset();
-        CurrentConfig::reset();
+        $this->currentConfig()->reset();
         parent::tearDown();
+    }
+
+    private function currentConfig(): CurrentConfig
+    {
+        // Same "resolve the real container-shared instance" reasoning as
+        // userService() just below.
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        }
+
+        return $currentConfig;
     }
 
     private function userService(): UserService
@@ -183,7 +195,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // body) if $refresh_time were ignored -- forcing the http method
         // here proves it's genuinely $refresh_time, not
         // defaultRedirectMethod(), driving the else branch.
-        CurrentConfig::setDefaultRedirectMethod('http');
+        $this->currentConfig()->setDefaultRedirectMethod('http');
 
         $execId = UniqueExecLock::begins('check_for_updates');
         self::assertIsString($execId);

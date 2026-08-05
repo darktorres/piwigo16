@@ -55,6 +55,7 @@ final readonly class HistoryService
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Core\PageState $pageState,
         private \Piwigo\Users\CurrentUser $currentUser,
+        private \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -65,12 +66,12 @@ final readonly class HistoryService
     public function isLoggingAllowed(?int $imageId = null, ?string $imageType = null): bool
     {
 
-        $doLog = \Piwigo\Config\CurrentConfig::logConf();
+        $doLog = $this->currentConfig->logConf();
         if ($this->accessControl->isAdmin()) {
-            $doLog = \Piwigo\Config\CurrentConfig::historyAdmin();
+            $doLog = $this->currentConfig->historyAdmin();
         }
         if ($this->accessControl->isAGuest()) {
-            $doLog = \Piwigo\Config\CurrentConfig::historyGuest();
+            $doLog = $this->currentConfig->historyGuest();
         }
 
         return $this->eventDispatcher->dispatchChange(new PwgLogAllowed($doLog, $imageId, $imageType))
@@ -113,7 +114,7 @@ final readonly class HistoryService
         $user = $this->currentUser->get();
         $lastVisit = $user->rawAttributes['last_visit'] ?? null;
         $lastVisitStr = is_string($lastVisit) ? $lastVisit : (is_numeric($lastVisit) ? (string) $lastVisit : '');
-        $sessionLength = \Piwigo\Config\CurrentConfig::sessionLength();
+        $sessionLength = $this->currentConfig->sessionLength();
 
         $updateLastVisit = false;
         if (in_array($lastVisit, [null, false, 0, '0', '', []], true) or strtotime($lastVisitStr) < time() - $sessionLength) {
@@ -163,20 +164,20 @@ final readonly class HistoryService
         // If plugin developers add their own sections, Piwigo will automatically add it in the history.section enum column
         if ($pageSection !== null) {
             // set cache if not available
-            if (\Piwigo\Config\CurrentConfig::historySectionsCache() === null) {
+            if ($this->currentConfig->historySectionsCache() === null) {
                 $this->configService->confUpdateParam('history_sections_cache', $this->repo->getSectionEnumOptions(), true);
             }
 
             // CurrentConfig::historySectionsCache() already unserializes internally
             // and returns list<string>|null -- no further decoding needed.
-            $cachedSections = \Piwigo\Config\CurrentConfig::historySectionsCache();
+            $cachedSections = $this->currentConfig->historySectionsCache();
             if (! is_array($cachedSections)) {
                 $cachedSections = $this->repo->getSectionEnumOptions();
             }
 
             $historySectionsCache = $cachedSections;
 
-            \Piwigo\Config\CurrentConfig::setHistorySectionsCache($historySectionsCache);
+            $this->currentConfig->setHistorySectionsCache($historySectionsCache);
 
             if (
                 in_array($pageSection, $historySectionsCache, true)
@@ -221,7 +222,7 @@ final readonly class HistoryService
             $this->summarize(50000);
         }
 
-        $historyAutopurgeEvery = \Piwigo\Config\CurrentConfig::historyAutopurgeEvery();
+        $historyAutopurgeEvery = $this->currentConfig->historyAutopurgeEvery();
         if ($historyAutopurgeEvery > 0 and $historyId % $historyAutopurgeEvery === 0) {
             $this->autopurge();
         }
@@ -426,7 +427,7 @@ final readonly class HistoryService
     {
         $logger = $this->currentLogger->get();
 
-        $keepLines = \Piwigo\Config\CurrentConfig::historyAutopurgeKeepLines();
+        $keepLines = $this->currentConfig->historyAutopurgeKeepLines();
         if ($keepLines === 0) {
             return;
         }
@@ -447,7 +448,7 @@ final readonly class HistoryService
         }
 
         $oldestId = $this->repo->findOldestHistoryId() ?? 0;
-        $blocksize = \Piwigo\Config\CurrentConfig::historyAutopurgeBlocksize();
+        $blocksize = $this->currentConfig->historyAutopurgeBlocksize();
 
         $searchMin = [
             $lastSummary->historyIdTo,

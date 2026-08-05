@@ -38,8 +38,9 @@ final class ImageExtImagick implements ImageInterface
     public function __construct(
         public string $source_filepath,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {
-        $imagick_dir = \Piwigo\Config\CurrentConfig::extImagickDir();
+        $imagick_dir = $this->currentConfig->extImagickDir();
         $this->imagickdir = $imagick_dir;
 
         $script_filename = $_SERVER['SCRIPT_FILENAME'] ?? null;
@@ -141,7 +142,7 @@ final class ImageExtImagick implements ImageInterface
             // in cas of animated WebP, we need to maximize quality to 70 to avoid
             // heavy thumbnails (or square or whatever is displayed on the thumbnails
             // page)
-            $max_quality = \Piwigo\Config\CurrentConfig::animatedWebpCompressionQuality();
+            $max_quality = $this->currentConfig->animatedWebpCompressionQuality();
             $quality = min($quality, $max_quality);
         }
 

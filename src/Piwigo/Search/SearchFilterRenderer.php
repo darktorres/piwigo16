@@ -55,6 +55,7 @@ final readonly class SearchFilterRenderer
         private UrlServiceInterface $urlService,
         private \Piwigo\Core\CurrentLogger $currentLogger,
         private \Piwigo\Users\CurrentUser $currentUser,
+        private \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     private function cacheGet(string $key): mixed
@@ -103,7 +104,7 @@ final readonly class SearchFilterRenderer
 
         $tagService = $this->tagService;
 
-        $filtersViewsRaw = \Piwigo\Config\CurrentConfig::filtersViews() ?? \Piwigo\Config\CurrentConfig::defaultFiltersViews();
+        $filtersViewsRaw = $this->currentConfig->filtersViews() ?? $this->currentConfig->defaultFiltersViews();
 
         // 'last_filters_conf' is a lone boolean flag stored alongside the
         // per-filter settings in this config value (see
@@ -434,7 +435,7 @@ final readonly class SearchFilterRenderer
                     }
                 }
 
-                $confUserFields = \Piwigo\Config\CurrentConfig::userFields();
+                $confUserFields = $this->currentConfig->userFields();
                 $userFieldId = $confUserFields['id'];
                 $userFieldUsername = $confUserFields['username'];
 
@@ -627,7 +628,7 @@ final readonly class SearchFilterRenderer
         }
 
         // For rating
-        if (\Piwigo\Config\CurrentConfig::rateEnabled()) {
+        if ($this->currentConfig->rateEnabled()) {
             $template->assign('SHOW_FILTER_RATINGS', true);
 
             if (isset($searchFields['ratings']) and (bool) $displayFilters['rating']['access']) {

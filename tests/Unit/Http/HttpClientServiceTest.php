@@ -839,9 +839,9 @@ test('guardedFetch() actually routes through the configured proxy and embeds Bas
     $originalHost = $_SERVER['HTTP_HOST'] ?? null;
     $_SERVER['HTTP_HOST'] = 'my-self-host.test';
 
-    \Piwigo\Config\CurrentConfig::setUseProxy(true);
-    \Piwigo\Config\CurrentConfig::setProxyServer('http://127.0.0.1:' . $port);
-    \Piwigo\Config\CurrentConfig::setProxyAuth('theuser:thepass');
+    \Piwigo\Config\CurrentConfig::current()->setUseProxy(true);
+    \Piwigo\Config\CurrentConfig::current()->setProxyServer('http://127.0.0.1:' . $port);
+    \Piwigo\Config\CurrentConfig::current()->setProxyAuth('theuser:thepass');
 
     try {
         $result = HttpClientService::fetch('http://my-self-host.test/i.php?x=1');
@@ -860,7 +860,7 @@ test('guardedFetch() actually routes through the configured proxy and embeds Bas
         } else {
             $_SERVER['HTTP_HOST'] = $originalHost;
         }
-        \Piwigo\Config\CurrentConfig::reset();
+        \Piwigo\Config\CurrentConfig::current()->reset();
         httpClientServiceTestStopLocalServer($proc);
         unlink($docRoot . '/router.php');
         rmdir($docRoot);
@@ -885,8 +885,8 @@ test('guardedFetch() does not route through the proxy at all when useProxy is fa
     $originalHost = $_SERVER['HTTP_HOST'] ?? null;
     $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $targetPort;
 
-    \Piwigo\Config\CurrentConfig::setUseProxy(false);
-    \Piwigo\Config\CurrentConfig::setProxyServer('http://127.0.0.1:' . $proxyPort);
+    \Piwigo\Config\CurrentConfig::current()->setUseProxy(false);
+    \Piwigo\Config\CurrentConfig::current()->setProxyServer('http://127.0.0.1:' . $proxyPort);
 
     try {
         $result = HttpClientService::fetch('http://127.0.0.1:' . $targetPort . '/direct.php');
@@ -898,7 +898,7 @@ test('guardedFetch() does not route through the proxy at all when useProxy is fa
         } else {
             $_SERVER['HTTP_HOST'] = $originalHost;
         }
-        \Piwigo\Config\CurrentConfig::reset();
+        \Piwigo\Config\CurrentConfig::current()->reset();
         httpClientServiceTestStopLocalServer($targetProc);
         httpClientServiceTestStopLocalServer($proxyProc);
         unlink($docRoot . '/direct.php');
@@ -926,9 +926,9 @@ test('guardedFetch() does not embed Basic-auth credentials into the proxy URL wh
     $originalHost = $_SERVER['HTTP_HOST'] ?? null;
     $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $targetPort;
 
-    \Piwigo\Config\CurrentConfig::setUseProxy(true);
-    \Piwigo\Config\CurrentConfig::setProxyServer('http://127.0.0.1:' . $proxyPort);
-    \Piwigo\Config\CurrentConfig::setProxyAuth('');
+    \Piwigo\Config\CurrentConfig::current()->setUseProxy(true);
+    \Piwigo\Config\CurrentConfig::current()->setProxyServer('http://127.0.0.1:' . $proxyPort);
+    \Piwigo\Config\CurrentConfig::current()->setProxyAuth('');
 
     try {
         $result = HttpClientService::fetch('http://127.0.0.1:' . $targetPort . '/direct.php');
@@ -944,7 +944,7 @@ test('guardedFetch() does not embed Basic-auth credentials into the proxy URL wh
         } else {
             $_SERVER['HTTP_HOST'] = $originalHost;
         }
-        \Piwigo\Config\CurrentConfig::reset();
+        \Piwigo\Config\CurrentConfig::current()->reset();
         httpClientServiceTestStopLocalServer($targetProc);
         httpClientServiceTestStopLocalServer($proxyProc);
         unlink($docRoot . '/direct.php');

@@ -140,9 +140,25 @@ function imageExtImagickTestCurrentLogger(): CurrentLogger
     return $currentLogger;
 }
 
+/**
+ * ImageExtImagick reads CurrentConfig through real constructor injection
+ * (singleton/service-locator elimination campaign, Phase 9) -- resolves
+ * the container-shared instance rather than a bare `new CurrentConfig()`,
+ * same reasoning as imageExtImagickTestCurrentLogger() above.
+ */
+function imageExtImagickTestCurrentConfig(): CurrentConfig
+{
+    $currentConfig = Kernel::container()->get(CurrentConfig::class);
+    if (! $currentConfig instanceof CurrentConfig) {
+        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+    }
+
+    return $currentConfig;
+}
+
 function imageExtImagickTestMake(string $path): ImageExtImagick
 {
-    return new ImageExtImagick($path, imageExtImagickTestCurrentLogger());
+    return new ImageExtImagick($path, imageExtImagickTestCurrentLogger(), imageExtImagickTestCurrentConfig());
 }
 
 beforeEach(function (): void {
@@ -152,7 +168,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     Kernel::reset();
     $dir = imageExtImagickTestMarker();
     $files = glob($dir . '/*');
@@ -260,7 +276,7 @@ test('rotate by 90 degrees swaps width/height and queues rotate+orient commands'
 
 test('set_compression_quality caps the requested quality via animatedWebpCompressionQuality for an animated webp source', function (): void {
     imageExtImagickTestSkipIfUnavailable();
-    CurrentConfig::setAnimatedWebpCompressionQuality(40);
+    imageExtImagickTestCurrentConfig()->setAnimatedWebpCompressionQuality(40);
 
     $path = imageExtImagickTestMarker() . '/animated-quality.webp';
     imageExtImagickTestMakeAnimatedWebp($path, 16, 10);
@@ -321,7 +337,7 @@ test('compose throws a LogicException when the overlay uses a different image ba
     imageExtImagickTestMakeJpeg($basePath, 20, 14, 10, 10, 10);
     imageExtImagickTestMakeJpeg($overlayPath, 8, 8, 200, 200, 200);
     $base = imageExtImagickTestMake($basePath);
-    $overlay = new PwgImage($overlayPath, imageExtImagickTestCurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), 'ext_imagick');
+    $overlay = new PwgImage($overlayPath, imageExtImagickTestCurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), imageExtImagickTestCurrentConfig(), 'ext_imagick');
     // Swap in a fake, non-ImageExtImagick backend to force the mismatch --
     // same idea as ImageGdTest's own compose()-mismatch test, this class's
     // guard only cares that it's genuinely not `self` (ImageExtImagick).
@@ -389,7 +405,7 @@ test('compose throws when the overlay source path cannot be resolved', function 
     imageExtImagickTestMakeJpeg($basePath, 20, 14, 10, 10, 10);
     imageExtImagickTestMakeJpeg($overlayPath, 8, 8, 200, 200, 200);
     $base = imageExtImagickTestMake($basePath);
-    $overlay = new PwgImage($overlayPath, imageExtImagickTestCurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), 'ext_imagick');
+    $overlay = new PwgImage($overlayPath, imageExtImagickTestCurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), imageExtImagickTestCurrentConfig(), 'ext_imagick');
     expect($overlay->image)->toBeInstanceOf(ImageExtImagick::class);
     // The overlay backend was legitimately constructed from a real file,
     // but that file is now gone by the time compose() actually resolves

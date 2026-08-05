@@ -113,7 +113,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         $conn = DbConnection::build();
         $repo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         self::assertInstanceOf(\Piwigo\Config\ConfigRepository::class, $repo);
-        $configService = new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher());
+        $configService = new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current());
         CurrentConfigService::current()->set($configService);
         // sendMailNotifications()'s recent-post-dates block builds real
         // thumbnail URLs (NotificationService::getHtmlDescriptionRecentPostDate()
@@ -160,9 +160,9 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         $this->conn->executeStatement('DELETE FROM ' . Tables::userMailNotification() . ' WHERE user_id = 4');
         $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . ' WHERE user_id = 4');
         $this->conn->executeStatement('UPDATE ' . Tables::users() . ' SET mail_address = NULL WHERE id = 4');
-        CurrentConfig::setSmtpHost('');
-        CurrentConfig::setNbmListAllEnabledUsersToSend(false);
-        CurrentConfig::setNbmSendDetailedContent(true);
+        CurrentConfig::current()->setSmtpHost('');
+        CurrentConfig::current()->setNbmListAllEnabledUsersToSend(false);
+        CurrentConfig::current()->setNbmSendDetailedContent(true);
         PageState::current()->reset();
         Kernel::reset();
         parent::tearDown();
@@ -189,7 +189,6 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
      */
     private function senderWithImmediateTimeout(): NotificationByMailSender
     {
-        CurrentConfig::setNbmTreatmentTimeoutDefault(-1);
         Kernel::reset();
         // Kernel::reset() discards the real Paths setUp()'s own bare
         // Kernel::boot() call had silently reused from parent::setUp()'s
@@ -216,6 +215,16 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // (e.g. via AccessControl) throws "not initialised" against this
         // now-unseeded container.
         \Piwigo\Users\CurrentUser::current()->attachGlobals();
+        // Kernel::reset() also discards the container-shared CurrentConfig
+        // instance (singleton/service-locator elimination campaign, Phase
+        // 9 -- CurrentConfig is now rebuilt fresh per container too, back
+        // to its own compiled-in defaults, not a true process-global
+        // survivor) -- must be set here, on the fresh post-reboot instance,
+        // not before the Kernel::reset() above, or the new container's own
+        // fresh CurrentConfig would silently discard it and the rebuilt
+        // sender below would read the ordinary default (20) instead of
+        // this test's forced-immediate-timeout value.
+        CurrentConfig::current()->setNbmTreatmentTimeoutDefault(-1);
 
         return PresentationAccessor::notificationByMailSender();
     }
@@ -391,7 +400,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // with a last_send that would otherwise exclude the user (see the
         // "excludes a user with no pending news" test above).
         $this->setUser1LastSend('2026-08-01 00:00:00');
-        CurrentConfig::setNbmListAllEnabledUsersToSend(true);
+        CurrentConfig::current()->setNbmListAllEnabledUsersToSend(true);
 
         $result = $this->sender->sendMailNotifications('list_to_send', [$this->user1OriginalRow['check_key']]);
 
@@ -403,7 +412,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     public function test_sendMailNotifications_send_action_records_a_failed_mail_and_treats_the_check_key_on_delivery_failure(): void
     {
         $this->setUser1LastSend('2000-01-01 00:00:00');
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::current()->setSmtpHost('127.0.0.1:1');
 
         // A forced delivery failure always raises MailService::mail()'s
         // own deliberate E_USER_WARNING in this CLI process, which
@@ -429,8 +438,8 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     public function test_sendMailNotifications_send_action_uses_the_newsExists_only_branch_when_detailed_content_is_disabled(): void
     {
         $this->setUser1LastSend('2000-01-01 00:00:00');
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
-        CurrentConfig::setNbmSendDetailedContent(false);
+        CurrentConfig::current()->setSmtpHost('127.0.0.1:1');
+        CurrentConfig::current()->setNbmSendDetailedContent(false);
 
         $result = $this->suppressMailerWarning(fn () => $this->sender->sendMailNotifications('send', [$this->user1OriginalRow['check_key']]));
 
@@ -494,7 +503,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // unobservable field. Not expectNotToPerformAssertions(): see that
         // test's own comment -- this file's setUp() already performs real
         // assertions, which PHPUnit counts against every test in the class.
-        CurrentConfig::setNbmSendMailAs('Custom Notifier');
+        CurrentConfig::current()->setNbmSendMailAs('Custom Notifier');
 
         $this->sender->beginUsersEnv(true);
         $this->sender->endUsersEnv();
@@ -511,7 +520,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
 
     public function test_doSubscribeUnsubscribeNotificationByMail_records_a_failed_mail_and_leaves_enabled_unchanged_on_delivery_failure(): void
     {
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::current()->setSmtpHost('127.0.0.1:1');
         self::assertSame(1, $this->user1Enabled());
 
         $result = $this->suppressMailerWarning(fn () => $this->sender->doSubscribeUnsubscribeNotificationByMail(
@@ -617,8 +626,8 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
             'INSERT INTO ' . Tables::userMailNotification() . ' (user_id, check_key, enabled, last_send) VALUES (?, ?, 1, NULL)',
             [4, $checkKey]
         );
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
-        CurrentConfig::setNbmComplementaryMailContent('A note from the admin.');
+        CurrentConfig::current()->setSmtpHost('127.0.0.1:1');
+        CurrentConfig::current()->setNbmComplementaryMailContent('A note from the admin.');
 
         $result = $this->suppressMailerWarning(fn () => $this->sender->sendMailNotifications('send', [$checkKey]));
 

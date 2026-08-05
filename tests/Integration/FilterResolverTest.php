@@ -51,20 +51,25 @@ final class FilterResolverTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
 
         $em = EntityManagerFactory::build($this->conn);
-        $sessionService = new SessionService($em->getRepository(SessionEntity::class));
+        $sessionService = new SessionService($em->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current());
         $imageService = new ImageService(
             \Piwigo\Core\Lang::current(),
             $em->getRepository(\Piwigo\Image\ImageEntity::class),
             new ActivityService($em->getRepository(\Piwigo\Activity\ActivityEntity::class)),
             $sessionService,
             new \Piwigo\PluginConfig\EventDispatcher(),
+            CurrentConfig::current(),
         );
         $categoryService = new CategoryService(
             \Piwigo\Core\Lang::current(),
@@ -74,6 +79,7 @@ final class FilterResolverTest extends IntegrationTestCase
                 $em->getRepository(\Piwigo\Group\GroupEntity::class),
                 $em->getRepository(\Piwigo\Category\CategoryEntity::class),
             ),
+            \Piwigo\Config\CurrentConfig::current(),
         );
         $caddieRepo = new CaddieRepository($this->conn);
         $userService = new UserService(
@@ -88,6 +94,7 @@ final class FilterResolverTest extends IntegrationTestCase
             new \Piwigo\PluginConfig\EventDispatcher(),
             new \Piwigo\Config\DeploymentPolicy(),
             \Piwigo\Users\CurrentUser::current(),
+            \Piwigo\Config\CurrentConfig::current(),
         );
 
         $this->resolver = new FilterResolver($imageService, $categoryService, $caddieRepo, $userService);

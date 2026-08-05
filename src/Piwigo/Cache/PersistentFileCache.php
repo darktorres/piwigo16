@@ -18,9 +18,10 @@ final class PersistentFileCache extends PersistentCache
 {
     private readonly string $dir;
 
-    public function __construct()
-    {
-        $data_location = \Piwigo\Config\CurrentConfig::dataLocation();
+    public function __construct(
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+    ) {
+        $data_location = $this->currentConfig->dataLocation();
         $this->dir = \Piwigo\Core\CurrentPaths::get()->root . $data_location . 'cache/';
     }
 

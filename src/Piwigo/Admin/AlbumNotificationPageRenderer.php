@@ -38,6 +38,7 @@ final class AlbumNotificationPageRenderer
         private readonly \Piwigo\Category\CategoryService $categoryService,
         private readonly \Piwigo\Html\HtmlService $htmlService,
         private readonly \Piwigo\Mail\MailService $mailService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -71,7 +72,7 @@ final class AlbumNotificationPageRenderer
         // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific column
         // names (see include/config_default.inc.php); every value is a plain
         // string. Extracted once here and reused by both user-list queries below.
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = $this->currentConfig->userFields();
         $user_field_id = $user_fields['id'];
         $user_field_username = $user_fields['username'];
         $user_field_email = $user_fields['email'];
@@ -115,7 +116,7 @@ final class AlbumNotificationPageRenderer
             $renderedCategoryName = $nameEvent->categoryName;
 
             $args = [
-                'subject' => $this->lang->t('[%s] Visit album %s', \Piwigo\Config\CurrentConfig::galleryTitle(), $renderedCategoryName),
+                'subject' => $this->lang->t('[%s] Visit album %s', $this->currentConfig->galleryTitle(), $renderedCategoryName),
             ];
 
             $mail_content = $albumNotificationSubmit->mailContent;
@@ -255,7 +256,7 @@ final class AlbumNotificationPageRenderer
 
         // auth_key_duration is a plain int config value (see
         // include/config_default.inc.php).
-        $auth_key_duration = \Piwigo\Config\CurrentConfig::authKeyDuration();
+        $auth_key_duration = $this->currentConfig->authKeyDuration();
         $auth_key_duration_num = $auth_key_duration;
         if ($auth_key_duration_num > 0) {
             $auth_key_since = strtotime('now -' . $auth_key_duration_num . ' second');

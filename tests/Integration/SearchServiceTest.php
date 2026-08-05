@@ -227,7 +227,11 @@ final class SearchServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         // UserService's own ProcessCache usage (reached via this test's own
@@ -240,8 +244,8 @@ final class SearchServiceTest extends IntegrationTestCase
         $this->repo = new SearchRepository($this->conn);
 
         CurrentUser::current()->set(User::fromUserArray(self::realisticUserGlobal()));
-        CurrentConfig::setDefaultFiltersViews(null);
-        CurrentConfig::setFiltersViews([
+        $currentConfig->setDefaultFiltersViews(null);
+        $currentConfig->setFiltersViews([
             'expert' => ['access' => 'everybody'],
             'words' => ['access' => 'everybody'],
             'author' => ['access' => 'everybody'],
@@ -257,10 +261,10 @@ final class SearchServiceTest extends IntegrationTestCase
             'width' => ['access' => 'everybody'],
             'tags' => ['access' => 'everybody'],
         ]);
-        CurrentConfig::setOrderBy('ORDER BY id ASC');
-        CurrentConfig::setCalendarDatefield('date_creation');
-        CurrentConfig::setQuickSearchIncludeSubAlbums(false);
-        CurrentConfig::setRateEnabled(true);
+        $currentConfig->setOrderBy('ORDER BY id ASC');
+        $currentConfig->setCalendarDatefield('date_creation');
+        $currentConfig->setQuickSearchIncludeSubAlbums(false);
+        $currentConfig->setRateEnabled(true);
 
         $this->service = new SearchService(
             \Piwigo\Auth\AccessControl::current(),
@@ -269,14 +273,16 @@ final class SearchServiceTest extends IntegrationTestCase
             new CategoryService(
                 \Piwigo\Core\Lang::current(),
                 \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
-                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class))
+                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)),
+                \Piwigo\Config\CurrentConfig::current()
             ),
             new MailService(),
             new HtmlService(),
             new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()),
-            new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(),
+            new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), \Piwigo\PluginConfig\EventDispatcher::get(),
             \Piwigo\Users\CurrentUser::current(),
             \Piwigo\Core\Lang::current(),
+            \Piwigo\Config\CurrentConfig::current(),
         );
     }
 
@@ -318,14 +324,16 @@ final class SearchServiceTest extends IntegrationTestCase
             new CategoryService(
                 \Piwigo\Core\Lang::current(),
                 \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
-                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class))
+                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)),
+                \Piwigo\Config\CurrentConfig::current()
             ),
             new MailService(),
             $htmlRenderer,
             new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()),
-            new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(),
+            new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), \Piwigo\PluginConfig\EventDispatcher::get(),
             \Piwigo\Users\CurrentUser::current(),
             \Piwigo\Core\Lang::current(),
+            \Piwigo\Config\CurrentConfig::current(),
         );
     }
 
@@ -1160,7 +1168,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
     public function test_get_quick_search_results_no_cache_expands_to_subalbums_when_enabled(): void
     {
-        CurrentConfig::setQuickSearchIncludeSubAlbums(true);
+        CurrentConfig::current()->setQuickSearchIncludeSubAlbums(true);
 
         // "Sample" matches category 1 ("Sample Album") only, by name --
         // with sub-album inclusion enabled this expands to include
@@ -1185,7 +1193,7 @@ final class SearchServiceTest extends IntegrationTestCase
         // genuinely return [], exercising qsearchGetCategories()'s own
         // "$subcatIds === []" ternary branch -- as opposed to the sibling
         // test above, whose category 1 always DOES have a real child.
-        CurrentConfig::setQuickSearchIncludeSubAlbums(true);
+        CurrentConfig::current()->setQuickSearchIncludeSubAlbums(true);
         $originalUppercats = $this->conn->fetchOne('SELECT uppercats FROM ' . Tables::categories() . ' WHERE id = 2');
         self::assertIsString($originalUppercats);
         $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET uppercats = '999' WHERE id = 2");
@@ -1308,7 +1316,7 @@ final class SearchServiceTest extends IntegrationTestCase
         // appending 'date' to $postedDateAliases instead of
         // $createdDateAliases -- proves the scope list still builds and the
         // search still functions correctly either way.
-        CurrentConfig::setCalendarDatefield('date_available');
+        CurrentConfig::current()->setCalendarDatefield('date_available');
 
         $results = $this->service->getQuickSearchResultsNoCache('family', []);
 

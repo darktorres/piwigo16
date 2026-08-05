@@ -46,7 +46,7 @@ final class PageHeaderRenderer
      *   $refresh/$url_link top-level-scope contract -- Bootstrap\RedirectService::redirectHtml()
      *   is the one real caller that sets both today.
      */
-    public function render(string $title, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, ?string $refresh = null, ?string $urlLink = null): void
+    public function render(string $title, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, ?string $refresh = null, ?string $urlLink = null): void
     {
         $template = $currentTemplate->get();
 
@@ -56,14 +56,14 @@ final class PageHeaderRenderer
 
         $eventDispatcher->dispatchNotify(new LocBeginPageHeader());
 
-        $show_mobile_app_banner = \Piwigo\Config\CurrentConfig::showMobileAppBannerInGallery();
+        $show_mobile_app_banner = $currentConfig->showMobileAppBannerInGallery();
         if (\Piwigo\Core\AdminContext::isActiveStatic()) {
-            $show_mobile_app_banner = \Piwigo\Config\CurrentConfig::showMobileAppBannerInAdmin();
+            $show_mobile_app_banner = $currentConfig->showMobileAppBannerInAdmin();
         }
 
         /** @var string $conf_gallery_title */
-        $conf_gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
-        $page_banner = $pageState->pageBanner ?? \Piwigo\Config\CurrentConfig::pageBanner();
+        $conf_gallery_title = $currentConfig->galleryTitle();
+        $page_banner = $pageState->pageBanner ?? $currentConfig->pageBanner();
 
         $template->assign(
             [
@@ -84,7 +84,7 @@ final class PageHeaderRenderer
 
                 'U_HOME' => self::urlService()->getGalleryHomeUrl(),
 
-                'LEVEL_SEPARATOR' => \Piwigo\Config\CurrentConfig::levelSeparator(),
+                'LEVEL_SEPARATOR' => $currentConfig->levelSeparator(),
 
                 'SHOW_MOBILE_APP_BANNER' => $show_mobile_app_banner,
 
@@ -100,7 +100,7 @@ final class PageHeaderRenderer
             $template->assign('header_notes', $header_notes);
         }
 
-        if (! \Piwigo\Config\CurrentConfig::metaRef()) {
+        if (! $currentConfig->metaRef()) {
             $pageState->setMetaRobotsFlag('noindex');
             $pageState->setMetaRobotsFlag('nofollow');
         }

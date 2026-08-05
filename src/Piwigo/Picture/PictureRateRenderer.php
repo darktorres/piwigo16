@@ -24,6 +24,7 @@ final class PictureRateRenderer
         private readonly RateRepository $repo,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -48,7 +49,7 @@ final class PictureRateRenderer
     {
         $template = $this->currentTemplate->get();
 
-        if (! \Piwigo\Config\CurrentConfig::rateEnabled()) {
+        if (! $this->currentConfig->rateEnabled()) {
             return;
         }
 
@@ -70,7 +71,7 @@ final class PictureRateRenderer
         $template->assign('rate_summary', $rate_summary);
 
         $user_rate = null;
-        if (\Piwigo\Config\CurrentConfig::rateAnonymous() or $this->accessControl->isAuthorizeStatus(AccessLevel::Classic)) {
+        if ($this->currentConfig->rateAnonymous() or $this->accessControl->isAuthorizeStatus(AccessLevel::Classic)) {
             if ($rate_summary['count'] > 0) {
                 $rate_image_id = $imageId;
                 $rate_user_id = $this->currentUser->get()
@@ -99,7 +100,7 @@ final class PictureRateRenderer
                         ]
                     ),
                     'USER_RATE' => $user_rate,
-                    'marks' => \Piwigo\Config\CurrentConfig::rateItems(),
+                    'marks' => $this->currentConfig->rateItems(),
                 ]
             );
         }

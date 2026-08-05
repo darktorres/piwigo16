@@ -44,7 +44,7 @@ final class PwgComments
      *   with no 'default' key -- may be entirely absent; WsParamType::ID
      *   guarantees a plain int when present. page: non-null int default,
      *   WsParamType::INT|WsParamType::POSITIVE -- always present. per_page: same type
-     *   flag, default is \Piwigo\Config\CurrentConfig::commentsPageNbComments() (a real int,
+     *   flag, default is \Piwigo\Config\CurrentConfig::current()->commentsPageNbComments() (a real int,
      *   confirmed 10 in config_default.inc.php) -- always present, always
      *   int.
      * A composite, multi-query response (raw summary/nb_authors aggregate
@@ -55,7 +55,7 @@ final class PwgComments
      */
     public static function getList(array $params, PwgServer &$service): PwgError|array
     {
-        if (! \Piwigo\Config\CurrentConfig::activateComments()) {
+        if (! \Piwigo\Config\CurrentConfig::current()->activateComments()) {
             return new PwgError(403, 'Comments are disabled');
         }
 
@@ -175,7 +175,7 @@ final class PwgComments
 
         // comments
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::current()->userFields();
         $list = [];
         foreach (self::commentService()->getListForAdminWs(
             array_values($where_clauses),
@@ -201,7 +201,7 @@ final class PwgComments
             $medium = $medium_derivative->get_url();
 
             $row_author = is_string($row['author']) ? $row['author'] : null;
-            if (! is_numeric($row['author_id']) or (int) $row['author_id'] === 0 or (int) $row['author_id'] === \Piwigo\Config\CurrentConfig::guestId()) {
+            if (! is_numeric($row['author_id']) or (int) $row['author_id'] === 0 or (int) $row['author_id'] === \Piwigo\Config\CurrentConfig::current()->guestId()) {
                 $author_name = $row_author;
             } else {
                 $row_username = $row['username'] ?? null;
@@ -229,7 +229,7 @@ final class PwgComments
                 'file' => $row['file'],
                 'image_date_available' => \Piwigo\Core\DateHelper::formatDate($comment_date_available, ['day_name', 'day', 'month', 'year', 'time']),
                 'author' => $authorEvent->commentAuthor,
-                'author_status' => is_numeric($row['author_id']) && \Piwigo\Config\CurrentConfig::webmasterId() === (int) $row['author_id'] ? 'main_user' : $row['status'],
+                'author_status' => is_numeric($row['author_id']) && \Piwigo\Config\CurrentConfig::current()->webmasterId() === (int) $row['author_id'] ? 'main_user' : $row['status'],
                 'date' => \Piwigo\Core\DateHelper::formatDate($comment_date, ['day_name', 'day', 'month', 'year', 'time']),
                 'content' => $contentEvent->commentContent,
                 'raw_content' => $row['content'],
@@ -310,6 +310,6 @@ final class PwgComments
      */
     private static function commentService(): CommentService
     {
-        return new CommentService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        return new CommentService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current()), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
     }
 }

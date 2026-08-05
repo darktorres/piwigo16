@@ -65,8 +65,9 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             Lang::current(),
             \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class),
             $this->maintenanceActionDispatcherTestActivityService(),
-            new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)),
+            new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
             new \Piwigo\PluginConfig\EventDispatcher(),
+            \Piwigo\Config\CurrentConfig::current(),
         );
     }
 
@@ -92,12 +93,14 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new \Piwigo\Auth\AccessControl(
                 new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess(),
                 new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled(),
-                new \Piwigo\Users\CurrentUser(),
+                new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
+                new \Piwigo\Config\CurrentConfig(),
             ),
             \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Rate\RateEntity::class),
             new \Piwigo\Auth\CookieService(),
             new \Piwigo\PluginConfig\EventDispatcher(),
-            new \Piwigo\Users\CurrentUser(),
+            new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
+            new \Piwigo\Config\CurrentConfig(),
         );
     }
 
@@ -119,10 +122,11 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             $this->maintenanceActionDispatcherTestActivityService(),
             new HtmlService(),
             $conn,
-            new SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(SessionEntity::class)),
+            new SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
             new \Piwigo\PluginConfig\EventDispatcher(),
             new \Piwigo\Config\DeploymentPolicy(),
-            new \Piwigo\Users\CurrentUser(),
+            new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
+            new \Piwigo\Config\CurrentConfig(),
         );
     }
 
@@ -148,6 +152,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             Lang::current(),
             \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class),
             $this->maintenanceActionDispatcherTestPermissionService(),
+            \Piwigo\Config\CurrentConfig::current(),
         );
     }
 
@@ -162,7 +167,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
      */
     private function maintenanceActionDispatcherTestTagService(): \Piwigo\Tag\TagService
     {
-        $currentUser = new \Piwigo\Users\CurrentUser();
+        $currentUser = new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig());
         $currentUser->set(new \Piwigo\Users\User(
             id: \Piwigo\Common\ValueObject\UserId::from(2),
             username: 'maintenance-action-dispatcher-test-tag-service-user',
@@ -180,6 +185,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             $this->maintenanceActionDispatcherTestActivityService(),
             new \Piwigo\PluginConfig\EventDispatcher(),
             $currentUser,
+            CurrentConfig::current(),
         );
     }
 
@@ -195,7 +201,11 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
@@ -216,9 +226,9 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         Lang::current()->load('admin.lang');
 
         $this->conn = DbConnection::build();
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
-        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(Lang::current(), $this->maintenanceActionDispatcherTestUserService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), $configService, new FilesystemIntegrityChecker(Lang::current(), CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService()), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), new \Piwigo\Admin\Maintenance\DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Db\DbCredentials::current()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), new HtmlService(), Lang::current());
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current()));
+        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current());
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(Lang::current(), $this->maintenanceActionDispatcherTestUserService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), $configService, new FilesystemIntegrityChecker(Lang::current(), CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfig::current()), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new Translator(CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), new \Piwigo\Admin\Maintenance\DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Db\DbCredentials::current()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), new HtmlService(), Lang::current(), CurrentConfig::current());
     }
 
     #[\Override]
@@ -594,14 +604,14 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // setUp() with no persistent cache) -- constructor injection means
         // this test just passes the fixture it wants directly, no static
         // set()/reset() ceremony needed.
-        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
+        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current());
         $dispatcher = new MaintenanceActionDispatcher(
             new RedirectService(Lang::current(), $this->maintenanceActionDispatcherTestUserService()),
             new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
             $configService,
-            new FilesystemIntegrityChecker(Lang::current(), CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService()),
-            new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)),
-            new Translator(),
+            new FilesystemIntegrityChecker(Lang::current(), CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfig::current()),
+            new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
+            new Translator(CurrentConfig::current()),
             new \Piwigo\PluginConfig\EventDispatcher(),
             \Piwigo\Core\PageState::current(),
             CurrentTemplate::current(),
@@ -612,7 +622,8 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             $this->maintenanceActionDispatcherTestTagService(),
             new HtmlService(),
             Lang::current(),
-            new \Piwigo\Cache\PersistentFileCache(),
+            CurrentConfig::current(),
+            new \Piwigo\Cache\PersistentFileCache(CurrentConfig::current()),
         );
 
         // FileCombiner::clear_combined_files()'s own opendir() (the real

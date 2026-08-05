@@ -42,8 +42,12 @@ beforeEach(function (): void {
     mkdir($root, 0o777, true);
     file_put_contents($root . '/tabsheet.tpl', '');
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::setDataLocation('data/');
-    CurrentConfig::setDataDirChecked('1');
+    $currentConfig = Kernel::container()->get(CurrentConfig::class);
+    if (! $currentConfig instanceof CurrentConfig) {
+        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+    }
+    $currentConfig->setDataLocation('data/');
+    $currentConfig->setDataDirChecked('1');
     CurrentTemplate::current()->set(new Template($root));
 });
 
@@ -51,7 +55,7 @@ afterEach(function (): void {
     tabsheetTestRrmdir(CurrentPaths::get()->root);
     CurrentTemplate::current()->reset();
     Kernel::reset();
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
 });
 
 test('the constructor defaults name/titlename and starts with no tabs and nothing selected', function (): void {

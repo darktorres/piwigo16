@@ -70,7 +70,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        CurrentConfig::current()->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         // Template::__construct() unconditionally checks
@@ -81,8 +81,8 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         // Pre-marking it "1" skips that write entirely, same technique as
         // tests/Unit/Picture/PictureCommentRendererTest.php's own
         // makePictureCommentTestTemplate().
-        CurrentConfig::setDataLocation('data/');
-        CurrentConfig::setDataDirChecked('1');
+        CurrentConfig::current()->setDataLocation('data/');
+        CurrentConfig::current()->setDataDirChecked('1');
         Lang::current()->reset();
         Translator::get()->reset();
 
@@ -118,7 +118,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
 
     private function makeCalendar(): CalendarWeekly
     {
-        $calendar = new CalendarWeekly(Lang::current(), new CalendarRepository($this->conn), $this->urlService);
+        $calendar = new CalendarWeekly(Lang::current(), new CalendarRepository($this->conn), $this->urlService, CurrentConfig::current());
         $calendar->chronology_field = 'posted';
         $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)'));
 
@@ -167,12 +167,12 @@ final class CalendarWeeklyTest extends IntegrationTestCase
      */
     public function test_initialize_builds_different_week_and_day_sql_for_monday_vs_sunday_start(): void
     {
-        CurrentConfig::setWeekStartsOn('sunday');
+        CurrentConfig::current()->setWeekStartsOn('sunday');
         $sunday = $this->makeCalendar();
         self::assertSame('WEEK(date_available)+1', $sunday->calendar_levels[CalendarBase::CWEEK]['sql']);
         self::assertSame('DAYOFWEEK(date_available)-1', $sunday->calendar_levels[CalendarBase::CDAY]['sql']);
 
-        CurrentConfig::setWeekStartsOn('monday');
+        CurrentConfig::current()->setWeekStartsOn('monday');
         $monday = $this->makeCalendar();
         self::assertSame('WEEK(date_available, 5)+1', $monday->calendar_levels[CalendarBase::CWEEK]['sql']);
         self::assertSame('WEEKDAY(date_available)', $monday->calendar_levels[CalendarBase::CDAY]['sql']);
@@ -310,7 +310,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
     public function test_initialize_rotates_sunday_to_the_end_of_the_day_labels_when_monday_starts_the_week(): void
     {
         Lang::current()->loadArray(['day' => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']]);
-        CurrentConfig::setWeekStartsOn('monday');
+        CurrentConfig::current()->setWeekStartsOn('monday');
 
         $calendar = $this->makeCalendar();
 

@@ -44,7 +44,11 @@ final class ThemeCatalogTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         // Untranslated-key fallback for Lang::t('Mobile') below --
         // deterministic regardless of what an earlier Integration test in
         // this shared process may have loaded into Translator's mirror.
@@ -57,7 +61,11 @@ final class ThemeCatalogTest extends IntegrationTestCase
     {
         Lang::current()->reset();
         Translator::get()->reset();
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         parent::tearDown();
     }
 
@@ -87,7 +95,11 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $this->conn->executeStatement(
             'INSERT INTO ' . Tables::themes() . " (id, version, name) VALUES ('mobile-candidate', '1.0', 'Mobile Candidate')"
         );
-        CurrentConfig::setMobilTheme('mobile-candidate');
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setMobilTheme('mobile-candidate');
 
         try {
             $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), showMobile: false);
@@ -103,7 +115,11 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $this->conn->executeStatement(
             "INSERT INTO " . Tables::themes() . " (id, version, name) VALUES ('default', '1.0', 'Default')"
         );
-        CurrentConfig::setMobilTheme('default');
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setMobilTheme('default');
 
         try {
             $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), showMobile: true);

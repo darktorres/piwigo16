@@ -127,6 +127,7 @@ abstract class CalendarBase
         protected readonly Lang $lang,
         protected readonly CalendarRepository $calendarRepository,
         protected readonly UrlServiceInterface $urlService,
+        protected readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -168,7 +169,7 @@ abstract class CalendarBase
         // level_separator is documented as a character string
         // (see config_default.inc.php); see the identical pattern in
         // include/section_init.inc.php and admin/cat_list.php.
-        $level_separator = \Piwigo\Config\CurrentConfig::levelSeparator();
+        $level_separator = $this->currentConfig->levelSeparator();
         $page_chronology_date = $this->chronology_date;
 
         for ($i = 0; $i < count($page_chronology_date); $i++) {
@@ -253,7 +254,7 @@ abstract class CalendarBase
     ) {
         $nav_bar_datas = [];
 
-        if (\Piwigo\Config\CurrentConfig::calendarShowEmpty() and $show_empty and $labels !== null and $labels !== []) {
+        if ($this->currentConfig->calendarShowEmpty() and $show_empty and $labels !== null and $labels !== []) {
             foreach ($labels as $item => $label) {
                 if (! isset($items[$item])) {
                     $items[$item] = -1;
@@ -290,7 +291,7 @@ abstract class CalendarBase
 
         }
 
-        if (\Piwigo\Config\CurrentConfig::calendarShowAny() and $show_any and count($items) > 1 and
+        if ($this->currentConfig->calendarShowAny() and $show_any and count($items) > 1 and
               count($date_components) < count($this->calendar_levels) - 1) {
             $url = $this->urlService->duplicateIndexUrl(
                 [

@@ -35,6 +35,10 @@ final class CurrentUser
 
     private ?User $user = null;
 
+    public function __construct(
+        private readonly CurrentConfig $currentConfig,
+    ) {}
+
     /**
      * Legacy Coupling Retirement Phase 8, 8h: distinguishes "a real,
      * per-request user was resolved" from "attachGlobals() guest-seeded
@@ -60,7 +64,7 @@ final class CurrentUser
             return $instance;
         }
 
-        return self::$fallback ??= new self();
+        return self::$fallback ??= new self(new CurrentConfig());
     }
 
     /**
@@ -71,7 +75,7 @@ final class CurrentUser
     public function attachGlobals(): void
     {
         $this->user ??= new User(
-            id: UserId::from(CurrentConfig::guestId()),
+            id: UserId::from($this->currentConfig->guestId()),
             username: '',
             email: '',
             language: AppInfo::DEFAULT_LANGUAGE,

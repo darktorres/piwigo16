@@ -27,7 +27,7 @@ use Piwigo\Menu\BlockManager;
  */
 final class MenubarPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
 
@@ -46,7 +46,7 @@ final class MenubarPageRenderer
         $tabsheet->select('');
         $tabsheet->assign($currentTemplate);
 
-        $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate);
+        $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate, $currentConfig);
         $menu->load_registered_blocks();
         $reg_blocks = $menu->get_registered_blocks();
 
@@ -55,7 +55,7 @@ final class MenubarPageRenderer
         // call site) -- a real CurrentConfig property instead of the
         // former dynamic 'blk_' . $id bag key. Already decoded -- no
         // manual unserialize() needed (gap-closure Stage 1a-bis item 1).
-        $mb_conf = \Piwigo\Config\CurrentConfig::blkMenubar() ?? [];
+        $mb_conf = $currentConfig->blkMenubar() ?? [];
 
         // $mb_conf comes from DB-stored config, so its element types are
         // not statically known; normalize every position to a real int.

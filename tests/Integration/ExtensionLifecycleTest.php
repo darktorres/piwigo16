@@ -59,7 +59,11 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
-            CurrentConfig::reset();
+            $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+            if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+            }
+            $currentConfig->reset();
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
@@ -83,15 +87,15 @@ namespace Piwigo\Tests\Integration {
             self::assertInstanceOf(\Piwigo\Users\UserService::class, $userService);
             $htmlService = Kernel::container()->get(\Piwigo\Html\HtmlService::class);
             self::assertInstanceOf(\Piwigo\Html\HtmlService::class, $htmlService);
-            $this->lifecycle = new ExtensionLifecycle(\Piwigo\Core\Lang::current(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()), $this->pluginMigrationRepo, $activityService, $userService, $htmlService);
+            $this->lifecycle = new ExtensionLifecycle(\Piwigo\Core\Lang::current(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig);
 
-            CurrentConfig::setEnableExtensionsInstall(true);
-            CurrentConfig::setPhpExtensionInUrls(false);
+            $currentConfig->setEnableExtensionsInstall(true);
+            $currentConfig->setPhpExtensionInUrls(false);
             // P23 batch 8f-4: ThemeCatalog::checkThemeInstalled() (called
             // for real here) reads CurrentConfig::themesDir() -- provide the
             // production value so the real filesystem check runs against
             // the real themes/ dir.
-            CurrentConfig::setThemesDir(\Piwigo\Core\CurrentPaths::get()->root . 'themes');
+            $currentConfig->setThemesDir(\Piwigo\Core\CurrentPaths::get()->root . 'themes');
             CurrentUser::current()->set(User::fromUserArray(['id' => 1]));
             CurrentUser::current()->markRealUserResolved();
             unset($_REQUEST['method'], $_REQUEST['action']);
@@ -284,7 +288,7 @@ namespace Piwigo\Tests\Integration {
             // leak into every later test in this shared process, same
             // reasoning as MaintenanceActionDispatcherTest's identical
             // local handler).
-            CurrentConfig::setEnableExtensionsInstall(false);
+            CurrentConfig::current()->setEnableExtensionsInstall(false);
 
             set_error_handler(static fn (): bool => true);
             try {
@@ -364,9 +368,10 @@ namespace Piwigo\Tests\Integration {
                 'name' => 'Mobile One',
                 'mobile' => true,
             ]);
-            CurrentConfig::setEnableExtensionsInstall(true);
-            CurrentConfig::setPhpExtensionInUrls(false);
-            CurrentConfig::setMobilTheme($first);
+            $currentConfig = CurrentConfig::current();
+            $currentConfig->setEnableExtensionsInstall(true);
+            $currentConfig->setPhpExtensionInUrls(false);
+            $currentConfig->setMobilTheme($first);
 
             $second = $this->themeId();
             $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $second, [
@@ -685,14 +690,15 @@ namespace Piwigo\Tests\Integration {
             // to 127.0.0.1 -- is what actually produces the failure.
             $previousHttpHost = $_SERVER['HTTP_HOST'] ?? null;
             $_SERVER['HTTP_HOST'] = 'extension-lifecycle-test.invalid';
-            CurrentConfig::setAlternativePemUrl('https://127.0.0.1/pem-unreachable');
+            $currentConfig = CurrentConfig::current();
+            $currentConfig->setAlternativePemUrl('https://127.0.0.1/pem-unreachable');
 
             try {
                 $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'update', $this->pluginId(), ['version' => '1.0'], ['revision' => '42']);
 
                 self::assertSame(['dl_archive_error'], $errors);
             } finally {
-                CurrentConfig::setAlternativePemUrl('');
+                $currentConfig->setAlternativePemUrl('');
                 if ($previousHttpHost === null) {
                     unset($_SERVER['HTTP_HOST']);
                 } else {
@@ -973,9 +979,10 @@ PHP);
             $mobile = $this->themeId();
             $other = $this->themeId();
             $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $mobile, ['version' => '1.0', 'name' => 'Mobile', 'mobile' => true]);
-            CurrentConfig::setEnableExtensionsInstall(true);
-            CurrentConfig::setPhpExtensionInUrls(false);
-            CurrentConfig::setMobilTheme($mobile);
+            $currentConfig = CurrentConfig::current();
+            $currentConfig->setEnableExtensionsInstall(true);
+            $currentConfig->setPhpExtensionInUrls(false);
+            $currentConfig->setMobilTheme($mobile);
             $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $other, ['version' => '1.0', 'name' => 'Other']);
 
             $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $mobile, ['version' => '1.0', 'name' => 'Mobile', 'mobile' => true]);
@@ -1017,7 +1024,8 @@ PHP);
             // flow) tolerates the relative value fine either way: a failed
             // file_exists() there just falls back to DummyThemeMaintain, a
             // real, already-exercised no-op path elsewhere in this suite.
-            CurrentConfig::setThemesDir('themes');
+            $currentConfig = CurrentConfig::current();
+            $currentConfig->setThemesDir('themes');
 
             $default = $this->themeId();
             $other = $this->themeId();
@@ -1025,7 +1033,7 @@ PHP);
             $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $default, ['version' => '1.0', 'name' => 'Real Default']);
             $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $other, ['version' => '1.0', 'name' => 'Other']);
 
-            $defaultUserId = \Piwigo\Config\CurrentConfig::defaultUserId();
+            $defaultUserId = $currentConfig->defaultUserId();
             $before = $this->conn->fetchOne('SELECT theme FROM ' . Tables::userInfos() . ' WHERE user_id = ?', [$defaultUserId]);
             $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET theme = ? WHERE user_id = ?', [$default, $defaultUserId]);
 

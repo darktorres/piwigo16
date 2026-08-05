@@ -25,6 +25,10 @@ use Piwigo\Common\ValueObject\IpAddress;
  */
 final class EphemeralKeyService
 {
+    public function __construct(
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+    ) {}
+
     /**
      * Returns a "secret key" that is to be sent back when a user posts a
      * form.
@@ -44,7 +48,7 @@ final class EphemeralKeyService
         // rounding-race comments elsewhere in this file).
         $time = round(microtime(true), 1);
         $remote_addr = IpAddress::fromRemoteAddr()->value ?? '';
-        $secret_key = \Piwigo\Config\CurrentConfig::secretKey();
+        $secret_key = $this->currentConfig->secretKey();
 
         // Both (string) casts below are redundant: `.` concatenation
         // already stringifies a float identically to an explicit cast
@@ -107,7 +111,7 @@ final class EphemeralKeyService
         }
 
         $remote_addr = IpAddress::fromRemoteAddr()->value ?? '';
-        $secret_key = \Piwigo\Config\CurrentConfig::secretKey();
+        $secret_key = $this->currentConfig->secretKey();
 
         $expected = hash_hmac(
             'sha256',

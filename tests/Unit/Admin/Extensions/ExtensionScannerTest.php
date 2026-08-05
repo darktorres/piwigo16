@@ -30,13 +30,13 @@ use Piwigo\Users\User;
 // seeded against this repo's own real root (not a disposable temp dir) so
 // the real language/ tree is genuinely reachable.
 beforeEach(function (): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     ConfigLoader::applyDefaults();
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 4)));
 });
 
 afterEach(function (): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     // Lang::current() (unlike CurrentUser::current()) has no memoized
     // pre-boot fallback -- see its own docblock -- so it must resolve
     // (and get reset) while the container is still up, before
@@ -97,7 +97,7 @@ function extensionScannerFixtureRoot(): string
     // takes.
     Kernel::reset();
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::setThemesDir(rtrim($root, '/') . '/themes');
+    CurrentConfig::current()->setThemesDir(rtrim($root, '/') . '/themes');
 
     return $root;
 }

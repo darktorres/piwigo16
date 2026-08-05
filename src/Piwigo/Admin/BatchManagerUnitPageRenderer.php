@@ -84,6 +84,7 @@ final class BatchManagerUnitPageRenderer
         private readonly ImageService $imageService,
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Html\HtmlService $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -132,7 +133,7 @@ final class BatchManagerUnitPageRenderer
                 $data['author'] = $batchManagerUnitRequest->post['author-' . $row_id_str] ?? null;
                 $data['level'] = $batchManagerUnitRequest->post['level-' . $row_id_str] ?? null;
 
-                if (\Piwigo\Config\CurrentConfig::allowHtmlDescriptions()) {
+                if ($this->currentConfig->allowHtmlDescriptions()) {
                     $data['comment'] = $batchManagerUnitRequest->post['description-' . $row_id_str] ?? null;
                 } else {
                     $description_post = $batchManagerUnitRequest->post['description-' . $row_id_str] ?? null;
@@ -232,7 +233,7 @@ final class BatchManagerUnitPageRenderer
         $page_start = $pageStart;
 
         new FilterPanelRenderer()
-            ->render($this->lang, $template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService, $this->htmlRenderer);
+            ->render($this->lang, $template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService, $this->htmlRenderer, $this->currentConfig);
         // +-------------------------------------------------------------------+
         // |                        global mode thumbnails                         |
         // +-------------------------------------------------------------------+
@@ -244,8 +245,8 @@ final class BatchManagerUnitPageRenderer
             // \Piwigo\Config\ConfigDb::confUpdateParam('batch_manager_images_per_page_unit' , intval($_GET['display']));
             // $nb_images = \Piwigo\Config\CurrentConfig::batchManagerImagesPerPageUnit();
             $nb_images = $batchManagerUnitRequest->display;
-        } elseif (in_array(\Piwigo\Config\CurrentConfig::batchManagerImagesPerPageUnit(), [5, 10, 50], true)) {
-            $nb_images = \Piwigo\Config\CurrentConfig::batchManagerImagesPerPageUnit();
+        } elseif (in_array($this->currentConfig->batchManagerImagesPerPageUnit(), [5, 10, 50], true)) {
+            $nb_images = $this->currentConfig->batchManagerImagesPerPageUnit();
         } else {
             $nb_images = 5;
         }
@@ -254,7 +255,7 @@ final class BatchManagerUnitPageRenderer
         if (count($cat_elements_id) > 0) {
             $page_nb_images = $nb_images;
 
-            $nav_bar = new \Piwigo\Core\PaginationService()
+            $nav_bar = new \Piwigo\Core\PaginationService($this->currentConfig)
                 ->createNavigationBar($base_url . $this->urlService->getQueryStringDiff(['start']), count($cat_elements_id), $page_start, $page_nb_images);
             $template->assign([
                 'navbar' => $nav_bar,
@@ -285,13 +286,13 @@ final class BatchManagerUnitPageRenderer
             } else {
                 // order_by is a raw "ORDER BY ..." SQL fragment string --
                 // see CurrentConfig::orderBy()'s own docblock.
-                $order_by = \Piwigo\Config\CurrentConfig::orderBy();
+                $order_by = $this->currentConfig->orderBy();
             }
 
             if ($is_category) {
                 $category_info = $this->categoryService->getCategoryInfo($filter_category_id);
 
-                $order_by = \Piwigo\Config\CurrentConfig::orderByInsideCategory();
+                $order_by = $this->currentConfig->orderByInsideCategory();
                 $category_image_order = $category_info !== null ? ($category_info['image_order'] ?? null) : null;
                 if (is_string($category_image_order) && $category_image_order !== '') {
                     $order_by = ' ORDER BY ' . $category_image_order;
@@ -314,7 +315,7 @@ final class BatchManagerUnitPageRenderer
             }
 
             $tagService = $this->tagService;
-            $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
+            $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig);
 
             foreach ($images as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this

@@ -40,7 +40,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     Lang::current()->reset();
     Translator::get()->reset();
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     Kernel::reset();
 });
 
@@ -77,7 +77,7 @@ test('get_php_str_val checks the first character for a matching double-quote, no
 });
 
 test('modcompiler_translate returns a cached lang lookup when compiled_template_cache_language is on', function (): void {
-    CurrentConfig::setCompiledTemplateCacheLanguage(true);
+    CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
     Lang::current()->loadArray(['Comment' => 'Commentaire']);
 
     $result = Template::modcompiler_translate(["'Comment'"]);
@@ -86,7 +86,7 @@ test('modcompiler_translate returns a cached lang lookup when compiled_template_
 });
 
 test('modcompiler_translate falls back to a runtime Lang::current()->t() call when caching is off', function (): void {
-    CurrentConfig::setCompiledTemplateCacheLanguage(false);
+    CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
     Lang::current()->loadArray(['Comment' => 'Commentaire']);
 
     $result = Template::modcompiler_translate(["'Comment'"]);
@@ -95,7 +95,7 @@ test('modcompiler_translate falls back to a runtime Lang::current()->t() call wh
 });
 
 test('modcompiler_translate falls back to a runtime Lang::current()->t() call when the key is not in the cached lang table', function (): void {
-    CurrentConfig::setCompiledTemplateCacheLanguage(true);
+    CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
     Lang::current()->loadArray([]);
 
     $result = Template::modcompiler_translate(["'Unknown'"]);
@@ -104,7 +104,7 @@ test('modcompiler_translate falls back to a runtime Lang::current()->t() call wh
 });
 
 test('modcompiler_translate wraps a runtime Lang::current()->t() call in sprintf when extra params are given', function (): void {
-    CurrentConfig::setCompiledTemplateCacheLanguage(false);
+    CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
     Lang::current()->loadArray([]);
 
     $result = Template::modcompiler_translate(["'%d comments'", '$count']);
@@ -113,7 +113,7 @@ test('modcompiler_translate wraps a runtime Lang::current()->t() call in sprintf
 });
 
 test('modcompiler_translate_dec falls back to a runtime Lang::current()->plural() call when caching is off', function (): void {
-    CurrentConfig::setCompiledTemplateCacheLanguage(false);
+    CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
 
     $result = Template::modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
 
@@ -121,7 +121,7 @@ test('modcompiler_translate_dec falls back to a runtime Lang::current()->plural(
 });
 
 test('modcompiler_translate wraps a cached lang lookup in sprintf when extra params are given and caching is on', function (): void {
-    CurrentConfig::setCompiledTemplateCacheLanguage(true);
+    CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
     Lang::current()->loadArray(['%d comments' => '%d commentaires']);
 
     $result = Template::modcompiler_translate(["'%d comments'", '$count']);
@@ -130,7 +130,7 @@ test('modcompiler_translate wraps a cached lang lookup in sprintf when extra par
 });
 
 test('modcompiler_translate_dec builds a plain >1 ternary from cached lang lookups when caching is on and zero is not plural', function (): void {
-    CurrentConfig::setCompiledTemplateCacheLanguage(true);
+    CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
     Lang::current()->setLangInfo(['zero_plural' => false]);
     Lang::current()->loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
 
@@ -140,7 +140,7 @@ test('modcompiler_translate_dec builds a plain >1 ternary from cached lang looku
 });
 
 test('modcompiler_translate_dec also treats zero as plural when zero_plural is set', function (): void {
-    CurrentConfig::setCompiledTemplateCacheLanguage(true);
+    CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
     Lang::current()->setLangInfo(['zero_plural' => true]);
     Lang::current()->loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
 

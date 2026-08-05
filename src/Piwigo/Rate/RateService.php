@@ -31,6 +31,7 @@ final readonly class RateService
         private CookieService $cookies,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Users\CurrentUser $currentUser,
+        private \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -45,11 +46,11 @@ final readonly class RateService
     public function rate(int $imageId, int|string|null $rate): array|false
     {
 
-        $rateItems = \Piwigo\Config\CurrentConfig::rateItems();
+        $rateItems = $this->currentConfig->rateItems();
 
         if (
             $rate === null
-            || ! \Piwigo\Config\CurrentConfig::rateEnabled()
+            || ! $this->currentConfig->rateEnabled()
             || ! (bool) preg_match('/^[0-9]+$/', (string) $rate)
         ) {
             return false;
@@ -66,7 +67,7 @@ final readonly class RateService
 
         $userAnonymous = ! $this->accessControl->isAuthorizeStatus(AccessLevel::Classic);
 
-        if ($userAnonymous && ! \Piwigo\Config\CurrentConfig::rateAnonymous()) {
+        if ($userAnonymous && ! $this->currentConfig->rateAnonymous()) {
             return false;
         }
 

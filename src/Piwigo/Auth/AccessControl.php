@@ -42,6 +42,7 @@ final class AccessControl
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly RedirectServiceInterface $redirectService,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -107,7 +108,7 @@ final class AccessControl
             // A guest CurrentUser, not an unset one -- get() throws on an
             // unset instance exactly like AccessControl::current() does,
             // which would just move this same problem one level down.
-            $guestUser = new \Piwigo\Users\CurrentUser();
+            $guestUser = new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig());
             $guestUser->attachGlobals();
 
             return self::$cachingFallback = new self(
@@ -221,6 +222,7 @@ final class AccessControl
                     }
                 },
                 $guestUser,
+                \Piwigo\Config\CurrentConfig::current(),
             );
         }
     }
@@ -239,7 +241,7 @@ final class AccessControl
     {
 
         return match ($this->getUserStatus($userStatus)) {
-            'guest' => \Piwigo\Config\CurrentConfig::guestAccess() ? AccessLevel::Guest : AccessLevel::Free,
+            'guest' => $this->currentConfig->guestAccess() ? AccessLevel::Guest : AccessLevel::Free,
             'generic' => AccessLevel::Guest,
             'normal' => AccessLevel::Classic,
             'admin' => AccessLevel::Administrator,
@@ -319,13 +321,13 @@ final class AccessControl
         $currentUserId = $this->currentUser->get()
             ->id->value;
 
-        if ($action === 'edit' && \Piwigo\Config\CurrentConfig::userCanEditComment()) {
+        if ($action === 'edit' && $this->currentConfig->userCanEditComment()) {
             if ((int) $commentAuthorId === $currentUserId) {
                 return true;
             }
         }
 
-        if ($action === 'delete' && \Piwigo\Config\CurrentConfig::userCanDeleteComment()) {
+        if ($action === 'delete' && $this->currentConfig->userCanDeleteComment()) {
             if ((int) $commentAuthorId === $currentUserId) {
                 return true;
             }

@@ -45,11 +45,11 @@ function pageFilterHelperTestRestoreServerKeys(array $saved): void
 }
 
 beforeEach(function (): void {
-    CurrentConfig::reset();
+    CurrentConfig::current()->reset();
 });
 
 afterEach(function (): void {
-    CurrentConfig::reset();
+    CurrentConfig::current()->reset();
 });
 
 test('scriptBasename lowercases SCRIPT_NAME and uses it when it is the only candidate present', function (): void {
@@ -120,7 +120,7 @@ test('scriptBasename uses PHP_SELF when it is the only candidate present', funct
  */
 test('scriptBasename skips a candidate whose extension is not .php when phpExtensionInUrls is enforced, falling through to the next one', function (): void {
     $saved = pageFilterHelperTestSaveServerKeys();
-    CurrentConfig::setPhpExtensionInUrls(true);
+    CurrentConfig::current()->setPhpExtensionInUrls(true);
     $_SERVER['SCRIPT_NAME'] = '/gallery/index.html';
     $_SERVER['SCRIPT_FILENAME'] = '/var/www/piwigo/picture.php';
     unset($_SERVER['PHP_SELF']);
@@ -137,7 +137,7 @@ test('getFilterPageValue returns null when neither the page nor the default entr
     $_SERVER['SCRIPT_NAME'] = '/gallery/picture.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
-    CurrentConfig::setFilterPages([
+    CurrentConfig::current()->setFilterPages([
         'picture' => ['show_thumbnail_caption' => true],
         'default' => ['hide_menu' => false],
     ]);
@@ -160,7 +160,7 @@ test('getFilterPageValue returns the page-specific value when configured, fallin
     $_SERVER['SCRIPT_NAME'] = '/gallery/picture.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
-    CurrentConfig::setFilterPages([
+    CurrentConfig::current()->setFilterPages([
         'picture' => ['show_thumbnail_caption' => true],
         'default' => ['hide_menu' => false],
     ]);
@@ -181,7 +181,7 @@ test('scriptBasename falls through to the next candidate when basename() reduces
     // instead; the mutant wrongly accepts and returns the empty string
     // immediately.
     $saved = pageFilterHelperTestSaveServerKeys();
-    CurrentConfig::setPhpExtensionInUrls(false);
+    CurrentConfig::current()->setPhpExtensionInUrls(false);
     $_SERVER['SCRIPT_NAME'] = '/';
     $_SERVER['SCRIPT_FILENAME'] = '/var/www/piwigo/picture.php';
     unset($_SERVER['PHP_SELF']);

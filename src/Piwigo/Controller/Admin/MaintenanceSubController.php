@@ -68,6 +68,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         private readonly MaintenanceEnvPageRenderer $maintenanceEnvPageRenderer,
         private readonly MaintenanceActionsPageRenderer $maintenanceActionsPageRenderer,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -175,7 +176,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
                 ->render();
         } elseif ($tab === 'sys') {
             new MaintenanceSysPageRenderer()
-                ->render($this->lang, $this->accessControl, $maintActions, $this->pageState, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $maintActions, $this->pageState, $this->currentTemplate, $this->currentConfig);
         } else {
             $this->maintenanceActionsPageRenderer
                 ->render($maintActions);

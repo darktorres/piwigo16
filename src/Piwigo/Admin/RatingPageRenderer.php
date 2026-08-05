@@ -16,7 +16,7 @@ use Piwigo\Image\DerivativeImage;
  */
 final class RatingPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Category\CategoryService $categoryService): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Category\CategoryService $categoryService): void
     {
         $template = $currentTemplate->get();
 
@@ -35,7 +35,7 @@ final class RatingPageRenderer
 
         // \Piwigo\Config\CurrentConfig::guestId() is set as a PHP int literal in
         // include/config_default.inc.php.
-        $conf_guest_id = \Piwigo\Config\CurrentConfig::guestId();
+        $conf_guest_id = $currentConfig->guestId();
         $guest_id = $conf_guest_id;
 
         $conn = DbConnection::build();
@@ -56,7 +56,7 @@ final class RatingPageRenderer
         }
 
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = $currentConfig->userFields();
         $rate_repository = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Rate\RateEntity::class);
 
         $usernames_by_id = $rate_repository->findUsernamesById($user_fields['id'], $user_fields['username']);
@@ -72,7 +72,7 @@ final class RatingPageRenderer
 
         $template->assign(
             [
-                'navbar' => new \Piwigo\Core\PaginationService()
+                'navbar' => new \Piwigo\Core\PaginationService($currentConfig)
                     ->createNavigationBar($urlService->getRootUrl() . 'admin.php' . $urlService->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page),
                 'F_ACTION' => $urlService->getRootUrl() . 'admin.php',
                 'DISPLAY' => $elements_per_page,

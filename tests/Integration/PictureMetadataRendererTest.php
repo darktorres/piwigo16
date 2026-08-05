@@ -43,12 +43,16 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
     {
         parent::setUp();
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), $currentConfig));
         CurrentTemplate::current()->set(new Template());
 
         $this->scratchDir = dirname(__DIR__, 2) . '/_data/picture-metadata-renderer-test-scratch';
@@ -165,12 +169,13 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
     public function test_render_appends_exif_metadata_with_direct_and_nested_field_tokens(): void
     {
-        CurrentConfig::setShowExif(true);
-        CurrentConfig::setShowIptc(false);
+        $currentConfig = CurrentConfig::current();
+        $currentConfig->setShowExif(true);
+        $currentConfig->setShowIptc(false);
         // 'COMPUTED;Height' is a real nested key exif_read_data() always
         // populates, even with zero embedded tags -- exercises the ';'
         // token branch alongside the 2 direct fields.
-        CurrentConfig::setShowExifFields(['Artist', 'ImageDescription', 'COMPUTED;Height']);
+        $currentConfig->setShowExifFields(['Artist', 'ImageDescription', 'COMPUTED;Height']);
         // Only 'Artist' gets a translation -- exercises both the
         // Lang::has() true and false sub-branches in the same test.
         // Lang::loadArray() (not restore()): Lang::t() reads through the
@@ -185,7 +190,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane Photographer', 'ImageDescription' => 'A test photo']))
         );
 
-        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
+        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), $currentConfig);
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -205,8 +210,9 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
     public function test_render_translates_a_composite_exif_field_when_a_translation_exists_for_its_second_token(): void
     {
-        CurrentConfig::setShowExif(true);
-        CurrentConfig::setShowIptc(false);
+        $currentConfig = CurrentConfig::current();
+        $currentConfig->setShowExif(true);
+        $currentConfig->setShowIptc(false);
         // 'COMPUTED;Height' is a real nested key exif_read_data() always
         // populates, even with zero embedded EXIF tags (see the sibling
         // test above). That test deliberately leaves 'exif_field_Height'
@@ -216,7 +222,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         // field's own second token instead, reaching that same arm's
         // Lang::has()-true sub-branch (distinct from the direct-field
         // Lang::has()/Lang::t() pair a few lines above it in the source).
-        CurrentConfig::setShowExifFields(['COMPUTED;Height']);
+        $currentConfig->setShowExifFields(['COMPUTED;Height']);
         Lang::current()->loadArray(['exif_field_Height' => 'Hauteur']);
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-composite-translated.jpg';
@@ -225,7 +231,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp1ExifSegment([]))
         );
 
-        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
+        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), $currentConfig);
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -237,23 +243,25 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
     public function test_render_appends_nothing_for_exif_when_no_configured_field_matches(): void
     {
-        CurrentConfig::setShowExif(true);
-        CurrentConfig::setShowIptc(false);
-        CurrentConfig::setShowExifFields(['ThisFieldDoesNotExistAnywhere']);
+        $currentConfig = CurrentConfig::current();
+        $currentConfig->setShowExif(true);
+        $currentConfig->setShowIptc(false);
+        $currentConfig->setShowExifFields(['ThisFieldDoesNotExistAnywhere']);
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-empty.jpg';
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane'])));
 
-        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
+        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), $currentConfig);
 
         self::assertNull(CurrentTemplate::current()->get()->get_template_vars('metadata'));
     }
 
     public function test_render_appends_iptc_metadata_translating_known_fields(): void
     {
-        CurrentConfig::setShowExif(false);
-        CurrentConfig::setShowIptc(true);
-        CurrentConfig::setShowIptcMapping(['title' => '2#005', 'author' => '2#080']);
+        $currentConfig = CurrentConfig::current();
+        $currentConfig->setShowExif(false);
+        $currentConfig->setShowIptc(true);
+        $currentConfig->setShowIptcMapping(['title' => '2#005', 'author' => '2#080']);
         // getIptcData()'s own result is keyed by the *pwg* side of the
         // mapping ('title'/'author'), not the raw IPTC code -- confirmed
         // live, the renderer's own Lang::has($field)/Lang::t($field) calls
@@ -272,7 +280,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp13IptcSegment([[5, 'Sunset Over The Bay'], [80, 'Jane Photographer']]))
         );
 
-        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
+        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), $currentConfig);
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -287,10 +295,11 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
     public function test_render_appends_both_exif_and_iptc_metadata_as_2_separate_entries(): void
     {
-        CurrentConfig::setShowExif(true);
-        CurrentConfig::setShowIptc(true);
-        CurrentConfig::setShowExifFields(['Artist']);
-        CurrentConfig::setShowIptcMapping(['title' => '2#005']);
+        $currentConfig = CurrentConfig::current();
+        $currentConfig->setShowExif(true);
+        $currentConfig->setShowIptc(true);
+        $currentConfig->setShowExifFields(['Artist']);
+        $currentConfig->setShowIptcMapping(['title' => '2#005']);
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/both-fields.jpg';
         // Both marker segments spliced onto the same real file -- proves
@@ -301,7 +310,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         );
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $combined);
 
-        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
+        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), $currentConfig);
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);

@@ -29,28 +29,43 @@ function generate_derivative_handler_test_rrmdir(string $dir): void
     rmdir($dir);
 }
 
+function generate_derivative_handler_test_current_config(): CurrentConfig
+{
+    $currentConfig = Kernel::container()->get(CurrentConfig::class);
+    if (! $currentConfig instanceof CurrentConfig) {
+        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+    }
+
+    return $currentConfig;
+}
+
 beforeEach(function (): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     $root = sys_get_temp_dir() . '/piwigo-generate-derivative-handler-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::setDataLocation('data/');
-    mkdir(CurrentPaths::get()->root . CurrentConfig::derivativeDir(), 0o777, true);
+    $currentConfig = generate_derivative_handler_test_current_config();
+    $currentConfig->setDataLocation('data/');
+    mkdir(CurrentPaths::get()->root . $currentConfig->derivativeDir(), 0o777, true);
 });
 
 afterEach(function (): void {
     generate_derivative_handler_test_rrmdir(CurrentPaths::get()->root);
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     Kernel::reset();
 });
 
 test('__invoke delegates to DerivativeCacheService::deleteElementDerivatives with just the path and type when representativeExt is null', function (): void {
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026/07';
+    $derivDir = CurrentPaths::get()->root . generate_derivative_handler_test_current_config()->derivativeDir() . '2026/07';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
     file_put_contents($derivDir . '/other-th.jpg', 'x');
 
-    $handler = new GenerateDerivativeHandler(new DerivativeCacheService());
+    // Must be the SAME container-shared CurrentConfig instance beforeEach()
+    // configured (dataLocation='data/') -- a fresh new CurrentConfig()
+    // would carry only its own hardcoded defaults, computing a different
+    // derivative directory than $derivDir above.
+    $handler = new GenerateDerivativeHandler(new DerivativeCacheService(generate_derivative_handler_test_current_config()));
     $handler(new GenerateDerivativeJob(path: '2026/07/photo.jpg', type: 'thumb'));
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse()
@@ -58,11 +73,11 @@ test('__invoke delegates to DerivativeCacheService::deleteElementDerivatives wit
 });
 
 test('__invoke forwards representativeExt as representative_ext, rewriting the path to its pwg_representative form', function (): void {
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026/07/pwg_representative';
+    $derivDir = CurrentPaths::get()->root . generate_derivative_handler_test_current_config()->derivativeDir() . '2026/07/pwg_representative';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
 
-    $handler = new GenerateDerivativeHandler(new DerivativeCacheService());
+    $handler = new GenerateDerivativeHandler(new DerivativeCacheService(generate_derivative_handler_test_current_config()));
     $handler(new GenerateDerivativeJob(path: '2026/07/photo.pdf', representativeExt: 'jpg', type: 'thumb'));
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse();

@@ -78,6 +78,7 @@ final readonly class SearchService
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Users\CurrentUser $currentUser,
         private Lang $lang,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private ?TagService $tagService = null,
         private ?UserService $userService = null,
         private ?\Piwigo\Users\PreferencesService $preferencesService = null,
@@ -210,7 +211,7 @@ final readonly class SearchService
         /** @var array<string, list<int>> $imageIdsForFilter */
         $imageIdsForFilter = [];
 
-        $rawFiltersViews = \Piwigo\Config\CurrentConfig::filtersViews() ?? \Piwigo\Config\CurrentConfig::defaultFiltersViews();
+        $rawFiltersViews = $this->currentConfig->filtersViews() ?? $this->currentConfig->defaultFiltersViews();
 
         $displayFilters = [];
         foreach ($rawFiltersViews as $filtName => $filtConf) {
@@ -366,7 +367,7 @@ final readonly class SearchService
         // ratings
         $ratingsField = $searchFields['ratings'] ?? null;
         $ratings = is_array($ratingsField) ? array_values(array_filter($ratingsField, is_string(...))) : [];
-        if (\Piwigo\Config\CurrentConfig::rateEnabled() && $ratings !== [] && (bool) ($displayFilters['rating']['access'] ?? false)) {
+        if ($this->currentConfig->rateEnabled() && $ratings !== [] && (bool) ($displayFilters['rating']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $clauses = [];
             $ratingParams = [];
@@ -424,7 +425,7 @@ final readonly class SearchService
         $tagsMode = is_array($tagsField) && is_string($tagsField['mode'] ?? null) ? $tagsField['mode'] : 'AND';
         if (isset($searchFields['tags']) && $tagsWords !== [] && (bool) ($displayFilters['tags']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $tagService = $this->tagService ?? new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class), $this->permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser);
+            $tagService = $this->tagService ?? new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class), $this->permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig);
             $imageIdsForFilter['tags'] = array_values(array_map(intval(...), array_filter($tagService->getImageIdsForTags(array_map(TagId::from(...), $tagsWords), $tagsMode), is_numeric(...))));
         }
 
@@ -446,7 +447,7 @@ final readonly class SearchService
         if (count($items) > 1) {
             // CurrentConfig::orderBy() (the typed SCHEMA accessor) models a
             // structured {field,dir}[] shape that no real code writes --
-            $orderBy = \Piwigo\Config\CurrentConfig::orderBy();
+            $orderBy = $this->currentConfig->orderBy();
             $items = $this->repo->findIdsByClause('id', Tables::images() . ' i', 'id IN (' . implode(',', array_fill(0, count($items), '?')) . ') ' . $orderBy, $items);
         }
 
@@ -1041,7 +1042,7 @@ final readonly class SearchService
             $token = $expr->stokens[$i];
 
             if ($catIds !== []) {
-                if (\Piwigo\Config\CurrentConfig::quickSearchIncludeSubAlbums()) {
+                if ($this->currentConfig->quickSearchIncludeSubAlbums()) {
                     $subcatIds = $this->categoryService->getSubcatIds($catIds);
                     $catIds = $subcatIds !== []
                         ? $this->repo->findIdsByClause(
@@ -1157,7 +1158,7 @@ final readonly class SearchService
         $pool = \Piwigo\Cache\CachePools::searchResults();
         $cacheKey = md5(serialize([
             strtolower($q),
-            \Piwigo\Config\CurrentConfig::orderBy(),
+            $this->currentConfig->orderBy(),
             $user->id->value,
             isset($options['permissions']) ? (bool) $options['permissions'] : true,
             $options['images_where'] ?? '',
@@ -1223,7 +1224,7 @@ final readonly class SearchService
 
         $createdDateAliases = ['taken', 'shot'];
         $postedDateAliases = ['added'];
-        if (\Piwigo\Config\CurrentConfig::calendarDatefield() === 'date_creation') {
+        if ($this->currentConfig->calendarDatefield() === 'date_creation') {
             $createdDateAliases[] = 'date';
         } else {
             $postedDateAliases[] = 'date';
@@ -1238,7 +1239,7 @@ final readonly class SearchService
         $expression = new QExpression($q, $scopes);
 
         $inflector = null;
-        $userService = $this->userService ?? new UserService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, \Piwigo\Config\DeploymentPolicy::current(), $this->currentUser);
+        $userService = $this->userService ?? new UserService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, \Piwigo\Config\DeploymentPolicy::current(), $this->currentUser, $this->currentConfig);
         $langCode = substr($userService->getDefaultLanguage(), 0, 2);
         $className = '\\Piwigo\\Search\\Inflector\\Inflector_' . $langCode;
         if (class_exists($className)) {
@@ -1367,7 +1368,7 @@ final readonly class SearchService
         // its own docblock), so `GROUP BY id` (functionally dependent via
         // the primary key) replaces DISTINCT here, same fix as
         // CalendarRepository::findImageIds().
-        $orderBy = \Piwigo\Config\CurrentConfig::orderBy();
+        $orderBy = $this->currentConfig->orderBy();
         $ids = $this->repo->findIdsByClause('id', $from, implode("\n AND ", $whereClauses) . "\nGROUP BY id\n" . $orderBy, $params);
 
         $debug[] = count($ids) . ' final photo count -->';

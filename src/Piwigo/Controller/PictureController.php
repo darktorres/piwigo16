@@ -116,11 +116,12 @@ final class PictureController implements ControllerInterface
         private readonly ImageService $imageService,
         private readonly \Piwigo\Html\HtmlService $htmlService,
         private readonly PictureRateRenderer $pictureRateRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     private function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
     {
-        return new CommentService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), $this->mailer, $this->htmlService, $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser);
+        return new CommentService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig);
     }
 
     #[\Override]
@@ -703,7 +704,7 @@ final class PictureController implements ControllerInterface
         } else {
             $slideshow = false;
         }
-        if ($slideshow and \Piwigo\Config\CurrentConfig::lightSlideshow()) {
+        if ($slideshow and $this->currentConfig->lightSlideshow()) {
             $template->set_filenames([
                 'slideshow' => 'slideshow.tpl',
             ]);
@@ -730,7 +731,7 @@ final class PictureController implements ControllerInterface
         // else than images?
         $metadata_showable = $this->eventDispatcher->dispatchChange(new GetElementMetadataAvailable(
             (
-                (\Piwigo\Config\CurrentConfig::showExif() or \Piwigo\Config\CurrentConfig::showIptc())
+                ($this->currentConfig->showExif() or $this->currentConfig->showIptc())
                 and ! $picture['current']['src_image']->is_mimetype()
             ),
             $picture['current']
@@ -799,12 +800,12 @@ final class PictureController implements ControllerInterface
         }
         $download_url = $picture['current']['download_url'] ?? null;
         $download_url_present = is_string($download_url) && $download_url !== '' && $download_url !== '0';
-        if (\Piwigo\Config\CurrentConfig::pictureDownloadIcon() and $download_url_present and $this->currentUser->get()->enabledHigh) {
+        if ($this->currentConfig->pictureDownloadIcon() and $download_url_present and $this->currentUser->get()->enabledHigh) {
             $template->append('current', [
                 'U_DOWNLOAD' => $download_url,
             ], true);
 
-            if (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
+            if ($this->currentConfig->isFormatsEnabled()) {
                 $picture_id = $picture['current']['id'];
                 $picture_id = is_numeric($picture_id) ? (int) $picture_id : 0;
                 $formats = array_map(
@@ -892,7 +893,7 @@ final class PictureController implements ControllerInterface
                 // preg-captured \d+ string).
                 $current_period = $slideshow_params['period'];
                 $current_period = is_numeric($current_period) ? (int) $current_period : 0;
-                $slideshow_period_step = \Piwigo\Config\CurrentConfig::slideshowPeriodStep();
+                $slideshow_period_step = $this->currentConfig->slideshowPeriodStep();
                 $new_period = $current_period + ((($op === 'dec') ? -1 : 1) * $slideshow_period_step);
                 $new_slideshow_params =
                   $this->imageService
@@ -918,7 +919,7 @@ final class PictureController implements ControllerInterface
                 }
             }
             $template->assign('slideshow', $tpl_slideshow);
-        } elseif (\Piwigo\Config\CurrentConfig::pictureSlideShowIcon()) {
+        } elseif ($this->currentConfig->pictureSlideShowIcon()) {
             $template->assign(
                 [
                     'U_SLIDESHOW_START' => $urlService->addUrlParams(
@@ -937,15 +938,15 @@ final class PictureController implements ControllerInterface
                 'PHOTO' => $title_nb,
                 'IS_HOME' => ($section_context->section === 'categories' and $page_category === null),
 
-                'LEVEL_SEPARATOR' => \Piwigo\Config\CurrentConfig::levelSeparator(),
+                'LEVEL_SEPARATOR' => $this->currentConfig->levelSeparator(),
 
                 'U_UP' => $url_up,
-                'DISPLAY_NAV_BUTTONS' => \Piwigo\Config\CurrentConfig::pictureNavigationIcons(),
-                'DISPLAY_NAV_THUMB' => \Piwigo\Config\CurrentConfig::pictureNavigationThumb(),
+                'DISPLAY_NAV_BUTTONS' => $this->currentConfig->pictureNavigationIcons(),
+                'DISPLAY_NAV_THUMB' => $this->currentConfig->pictureNavigationThumb(),
             ]
         );
 
-        if (\Piwigo\Config\CurrentConfig::pictureMetadataIcon()) {
+        if ($this->currentConfig->pictureMetadataIcon()) {
             $template->assign('U_METADATA', $url_metadata);
         }
 
@@ -953,7 +954,7 @@ final class PictureController implements ControllerInterface
 
         // admin links
         if ($this->accessControl->isAdmin()) {
-            if ($page_category !== null and \Piwigo\Config\CurrentConfig::pictureRepresentativeIcon()) {
+            if ($page_category !== null and $this->currentConfig->pictureRepresentativeIcon()) {
                 $template->assign(
                     [
                         'U_SET_AS_REPRESENTATIVE' => $urlService->addUrlParams(
@@ -966,11 +967,11 @@ final class PictureController implements ControllerInterface
                 );
             }
 
-            if (\Piwigo\Config\CurrentConfig::pictureEditIcon()) {
+            if ($this->currentConfig->pictureEditIcon()) {
                 $template->assign('U_PHOTO_ADMIN', $urlService->getRootUrl() . 'admin.php?page=photo-' . $image_id);
             }
 
-            if (\Piwigo\Config\CurrentConfig::pictureCaddieIcon()) {
+            if ($this->currentConfig->pictureCaddieIcon()) {
                 $template->assign(
                     'U_CADDIE',
                     $urlService->addUrlParams($url_self, [
@@ -982,7 +983,7 @@ final class PictureController implements ControllerInterface
         }
 
         // favorite manipulation
-        if (! $this->accessControl->isAGuest() and \Piwigo\Config\CurrentConfig::pictureFavoriteIcon()) {
+        if (! $this->accessControl->isAGuest() and $this->currentConfig->pictureFavoriteIcon()) {
             // verify if the picture is already in the favorite of the
             // user
             $is_favorite = $this->userService->isFavorite($user->id, $image_id);
@@ -1070,7 +1071,7 @@ final class PictureController implements ControllerInterface
         $infos['INFO_FILE'] = $picture['current']['file'];
 
         $template->assign($infos);
-        $template->assign('display_info', \Piwigo\Config\CurrentConfig::pictureInformations());
+        $template->assign('display_info', $this->currentConfig->pictureInformations());
 
         // related tags
         $tags = $this->tagService
@@ -1152,7 +1153,7 @@ final class PictureController implements ControllerInterface
         }
 
         if (in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($picture['current']['file'])), ['pdf'], true)) {
-            $pdf_viewer_filesize_threshold = \Piwigo\Config\CurrentConfig::pdfViewerFilesizeThreshold();
+            $pdf_viewer_filesize_threshold = $this->currentConfig->pdfViewerFilesizeThreshold();
             $template->assign(
                 [
                     'PDF_VIEWER_FILESIZE_THRESHOLD' => $pdf_viewer_filesize_threshold * 1024,
@@ -1188,7 +1189,7 @@ final class PictureController implements ControllerInterface
             and $picture['next']['src_image']->is_original()
             and $template->get_template_vars('U_PREFETCH') === null
             and ! str_contains($http_user_agent, 'Chrome/')) {
-            $prefetch_deriv_type = $this->sessionService->getSessionVar('picture_deriv', \Piwigo\Config\CurrentConfig::derivativeDefaultSize());
+            $prefetch_deriv_type = $this->sessionService->getSessionVar('picture_deriv', $this->currentConfig->derivativeDefaultSize());
             if (! is_string($prefetch_deriv_type)) {
                 $prefetch_deriv_type = ImageStdParams::MEDIUM;
             }
@@ -1214,21 +1215,21 @@ final class PictureController implements ControllerInterface
 
         $this->pictureRateRenderer
             ->render($image_id, $urlService, $picture, $url_self);
-        if (\Piwigo\Config\CurrentConfig::activateComments()) {
+        if ($this->currentConfig->activateComments()) {
             new PictureCommentRenderer()
-                ->render($this->lang, $this->accessControl, $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->mailer);
+                ->render($this->lang, $this->accessControl, $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->mailer);
         }
         if ($metadata_showable and $this->sessionService->getSessionVar('show_metadata') !== null) {
             new PictureMetadataRenderer()
-                ->render($this->lang, $picture, $this->currentLogger, $this->eventDispatcher, $this->currentTemplate);
+                ->render($this->lang, $picture, $this->currentLogger, $this->eventDispatcher, $this->currentTemplate, $this->currentConfig);
         }
 
         // include menubar
         $themeconf = $template->get_template_vars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
-        if (\Piwigo\Config\CurrentConfig::pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
+        if ($this->currentConfig->pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
             new MenubarRenderer()
-                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig);
         }
 
         // The slideshow branch above may have set $refresh/$url_link
@@ -1237,11 +1238,11 @@ final class PictureController implements ControllerInterface
         $refresh_str = isset($refresh) && is_numeric($refresh) ? (string) $refresh : null;
         /** @var string|null $url_link */
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $refresh_str, $url_link ?? null);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig, $refresh_str, $url_link ?? null);
         $this->eventDispatcher->dispatchNotify(new LocEndPicture());
         $this->htmlService
             ->flushPageMessages();
-        if ($slideshow and \Piwigo\Config\CurrentConfig::lightSlideshow()) {
+        if ($slideshow and $this->currentConfig->lightSlideshow()) {
             $template->parse('slideshow', false);
         } else {
             $template->parse_picture_buttons();
@@ -1299,7 +1300,7 @@ final class PictureController implements ControllerInterface
                     ->cookiePath(),
             ]);
         }
-        $deriv_type = $this->sessionService->getSessionVar('picture_deriv', \Piwigo\Config\CurrentConfig::derivativeDefaultSize());
+        $deriv_type = $this->sessionService->getSessionVar('picture_deriv', $this->currentConfig->derivativeDefaultSize());
         if (! is_string($deriv_type)) {
             $deriv_type = ImageStdParams::MEDIUM;
         }
@@ -1324,7 +1325,7 @@ final class PictureController implements ControllerInterface
 
             // in case we do not display the sizes icon, we only add the
             // selected size to unique_derivatives
-            if (\Piwigo\Config\CurrentConfig::pictureSizesIcon() or $type === $deriv_type) {
+            if ($this->currentConfig->pictureSizesIcon() or $type === $deriv_type) {
                 $unique_derivatives[$type] = $derivative;
             }
         }

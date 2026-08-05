@@ -31,6 +31,7 @@ final class ThemeSubController implements AdminSubControllerInterface
         private readonly Lang $lang,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -45,7 +46,7 @@ final class ThemeSubController implements AdminSubControllerInterface
                 ->fatalError('Invalid theme');
         }
 
-        $filename = CurrentConfig::themesPath() . $theme . '/admin/admin.inc.php';
+        $filename = $this->currentConfig->themesPath() . $theme . '/admin/admin.inc.php';
         if (is_file($filename)) {
             include_once $filename;
         } else {

@@ -209,7 +209,11 @@ final class CategoryServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
@@ -218,11 +222,12 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->service = new CategoryService(
             \Piwigo\Core\Lang::current(),
             $this->repo,
-            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class))
+            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)),
+            \Piwigo\Config\CurrentConfig::current()
         );
 
         CurrentUser::current()->set(User::fromUserArray(['id' => 1]));
-        CurrentConfig::setRateEnabled(true);
+        $currentConfig->setRateEnabled(true);
         // getCategoryRepresentantProperties()'s own DerivativeImage::thumb_url()/
         // url() calls need a real, populated ImageStdParams type map --
         // DerivativeImage::urlService() itself now resolves
@@ -232,7 +237,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // explicit wiring needed here anymore, same reasoning as
         // NotificationByMailSenderTest's own identical setUp.
         // ImageStdParams::load_from_db() itself needs CurrentConfigService.
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
         ImageStdParams::current()->load_from_db();
     }
 
@@ -757,7 +762,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // image.
         $this->conn->executeStatement("INSERT INTO " . Tables::imageCategory() . " (image_id, category_id) VALUES (1, {$tempId})");
 
-        $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), EventDispatcher::get(), 'delete_orphans');
+        $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), EventDispatcher::get(), 'delete_orphans');
 
         self::assertNull($this->repo->findById($tempId));
         $stillLinked = $this->conn->createQueryBuilder()
@@ -1170,7 +1175,11 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_create_virtual_category_with_last_position_ranks_after_existing_siblings(): void
     {
-        CurrentConfig::setNewcatDefaultPosition('last');
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setNewcatDefaultPosition('last');
 
         try {
             $result = $this->service->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current());
@@ -1191,7 +1200,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
             $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $newId);
         } finally {
-            CurrentConfig::setNewcatDefaultPosition('first');
+            $currentConfig->setNewcatDefaultPosition('first');
         }
     }
 

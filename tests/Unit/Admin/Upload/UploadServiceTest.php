@@ -93,7 +93,12 @@ function upload_service_test_make(): UploadService
         throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Image\ImageService::class);
     }
 
-    return new UploadService(Lang::current(), upload_service_test_current_logger(), $storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $configService, $entityManager, $activityService, $metadataService, $imageService);
+    $currentConfig = Kernel::container()->get(CurrentConfig::class);
+    if (! $currentConfig instanceof CurrentConfig) {
+        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+    }
+
+    return new UploadService(Lang::current(), upload_service_test_current_logger(), $storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig);
 }
 
 beforeEach(function (): void {
@@ -389,7 +394,7 @@ test('isValidImageExtension actually deduplicates case-variant extensions, not j
     // tell a real array_unique() call apart from a removed one. Injecting
     // deliberate case-variant duplicates is the only way to prove
     // dedup actually happens.
-    CurrentConfig::setPictureExtensions(['JPG', 'jpg', 'PNG']);
+    CurrentConfig::current()->setPictureExtensions(['JPG', 'jpg', 'PNG']);
     try {
         $service = upload_service_test_make();
         $result = $service->isValidImageExtension('JPG');
@@ -397,12 +402,12 @@ test('isValidImageExtension actually deduplicates case-variant extensions, not j
         expect($result)->toHaveCount(2)
             ->and(array_values($result))->toBe(['jpg', 'png']);
     } finally {
-        CurrentConfig::setPictureExtensions(['jpg', 'jpeg', 'png', 'gif', 'webp']);
+        CurrentConfig::current()->setPictureExtensions(['jpg', 'jpeg', 'png', 'gif', 'webp']);
     }
 });
 
 test('isValidImageExtension returns the lowercased, deduplicated file extensions when all types are allowed', function (): void {
-    CurrentConfig::setUploadFormAllTypes(true);
+    CurrentConfig::current()->setUploadFormAllTypes(true);
     try {
         $service = upload_service_test_make();
         $result = $service->isValidImageExtension('PDF');
@@ -416,7 +421,7 @@ test('isValidImageExtension returns the lowercased, deduplicated file extensions
         // through the uploadFormAllTypes()-true branch above.
         expect($result)->toContain('pdf');
     } finally {
-        CurrentConfig::setUploadFormAllTypes(false);
+        CurrentConfig::current()->setUploadFormAllTypes(false);
     }
 });
 
@@ -970,7 +975,7 @@ test('addUploadedFile throws when md5_file() fails to read the source file', fun
 test('readyForUploadMessage returns null when the real upload directory exists and is writable', function (): void {
     $root = upload_service_test_marker() . '/root/';
     mkdir($root . 'upload', 0o777, true);
-    CurrentConfig::setUploadDir('upload/');
+    CurrentConfig::current()->setUploadDir('upload/');
 
     // KernelContainerOverride::with() rebinds Paths::class for this test's
     // own scope -- CurrentPaths (singleton/service-locator elimination
@@ -984,7 +989,7 @@ test('readyForUploadMessage returns null when the real upload directory exists a
 test('readyForUploadMessage reports a missing-directory message when the parent is not writable', function (): void {
     $root = upload_service_test_marker() . '/root2/';
     mkdir($root, 0o555, true);
-    CurrentConfig::setUploadDir('upload/');
+    CurrentConfig::current()->setUploadDir('upload/');
 
     try {
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
@@ -1000,7 +1005,7 @@ test('readyForUploadMessage reports a chmod message and fixes an unwritable exis
     $root = upload_service_test_marker() . '/root3/';
     mkdir($root . 'upload', 0o777, true);
     chmod($root . 'upload', 0o555);
-    CurrentConfig::setUploadDir('upload/');
+    CurrentConfig::current()->setUploadDir('upload/');
 
     KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($root): void {
         $message = upload_service_test_make()->readyForUploadMessage();
@@ -1071,7 +1076,7 @@ test('prepareDirectoryStatic throws when mkdir() fails under a real unwritable p
 });
 
 test('addFormat throws when formats are disabled', function (): void {
-    CurrentConfig::setIsFormatsEnabled(false);
+    CurrentConfig::current()->setIsFormatsEnabled(false);
     $service = upload_service_test_make();
 
     expect(fn () => $service->addFormat('/tmp/whatever', 'tif', 1))
@@ -1079,8 +1084,8 @@ test('addFormat throws when formats are disabled', function (): void {
 });
 
 test('addFormat throws for an unauthorized format extension', function (): void {
-    CurrentConfig::setIsFormatsEnabled(true);
-    CurrentConfig::setFormatExtensions(['tif', 'psd']);
+    CurrentConfig::current()->setIsFormatsEnabled(true);
+    CurrentConfig::current()->setFormatExtensions(['tif', 'psd']);
     $service = upload_service_test_make();
 
     try {
@@ -1090,8 +1095,8 @@ test('addFormat throws for an unauthorized format extension', function (): void 
                 '[Piwigo\Admin\Upload\UploadService::addFormat] unexpected format extension "exe" (authorized extensions: tif, psd)'
             );
     } finally {
-        CurrentConfig::setIsFormatsEnabled(false);
-        CurrentConfig::setFormatExtensions(['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd']);
+        CurrentConfig::current()->setIsFormatsEnabled(false);
+        CurrentConfig::current()->setFormatExtensions(['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd']);
     }
 });
 
@@ -1206,7 +1211,7 @@ test('the 5 ext_imagick-only handlers return the incoming representative_ext unm
     // each of these 5 handlers checks the library BEFORE its own extension
     // whitelist, so a bogus, never-read path is enough here; no real
     // PDF/HEIC/TIFF/PSD/EPS fixture or exec() call is reached.
-    CurrentConfig::setGraphicsLibrary('gd');
+    CurrentConfig::current()->setGraphicsLibrary('gd');
     try {
         expect(upload_service_test_upload(UploadService::uploadFilePdf(...), null, '/tmp/whatever.pdf'))->toBeNull();
         expect(upload_service_test_upload(UploadService::uploadFileHeic(...), null, '/tmp/whatever.heic'))->toBeNull();
@@ -1214,7 +1219,7 @@ test('the 5 ext_imagick-only handlers return the incoming representative_ext unm
         expect(upload_service_test_upload(UploadService::uploadFilePsd(...), null, '/tmp/whatever.psd'))->toBeNull();
         expect(upload_service_test_upload(UploadService::uploadFileEps(...), null, '/tmp/whatever.eps'))->toBeNull();
     } finally {
-        CurrentConfig::setGraphicsLibrary('auto');
+        CurrentConfig::current()->setGraphicsLibrary('auto');
     }
 });
 
@@ -1408,7 +1413,7 @@ test('uploadFileTiff appends the -quality 98 flag and converts to jpg when tiffR
     // config) -- forcing it to 'jpg' here is the only way to reach this
     // method's own `if ($representative_ext === 'jpg') { $exec .= '
     // -quality 98'; }` branch.
-    CurrentConfig::setTiffRepresentativeExt('jpg');
+    CurrentConfig::current()->setTiffRepresentativeExt('jpg');
     try {
         $dir = upload_service_test_marker();
         $png = $dir . '/source-jpgext.png';
@@ -1423,7 +1428,7 @@ test('uploadFileTiff appends the -quality 98 flag and converts to jpg when tiffR
         expect(file_exists($representativePath))->toBeTrue();
         expect(filesize($representativePath))->toBeGreaterThan(0);
     } finally {
-        CurrentConfig::setTiffRepresentativeExt('png');
+        CurrentConfig::current()->setTiffRepresentativeExt('png');
     }
 });
 
@@ -1538,7 +1543,7 @@ test('the 5 ext_imagick handlers leave an already-set representative_ext untouch
  */
 test('the 5 ext_imagick handlers skip a real, otherwise-convertible file when the graphics library is not ext_imagick', function (): void {
     $dir = upload_service_test_marker();
-    CurrentConfig::setGraphicsLibrary('gd');
+    CurrentConfig::current()->setGraphicsLibrary('gd');
     try {
         $pdfPng = $dir . '/library-guard-src.png';
         upload_service_make_sample_png($pdfPng);
@@ -1568,7 +1573,7 @@ test('the 5 ext_imagick handlers skip a real, otherwise-convertible file when th
         upload_service_convert_sample($epsPng, $eps);
         expect(upload_service_test_upload(UploadService::uploadFileEps(...), null, $eps))->toBeNull();
     } finally {
-        CurrentConfig::setGraphicsLibrary('auto');
+        CurrentConfig::current()->setGraphicsLibrary('auto');
     }
 });
 
@@ -1652,24 +1657,24 @@ test('uploadFilePdf actually applies pdfJpgQuality to the generated representati
         throw new RuntimeException('convert (plasma source) failed: ' . implode("\n", $out));
     }
 
-    CurrentConfig::setPdfJpgQuality(1);
+    CurrentConfig::current()->setPdfJpgQuality(1);
     try {
         $lowPdf = $dir . '/quality-low.pdf';
         upload_service_convert_sample($png, $lowPdf);
         upload_service_test_upload(UploadService::uploadFilePdf(...), null, $lowPdf);
         $lowSize = filesize($dir . '/pwg_representative/quality-low.jpg');
     } finally {
-        CurrentConfig::setPdfJpgQuality(90);
+        CurrentConfig::current()->setPdfJpgQuality(90);
     }
 
-    CurrentConfig::setPdfJpgQuality(100);
+    CurrentConfig::current()->setPdfJpgQuality(100);
     try {
         $highPdf = $dir . '/quality-high.pdf';
         upload_service_convert_sample($png, $highPdf);
         upload_service_test_upload(UploadService::uploadFilePdf(...), null, $highPdf);
         $highSize = filesize($dir . '/pwg_representative/quality-high.jpg');
     } finally {
-        CurrentConfig::setPdfJpgQuality(90);
+        CurrentConfig::current()->setPdfJpgQuality(90);
     }
     if ($highSize === false) {
         throw new RuntimeException('filesize (quality-high.jpg) failed');

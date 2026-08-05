@@ -61,6 +61,7 @@ final class PictureModifyPageRenderer
         private readonly CategoryService $categoryService,
         private readonly PermissionService $permissionService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     public function render(string $adminPhotoBaseUrl): void
@@ -84,7 +85,7 @@ final class PictureModifyPageRenderer
         $template = $this->currentTemplate->get();
 
         $conn = DbConnection::build();
-        $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
+        $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig);
         $htmlRenderer = $this->htmlRenderer;
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
@@ -161,7 +162,7 @@ final class PictureModifyPageRenderer
                 'comment' => $pictureModifyRequest->commentField ?? '',
             ];
             foreach ($to_sanitize_fields as $field => $field_value) {
-                $data[$field] = (\Piwigo\Config\CurrentConfig::allowHtmlDescriptions()) ? $field_value : strip_tags($field_value);
+                $data[$field] = ($this->currentConfig->allowHtmlDescriptions()) ? $field_value : strip_tags($field_value);
             }
 
             $data['date_creation'] = $pictureModifyRequest->dateCreation;
@@ -207,7 +208,8 @@ final class PictureModifyPageRenderer
                 new CategoryService(
                     $this->lang,
                     \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
-                    $this->permissionService
+                    $this->permissionService,
+                    $this->currentConfig
                 )->setRandomRepresentant($no_longer_thumbnail_for);
             }
 
@@ -339,7 +341,7 @@ final class PictureModifyPageRenderer
         );
 
         $added_by = 'N/A';
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = $this->currentConfig->userFields();
         $uf_username = $user_fields['username'];
         $uf_id = $user_fields['id'];
         $row_added_by = \Piwigo\Common\ValueObject\UserId::tryFrom($row['added_by']);
@@ -364,7 +366,7 @@ final class PictureModifyPageRenderer
             'is_svg' => (strtoupper(end($extTab)) === 'SVG'),
         ];
 
-        if (\Piwigo\Config\CurrentConfig::rateEnabled() && ! in_array($row['rating_score'], [null, false, 0, 0.0, '0', '', []], true)) {
+        if ($this->currentConfig->rateEnabled() && ! in_array($row['rating_score'], [null, false, 0, 0.0, '0', '', []], true)) {
             $row['nb_rates'] = $this->rateService->countRatesForElement($image_id);
 
             $intro_vars['stats'] .= ', ' . sprintf($this->lang->t('Rated %d times, score : %.2f'), $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
@@ -386,7 +388,7 @@ final class PictureModifyPageRenderer
         $template->assign('INTRO', $intro_vars);
 
         $row_path = is_string($row['path']) ? $row['path'] : null;
-        $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
+        $picture_ext = $this->currentConfig->pictureExtensions();
         if (in_array(\Piwigo\Core\StringHelper::getExtension($row_path), $picture_ext, true)) {
             $template->assign('U_COI', $this->urlService->getRootUrl() . 'admin.php?page=picture_coi&amp;image_id=' . $image_id);
         }

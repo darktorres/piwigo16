@@ -237,7 +237,7 @@ final class PwgImages
             }
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
         $pattern = '/' . $original_sum . '-' . $type . '/';
         $chunks = [];
@@ -296,7 +296,7 @@ final class PwgImages
     private static function removeChunks($original_sum, string $type): void
     {
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
         $pattern = '/' . $original_sum . '-' . $type . '/';
         $chunks = [];
@@ -329,7 +329,7 @@ final class PwgImages
     public static function addComment(array $params, PwgServer $service): PwgError|array
     {
 
-        if (! \Piwigo\Config\CurrentConfig::activateComments()) {
+        if (! \Piwigo\Config\CurrentConfig::current()->activateComments()) {
             return new PwgError(403, 'Comments are disabled');
         }
 
@@ -350,7 +350,7 @@ final class PwgImages
         ];
 
         $infos = [];
-        $comment_action = new CommentService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current())
+        $comment_action = new CommentService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current()), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current())
             ->insertComment($comm, $params['key'], $infos);
 
         switch ($comment_action) {
@@ -521,15 +521,15 @@ final class PwgImages
         }
 
         $comment_post_data = null;
-        if (\Piwigo\Config\CurrentConfig::activateComments() and
+        if (\Piwigo\Config\CurrentConfig::current()->activateComments() and
             $is_commentable and
             (! \Piwigo\Auth\AccessControl::current()->isAGuest()
-              or \Piwigo\Config\CurrentConfig::commentsForall()
+              or \Piwigo\Config\CurrentConfig::current()->commentsForall()
             )
         ) {
             $username = \Piwigo\Users\CurrentUser::current()->get()->username;
             $comment_post_data['author'] = stripslashes($username);
-            $comment_post_data['key'] = new EphemeralKeyService()->generate(2, (string) $params['image_id']);
+            $comment_post_data['key'] = new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current())->generate(2, (string) $params['image_id']);
         }
 
         $ret = $image_row;
@@ -610,7 +610,7 @@ final class PwgImages
             ->rate($params['image_id'], (int) $params['rate']);
 
         if ($res === false) {
-            $rate_items = \Piwigo\Config\CurrentConfig::rateItems();
+            $rate_items = \Piwigo\Config\CurrentConfig::current()->rateItems();
             return new PwgError(403, 'Forbidden or rate not in ' . implode(',', $rate_items));
         }
         return $res;
@@ -635,10 +635,10 @@ final class PwgImages
         if ($order_by !== '') {
             // Communicates the effective order_by to SearchService::
             // getQuickSearchResults()/getRegularSearchResults() etc, which
-            // read it back from CurrentConfig:: for the rest of this request --
-            // an in-memory-only override (CurrentConfig::setOrderBy()), not a
+            // read it back from CurrentConfig::current()-> for the rest of this request --
+            // an in-memory-only override (CurrentConfig::current()->setOrderBy()), not a
             // DB write.
-            \Piwigo\Config\CurrentConfig::setOrderBy('ORDER BY ' . $order_by);
+            \Piwigo\Config\CurrentConfig::current()->setOrderBy('ORDER BY ' . $order_by);
             $super_order_by = true; // quick_search_result might be faster
         }
 
@@ -987,7 +987,7 @@ final class PwgImages
             ];
         }
 
-        if (\Piwigo\Config\CurrentConfig::rateEnabled() and isset($params['ratings'])) {
+        if (\Piwigo\Config\CurrentConfig::current()->rateEnabled() and isset($params['ratings'])) {
             $search['fields']['ratings'] = $params['ratings'];
         }
 
@@ -1036,7 +1036,7 @@ final class PwgImages
     public static function setPrivacyLevel(array $params, PwgServer $service): PwgError|int
     {
 
-        $available_permission_levels = \Piwigo\Config\CurrentConfig::availablePermissionLevels();
+        $available_permission_levels = \Piwigo\Config\CurrentConfig::current()->availablePermissionLevels();
 
         if (! in_array($params['level'], $available_permission_levels, true)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
@@ -1159,7 +1159,7 @@ final class PwgImages
             ), 'WS');
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
@@ -1229,7 +1229,7 @@ final class PwgImages
             $original_type = 'high';
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->uploadDir();
         $file_path = $upload_dir_conf . '/buffer/' . $image['md5sum'] . '-original';
 
         self::mergeChunks($file_path, $image['md5sum'], $original_type);
@@ -1240,7 +1240,7 @@ final class PwgImages
         if ($params['type'] === 'file') {
             $do_update = false;
 
-            $infos = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService())
+            $infos = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())
                 ->pwgImageInfos($file_path);
 
             foreach (['width', 'height', 'filesize'] as $image_info) {
@@ -1255,7 +1255,7 @@ final class PwgImages
             }
         }
 
-        $image_id = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService())
+        $image_id = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())
             ->addUploadedFile(
                 $file_path,
                 \Piwigo\Bootstrap\PresentationAccessor::urlService(),
@@ -1308,7 +1308,7 @@ final class PwgImages
         // constraints, so this was a real SQL injection. Fixed by binding
         // the value through existsWithColumnValue() instead.
         if ($params['check_uniqueness']) {
-            $uniqueness_column = match (\Piwigo\Config\CurrentConfig::uniquenessMode()) {
+            $uniqueness_column = match (\Piwigo\Config\CurrentConfig::current()->uniquenessMode()) {
                 'md5sum' => 'md5sum',
                 'filename' => 'file',
                 default => null, // no known uniqueness_mode: skip the uniqueness check
@@ -1335,13 +1335,13 @@ final class PwgImages
             $original_type = 'file';
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->uploadDir();
         $file_path = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-original';
 
         self::mergeChunks($file_path, $params['original_sum'], $original_type);
         chmod($file_path, 0644);
 
-        $image_id = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService())
+        $image_id = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())
             ->addUploadedFile(
                 $file_path,
                 \Piwigo\Bootstrap\PresentationAccessor::urlService(),
@@ -1457,7 +1457,7 @@ final class PwgImages
             return new PwgError(500, '[ws_images_addSimple] missing uploaded file temp name');
         }
 
-        $image_id = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService())
+        $image_id = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())
             ->addUploadedFile(
                 $uploaded_tmp_name,
                 \Piwigo\Bootstrap\PresentationAccessor::urlService(),
@@ -1556,11 +1556,11 @@ final class PwgImages
 
         if (isset($params['format_of'])) {
             // are formats enabled?
-            if (! \Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
+            if (! \Piwigo\Config\CurrentConfig::current()->isFormatsEnabled()) {
                 return new PwgError(401, 'formats are disabled');
             }
 
-            $format_ext_list = \Piwigo\Config\CurrentConfig::formatExtensions();
+            $format_ext_list = \Piwigo\Config\CurrentConfig::current()->formatExtensions();
 
             // We must check if the extension is in the authorized list.
             if ((bool) preg_match('/\.(' . implode('|', $format_ext_list) . ')$/', (string) $params['name'], $matches)) {
@@ -1572,7 +1572,7 @@ final class PwgImages
             }
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
@@ -1654,7 +1654,7 @@ final class PwgImages
                 }
                 $image = $imageRow->toArray();
 
-                $add_status = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService())
+                $add_status = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())
                     ->addFormat($filePath, $format_ext, $imageRow->id);
 
                 return [
@@ -1677,7 +1677,7 @@ final class PwgImages
                 }
             }
 
-            $image_id = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService())
+            $image_id = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())
                 ->addUploadedFile(
                     $filePath,
                     \Piwigo\Bootstrap\PresentationAccessor::urlService(),
@@ -1755,7 +1755,7 @@ final class PwgImages
             }
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->uploadDir();
         $output_filepath_prefix = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-u' . \Piwigo\Users\CurrentUser::current()->get()->id->value;
         $chunkfile_path_pattern = $output_filepath_prefix . '-%03uof%03u.chunk';
 
@@ -1779,7 +1779,7 @@ final class PwgImages
         // keeps using the original absolute $chunkfile_path unchanged, since
         // the 'uploads' disk is rooted at the same real filesystem location.
         $paths = CurrentPaths::get();
-        $chunk_root = $paths->root . CurrentConfig::uploadDir();
+        $chunk_root = $paths->root . CurrentConfig::current()->uploadDir();
         $chunk_abs_path = str_replace(['\\', '/./'], ['/', '/'], $chunkfile_path);
         $chunk_rel_path = StorageRegistry::stripRoot($chunk_root, $chunk_abs_path);
         $chunk_stream = fopen($uploaded_chunk_tmp_name, 'rb');
@@ -1899,7 +1899,7 @@ final class PwgImages
 
         $logger->debug(__FUNCTION__ . ' ' . $output_filepath . ' MD5 checksum OK');
 
-        $image_id = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService())
+        $image_id = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())
             ->addUploadedFile(
                 $output_filepath,
                 \Piwigo\Bootstrap\PresentationAccessor::urlService(),
@@ -2001,7 +2001,7 @@ final class PwgImages
         $split_pattern = '/[\s,;\|]/';
         $result = [];
 
-        if (\Piwigo\Config\CurrentConfig::uniquenessMode() === 'md5sum') {
+        if (\Piwigo\Config\CurrentConfig::current()->uniquenessMode() === 'md5sum') {
             // search among photos the list of photos already added, based on md5sum list
             $md5sums = preg_split(
                 $split_pattern,
@@ -2018,7 +2018,7 @@ final class PwgImages
             foreach ($md5sums as $md5sum) {
                 $result[$md5sum] = $id_of_md5[$md5sum] ?? null;
             }
-        } elseif (\Piwigo\Config\CurrentConfig::uniquenessMode() === 'filename') {
+        } elseif (\Piwigo\Config\CurrentConfig::current()->uniquenessMode() === 'filename') {
             // search among photos the list of photos already added, based on
             // filename list
             $filenames = preg_split(
@@ -2077,10 +2077,10 @@ final class PwgImages
 
         // we want "long" format extensions first to match "cmyk.jpg" before "jpg" for example
         // (kept as a local variable, not written back to $conf: the original
-        // in-place usort() by reference on \Piwigo\Config\CurrentConfig::formatExtensions() only ever
+        // in-place usort() by reference on \Piwigo\Config\CurrentConfig::current()->formatExtensions() only ever
         // mutated the request-local config copy anyway, since $conf is reloaded
         // from scratch on every request)
-        $format_ext_list = \Piwigo\Config\CurrentConfig::formatExtensions();
+        $format_ext_list = \Piwigo\Config\CurrentConfig::current()->formatExtensions();
         usort($format_ext_list, static fn (string $a, string $b): int => strlen($b) - strlen($a));
 
         $format_db = [];
@@ -2337,7 +2337,7 @@ final class PwgImages
 
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
-                if (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions() or ! isset($params['pwg_token'])) {
+                if (! \Piwigo\Config\CurrentConfig::current()->allowHtmlDescriptions() or ! isset($params['pwg_token'])) {
                     $params[$key] = strip_tags((string) $params[$key], '<b><strong><em><i>');
                 }
 
@@ -2504,7 +2504,7 @@ final class PwgImages
     public static function checkUpload(array $params, PwgServer $service): array
     {
         $ret = [];
-        $ret['message'] = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService())->readyForUploadMessage();
+        $ret['message'] = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())->readyForUploadMessage();
         $ret['ready_for_upload'] = true;
         if (! in_array($ret['message'], [null, ''], true)) {
             $ret['ready_for_upload'] = false;

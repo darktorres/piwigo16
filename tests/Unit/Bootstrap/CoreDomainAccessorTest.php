@@ -31,7 +31,7 @@ use Piwigo\Users\UserService;
 afterEach(function (): void {
     \Piwigo\Core\Kernel::reset();
     \Piwigo\Template\CurrentTemplate::current()->reset();
-    \Piwigo\Config\CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
 });
 
 test('every accessor returns its real, correctly-typed instance from a real container, without throwing', function (): void {
@@ -41,8 +41,12 @@ test('every accessor returns its real, correctly-typed instance from a real cont
     // a real Paths passed in.
     \Piwigo\Core\Kernel::reset();
     \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
-    \Piwigo\Config\CurrentConfig::setDataLocation('data/');
-    \Piwigo\Config\CurrentConfig::setDataDirChecked('1');
+    $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+    if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+    }
+    $currentConfig->setDataLocation('data/');
+    $currentConfig->setDataDirChecked('1');
     \Piwigo\Template\CurrentTemplate::current()->set(new \Piwigo\Template\Template(sys_get_temp_dir()));
 
     expect(CoreDomainAccessor::permissionService())->toBeInstanceOf(PermissionService::class);

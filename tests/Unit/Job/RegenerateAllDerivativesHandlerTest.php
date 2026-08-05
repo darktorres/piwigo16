@@ -30,27 +30,33 @@ function regen_handler_test_rrmdir(string $dir): void
 }
 
 beforeEach(function (): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     $root = sys_get_temp_dir() . '/piwigo-regen-handler-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::setDataLocation('data/');
-    mkdir(CurrentPaths::get()->root . CurrentConfig::derivativeDir(), 0o777, true);
+    CurrentConfig::current()->setDataLocation('data/');
+    mkdir(CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir(), 0o777, true);
 });
 
 afterEach(function (): void {
     regen_handler_test_rrmdir(CurrentPaths::get()->root);
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     Kernel::reset();
 });
 
 test('__invoke delegates to DerivativeCacheService::clearDerivativeCache with the job types', function (): void {
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026';
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir() . '2026';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
     file_put_contents($derivDir . '/photo-sq.jpg', 'x');
 
-    $handler = new RegenerateAllDerivativesHandler(new DerivativeCacheService());
+    // Same container-shared instance as beforeEach's own setDataLocation('data/')
+    // write -- a fresh `new CurrentConfig()` here would carry its own
+    // default dataLocation ('_data/'), pointing DerivativeCacheService's
+    // derivativeDir() at a directory that doesn't hold the fixture files
+    // created above, silently no-oping clearDerivativeCache() and failing
+    // the assertions below for the wrong reason.
+    $handler = new RegenerateAllDerivativesHandler(new DerivativeCacheService(CurrentConfig::current()));
     $handler(new RegenerateAllDerivativesJob(['thumb']));
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse()

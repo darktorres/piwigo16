@@ -346,6 +346,7 @@ final readonly class ConfigService
     public function __construct(
         private ConfigRepository $repo,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -362,7 +363,7 @@ final readonly class ConfigService
     {
         $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
         if ($propertyName !== null) {
-            $value = new \ReflectionMethod(CurrentConfig::class, $propertyName)->invoke(null);
+            $value = new \ReflectionMethod(CurrentConfig::class, $propertyName)->invoke($this->currentConfig);
             /** @var array<mixed>|string|int|float|bool|NotificationConfig|null $value every mapped property getter's declared return type */
 
             return $value ?? $defaultValue;
@@ -405,7 +406,7 @@ final readonly class ConfigService
     {
         if ($param === null) {
             foreach ($this->allRowsFromCacheOrDb() as $rowParam => $value) {
-                self::hydrate($rowParam, $value);
+                $this->hydrate($rowParam, $value);
             }
         } else {
             $entry = $this->repo->find($param);
@@ -415,7 +416,7 @@ final readonly class ConfigService
                 }
                 return;
             }
-            self::hydrate($entry->param, $entry->value);
+            $this->hydrate($entry->param, $entry->value);
         }
 
         $this->eventDispatcher->dispatchNotify(new LoadConf($param));
@@ -471,7 +472,7 @@ final readonly class ConfigService
         if ($updateGlobal) {
             $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
             if ($propertyName !== null) {
-                new \ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($propertyName))->invoke(null, $value);
+                new \ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($propertyName))->invoke($this->currentConfig, $value);
             }
         }
     }
@@ -497,7 +498,7 @@ final readonly class ConfigService
             // violate their own non-nullable type).
             $property = new \ReflectionProperty(CurrentConfig::class, $propertyName);
             new \ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($propertyName))
-                ->invoke(null, $property->getDefaultValue());
+                ->invoke($this->currentConfig, $property->getDefaultValue());
         }
     }
 
@@ -526,7 +527,7 @@ final readonly class ConfigService
      * property's exact native PHP type; every real setter can otherwise
      * assume it's always called with an already-correctly-shaped value.
      */
-    private static function hydrate(string $param, ?string $raw): void
+    private function hydrate(string $param, ?string $raw): void
     {
         $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
         if ($propertyName === null) {
@@ -540,7 +541,7 @@ final readonly class ConfigService
 
         if ($raw === null) {
             if ($paramType?->allowsNull() === true) {
-                $setter->invoke(null, null);
+                $setter->invoke($this->currentConfig, null);
             }
 
             return;
@@ -563,7 +564,7 @@ final readonly class ConfigService
             default => $decoded,
         };
 
-        $setter->invoke(null, $value);
+        $setter->invoke($this->currentConfig, $value);
     }
 
     /**

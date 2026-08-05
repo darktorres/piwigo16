@@ -113,7 +113,7 @@ final class MailServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $repo = EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class);
         self::assertInstanceOf(\Piwigo\Config\ConfigRepository::class, $repo);
-        $configService = new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher());
+        $configService = new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current());
         CurrentConfigService::current()->set($configService);
         $configService->loadConfFromDb();
 
@@ -124,8 +124,9 @@ final class MailServiceTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $this->conn->executeStatement('UPDATE ' . Tables::users() . ' SET mail_address = NULL WHERE id = 3');
-        CurrentConfig::setSmtpHost('');
-        CurrentConfig::setDebugMail(false);
+        $currentConfig = CurrentConfig::current();
+        $currentConfig->setSmtpHost('');
+        $currentConfig->setDebugMail(false);
         // CurrentUser::current()->attachGlobals() is a lazy-init `??=` -- once
         // setCurrentUserToFixtureAdmin() has called CurrentUser::current()->set(),
         // attachGlobals() alone is a no-op (self::$instance is already
@@ -147,10 +148,11 @@ final class MailServiceTest extends IntegrationTestCase
             new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
             new HtmlService(),
             $this->conn,
-            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
             new \Piwigo\PluginConfig\EventDispatcher(),
             new \Piwigo\Config\DeploymentPolicy(),
             \Piwigo\Users\CurrentUser::current(),
+            \Piwigo\Config\CurrentConfig::current(),
         );
     }
 
@@ -190,7 +192,7 @@ final class MailServiceTest extends IntegrationTestCase
 
     public function test_mailNotificationAdmins_sends_to_the_only_admin_and_fails_delivery_deterministically(): void
     {
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::current()->setSmtpHost('127.0.0.1:1');
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mailNotificationAdmins('Test subject', 'Test content'));
 
@@ -199,7 +201,7 @@ final class MailServiceTest extends IntegrationTestCase
 
     public function test_mailNotificationAdmins_builds_subject_and_content_from_lang_args_arrays(): void
     {
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::current()->setSmtpHost('127.0.0.1:1');
         $subject = Lang::current()->buildArgs('Registration of %s', 'someuser');
         $content = [
             Lang::current()->buildArgs('User: %s', 'someuser'),
@@ -230,7 +232,7 @@ final class MailServiceTest extends IntegrationTestCase
 
     public function test_mailAdmins_sends_to_the_admin_and_fails_delivery_deterministically(): void
     {
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::current()->setSmtpHost('127.0.0.1:1');
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mailAdmins(['content' => 'hi'], []));
 
@@ -239,7 +241,7 @@ final class MailServiceTest extends IntegrationTestCase
 
     public function test_mailAdmins_only_webmasters_still_finds_the_webmaster(): void
     {
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::current()->setSmtpHost('127.0.0.1:1');
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mailAdmins(['content' => 'hi'], [], true, true));
 
@@ -265,7 +267,7 @@ final class MailServiceTest extends IntegrationTestCase
     {
         // Group 1 has user 1 (real email) and user 3 (NULL email, filtered
         // out at the query level) -- exactly one real send attempt.
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::current()->setSmtpHost('127.0.0.1:1');
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(1, ['content' => 'hi']));
 
@@ -282,7 +284,7 @@ final class MailServiceTest extends IntegrationTestCase
         $this->conn->executeStatement(
             "UPDATE " . Tables::users() . " SET mail_address = 'temp3@example.test' WHERE id = 3"
         );
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::current()->setSmtpHost('127.0.0.1:1');
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(2, ['content' => 'hi'], ['assign' => ['LINK' => 'http://example.test/link']]));
 
@@ -296,7 +298,7 @@ final class MailServiceTest extends IntegrationTestCase
 
     public function test_mail_attempts_delivery_when_only_cc_is_set_and_to_is_empty(): void
     {
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::current()->setSmtpHost('127.0.0.1:1');
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mail('', ['Cc' => 'cc@example.test', 'content' => 'hi']));
 
@@ -305,8 +307,9 @@ final class MailServiceTest extends IntegrationTestCase
 
     public function test_sendMailTest_dumps_a_labelled_error_file_when_debug_mail_is_enabled(): void
     {
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
-        CurrentConfig::setDebugMail(true);
+        $currentConfig = CurrentConfig::current();
+        $currentConfig->setSmtpHost('127.0.0.1:1');
+        $currentConfig->setDebugMail(true);
         $dir = dirname(__DIR__, 2) . '/_data/tmp';
         $before = glob($dir . '/mail.*');
         self::assertIsArray($before);
@@ -332,8 +335,9 @@ final class MailServiceTest extends IntegrationTestCase
 
     public function test_sendMailTest_returns_early_when_the_target_file_cannot_be_opened(): void
     {
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
-        CurrentConfig::setDebugMail(true);
+        $currentConfig = CurrentConfig::current();
+        $currentConfig->setSmtpHost('127.0.0.1:1');
+        $currentConfig->setDebugMail(true);
         // A username containing '/' makes sendMailTest()'s own filename
         // resolve into a non-existent subdirectory of _data/tmp --
         // fopen('w+') doesn't create missing intermediate directories, so
@@ -459,7 +463,7 @@ final class MailServiceTest extends IntegrationTestCase
         // (group 1: user 1 real+English, user 3 NULL email) -- explicitly
         // requesting 'en_UK' here exercises language_selected's own
         // non-empty ternary branch, not just its default-null fallback.
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::current()->setSmtpHost('127.0.0.1:1');
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(1, ['content' => 'hi', 'language_selected' => 'en_UK']));
 
@@ -562,7 +566,7 @@ final class MailServiceTest extends IntegrationTestCase
         $this->conn->executeStatement(
             "UPDATE " . Tables::users() . " SET mail_address = 'temp3@example.test' WHERE id = 3"
         );
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::current()->setSmtpHost('127.0.0.1:1');
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(
             2,
@@ -575,8 +579,9 @@ final class MailServiceTest extends IntegrationTestCase
 
     public function test_mail_auto_adds_a_bcc_to_the_webmaster_when_send_bcc_mail_webmaster_is_enabled(): void
     {
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
-        CurrentConfig::setSendBccMailWebmaster(true);
+        $currentConfig = CurrentConfig::current();
+        $currentConfig->setSmtpHost('127.0.0.1:1');
+        $currentConfig->setSendBccMailWebmaster(true);
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
             ['name' => 'Someone', 'email' => 'someone@example.test'],
@@ -594,7 +599,7 @@ final class MailServiceTest extends IntegrationTestCase
         // called at all; the genuinely nonexistent 'filename' is what
         // actually forces templateExists() to return false, independent
         // of dirname.
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::current()->setSmtpHost('127.0.0.1:1');
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
             ['name' => 'Someone', 'email' => 'someone@example.test'],
@@ -613,10 +618,11 @@ final class MailServiceTest extends IntegrationTestCase
         // daemon listening on port 25 in this environment, so the
         // connection is refused just as fast/deterministically as the
         // ':1'-suffixed closed port every other test in this file uses.
-        CurrentConfig::setSmtpHost('127.0.0.1');
-        CurrentConfig::setSmtpUser('mail user');
-        CurrentConfig::setSmtpPassword('p@ss w/ord');
-        CurrentConfig::setSmtpSecure('tls');
+        $currentConfig = CurrentConfig::current();
+        $currentConfig->setSmtpHost('127.0.0.1');
+        $currentConfig->setSmtpUser('mail user');
+        $currentConfig->setSmtpPassword('p@ss w/ord');
+        $currentConfig->setSmtpSecure('tls');
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
             ['name' => 'Someone', 'email' => 'someone@example.test'],

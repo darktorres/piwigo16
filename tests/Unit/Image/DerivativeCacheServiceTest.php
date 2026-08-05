@@ -32,17 +32,17 @@ function derivative_cache_test_rrmdir(string $dir): void
 }
 
 beforeEach(function (): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     $root = sys_get_temp_dir() . '/piwigo-derivative-cache-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::setDataLocation('data/');
-    mkdir(CurrentPaths::get()->root . CurrentConfig::derivativeDir(), 0o777, true);
+    CurrentConfig::current()->setDataLocation('data/');
+    mkdir(CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir(), 0o777, true);
 });
 
 afterEach(function (): void {
     derivative_cache_test_rrmdir(CurrentPaths::get()->root);
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     Kernel::reset();
 });
 
@@ -53,7 +53,7 @@ test('clearDerivativeCacheRecursive deletes only files matching the pattern', fu
     file_put_contents($dir . '/photo-sq.jpg', 'x');
     file_put_contents($dir . '/original.jpg', 'x');
 
-    new DerivativeCacheService()->clearDerivativeCacheRecursive($dir, '#.*-th\.jpg$#');
+    new DerivativeCacheService(CurrentConfig::current())->clearDerivativeCacheRecursive($dir, '#.*-th\.jpg$#');
 
     expect(file_exists($dir . '/photo-th.jpg'))->toBeFalse()
         ->and(file_exists($dir . '/photo-sq.jpg'))->toBeTrue()
@@ -66,7 +66,7 @@ test('clearDerivativeCacheRecursive removes an emptied subdirectory', function (
     mkdir($dir, 0o777, true);
     file_put_contents($dir . '/photo-th.jpg', 'x');
 
-    new DerivativeCacheService()->clearDerivativeCacheRecursive($base, '#.*-th\.jpg$#');
+    new DerivativeCacheService(CurrentConfig::current())->clearDerivativeCacheRecursive($base, '#.*-th\.jpg$#');
 
     expect(is_dir($dir))->toBeFalse();
 });
@@ -78,20 +78,20 @@ test('clearDerivativeCacheRecursive recurses into nested directories', function 
     file_put_contents($nested . '/photo-th.jpg', 'x');
     file_put_contents($nested . '/photo-sq.jpg', 'x');
 
-    new DerivativeCacheService()->clearDerivativeCacheRecursive($base, '#.*-th\.jpg$#');
+    new DerivativeCacheService(CurrentConfig::current())->clearDerivativeCacheRecursive($base, '#.*-th\.jpg$#');
 
     expect(file_exists($nested . '/photo-th.jpg'))->toBeFalse()
         ->and(file_exists($nested . '/photo-sq.jpg'))->toBeTrue();
 });
 
 test('deleteElementDerivatives removes every derivative for the given element', function (): void {
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026/07';
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir() . '2026/07';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
     file_put_contents($derivDir . '/photo-sq.jpg', 'x');
     file_put_contents($derivDir . '/other-th.jpg', 'x');
 
-    new DerivativeCacheService()->deleteElementDerivatives([
+    new DerivativeCacheService(CurrentConfig::current())->deleteElementDerivatives([
         'path' => '2026/07/photo.jpg',
     ]);
 
@@ -101,12 +101,12 @@ test('deleteElementDerivatives removes every derivative for the given element', 
 });
 
 test('deleteElementDerivatives filters by a specific derivative type', function (): void {
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026/07';
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir() . '2026/07';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
     file_put_contents($derivDir . '/photo-sq.jpg', 'x');
 
-    new DerivativeCacheService()->deleteElementDerivatives([
+    new DerivativeCacheService(CurrentConfig::current())->deleteElementDerivatives([
         'path' => '2026/07/photo.jpg',
     ], 'thumb');
 
@@ -125,11 +125,11 @@ test('deleteElementDerivatives\'s type pattern uses a trailing wildcard, matchin
     // the type code (a realistic "-th_100x100.jpg" size-stamped
     // derivative name) requires the wildcard, in the right place, to
     // match at all.
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026/07';
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir() . '2026/07';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th_100x100.jpg', 'x');
 
-    new DerivativeCacheService()->deleteElementDerivatives([
+    new DerivativeCacheService(CurrentConfig::current())->deleteElementDerivatives([
         'path' => '2026/07/photo.jpg',
     ], 'thumb');
 
@@ -149,11 +149,11 @@ test('deleteElementDerivatives inserts the type pattern without consuming any of
     // (dropping the dot, or dropping the whole extension but one
     // letter). A stray file that ends the same way but has no dot at
     // all exposes the over-match.
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026/07';
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir() . '2026/07';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-thabcjpg', 'x');
 
-    new DerivativeCacheService()->deleteElementDerivatives([
+    new DerivativeCacheService(CurrentConfig::current())->deleteElementDerivatives([
         'path' => '2026/07/photo.jpg',
     ], 'thumb');
 
@@ -166,11 +166,11 @@ test('deleteElementDerivatives does not rewrite the path when representative_ext
     // non-empty extension; an explicitly-empty string is falsy but
     // non-null, so it needs its own case to reach the false side of
     // this exact comparison.
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026/07';
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir() . '2026/07';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
 
-    new DerivativeCacheService()->deleteElementDerivatives([
+    new DerivativeCacheService(CurrentConfig::current())->deleteElementDerivatives([
         'path' => '2026/07/photo.jpg',
         'representative_ext' => '',
     ]);
@@ -185,11 +185,11 @@ test('deleteElementDerivatives only strips a leading "../" when it is genuinely 
     // requires all 3 characters to match; the mutant only checks the
     // first 2, wrongly treating "..2" as a "../" prefix and stripping
     // 3 characters off a path that never had one.
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '..2026/07';
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir() . '..2026/07';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
 
-    new DerivativeCacheService()->deleteElementDerivatives([
+    new DerivativeCacheService(CurrentConfig::current())->deleteElementDerivatives([
         'path' => '..2026/07/photo.jpg',
     ]);
 
@@ -197,7 +197,7 @@ test('deleteElementDerivatives only strips a leading "../" when it is genuinely 
 });
 
 test('deleteElementDerivatives throws for a path with no extension', function (): void {
-    new DerivativeCacheService()->deleteElementDerivatives(['path' => 'no_extension']);
+    new DerivativeCacheService(CurrentConfig::current())->deleteElementDerivatives(['path' => 'no_extension']);
 })->throws(Exception::class);
 
 test('deleteElementDerivatives never attempts to iterate a failed glob() result', function (): void {
@@ -219,7 +219,7 @@ test('deleteElementDerivatives never attempts to iterate a failed glob() result'
         return true;
     });
     try {
-        new DerivativeCacheService()->deleteElementDerivatives([
+        new DerivativeCacheService(CurrentConfig::current())->deleteElementDerivatives([
             'path' => str_repeat('a', 5000) . '.jpg',
         ]);
     } finally {
@@ -230,24 +230,24 @@ test('deleteElementDerivatives never attempts to iterate a failed glob() result'
 });
 
 test('clearDerivativeCache with an explicit type list only matches those types', function (): void {
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026';
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir() . '2026';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
     file_put_contents($derivDir . '/photo-sq.jpg', 'x');
 
-    new DerivativeCacheService()->clearDerivativeCache(['thumb']);
+    new DerivativeCacheService(CurrentConfig::current())->clearDerivativeCache(['thumb']);
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse()
         ->and(file_exists($derivDir . '/photo-sq.jpg'))->toBeTrue();
 });
 
 test('clearDerivativeCache accepts a single type given as a plain string, not wrapped in an array', function (): void {
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026';
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir() . '2026';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
     file_put_contents($derivDir . '/photo-sq.jpg', 'x');
 
-    new DerivativeCacheService()->clearDerivativeCache('thumb');
+    new DerivativeCacheService(CurrentConfig::current())->clearDerivativeCache('thumb');
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse()
         ->and(file_exists($derivDir . '/photo-sq.jpg'))->toBeTrue();
@@ -262,11 +262,11 @@ test('clearDerivativeCache re-indexes a non-sequential type array before iterati
     // param type `array<int|string, string>` explicitly allows)
     // exposes the gap: without re-indexing, $resolvedTypes[0] would be
     // undefined.
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026';
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir() . '2026';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
 
-    new DerivativeCacheService()->clearDerivativeCache(['a' => 'thumb']);
+    new DerivativeCacheService(CurrentConfig::current())->clearDerivativeCache(['a' => 'thumb']);
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse();
 });
@@ -276,7 +276,7 @@ test('clearDerivativeCache groups 2+ types into a single alternation pattern', f
     // IncrementInteger -- every existing test above resolves to exactly
     // ONE type, never reaching the `count($resolvedTypes) > 1` grouped-
     // pattern branch at all.
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026';
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir() . '2026';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
     file_put_contents($derivDir . '/photo-sq.jpg', 'x');
@@ -294,7 +294,7 @@ test('clearDerivativeCache groups 2+ types into a single alternation pattern', f
     // which only the FIRST (unscoped) alternative would wrongly match.
     file_put_contents($derivDir . '/photo-th_not_a_real_derivative.jpg', 'x');
 
-    new DerivativeCacheService()->clearDerivativeCache(['thumb', 'square']);
+    new DerivativeCacheService(CurrentConfig::current())->clearDerivativeCache(['thumb', 'square']);
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse()
         ->and(file_exists($derivDir . '/photo-sq.jpg'))->toBeFalse()
@@ -315,7 +315,7 @@ test('clearDerivativeCache groups 2+ types into a single alternation pattern', f
  * both mutations applied against the full suite: both pass identically.
  */
 test('clearDerivativeCache falls back to the custom-type pattern for a type name that is neither "all" nor a standard ImageStdParams type', function (): void {
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026';
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir() . '2026';
     mkdir($derivDir, 0o777, true);
     // derivativeToUrl(CUSTOM) . '_' . $type == 'cu_myCustomWidget', matching
     // the '-cu_myCustomWidget.ext' filename a real custom-type derivative
@@ -323,18 +323,18 @@ test('clearDerivativeCache falls back to the custom-type pattern for a type name
     file_put_contents($derivDir . '/photo-cu_myCustomWidget.jpg', 'x');
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
 
-    new DerivativeCacheService()->clearDerivativeCache('myCustomWidget');
+    new DerivativeCacheService(CurrentConfig::current())->clearDerivativeCache('myCustomWidget');
 
     expect(file_exists($derivDir . '/photo-cu_myCustomWidget.jpg'))->toBeFalse()
         ->and(file_exists($derivDir . '/photo-th.jpg'))->toBeTrue();
 });
 
 test('deleteElementDerivatives rewrites the path to its pwg_representative form when representative_ext is given', function (): void {
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026/07/pwg_representative';
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir() . '2026/07/pwg_representative';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
 
-    new DerivativeCacheService()->deleteElementDerivatives([
+    new DerivativeCacheService(CurrentConfig::current())->deleteElementDerivatives([
         'path' => '2026/07/photo.pdf',
         'representative_ext' => 'jpg',
     ]);
@@ -354,11 +354,11 @@ test('deleteElementDerivatives rewrites the path to its pwg_representative form 
  * Live sed-verified against the full suite: passes identically.
  */
 test('deleteElementDerivatives strips a leading "../" from the path', function (): void {
-    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026/07';
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir() . '2026/07';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
 
-    new DerivativeCacheService()->deleteElementDerivatives([
+    new DerivativeCacheService(CurrentConfig::current())->deleteElementDerivatives([
         'path' => '../2026/07/photo.jpg',
     ]);
 
@@ -376,11 +376,11 @@ test('clearDerivativeCache does nothing, without throwing, when the derivatives 
     // its own opendir() E_WARNING, same convention as the sibling
     // "cannot be opened" test below: `@` doesn't hide it from
     // PHPUnit's own error handler).
-    rmdir(CurrentPaths::get()->root . CurrentConfig::derivativeDir());
+    rmdir(CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir());
 
     set_error_handler(static fn (): bool => true);
     try {
-        new DerivativeCacheService()->clearDerivativeCache('thumb');
+        new DerivativeCacheService(CurrentConfig::current())->clearDerivativeCache('thumb');
     } finally {
         restore_error_handler();
     }
@@ -404,7 +404,7 @@ test('clearDerivativeCache never removes the derivatives root directory itself, 
     // against the derivatives root itself -- removing a directory real
     // code's outer loop (which only ever recurses into the root's own
     // CHILDREN, never the root path itself) would never touch).
-    $derivRoot = CurrentPaths::get()->root . CurrentConfig::derivativeDir();
+    $derivRoot = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir();
     $derivDir = $derivRoot . '2026';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
@@ -423,7 +423,7 @@ test('clearDerivativeCache never removes the derivatives root directory itself, 
         return true;
     });
     try {
-        new DerivativeCacheService()->clearDerivativeCache('thumb');
+        new DerivativeCacheService(CurrentConfig::current())->clearDerivativeCache('thumb');
     } finally {
         restore_error_handler();
     }
@@ -444,10 +444,10 @@ test('clearDerivativeCache never recurses into a stray plain FILE at the derivat
     // and returns false early) -- but that opendir() failure raises a
     // real, otherwise-absent E_WARNING, unlike real code which never
     // attempts to open a non-directory in the first place.
-    $derivRoot = CurrentPaths::get()->root . CurrentConfig::derivativeDir();
+    $derivRoot = CurrentPaths::get()->root . CurrentConfig::current()->derivativeDir();
     file_put_contents($derivRoot . 'stray.txt', 'x');
 
-    new DerivativeCacheService()->clearDerivativeCache('thumb');
+    new DerivativeCacheService(CurrentConfig::current())->clearDerivativeCache('thumb');
 
     expect(file_exists($derivRoot . 'stray.txt'))->toBeTrue();
 });
@@ -472,7 +472,7 @@ test('clearDerivativeCacheRecursive\'s own return value reflects EVERY subdirect
     file_put_contents($goodChild . '/photo-th.jpg', 'x');
     file_put_contents($badChild . '/unmatched.dat', 'x');
 
-    $result = new DerivativeCacheService()->clearDerivativeCacheRecursive($parent, '#-th\.jpg$#');
+    $result = new DerivativeCacheService(CurrentConfig::current())->clearDerivativeCacheRecursive($parent, '#-th\.jpg$#');
 
     expect($result)->toBeFalse();
 });
@@ -491,7 +491,7 @@ test('clearDerivativeCacheRecursive never calls preg_match with a genuinely empt
     mkdir($dir, 0o777, true);
     file_put_contents($dir . '/photo-th.jpg', 'x');
 
-    $result = new DerivativeCacheService()->clearDerivativeCacheRecursive($dir, '');
+    $result = new DerivativeCacheService(CurrentConfig::current())->clearDerivativeCacheRecursive($dir, '');
 
     expect($result)->toBeFalse()
         ->and(file_exists($dir . '/photo-th.jpg'))->toBeTrue();
@@ -508,7 +508,7 @@ test('clearDerivativeCacheRecursive\'s own return value reports failure when an 
     mkdir($dir, 0o777, true);
     file_put_contents($dir . '/unrecognized.dat', 'x');
 
-    $result = new DerivativeCacheService()->clearDerivativeCacheRecursive($dir, '#nomatch#');
+    $result = new DerivativeCacheService(CurrentConfig::current())->clearDerivativeCacheRecursive($dir, '#nomatch#');
 
     expect($result)->toBeFalse();
 });
@@ -542,7 +542,7 @@ test('clearDerivativeCacheRecursive returns false without throwing when the dire
     // set_error_handler()/restore_error_handler() pair.
     set_error_handler(static fn (): bool => true);
     try {
-        $result = new DerivativeCacheService()->clearDerivativeCacheRecursive($missing, '#.*#');
+        $result = new DerivativeCacheService(CurrentConfig::current())->clearDerivativeCacheRecursive($missing, '#.*#');
     } finally {
         restore_error_handler();
     }

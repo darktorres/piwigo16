@@ -5,16 +5,17 @@ declare(strict_types=1);
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\PaginationService;
 
-beforeEach(function (): void {
-    CurrentConfig::setPaginatePagesAround(2);
-});
-
-afterEach(function (): void {
-    CurrentConfig::reset();
-});
-
+// CurrentConfig is now a real, constructor-injected instance (no more
+// static property bag) -- each test builds its own fresh instance rather
+// than mutating/resetting shared static state, matching the
+// singleton/DI-elimination campaign's own established test pattern (see
+// e.g. tests/Unit/Controller/ImageDerivativeControllerTest.php). A fresh
+// instance's paginatePagesAround() already defaults to 2, matching this
+// suite's former beforeEach override, so most tests below don't need to
+// touch it at all.
 test('createNavigationBar returns an empty bar when everything fits on one page', function (): void {
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 10, 0, 20);
 
@@ -22,7 +23,8 @@ test('createNavigationBar returns an empty bar when everything fits on one page'
 });
 
 test('createNavigationBar computes the current page and total page count', function (): void {
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 100, 40, 20);
 
@@ -36,7 +38,8 @@ test('createNavigationBar computes the current page and total page count', funct
 });
 
 test('createNavigationBar omits URL_FIRST/URL_PREV on the first page', function (): void {
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 100, 0, 20);
 
@@ -47,7 +50,8 @@ test('createNavigationBar omits URL_FIRST/URL_PREV on the first page', function 
 });
 
 test('createNavigationBar omits URL_NEXT/URL_LAST on the last page', function (): void {
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 100, 80, 20);
 
@@ -58,7 +62,8 @@ test('createNavigationBar omits URL_NEXT/URL_LAST on the last page', function ()
 });
 
 test('createNavigationBar clamps a negative start to zero', function (): void {
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 100, -5, 20);
 
@@ -85,7 +90,8 @@ test('createNavigationBar clamps a start of exactly -1, one below the real bound
     // NOT (`-1 < -1` is false) -- confirmed live the unclamped -1
     // survives into the current-page arithmetic, producing 0.95
     // instead of the real, clamped 1.0.
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 100, -1, 20);
 
@@ -101,7 +107,8 @@ test('createNavigationBar returns an empty bar when nbElement exactly equals nbE
     // intent, but that test's nbElement=10 vs nbElementPage=20 never
     // reaches the boundary itself). Confirmed live the mutant instead
     // treats an exact match as "more than one page".
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 20, 0, 20);
 
@@ -114,7 +121,8 @@ test('createNavigationBar rounds the total page count up, not down or to nearest
     // and round(5.05) both wrongly give 5. Every other test in this
     // file uses an exact multiple (100/20, 1000/20), where all three
     // functions happen to agree.
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 101, 0, 20);
 
@@ -145,7 +153,8 @@ test('createNavigationBar rounds the total page count up, not down or to nearest
  * removed.
  */
 test('createNavigationBar accepts numeric strings for nbElement and start', function (): void {
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', '100', '40', 20);
 
@@ -155,7 +164,8 @@ test('createNavigationBar accepts numeric strings for nbElement and start', func
 });
 
 test('createNavigationBar builds clean-url-style page links when requested', function (): void {
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php/category/1', 100, 40, 20, true);
 
@@ -165,7 +175,8 @@ test('createNavigationBar builds clean-url-style page links when requested', fun
 });
 
 test('createNavigationBar builds query-string-style page links by default', function (): void {
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 100, 40, 20);
 
@@ -175,7 +186,8 @@ test('createNavigationBar builds query-string-style page links by default', func
 });
 
 test('createNavigationBar respects a custom param name', function (): void {
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 100, 40, 20, false, 'offset');
 
@@ -196,7 +208,8 @@ test('createNavigationBar builds the full "pages" link array around the current 
     // index arithmetic, and all 3 ConcatRemoveLeft/Right/SwitchSides
     // mutations on the url/start_str/offset concatenation) -- each
     // independently confirmed live via a sed-applied mutation rerun.
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 100, 40, 20);
 
@@ -217,7 +230,8 @@ test('createNavigationBar\'s "pages" array clamps its lower bound to page 2 near
     // backwards), the loop would start at a negative/zero index instead,
     // either fataling on a negative array key range or producing extra,
     // wrong entries.
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 100, 0, 20);
 
@@ -235,7 +249,8 @@ test('createNavigationBar\'s "pages" array clamps its upper bound to the last pa
     // page 5 of 5 with pagesAround=2, ceil(5) + 2 + 1 = 8, which the
     // real min(8, 5) clamps down to 5 -- without that clamp, the loop
     // would try to build links past the real last page.
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 100, 80, 20);
 
@@ -268,8 +283,9 @@ test('createNavigationBar\'s "pages" array starts from floor(), not ceil() or ro
     // Line 69's MinusToPlus and RemoveDoubleCast, and line 70's
     // RemoveDoubleCast, are closed the same way: real
     // previous/next are exact -20/+20 offsets from the snapped 40.
-    \Piwigo\Config\CurrentConfig::setPaginatePagesAround(0);
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $currentConfig->setPaginatePagesAround(0);
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 1000, 30, 20);
 
@@ -295,8 +311,9 @@ test('createNavigationBar\'s "pages" array uses ceil(), not round(), for its upp
     // confirmed live via the URL_PREV/URL_NEXT assertions below, which
     // the .5-boundary test above can't reach (round and ceil agree at
     // exactly .5).
-    \Piwigo\Config\CurrentConfig::setPaginatePagesAround(0);
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $currentConfig->setPaginatePagesAround(0);
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 1000, 26, 20);
 
@@ -333,7 +350,8 @@ test('createNavigationBar builds an exact URL_PREV/URL_NEXT/URL_LAST when nbElem
     // excludes -- the boundary-exact test above only covers $previous
     // === 0, which IncrementInteger doesn't actually mis-handle (see
     // its own confirmed-equivalent note there).
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 10, 2, 1);
 
@@ -368,7 +386,8 @@ test('createNavigationBar caps URL_NEXT at the real last page when the unsnapped
     // Also closes line 85's ConcatRemoveLeft/ConcatRemoveRight/
     // ConcatSwitchSides on URL_LAST's own concatenation, via the same
     // exact-value assertion.
-    $service = new PaginationService();
+    $currentConfig = new CurrentConfig();
+    $service = new PaginationService($currentConfig);
 
     // start=85 with nbElement=100/nbElementPage=20 gives an unsnapped
     // current page of 5.25 -- not equal to the real maximum (5.0), so

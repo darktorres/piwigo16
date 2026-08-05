@@ -49,19 +49,19 @@ function unconnectedConfigService(): ConfigService
     ]);
     $repo = EntityManagerFactory::build($connection)->getRepository(ConfigEntry::class);
 
-    return new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher());
+    return new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current());
 }
 
 beforeEach(function (): void {
-    CurrentConfig::reset();
+    CurrentConfig::current()->reset();
 });
 
 afterEach(function (): void {
-    CurrentConfig::reset();
+    CurrentConfig::current()->reset();
 });
 
 test('confGetParam reads a property-backed key via its own typed getter', function (): void {
-    CurrentConfig::setBlkMenubar(['menu' => 50]);
+    CurrentConfig::current()->setBlkMenubar(['menu' => 50]);
 
     $service = unconnectedConfigService();
 
@@ -74,17 +74,25 @@ test('confGetParam reads a property-backed key via its own typed getter', functi
 // lookup. Covered by tests/Integration/ConfigServiceTest.php instead.
 
 /**
- * hydrate() is `private static` and only reachable through loadConfFromDb()
+ * hydrate() is `private` and only reachable through loadConfFromDb()
  * (DB-bound) in production, but its own body never touches the DB or
  * $this->repo at all -- pure reflection + json_decode + type coercion
  * against CurrentConfig's own setters, so it's invoked here directly via
  * Reflection instead, matching this repo's established
  * `invokeXxx()`-via-Reflection convention for private-static pure logic
  * (see e.g. PwgTOTPTest.php's own invokeGenerateCodeFromTimestamp()).
+ *
+ * hydrate() is `private` (instance), not `private static` (singleton/
+ * service-locator elimination campaign, Phase 9 -- ConfigService now reads/
+ * writes CurrentConfig through a constructor-injected instance, not a
+ * static call), so it can no longer be invoked with a null $object --
+ * unconnectedConfigService() itself resolves CurrentConfig::current(),
+ * matching every test below that also reads/writes through
+ * CurrentConfig::current() directly.
  */
 function invokeConfigServiceHydrate(string $param, ?string $raw): void
 {
-    new ReflectionMethod(ConfigService::class, 'hydrate')->invoke(null, $param, $raw);
+    new ReflectionMethod(ConfigService::class, 'hydrate')->invoke(unconnectedConfigService(), $param, $raw);
 }
 
 function jsonEncodeForHydrateTest(mixed $value): string
@@ -97,44 +105,44 @@ function jsonEncodeForHydrateTest(mixed $value): string
 }
 
 test('hydrate falls back to false for a non-bool decoded value on a bool-typed property', function (): void {
-    CurrentConfig::setGalleryLocked(true);
+    CurrentConfig::current()->setGalleryLocked(true);
 
     invokeConfigServiceHydrate('gallery_locked', jsonEncodeForHydrateTest('not-a-bool'));
 
-    expect(CurrentConfig::galleryLocked())->toBeFalse();
+    expect(CurrentConfig::current()->galleryLocked())->toBeFalse();
 });
 
 test('hydrate falls back to exactly 0 for a non-int decoded value on an int-typed property', function (): void {
-    CurrentConfig::setSessionLength(999);
+    CurrentConfig::current()->setSessionLength(999);
 
     invokeConfigServiceHydrate('session_length', jsonEncodeForHydrateTest('not-an-int'));
 
-    expect(CurrentConfig::sessionLength())->toBe(0);
+    expect(CurrentConfig::current()->sessionLength())->toBe(0);
 });
 
 test('hydrate falls back to exactly 0.0 for a non-numeric decoded value on a float-typed property', function (): void {
-    CurrentConfig::setNbmMaxTreatmentTimeoutPercent(99.9);
+    CurrentConfig::current()->setNbmMaxTreatmentTimeoutPercent(99.9);
 
     invokeConfigServiceHydrate('nbm_max_treatment_timeout_percent', jsonEncodeForHydrateTest('not-a-float'));
 
-    expect(CurrentConfig::nbmMaxTreatmentTimeoutPercent())->toBe(0.0);
+    expect(CurrentConfig::current()->nbmMaxTreatmentTimeoutPercent())->toBe(0.0);
 });
 
 test('hydrate falls back to an empty string for a non-string decoded value on a string-typed property', function (): void {
     // Same real bug this class's own docblock references (data_dir_checked):
     // jsonEncodeForHydrateTest(123) decodes to a real int, which the 'string' match arm
     // must not silently accept.
-    CurrentConfig::setGalleryTitle('Something Real');
+    CurrentConfig::current()->setGalleryTitle('Something Real');
 
     invokeConfigServiceHydrate('gallery_title', jsonEncodeForHydrateTest(123));
 
-    expect(CurrentConfig::galleryTitle())->toBe('');
+    expect(CurrentConfig::current()->galleryTitle())->toBe('');
 });
 
 test('hydrate invokes the setter with null for a nullable property when raw is null', function (): void {
-    CurrentConfig::setCountOrphans(5);
+    CurrentConfig::current()->setCountOrphans(5);
 
     invokeConfigServiceHydrate('count_orphans', null);
 
-    expect(CurrentConfig::countOrphans())->toBeNull();
+    expect(CurrentConfig::current()->countOrphans())->toBeNull();
 });

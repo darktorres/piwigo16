@@ -70,11 +70,15 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot();
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
 
         $checker = Kernel::container()->get(FilesystemIntegrityChecker::class);
         if (! $checker instanceof FilesystemIntegrityChecker) {
@@ -136,7 +140,11 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
 
     public function test_fs_quick_check_writes_nothing_when_the_period_is_disabled(): void
     {
-        CurrentConfig::setFsQuickCheckPeriod(0);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        }
+        $currentConfig->setFsQuickCheckPeriod(0);
 
         $this->checker->fsQuickCheck();
 

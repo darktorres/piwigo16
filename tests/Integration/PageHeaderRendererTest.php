@@ -50,12 +50,16 @@ final class PageHeaderRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
         // header.tpl's own {get_combined_css}/{get_combined_scripts
         // load='header'} tags reach ScriptLoader::urlService() -- unset by
         // default, real RequestBootstrap-only wiring this test never boots.
@@ -81,7 +85,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     {
         PageState::current()->addHeaderNote('Photos posted within the last 3 days.');
 
-        $this->renderer->render('Header Notes Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current());
+        $this->renderer->render('Header Notes Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), CurrentConfig::current());
 
         $output = CurrentTemplate::current()->get()->fetchOutput();
         self::assertStringContainsString('Photos posted within the last 3 days.', $output);
@@ -89,7 +93,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
 
     public function test_render_omits_the_header_notes_container_when_page_state_has_none(): void
     {
-        $this->renderer->render('No Header Notes Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current());
+        $this->renderer->render('No Header Notes Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), CurrentConfig::current());
 
         $output = CurrentTemplate::current()->get()->fetchOutput();
         self::assertStringNotContainsString('Photos posted within the last', $output);
@@ -97,9 +101,13 @@ final class PageHeaderRendererTest extends IntegrationTestCase
 
     public function test_render_sets_noindex_and_nofollow_meta_robots_when_meta_ref_is_disabled(): void
     {
-        CurrentConfig::setMetaRef(false);
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setMetaRef(false);
 
-        $this->renderer->render('Meta Robots Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current());
+        $this->renderer->render('Meta Robots Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), CurrentConfig::current());
 
         self::assertSame(['noindex' => 1, 'nofollow' => 1], PageState::current()->metaRobots);
 
@@ -109,9 +117,13 @@ final class PageHeaderRendererTest extends IntegrationTestCase
 
     public function test_render_does_not_set_meta_robots_when_meta_ref_is_enabled(): void
     {
-        CurrentConfig::setMetaRef(true);
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setMetaRef(true);
 
-        $this->renderer->render('Meta Ref Enabled Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current());
+        $this->renderer->render('Meta Ref Enabled Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), CurrentConfig::current());
 
         self::assertSame([], PageState::current()->metaRobots);
     }

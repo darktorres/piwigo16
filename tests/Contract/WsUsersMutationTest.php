@@ -398,7 +398,11 @@ final class WsUsersMutationTest extends ContractTestCase
     public function test_delete_protects_the_guest_id(): void
     {
         $token = $this->getPwgToken();
-        $guestId = \Piwigo\Config\CurrentConfig::guestId();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $guestId = $currentConfig->guestId();
 
         $response = $this->callWs('pwg.users.delete', [
             'user_id' => [$guestId],
@@ -875,7 +879,11 @@ final class WsUsersMutationTest extends ContractTestCase
     public function test_generatePasswordLink_guest_target_returns_error(): void
     {
         $token = $this->getPwgToken();
-        $guestId = \Piwigo\Config\CurrentConfig::guestId();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $guestId = $currentConfig->guestId();
 
         $response = $this->callWsAllowingServerError('pwg.users.generatePasswordLink', [
             'user_id' => $guestId,

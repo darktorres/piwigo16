@@ -236,7 +236,7 @@ final class PwgCategories
             ) {
                 $order_by = $cats[$params['cat_id'][0]]['image_order'];
             }
-            $order_by = $order_by === '' ? \Piwigo\Config\CurrentConfig::orderBy() : 'ORDER BY ' . $order_by;
+            $order_by = $order_by === '' ? \Piwigo\Config\CurrentConfig::current()->orderBy() : 'ORDER BY ' . $order_by;
             $favorite_ids = $urlService->getUserFavorites();
 
             $paginated_images = self::imageService()->getWithConditionsPaginated(
@@ -447,7 +447,7 @@ final class PwgCategories
             $where[] = 'status = "public"';
             $where[] = 'visible = 1';
 
-            $repr_user_id = \Piwigo\Config\CurrentConfig::guestId();
+            $repr_user_id = \Piwigo\Config\CurrentConfig::current()->guestId();
             // UserService::getUserData() computes the same effective
             // (feature-1053-widened) forbidden-categories value for any
             // given user id that CurrentUser::forbiddenCategories already
@@ -506,7 +506,7 @@ final class PwgCategories
         $paginated_cats = self::categoryService()->getListForWs(
             $where,
             $search_term,
-            \Piwigo\Config\CurrentConfig::linkedAlbumSearchLimit(),
+            \Piwigo\Config\CurrentConfig::current()->linkedAlbumSearchLimit(),
             $params['limit'],
             $params['cat_id'] > 0,
             $bound_params,
@@ -605,7 +605,7 @@ final class PwgCategories
                 $image_id = $row['user_representative_picture_id'];
             } elseif (is_numeric($row['representative_picture_id']) && (int) $row['representative_picture_id'] !== 0) { // if a representative picture is set, it has priority
                 $image_id = $row['representative_picture_id'];
-            } elseif (\Piwigo\Config\CurrentConfig::allowRandomRepresentative()) {
+            } elseif (\Piwigo\Config\CurrentConfig::current()->allowRandomRepresentative()) {
                 // searching a random representant among elements in sub-categories
                 $image_id = $categoryService->getRandomImageInCategory($row);
             } else { // searching a random representant among representant of sub-categories
@@ -646,7 +646,7 @@ final class PwgCategories
                     ? (int) $row['user_representative_picture_id']
                     : null;
 
-                if (\Piwigo\Config\CurrentConfig::representativeCacheOnSubcats() and $cached_representative_id !== $image_id) {
+                if (\Piwigo\Config\CurrentConfig::current()->representativeCacheOnSubcats() and $cached_representative_id !== $image_id) {
                     $user_representative_updates_for[$row['id']] = $image_id;
                 }
 
@@ -658,7 +658,7 @@ final class PwgCategories
             // management of the album thumbnail -- stops here
 
             if (! is_string($row['image_order']) || $row['image_order'] === '') {
-                $row['image_order'] = str_replace('ORDER BY ', '', \Piwigo\Config\CurrentConfig::orderBy());
+                $row['image_order'] = str_replace('ORDER BY ', '', \Piwigo\Config\CurrentConfig::current()->orderBy());
             }
 
             $cats[] = $row;
@@ -689,7 +689,7 @@ final class PwgCategories
                             if (isset($image_id) and ! in_array($image_id, $image_ids, true)) {
                                 $new_image_ids[] = $image_id;
                             }
-                            if (\Piwigo\Config\CurrentConfig::representativeCacheOnLevel()) {
+                            if (\Piwigo\Config\CurrentConfig::current()->representativeCacheOnLevel()) {
                                 $category_id = $category['id'];
                                 if (is_int($category_id)) {
                                     $user_representative_updates_for[$category_id] = $image_id;
@@ -802,7 +802,7 @@ final class PwgCategories
         $paginated_admin_cats = self::categoryService()->getAdminListForWs(
             $where,
             $search_term,
-            \Piwigo\Config\CurrentConfig::linkedAlbumSearchLimit(),
+            \Piwigo\Config\CurrentConfig::current()->linkedAlbumSearchLimit(),
             $bound_params,
             $bound_types
         );
@@ -839,7 +839,7 @@ final class PwgCategories
             $row['comment'] = $adminDescriptionEvent->categoryDescription;
 
             if (! is_string($row['image_order']) || $row['image_order'] === '') {
-                $row['image_order'] = str_replace('ORDER BY ', '', \Piwigo\Config\CurrentConfig::orderBy());
+                $row['image_order'] = str_replace('ORDER BY ', '', \Piwigo\Config\CurrentConfig::current()->orderBy());
             }
 
             if (in_array('full_name_with_admin_links', $params['additional_output'], true)) {
@@ -865,7 +865,7 @@ final class PwgCategories
         }
 
         $limit_reached = false;
-        if ($counter > \Piwigo\Config\CurrentConfig::linkedAlbumSearchLimit()) {
+        if ($counter > \Piwigo\Config\CurrentConfig::current()->linkedAlbumSearchLimit()) {
             $limit_reached = true;
         }
 
@@ -876,7 +876,7 @@ final class PwgCategories
                 'category',
                 ['id', 'nb_images', 'name', 'uppercats', 'global_rank', 'status', 'test']
             ),
-            'limit' => \Piwigo\Config\CurrentConfig::linkedAlbumSearchLimit(),
+            'limit' => \Piwigo\Config\CurrentConfig::current()->linkedAlbumSearchLimit(),
             'limit_reached' => $limit_reached,
         ];
     }
@@ -902,7 +902,7 @@ final class PwgCategories
             // property), not a real persisted preference -- known
             // limitation, same as AlbumsPageRenderer's own POS_PREF
             // assignment.
-            \Piwigo\Config\CurrentConfig::setNewcatDefaultPosition($params['position']);
+            \Piwigo\Config\CurrentConfig::current()->setNewcatDefaultPosition($params['position']);
         }
 
         // Docs/PLAN.md gap-closure, 2026-07-23: $params['visible']/
@@ -922,12 +922,12 @@ final class PwgCategories
         }
 
         if (! in_array($params['comment'], [null, ''], true)) {
-            $options['comment'] = (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['comment']) : $params['comment'];
+            $options['comment'] = (! \Piwigo\Config\CurrentConfig::current()->allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['comment']) : $params['comment'];
         }
 
         $categoryConn = DbConnection::build();
         $creation_output = self::categoryService()->createVirtualCategory(
-            (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
+            (! \Piwigo\Config\CurrentConfig::current()->allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
             \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
             \Piwigo\Users\CurrentUser::current(),
             $params['parent'],
@@ -1066,7 +1066,7 @@ final class PwgCategories
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
                 $perform_update = true;
-                $update[$key] = (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params[$key]) : $params[$key];
+                $update[$key] = (! \Piwigo\Config\CurrentConfig::current()->allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params[$key]) : $params[$key];
             }
         }
 
@@ -1139,7 +1139,7 @@ final class PwgCategories
      * API method
      *
      * Deletes the album thumbnail. Only possible if
-     * \Piwigo\Config\CurrentConfig::allowRandomRepresentative() or if the album has no direct photos.
+     * \Piwigo\Config\CurrentConfig::current()->allowRandomRepresentative() or if the album has no direct photos.
      *
      * @param array{category_id: int, ...} $params no 'default' key -- mandatory,
      *   always present, WsParamType::ID guarantees a plain int.
@@ -1153,7 +1153,7 @@ final class PwgCategories
 
         $has_images = self::categoryService()->hasImages($params['category_id']);
 
-        if (! \Piwigo\Config\CurrentConfig::allowRandomRepresentative() and $has_images) {
+        if (! \Piwigo\Config\CurrentConfig::current()->allowRandomRepresentative() and $has_images) {
             return new PwgError(401, 'not permitted');
         }
 

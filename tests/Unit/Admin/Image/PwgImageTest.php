@@ -82,7 +82,7 @@ function pwgImageTestMarker(): string
  */
 function pwgImageTestMake(string $sourceFilepath, ?string $library = null): PwgImage
 {
-    return new PwgImage($sourceFilepath, new CurrentLogger(), \Piwigo\PluginConfig\EventDispatcher::get(), $library);
+    return new PwgImage($sourceFilepath, new CurrentLogger(), \Piwigo\PluginConfig\EventDispatcher::get(), new \Piwigo\Config\CurrentConfig(), $library);
 }
 
 /**
@@ -737,17 +737,17 @@ test('get_rotation_angle maps EXIF orientation 8 to a 90-degree rotation', funct
 });
 
 test('is_ext_imagick returns false when the configured binary directory has no real ImageMagick binary', function (): void {
-    $original = \Piwigo\Config\CurrentConfig::extImagickDir();
+    $original = \Piwigo\Config\CurrentConfig::current()->extImagickDir();
     // Concatenated adjacent to the (memoized, real) command name via
     // escapeshellarg() -- see get_ext_imagick_command()'s own [SEC-16]
     // comment -- so this genuinely points `exec()` at a nonexistent path
     // regardless of which real binary this environment already resolved.
-    \Piwigo\Config\CurrentConfig::setExtImagickDir('/totally/nonexistent/dir/');
+    \Piwigo\Config\CurrentConfig::current()->setExtImagickDir('/totally/nonexistent/dir/');
 
     try {
         expect(PwgImage::is_ext_imagick())->toBeFalse();
     } finally {
-        \Piwigo\Config\CurrentConfig::setExtImagickDir($original);
+        \Piwigo\Config\CurrentConfig::current()->setExtImagickDir($original);
     }
 });
 
@@ -766,8 +766,8 @@ test('is_ext_imagick detects the real, installed magick binary and parses its ve
 });
 
 test('get_graphics_library reports a real ImageMagick PHP-extension version when ext_imagick itself is unavailable', function (): void {
-    $original = \Piwigo\Config\CurrentConfig::extImagickDir();
-    \Piwigo\Config\CurrentConfig::setExtImagickDir('/totally/nonexistent/dir/');
+    $original = \Piwigo\Config\CurrentConfig::current()->extImagickDir();
+    \Piwigo\Config\CurrentConfig::current()->setExtImagickDir('/totally/nonexistent/dir/');
 
     try {
         // is_ext_imagick() forced false above; the 'imagick' PHP extension
@@ -778,7 +778,7 @@ test('get_graphics_library reports a real ImageMagick PHP-extension version when
         expect($library)->toBeString();
         expect($library)->toStartWith('imagick/');
     } finally {
-        \Piwigo\Config\CurrentConfig::setExtImagickDir($original);
+        \Piwigo\Config\CurrentConfig::current()->setExtImagickDir($original);
     }
 });
 
@@ -846,7 +846,7 @@ test('is_ext_imagick returns false when exec() itself is unavailable, without ev
 });
 
 test('get_graphics_library resolves through the gd case and appends a real GD version string', function (): void {
-    $script = '\Piwigo\Config\CurrentConfig::setExtImagickDir("/totally/nonexistent/dir/");'
+    $script = '\Piwigo\Config\CurrentConfig::current()->setExtImagickDir("/totally/nonexistent/dir/");'
         . 'echo json_encode(['
         . '"imagick_extension_loaded" => extension_loaded("imagick"), '
         . '"result" => \Piwigo\Admin\Image\PwgImage::get_graphics_library(),'

@@ -21,7 +21,7 @@ use Piwigo\Users\UserService;
  */
 final class UserListPageRenderer
 {
-    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, \Piwigo\Group\GroupService $groupService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, \Piwigo\Group\GroupService $groupService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer, \Piwigo\Config\CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
         $conn = DbConnection::build();
@@ -56,8 +56,8 @@ final class UserListPageRenderer
         $template->assign(
             [
                 'ADMIN_PAGE_TITLE' => $lang->t('Users'),
-                'ACTIVATE_COMMENTS' => \Piwigo\Config\CurrentConfig::activateComments(),
-                'Double_Password' => \Piwigo\Config\CurrentConfig::doublePasswordTypeInAdmin(),
+                'ACTIVATE_COMMENTS' => $currentConfig->activateComments(),
+                'Double_Password' => $currentConfig->doublePasswordTypeInAdmin(),
             ]
         );
 
@@ -74,9 +74,9 @@ final class UserListPageRenderer
         // conf's guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // fetch value or int config default -- same normalization already used by
         // functions.inc.php's get_webmaster_mail_address() and build_user()).
-        $guest_id = \Piwigo\Config\CurrentConfig::guestId();
-        $default_user_id = \Piwigo\Config\CurrentConfig::defaultUserId();
-        $webmaster_id = \Piwigo\Config\CurrentConfig::webmasterId();
+        $guest_id = $currentConfig->guestId();
+        $default_user_id = $currentConfig->defaultUserId();
+        $webmaster_id = $currentConfig->webmasterId();
 
         $protected_users = [
             $currentUser->get()
@@ -101,7 +101,7 @@ final class UserListPageRenderer
             $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id]));
         }
 
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = $currentConfig->userFields();
 
         $owner_username = $userService->getUsernameById(\Piwigo\Common\ValueObject\UserId::from($webmaster_id), $user_fields['id'], $user_fields['username'])->value ?? '';
 
@@ -172,7 +172,7 @@ final class UserListPageRenderer
         $template->assign('nb_users_by_status', $nb_users_by_status);
 
         // user level options
-        $available_permission_levels = \Piwigo\Config\CurrentConfig::availablePermissionLevels();
+        $available_permission_levels = $currentConfig->availablePermissionLevels();
 
         $level_options = [];
         foreach ($available_permission_levels as $level) {

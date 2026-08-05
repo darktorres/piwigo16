@@ -14,7 +14,7 @@ use Piwigo\Config\CurrentConfig;
  * matching composer package -- no call-site changes required.
  *
  * Disk roots use runtime Config values so they honour site-level overrides
- * (e.g. CurrentConfig::uploadDir(), CurrentConfig::dataLocation()). Required via
+ * (e.g. CurrentConfig::current()->uploadDir(), CurrentConfig::current()->dataLocation()). Required via
  * StorageRegistry::fromConfig(CurrentPaths::get()->root . 'config/storage.php')
  * -- no constructor/parameter seam available for a plain `require`d array
  * file, so $paths is captured once here the same way LegacyFileConf/
@@ -27,12 +27,12 @@ $paths = \Piwigo\Core\CurrentPaths::get();
 return [
     // User photo uploads: upload/YYYY/MM/DD/
     'uploads' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter(rtrim($paths->root . CurrentConfig::uploadDir(), '/')),
+        new LocalFilesystemAdapter(rtrim($paths->root . CurrentConfig::current()->uploadDir(), '/')),
     ),
 
     // Derivative/thumbnail tree: _data/i/
     'derivatives' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter($paths->root . CurrentConfig::dataLocation() . 'i'),
+        new LocalFilesystemAdapter($paths->root . CurrentConfig::current()->dataLocation() . 'i'),
     ),
 
     // Watermark PNG files: local/watermarks/
@@ -42,7 +42,7 @@ return [
 
     // Theme files
     'themes' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter($paths->root . CurrentConfig::themesDir()),
+        new LocalFilesystemAdapter($paths->root . CurrentConfig::current()->themesDir()),
     ),
 
     // Plugin files
@@ -52,7 +52,7 @@ return [
 
     // Data exports
     'exports' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter($paths->root . CurrentConfig::dataLocation() . 'exports'),
+        new LocalFilesystemAdapter($paths->root . CurrentConfig::current()->dataLocation() . 'exports'),
     ),
 
     // Site-local overrides: local/watermarks/, local/logo/, local/config/, …

@@ -51,6 +51,7 @@ final readonly class ImageService
         private ActivityLoggerInterface $activityLogger,
         private SessionService $sessionService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -68,7 +69,8 @@ final readonly class ImageService
         return new CategoryService(
             $this->lang,
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
-            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class))
+            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class)),
+            $this->currentConfig
         );
     }
 
@@ -79,8 +81,8 @@ final readonly class ImageService
     {
 
         return [
-            'period' => \Piwigo\Config\CurrentConfig::slideshowPeriod(),
-            'repeat' => \Piwigo\Config\CurrentConfig::slideshowRepeat(),
+            'period' => $this->currentConfig->slideshowPeriod(),
+            'repeat' => $this->currentConfig->slideshowRepeat(),
             'play' => true,
         ];
     }
@@ -98,8 +100,8 @@ final readonly class ImageService
     {
 
         $period = $params['period'] ?? 0;
-        $min = \Piwigo\Config\CurrentConfig::slideshowPeriodMin();
-        $max = \Piwigo\Config\CurrentConfig::slideshowPeriodMax();
+        $min = $this->currentConfig->slideshowPeriodMin();
+        $max = $this->currentConfig->slideshowPeriodMax();
 
         if ($period < $min) {
             $params['period'] = $min;
@@ -237,7 +239,7 @@ final readonly class ImageService
             }
 
             $ok = true;
-            if (! \Piwigo\Config\CurrentConfig::neverDeleteOriginals()) {
+            if (! $this->currentConfig->neverDeleteOriginals()) {
                 foreach ($files as $path) {
                     if (is_file($path) and ! unlink($path)) {
                         $ok = false;
@@ -254,7 +256,7 @@ final readonly class ImageService
                 if ($representativeExt !== null) {
                     $derivativeInfos['representative_ext'] = $representativeExt;
                 }
-                new DerivativeCacheService()
+                new DerivativeCacheService($this->currentConfig)
                     ->deleteElementDerivatives($derivativeInfos);
                 $newIds[] = $rowId;
             } else {
@@ -338,7 +340,7 @@ final readonly class ImageService
     {
         $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
-        $emptyLoungeRunning = \Piwigo\Config\CurrentConfig::emptyLoungeRunning();
+        $emptyLoungeRunning = $this->currentConfig->emptyLoungeRunning();
         if ($emptyLoungeRunning !== null) {
             [$runningExecId, $runningExecStartTime] = explode('-', $emptyLoungeRunning);
             if (time() - (int) $runningExecStartTime > 60) {
@@ -552,14 +554,14 @@ final readonly class ImageService
 
     public function countOrphans(): int
     {
-        if (\Piwigo\Config\CurrentConfig::countOrphans() === null) {
+        if ($this->currentConfig->countOrphans() === null) {
             // we don't care about the list of image_ids, we only care about the number
             // of orphans, so let's use a faster method than calling count(getOrphans())
             $counter = $this->repo->countAllImages() - $this->repo->countImagesInCategories();
             \Piwigo\Config\CurrentConfigService::current()->get()->confUpdateParam('count_orphans', $counter, updateGlobal: true);
         }
 
-        return \Piwigo\Config\CurrentConfig::countOrphans() ?? 0;
+        return $this->currentConfig->countOrphans() ?? 0;
     }
 
     /**

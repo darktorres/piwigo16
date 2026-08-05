@@ -37,9 +37,19 @@ use Piwigo\Mail\NotificationByMailSender;
 function nbm_sender_with_timeout_inputs(string $maxExecutionTime, float $percent, int $timeoutDefault): NotificationByMailSender
 {
     ini_set('max_execution_time', $maxExecutionTime);
-    CurrentConfig::setNbmMaxTreatmentTimeoutPercent($percent);
-    CurrentConfig::setNbmTreatmentTimeoutDefault($timeoutDefault);
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    // Must be resolved (and written to) *after* boot -- PresentationAccessor::
+    // notificationByMailSender() constructor-injects the container-shared
+    // CurrentConfig instance, which only exists once Kernel::boot() has built
+    // the container; the pre-boot memoized fallback (CurrentConfig::current()
+    // before boot) is a distinct object never seen by the sender under
+    // construction below.
+    $currentConfig = Kernel::container()->get(CurrentConfig::class);
+    if (! $currentConfig instanceof CurrentConfig) {
+        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+    }
+    $currentConfig->setNbmMaxTreatmentTimeoutPercent($percent);
+    $currentConfig->setNbmTreatmentTimeoutDefault($timeoutDefault);
 
     return PresentationAccessor::notificationByMailSender();
 }
@@ -54,7 +64,7 @@ function nbm_sendmail_timeout(NotificationByMailSender $sender): float
 
 afterEach(function (): void {
     Kernel::reset();
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     ini_set('max_execution_time', '0');
 });
 

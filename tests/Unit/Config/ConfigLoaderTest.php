@@ -7,27 +7,27 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\MissingRequiredConfigException;
 
 beforeEach(function (): void {
-    CurrentConfig::reset();
+    CurrentConfig::current()->reset();
 });
 
 afterEach(function (): void {
-    CurrentConfig::reset();
+    CurrentConfig::current()->reset();
 });
 
 test('applyDefaults is a genuine no-op -- every property already carries its own default', function (): void {
-    CurrentConfig::setGalleryTitle('Already set');
+    CurrentConfig::current()->setGalleryTitle('Already set');
 
     ConfigLoader::applyDefaults();
 
-    expect(CurrentConfig::galleryTitle())->toBe('Already set');
+    expect(CurrentConfig::current()->galleryTitle())->toBe('Already set');
 });
 
 test('applyEnvOverrides is a genuine no-op', function (): void {
-    CurrentConfig::setGalleryTitle('Already set');
+    CurrentConfig::current()->setGalleryTitle('Already set');
 
     ConfigLoader::applyEnvOverrides();
 
-    expect(CurrentConfig::galleryTitle())->toBe('Already set');
+    expect(CurrentConfig::current()->galleryTitle())->toBe('Already set');
 });
 
 test('validateRequired throws when a required key is missing', function (): void {
@@ -39,7 +39,7 @@ test('validateRequired throws when a required key is missing', function (): void
 });
 
 test('validateRequired passes when every required key is set', function (): void {
-    CurrentConfig::setSecretKey('a-real-secret');
+    CurrentConfig::current()->setSecretKey('a-real-secret');
 
     ConfigLoader::validateRequired(); // should not throw
     expect(true)->toBeTrue();

@@ -20,7 +20,7 @@ use Piwigo\Template\Template;
  */
 final class UserActivityPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Users\UserService $userService, \Piwigo\Image\ImageService $imageService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Group\GroupService $groupService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Users\UserService $userService, \Piwigo\Image\ImageService $imageService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Group\GroupService $groupService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
@@ -38,7 +38,7 @@ final class UserActivityPageRenderer
         // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific column
         // names; narrow once here and reuse below.
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = $currentConfig->userFields();
 
         $activity_service = $activityService;
 
@@ -86,7 +86,7 @@ final class UserActivityPageRenderer
         $template->assign([
             'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                 ->getToken(),
-            'INHERIT' => \Piwigo\Config\CurrentConfig::inheritanceByDefault(),
+            'INHERIT' => $currentConfig->inheritanceByDefault(),
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($urlService, ['users']),
         ]);
 

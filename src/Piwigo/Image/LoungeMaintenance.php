@@ -21,6 +21,14 @@ use Piwigo\Db\EntityManagerFactory;
  * `needsEmptying()` gates (via include/common.inc.php's own
  * `needsEmptying()` caller, isn't deptrac-scanned) is now a same-layer
  * (Image -> Image) call instead of a cross-layer one.
+ *
+ * Singleton/service-locator elimination campaign, Phase 9: `needsEmptying()`
+ * is a purely static method with no instance/constructor at all (same
+ * shape as `Core\FilesystemHelper`) -- there is no `$this` to receive
+ * `CurrentConfig` via constructor injection through, so it reads via the
+ * `CurrentConfig::current()` transitional bridge instead, matching
+ * FilesystemHelper's own established "no wrapper needed" precedent for a
+ * stateless static utility.
  */
 final class LoungeMaintenance
 {
@@ -32,7 +40,7 @@ final class LoungeMaintenance
     public static function needsEmptying(): bool
     {
 
-        if (! \Piwigo\Config\CurrentConfig::loungeActive()) {
+        if (! \Piwigo\Config\CurrentConfig::current()->loungeActive()) {
             return false;
         }
 
@@ -56,7 +64,7 @@ final class LoungeMaintenance
         // an expected real path.
         $age = $dbnow - ($date_available !== false ? $date_available : 0);
 
-        $lounge_max_duration = \Piwigo\Config\CurrentConfig::loungeMaxDuration();
+        $lounge_max_duration = \Piwigo\Config\CurrentConfig::current()->loungeMaxDuration();
 
         return $age > $lounge_max_duration;
     }

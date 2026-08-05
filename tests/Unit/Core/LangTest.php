@@ -256,7 +256,7 @@ function langTestMake(
     ?InstallationFlag $installationFlag = null,
 ): Lang {
     return new Lang(
-        $translator ?? new Translator(),
+        $translator ?? new Translator(new \Piwigo\Config\CurrentConfig()),
         $htmlRenderer ?? new HtmlService(),
         Paths::fromRoot($root ?? sys_get_temp_dir()),
         $installationFlag ?? new InstallationFlag(),
@@ -323,7 +323,7 @@ test('has reflects the loaded data set', function (): void {
 });
 
 test('attachGlobals seeds from Translator\'s already-mirrored strings', function (): void {
-    $translator = new Translator();
+    $translator = new Translator(new \Piwigo\Config\CurrentConfig());
     $translator->loadArray(['greeting' => 'hi']);
     $lang = langTestMake(translator: $translator);
 
@@ -333,7 +333,7 @@ test('attachGlobals seeds from Translator\'s already-mirrored strings', function
 });
 
 test('attachGlobals takes a one-time snapshot -- a later Translator mirror change is not retroactively visible', function (): void {
-    $translator = new Translator();
+    $translator = new Translator(new \Piwigo\Config\CurrentConfig());
     $translator->loadArray(['greeting' => 'hi']);
     $lang = langTestMake(translator: $translator);
     $lang->attachGlobals();
@@ -449,7 +449,7 @@ test('attachGlobals silently drops a mirrored key that PHP auto-casts to an int 
     // makes impossible to satisfy for a literal numeric-string key, so
     // $mirror is seeded directly via reflection here instead of going
     // through that type-checked method.
-    $translator = new Translator();
+    $translator = new Translator(new \Piwigo\Config\CurrentConfig());
     $mirror = ['42' => 'forty-two', 'greeting' => 'hi'];
     new ReflectionProperty(Translator::class, 'mirror')->setValue($translator, $mirror);
     $lang = langTestMake(translator: $translator);

@@ -11,12 +11,12 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
 
 beforeEach(function (): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     Kernel::boot(Paths::fromRoot('/tmp/piwigo-extension-type-test'));
 });
 
 afterEach(function (): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     Kernel::reset();
 });
 
@@ -27,9 +27,9 @@ test('table returns each type\'s own table', function (): void {
 });
 
 test('pemCategoryId returns each type\'s own pem category id', function (): void {
-    expect(ExtensionType::Plugin->pemCategoryId())->toBe(CurrentConfig::pemPluginsCategory())
-        ->and(ExtensionType::Theme->pemCategoryId())->toBe(CurrentConfig::pemThemesCategory())
-        ->and(ExtensionType::Language->pemCategoryId())->toBe(CurrentConfig::pemLanguagesCategory());
+    expect(ExtensionType::Plugin->pemCategoryId())->toBe(CurrentConfig::current()->pemPluginsCategory())
+        ->and(ExtensionType::Theme->pemCategoryId())->toBe(CurrentConfig::current()->pemThemesCategory())
+        ->and(ExtensionType::Language->pemCategoryId())->toBe(CurrentConfig::current()->pemLanguagesCategory());
 });
 
 test('fromPluralWsParam maps each type\'s plural pwg.extensions.ignoreUpdate wire value back to its enum case', function (): void {
@@ -48,7 +48,7 @@ test('scanDirectory returns each type\'s own filesystem root', function (): void
     // P23 batch 8f-4: the PHPWG_PLUGINS_PATH define is gone --
     // Piwigo\Admin\PluginLoader::pluginsPath() is the canonical value now.
     expect(ExtensionType::Plugin->scanDirectory())->toBe(\Piwigo\Admin\PluginLoader::pluginsPath())
-        ->and(ExtensionType::Theme->scanDirectory())->toBe(CurrentConfig::themesPath())
+        ->and(ExtensionType::Theme->scanDirectory())->toBe(CurrentConfig::current()->themesPath())
         ->and(ExtensionType::Language->scanDirectory())->toBe(CurrentPaths::get()->root . 'language/');
 });
 

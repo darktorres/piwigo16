@@ -92,7 +92,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        CurrentConfig::current()->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
@@ -108,7 +108,8 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),
             new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
-            new SessionService($this->em->getRepository(SessionEntity::class)),
+            new SessionService($this->em->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
+            \Piwigo\Config\CurrentConfig::current(),
         );
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
@@ -208,7 +209,8 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),
             new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
-            new SessionService($this->em->getRepository(SessionEntity::class)),
+            new SessionService($this->em->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
+            \Piwigo\Config\CurrentConfig::current(),
         );
 
         $result = $service->notifyExpiration('fixture_admin', 'fixture_admin@example.test', 5);
@@ -231,7 +233,8 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),
             new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
-            new SessionService($this->em->getRepository(SessionEntity::class)),
+            new SessionService($this->em->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
+            \Piwigo\Config\CurrentConfig::current(),
         );
 
         $result = $service->notifyExpiration('fixture_admin', 'fixture_admin@example.test', 1);

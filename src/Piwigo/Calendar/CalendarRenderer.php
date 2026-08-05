@@ -50,6 +50,7 @@ final readonly class CalendarRenderer
         private TemplateInterface $template,
         private UrlServiceInterface $urlService,
         private \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -77,7 +78,7 @@ final readonly class CalendarRenderer
         $permissionService = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class));
         $calendarService = new CalendarService(
             $permissionService,
-            new CategoryService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $permissionService)
+            new CategoryService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $permissionService, $this->currentConfig)
         );
 
         if ($section === 'categories') { // we will regenerate the items by including subcats elements
@@ -143,7 +144,7 @@ final readonly class CalendarRenderer
         $cal_style = $chronology_style;
         $classname = $styles[$cal_style]['classname'];
 
-        $calendar = new $classname($this->lang, new CalendarRepository($conn), $this->urlService);
+        $calendar = new $classname($this->lang, new CalendarRepository($conn), $this->urlService, $this->currentConfig);
         $calendar->chronology_field = $chronologyField;
 
         // Retrieve view
@@ -260,7 +261,7 @@ final readonly class CalendarRenderer
         } // end category calling
 
         if ($must_show_list) {
-            $conf_order_by = \Piwigo\Config\CurrentConfig::orderBy();
+            $conf_order_by = $this->currentConfig->orderBy();
 
             if ($superOrderBy) {
                 $order_by = $conf_order_by;

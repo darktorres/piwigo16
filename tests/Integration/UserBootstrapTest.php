@@ -95,7 +95,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot();
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
 
         $this->conn = DbConnection::build();
 
@@ -203,7 +203,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         // key never resolves to a real user.
         $this->bootstrap()->initialize();
 
-        self::assertSame(\Piwigo\Config\CurrentConfig::guestId(), CurrentUser::current()->get()->id->value);
+        self::assertSame(\Piwigo\Config\CurrentConfig::current()->guestId(), CurrentUser::current()->get()->id->value);
     }
 
     public function test_initialize_logs_in_via_ws_uploadAsync_and_marks_the_session_connected_with(): void
@@ -228,10 +228,11 @@ final class UserBootstrapTest extends IntegrationTestCase
             new PasswordService(new PasswordRepository($this->conn), new DeploymentPolicy()),
             new CookieService(),
             EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
-            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
             EventDispatcher::get(),
             \Piwigo\Core\PageState::current(),
             \Piwigo\Users\CurrentUser::current(),
+            \Piwigo\Config\CurrentConfig::current(),
         )->pwgLogin(...));
 
         $_SERVER = [];

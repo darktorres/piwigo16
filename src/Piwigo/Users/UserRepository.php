@@ -83,10 +83,10 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     public function getWebmasterMailAddress(): string
     {
 
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::current()->userFields();
         $email_field = $user_fields['email'];
         $id_field = $user_fields['id'];
-        $webmaster_id = \Piwigo\Config\CurrentConfig::webmasterId();
+        $webmaster_id = \Piwigo\Config\CurrentConfig::current()->webmasterId();
 
         $value = $this->getEntityManager()
             ->getConnection()
@@ -432,7 +432,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         // reasoning as GroupRepository::delete()'s own comment).
         $em->clear();
 
-        $userFields = \Piwigo\Config\CurrentConfig::userFields();
+        $userFields = \Piwigo\Config\CurrentConfig::current()->userFields();
         $userIdField = $userFields['id'];
         $conn->createQueryBuilder()
             ->delete(Tables::users())

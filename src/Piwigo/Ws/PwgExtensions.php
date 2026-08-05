@@ -102,7 +102,7 @@ final class PwgExtensions
             return new PwgError(403, Lang::current()->t('Webmaster status is required.'));
         }
 
-        if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall() and $params['action'] === 'delete') {
+        if (! \Piwigo\Config\CurrentConfig::current()->enableExtensionsInstall() and $params['action'] === 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -127,6 +127,7 @@ final class PwgExtensions
             \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
             \Piwigo\Bootstrap\CoreDomainAccessor::userService(),
             \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
+            \Piwigo\Config\CurrentConfig::current(),
         );
         $fsEntry = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService, Lang::current())[$params['plugin']] ?? null;
@@ -159,7 +160,7 @@ final class PwgExtensions
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall() and $params['action'] === 'delete') {
+        if (! \Piwigo\Config\CurrentConfig::current()->enableExtensionsInstall() and $params['action'] === 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -179,6 +180,7 @@ final class PwgExtensions
             \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
             \Piwigo\Bootstrap\CoreDomainAccessor::userService(),
             \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
+            \Piwigo\Config\CurrentConfig::current(),
         );
         $fsEntry = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $urlService, Lang::current())[$params['theme']] ?? null;
@@ -207,7 +209,7 @@ final class PwgExtensions
      */
     public static function update(array $params, PwgServer &$service): PwgError|string
     {
-        if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
+        if (! \Piwigo\Config\CurrentConfig::current()->enableExtensionsInstall()) {
             return new PwgError(401, 'Piwigo extensions install/update system is disabled');
         }
 
@@ -241,7 +243,7 @@ final class PwgExtensions
         $repo = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
         $pemCatalog = new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger());
         $pluginMigrationRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
-        $lifecycle = new ExtensionLifecycle(Lang::current(), $repo, $pemCatalog, $urlService, CurrentConfigService::current()->get(), $pluginMigrationRepo, \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\CoreDomainAccessor::userService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService());
+        $lifecycle = new ExtensionLifecycle(Lang::current(), $repo, $pemCatalog, $urlService, CurrentConfigService::current()->get(), $pluginMigrationRepo, \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\CoreDomainAccessor::userService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Config\CurrentConfig::current());
 
         if ($type === ExtensionType::Plugin) {
             $dbPluginsById = $repo->findAll(ExtensionType::Plugin);

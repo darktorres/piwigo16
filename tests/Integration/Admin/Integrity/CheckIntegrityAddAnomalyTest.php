@@ -31,7 +31,7 @@ use Piwigo\Lang\Translator;
 // used throughout the campaign's own test fallout fixes.
 function checkIntegrityAddAnomalyTestLang(): Lang
 {
-    return new Lang(new Translator(), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new \Piwigo\Config\CurrentConfig()), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 function checkIntegrityAddAnomalyNew(): CheckIntegrity
@@ -39,7 +39,7 @@ function checkIntegrityAddAnomalyNew(): CheckIntegrity
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
     expect($repo)->toBeInstanceOf(IntegrityIgnoredAnomalyRepository::class);
 
-    return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current());
+    return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(\Piwigo\Config\CurrentConfig::current()), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current());
 }
 
 test('add_anomaly records a new anomaly with is_callable computed from a real function name', function (): void {

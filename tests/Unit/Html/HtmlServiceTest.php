@@ -42,14 +42,14 @@ beforeEach(function (): void {
     }
     CurrentUser::current()->reset();
     CurrentTemplate::current()->reset();
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
 });
 
 afterEach(function (): void {
     Kernel::reset();
     CurrentUser::current()->reset();
     CurrentTemplate::current()->reset();
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
 });
 
 function htmlServiceTestRenderCommentContent(HtmlService $service, string $content): string
@@ -1013,14 +1013,23 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
     // fresh temp root" Template setup as PictureRateRendererTest.php.
     $root = sys_get_temp_dir() . '/pwg-html-service-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
-    CurrentConfig::setDataLocation('data/');
-    CurrentConfig::setDataDirChecked('1');
 
     // KernelContainerOverride::with() rebinds Paths::class for this test's
     // own scope -- CurrentPaths (singleton/service-locator elimination
     // campaign, Phase 3) is a pure shim now, reading whatever the live
-    // container has, not an independently-settable static.
+    // container has, not an independently-settable static. It builds a
+    // genuinely new container (Container::build(), not a mutation of the
+    // outer one), so CurrentConfig -- itself container-shared since Phase 9
+    // -- resolves to a brand-new instance inside the closure too; the
+    // setDataLocation()/setDataDirChecked() calls below must therefore run
+    // AFTER entering the closure, against that new instance, or
+    // Template::__construct()'s own dataDirChecked()===null branch reaches
+    // CurrentConfigService::current()->get() (never set() in this Unit
+    // test) and throws.
     KernelContainerOverride::with([\Piwigo\Core\Paths::class => \Piwigo\Core\Paths::fromRoot($root)], function () use ($root): void {
+        CurrentConfig::current()->setDataLocation('data/');
+        CurrentConfig::current()->setDataDirChecked('1');
+
         $template = new \Piwigo\Template\Template();
         $template->assign('themeconf', ['icon_dir' => '/my-theme/icons']);
         CurrentTemplate::current()->set($template);
@@ -1192,7 +1201,7 @@ test('setStatusHeader keeps the given text unchanged when it is genuinely non-em
 
 test('registerDefaultMenubarBlocks does nothing for a BlockManager whose id is not "menubar"', function (): void {
     $service = new HtmlService();
-    $menu = new BlockManager('sidebar', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
+    $menu = new BlockManager('sidebar', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current());
 
     $service->registerDefaultMenubarBlocks(new BlockManagerRegisterBlocks($menu));
 
@@ -1227,7 +1236,7 @@ test('getSrcImageUrlProtectionHandler uses "e" for an original image and "r" for
 });
 
 test('getElementUrlProtectionHandler passes a non-image extension through unchanged when protection is scoped to images', function (): void {
-    CurrentConfig::setOriginalUrlProtection('images');
+    CurrentConfig::current()->setOriginalUrlProtection('images');
     $service = new HtmlService();
 
     $result = htmlServiceTestElementUrlProtection($service, 'original-url-unchanged', ['id' => 3, 'path' => 'upload/video.mp4']);
@@ -1236,7 +1245,7 @@ test('getElementUrlProtectionHandler passes a non-image extension through unchan
 });
 
 test('getElementUrlProtectionHandler builds an action url for an image extension when protection is scoped to images', function (): void {
-    CurrentConfig::setOriginalUrlProtection('images');
+    CurrentConfig::current()->setOriginalUrlProtection('images');
     $service = new HtmlService();
 
     $result = htmlServiceTestElementUrlProtection($service, 'ignored', ['id' => 3, 'path' => 'upload/photo.jpg']);

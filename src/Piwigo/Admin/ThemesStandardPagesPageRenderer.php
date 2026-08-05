@@ -54,6 +54,7 @@ final class ThemesStandardPagesPageRenderer
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void
@@ -208,7 +209,7 @@ final class ThemesStandardPagesPageRenderer
         // path stored in config. null (not the raw config value) is what
         // gates the template's own "existing logo preview" vs. "upload a
         // logo" UI toggle, so an unset/empty config value must stay null here.
-        $configured_logo_path = \Piwigo\Config\CurrentConfig::standardPagesSelectedLogoPath();
+        $configured_logo_path = $this->currentConfig->standardPagesSelectedLogoPath();
         $std_pgs_selected_logo_path = is_string($configured_logo_path) && $configured_logo_path !== ''
             ? $this->urlService->getRootUrl() . 'logo.php'
             : null;
@@ -216,10 +217,10 @@ final class ThemesStandardPagesPageRenderer
         // Send all info to template
         $template->assign(
             [
-                'use_standard_pages' => \Piwigo\Config\CurrentConfig::useStandardPages(),
-                'std_pgs_selected_logo' => \Piwigo\Config\CurrentConfig::standardPagesSelectedLogo(),
+                'use_standard_pages' => $this->currentConfig->useStandardPages(),
+                'std_pgs_selected_logo' => $this->currentConfig->standardPagesSelectedLogo(),
                 'std_pgs_logo_options' => $std_pgs_logo_options,
-                'std_pgs_selected_skin' => \Piwigo\Config\CurrentConfig::standardPagesSelectedSkin(),
+                'std_pgs_selected_skin' => $this->currentConfig->standardPagesSelectedSkin(),
                 'std_pgs_skin_options' => $std_pgs_skin_options,
                 'is_standard_pages_used' => $is_standard_pages_used,
                 'standard_pages_used_by' => $standard_pages_used_by,

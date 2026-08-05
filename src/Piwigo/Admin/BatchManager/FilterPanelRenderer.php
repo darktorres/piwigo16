@@ -58,6 +58,7 @@ final class FilterPanelRenderer
         \Piwigo\Core\PageState $pageState,
         \Piwigo\Tag\TagService $tagService,
         \Piwigo\Html\HtmlService $htmlService,
+        \Piwigo\Config\CurrentConfig $currentConfig,
     ): void {
         $conn = DbConnection::build();
 
@@ -95,7 +96,7 @@ final class FilterPanelRenderer
             ],
         ];
 
-        if (\Piwigo\Config\CurrentConfig::enableSynchronization()) {
+        if ($currentConfig->enableSynchronization()) {
             $prefilters[] = [
                 'ID' => 'no_virtual_album',
                 'NAME' => $lang->t('With no virtual album'),
@@ -119,7 +120,7 @@ final class FilterPanelRenderer
 
         $template->assign(
             [
-                'conf_checksum_compute_blocksize' => \Piwigo\Config\CurrentConfig::checksumComputeBlocksize(),
+                'conf_checksum_compute_blocksize' => $currentConfig->checksumComputeBlocksize(),
                 'prefilters' => $prefilters,
                 'filter' => $bulk_manager_filter,
                 'selection' => $collection,
@@ -152,7 +153,7 @@ final class FilterPanelRenderer
         }
 
         // privacy level
-        $available_permission_levels = \Piwigo\Config\CurrentConfig::availablePermissionLevels();
+        $available_permission_levels = $currentConfig->availablePermissionLevels();
 
         $level_options = [];
         foreach ($available_permission_levels as $level) {

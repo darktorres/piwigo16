@@ -67,14 +67,18 @@ final class MenubarRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         // Skips Template's own data_dir_checked write, which would
         // otherwise reach for a full RequestBootstrap dependency this
         // test never boots -- same as CategoryDefaultRendererTest/
         // PictureCommentRendererTest's identical comment.
-        CurrentConfig::setDataDirChecked('1');
+        $currentConfig->setDataDirChecked('1');
 
         // Real menu-block registration (normally wired by
         // RequestBootstrap::finalize(), never booted here) -- without it
@@ -151,7 +155,7 @@ final class MenubarRendererTest extends IntegrationTestCase
             qsearchDetails: ['q' => '<script>alert(1)</script>'],
         ));
 
-        $this->renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), CurrentTemplate::current());
+        $this->renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current());
 
         self::assertSame('&lt;script&gt;alert(1)&lt;/script&gt;', $this->template->get_template_vars('QUERY_SEARCH'));
     }
@@ -160,18 +164,18 @@ final class MenubarRendererTest extends IntegrationTestCase
     {
         $this->sectionContextRegistry->set(new SectionContext(section: 'categories'));
 
-        $this->renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), CurrentTemplate::current());
+        $this->renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current());
 
         self::assertNull($this->template->get_template_vars('QUERY_SEARCH'));
     }
 
     public function test_render_assigns_a_stop_filter_link_when_the_recent_filter_is_active(): void
     {
-        CurrentConfig::setMenubarFilterIcon(true);
-        CurrentConfig::setFilterPages(['default' => ['used' => true]]);
+        CurrentConfig::current()->setMenubarFilterIcon(true);
+        CurrentConfig::current()->setFilterPages(['default' => ['used' => true]]);
         $this->filterState->set(true, '', '', []);
 
-        $this->renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), CurrentTemplate::current());
+        $this->renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current());
 
         $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), ['filter' => 'stop']);
         self::assertSame($expected, $this->template->get_template_vars('U_STOP_FILTER'));
@@ -180,12 +184,12 @@ final class MenubarRendererTest extends IntegrationTestCase
 
     public function test_render_assigns_a_start_filter_link_with_the_users_recent_period_when_the_filter_is_inactive(): void
     {
-        CurrentConfig::setMenubarFilterIcon(true);
-        CurrentConfig::setFilterPages(['default' => ['used' => true]]);
+        CurrentConfig::current()->setMenubarFilterIcon(true);
+        CurrentConfig::current()->setFilterPages(['default' => ['used' => true]]);
         $this->filterState->set(false, '', '', []);
         CurrentUser::current()->set(CurrentUser::current()->get()->withRawAttribute('recent_period', 7));
 
-        $this->renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), CurrentTemplate::current());
+        $this->renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current());
 
         $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), ['filter' => 'start-recent-7']);
         self::assertSame($expected, $this->template->get_template_vars('U_START_FILTER'));
@@ -211,7 +215,7 @@ final class MenubarRendererTest extends IntegrationTestCase
             combinedCategories: null,
         ));
 
-        $this->renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), CurrentTemplate::current());
+        $this->renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current());
 
         $menubar = $this->template->get_template_vars('MENUBAR');
         self::assertIsString($menubar);
@@ -237,7 +241,7 @@ final class MenubarRendererTest extends IntegrationTestCase
             combinedCategories: [['id' => 2, 'name' => 'Nested Sub Album', 'permalink' => null]],
         ));
 
-        $this->renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), CurrentTemplate::current());
+        $this->renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current());
 
         $menubar = $this->template->get_template_vars('MENUBAR');
         self::assertIsString($menubar);

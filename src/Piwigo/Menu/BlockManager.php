@@ -39,6 +39,7 @@ final class BlockManager
         private $id,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -91,7 +92,7 @@ final class BlockManager
         // call site) -- a real CurrentConfig property instead of the
         // former dynamic 'blk_' . $id bag key. Already decoded -- no
         // manual unserialize() needed (gap-closure Stage 1a-bis item 1).
-        $mb_conf = CurrentConfig::blkMenubar() ?? [];
+        $mb_conf = $this->currentConfig->blkMenubar() ?? [];
 
         $idx = 1;
         foreach ($this->registered_blocks as $id => $block) {

@@ -65,7 +65,8 @@ final class DerivativeImage
      */
     public function __construct(
         $type,
-        public SrcImage $src_image
+        public SrcImage $src_image,
+        private readonly CurrentConfig $currentConfig,
     ) {
         if (is_string($type)) {
             $this->params = ImageStdParams::current()->get_by_type($type);
@@ -73,7 +74,7 @@ final class DerivativeImage
             $this->params = $type;
         }
 
-        self::build($this->src_image, $this->params, $this->rel_path, $this->rel_url, $this->is_cached);
+        self::build($this->src_image, $this->currentConfig, $this->params, $this->rel_path, $this->rel_url, $this->is_cached);
     }
 
     /**
@@ -99,7 +100,7 @@ final class DerivativeImage
         $params = is_string($type) ? ImageStdParams::current()->get_by_type($type) : $type;
         $rel_path = '';
         $rel_url = '';
-        self::build($src_image, $params, $rel_path, $rel_url);
+        self::build($src_image, CurrentConfig::current(), $params, $rel_path, $rel_url);
         if ($params === null) {
             return $src_image->get_url();
         }
@@ -133,7 +134,7 @@ final class DerivativeImage
         $ret = [];
         // build enabled types
         foreach (ImageStdParams::current()->get_defined_type_map() as $type => $params) {
-            $derivative = new self($params, $src_image);
+            $derivative = new self($params, $src_image, CurrentConfig::current());
             $ret[$type] = $derivative;
         }
         // disabled types, fallback to enabled types
@@ -161,12 +162,12 @@ final class DerivativeImage
 
         $defined = ImageStdParams::current()->get_defined_type_map();
         if (isset($defined[$type])) {
-            return new self($defined[$type], $src_image);
+            return new self($defined[$type], $src_image, CurrentConfig::current());
         }
 
         $undefined = ImageStdParams::current()->get_undefined_type_map();
         if (isset($undefined[$type])) {
-            return new self($defined[$undefined[$type]], $src_image);
+            return new self($defined[$undefined[$type]], $src_image, CurrentConfig::current());
         }
 
         return null;
@@ -179,7 +180,7 @@ final class DerivativeImage
      * @param string $rel_url by-ref out-param
      * @param bool $is_cached by-ref out-param; not bound to a real variable when omitted (uses its default)
      */
-    private static function build(SrcImage $src, &$params, &$rel_path, &$rel_url, &$is_cached = false): void
+    private static function build(SrcImage $src, CurrentConfig $currentConfig, &$params, &$rel_path, &$rel_url, &$is_cached = false): void
     {
         // every real call site (the constructor, url(), and this method's
         // own recursive call below) passes a freshly-resolved, non-null
@@ -206,7 +207,7 @@ final class DerivativeImage
                             $smaller = ImageStdParams::current()->get_by_type($defined_types[$i]);
                             if ($smaller->sizing->max_crop === $params->sizing->max_crop && $smaller->is_identity($src_size)) {
                                 $params = $smaller;
-                                self::build($src, $params, $rel_path, $rel_url, $is_cached);
+                                self::build($src, $currentConfig, $params, $rel_path, $rel_url, $is_cached);
                                 return;
                             }
                         }
@@ -235,9 +236,9 @@ final class DerivativeImage
         }
         $loc = substr_replace($loc, '-' . implode('_', $tokens), $dot, 0);
 
-        $rel_path = CurrentConfig::derivativeDir() . $loc;
+        $rel_path = $currentConfig->derivativeDir() . $loc;
 
-        $url_style = \Piwigo\Config\CurrentConfig::derivativeUrlStyle();
+        $url_style = $currentConfig->derivativeUrlStyle();
         if (! (bool) $url_style) {
             $abs_path = CurrentPaths::get()->root . $rel_path;
             $mtime = file_exists($abs_path) ? filemtime($abs_path) : false;
@@ -251,10 +252,10 @@ final class DerivativeImage
 
         if ($url_style === 2) {
             $rel_url = 'i';
-            if (\Piwigo\Config\CurrentConfig::phpExtensionInUrls()) {
+            if ($currentConfig->phpExtensionInUrls()) {
                 $rel_url .= '.php';
             }
-            if (\Piwigo\Config\CurrentConfig::questionMarkInUrls()) {
+            if ($currentConfig->questionMarkInUrls()) {
                 $rel_url .= '?';
             }
             $rel_url .= '/' . $loc;

@@ -35,7 +35,7 @@ final class SessionBootstrap
     public static function register(): void
     {
 
-        if (\Piwigo\Config\CurrentConfig::sessionSaveHandler() === 'db'
+        if (\Piwigo\Bootstrap\RequestBootstrap::currentConfig()->sessionSaveHandler() === 'db'
           and \Piwigo\Core\InstallationFlag::isActiveStatic()) {
             $sessionService = Kernel::container()->get(SessionService::class);
             if (! $sessionService instanceof SessionService) {
@@ -44,18 +44,18 @@ final class SessionBootstrap
             session_set_save_handler(new PwgSession($sessionService));
 
             if (function_exists('ini_set')) {
-                $session_use_cookies = \Piwigo\Config\CurrentConfig::sessionUseCookies();
+                $session_use_cookies = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->sessionUseCookies();
                 ini_set('session.use_cookies', $session_use_cookies);
 
-                $session_use_only_cookies = \Piwigo\Config\CurrentConfig::sessionUseOnlyCookies();
+                $session_use_only_cookies = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->sessionUseOnlyCookies();
                 ini_set('session.use_only_cookies', $session_use_only_cookies);
 
-                $session_use_trans_sid = \Piwigo\Config\CurrentConfig::sessionUseTransSid();
+                $session_use_trans_sid = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->sessionUseTransSid();
                 ini_set('session.use_trans_sid', intval($session_use_trans_sid));
                 ini_set('session.cookie_httponly', 1);
             }
 
-            $session_name = \Piwigo\Config\CurrentConfig::sessionName();
+            $session_name = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->sessionName();
             session_name($session_name);
             session_set_cookie_params(0, new CookieService()->cookiePath());
             register_shutdown_function(session_write_close(...));

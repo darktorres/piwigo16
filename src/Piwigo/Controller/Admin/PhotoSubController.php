@@ -52,6 +52,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         private readonly PictureCoiPageRenderer $pictureCoiPageRenderer,
         private readonly \Piwigo\Image\ImageService $imageService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -97,7 +98,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         } elseif ($tab === 'coi') {
             $this->pictureCoiPageRenderer
                 ->render();
-        } elseif (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
+        } elseif ($this->currentConfig->isFormatsEnabled()) {
             new PictureFormatsPageRenderer()
                 ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer);
         }

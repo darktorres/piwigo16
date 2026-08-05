@@ -78,6 +78,7 @@ final readonly class SectionPopulator
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Core\PageState $pageState,
         private \Piwigo\Users\CurrentUser $currentUser,
+        private \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     public function populate(): void
@@ -101,7 +102,7 @@ final readonly class SectionPopulator
         // section-specific branches below and read back by several others
         // -- a single local variable threaded through the whole method,
         // seeded from CurrentConfig::orderBy().
-        $order_by = \Piwigo\Config\CurrentConfig::orderBy();
+        $order_by = $this->currentConfig->orderBy();
 
         $page['items'] = [];
         $page['start'] = $page['startcat'] = 0;
@@ -115,7 +116,7 @@ final readonly class SectionPopulator
         // execution. No downstream code reads SectionContextRegistry::
         // current() mid-request today (confirmed via a full-repo grep),
         // so deferring the one real set() call to the end is safe.
-        $url_parse = new SectionInitializer($this->htmlRenderer, $this->repo, $this->redirectService, $this->urlService, $this->requestMountDepth)
+        $url_parse = new SectionInitializer($this->htmlRenderer, $this->repo, $this->redirectService, $this->urlService, $this->requestMountDepth, $this->currentConfig)
             ->parse();
 
         $page['root_path'] = $url_parse->rootPath;
@@ -145,7 +146,7 @@ final readonly class SectionPopulator
                     // original's eval($random_url_condition) -- a config value
                     // with DB write access previously got arbitrary PHP
                     // execution.
-                    $redirect_candidates = \Piwigo\Config\CurrentConfig::randomIndexRedirect();
+                    $redirect_candidates = $this->currentConfig->randomIndexRedirect();
                     $next_token_value = $tokens[$next_token] ?? '';
                     $next_token_is_empty = $next_token_value === '' || $next_token_value === '0';
                     if ($redirect_candidates !== [] and $next_token_is_empty) {
@@ -191,7 +192,7 @@ final readonly class SectionPopulator
         // and not as a category set because we can't use the #image_category.rank :
         // displayed images are not directly linked to the displayed category
         if ($section === 'categories' and ! isset($page['flat'])) {
-            $order_by = \Piwigo\Config\CurrentConfig::orderByInsideCategory();
+            $order_by = $this->currentConfig->orderByInsideCategory();
         }
 
         if ($this->sessionService->getSessionVar('image_order', 0) > 0) {
@@ -575,7 +576,7 @@ final readonly class SectionPopulator
                 $page['super_order_by'] = true;
                 $order_by = ' ORDER BY hit DESC, id DESC';
 
-                $top_number = \Piwigo\Config\CurrentConfig::topNumber();
+                $top_number = $this->currentConfig->topNumber();
 
                 // GROUP BY id, same ONLY_FULL_GROUP_BY fix as above --
                 // $order_by orders by hit/id, both images' own columns.
@@ -597,7 +598,7 @@ final readonly class SectionPopulator
                 $page['super_order_by'] = true;
                 $order_by = ' ORDER BY rating_score DESC, id DESC';
 
-                $top_number = \Piwigo\Config\CurrentConfig::topNumber();
+                $top_number = $this->currentConfig->topNumber();
 
                 // GROUP BY id, same ONLY_FULL_GROUP_BY fix as above --
                 // $order_by orders by rating_score/id, both images' own
@@ -657,7 +658,7 @@ final readonly class SectionPopulator
             $calendar_items_raw = is_array($page['items'] ?? null) ? $page['items'] : [];
             $calendar_items = array_values(array_filter($calendar_items_raw, static fn (mixed $v): bool => is_int($v) || is_string($v)));
 
-            $calendar_result = new CalendarRenderer($this->lang, $this->htmlRenderer, $this->template, $this->urlService, $this->currentUser)
+            $calendar_result = new CalendarRenderer($this->lang, $this->htmlRenderer, $this->template, $this->urlService, $this->currentUser, $this->currentConfig)
                 ->render(
                     $section,
                     $page_category,
@@ -682,7 +683,7 @@ final readonly class SectionPopulator
             $page['section_title'] = '<a href="' . $gallery_home_url . '">' . $this->lang->t('Home') . '</a>';
             $title_value = is_string($page['title']) ? $page['title'] : '';
             if ($title_value !== '' && $title_value !== '0') {
-                $level_separator = \Piwigo\Config\CurrentConfig::levelSeparator();
+                $level_separator = $this->currentConfig->levelSeparator();
                 $page['section_title'] .= $level_separator . $title_value;
             } else {
                 $page['title'] = $page['section_title'];
@@ -704,7 +705,7 @@ final readonly class SectionPopulator
             $hit_by_cat_url_name = is_string($hit_by_cat_url_name) ? $hit_by_cat_url_name : null;
             $hit_by_cat_permalink = $hit_by['cat_permalink'] ?? null;
             $hit_by_cat_permalink = is_string($hit_by_cat_permalink) ? $hit_by_cat_permalink : null;
-            $category_url_style = \Piwigo\Config\CurrentConfig::categoryUrlStyle();
+            $category_url_style = $this->currentConfig->categoryUrlStyle();
             $category_permalink = is_string($page_category['permalink'] ?? null) ? $page_category['permalink'] : null;
             $category_name = $page_category['name'];
             $expected_cat_url_name = \Piwigo\Core\StringHelper::str2url($category_name);

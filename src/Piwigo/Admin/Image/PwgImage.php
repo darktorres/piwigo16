@@ -52,6 +52,7 @@ final class PwgImage
         public string $source_filepath,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         ?string $library = null
     ) {
 
@@ -63,7 +64,7 @@ final class PwgImage
 
         $extension = strtolower(\Piwigo\Core\StringHelper::getExtension($this->source_filepath));
 
-        $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
+        $picture_ext = $this->currentConfig->pictureExtensions();
         if (! in_array($extension, $picture_ext, true)) {
             throw new ImageProcessingException('[Image] unsupported file extension');
         }
@@ -73,7 +74,7 @@ final class PwgImage
         }
 
         $this->image = match ($this->library) {
-            'ext_imagick' => new ImageExtImagick($this->source_filepath, $this->currentLogger),
+            'ext_imagick' => new ImageExtImagick($this->source_filepath, $this->currentLogger, $this->currentConfig),
             'imagick' => new ImageImagick($this->source_filepath),
             'gd' => new ImageGd($this->source_filepath),
             default => throw new \Exception("PwgImage: unknown image library '{$this->library}'"),
@@ -430,7 +431,13 @@ final class PwgImage
         if (! is_string($command)) {
             $retval = null;
             $cmd_out = null;
-            $imagick_dir = \Piwigo\Config\CurrentConfig::extImagickDir();
+            // Static method, no instance available for real constructor
+            // injection (singleton/DI elimination campaign, Phase 9) -- see
+            // this class's own is_ext_imagick()/get_library()/
+            // get_graphics_library() for the same constraint. Same
+            // transitional shim already used by every Ws/ static-dispatch
+            // caller for exactly this "no instance in scope" shape.
+            $imagick_dir = \Piwigo\Config\CurrentConfig::current()->extImagickDir();
             // check if magick is in path
             // [SEC-16] escapeshellarg() quotes the dir prefix; the adjacent
             // quoted+unquoted shell tokens still concatenate into one word
@@ -449,7 +456,9 @@ final class PwgImage
             return false;
         }
 
-        $imagick_dir = \Piwigo\Config\CurrentConfig::extImagickDir();
+        // Static method, no instance available for real constructor
+        // injection -- see get_ext_imagick_command()'s own comment above.
+        $imagick_dir = \Piwigo\Config\CurrentConfig::current()->extImagickDir();
         // [SEC-16] see the escapeshellarg() note above.
         $returnarray = [];
         @exec(escapeshellarg($imagick_dir) . self::get_ext_imagick_command() . ' -version', $returnarray);
@@ -471,7 +480,9 @@ final class PwgImage
     {
 
         if ($library === null) {
-            $conf_library = \Piwigo\Config\CurrentConfig::graphicsLibrary();
+            // Static method, no instance available for real constructor
+            // injection -- see get_ext_imagick_command()'s own comment above.
+            $conf_library = \Piwigo\Config\CurrentConfig::current()->graphicsLibrary();
             $library = $conf_library;
         }
 
@@ -516,7 +527,9 @@ final class PwgImage
 
         switch ($library) {
             case 'ext_imagick':
-                $ext_imagick_dir = \Piwigo\Config\CurrentConfig::extImagickDir();
+                // Static method, no instance available for real constructor
+                // injection -- see get_ext_imagick_command()'s own comment above.
+                $ext_imagick_dir = \Piwigo\Config\CurrentConfig::current()->extImagickDir();
                 $returnarray = [];
                 exec($ext_imagick_dir . self::get_ext_imagick_command() . ' -version', $returnarray);
                 if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0] ?? '', $match)) {

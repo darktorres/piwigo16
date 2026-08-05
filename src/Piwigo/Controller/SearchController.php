@@ -39,6 +39,7 @@ final class SearchController implements ControllerInterface
         private readonly \Piwigo\Tag\TagService $tagService,
         private readonly \Piwigo\Image\ImageService $imageService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -60,7 +61,7 @@ final class SearchController implements ControllerInterface
         ];
 
         // list of filters in user preferences
-        $filters_views = \Piwigo\Config\CurrentConfig::filtersViews() ?? \Piwigo\Config\CurrentConfig::defaultFiltersViews();
+        $filters_views = $this->currentConfig->filtersViews() ?? $this->currentConfig->defaultFiltersViews();
 
         // change the name of the keys so that they can be used with this
         // part of the program

@@ -56,6 +56,7 @@ final class IdentificationController implements ControllerInterface
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Auth\AuthService $authService,
         private readonly \Piwigo\Html\HtmlService $htmlService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -83,7 +84,7 @@ final class IdentificationController implements ControllerInterface
         $redirect_to = '';
         if ($identificationSubmit->getRedirect !== null) {
             $redirect_to = urldecode($identificationSubmit->getRedirect);
-            if (\Piwigo\Config\CurrentConfig::guestAccess() and ! $identificationSubmit->hideRedirectErrorPresent) {
+            if ($this->currentConfig->guestAccess() and ! $identificationSubmit->hideRedirectErrorPresent) {
                 $errors['login_page_error'] = $this->lang->t('You are not authorized to access the requested page');
             }
         }
@@ -104,7 +105,7 @@ final class IdentificationController implements ControllerInterface
                 $password = $identificationSubmit->password;
 
                 $conn = \Piwigo\Db\DbConnection::build();
-                if (\Piwigo\Config\CurrentConfig::insensitiveCaseLogon()) {
+                if ($this->currentConfig->insensitiveCaseLogon()) {
                     $username = $this->userService
                         ->searchCaseUsername($username);
                 }
@@ -160,24 +161,24 @@ final class IdentificationController implements ControllerInterface
                 'U_REDIRECT' => $redirect_to,
 
                 'F_LOGIN_ACTION' => $urlService->getRootUrl() . 'identification.php',
-                'authorize_remembering' => \Piwigo\Config\CurrentConfig::authorizeRemembering(),
+                'authorize_remembering' => $this->currentConfig->authorizeRemembering(),
             ]
         );
 
-        if (! \Piwigo\Config\CurrentConfig::galleryLocked() && \Piwigo\Config\CurrentConfig::allowUserRegistration()) {
+        if (! $this->currentConfig->galleryLocked() && $this->currentConfig->allowUserRegistration()) {
             $template->assign('U_REGISTER', $urlService->getRootUrl() . 'register.php');
         }
 
-        if (! \Piwigo\Config\CurrentConfig::galleryLocked()) {
+        if (! $this->currentConfig->galleryLocked()) {
             $template->assign('U_LOST_PASSWORD', $urlService->getRootUrl() . 'password.php');
         }
 
         $themeconf = $template->get_template_vars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
-        if (! \Piwigo\Config\CurrentConfig::galleryLocked() && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
+        if (! $this->currentConfig->galleryLocked() && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
             new MenubarRenderer()
-                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig);
         }
 
         // Load language if cookie is set from login/register/password
@@ -219,7 +220,7 @@ final class IdentificationController implements ControllerInterface
         $template->assign('HELP_LINK', $help_link);
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatchNotify(new LocEndIdentification());
         $this->htmlService
             ->flushPageMessages();

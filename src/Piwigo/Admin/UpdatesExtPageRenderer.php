@@ -42,11 +42,11 @@ final class UpdatesExtPageRenderer
      * slug statically (config/admin_pages.php registers each of those 4
      * controllers for exactly one slug), so each passes its own literal.
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer, \Piwigo\Config\CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
 
-        if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
+        if (! $currentConfig->enableExtensionsInstall()) {
             $htmlRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }

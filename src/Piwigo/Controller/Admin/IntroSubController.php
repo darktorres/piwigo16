@@ -85,6 +85,7 @@ final class IntroSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Image\ImageService $imageService,
         private readonly \Piwigo\Category\CategoryService $categoryService,
         private readonly \Piwigo\Users\UserService $userService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -178,7 +179,7 @@ final class IntroSubController implements AdminSubControllerInterface
             'intro' => 'intro.tpl',
         ]);
 
-        if (\Piwigo\Config\CurrentConfig::showNewsletterSubscription() and (bool) $this->preferencesService->getParam('show_newsletter_subscription', true)) {
+        if ($this->currentConfig->showNewsletterSubscription() and (bool) $this->preferencesService->getParam('show_newsletter_subscription', true)) {
             $register_date = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
                 ->findEarliestRegistrationDate();
             $nb_cats = $this->categoryService->countAllCategories();
@@ -226,18 +227,18 @@ final class IntroSubController implements AdminSubControllerInterface
                 'NB_PLUGINS' => count($this->loadedPlugins->get()),
                 'STORAGE_USED' => str_replace(' ', '&nbsp;', $this->lang->t('%sGB', number_format($du_gb, $du_decimals))),
                 'U_QUICK_SYNC' => $this->urlService->getRootUrl() . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
-                'CHECK_FOR_UPDATES' => \Piwigo\Config\CurrentConfig::dashboardCheckForUpdates(),
+                'CHECK_FOR_UPDATES' => $this->currentConfig->dashboardCheckForUpdates(),
             ]
         );
 
-        if (\Piwigo\Config\CurrentConfig::activateComments()) {
+        if ($this->currentConfig->activateComments()) {
             $template->assign('NB_COMMENTS', $this->commentService->countAll());
         } else {
             $template->assign('NB_COMMENTS', 0);
         }
 
-        if (\Piwigo\Config\CurrentConfig::showPiwigoLatestNews()) {
-            $latest_news = self::getLatestNews($this->lang);
+        if ($this->currentConfig->showPiwigoLatestNews()) {
+            $latest_news = self::getLatestNews($this->lang, $this->currentConfig);
 
             // getLatestNews() is declared to return mixed (it can come straight
             // back out of unserialize() on the cache file), so every field needs a
@@ -275,7 +276,7 @@ final class IntroSubController implements AdminSubControllerInterface
         // |                           get activity data                           |
         // +-----------------------------------------------------------------------+
 
-        $nb_weeks = \Piwigo\Config\CurrentConfig::dashboardActivityNbWeeks();
+        $nb_weeks = $this->currentConfig->dashboardActivityNbWeeks();
 
         // Count mondays
         $mondays = 0;
@@ -465,7 +466,7 @@ final class IntroSubController implements AdminSubControllerInterface
         /** @var array<string, array<string, array<string, mixed>>> $data_storage */
         $data_storage = [];
 
-        $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
+        $picture_ext = $this->currentConfig->pictureExtensions();
 
         // Select files in Image_Table
         $imageService = $this->imageService;
@@ -521,8 +522,8 @@ final class IntroSubController implements AdminSubControllerInterface
         }
 
         // Add cache size if requested and known.
-        if (\Piwigo\Config\CurrentConfig::addCacheToStorageChart()) {
-            $cache_sizes = \Piwigo\Config\CurrentConfig::cacheSizes();
+        if ($this->currentConfig->addCacheToStorageChart()) {
+            $cache_sizes = $this->currentConfig->cacheSizes();
 
             if (is_array($cache_sizes)) {
                 $cache_size_zero = $cache_sizes[0] ?? null;
@@ -555,7 +556,7 @@ final class IntroSubController implements AdminSubControllerInterface
         $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
         $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         // add internal checks
-        new C13yInternal($this->lang, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->userService)
+        new C13yInternal($this->lang, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->userService, $this->currentConfig)
             ->registerHandlers();
         // check and display
         $c13y->check();
@@ -580,11 +581,11 @@ final class IntroSubController implements AdminSubControllerInterface
      * view-shaping stays inline" precedent this class's own docblock
      * already establishes for its other dashboard queries.
      */
-    private static function getLatestNews(Lang $lang): mixed
+    private static function getLatestNews(Lang $lang, \Piwigo\Config\CurrentConfig $currentConfig): mixed
     {
         $news = null;
 
-        $data_location = \Piwigo\Config\CurrentConfig::dataLocation();
+        $data_location = $currentConfig->dataLocation();
         $lang_code = $lang->langInfo()['code'] ?? null;
         $lang_code = is_string($lang_code) ? $lang_code : '';
         $cache_path = \Piwigo\Core\CurrentPaths::get()->root . $data_location . 'cache/piwigo_latest_news-' . $lang_code . '.cache.php';

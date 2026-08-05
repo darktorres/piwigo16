@@ -556,13 +556,13 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
         // if the request is made with an API key (via header or session API key),
         // we check whether the requested method is on the
-        // list of prohibited methods (\Piwigo\Config\CurrentConfig::apiKeyForbiddenMethods()) for API keys
+        // list of prohibited methods (\Piwigo\Config\CurrentConfig::current()->apiKeyForbiddenMethods()) for API keys
         // if it is, access is refused (false)
         if (
             ApiKeyRequestFlag::isActiveStatic()
             or (isset($_SESSION['connected_with']) and $_SESSION['connected_with'] === 'ws_session_login_api_key')
         ) {
-            $forbidden_methods = \Piwigo\Config\CurrentConfig::apiKeyForbiddenMethods();
+            $forbidden_methods = \Piwigo\Config\CurrentConfig::current()->apiKeyForbiddenMethods();
 
             if (in_array($methodName, array_map(strval(...), array_filter($forbidden_methods, is_scalar(...))), true)) {
                 return false;

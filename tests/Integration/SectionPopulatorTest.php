@@ -120,20 +120,20 @@ final class SectionPopulatorTest extends IntegrationTestCase
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current()));
         Lang::current()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
-        CurrentConfig::setSendPiwigoInfos(false);
-        CurrentConfig::setQuestionMarkInUrls(false);
+        CurrentConfig::current()->setSendPiwigoInfos(false);
+        CurrentConfig::current()->setQuestionMarkInUrls(false);
 
         $this->conn = DbConnection::build();
         $em = \Piwigo\Db\EntityManagerFactory::build($this->conn);
         $categoryRepo = $em->getRepository(CategoryEntity::class);
         $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo);
-        $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $this->permissionService);
-        $this->tagService = new TagService(Lang::current(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current());
-        $this->sessionService = new SessionService($em->getRepository(SessionEntity::class));
-        $this->userService = new UserService(Lang::current(), $em->getRepository(UserInfoEntity::class), $em->getRepository(GroupEntity::class), new MailService(), new ActivityService($em->getRepository(ActivityEntity::class)), new HtmlService(), $this->conn, $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current());
-        $this->searchService = new SearchService(\Piwigo\Auth\AccessControl::current(), new SearchRepository($this->conn), $this->permissionService, $this->categoryService, new MailService(), new HtmlService(), new RedirectService(Lang::current(), $this->userService), $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), Lang::current(), $this->tagService);
+        $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $this->permissionService, \Piwigo\Config\CurrentConfig::current());
+        $this->tagService = new TagService(Lang::current(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), CurrentConfig::current());
+        $this->sessionService = new SessionService($em->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current());
+        $this->userService = new UserService(Lang::current(), $em->getRepository(UserInfoEntity::class), $em->getRepository(GroupEntity::class), new MailService(), new ActivityService($em->getRepository(ActivityEntity::class)), new HtmlService(), $this->conn, $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
+        $this->searchService = new SearchService(\Piwigo\Auth\AccessControl::current(), new SearchRepository($this->conn), $this->permissionService, $this->categoryService, new MailService(), new HtmlService(), new RedirectService(Lang::current(), $this->userService), $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), Lang::current(), \Piwigo\Config\CurrentConfig::current(), $this->tagService);
         $this->sectionRepo = new SectionRepository($this->conn);
         $this->filterState = new FilterState();
         $this->currentLogger = new CurrentLogger();
@@ -164,7 +164,11 @@ final class SectionPopulatorTest extends IntegrationTestCase
         CurrentUser::current()->reset();
         CurrentTemplate::current()->reset();
         PageState::current()->reset();
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         parent::tearDown();
     }
 
@@ -196,6 +200,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             new \Piwigo\PluginConfig\EventDispatcher(),
             \Piwigo\Core\PageState::current(),
             \Piwigo\Users\CurrentUser::current(),
+            \Piwigo\Config\CurrentConfig::current(),
         );
     }
 
@@ -241,7 +246,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     public function test_populate_redirects_when_index_has_a_matching_random_redirect_candidate(): void
     {
-        CurrentConfig::setRandomIndexRedirect(['random.php' => '']);
+        CurrentConfig::current()->setRandomIndexRedirect(['random.php' => '']);
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/';
 
@@ -490,7 +495,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     public function test_populate_redirects_permanently_on_a_permalink_mismatch(): void
     {
-        CurrentConfig::setCategoryUrlStyle('id-name');
+        CurrentConfig::current()->setCategoryUrlStyle('id-name');
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         // Category 1 has no real permalink row -- categoryUrlStyle
         // 'id-name' + a URL name that doesn't match str2url('Sample Album')

@@ -71,6 +71,7 @@ final class MaintenanceActionDispatcher
         private readonly \Piwigo\Tag\TagService $tagService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly Lang $lang,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -162,7 +163,7 @@ final class MaintenanceActionDispatcher
 
                 $this->sessionService->sessionGc();
 
-                $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+                $user_fields = $this->currentConfig->userFields();
                 $id_field = $user_fields['id'];
 
                 $db_maintenance->purgeSessionsForDeletedUsers($id_field);
@@ -191,7 +192,7 @@ final class MaintenanceActionDispatcher
 
             case 'empty_lounge':
 
-                $rows = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher)
+                $rows = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig)
                     ->emptyLounge();
                 $this->pageState->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
                 break;
@@ -219,12 +220,12 @@ final class MaintenanceActionDispatcher
 
                 $types_str = Request\DerivativesTypeRequest::fromGlobals()->typesStr;
                 if ($types_str === 'all') {
-                    new DerivativeCacheService()
+                    new DerivativeCacheService($this->currentConfig)
                         ->clearDerivativeCache($types_str);
                 } else {
                     $types = explode('_', $types_str);
                     foreach ($types as $type_to_clear) {
-                        new DerivativeCacheService()
+                        new DerivativeCacheService($this->currentConfig)
                             ->clearDerivativeCache($type_to_clear);
                     }
                 }

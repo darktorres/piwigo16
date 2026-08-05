@@ -217,7 +217,11 @@ final class InstallWizardTest extends IntegrationTestCase
             }
         }
         Kernel::reset();
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         foreach ($this->createdDatabases as $dbName) {
             $db = $this->newMysqli('');
             $db->query(sprintf('DROP DATABASE IF EXISTS `%s`', $dbName));
@@ -307,7 +311,7 @@ final class InstallWizardTest extends IntegrationTestCase
             'PIWIGO_DB_PREFIX' => $prefix,
         ]);
 
-        $wizard = new InstallWizard(\Piwigo\Core\Lang::current(), $prefix, $this->paths, $dbCredentials, \Piwigo\Config\CurrentConfigService::current());
+        $wizard = new InstallWizard(\Piwigo\Core\Lang::current(), $prefix, $this->paths, $dbCredentials, \Piwigo\Config\CurrentConfigService::current(), CurrentConfig::current());
         $wizard->boot();
 
         return $wizard;
@@ -363,7 +367,7 @@ final class InstallWizardTest extends IntegrationTestCase
         // the CurrentPaths::get() shim. KernelContainerOverride::with()
         // rebinds Paths::class for just this test's own scope instead.
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            $wizard = new InstallWizard(\Piwigo\Core\Lang::current(), 'itest_', $this->paths, DbCredentials::current(), \Piwigo\Config\CurrentConfigService::current());
+            $wizard = new InstallWizard(\Piwigo\Core\Lang::current(), 'itest_', $this->paths, DbCredentials::current(), \Piwigo\Config\CurrentConfigService::current(), CurrentConfig::current());
 
             self::assertSame('_data/', $this->reflectPrivate($wizard, 'confDataLocation'));
         });
@@ -377,7 +381,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $this->expectExceptionMessage("Invalid \$conf['data_location'] configuration: expected a string.");
 
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            new InstallWizard(\Piwigo\Core\Lang::current(), 'itest_', $this->paths, DbCredentials::current(), \Piwigo\Config\CurrentConfigService::current());
+            new InstallWizard(\Piwigo\Core\Lang::current(), 'itest_', $this->paths, DbCredentials::current(), \Piwigo\Config\CurrentConfigService::current(), CurrentConfig::current());
         });
     }
 
@@ -1205,8 +1209,12 @@ final class InstallWizardTest extends IntegrationTestCase
         $wizard->performInstall();
         self::assertFalse($wizard->hasErrors(), 'unexpected performInstall() errors: ' . $this->reflectErrorsJoined($wizard));
 
-        CurrentConfig::setSmtpHost('127.0.0.1:1');
-        CurrentConfig::setDebugMail(true);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        }
+        $currentConfig->setSmtpHost('127.0.0.1:1');
+        $currentConfig->setDebugMail(true);
 
         $mailTmpDir = $this->tempRoot . '_data/tmp';
         $before = glob($mailTmpDir . '/mail.*');

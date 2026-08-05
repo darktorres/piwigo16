@@ -59,7 +59,7 @@ final readonly class PermissionService
     public static function getPrivacyLevelOptions(): array
     {
 
-        $available_permission_levels = \Piwigo\Config\CurrentConfig::availablePermissionLevels();
+        $available_permission_levels = \Piwigo\Config\CurrentConfig::current()->availablePermissionLevels();
 
         $options = [];
         $label = '';

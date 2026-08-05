@@ -42,6 +42,7 @@ final class LanguagesNewPageRenderer
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -59,7 +60,7 @@ final class LanguagesNewPageRenderer
     {
         $template = $this->currentTemplate->get();
 
-        if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
+        if (! $this->currentConfig->enableExtensionsInstall()) {
             $this->htmlRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }
@@ -74,7 +75,7 @@ final class LanguagesNewPageRenderer
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer);
+        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig);
 
         // +-----------------------------------------------------------------------+
         // |                           setup check                                 |

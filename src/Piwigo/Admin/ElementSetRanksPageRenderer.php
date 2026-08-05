@@ -52,6 +52,7 @@ final class ElementSetRanksPageRenderer
         private readonly CategoryAdminService $categoryAdminService,
         private readonly \Piwigo\Image\ImageService $imageService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void
@@ -189,7 +190,7 @@ final class ElementSetRanksPageRenderer
             $current_rank = 1;
             $derivativeParams = $this->imageStdParams->get_by_type(ImageStdParams::SQUARE);
             foreach ($thumbnail_rows as $row) {
-                $derivative = new DerivativeImage($derivativeParams, new SrcImage($row));
+                $derivative = new DerivativeImage($derivativeParams, new SrcImage($row), $this->currentConfig);
 
                 if (! in_array($row['name'], [null, false, 0, '0', '', []], true)) {
                     $thumbnail_name = $row['name'];

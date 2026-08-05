@@ -64,7 +64,7 @@ final class CsrfService
             throw new \Exception('CsrfService::getToken(): no active session');
         }
 
-        $secret_key = \Piwigo\Config\CurrentConfig::secretKey();
+        $secret_key = \Piwigo\Config\CurrentConfig::current()->secretKey();
 
         return hash_hmac('sha256', $session_id, $secret_key);
     }

@@ -41,6 +41,7 @@ final readonly class GroupService
         private ConfigService $configService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -310,7 +311,7 @@ final readonly class GroupService
             return false;
         }
 
-        $emailAdminOnNewUser = \Piwigo\Config\CurrentConfig::emailAdminOnNewUser();
+        $emailAdminOnNewUser = $this->currentConfig->emailAdminOnNewUser();
         if ((bool) preg_match('/^group:(\d+)$/', $emailAdminOnNewUser, $matches)) {
             foreach ($groupIds as $groupId) {
                 if ($groupId->value === (int) $matches[1]) {

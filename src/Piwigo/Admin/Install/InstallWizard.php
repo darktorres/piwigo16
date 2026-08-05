@@ -165,6 +165,7 @@ final class InstallWizard
         private readonly Paths $paths,
         private readonly DbCredentials $dbCredentials,
         private readonly \Piwigo\Config\CurrentConfigService $currentConfigService,
+        private readonly CurrentConfig $currentConfig,
     ) {
         $conf_data_location = LegacyFileConf::read()['data_location'] ?? null;
         if (! is_string($conf_data_location)) {
@@ -281,11 +282,11 @@ final class InstallWizard
         // own site) -- no DB access needed, just Config/DbCredentials reads
         // already valid this early (the DB password was just seeded above).
         \Piwigo\Bootstrap\InstallBootstrap::currentLogger()->set(new Logger([
-            'directory' => $this->paths->root . CurrentConfig::dataLocation() . CurrentConfig::logDir(),
-            'severity' => CurrentConfig::logLevel(),
+            'directory' => $this->paths->root . $this->currentConfig->dataLocation() . $this->currentConfig->logDir(),
+            'severity' => $this->currentConfig->logLevel(),
             'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $this->dbCredentials->password) . '.txt',
             'globPattern' => 'log_*.txt',
-            'archiveDays' => CurrentConfig::logArchiveDays(),
+            'archiveDays' => $this->currentConfig->logArchiveDays(),
         ]));
 
         // dblayer
@@ -375,7 +376,7 @@ final class InstallWizard
     private function userService(?Connection $conn = null): UserService
     {
         $conn ??= DbConnection::build();
-        return new UserService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn, new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\DeploymentPolicy::current(), \Piwigo\Users\CurrentUser::current());
+        return new UserService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn, new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class), $this->currentConfig), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\DeploymentPolicy::current(), \Piwigo\Users\CurrentUser::current(), $this->currentConfig);
     }
 
     /**
@@ -606,6 +607,7 @@ define(\'DB_COLLATE\', \'\');
             \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
             \Piwigo\Bootstrap\CoreDomainAccessor::userService(),
             \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
+            $this->currentConfig,
         )->performAction(ExtensionType::Language, 'activate', $this->language, $this->fsLanguages[$this->language] ?? null);
 
         // fill CurrentConfig::$data from the freshly-seeded config table
@@ -715,14 +717,14 @@ define(\'DB_COLLATE\', \'\');
             // define()d and this block ran unconditionally in the original,
             // without SessionBootstrap::register()'s
             // session_save_handler === 'db' guard)
-            session_set_save_handler(new PwgSession(new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class))));
+            session_set_save_handler(new PwgSession(new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class), $this->currentConfig)));
             if (function_exists('ini_set')) {
-                ini_set('session.use_cookies', CurrentConfig::sessionUseCookies());
-                ini_set('session.use_only_cookies', CurrentConfig::sessionUseOnlyCookies());
-                ini_set('session.use_trans_sid', (int) CurrentConfig::sessionUseTransSid());
+                ini_set('session.use_cookies', $this->currentConfig->sessionUseCookies());
+                ini_set('session.use_only_cookies', $this->currentConfig->sessionUseOnlyCookies());
+                ini_set('session.use_trans_sid', (int) $this->currentConfig->sessionUseTransSid());
                 ini_set('session.cookie_httponly', 1);
             }
-            session_name(CurrentConfig::sessionName());
+            session_name($this->currentConfig->sessionName());
             session_set_cookie_params(0, new CookieService()->cookiePath());
             register_shutdown_function(session_write_close(...));
 
@@ -754,7 +756,7 @@ define(\'DB_COLLATE\', \'\');
             // data; this mirrors that method's own two calls verbatim.
             \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\User::fromUserArray($user));
             \Piwigo\Users\CurrentUser::current()->markRealUserResolved();
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->passwordService($conn), new \Piwigo\Auth\CookieService(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class), new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current())
+            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->passwordService($conn), new \Piwigo\Auth\CookieService(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class), new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class), $this->currentConfig), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), $this->currentConfig)
                 ->logUser($login_user_id, false);
             $_SESSION['connected_with'] = 'pwg_ui';
 

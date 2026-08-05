@@ -19,7 +19,7 @@ use Piwigo\Image\ImageStdParams;
  */
 final class RatingUserPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
 
@@ -28,13 +28,13 @@ final class RatingUserPageRenderer
         $tabsheet->select('rating_user');
         $tabsheet->assign($currentTemplate);
 
-        $ratingFilter = Request\RatingUserFilterRequest::fromGlobals(\Piwigo\Config\CurrentConfig::topNumber());
+        $ratingFilter = Request\RatingUserFilterRequest::fromGlobals($currentConfig->topNumber());
         $filter_min_rates = $ratingFilter->minRates;
         $consensus_top_number = $ratingFilter->consensusTopNumber;
 
         // build users
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+        $user_fields = $currentConfig->userFields();
         $rate_repository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Rate\RateEntity::class);
 
         $users_by_id = [];
@@ -45,7 +45,7 @@ final class RatingUserPageRenderer
             ];
         }
 
-        $rate_items = \Piwigo\Config\CurrentConfig::rateItems();
+        $rate_items = $currentConfig->rateItems();
 
         $by_user_rating_model = [
             'rates' => [],
@@ -192,7 +192,7 @@ final class RatingUserPageRenderer
             'F_ACTION' => $urlService->getRootUrl() . 'admin.php',
             'F_MIN_RATES' => $filter_min_rates,
             'CONSENSUS_TOP_NUMBER' => $consensus_top_number,
-            'available_rates' => \Piwigo\Config\CurrentConfig::rateItems(),
+            'available_rates' => $currentConfig->rateItems(),
             'ratings' => $by_user_ratings,
             'image_urls' => $image_urls,
             'TN_WIDTH' => $imageStdParams->get_by_type(ImageStdParams::SQUARE)->sizing->ideal_size[0],

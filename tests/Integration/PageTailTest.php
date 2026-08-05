@@ -65,15 +65,19 @@ final class PageTailTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
         // Kernel is already booted by parent::setUp() with this exact same
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
 
         // footer.tpl's own {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
         CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes', 'default'));
 
-        CurrentConfig::setSendPiwigoInfos(false);
-        CurrentConfig::setShowVersion(true);
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setSendPiwigoInfos(false);
+        $currentConfig->setShowVersion(true);
     }
 
     #[\Override]
@@ -81,18 +85,26 @@ final class PageTailTest extends IntegrationTestCase
     {
         UniqueExecLock::ends('check_for_updates');
         CurrentTemplate::current()->reset();
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         Kernel::reset();
         parent::tearDown();
     }
 
     public function test_renderToString_skips_the_update_check_when_another_exec_already_holds_the_fresh_lock(): void
     {
-        CurrentConfig::setUpdateNotifyCheckPeriod(1);
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setUpdateNotifyCheckPeriod(1);
         // Far enough in the past that, with a 1-second check period,
         // strtotime($lastCheck) < strtotime('1 seconds ago') is true --
         // reaches the `$check_for_updates = true;` line under test.
-        CurrentConfig::setUpdateNotifyLastCheck('2020-01-01 00:00:00');
+        $currentConfig->setUpdateNotifyLastCheck('2020-01-01 00:00:00');
 
         // Win the real lock first, under a *different* random exec id than
         // whatever checkForUpdates() will generate internally -- its own

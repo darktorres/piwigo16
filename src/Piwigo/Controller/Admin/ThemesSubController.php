@@ -69,6 +69,7 @@ final class ThemesSubController implements AdminSubControllerInterface
         private readonly ThemesStandardPagesPageRenderer $themesStandardPagesPageRenderer,
         private readonly ThemesInstalledPageRenderer $themesInstalledPageRenderer,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -91,7 +92,7 @@ final class ThemesSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render($this->lang, $this->accessControl, 'themes', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
+                ->render($this->lang, $this->accessControl, 'themes', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig);
             $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Themes'));
         } elseif ($tab === 'new') {
             $this->themesNewPageRenderer

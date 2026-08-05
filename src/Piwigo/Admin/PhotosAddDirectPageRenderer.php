@@ -54,6 +54,7 @@ final class PhotosAddDirectPageRenderer
         private readonly \Piwigo\Metadata\MetadataService $metadataService,
         private readonly \Piwigo\Image\ImageService $imageService,
         private readonly \Piwigo\Users\PreferencesService $preferencesService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -81,7 +82,7 @@ final class PhotosAddDirectPageRenderer
         $user_id = $this->currentUser->get()
             ->id->value;
 
-        $photosAddDirectRequest = Request\PhotosAddDirectRequest::fromGlobals(\Piwigo\Config\CurrentConfig::isFormatsEnabled());
+        $photosAddDirectRequest = Request\PhotosAddDirectRequest::fromGlobals($this->currentConfig->isFormatsEnabled());
 
         // +-------------------------------------------------------------------+
         // |                        batch management request                   |
@@ -187,10 +188,10 @@ final class PhotosAddDirectPageRenderer
 
         $this->eventDispatcher->dispatchNotify(new LocEndPhotoAddDirect());
 
-        $conf_format_ext = \Piwigo\Config\CurrentConfig::formatExtensions();
+        $conf_format_ext = $this->currentConfig->formatExtensions();
 
         $template->assign([
-            'ENABLE_FORMATS' => \Piwigo\Config\CurrentConfig::isFormatsEnabled(),
+            'ENABLE_FORMATS' => $this->currentConfig->isFormatsEnabled(),
             'DISPLAY_FORMATS' => $display_formats,
             'HAVE_FORMATS_ORIGINAL' => $have_formats_original,
             'FORMATS_ORIGINAL_INFO' => $formats_original_info,
@@ -216,7 +217,7 @@ final class PhotosAddDirectPageRenderer
 
         $htmlRenderer = $this->htmlRenderer;
 
-        $uploadService = new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService);
+        $uploadService = new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig);
 
         // +-------------------------------------------------------------------+
         // | Photo selection                                                    |
@@ -225,8 +226,8 @@ final class PhotosAddDirectPageRenderer
         $template->assign(
             [
                 'F_ADD_ACTION' => self::baseUrl($this->urlService),
-                'chunk_size' => \Piwigo\Config\CurrentConfig::uploadFormChunkSize(),
-                'max_file_size' => \Piwigo\Config\CurrentConfig::uploadFormMaxFileSize(),
+                'chunk_size' => $this->currentConfig->uploadFormChunkSize(),
+                'max_file_size' => $this->currentConfig->uploadFormMaxFileSize(),
                 'ADMIN_PAGE_TITLE' => $this->lang->t('Upload Photos'),
             ]
         );
@@ -260,11 +261,11 @@ final class PhotosAddDirectPageRenderer
         }
 
         // warn the user if the picture will be resized after upload
-        if (\Piwigo\Config\CurrentConfig::originalResize()) {
+        if ($this->currentConfig->originalResize()) {
             $template->assign(
                 [
-                    'original_resize_maxwidth' => \Piwigo\Config\CurrentConfig::originalResizeMaxwidth(),
-                    'original_resize_maxheight' => \Piwigo\Config\CurrentConfig::originalResizeMaxheight(),
+                    'original_resize_maxwidth' => $this->currentConfig->originalResizeMaxwidth(),
+                    'original_resize_maxheight' => $this->currentConfig->originalResizeMaxheight(),
                 ]
             );
         }
@@ -277,7 +278,7 @@ final class PhotosAddDirectPageRenderer
             ]
         );
 
-        $upload_extensions = (\Piwigo\Config\CurrentConfig::uploadFormAllTypes()) ? \Piwigo\Config\CurrentConfig::fileExtensions() : \Piwigo\Config\CurrentConfig::pictureExtensions();
+        $upload_extensions = ($this->currentConfig->uploadFormAllTypes()) ? $this->currentConfig->fileExtensions() : $this->currentConfig->pictureExtensions();
         $unique_exts = array_unique(array_map(strtolower(...), $upload_extensions));
 
         $template->assign(
@@ -366,7 +367,7 @@ final class PhotosAddDirectPageRenderer
         if (! isset($_SESSION['upload_hide_warnings'])) {
             $setup_warnings = [];
 
-            if (\Piwigo\Config\CurrentConfig::useExif() and ! function_exists('exif_read_data')) {
+            if ($this->currentConfig->useExif() and ! function_exists('exif_read_data')) {
                 $setup_warnings[] = $this->lang->t('Exif extension not available, admin should disable exif use');
             }
 
@@ -378,7 +379,7 @@ final class PhotosAddDirectPageRenderer
                 );
             }
 
-            $upload_form_chunk_size = \Piwigo\Config\CurrentConfig::uploadFormChunkSize();
+            $upload_form_chunk_size = $this->currentConfig->uploadFormChunkSize();
             if ($uploadService->getIniSize('upload_max_filesize') < $upload_form_chunk_size * 1024) {
                 $upload_max_filesize = $uploadService->getIniSize('upload_max_filesize');
                 // upload_max_filesize is a core php.ini directive, always present

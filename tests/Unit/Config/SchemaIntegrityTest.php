@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\PluginConfig\EventDispatcher;
 
 // Guards the property <-> accessor contract on Piwigo\Config\CurrentConfig
 // (Config generic-accessor removal) -- replaces the former 3 SCHEMA<->
@@ -15,6 +18,13 @@ use Piwigo\Config\CurrentConfig;
 // reason to compute instead of trivially return/assign (see their own
 // docblocks: chmodValue's SAPI-dependent fallback, recentPostDates's
 // can't-`new`-in-a-property-default lazy build).
+//
+// Singleton/service-locator elimination campaign, Phase 9: CurrentConfig's
+// 289 config-key properties/accessors converted from static to instance --
+// this file's own reflection now filters out the class's one remaining
+// static property (the `current()` shim's memoized $fallback, not a config
+// key) and invokes getters/setters against a real instance instead of
+// `null`.
 
 const SCHEMA_INTEGRITY_METHOD_ALLOW_LIST = [
     // Bulk readers / test helpers
@@ -22,6 +32,9 @@ const SCHEMA_INTEGRITY_METHOD_ALLOW_LIST = [
     // Composed accessors -- no property of their own, just composition
     // over existing accessors (themesDir()/dataLocation()).
     'themesPath', 'combinedDir', 'derivativeDir',
+    // Transitional bridge (see CurrentConfig's own class docblock) --
+    // resolves the container-shared instance, not a property of its own.
+    'current',
 ];
 
 const SCHEMA_INTEGRITY_TRIVIAL_BODY_ALLOW_LIST = [
@@ -35,7 +48,10 @@ function schemaIntegrityConfigProperties(): array
 {
     $reflection = new ReflectionClass(CurrentConfig::class);
 
-    return $reflection->getProperties(ReflectionProperty::IS_STATIC | ReflectionProperty::IS_PRIVATE);
+    return array_values(array_filter(
+        $reflection->getProperties(ReflectionProperty::IS_PRIVATE),
+        static fn (ReflectionProperty $property): bool => ! $property->isStatic(),
+    ));
 }
 
 function schemaIntegrityMethodBody(ReflectionMethod $method): string
@@ -94,7 +110,7 @@ test('every getter trivially returns its own property, minus the documented allo
             continue;
         }
         $body = schemaIntegrityMethodBody(new ReflectionMethod(CurrentConfig::class, $name));
-        expect($body)->toBe("return self::\${$name};", "CurrentConfig::{$name}() does more than trivially return its own property.");
+        expect($body)->toBe("return \$this->{$name};", "CurrentConfig::{$name}() does more than trivially return its own property.");
     }
 });
 
@@ -106,14 +122,14 @@ test('every setter trivially assigns its own property, minus the documented allo
         }
         $setter = 'set' . ucfirst($name);
         $body = schemaIntegrityMethodBody(new ReflectionMethod(CurrentConfig::class, $setter));
-        if ($body === "self::\${$name} = \$value;") {
+        if ($body === "\$this->{$name} = \$value;") {
             continue;
         }
         // The 38 custom-shaped properties' setters validate/normalize
         // $value before assigning -- still real, just not a bare
         // one-liner. Confirm it's a genuine write to the right property,
         // not a silent no-op or a write to the wrong one.
-        expect(str_contains($body, "self::\${$name} ="))
+        expect(str_contains($body, "\$this->{$name} ="))
             ->toBeTrue("CurrentConfig::{$setter}() doesn't assign CurrentConfig::\${$name}.");
     }
 });
@@ -125,8 +141,12 @@ test('every setter trivially assigns its own property, minus the documented allo
 // real call sites had (a value of the wrong PHP type for its target
 // property, e.g. a real int passed to a ?string-typed property, silently
 // absorbed by the old per-type string-cast convention but not by real
-// JSON typing). Both private statics are called directly via reflection --
-// pure functions, no DB needed for either. Skips: keys not in
+// JSON typing). encode() stays a pure static (no CurrentConfig state
+// involved); hydrate() is a real instance method since Phase 9, so this
+// sweep builds one throwaway CurrentConfig + ConfigService pair up front
+// and invokes every getter/setter/hydrate() call against that same pair --
+// hydrate() never touches the DB (it only calls a CurrentConfig setter via
+// reflection), so no Kernel::boot() is needed. Skips: keys not in
 // KEY_TO_PROPERTY (property has no DB-backed key, e.g. computed/lazy
 // properties), union/object-typed setters (no single generic round-trip
 // contract), and a null default (encode()/hydrate() both take a separate,
@@ -142,6 +162,17 @@ test('every scalar/array-typed property survives a real encode()/hydrate() round
     }
     /** @var array<string, string> $keyToProperty */
     $propertyToKey = array_flip($keyToProperty);
+
+    // Throwaway, no Kernel::boot() needed -- EntityManagerFactory::build()
+    // only constructs objects, it never opens a real connection, and
+    // hydrate() never reads $this->repo/$this->eventDispatcher, only
+    // $this->currentConfig (see this test's own docblock above).
+    $currentConfig = new CurrentConfig();
+    $configService = new ConfigService(
+        EntityManagerFactory::build()->getRepository(ConfigEntry::class),
+        new EventDispatcher(),
+        $currentConfig,
+    );
 
     $encode = new ReflectionMethod(ConfigService::class, 'encode');
     $hydrate = new ReflectionMethod(ConfigService::class, 'hydrate');
@@ -173,13 +204,13 @@ test('every scalar/array-typed property survives a real encode()/hydrate() round
             }
 
             $getter = new ReflectionMethod(CurrentConfig::class, $name);
-            $originalValues[$name] = $getter->invoke(null);
+            $originalValues[$name] = $getter->invoke($currentConfig);
 
             $encoded = $encode->invoke(null, $key, $original);
             expect($encoded)->toBeString("ConfigService::encode() returned null for config key '{$key}''s non-null default.");
 
-            $hydrate->invoke(null, $key, $encoded);
-            $roundTripped = $getter->invoke(null);
+            $hydrate->invoke($configService, $key, $encoded);
+            $roundTripped = $getter->invoke($currentConfig);
 
             expect($roundTripped)->toEqual($original, "CurrentConfig::\${$name} (config key '{$key}') did not round-trip through ConfigService::encode()/hydrate(): expected " . var_export($original, true) . ', got ' . var_export($roundTripped, true) . '.');
             $checked++;
@@ -188,7 +219,7 @@ test('every scalar/array-typed property survives a real encode()/hydrate() round
         expect($checked)->toBeGreaterThan(0, 'The round-trip sweep skipped every property -- check its skip conditions.');
     } finally {
         foreach ($originalValues as $name => $value) {
-            new ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($name))->invoke(null, $value);
+            new ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($name))->invoke($currentConfig, $value);
         }
     }
 });

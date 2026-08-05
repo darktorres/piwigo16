@@ -7,11 +7,11 @@ namespace Piwigo\Config;
 /**
  * Typed facade over Piwigo's runtime configuration (P13, retyped in full
  * during Config generic-accessor removal). Every real config key is a
- * private static typed property -- named getter/setter pair, no generic
+ * private typed property -- named getter/setter pair, no generic
  * string-keyed surface (no override()/has()/delete()/loadArray(), all
  * deleted; see design doc for the full rationale). DB-backed persistence
  * stays a two-part split (Legacy Coupling Retirement Phase 5, narrowed in
- * Phase 8, 8d, unchanged by this rename): this class is the static typed
+ * Phase 8, 8d, unchanged by this rename): this class is the typed
  * read/in-memory-write layer; Piwigo\Config\ConfigService is the DI/
  * Doctrine-backed persistence layer, constructor-injected where possible
  * and reached via Piwigo\Config\CurrentConfigService::get() everywhere
@@ -22,6 +22,20 @@ namespace Piwigo\Config;
  * once a sibling of this same shape, was deleted by the singleton/DI
  * elimination campaign -- see config/container.php's PersistentCache
  * binding -- since its value never actually varied per request.)
+ *
+ * Singleton/service-locator elimination campaign, Phase 9: converted from
+ * a static-property bag to a real, container-shared instance -- no
+ * constructor collaborators needed at all (every property already carries
+ * its own real, sensible hardcoded default at declaration), so `current()`
+ * is a memoized `@deprecated` transitional bridge for callers not yet
+ * converted to constructor injection, same "load once via
+ * ConfigService::loadConfFromDb(), read/write many times per request"
+ * reasoning as `Translator`/`EventDispatcher`/`CurrentUser`/
+ * `CurrentTemplate` -- the not-booted fallback is memoized
+ * (`self::$fallback ??= new self()`), not fresh-per-call, and is safe to
+ * memoize here (unlike a class with required collaborators) because every
+ * property's own declared default is already the correct value to read
+ * before the real config table has loaded.
  *
  * DB credentials (db_host/db_port/db_driver/db_base/db_user/db_password/
  * db_prefix) and the handful of sysadmin-lockable settings
@@ -39,52 +53,73 @@ namespace Piwigo\Config;
  */
 final class CurrentConfig
 {
+    private static ?self $fallback = null;
+
+    /**
+     * @deprecated transitional bridge for callers not yet converted to
+     * constructor injection -- see the class docblock above. Delete once
+     * `grep -rn "CurrentConfig::current("` outside tests/ returns nothing.
+     */
+    public static function current(): self
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $instance = \Piwigo\Core\Kernel::container()->get(self::class);
+            if (! $instance instanceof self) {
+                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+            }
+
+            return $instance;
+        }
+
+        return self::$fallback ??= new self();
+    }
+
     // === activate_comments ===
     /**
      * Enable or disable user comments on photos gallery-wide.
      */
-    private static bool $activateComments = true;
+    private bool $activateComments = true;
 
-    public static function activateComments(): bool
+    public function activateComments(): bool
     {
-        return self::$activateComments;
+        return $this->activateComments;
     }
 
-    public static function setActivateComments(bool $value): void
+    public function setActivateComments(bool $value): void
     {
-        self::$activateComments = $value;
+        $this->activateComments = $value;
     }
 
     // === activity_display_connections ===
     /**
      * Which connection events to show in the activity log: all, admin, or none.
      */
-    private static string $activityDisplayConnections = 'all';
+    private string $activityDisplayConnections = 'all';
 
-    public static function activityDisplayConnections(): string
+    public function activityDisplayConnections(): string
     {
-        return self::$activityDisplayConnections;
+        return $this->activityDisplayConnections;
     }
 
-    public static function setActivityDisplayConnections(string $value): void
+    public function setActivityDisplayConnections(string $value): void
     {
-        self::$activityDisplayConnections = $value;
+        $this->activityDisplayConnections = $value;
     }
 
     // === add_cache_to_storage_chart ===
     /**
      * Include cache files in the storage usage chart on the dashboard.
      */
-    private static bool $addCacheToStorageChart = true;
+    private bool $addCacheToStorageChart = true;
 
-    public static function addCacheToStorageChart(): bool
+    public function addCacheToStorageChart(): bool
     {
-        return self::$addCacheToStorageChart;
+        return $this->addCacheToStorageChart;
     }
 
-    public static function setAddCacheToStorageChart(bool $value): void
+    public function setAddCacheToStorageChart(bool $value): void
     {
-        self::$addCacheToStorageChart = $value;
+        $this->addCacheToStorageChart = $value;
     }
 
     // === admin_theme ===
@@ -92,32 +127,32 @@ final class CurrentConfig
      * Site-wide fallback admin theme (clear, default, or roma) used when a user
      * has no admin_theme preference of their own yet.
      */
-    private static string $adminTheme = 'clear';
+    private string $adminTheme = 'clear';
 
-    public static function adminTheme(): string
+    public function adminTheme(): string
     {
-        return self::$adminTheme;
+        return $this->adminTheme;
     }
 
-    public static function setAdminTheme(string $value): void
+    public function setAdminTheme(string $value): void
     {
-        self::$adminTheme = $value;
+        $this->adminTheme = $value;
     }
 
     // === album_description_on_all_pages ===
     /**
      * Show the album description on every paginated page, not just the first.
      */
-    private static bool $albumDescriptionOnAllPages = false;
+    private bool $albumDescriptionOnAllPages = false;
 
-    public static function albumDescriptionOnAllPages(): bool
+    public function albumDescriptionOnAllPages(): bool
     {
-        return self::$albumDescriptionOnAllPages;
+        return $this->albumDescriptionOnAllPages;
     }
 
-    public static function setAlbumDescriptionOnAllPages(bool $value): void
+    public function setAlbumDescriptionOnAllPages(bool $value): void
     {
-        self::$albumDescriptionOnAllPages = $value;
+        $this->albumDescriptionOnAllPages = $value;
     }
 
     // === album_move_delay_before_auto_opening ===
@@ -125,48 +160,48 @@ final class CurrentConfig
      * Milliseconds to wait before auto-expanding an album drop-target during
      * drag-and-drop.
      */
-    private static int $albumMoveDelayBeforeAutoOpening = 3000;
+    private int $albumMoveDelayBeforeAutoOpening = 3000;
 
-    public static function albumMoveDelayBeforeAutoOpening(): int
+    public function albumMoveDelayBeforeAutoOpening(): int
     {
-        return self::$albumMoveDelayBeforeAutoOpening;
+        return $this->albumMoveDelayBeforeAutoOpening;
     }
 
-    public static function setAlbumMoveDelayBeforeAutoOpening(int $value): void
+    public function setAlbumMoveDelayBeforeAutoOpening(int $value): void
     {
-        self::$albumMoveDelayBeforeAutoOpening = $value;
+        $this->albumMoveDelayBeforeAutoOpening = $value;
     }
 
     // === allow_html_descriptions ===
     /**
      * Allow HTML markup in photo and album descriptions.
      */
-    private static bool $allowHtmlDescriptions = true;
+    private bool $allowHtmlDescriptions = true;
 
-    public static function allowHtmlDescriptions(): bool
+    public function allowHtmlDescriptions(): bool
     {
-        return self::$allowHtmlDescriptions;
+        return $this->allowHtmlDescriptions;
     }
 
-    public static function setAllowHtmlDescriptions(bool $value): void
+    public function setAllowHtmlDescriptions(bool $value): void
     {
-        self::$allowHtmlDescriptions = $value;
+        $this->allowHtmlDescriptions = $value;
     }
 
     // === allow_html_in_metadata ===
     /**
      * Allow HTML in metadata values extracted from photo files.
      */
-    private static bool $allowHtmlInMetadata = false;
+    private bool $allowHtmlInMetadata = false;
 
-    public static function allowHtmlInMetadata(): bool
+    public function allowHtmlInMetadata(): bool
     {
-        return self::$allowHtmlInMetadata;
+        return $this->allowHtmlInMetadata;
     }
 
-    public static function setAllowHtmlInMetadata(bool $value): void
+    public function setAllowHtmlInMetadata(bool $value): void
     {
-        self::$allowHtmlInMetadata = $value;
+        $this->allowHtmlInMetadata = $value;
     }
 
     // === allow_random_representative ===
@@ -174,272 +209,272 @@ final class CurrentConfig
      * Allow a random photo to represent an album that has no explicit
      * representative set.
      */
-    private static bool $allowRandomRepresentative = false;
+    private bool $allowRandomRepresentative = false;
 
-    public static function allowRandomRepresentative(): bool
+    public function allowRandomRepresentative(): bool
     {
-        return self::$allowRandomRepresentative;
+        return $this->allowRandomRepresentative;
     }
 
-    public static function setAllowRandomRepresentative(bool $value): void
+    public function setAllowRandomRepresentative(bool $value): void
     {
-        self::$allowRandomRepresentative = $value;
+        $this->allowRandomRepresentative = $value;
     }
 
     // === allow_user_customization ===
     /**
      * Let registered users change their own display preferences.
      */
-    private static bool $allowUserCustomization = true;
+    private bool $allowUserCustomization = true;
 
-    public static function allowUserCustomization(): bool
+    public function allowUserCustomization(): bool
     {
-        return self::$allowUserCustomization;
+        return $this->allowUserCustomization;
     }
 
-    public static function setAllowUserCustomization(bool $value): void
+    public function setAllowUserCustomization(bool $value): void
     {
-        self::$allowUserCustomization = $value;
+        $this->allowUserCustomization = $value;
     }
 
     // === allow_user_registration ===
     /**
      * Allow new users to self-register from the public gallery.
      */
-    private static bool $allowUserRegistration = true;
+    private bool $allowUserRegistration = true;
 
-    public static function allowUserRegistration(): bool
+    public function allowUserRegistration(): bool
     {
-        return self::$allowUserRegistration;
+        return $this->allowUserRegistration;
     }
 
-    public static function setAllowUserRegistration(bool $value): void
+    public function setAllowUserRegistration(bool $value): void
     {
-        self::$allowUserRegistration = $value;
+        $this->allowUserRegistration = $value;
     }
 
     // === allow_web_services ===
     /**
      * Enable the Piwigo web-service (API) endpoint.
      */
-    private static bool $allowWebServices = true;
+    private bool $allowWebServices = true;
 
-    public static function allowWebServices(): bool
+    public function allowWebServices(): bool
     {
-        return self::$allowWebServices;
+        return $this->allowWebServices;
     }
 
-    public static function setAllowWebServices(bool $value): void
+    public function setAllowWebServices(bool $value): void
     {
-        self::$allowWebServices = $value;
+        $this->allowWebServices = $value;
     }
 
     // === alternative_pem_url ===
     /**
      * Override URL for the Piwigo Extensions Manager repository.
      */
-    private static string $alternativePemUrl = '';
+    private string $alternativePemUrl = '';
 
-    public static function alternativePemUrl(): string
+    public function alternativePemUrl(): string
     {
-        return self::$alternativePemUrl;
+        return $this->alternativePemUrl;
     }
 
-    public static function setAlternativePemUrl(string $value): void
+    public function setAlternativePemUrl(string $value): void
     {
-        self::$alternativePemUrl = $value;
+        $this->alternativePemUrl = $value;
     }
 
     // === animated_webp_compression_quality ===
     /**
      * Quality level (1-100) for animated WebP derivative encoding.
      */
-    private static int $animatedWebpCompressionQuality = 70;
+    private int $animatedWebpCompressionQuality = 70;
 
-    public static function animatedWebpCompressionQuality(): int
+    public function animatedWebpCompressionQuality(): int
     {
-        return self::$animatedWebpCompressionQuality;
+        return $this->animatedWebpCompressionQuality;
     }
 
-    public static function setAnimatedWebpCompressionQuality(int $value): void
+    public function setAnimatedWebpCompressionQuality(int $value): void
     {
-        self::$animatedWebpCompressionQuality = $value;
+        $this->animatedWebpCompressionQuality = $value;
     }
 
     // === anti-flood_time ===
     /**
      * Minimum seconds between comment posts from the same user to prevent spam.
      */
-    private static int $antiFloodTime = 60;
+    private int $antiFloodTime = 60;
 
-    public static function antiFloodTime(): int
+    public function antiFloodTime(): int
     {
-        return self::$antiFloodTime;
+        return $this->antiFloodTime;
     }
 
-    public static function setAntiFloodTime(int $value): void
+    public function setAntiFloodTime(int $value): void
     {
-        self::$antiFloodTime = $value;
+        $this->antiFloodTime = $value;
     }
 
     // === auth_key_duration ===
     /**
      * Lifetime in seconds for single-use authentication keys sent in emails.
      */
-    private static int $authKeyDuration = 259200;
+    private int $authKeyDuration = 259200;
 
-    public static function authKeyDuration(): int
+    public function authKeyDuration(): int
     {
-        return self::$authKeyDuration;
+        return $this->authKeyDuration;
     }
 
-    public static function setAuthKeyDuration(int $value): void
+    public function setAuthKeyDuration(int $value): void
     {
-        self::$authKeyDuration = $value;
+        $this->authKeyDuration = $value;
     }
 
     // === authorize_remembering ===
     /**
      * Allow users to use the remember-me persistent login cookie.
      */
-    private static bool $authorizeRemembering = true;
+    private bool $authorizeRemembering = true;
 
-    public static function authorizeRemembering(): bool
+    public function authorizeRemembering(): bool
     {
-        return self::$authorizeRemembering;
+        return $this->authorizeRemembering;
     }
 
-    public static function setAuthorizeRemembering(bool $value): void
+    public function setAuthorizeRemembering(bool $value): void
     {
-        self::$authorizeRemembering = $value;
+        $this->authorizeRemembering = $value;
     }
 
     // === batch_manager_images_per_page_global ===
     /**
      * Number of photos shown per page in the batch-manager global view.
      */
-    private static int $batchManagerImagesPerPageGlobal = 20;
+    private int $batchManagerImagesPerPageGlobal = 20;
 
-    public static function batchManagerImagesPerPageGlobal(): int
+    public function batchManagerImagesPerPageGlobal(): int
     {
-        return self::$batchManagerImagesPerPageGlobal;
+        return $this->batchManagerImagesPerPageGlobal;
     }
 
-    public static function setBatchManagerImagesPerPageGlobal(int $value): void
+    public function setBatchManagerImagesPerPageGlobal(int $value): void
     {
-        self::$batchManagerImagesPerPageGlobal = $value;
+        $this->batchManagerImagesPerPageGlobal = $value;
     }
 
     // === batch_manager_images_per_page_unit ===
     /**
      * Number of photos shown per page in the batch-manager unit view.
      */
-    private static int $batchManagerImagesPerPageUnit = 5;
+    private int $batchManagerImagesPerPageUnit = 5;
 
-    public static function batchManagerImagesPerPageUnit(): int
+    public function batchManagerImagesPerPageUnit(): int
     {
-        return self::$batchManagerImagesPerPageUnit;
+        return $this->batchManagerImagesPerPageUnit;
     }
 
-    public static function setBatchManagerImagesPerPageUnit(int $value): void
+    public function setBatchManagerImagesPerPageUnit(int $value): void
     {
-        self::$batchManagerImagesPerPageUnit = $value;
+        $this->batchManagerImagesPerPageUnit = $value;
     }
 
     // === browser_language ===
     /**
      * Automatically detect and use the visitor browser language preference.
      */
-    private static bool $browserLanguage = true;
+    private bool $browserLanguage = true;
 
-    public static function browserLanguage(): bool
+    public function browserLanguage(): bool
     {
-        return self::$browserLanguage;
+        return $this->browserLanguage;
     }
 
-    public static function setBrowserLanguage(bool $value): void
+    public function setBrowserLanguage(bool $value): void
     {
-        self::$browserLanguage = $value;
+        $this->browserLanguage = $value;
     }
 
     // === cache.backend ===
     /**
      * Cache driver to use: file or redis.
      */
-    private static string $cacheBackend = 'file';
+    private string $cacheBackend = 'file';
 
-    public static function cacheBackend(): string
+    public function cacheBackend(): string
     {
-        return self::$cacheBackend;
+        return $this->cacheBackend;
     }
 
-    public static function setCacheBackend(string $value): void
+    public function setCacheBackend(string $value): void
     {
-        self::$cacheBackend = $value;
+        $this->cacheBackend = $value;
     }
 
     // === cache.default_ttl ===
     /**
      * Default cache entry time-to-live in seconds.
      */
-    private static int $cacheDefaultTtl = 86400;
+    private int $cacheDefaultTtl = 86400;
 
-    public static function cacheDefaultTtl(): int
+    public function cacheDefaultTtl(): int
     {
-        return self::$cacheDefaultTtl;
+        return $this->cacheDefaultTtl;
     }
 
-    public static function setCacheDefaultTtl(int $value): void
+    public function setCacheDefaultTtl(int $value): void
     {
-        self::$cacheDefaultTtl = $value;
+        $this->cacheDefaultTtl = $value;
     }
 
     // === cache.namespace ===
     /**
      * Namespace prefix for all cache keys, useful when sharing a Redis instance.
      */
-    private static string $cacheNamespace = '';
+    private string $cacheNamespace = '';
 
-    public static function cacheNamespace(): string
+    public function cacheNamespace(): string
     {
-        return self::$cacheNamespace;
+        return $this->cacheNamespace;
     }
 
-    public static function setCacheNamespace(string $value): void
+    public function setCacheNamespace(string $value): void
     {
-        self::$cacheNamespace = $value;
+        $this->cacheNamespace = $value;
     }
 
     // === cache.redis_url ===
     /**
      * Redis connection DSN used when cache.backend is redis.
      */
-    private static string $cacheRedisUrl = 'redis://localhost:6379';
+    private string $cacheRedisUrl = 'redis://localhost:6379';
 
-    public static function cacheRedisUrl(): string
+    public function cacheRedisUrl(): string
     {
-        return self::$cacheRedisUrl;
+        return $this->cacheRedisUrl;
     }
 
-    public static function setCacheRedisUrl(string $value): void
+    public function setCacheRedisUrl(string $value): void
     {
-        self::$cacheRedisUrl = $value;
+        $this->cacheRedisUrl = $value;
     }
 
     // === calendar_datefield ===
     /**
      * Date field used for the calendar view: date_creation or date_available.
      */
-    private static string $calendarDatefield = 'date_creation';
+    private string $calendarDatefield = 'date_creation';
 
-    public static function calendarDatefield(): string
+    public function calendarDatefield(): string
     {
-        return self::$calendarDatefield;
+        return $this->calendarDatefield;
     }
 
-    public static function setCalendarDatefield(string $value): void
+    public function setCalendarDatefield(string $value): void
     {
-        self::$calendarDatefield = $value;
+        $this->calendarDatefield = $value;
     }
 
     // === calendar_show_any ===
@@ -447,64 +482,64 @@ final class CurrentConfig
      * Show an Any link in the calendar so visitors can view photos without a date
      * filter.
      */
-    private static bool $calendarShowAny = true;
+    private bool $calendarShowAny = true;
 
-    public static function calendarShowAny(): bool
+    public function calendarShowAny(): bool
     {
-        return self::$calendarShowAny;
+        return $this->calendarShowAny;
     }
 
-    public static function setCalendarShowAny(bool $value): void
+    public function setCalendarShowAny(bool $value): void
     {
-        self::$calendarShowAny = $value;
+        $this->calendarShowAny = $value;
     }
 
     // === calendar_show_empty ===
     /**
      * Show months and years with no photos in the calendar navigation.
      */
-    private static bool $calendarShowEmpty = true;
+    private bool $calendarShowEmpty = true;
 
-    public static function calendarShowEmpty(): bool
+    public function calendarShowEmpty(): bool
     {
-        return self::$calendarShowEmpty;
+        return $this->calendarShowEmpty;
     }
 
-    public static function setCalendarShowEmpty(bool $value): void
+    public function setCalendarShowEmpty(bool $value): void
     {
-        self::$calendarShowEmpty = $value;
+        $this->calendarShowEmpty = $value;
     }
 
     // === category_url_style ===
     /**
      * URL format for album links: id or id-name.
      */
-    private static string $categoryUrlStyle = 'id';
+    private string $categoryUrlStyle = 'id';
 
-    public static function categoryUrlStyle(): string
+    public function categoryUrlStyle(): string
     {
-        return self::$categoryUrlStyle;
+        return $this->categoryUrlStyle;
     }
 
-    public static function setCategoryUrlStyle(string $value): void
+    public function setCategoryUrlStyle(string $value): void
     {
-        self::$categoryUrlStyle = $value;
+        $this->categoryUrlStyle = $value;
     }
 
     // === checksum_compute_blocksize ===
     /**
      * Number of photos per block when computing file checksums in batch.
      */
-    private static int $checksumComputeBlocksize = 50;
+    private int $checksumComputeBlocksize = 50;
 
-    public static function checksumComputeBlocksize(): int
+    public function checksumComputeBlocksize(): int
     {
-        return self::$checksumComputeBlocksize;
+        return $this->checksumComputeBlocksize;
     }
 
-    public static function setChecksumComputeBlocksize(int $value): void
+    public function setChecksumComputeBlocksize(int $value): void
     {
-        self::$checksumComputeBlocksize = $value;
+        $this->checksumComputeBlocksize = $value;
     }
 
     // === comment_spam_max_links ===
@@ -512,176 +547,176 @@ final class CurrentConfig
      * Maximum number of links allowed in a single comment before it is rejected as
      * spam.
      */
-    private static int $commentSpamMaxLinks = 3;
+    private int $commentSpamMaxLinks = 3;
 
-    public static function commentSpamMaxLinks(): int
+    public function commentSpamMaxLinks(): int
     {
-        return self::$commentSpamMaxLinks;
+        return $this->commentSpamMaxLinks;
     }
 
-    public static function setCommentSpamMaxLinks(int $value): void
+    public function setCommentSpamMaxLinks(int $value): void
     {
-        self::$commentSpamMaxLinks = $value;
+        $this->commentSpamMaxLinks = $value;
     }
 
     // === comment_spam_reject ===
     /**
      * Silently reject comments that exceed the spam link threshold.
      */
-    private static bool $commentSpamReject = true;
+    private bool $commentSpamReject = true;
 
-    public static function commentSpamReject(): bool
+    public function commentSpamReject(): bool
     {
-        return self::$commentSpamReject;
+        return $this->commentSpamReject;
     }
 
-    public static function setCommentSpamReject(bool $value): void
+    public function setCommentSpamReject(bool $value): void
     {
-        self::$commentSpamReject = $value;
+        $this->commentSpamReject = $value;
     }
 
     // === comments_author_mandatory ===
     /**
      * Require commenters to supply an author name.
      */
-    private static bool $commentsAuthorMandatory = false;
+    private bool $commentsAuthorMandatory = false;
 
-    public static function commentsAuthorMandatory(): bool
+    public function commentsAuthorMandatory(): bool
     {
-        return self::$commentsAuthorMandatory;
+        return $this->commentsAuthorMandatory;
     }
 
-    public static function setCommentsAuthorMandatory(bool $value): void
+    public function setCommentsAuthorMandatory(bool $value): void
     {
-        self::$commentsAuthorMandatory = $value;
+        $this->commentsAuthorMandatory = $value;
     }
 
     // === comments_email_mandatory ===
     /**
      * Require commenters to supply an email address.
      */
-    private static bool $commentsEmailMandatory = false;
+    private bool $commentsEmailMandatory = false;
 
-    public static function commentsEmailMandatory(): bool
+    public function commentsEmailMandatory(): bool
     {
-        return self::$commentsEmailMandatory;
+        return $this->commentsEmailMandatory;
     }
 
-    public static function setCommentsEmailMandatory(bool $value): void
+    public function setCommentsEmailMandatory(bool $value): void
     {
-        self::$commentsEmailMandatory = $value;
+        $this->commentsEmailMandatory = $value;
     }
 
     // === comments_enable_website ===
     /**
      * Show a website field in the comment form.
      */
-    private static bool $commentsEnableWebsite = true;
+    private bool $commentsEnableWebsite = true;
 
-    public static function commentsEnableWebsite(): bool
+    public function commentsEnableWebsite(): bool
     {
-        return self::$commentsEnableWebsite;
+        return $this->commentsEnableWebsite;
     }
 
-    public static function setCommentsEnableWebsite(bool $value): void
+    public function setCommentsEnableWebsite(bool $value): void
     {
-        self::$commentsEnableWebsite = $value;
+        $this->commentsEnableWebsite = $value;
     }
 
     // === comments_forall ===
     /**
      * Allow unauthenticated (guest) visitors to post comments.
      */
-    private static bool $commentsForall = false;
+    private bool $commentsForall = false;
 
-    public static function commentsForall(): bool
+    public function commentsForall(): bool
     {
-        return self::$commentsForall;
+        return $this->commentsForall;
     }
 
-    public static function setCommentsForall(bool $value): void
+    public function setCommentsForall(bool $value): void
     {
-        self::$commentsForall = $value;
+        $this->commentsForall = $value;
     }
 
     // === comments_order ===
     /**
      * Sort order for comment display: ASC (oldest first) or DESC (newest first).
      */
-    private static string $commentsOrder = 'ASC';
+    private string $commentsOrder = 'ASC';
 
-    public static function commentsOrder(): string
+    public function commentsOrder(): string
     {
-        return self::$commentsOrder;
+        return $this->commentsOrder;
     }
 
-    public static function setCommentsOrder(string $value): void
+    public function setCommentsOrder(string $value): void
     {
-        self::$commentsOrder = $value;
+        $this->commentsOrder = $value;
     }
 
     // === comments_page_nb_comments ===
     /**
      * Number of comments shown per page on the admin comments page.
      */
-    private static int $commentsPageNbComments = 10;
+    private int $commentsPageNbComments = 10;
 
-    public static function commentsPageNbComments(): int
+    public function commentsPageNbComments(): int
     {
-        return self::$commentsPageNbComments;
+        return $this->commentsPageNbComments;
     }
 
-    public static function setCommentsPageNbComments(int $value): void
+    public function setCommentsPageNbComments(int $value): void
     {
-        self::$commentsPageNbComments = $value;
+        $this->commentsPageNbComments = $value;
     }
 
     // === comments_validation ===
     /**
      * Require admin approval before newly posted comments appear publicly.
      */
-    private static bool $commentsValidation = false;
+    private bool $commentsValidation = false;
 
-    public static function commentsValidation(): bool
+    public function commentsValidation(): bool
     {
-        return self::$commentsValidation;
+        return $this->commentsValidation;
     }
 
-    public static function setCommentsValidation(bool $value): void
+    public function setCommentsValidation(bool $value): void
     {
-        self::$commentsValidation = $value;
+        $this->commentsValidation = $value;
     }
 
     // === compiled_template_cache_language ===
     /**
      * Include the active language in the compiled-template cache key.
      */
-    private static bool $compiledTemplateCacheLanguage = false;
+    private bool $compiledTemplateCacheLanguage = false;
 
-    public static function compiledTemplateCacheLanguage(): bool
+    public function compiledTemplateCacheLanguage(): bool
     {
-        return self::$compiledTemplateCacheLanguage;
+        return $this->compiledTemplateCacheLanguage;
     }
 
-    public static function setCompiledTemplateCacheLanguage(bool $value): void
+    public function setCompiledTemplateCacheLanguage(bool $value): void
     {
-        self::$compiledTemplateCacheLanguage = $value;
+        $this->compiledTemplateCacheLanguage = $value;
     }
 
     // === content_tag_cloud_items_number ===
     /**
      * Maximum number of tags shown in the content-area tag cloud.
      */
-    private static int $contentTagCloudItemsNumber = 12;
+    private int $contentTagCloudItemsNumber = 12;
 
-    public static function contentTagCloudItemsNumber(): int
+    public function contentTagCloudItemsNumber(): int
     {
-        return self::$contentTagCloudItemsNumber;
+        return $this->contentTagCloudItemsNumber;
     }
 
-    public static function setContentTagCloudItemsNumber(int $value): void
+    public function setContentTagCloudItemsNumber(int $value): void
     {
-        self::$contentTagCloudItemsNumber = $value;
+        $this->contentTagCloudItemsNumber = $value;
     }
 
     // === count_orphans ===
@@ -690,48 +725,48 @@ final class CurrentConfig
      * yet" (recomputed lazily by ImageService::countOrphans(), invalidated by
      * PermissionCacheInvalidator).
      */
-    private static ?int $countOrphans = null;
+    private ?int $countOrphans = null;
 
-    public static function countOrphans(): ?int
+    public function countOrphans(): ?int
     {
-        return self::$countOrphans;
+        return $this->countOrphans;
     }
 
-    public static function setCountOrphans(?int $value): void
+    public function setCountOrphans(?int $value): void
     {
-        self::$countOrphans = $value;
+        $this->countOrphans = $value;
     }
 
     // === dashboard_activity_nb_weeks ===
     /**
      * Number of weeks of activity data shown on the admin dashboard.
      */
-    private static int $dashboardActivityNbWeeks = 4;
+    private int $dashboardActivityNbWeeks = 4;
 
-    public static function dashboardActivityNbWeeks(): int
+    public function dashboardActivityNbWeeks(): int
     {
-        return self::$dashboardActivityNbWeeks;
+        return $this->dashboardActivityNbWeeks;
     }
 
-    public static function setDashboardActivityNbWeeks(int $value): void
+    public function setDashboardActivityNbWeeks(int $value): void
     {
-        self::$dashboardActivityNbWeeks = $value;
+        $this->dashboardActivityNbWeeks = $value;
     }
 
     // === dashboard_check_for_updates ===
     /**
      * Check for Piwigo core updates on the admin dashboard.
      */
-    private static bool $dashboardCheckForUpdates = true;
+    private bool $dashboardCheckForUpdates = true;
 
-    public static function dashboardCheckForUpdates(): bool
+    public function dashboardCheckForUpdates(): bool
     {
-        return self::$dashboardCheckForUpdates;
+        return $this->dashboardCheckForUpdates;
     }
 
-    public static function setDashboardCheckForUpdates(bool $value): void
+    public function setDashboardCheckForUpdates(bool $value): void
     {
-        self::$dashboardCheckForUpdates = $value;
+        $this->dashboardCheckForUpdates = $value;
     }
 
     // === data_dir_checked ===
@@ -740,128 +775,128 @@ final class CurrentConfig
      * writability check is permanently skipped. Genuine absence until the check
      * first passes, matching the gallery_url/last_major_update convention.
      */
-    private static ?string $dataDirChecked = null;
+    private ?string $dataDirChecked = null;
 
-    public static function dataDirChecked(): ?string
+    public function dataDirChecked(): ?string
     {
-        return self::$dataDirChecked;
+        return $this->dataDirChecked;
     }
 
-    public static function setDataDirChecked(?string $value): void
+    public function setDataDirChecked(?string $value): void
     {
-        self::$dataDirChecked = $value;
+        $this->dataDirChecked = $value;
     }
 
     // === data_location ===
     /**
      * Relative path from the Piwigo root to the writable data directory.
      */
-    private static string $dataLocation = '_data/';
+    private string $dataLocation = '_data/';
 
-    public static function dataLocation(): string
+    public function dataLocation(): string
     {
-        return self::$dataLocation;
+        return $this->dataLocation;
     }
 
-    public static function setDataLocation(string $value): void
+    public function setDataLocation(string $value): void
     {
-        self::$dataLocation = $value;
+        $this->dataLocation = $value;
     }
 
     // === debug_l10n ===
     /**
      * Highlight untranslated strings in the UI for l10n debugging.
      */
-    private static bool $debugL10n = false;
+    private bool $debugL10n = false;
 
-    public static function debugL10n(): bool
+    public function debugL10n(): bool
     {
-        return self::$debugL10n;
+        return $this->debugL10n;
     }
 
-    public static function setDebugL10n(bool $value): void
+    public function setDebugL10n(bool $value): void
     {
-        self::$debugL10n = $value;
+        $this->debugL10n = $value;
     }
 
     // === debug_mail ===
     /**
      * Log all outgoing mail to a file instead of sending.
      */
-    private static bool $debugMail = false;
+    private bool $debugMail = false;
 
-    public static function debugMail(): bool
+    public function debugMail(): bool
     {
-        return self::$debugMail;
+        return $this->debugMail;
     }
 
-    public static function setDebugMail(bool $value): void
+    public function setDebugMail(bool $value): void
     {
-        self::$debugMail = $value;
+        $this->debugMail = $value;
     }
 
     // === debug_template ===
     /**
      * Add template debugging information to rendered pages.
      */
-    private static bool $debugTemplate = false;
+    private bool $debugTemplate = false;
 
-    public static function debugTemplate(): bool
+    public function debugTemplate(): bool
     {
-        return self::$debugTemplate;
+        return $this->debugTemplate;
     }
 
-    public static function setDebugTemplate(bool $value): void
+    public function setDebugTemplate(bool $value): void
     {
-        self::$debugTemplate = $value;
+        $this->debugTemplate = $value;
     }
 
     // === default_redirect_method ===
     /**
      * HTTP redirect method Piwigo uses internally: http or html.
      */
-    private static string $defaultRedirectMethod = 'http';
+    private string $defaultRedirectMethod = 'http';
 
-    public static function defaultRedirectMethod(): string
+    public function defaultRedirectMethod(): string
     {
-        return self::$defaultRedirectMethod;
+        return $this->defaultRedirectMethod;
     }
 
-    public static function setDefaultRedirectMethod(string $value): void
+    public function setDefaultRedirectMethod(string $value): void
     {
-        self::$defaultRedirectMethod = $value;
+        $this->defaultRedirectMethod = $value;
     }
 
     // === default_user_id ===
     /**
      * User ID whose settings serve as defaults for new accounts.
      */
-    private static int $defaultUserId = 2;
+    private int $defaultUserId = 2;
 
-    public static function defaultUserId(): int
+    public function defaultUserId(): int
     {
-        return self::$defaultUserId;
+        return $this->defaultUserId;
     }
 
-    public static function setDefaultUserId(int $value): void
+    public function setDefaultUserId(int $value): void
     {
-        self::$defaultUserId = $value;
+        $this->defaultUserId = $value;
     }
 
     // === derivative_default_size ===
     /**
      * Default derivative size name served when no size is specified.
      */
-    private static string $derivativeDefaultSize = 'medium';
+    private string $derivativeDefaultSize = 'medium';
 
-    public static function derivativeDefaultSize(): string
+    public function derivativeDefaultSize(): string
     {
-        return self::$derivativeDefaultSize;
+        return $this->derivativeDefaultSize;
     }
 
-    public static function setDerivativeDefaultSize(string $value): void
+    public function setDerivativeDefaultSize(string $value): void
     {
-        self::$derivativeDefaultSize = $value;
+        $this->derivativeDefaultSize = $value;
     }
 
     // === derivative_url_style ===
@@ -869,16 +904,16 @@ final class CurrentConfig
      * Derivative URL format: 0 = auto (static link if already cached, else routed
      * through i.php), 1 = always a static link, 2 = always routed through i.php.
      */
-    private static int $derivativeUrlStyle = 2;
+    private int $derivativeUrlStyle = 2;
 
-    public static function derivativeUrlStyle(): int
+    public function derivativeUrlStyle(): int
     {
-        return self::$derivativeUrlStyle;
+        return $this->derivativeUrlStyle;
     }
 
-    public static function setDerivativeUrlStyle(int $value): void
+    public function setDerivativeUrlStyle(int $value): void
     {
-        self::$derivativeUrlStyle = $value;
+        $this->derivativeUrlStyle = $value;
     }
 
     // === derivatives_strip_metadata_threshold ===
@@ -886,224 +921,224 @@ final class CurrentConfig
      * File size in bytes above which EXIF/IPTC metadata is stripped from
      * derivatives.
      */
-    private static int $derivativesStripMetadataThreshold = 256000;
+    private int $derivativesStripMetadataThreshold = 256000;
 
-    public static function derivativesStripMetadataThreshold(): int
+    public function derivativesStripMetadataThreshold(): int
     {
-        return self::$derivativesStripMetadataThreshold;
+        return $this->derivativesStripMetadataThreshold;
     }
 
-    public static function setDerivativesStripMetadataThreshold(int $value): void
+    public function setDerivativesStripMetadataThreshold(int $value): void
     {
-        self::$derivativesStripMetadataThreshold = $value;
+        $this->derivativesStripMetadataThreshold = $value;
     }
 
     // === die_on_sql_error ===
     /**
      * Halt execution immediately when a database query fails.
      */
-    private static bool $dieOnSqlError = false;
+    private bool $dieOnSqlError = false;
 
-    public static function dieOnSqlError(): bool
+    public function dieOnSqlError(): bool
     {
-        return self::$dieOnSqlError;
+        return $this->dieOnSqlError;
     }
 
-    public static function setDieOnSqlError(bool $value): void
+    public function setDieOnSqlError(bool $value): void
     {
-        self::$dieOnSqlError = $value;
+        $this->dieOnSqlError = $value;
     }
 
     // === display_fromto ===
     /**
      * Show the date range of photos in album and search results headers.
      */
-    private static bool $displayFromto = false;
+    private bool $displayFromto = false;
 
-    public static function displayFromto(): bool
+    public function displayFromto(): bool
     {
-        return self::$displayFromto;
+        return $this->displayFromto;
     }
 
-    public static function setDisplayFromto(bool $value): void
+    public function setDisplayFromto(bool $value): void
     {
-        self::$displayFromto = $value;
+        $this->displayFromto = $value;
     }
 
     // === double_password_type_in_admin ===
     /**
      * Require admins to enter a new password twice when setting it.
      */
-    private static bool $doublePasswordTypeInAdmin = false;
+    private bool $doublePasswordTypeInAdmin = false;
 
-    public static function doublePasswordTypeInAdmin(): bool
+    public function doublePasswordTypeInAdmin(): bool
     {
-        return self::$doublePasswordTypeInAdmin;
+        return $this->doublePasswordTypeInAdmin;
     }
 
-    public static function setDoublePasswordTypeInAdmin(bool $value): void
+    public function setDoublePasswordTypeInAdmin(bool $value): void
     {
-        self::$doublePasswordTypeInAdmin = $value;
+        $this->doublePasswordTypeInAdmin = $value;
     }
 
     // === email_admin_on_comment ===
     /**
      * Send an email to the administrators when a valid comment is entered.
      */
-    private static bool $emailAdminOnComment = false;
+    private bool $emailAdminOnComment = false;
 
-    public static function emailAdminOnComment(): bool
+    public function emailAdminOnComment(): bool
     {
-        return self::$emailAdminOnComment;
+        return $this->emailAdminOnComment;
     }
 
-    public static function setEmailAdminOnComment(bool $value): void
+    public function setEmailAdminOnComment(bool $value): void
     {
-        self::$emailAdminOnComment = $value;
+        $this->emailAdminOnComment = $value;
     }
 
     // === email_admin_on_comment_deletion ===
     /**
      * Send an email to the administrators when a comment is deleted.
      */
-    private static bool $emailAdminOnCommentDeletion = false;
+    private bool $emailAdminOnCommentDeletion = false;
 
-    public static function emailAdminOnCommentDeletion(): bool
+    public function emailAdminOnCommentDeletion(): bool
     {
-        return self::$emailAdminOnCommentDeletion;
+        return $this->emailAdminOnCommentDeletion;
     }
 
-    public static function setEmailAdminOnCommentDeletion(bool $value): void
+    public function setEmailAdminOnCommentDeletion(bool $value): void
     {
-        self::$emailAdminOnCommentDeletion = $value;
+        $this->emailAdminOnCommentDeletion = $value;
     }
 
     // === email_admin_on_comment_edition ===
     /**
      * Send an email to the administrators when a comment is modified.
      */
-    private static bool $emailAdminOnCommentEdition = false;
+    private bool $emailAdminOnCommentEdition = false;
 
-    public static function emailAdminOnCommentEdition(): bool
+    public function emailAdminOnCommentEdition(): bool
     {
-        return self::$emailAdminOnCommentEdition;
+        return $this->emailAdminOnCommentEdition;
     }
 
-    public static function setEmailAdminOnCommentEdition(bool $value): void
+    public function setEmailAdminOnCommentEdition(bool $value): void
     {
-        self::$emailAdminOnCommentEdition = $value;
+        $this->emailAdminOnCommentEdition = $value;
     }
 
     // === email_admin_on_comment_validation ===
     /**
      * Send an email to the administrators when a comment requires validation.
      */
-    private static bool $emailAdminOnCommentValidation = true;
+    private bool $emailAdminOnCommentValidation = true;
 
-    public static function emailAdminOnCommentValidation(): bool
+    public function emailAdminOnCommentValidation(): bool
     {
-        return self::$emailAdminOnCommentValidation;
+        return $this->emailAdminOnCommentValidation;
     }
 
-    public static function setEmailAdminOnCommentValidation(bool $value): void
+    public function setEmailAdminOnCommentValidation(bool $value): void
     {
-        self::$emailAdminOnCommentValidation = $value;
+        $this->emailAdminOnCommentValidation = $value;
     }
 
     // === email_admin_on_new_user ===
     /**
      * When to email the webmaster when a new user registers: none, all, or new.
      */
-    private static string $emailAdminOnNewUser = 'none';
+    private string $emailAdminOnNewUser = 'none';
 
-    public static function emailAdminOnNewUser(): string
+    public function emailAdminOnNewUser(): string
     {
-        return self::$emailAdminOnNewUser;
+        return $this->emailAdminOnNewUser;
     }
 
-    public static function setEmailAdminOnNewUser(string $value): void
+    public function setEmailAdminOnNewUser(string $value): void
     {
-        self::$emailAdminOnNewUser = $value;
+        $this->emailAdminOnNewUser = $value;
     }
 
     // === enable_core_update ===
     /**
      * Allow Piwigo core to be updated from the administration panel.
      */
-    private static bool $enableCoreUpdate = true;
+    private bool $enableCoreUpdate = true;
 
-    public static function enableCoreUpdate(): bool
+    public function enableCoreUpdate(): bool
     {
-        return self::$enableCoreUpdate;
+        return $this->enableCoreUpdate;
     }
 
-    public static function setEnableCoreUpdate(bool $value): void
+    public function setEnableCoreUpdate(bool $value): void
     {
-        self::$enableCoreUpdate = $value;
+        $this->enableCoreUpdate = $value;
     }
 
     // === enable_extensions_install ===
     /**
      * Allow plugins and themes to be installed from the administration panel.
      */
-    private static bool $enableExtensionsInstall = true;
+    private bool $enableExtensionsInstall = true;
 
-    public static function enableExtensionsInstall(): bool
+    public function enableExtensionsInstall(): bool
     {
-        return self::$enableExtensionsInstall;
+        return $this->enableExtensionsInstall;
     }
 
-    public static function setEnableExtensionsInstall(bool $value): void
+    public function setEnableExtensionsInstall(bool $value): void
     {
-        self::$enableExtensionsInstall = $value;
+        $this->enableExtensionsInstall = $value;
     }
 
     // === enable_formats ===
     /**
      * Enable the multi-format photo feature (original plus additional formats).
      */
-    private static bool $isFormatsEnabled = false;
+    private bool $isFormatsEnabled = false;
 
-    public static function isFormatsEnabled(): bool
+    public function isFormatsEnabled(): bool
     {
-        return self::$isFormatsEnabled;
+        return $this->isFormatsEnabled;
     }
 
-    public static function setIsFormatsEnabled(bool $value): void
+    public function setIsFormatsEnabled(bool $value): void
     {
-        self::$isFormatsEnabled = $value;
+        $this->isFormatsEnabled = $value;
     }
 
     // === enable_plugins ===
     /**
      * Load and activate installed plugins.
      */
-    private static bool $enablePlugins = true;
+    private bool $enablePlugins = true;
 
-    public static function enablePlugins(): bool
+    public function enablePlugins(): bool
     {
-        return self::$enablePlugins;
+        return $this->enablePlugins;
     }
 
-    public static function setEnablePlugins(bool $value): void
+    public function setEnablePlugins(bool $value): void
     {
-        self::$enablePlugins = $value;
+        $this->enablePlugins = $value;
     }
 
     // === enable_synchronization ===
     /**
      * Allow directory-to-database synchronization from the admin panel.
      */
-    private static bool $enableSynchronization = true;
+    private bool $enableSynchronization = true;
 
-    public static function enableSynchronization(): bool
+    public function enableSynchronization(): bool
     {
-        return self::$enableSynchronization;
+        return $this->enableSynchronization;
     }
 
-    public static function setEnableSynchronization(bool $value): void
+    public function setEnableSynchronization(bool $value): void
     {
-        self::$enableSynchronization = $value;
+        $this->enableSynchronization = $value;
     }
 
     // === ext_imagick_dir ===
@@ -1111,624 +1146,624 @@ final class CurrentConfig
      * Filesystem path to the ImageMagick binary directory (leave empty to
      * auto-detect).
      */
-    private static string $extImagickDir = '';
+    private string $extImagickDir = '';
 
-    public static function extImagickDir(): string
+    public function extImagickDir(): string
     {
-        return self::$extImagickDir;
+        return $this->extImagickDir;
     }
 
-    public static function setExtImagickDir(string $value): void
+    public function setExtImagickDir(string $value): void
     {
-        self::$extImagickDir = $value;
+        $this->extImagickDir = $value;
     }
 
     // === ffmpeg_dir ===
     /**
      * Filesystem path to the FFmpeg binary directory (leave empty to auto-detect).
      */
-    private static string $ffmpegDir = '';
+    private string $ffmpegDir = '';
 
-    public static function ffmpegDir(): string
+    public function ffmpegDir(): string
     {
-        return self::$ffmpegDir;
+        return $this->ffmpegDir;
     }
 
-    public static function setFfmpegDir(string $value): void
+    public function setFfmpegDir(string $value): void
     {
-        self::$ffmpegDir = $value;
+        $this->ffmpegDir = $value;
     }
 
     // === fs_quick_check_last_check ===
     /**
      * Timestamp of the last filesystem quick-check run.
      */
-    private static ?string $fsQuickCheckLastCheck = null;
+    private ?string $fsQuickCheckLastCheck = null;
 
-    public static function fsQuickCheckLastCheck(): ?string
+    public function fsQuickCheckLastCheck(): ?string
     {
-        return self::$fsQuickCheckLastCheck;
+        return $this->fsQuickCheckLastCheck;
     }
 
-    public static function setFsQuickCheckLastCheck(?string $value): void
+    public function setFsQuickCheckLastCheck(?string $value): void
     {
-        self::$fsQuickCheckLastCheck = $value;
+        $this->fsQuickCheckLastCheck = $value;
     }
 
     // === fs_quick_check_period ===
     /**
      * Interval in seconds between automatic filesystem quick-checks.
      */
-    private static int $fsQuickCheckPeriod = 86400;
+    private int $fsQuickCheckPeriod = 86400;
 
-    public static function fsQuickCheckPeriod(): int
+    public function fsQuickCheckPeriod(): int
     {
-        return self::$fsQuickCheckPeriod;
+        return $this->fsQuickCheckPeriod;
     }
 
-    public static function setFsQuickCheckPeriod(int $value): void
+    public function setFsQuickCheckPeriod(int $value): void
     {
-        self::$fsQuickCheckPeriod = $value;
+        $this->fsQuickCheckPeriod = $value;
     }
 
     // === full_tag_cloud_items_number ===
     /**
      * Maximum number of tags shown on the full tag-cloud page.
      */
-    private static int $fullTagCloudItemsNumber = 200;
+    private int $fullTagCloudItemsNumber = 200;
 
-    public static function fullTagCloudItemsNumber(): int
+    public function fullTagCloudItemsNumber(): int
     {
-        return self::$fullTagCloudItemsNumber;
+        return $this->fullTagCloudItemsNumber;
     }
 
-    public static function setFullTagCloudItemsNumber(int $value): void
+    public function setFullTagCloudItemsNumber(int $value): void
     {
-        self::$fullTagCloudItemsNumber = $value;
+        $this->fullTagCloudItemsNumber = $value;
     }
 
     // === gallery_locked ===
     /**
      * Lock the gallery for maintenance, blocking non-admin access.
      */
-    private static bool $galleryLocked = false;
+    private bool $galleryLocked = false;
 
-    public static function galleryLocked(): bool
+    public function galleryLocked(): bool
     {
-        return self::$galleryLocked;
+        return $this->galleryLocked;
     }
 
-    public static function setGalleryLocked(bool $value): void
+    public function setGalleryLocked(bool $value): void
     {
-        self::$galleryLocked = $value;
+        $this->galleryLocked = $value;
     }
 
     // === gallery_title ===
     /**
      * Title of the gallery shown in the browser tab and page header.
      */
-    private static string $galleryTitle = 'Piwigo';
+    private string $galleryTitle = 'Piwigo';
 
-    public static function galleryTitle(): string
+    public function galleryTitle(): string
     {
-        return self::$galleryTitle;
+        return $this->galleryTitle;
     }
 
-    public static function setGalleryTitle(string $value): void
+    public function setGalleryTitle(string $value): void
     {
-        self::$galleryTitle = $value;
+        $this->galleryTitle = $value;
     }
 
     // === gallery_url ===
     /**
      * Public base URL of the gallery (overrides auto-detection when set).
      */
-    private static ?string $galleryUrl = null;
+    private ?string $galleryUrl = null;
 
-    public static function galleryUrl(): ?string
+    public function galleryUrl(): ?string
     {
-        return self::$galleryUrl;
+        return $this->galleryUrl;
     }
 
-    public static function setGalleryUrl(?string $value): void
+    public function setGalleryUrl(?string $value): void
     {
-        self::$galleryUrl = $value;
+        $this->galleryUrl = $value;
     }
 
     // === graphics_library ===
     /**
      * Image processing backend: auto, gd, imagick, or ext_imagick.
      */
-    private static string $graphicsLibrary = 'auto';
+    private string $graphicsLibrary = 'auto';
 
-    public static function graphicsLibrary(): string
+    public function graphicsLibrary(): string
     {
-        return self::$graphicsLibrary;
+        return $this->graphicsLibrary;
     }
 
-    public static function setGraphicsLibrary(string $value): void
+    public function setGraphicsLibrary(string $value): void
     {
-        self::$graphicsLibrary = $value;
+        $this->graphicsLibrary = $value;
     }
 
     // === guest_access ===
     /**
      * Allow unauthenticated (guest) visitors to browse public photos.
      */
-    private static bool $guestAccess = true;
+    private bool $guestAccess = true;
 
-    public static function guestAccess(): bool
+    public function guestAccess(): bool
     {
-        return self::$guestAccess;
+        return $this->guestAccess;
     }
 
-    public static function setGuestAccess(bool $value): void
+    public function setGuestAccess(bool $value): void
     {
-        self::$guestAccess = $value;
+        $this->guestAccess = $value;
     }
 
     // === guest_id ===
     /**
      * User ID of the built-in guest account used for unauthenticated sessions.
      */
-    private static int $guestId = 2;
+    private int $guestId = 2;
 
-    public static function guestId(): int
+    public function guestId(): int
     {
-        return self::$guestId;
+        return $this->guestId;
     }
 
-    public static function setGuestId(int $value): void
+    public function setGuestId(int $value): void
     {
-        self::$guestId = $value;
+        $this->guestId = $value;
     }
 
     // === history_admin ===
     /**
      * Log page visits by admin users in the history table.
      */
-    private static bool $historyAdmin = false;
+    private bool $historyAdmin = false;
 
-    public static function historyAdmin(): bool
+    public function historyAdmin(): bool
     {
-        return self::$historyAdmin;
+        return $this->historyAdmin;
     }
 
-    public static function setHistoryAdmin(bool $value): void
+    public function setHistoryAdmin(bool $value): void
     {
-        self::$historyAdmin = $value;
+        $this->historyAdmin = $value;
     }
 
     // === history_autopurge_blocksize ===
     /**
      * Number of rows deleted per autopurge cycle from the history table.
      */
-    private static int $historyAutopurgeBlocksize = 50000;
+    private int $historyAutopurgeBlocksize = 50000;
 
-    public static function historyAutopurgeBlocksize(): int
+    public function historyAutopurgeBlocksize(): int
     {
-        return self::$historyAutopurgeBlocksize;
+        return $this->historyAutopurgeBlocksize;
     }
 
-    public static function setHistoryAutopurgeBlocksize(int $value): void
+    public function setHistoryAutopurgeBlocksize(int $value): void
     {
-        self::$historyAutopurgeBlocksize = $value;
+        $this->historyAutopurgeBlocksize = $value;
     }
 
     // === history_autopurge_every ===
     /**
      * Autopurge frequency: delete old history every N page loads (approximately).
      */
-    private static int $historyAutopurgeEvery = 1021;
+    private int $historyAutopurgeEvery = 1021;
 
-    public static function historyAutopurgeEvery(): int
+    public function historyAutopurgeEvery(): int
     {
-        return self::$historyAutopurgeEvery;
+        return $this->historyAutopurgeEvery;
     }
 
-    public static function setHistoryAutopurgeEvery(int $value): void
+    public function setHistoryAutopurgeEvery(int $value): void
     {
-        self::$historyAutopurgeEvery = $value;
+        $this->historyAutopurgeEvery = $value;
     }
 
     // === history_autopurge_keep_lines ===
     /**
      * Maximum number of history rows to retain after an autopurge.
      */
-    private static int $historyAutopurgeKeepLines = 1000000;
+    private int $historyAutopurgeKeepLines = 1000000;
 
-    public static function historyAutopurgeKeepLines(): int
+    public function historyAutopurgeKeepLines(): int
     {
-        return self::$historyAutopurgeKeepLines;
+        return $this->historyAutopurgeKeepLines;
     }
 
-    public static function setHistoryAutopurgeKeepLines(int $value): void
+    public function setHistoryAutopurgeKeepLines(int $value): void
     {
-        self::$historyAutopurgeKeepLines = $value;
+        $this->historyAutopurgeKeepLines = $value;
     }
 
     // === history_guest ===
     /**
      * Log page visits by guest (unauthenticated) users in the history table.
      */
-    private static bool $historyGuest = false;
+    private bool $historyGuest = false;
 
-    public static function historyGuest(): bool
+    public function historyGuest(): bool
     {
-        return self::$historyGuest;
+        return $this->historyGuest;
     }
 
-    public static function setHistoryGuest(bool $value): void
+    public function setHistoryGuest(bool $value): void
     {
-        self::$historyGuest = $value;
+        $this->historyGuest = $value;
     }
 
     // === index_caddie_icon ===
     /**
      * Show the add-to-caddie icon on album index pages.
      */
-    private static bool $indexCaddieIcon = true;
+    private bool $indexCaddieIcon = true;
 
-    public static function indexCaddieIcon(): bool
+    public function indexCaddieIcon(): bool
     {
-        return self::$indexCaddieIcon;
+        return $this->indexCaddieIcon;
     }
 
-    public static function setIndexCaddieIcon(bool $value): void
+    public function setIndexCaddieIcon(bool $value): void
     {
-        self::$indexCaddieIcon = $value;
+        $this->indexCaddieIcon = $value;
     }
 
     // === index_created_date_icon ===
     /**
      * Show the creation-date icon on album index pages.
      */
-    private static bool $indexCreatedDateIcon = true;
+    private bool $indexCreatedDateIcon = true;
 
-    public static function indexCreatedDateIcon(): bool
+    public function indexCreatedDateIcon(): bool
     {
-        return self::$indexCreatedDateIcon;
+        return $this->indexCreatedDateIcon;
     }
 
-    public static function setIndexCreatedDateIcon(bool $value): void
+    public function setIndexCreatedDateIcon(bool $value): void
     {
-        self::$indexCreatedDateIcon = $value;
+        $this->indexCreatedDateIcon = $value;
     }
 
     // === index_edit_icon ===
     /**
      * Show the quick-edit icon on album index pages (admins only).
      */
-    private static bool $indexEditIcon = true;
+    private bool $indexEditIcon = true;
 
-    public static function indexEditIcon(): bool
+    public function indexEditIcon(): bool
     {
-        return self::$indexEditIcon;
+        return $this->indexEditIcon;
     }
 
-    public static function setIndexEditIcon(bool $value): void
+    public function setIndexEditIcon(bool $value): void
     {
-        self::$indexEditIcon = $value;
+        $this->indexEditIcon = $value;
     }
 
     // === index_flat_icon ===
     /**
      * Show the flat-view icon on album index pages.
      */
-    private static bool $indexFlatIcon = true;
+    private bool $indexFlatIcon = true;
 
-    public static function indexFlatIcon(): bool
+    public function indexFlatIcon(): bool
     {
-        return self::$indexFlatIcon;
+        return $this->indexFlatIcon;
     }
 
-    public static function setIndexFlatIcon(bool $value): void
+    public function setIndexFlatIcon(bool $value): void
     {
-        self::$indexFlatIcon = $value;
+        $this->indexFlatIcon = $value;
     }
 
     // === index_new_icon ===
     /**
      * Show the new badge icon on recently added photos in album index pages.
      */
-    private static bool $indexNewIcon = true;
+    private bool $indexNewIcon = true;
 
-    public static function indexNewIcon(): bool
+    public function indexNewIcon(): bool
     {
-        return self::$indexNewIcon;
+        return $this->indexNewIcon;
     }
 
-    public static function setIndexNewIcon(bool $value): void
+    public function setIndexNewIcon(bool $value): void
     {
-        self::$indexNewIcon = $value;
+        $this->indexNewIcon = $value;
     }
 
     // === index_posted_date_icon ===
     /**
      * Show the posted-date icon on album index pages.
      */
-    private static bool $indexPostedDateIcon = true;
+    private bool $indexPostedDateIcon = true;
 
-    public static function indexPostedDateIcon(): bool
+    public function indexPostedDateIcon(): bool
     {
-        return self::$indexPostedDateIcon;
+        return $this->indexPostedDateIcon;
     }
 
-    public static function setIndexPostedDateIcon(bool $value): void
+    public function setIndexPostedDateIcon(bool $value): void
     {
-        self::$indexPostedDateIcon = $value;
+        $this->indexPostedDateIcon = $value;
     }
 
     // === index_search_in_set_action ===
     /**
      * Behaviour when searching within the current set: results or filter.
      */
-    private static string $indexSearchInSetAction = 'results';
+    private string $indexSearchInSetAction = 'results';
 
-    public static function indexSearchInSetAction(): string
+    public function indexSearchInSetAction(): string
     {
-        return self::$indexSearchInSetAction;
+        return $this->indexSearchInSetAction;
     }
 
-    public static function setIndexSearchInSetAction(string $value): void
+    public function setIndexSearchInSetAction(string $value): void
     {
-        self::$indexSearchInSetAction = $value;
+        $this->indexSearchInSetAction = $value;
     }
 
     // === index_search_in_set_button ===
     /**
      * Show the search-within-set button on album index pages.
      */
-    private static bool $indexSearchInSetButton = false;
+    private bool $indexSearchInSetButton = false;
 
-    public static function indexSearchInSetButton(): bool
+    public function indexSearchInSetButton(): bool
     {
-        return self::$indexSearchInSetButton;
+        return $this->indexSearchInSetButton;
     }
 
-    public static function setIndexSearchInSetButton(bool $value): void
+    public function setIndexSearchInSetButton(bool $value): void
     {
-        self::$indexSearchInSetButton = $value;
+        $this->indexSearchInSetButton = $value;
     }
 
     // === index_sizes_icon ===
     /**
      * Show the available-sizes icon on album index pages.
      */
-    private static bool $indexSizesIcon = true;
+    private bool $indexSizesIcon = true;
 
-    public static function indexSizesIcon(): bool
+    public function indexSizesIcon(): bool
     {
-        return self::$indexSizesIcon;
+        return $this->indexSizesIcon;
     }
 
-    public static function setIndexSizesIcon(bool $value): void
+    public function setIndexSizesIcon(bool $value): void
     {
-        self::$indexSizesIcon = $value;
+        $this->indexSizesIcon = $value;
     }
 
     // === index_slideshow_icon ===
     /**
      * Show the slideshow icon on album index pages.
      */
-    private static bool $indexSlideShowIcon = true;
+    private bool $indexSlideShowIcon = true;
 
-    public static function indexSlideShowIcon(): bool
+    public function indexSlideShowIcon(): bool
     {
-        return self::$indexSlideShowIcon;
+        return $this->indexSlideShowIcon;
     }
 
-    public static function setIndexSlideShowIcon(bool $value): void
+    public function setIndexSlideShowIcon(bool $value): void
     {
-        self::$indexSlideShowIcon = $value;
+        $this->indexSlideShowIcon = $value;
     }
 
     // === index_sort_order_input ===
     /**
      * Display the image order selection list on album index pages.
      */
-    private static bool $indexSortOrderInput = true;
+    private bool $indexSortOrderInput = true;
 
-    public static function indexSortOrderInput(): bool
+    public function indexSortOrderInput(): bool
     {
-        return self::$indexSortOrderInput;
+        return $this->indexSortOrderInput;
     }
 
-    public static function setIndexSortOrderInput(bool $value): void
+    public function setIndexSortOrderInput(bool $value): void
     {
-        self::$indexSortOrderInput = $value;
+        $this->indexSortOrderInput = $value;
     }
 
     // === inheritance_by_default ===
     /**
      * Apply parent album permissions to newly created sub-albums by default.
      */
-    private static bool $inheritanceByDefault = false;
+    private bool $inheritanceByDefault = false;
 
-    public static function inheritanceByDefault(): bool
+    public function inheritanceByDefault(): bool
     {
-        return self::$inheritanceByDefault;
+        return $this->inheritanceByDefault;
     }
 
-    public static function setInheritanceByDefault(bool $value): void
+    public function setInheritanceByDefault(bool $value): void
     {
-        self::$inheritanceByDefault = $value;
+        $this->inheritanceByDefault = $value;
     }
 
     // === insensitive_case_logon ===
     /**
      * Allow login with any letter-case variation of the username.
      */
-    private static bool $insensitiveCaseLogon = false;
+    private bool $insensitiveCaseLogon = false;
 
-    public static function insensitiveCaseLogon(): bool
+    public function insensitiveCaseLogon(): bool
     {
-        return self::$insensitiveCaseLogon;
+        return $this->insensitiveCaseLogon;
     }
 
-    public static function setInsensitiveCaseLogon(bool $value): void
+    public function setInsensitiveCaseLogon(bool $value): void
     {
-        self::$insensitiveCaseLogon = $value;
+        $this->insensitiveCaseLogon = $value;
     }
 
     // === last_major_update ===
     /**
      * Timestamp of the last major Piwigo upgrade, used for change detection.
      */
-    private static ?string $lastMajorUpdate = null;
+    private ?string $lastMajorUpdate = null;
 
-    public static function lastMajorUpdate(): ?string
+    public function lastMajorUpdate(): ?string
     {
-        return self::$lastMajorUpdate;
+        return $this->lastMajorUpdate;
     }
 
-    public static function setLastMajorUpdate(?string $value): void
+    public function setLastMajorUpdate(?string $value): void
     {
-        self::$lastMajorUpdate = $value;
+        $this->lastMajorUpdate = $value;
     }
 
     // === level_separator ===
     /**
      * String used to separate album hierarchy levels in breadcrumb trails.
      */
-    private static string $levelSeparator = ' / ';
+    private string $levelSeparator = ' / ';
 
-    public static function levelSeparator(): string
+    public function levelSeparator(): string
     {
-        return self::$levelSeparator;
+        return $this->levelSeparator;
     }
 
-    public static function setLevelSeparator(string $value): void
+    public function setLevelSeparator(string $value): void
     {
-        self::$levelSeparator = $value;
+        $this->levelSeparator = $value;
     }
 
     // === light_album_manager_threshold ===
     /**
      * Album count above which the lightweight album manager UI is used.
      */
-    private static int $lightAlbumManagerThreshold = 10000;
+    private int $lightAlbumManagerThreshold = 10000;
 
-    public static function lightAlbumManagerThreshold(): int
+    public function lightAlbumManagerThreshold(): int
     {
-        return self::$lightAlbumManagerThreshold;
+        return $this->lightAlbumManagerThreshold;
     }
 
-    public static function setLightAlbumManagerThreshold(int $value): void
+    public function setLightAlbumManagerThreshold(int $value): void
     {
-        self::$lightAlbumManagerThreshold = $value;
+        $this->lightAlbumManagerThreshold = $value;
     }
 
     // === light_slideshow ===
     /**
      * Use the lightweight built-in slideshow instead of a plugin-based one.
      */
-    private static bool $lightSlideshow = true;
+    private bool $lightSlideshow = true;
 
-    public static function lightSlideshow(): bool
+    public function lightSlideshow(): bool
     {
-        return self::$lightSlideshow;
+        return $this->lightSlideshow;
     }
 
-    public static function setLightSlideshow(bool $value): void
+    public function setLightSlideshow(bool $value): void
     {
-        self::$lightSlideshow = $value;
+        $this->lightSlideshow = $value;
     }
 
     // === linked_album_search_limit ===
     /**
      * Maximum albums returned when searching for albums to link a photo to.
      */
-    private static int $linkedAlbumSearchLimit = 100;
+    private int $linkedAlbumSearchLimit = 100;
 
-    public static function linkedAlbumSearchLimit(): int
+    public function linkedAlbumSearchLimit(): int
     {
-        return self::$linkedAlbumSearchLimit;
+        return $this->linkedAlbumSearchLimit;
     }
 
-    public static function setLinkedAlbumSearchLimit(int $value): void
+    public function setLinkedAlbumSearchLimit(int $value): void
     {
-        self::$linkedAlbumSearchLimit = $value;
+        $this->linkedAlbumSearchLimit = $value;
     }
 
     // === log ===
     /**
      * Enable the application log.
      */
-    private static bool $logConf = false;
+    private bool $logConf = false;
 
-    public static function logConf(): bool
+    public function logConf(): bool
     {
-        return self::$logConf;
+        return $this->logConf;
     }
 
-    public static function setLogConf(bool $value): void
+    public function setLogConf(bool $value): void
     {
-        self::$logConf = $value;
+        $this->logConf = $value;
     }
 
     // === log_archive_days ===
     /**
      * Number of days to keep archived log files before deletion.
      */
-    private static int $logArchiveDays = 30;
+    private int $logArchiveDays = 30;
 
-    public static function logArchiveDays(): int
+    public function logArchiveDays(): int
     {
-        return self::$logArchiveDays;
+        return $this->logArchiveDays;
     }
 
-    public static function setLogArchiveDays(int $value): void
+    public function setLogArchiveDays(int $value): void
     {
-        self::$logArchiveDays = $value;
+        $this->logArchiveDays = $value;
     }
 
     // === log_dir ===
     /**
      * Directory (relative to the data location) where log files are written.
      */
-    private static string $logDir = '/logs';
+    private string $logDir = '/logs';
 
-    public static function logDir(): string
+    public function logDir(): string
     {
-        return self::$logDir;
+        return $this->logDir;
     }
 
-    public static function setLogDir(string $value): void
+    public function setLogDir(string $value): void
     {
-        self::$logDir = $value;
+        $this->logDir = $value;
     }
 
     // === log_level ===
     /**
      * Minimum log severity to record: DEBUG, INFO, WARNING, or ERROR.
      */
-    private static string $logLevel = 'DEBUG';
+    private string $logLevel = 'DEBUG';
 
-    public static function logLevel(): string
+    public function logLevel(): string
     {
-        return self::$logLevel;
+        return $this->logLevel;
     }
 
-    public static function setLogLevel(string $value): void
+    public function setLogLevel(string $value): void
     {
-        self::$logLevel = $value;
+        $this->logLevel = $value;
     }
 
     // === login_lockout_duration_minutes ===
     /**
      * Minutes a username/IP stays locked out after too many failed logins.
      */
-    private static int $loginLockoutDurationMinutes = 15;
+    private int $loginLockoutDurationMinutes = 15;
 
-    public static function loginLockoutDurationMinutes(): int
+    public function loginLockoutDurationMinutes(): int
     {
-        return self::$loginLockoutDurationMinutes;
+        return $this->loginLockoutDurationMinutes;
     }
 
-    public static function setLoginLockoutDurationMinutes(int $value): void
+    public function setLoginLockoutDurationMinutes(int $value): void
     {
-        self::$loginLockoutDurationMinutes = $value;
+        $this->loginLockoutDurationMinutes = $value;
     }
 
     // === login_lockout_max_attempts ===
@@ -1737,16 +1772,16 @@ final class CurrentConfig
      * the lockout window before AuthService::pwgLogin() starts rejecting
      * outright.
      */
-    private static int $loginLockoutMaxAttempts = 5;
+    private int $loginLockoutMaxAttempts = 5;
 
-    public static function loginLockoutMaxAttempts(): int
+    public function loginLockoutMaxAttempts(): int
     {
-        return self::$loginLockoutMaxAttempts;
+        return $this->loginLockoutMaxAttempts;
     }
 
-    public static function setLoginLockoutMaxAttempts(int $value): void
+    public function setLoginLockoutMaxAttempts(int $value): void
     {
-        self::$loginLockoutMaxAttempts = $value;
+        $this->loginLockoutMaxAttempts = $value;
     }
 
     // === login_lockout_window_minutes ===
@@ -1754,304 +1789,304 @@ final class CurrentConfig
      * Rolling window, in minutes, over which failed logins are counted
      * towards the lockout threshold.
      */
-    private static int $loginLockoutWindowMinutes = 15;
+    private int $loginLockoutWindowMinutes = 15;
 
-    public static function loginLockoutWindowMinutes(): int
+    public function loginLockoutWindowMinutes(): int
     {
-        return self::$loginLockoutWindowMinutes;
+        return $this->loginLockoutWindowMinutes;
     }
 
-    public static function setLoginLockoutWindowMinutes(int $value): void
+    public function setLoginLockoutWindowMinutes(int $value): void
     {
-        self::$loginLockoutWindowMinutes = $value;
+        $this->loginLockoutWindowMinutes = $value;
     }
 
     // === lounge_activate_threshold ===
     /**
      * Number of photos in the lounge that triggers automatic album creation.
      */
-    private static int $loungeActivateThreshold = 1;
+    private int $loungeActivateThreshold = 1;
 
-    public static function loungeActivateThreshold(): int
+    public function loungeActivateThreshold(): int
     {
-        return self::$loungeActivateThreshold;
+        return $this->loungeActivateThreshold;
     }
 
-    public static function setLoungeActivateThreshold(int $value): void
+    public function setLoungeActivateThreshold(int $value): void
     {
-        self::$loungeActivateThreshold = $value;
+        $this->loungeActivateThreshold = $value;
     }
 
     // === lounge_active ===
     /**
      * Enable the lounge feature (a staging area for uploaded photos).
      */
-    private static bool $loungeActive = false;
+    private bool $loungeActive = false;
 
-    public static function loungeActive(): bool
+    public function loungeActive(): bool
     {
-        return self::$loungeActive;
+        return $this->loungeActive;
     }
 
-    public static function setLoungeActive(bool $value): void
+    public function setLoungeActive(bool $value): void
     {
-        self::$loungeActive = $value;
+        $this->loungeActive = $value;
     }
 
     // === lounge_max_duration ===
     /**
      * Maximum seconds a photo can stay in the lounge before auto-processing.
      */
-    private static int $loungeMaxDuration = 300;
+    private int $loungeMaxDuration = 300;
 
-    public static function loungeMaxDuration(): int
+    public function loungeMaxDuration(): int
     {
-        return self::$loungeMaxDuration;
+        return $this->loungeMaxDuration;
     }
 
-    public static function setLoungeMaxDuration(int $value): void
+    public function setLoungeMaxDuration(int $value): void
     {
-        self::$loungeMaxDuration = $value;
+        $this->loungeMaxDuration = $value;
     }
 
     // === mail_allow_html ===
     /**
      * Send emails in HTML format in addition to plain text.
      */
-    private static bool $mailAllowHtml = true;
+    private bool $mailAllowHtml = true;
 
-    public static function mailAllowHtml(): bool
+    public function mailAllowHtml(): bool
     {
-        return self::$mailAllowHtml;
+        return $this->mailAllowHtml;
     }
 
-    public static function setMailAllowHtml(bool $value): void
+    public function setMailAllowHtml(bool $value): void
     {
-        self::$mailAllowHtml = $value;
+        $this->mailAllowHtml = $value;
     }
 
     // === mail_sender_email ===
     /**
      * From email address used for all outgoing Piwigo emails.
      */
-    private static string $mailSenderEmail = '';
+    private string $mailSenderEmail = '';
 
-    public static function mailSenderEmail(): string
+    public function mailSenderEmail(): string
     {
-        return self::$mailSenderEmail;
+        return $this->mailSenderEmail;
     }
 
-    public static function setMailSenderEmail(string $value): void
+    public function setMailSenderEmail(string $value): void
     {
-        self::$mailSenderEmail = $value;
+        $this->mailSenderEmail = $value;
     }
 
     // === mail_sender_name ===
     /**
      * Display name shown as the email sender in outgoing Piwigo emails.
      */
-    private static string $mailSenderName = '';
+    private string $mailSenderName = '';
 
-    public static function mailSenderName(): string
+    public function mailSenderName(): string
     {
-        return self::$mailSenderName;
+        return $this->mailSenderName;
     }
 
-    public static function setMailSenderName(string $value): void
+    public function setMailSenderName(string $value): void
     {
-        self::$mailSenderName = $value;
+        $this->mailSenderName = $value;
     }
 
     // === mail_theme ===
     /**
      * Visual theme for HTML notification emails: light or dark.
      */
-    private static string $mailTheme = 'light';
+    private string $mailTheme = 'light';
 
-    public static function mailTheme(): string
+    public function mailTheme(): string
     {
-        return self::$mailTheme;
+        return $this->mailTheme;
     }
 
-    public static function setMailTheme(string $value): void
+    public function setMailTheme(string $value): void
     {
-        self::$mailTheme = $value;
+        $this->mailTheme = $value;
     }
 
     // === max_requests ===
     /**
      * Maximum concurrent HTTP requests Piwigo will make to external services.
      */
-    private static int $maxRequests = 3;
+    private int $maxRequests = 3;
 
-    public static function maxRequests(): int
+    public function maxRequests(): int
     {
-        return self::$maxRequests;
+        return $this->maxRequests;
     }
 
-    public static function setMaxRequests(int $value): void
+    public function setMaxRequests(int $value): void
     {
-        self::$maxRequests = $value;
+        $this->maxRequests = $value;
     }
 
     // === menubar_filter_icon ===
     /**
      * Show the filter icon in the sidebar menu.
      */
-    private static bool $menubarFilterIcon = true;
+    private bool $menubarFilterIcon = true;
 
-    public static function menubarFilterIcon(): bool
+    public function menubarFilterIcon(): bool
     {
-        return self::$menubarFilterIcon;
+        return $this->menubarFilterIcon;
     }
 
-    public static function setMenubarFilterIcon(bool $value): void
+    public function setMenubarFilterIcon(bool $value): void
     {
-        self::$menubarFilterIcon = $value;
+        $this->menubarFilterIcon = $value;
     }
 
     // === menubar_tag_cloud_content ===
     /**
      * Which tags to show in the sidebar tag cloud: all_or_current or current.
      */
-    private static string $menubarTagCloudContent = 'all_or_current';
+    private string $menubarTagCloudContent = 'all_or_current';
 
-    public static function menubarTagCloudContent(): string
+    public function menubarTagCloudContent(): string
     {
-        return self::$menubarTagCloudContent;
+        return $this->menubarTagCloudContent;
     }
 
-    public static function setMenubarTagCloudContent(string $value): void
+    public function setMenubarTagCloudContent(string $value): void
     {
-        self::$menubarTagCloudContent = $value;
+        $this->menubarTagCloudContent = $value;
     }
 
     // === menubar_tag_cloud_items_number ===
     /**
      * Maximum number of tags shown in the sidebar tag cloud.
      */
-    private static int $menubarTagCloudItemsNumber = 20;
+    private int $menubarTagCloudItemsNumber = 20;
 
-    public static function menubarTagCloudItemsNumber(): int
+    public function menubarTagCloudItemsNumber(): int
     {
-        return self::$menubarTagCloudItemsNumber;
+        return $this->menubarTagCloudItemsNumber;
     }
 
-    public static function setMenubarTagCloudItemsNumber(int $value): void
+    public function setMenubarTagCloudItemsNumber(int $value): void
     {
-        self::$menubarTagCloudItemsNumber = $value;
+        $this->menubarTagCloudItemsNumber = $value;
     }
 
     // === meta_ref ===
     /**
      * Emit a referrer meta tag allowing search engines to attribute traffic.
      */
-    private static bool $metaRef = true;
+    private bool $metaRef = true;
 
-    public static function metaRef(): bool
+    public function metaRef(): bool
     {
-        return self::$metaRef;
+        return $this->metaRef;
     }
 
-    public static function setMetaRef(bool $value): void
+    public function setMetaRef(bool $value): void
     {
-        self::$metaRef = $value;
+        $this->metaRef = $value;
     }
 
     // === mobile_theme ===
     /**
      * Theme name applied automatically when a mobile browser is detected.
      */
-    private static string $mobilTheme = '';
+    private string $mobilTheme = '';
 
-    public static function mobilTheme(): string
+    public function mobilTheme(): string
     {
-        return self::$mobilTheme;
+        return $this->mobilTheme;
     }
 
-    public static function setMobilTheme(string $value): void
+    public function setMobilTheme(string $value): void
     {
-        self::$mobilTheme = $value;
+        $this->mobilTheme = $value;
     }
 
     // === nb_categories_page ===
     /**
      * Maximum albums shown per page in admin album listings.
      */
-    private static int $nbCategoriesPage = 9999;
+    private int $nbCategoriesPage = 9999;
 
-    public static function nbCategoriesPage(): int
+    public function nbCategoriesPage(): int
     {
-        return self::$nbCategoriesPage;
+        return $this->nbCategoriesPage;
     }
 
-    public static function setNbCategoriesPage(int $value): void
+    public function setNbCategoriesPage(int $value): void
     {
-        self::$nbCategoriesPage = $value;
+        $this->nbCategoriesPage = $value;
     }
 
     // === nb_comment_page ===
     /**
      * Number of comments per page on the public photo detail page.
      */
-    private static int $nbCommentPage = 10;
+    private int $nbCommentPage = 10;
 
-    public static function nbCommentPage(): int
+    public function nbCommentPage(): int
     {
-        return self::$nbCommentPage;
+        return $this->nbCommentPage;
     }
 
-    public static function setNbCommentPage(int $value): void
+    public function setNbCommentPage(int $value): void
     {
-        self::$nbCommentPage = $value;
+        $this->nbCommentPage = $value;
     }
 
     // === nb_logs_page ===
     /**
      * Number of history entries shown per page in the admin history view.
      */
-    private static int $nbLogsPage = 300;
+    private int $nbLogsPage = 300;
 
-    public static function nbLogsPage(): int
+    public function nbLogsPage(): int
     {
-        return self::$nbLogsPage;
+        return $this->nbLogsPage;
     }
 
-    public static function setNbLogsPage(int $value): void
+    public function setNbLogsPage(int $value): void
     {
-        self::$nbLogsPage = $value;
+        $this->nbLogsPage = $value;
     }
 
     // === nbm_complementary_mail_content ===
     /**
      * Extra HTML appended to notification-by-mail digest emails.
      */
-    private static string $nbmComplementaryMailContent = '';
+    private string $nbmComplementaryMailContent = '';
 
-    public static function nbmComplementaryMailContent(): string
+    public function nbmComplementaryMailContent(): string
     {
-        return self::$nbmComplementaryMailContent;
+        return $this->nbmComplementaryMailContent;
     }
 
-    public static function setNbmComplementaryMailContent(string $value): void
+    public function setNbmComplementaryMailContent(string $value): void
     {
-        self::$nbmComplementaryMailContent = $value;
+        $this->nbmComplementaryMailContent = $value;
     }
 
     // === nbm_default_value_user_enabled ===
     /**
      * Subscribe new users to notification-by-mail digests by default.
      */
-    private static bool $nbmDefaultValueUserEnabled = false;
+    private bool $nbmDefaultValueUserEnabled = false;
 
-    public static function nbmDefaultValueUserEnabled(): bool
+    public function nbmDefaultValueUserEnabled(): bool
     {
-        return self::$nbmDefaultValueUserEnabled;
+        return $this->nbmDefaultValueUserEnabled;
     }
 
-    public static function setNbmDefaultValueUserEnabled(bool $value): void
+    public function setNbmDefaultValueUserEnabled(bool $value): void
     {
-        self::$nbmDefaultValueUserEnabled = $value;
+        $this->nbmDefaultValueUserEnabled = $value;
     }
 
     // === nbm_list_all_enabled_users_to_send ===
@@ -2059,176 +2094,176 @@ final class CurrentConfig
      * Show all subscribed users in the NBM send UI, not just those with pending
      * notifications.
      */
-    private static bool $nbmListAllEnabledUsersToSend = false;
+    private bool $nbmListAllEnabledUsersToSend = false;
 
-    public static function nbmListAllEnabledUsersToSend(): bool
+    public function nbmListAllEnabledUsersToSend(): bool
     {
-        return self::$nbmListAllEnabledUsersToSend;
+        return $this->nbmListAllEnabledUsersToSend;
     }
 
-    public static function setNbmListAllEnabledUsersToSend(bool $value): void
+    public function setNbmListAllEnabledUsersToSend(bool $value): void
     {
-        self::$nbmListAllEnabledUsersToSend = $value;
+        $this->nbmListAllEnabledUsersToSend = $value;
     }
 
     // === nbm_send_detailed_content ===
     /**
      * Include photo thumbnails and descriptions in NBM digest emails.
      */
-    private static bool $nbmSendDetailedContent = true;
+    private bool $nbmSendDetailedContent = true;
 
-    public static function nbmSendDetailedContent(): bool
+    public function nbmSendDetailedContent(): bool
     {
-        return self::$nbmSendDetailedContent;
+        return $this->nbmSendDetailedContent;
     }
 
-    public static function setNbmSendDetailedContent(bool $value): void
+    public function setNbmSendDetailedContent(bool $value): void
     {
-        self::$nbmSendDetailedContent = $value;
+        $this->nbmSendDetailedContent = $value;
     }
 
     // === nbm_send_html_mail ===
     /**
      * Send NBM digest emails in HTML format.
      */
-    private static bool $nbmSendHtmlMail = true;
+    private bool $nbmSendHtmlMail = true;
 
-    public static function nbmSendHtmlMail(): bool
+    public function nbmSendHtmlMail(): bool
     {
-        return self::$nbmSendHtmlMail;
+        return $this->nbmSendHtmlMail;
     }
 
-    public static function setNbmSendHtmlMail(bool $value): void
+    public function setNbmSendHtmlMail(bool $value): void
     {
-        self::$nbmSendHtmlMail = $value;
+        $this->nbmSendHtmlMail = $value;
     }
 
     // === nbm_send_mail_as ===
     /**
      * Override the From display name used specifically for NBM emails.
      */
-    private static string $nbmSendMailAs = '';
+    private string $nbmSendMailAs = '';
 
-    public static function nbmSendMailAs(): string
+    public function nbmSendMailAs(): string
     {
-        return self::$nbmSendMailAs;
+        return $this->nbmSendMailAs;
     }
 
-    public static function setNbmSendMailAs(string $value): void
+    public function setNbmSendMailAs(string $value): void
     {
-        self::$nbmSendMailAs = $value;
+        $this->nbmSendMailAs = $value;
     }
 
     // === nbm_send_recent_post_dates ===
     /**
      * Include recent-post date ranges in NBM digest emails.
      */
-    private static bool $nbmSendRecentPostDates = true;
+    private bool $nbmSendRecentPostDates = true;
 
-    public static function nbmSendRecentPostDates(): bool
+    public function nbmSendRecentPostDates(): bool
     {
-        return self::$nbmSendRecentPostDates;
+        return $this->nbmSendRecentPostDates;
     }
 
-    public static function setNbmSendRecentPostDates(bool $value): void
+    public function setNbmSendRecentPostDates(bool $value): void
     {
-        self::$nbmSendRecentPostDates = $value;
+        $this->nbmSendRecentPostDates = $value;
     }
 
     // === nbm_treatment_timeout_default ===
     /**
      * Default timeout in seconds for a single NBM send-batch execution.
      */
-    private static int $nbmTreatmentTimeoutDefault = 20;
+    private int $nbmTreatmentTimeoutDefault = 20;
 
-    public static function nbmTreatmentTimeoutDefault(): int
+    public function nbmTreatmentTimeoutDefault(): int
     {
-        return self::$nbmTreatmentTimeoutDefault;
+        return $this->nbmTreatmentTimeoutDefault;
     }
 
-    public static function setNbmTreatmentTimeoutDefault(int $value): void
+    public function setNbmTreatmentTimeoutDefault(int $value): void
     {
-        self::$nbmTreatmentTimeoutDefault = $value;
+        $this->nbmTreatmentTimeoutDefault = $value;
     }
 
     // === never_delete_originals ===
     /**
      * Prevent deletion of original image files when a photo is removed.
      */
-    private static bool $neverDeleteOriginals = false;
+    private bool $neverDeleteOriginals = false;
 
-    public static function neverDeleteOriginals(): bool
+    public function neverDeleteOriginals(): bool
     {
-        return self::$neverDeleteOriginals;
+        return $this->neverDeleteOriginals;
     }
 
-    public static function setNeverDeleteOriginals(bool $value): void
+    public function setNeverDeleteOriginals(bool $value): void
     {
-        self::$neverDeleteOriginals = $value;
+        $this->neverDeleteOriginals = $value;
     }
 
     // === newcat_default_commentable ===
     /**
      * Make newly created albums commentable by default.
      */
-    private static bool $newcatDefaultCommentable = true;
+    private bool $newcatDefaultCommentable = true;
 
-    public static function newcatDefaultCommentable(): bool
+    public function newcatDefaultCommentable(): bool
     {
-        return self::$newcatDefaultCommentable;
+        return $this->newcatDefaultCommentable;
     }
 
-    public static function setNewcatDefaultCommentable(bool $value): void
+    public function setNewcatDefaultCommentable(bool $value): void
     {
-        self::$newcatDefaultCommentable = $value;
+        $this->newcatDefaultCommentable = $value;
     }
 
     // === newcat_default_position ===
     /**
      * Insert position for new sub-albums: first or last.
      */
-    private static string $newcatDefaultPosition = 'first';
+    private string $newcatDefaultPosition = 'first';
 
-    public static function newcatDefaultPosition(): string
+    public function newcatDefaultPosition(): string
     {
-        return self::$newcatDefaultPosition;
+        return $this->newcatDefaultPosition;
     }
 
-    public static function setNewcatDefaultPosition(string $value): void
+    public function setNewcatDefaultPosition(string $value): void
     {
-        self::$newcatDefaultPosition = $value;
+        $this->newcatDefaultPosition = $value;
     }
 
     // === newcat_default_status ===
     /**
      * Default visibility for new albums: public or private.
      */
-    private static string $newcatDefaultStatus = 'public';
+    private string $newcatDefaultStatus = 'public';
 
-    public static function newcatDefaultStatus(): string
+    public function newcatDefaultStatus(): string
     {
-        return self::$newcatDefaultStatus;
+        return $this->newcatDefaultStatus;
     }
 
-    public static function setNewcatDefaultStatus(string $value): void
+    public function setNewcatDefaultStatus(string $value): void
     {
-        self::$newcatDefaultStatus = $value;
+        $this->newcatDefaultStatus = $value;
     }
 
     // === newcat_default_visible ===
     /**
      * Make newly created albums visible by default.
      */
-    private static bool $newcatDefaultVisible = true;
+    private bool $newcatDefaultVisible = true;
 
-    public static function newcatDefaultVisible(): bool
+    public function newcatDefaultVisible(): bool
     {
-        return self::$newcatDefaultVisible;
+        return $this->newcatDefaultVisible;
     }
 
-    public static function setNewcatDefaultVisible(bool $value): void
+    public function setNewcatDefaultVisible(bool $value): void
     {
-        self::$newcatDefaultVisible = $value;
+        $this->newcatDefaultVisible = $value;
     }
 
     // === no_photo_yet ===
@@ -2238,144 +2273,144 @@ final class CurrentConfig
      * -- callers check noPhotoYet() === null to detect first-run state, matching
      * the gallery_url/last_major_update convention.
      */
-    private static ?string $noPhotoYet = null;
+    private ?string $noPhotoYet = null;
 
-    public static function noPhotoYet(): ?string
+    public function noPhotoYet(): ?string
     {
-        return self::$noPhotoYet;
+        return $this->noPhotoYet;
     }
 
-    public static function setNoPhotoYet(?string $value): void
+    public function setNoPhotoYet(?string $value): void
     {
-        self::$noPhotoYet = $value;
+        $this->noPhotoYet = $value;
     }
 
     // === no_photo_yet_url ===
     /**
      * Admin URL linked from the no-photos-yet placeholder shown to admins.
      */
-    private static string $noPhotoYetUrl = 'admin.php?page=photos_add';
+    private string $noPhotoYetUrl = 'admin.php?page=photos_add';
 
-    public static function noPhotoYetUrl(): string
+    public function noPhotoYetUrl(): string
     {
-        return self::$noPhotoYetUrl;
+        return $this->noPhotoYetUrl;
     }
 
-    public static function setNoPhotoYetUrl(string $value): void
+    public function setNoPhotoYetUrl(string $value): void
     {
-        self::$noPhotoYetUrl = $value;
+        $this->noPhotoYetUrl = $value;
     }
 
     // === obligatory_user_mail_address ===
     /**
      * Require an email address for all user registrations.
      */
-    private static bool $obligatoryUserMailAddress = false;
+    private bool $obligatoryUserMailAddress = false;
 
-    public static function obligatoryUserMailAddress(): bool
+    public function obligatoryUserMailAddress(): bool
     {
-        return self::$obligatoryUserMailAddress;
+        return $this->obligatoryUserMailAddress;
     }
 
-    public static function setObligatoryUserMailAddress(bool $value): void
+    public function setObligatoryUserMailAddress(bool $value): void
     {
-        self::$obligatoryUserMailAddress = $value;
+        $this->obligatoryUserMailAddress = $value;
     }
 
     // === original_resize ===
     /**
      * Resize uploaded originals that exceed the configured maximum dimensions.
      */
-    private static bool $originalResize = false;
+    private bool $originalResize = false;
 
-    public static function originalResize(): bool
+    public function originalResize(): bool
     {
-        return self::$originalResize;
+        return $this->originalResize;
     }
 
-    public static function setOriginalResize(bool $value): void
+    public function setOriginalResize(bool $value): void
     {
-        self::$originalResize = $value;
+        $this->originalResize = $value;
     }
 
     // === original_resize_maxheight ===
     /**
      * Maximum pixel height for uploaded originals when resize is enabled.
      */
-    private static int $originalResizeMaxheight = 2000;
+    private int $originalResizeMaxheight = 2000;
 
-    public static function originalResizeMaxheight(): int
+    public function originalResizeMaxheight(): int
     {
-        return self::$originalResizeMaxheight;
+        return $this->originalResizeMaxheight;
     }
 
-    public static function setOriginalResizeMaxheight(int $value): void
+    public function setOriginalResizeMaxheight(int $value): void
     {
-        self::$originalResizeMaxheight = $value;
+        $this->originalResizeMaxheight = $value;
     }
 
     // === original_resize_maxwidth ===
     /**
      * Maximum pixel width for uploaded originals when resize is enabled.
      */
-    private static int $originalResizeMaxwidth = 2000;
+    private int $originalResizeMaxwidth = 2000;
 
-    public static function originalResizeMaxwidth(): int
+    public function originalResizeMaxwidth(): int
     {
-        return self::$originalResizeMaxwidth;
+        return $this->originalResizeMaxwidth;
     }
 
-    public static function setOriginalResizeMaxwidth(int $value): void
+    public function setOriginalResizeMaxwidth(int $value): void
     {
-        self::$originalResizeMaxwidth = $value;
+        $this->originalResizeMaxwidth = $value;
     }
 
     // === original_resize_quality ===
     /**
      * JPEG quality (1-100) used when resizing uploaded originals.
      */
-    private static int $originalResizeQuality = 95;
+    private int $originalResizeQuality = 95;
 
-    public static function originalResizeQuality(): int
+    public function originalResizeQuality(): int
     {
-        return self::$originalResizeQuality;
+        return $this->originalResizeQuality;
     }
 
-    public static function setOriginalResizeQuality(int $value): void
+    public function setOriginalResizeQuality(int $value): void
     {
-        self::$originalResizeQuality = $value;
+        $this->originalResizeQuality = $value;
     }
 
     // === original_url_protection ===
     /**
      * Original-file URL protection mode: empty (none), images, or all.
      */
-    private static string $originalUrlProtection = '';
+    private string $originalUrlProtection = '';
 
-    public static function originalUrlProtection(): string
+    public function originalUrlProtection(): string
     {
-        return self::$originalUrlProtection;
+        return $this->originalUrlProtection;
     }
 
-    public static function setOriginalUrlProtection(string $value): void
+    public function setOriginalUrlProtection(string $value): void
     {
-        self::$originalUrlProtection = $value;
+        $this->originalUrlProtection = $value;
     }
 
     // === page_banner ===
     /**
      * HTML banner content displayed at the top of public gallery pages.
      */
-    private static string $pageBanner = '';
+    private string $pageBanner = '';
 
-    public static function pageBanner(): string
+    public function pageBanner(): string
     {
-        return self::$pageBanner;
+        return $this->pageBanner;
     }
 
-    public static function setPageBanner(string $value): void
+    public function setPageBanner(string $value): void
     {
-        self::$pageBanner = $value;
+        $this->pageBanner = $value;
     }
 
     // === paginate_pages_around ===
@@ -2383,96 +2418,96 @@ final class CurrentConfig
      * Number of page-number links shown on each side of the current page in
      * pagination.
      */
-    private static int $paginatePagesAround = 2;
+    private int $paginatePagesAround = 2;
 
-    public static function paginatePagesAround(): int
+    public function paginatePagesAround(): int
     {
-        return self::$paginatePagesAround;
+        return $this->paginatePagesAround;
     }
 
-    public static function setPaginatePagesAround(int $value): void
+    public function setPaginatePagesAround(int $value): void
     {
-        self::$paginatePagesAround = $value;
+        $this->paginatePagesAround = $value;
     }
 
     // === password_activation_duration ===
     /**
      * Seconds a password-activation link emailed to new users remains valid.
      */
-    private static int $passwordActivationDuration = 259200;
+    private int $passwordActivationDuration = 259200;
 
-    public static function passwordActivationDuration(): int
+    public function passwordActivationDuration(): int
     {
-        return self::$passwordActivationDuration;
+        return $this->passwordActivationDuration;
     }
 
-    public static function setPasswordActivationDuration(int $value): void
+    public function setPasswordActivationDuration(int $value): void
     {
-        self::$passwordActivationDuration = $value;
+        $this->passwordActivationDuration = $value;
     }
 
     // === password_reset_code_duration ===
     /**
      * Seconds a password-reset verification code is valid.
      */
-    private static int $passwordResetCodeDuration = 300;
+    private int $passwordResetCodeDuration = 300;
 
-    public static function passwordResetCodeDuration(): int
+    public function passwordResetCodeDuration(): int
     {
-        return self::$passwordResetCodeDuration;
+        return $this->passwordResetCodeDuration;
     }
 
-    public static function setPasswordResetCodeDuration(int $value): void
+    public function setPasswordResetCodeDuration(int $value): void
     {
-        self::$passwordResetCodeDuration = $value;
+        $this->passwordResetCodeDuration = $value;
     }
 
     // === password_reset_duration ===
     /**
      * Seconds a password-reset link emailed to a user remains valid.
      */
-    private static int $passwordResetDuration = 3600;
+    private int $passwordResetDuration = 3600;
 
-    public static function passwordResetDuration(): int
+    public function passwordResetDuration(): int
     {
-        return self::$passwordResetDuration;
+        return $this->passwordResetDuration;
     }
 
-    public static function setPasswordResetDuration(int $value): void
+    public function setPasswordResetDuration(int $value): void
     {
-        self::$passwordResetDuration = $value;
+        $this->passwordResetDuration = $value;
     }
 
     // === pdf_jpg_quality ===
     /**
      * JPEG quality used when Imagick renders a PDF's representative image.
      */
-    private static int $pdfJpgQuality = 90;
+    private int $pdfJpgQuality = 90;
 
-    public static function pdfJpgQuality(): int
+    public function pdfJpgQuality(): int
     {
-        return self::$pdfJpgQuality;
+        return $this->pdfJpgQuality;
     }
 
-    public static function setPdfJpgQuality(int $value): void
+    public function setPdfJpgQuality(int $value): void
     {
-        self::$pdfJpgQuality = $value;
+        $this->pdfJpgQuality = $value;
     }
 
     // === pdf_representative_ext ===
     /**
      * File extension used for a PDF's rendered representative image.
      */
-    private static string $pdfRepresentativeExt = 'jpg';
+    private string $pdfRepresentativeExt = 'jpg';
 
-    public static function pdfRepresentativeExt(): string
+    public function pdfRepresentativeExt(): string
     {
-        return self::$pdfRepresentativeExt;
+        return $this->pdfRepresentativeExt;
     }
 
-    public static function setPdfRepresentativeExt(string $value): void
+    public function setPdfRepresentativeExt(string $value): void
     {
-        self::$pdfRepresentativeExt = $value;
+        $this->pdfRepresentativeExt = $value;
     }
 
     // === pdf_viewer_filesize_threshold ===
@@ -2480,64 +2515,64 @@ final class CurrentConfig
      * Maximum PDF file size in MB to display inline; larger files show a download
      * link.
      */
-    private static int $pdfViewerFilesizeThreshold = 5;
+    private int $pdfViewerFilesizeThreshold = 5;
 
-    public static function pdfViewerFilesizeThreshold(): int
+    public function pdfViewerFilesizeThreshold(): int
     {
-        return self::$pdfViewerFilesizeThreshold;
+        return $this->pdfViewerFilesizeThreshold;
     }
 
-    public static function setPdfViewerFilesizeThreshold(int $value): void
+    public function setPdfViewerFilesizeThreshold(int $value): void
     {
-        self::$pdfViewerFilesizeThreshold = $value;
+        $this->pdfViewerFilesizeThreshold = $value;
     }
 
     // === pem_languages_category ===
     /**
      * PEM (Piwigo Extensions Manager) category ID for language packs.
      */
-    private static int $pemLanguagesCategory = 8;
+    private int $pemLanguagesCategory = 8;
 
-    public static function pemLanguagesCategory(): int
+    public function pemLanguagesCategory(): int
     {
-        return self::$pemLanguagesCategory;
+        return $this->pemLanguagesCategory;
     }
 
-    public static function setPemLanguagesCategory(int $value): void
+    public function setPemLanguagesCategory(int $value): void
     {
-        self::$pemLanguagesCategory = $value;
+        $this->pemLanguagesCategory = $value;
     }
 
     // === pem_plugins_category ===
     /**
      * PEM category ID for plugins.
      */
-    private static int $pemPluginsCategory = 12;
+    private int $pemPluginsCategory = 12;
 
-    public static function pemPluginsCategory(): int
+    public function pemPluginsCategory(): int
     {
-        return self::$pemPluginsCategory;
+        return $this->pemPluginsCategory;
     }
 
-    public static function setPemPluginsCategory(int $value): void
+    public function setPemPluginsCategory(int $value): void
     {
-        self::$pemPluginsCategory = $value;
+        $this->pemPluginsCategory = $value;
     }
 
     // === pem_themes_category ===
     /**
      * PEM category ID for themes.
      */
-    private static int $pemThemesCategory = 10;
+    private int $pemThemesCategory = 10;
 
-    public static function pemThemesCategory(): int
+    public function pemThemesCategory(): int
     {
-        return self::$pemThemesCategory;
+        return $this->pemThemesCategory;
     }
 
-    public static function setPemThemesCategory(int $value): void
+    public function setPemThemesCategory(int $value): void
     {
-        self::$pemThemesCategory = $value;
+        $this->pemThemesCategory = $value;
     }
 
     // === php_extension_in_urls ===
@@ -2545,256 +2580,256 @@ final class CurrentConfig
      * Include the .php extension in generated picture/category URLs. Works only
      * with Options +MultiViews or URL rewriting active.
      */
-    private static bool $phpExtensionInUrls = true;
+    private bool $phpExtensionInUrls = true;
 
-    public static function phpExtensionInUrls(): bool
+    public function phpExtensionInUrls(): bool
     {
-        return self::$phpExtensionInUrls;
+        return $this->phpExtensionInUrls;
     }
 
-    public static function setPhpExtensionInUrls(bool $value): void
+    public function setPhpExtensionInUrls(bool $value): void
     {
-        self::$phpExtensionInUrls = $value;
+        $this->phpExtensionInUrls = $value;
     }
 
     // === picture_caddie_icon ===
     /**
      * Show the add-to-caddie icon on the photo detail page.
      */
-    private static bool $pictureCaddieIcon = true;
+    private bool $pictureCaddieIcon = true;
 
-    public static function pictureCaddieIcon(): bool
+    public function pictureCaddieIcon(): bool
     {
-        return self::$pictureCaddieIcon;
+        return $this->pictureCaddieIcon;
     }
 
-    public static function setPictureCaddieIcon(bool $value): void
+    public function setPictureCaddieIcon(bool $value): void
     {
-        self::$pictureCaddieIcon = $value;
+        $this->pictureCaddieIcon = $value;
     }
 
     // === picture_download_icon ===
     /**
      * Show the download icon on the photo detail page.
      */
-    private static bool $pictureDownloadIcon = true;
+    private bool $pictureDownloadIcon = true;
 
-    public static function pictureDownloadIcon(): bool
+    public function pictureDownloadIcon(): bool
     {
-        return self::$pictureDownloadIcon;
+        return $this->pictureDownloadIcon;
     }
 
-    public static function setPictureDownloadIcon(bool $value): void
+    public function setPictureDownloadIcon(bool $value): void
     {
-        self::$pictureDownloadIcon = $value;
+        $this->pictureDownloadIcon = $value;
     }
 
     // === picture_edit_icon ===
     /**
      * Show the quick-edit icon on the photo detail page (admins only).
      */
-    private static bool $pictureEditIcon = true;
+    private bool $pictureEditIcon = true;
 
-    public static function pictureEditIcon(): bool
+    public function pictureEditIcon(): bool
     {
-        return self::$pictureEditIcon;
+        return $this->pictureEditIcon;
     }
 
-    public static function setPictureEditIcon(bool $value): void
+    public function setPictureEditIcon(bool $value): void
     {
-        self::$pictureEditIcon = $value;
+        $this->pictureEditIcon = $value;
     }
 
     // === picture_favorite_icon ===
     /**
      * Show the add-to-favorites icon on the photo detail page.
      */
-    private static bool $pictureFavoriteIcon = true;
+    private bool $pictureFavoriteIcon = true;
 
-    public static function pictureFavoriteIcon(): bool
+    public function pictureFavoriteIcon(): bool
     {
-        return self::$pictureFavoriteIcon;
+        return $this->pictureFavoriteIcon;
     }
 
-    public static function setPictureFavoriteIcon(bool $value): void
+    public function setPictureFavoriteIcon(bool $value): void
     {
-        self::$pictureFavoriteIcon = $value;
+        $this->pictureFavoriteIcon = $value;
     }
 
     // === picture_menu ===
     /**
      * Show the navigation menu on the photo detail page.
      */
-    private static bool $pictureMenu = true;
+    private bool $pictureMenu = true;
 
-    public static function pictureMenu(): bool
+    public function pictureMenu(): bool
     {
-        return self::$pictureMenu;
+        return $this->pictureMenu;
     }
 
-    public static function setPictureMenu(bool $value): void
+    public function setPictureMenu(bool $value): void
     {
-        self::$pictureMenu = $value;
+        $this->pictureMenu = $value;
     }
 
     // === picture_metadata_icon ===
     /**
      * Show the metadata icon on the photo detail page.
      */
-    private static bool $pictureMetadataIcon = true;
+    private bool $pictureMetadataIcon = true;
 
-    public static function pictureMetadataIcon(): bool
+    public function pictureMetadataIcon(): bool
     {
-        return self::$pictureMetadataIcon;
+        return $this->pictureMetadataIcon;
     }
 
-    public static function setPictureMetadataIcon(bool $value): void
+    public function setPictureMetadataIcon(bool $value): void
     {
-        self::$pictureMetadataIcon = $value;
+        $this->pictureMetadataIcon = $value;
     }
 
     // === picture_navigation_icons ===
     /**
      * Show previous/next navigation arrows on the photo detail page.
      */
-    private static bool $pictureNavigationIcons = true;
+    private bool $pictureNavigationIcons = true;
 
-    public static function pictureNavigationIcons(): bool
+    public function pictureNavigationIcons(): bool
     {
-        return self::$pictureNavigationIcons;
+        return $this->pictureNavigationIcons;
     }
 
-    public static function setPictureNavigationIcons(bool $value): void
+    public function setPictureNavigationIcons(bool $value): void
     {
-        self::$pictureNavigationIcons = $value;
+        $this->pictureNavigationIcons = $value;
     }
 
     // === picture_navigation_thumb ===
     /**
      * Show previous/next thumbnail previews on the photo detail page.
      */
-    private static bool $pictureNavigationThumb = true;
+    private bool $pictureNavigationThumb = true;
 
-    public static function pictureNavigationThumb(): bool
+    public function pictureNavigationThumb(): bool
     {
-        return self::$pictureNavigationThumb;
+        return $this->pictureNavigationThumb;
     }
 
-    public static function setPictureNavigationThumb(bool $value): void
+    public function setPictureNavigationThumb(bool $value): void
     {
-        self::$pictureNavigationThumb = $value;
+        $this->pictureNavigationThumb = $value;
     }
 
     // === picture_representative_icon ===
     /**
      * Show the set-as-album-representative icon on the photo detail page.
      */
-    private static bool $pictureRepresentativeIcon = true;
+    private bool $pictureRepresentativeIcon = true;
 
-    public static function pictureRepresentativeIcon(): bool
+    public function pictureRepresentativeIcon(): bool
     {
-        return self::$pictureRepresentativeIcon;
+        return $this->pictureRepresentativeIcon;
     }
 
-    public static function setPictureRepresentativeIcon(bool $value): void
+    public function setPictureRepresentativeIcon(bool $value): void
     {
-        self::$pictureRepresentativeIcon = $value;
+        $this->pictureRepresentativeIcon = $value;
     }
 
     // === picture_sizes_icon ===
     /**
      * Show the available-sizes icon on the photo detail page.
      */
-    private static bool $pictureSizesIcon = true;
+    private bool $pictureSizesIcon = true;
 
-    public static function pictureSizesIcon(): bool
+    public function pictureSizesIcon(): bool
     {
-        return self::$pictureSizesIcon;
+        return $this->pictureSizesIcon;
     }
 
-    public static function setPictureSizesIcon(bool $value): void
+    public function setPictureSizesIcon(bool $value): void
     {
-        self::$pictureSizesIcon = $value;
+        $this->pictureSizesIcon = $value;
     }
 
     // === picture_slideshow_icon ===
     /**
      * Show the slideshow icon on the photo detail page.
      */
-    private static bool $pictureSlideShowIcon = true;
+    private bool $pictureSlideShowIcon = true;
 
-    public static function pictureSlideShowIcon(): bool
+    public function pictureSlideShowIcon(): bool
     {
-        return self::$pictureSlideShowIcon;
+        return $this->pictureSlideShowIcon;
     }
 
-    public static function setPictureSlideShowIcon(bool $value): void
+    public function setPictureSlideShowIcon(bool $value): void
     {
-        self::$pictureSlideShowIcon = $value;
+        $this->pictureSlideShowIcon = $value;
     }
 
     // === picture_url_style ===
     /**
      * URL format for photo links: id or id-file.
      */
-    private static string $pictureUrlStyle = 'id';
+    private string $pictureUrlStyle = 'id';
 
-    public static function pictureUrlStyle(): string
+    public function pictureUrlStyle(): string
     {
-        return self::$pictureUrlStyle;
+        return $this->pictureUrlStyle;
     }
 
-    public static function setPictureUrlStyle(string $value): void
+    public function setPictureUrlStyle(string $value): void
     {
-        self::$pictureUrlStyle = $value;
+        $this->pictureUrlStyle = $value;
     }
 
     // === piwigo_installed_version ===
     /**
      * Full Piwigo version string recorded at the time of the last upgrade.
      */
-    private static ?string $piwigoInstalledVersion = null;
+    private ?string $piwigoInstalledVersion = null;
 
-    public static function piwigoInstalledVersion(): ?string
+    public function piwigoInstalledVersion(): ?string
     {
-        return self::$piwigoInstalledVersion;
+        return $this->piwigoInstalledVersion;
     }
 
-    public static function setPiwigoInstalledVersion(?string $value): void
+    public function setPiwigoInstalledVersion(?string $value): void
     {
-        self::$piwigoInstalledVersion = $value;
+        $this->piwigoInstalledVersion = $value;
     }
 
     // === proxy_auth ===
     /**
      * Credentials (user:password) for HTTP proxy authentication.
      */
-    private static string $proxyAuth = '';
+    private string $proxyAuth = '';
 
-    public static function proxyAuth(): string
+    public function proxyAuth(): string
     {
-        return self::$proxyAuth;
+        return $this->proxyAuth;
     }
 
-    public static function setProxyAuth(string $value): void
+    public function setProxyAuth(string $value): void
     {
-        self::$proxyAuth = $value;
+        $this->proxyAuth = $value;
     }
 
     // === proxy_server ===
     /**
      * HTTP proxy server URL used for outgoing connections from Piwigo.
      */
-    private static string $proxyServer = '';
+    private string $proxyServer = '';
 
-    public static function proxyServer(): string
+    public function proxyServer(): string
     {
-        return self::$proxyServer;
+        return $this->proxyServer;
     }
 
-    public static function setProxyServer(string $value): void
+    public function setProxyServer(string $value): void
     {
-        self::$proxyServer = $value;
+        $this->proxyServer = $value;
     }
 
     // === question_mark_in_urls ===
@@ -2802,176 +2837,176 @@ final class CurrentConfig
      * Include a ? in generated URLs. Can only be set false when the server
      * translates PATH_INFO (AcceptPathInfo).
      */
-    private static bool $questionMarkInUrls = true;
+    private bool $questionMarkInUrls = true;
 
-    public static function questionMarkInUrls(): bool
+    public function questionMarkInUrls(): bool
     {
-        return self::$questionMarkInUrls;
+        return $this->questionMarkInUrls;
     }
 
-    public static function setQuestionMarkInUrls(bool $value): void
+    public function setQuestionMarkInUrls(bool $value): void
     {
-        self::$questionMarkInUrls = $value;
+        $this->questionMarkInUrls = $value;
     }
 
     // === quick_search_include_sub_albums ===
     /**
      * Include photos from sub-albums in quick-search results.
      */
-    private static bool $quickSearchIncludeSubAlbums = false;
+    private bool $quickSearchIncludeSubAlbums = false;
 
-    public static function quickSearchIncludeSubAlbums(): bool
+    public function quickSearchIncludeSubAlbums(): bool
     {
-        return self::$quickSearchIncludeSubAlbums;
+        return $this->quickSearchIncludeSubAlbums;
     }
 
-    public static function setQuickSearchIncludeSubAlbums(bool $value): void
+    public function setQuickSearchIncludeSubAlbums(bool $value): void
     {
-        self::$quickSearchIncludeSubAlbums = $value;
+        $this->quickSearchIncludeSubAlbums = $value;
     }
 
     // === rate ===
     /**
      * Enable the photo rating feature.
      */
-    private static bool $rateEnabled = true;
+    private bool $rateEnabled = true;
 
-    public static function rateEnabled(): bool
+    public function rateEnabled(): bool
     {
-        return self::$rateEnabled;
+        return $this->rateEnabled;
     }
 
-    public static function setRateEnabled(bool $value): void
+    public function setRateEnabled(bool $value): void
     {
-        self::$rateEnabled = $value;
+        $this->rateEnabled = $value;
     }
 
     // === rate_anonymous ===
     /**
      * Allow guest (unauthenticated) visitors to rate photos.
      */
-    private static bool $rateAnonymous = true;
+    private bool $rateAnonymous = true;
 
-    public static function rateAnonymous(): bool
+    public function rateAnonymous(): bool
     {
-        return self::$rateAnonymous;
+        return $this->rateAnonymous;
     }
 
-    public static function setRateAnonymous(bool $value): void
+    public function setRateAnonymous(bool $value): void
     {
-        self::$rateAnonymous = $value;
+        $this->rateAnonymous = $value;
     }
 
     // === related_albums_display_limit ===
     /**
      * Maximum number of related albums shown on the photo detail page.
      */
-    private static int $relatedAlbumsDisplayLimit = 20;
+    private int $relatedAlbumsDisplayLimit = 20;
 
-    public static function relatedAlbumsDisplayLimit(): int
+    public function relatedAlbumsDisplayLimit(): int
     {
-        return self::$relatedAlbumsDisplayLimit;
+        return $this->relatedAlbumsDisplayLimit;
     }
 
-    public static function setRelatedAlbumsDisplayLimit(int $value): void
+    public function setRelatedAlbumsDisplayLimit(int $value): void
     {
-        self::$relatedAlbumsDisplayLimit = $value;
+        $this->relatedAlbumsDisplayLimit = $value;
     }
 
     // === related_albums_maximum_items_to_compute ===
     /**
      * Maximum photos considered when computing related albums.
      */
-    private static int $relatedAlbumsMaximumItemsToCompute = 1000;
+    private int $relatedAlbumsMaximumItemsToCompute = 1000;
 
-    public static function relatedAlbumsMaximumItemsToCompute(): int
+    public function relatedAlbumsMaximumItemsToCompute(): int
     {
-        return self::$relatedAlbumsMaximumItemsToCompute;
+        return $this->relatedAlbumsMaximumItemsToCompute;
     }
 
-    public static function setRelatedAlbumsMaximumItemsToCompute(int $value): void
+    public function setRelatedAlbumsMaximumItemsToCompute(int $value): void
     {
-        self::$relatedAlbumsMaximumItemsToCompute = $value;
+        $this->relatedAlbumsMaximumItemsToCompute = $value;
     }
 
     // === remember_me_length ===
     /**
      * Lifetime in seconds of the remember-me persistent login cookie.
      */
-    private static int $rememberMeLength = 5184000;
+    private int $rememberMeLength = 5184000;
 
-    public static function rememberMeLength(): int
+    public function rememberMeLength(): int
     {
-        return self::$rememberMeLength;
+        return $this->rememberMeLength;
     }
 
-    public static function setRememberMeLength(int $value): void
+    public function setRememberMeLength(int $value): void
     {
-        self::$rememberMeLength = $value;
+        $this->rememberMeLength = $value;
     }
 
     // === remember_me_name ===
     /**
      * Cookie name used for the remember-me persistent login token.
      */
-    private static string $rememberMeName = 'pwg_remember';
+    private string $rememberMeName = 'pwg_remember';
 
-    public static function rememberMeName(): string
+    public function rememberMeName(): string
     {
-        return self::$rememberMeName;
+        return $this->rememberMeName;
     }
 
-    public static function setRememberMeName(string $value): void
+    public function setRememberMeName(string $value): void
     {
-        self::$rememberMeName = $value;
+        $this->rememberMeName = $value;
     }
 
     // === representative_cache_on_level ===
     /**
      * Cache the album representative photo when permission level changes.
      */
-    private static bool $representativeCacheOnLevel = true;
+    private bool $representativeCacheOnLevel = true;
 
-    public static function representativeCacheOnLevel(): bool
+    public function representativeCacheOnLevel(): bool
     {
-        return self::$representativeCacheOnLevel;
+        return $this->representativeCacheOnLevel;
     }
 
-    public static function setRepresentativeCacheOnLevel(bool $value): void
+    public function setRepresentativeCacheOnLevel(bool $value): void
     {
-        self::$representativeCacheOnLevel = $value;
+        $this->representativeCacheOnLevel = $value;
     }
 
     // === representative_cache_on_subcats ===
     /**
      * Rebuild album representative thumbnails when sub-album content changes.
      */
-    private static bool $representativeCacheOnSubcats = true;
+    private bool $representativeCacheOnSubcats = true;
 
-    public static function representativeCacheOnSubcats(): bool
+    public function representativeCacheOnSubcats(): bool
     {
-        return self::$representativeCacheOnSubcats;
+        return $this->representativeCacheOnSubcats;
     }
 
-    public static function setRepresentativeCacheOnSubcats(bool $value): void
+    public function setRepresentativeCacheOnSubcats(bool $value): void
     {
-        self::$representativeCacheOnSubcats = $value;
+        $this->representativeCacheOnSubcats = $value;
     }
 
     // === rss_feed_author ===
     /**
      * Author name shown in the gallery RSS feed.
      */
-    private static string $rssReedAuthor = 'Piwigo notifier';
+    private string $rssReedAuthor = 'Piwigo notifier';
 
-    public static function rssReedAuthor(): string
+    public function rssReedAuthor(): string
     {
-        return self::$rssReedAuthor;
+        return $this->rssReedAuthor;
     }
 
-    public static function setRssReedAuthor(string $value): void
+    public function setRssReedAuthor(string $value): void
     {
-        self::$rssReedAuthor = $value;
+        $this->rssReedAuthor = $value;
     }
 
     // === secret_key ===
@@ -2979,112 +3014,112 @@ final class CurrentConfig
      * Random string used to sign CSRF tokens and internal hashes.
      */
     #[Required]
-    private static string $secretKey = '';
+    private string $secretKey = '';
 
-    public static function secretKey(): string
+    public function secretKey(): string
     {
-        return self::$secretKey;
+        return $this->secretKey;
     }
 
-    public static function setSecretKey(string $value): void
+    public function setSecretKey(string $value): void
     {
-        self::$secretKey = $value;
+        $this->secretKey = $value;
     }
 
     // === send_bcc_mail_webmaster ===
     /**
      * BCC the webmaster address on every outgoing notification email.
      */
-    private static bool $sendBccMailWebmaster = false;
+    private bool $sendBccMailWebmaster = false;
 
-    public static function sendBccMailWebmaster(): bool
+    public function sendBccMailWebmaster(): bool
     {
-        return self::$sendBccMailWebmaster;
+        return $this->sendBccMailWebmaster;
     }
 
-    public static function setSendBccMailWebmaster(bool $value): void
+    public function setSendBccMailWebmaster(bool $value): void
     {
-        self::$sendBccMailWebmaster = $value;
+        $this->sendBccMailWebmaster = $value;
     }
 
     // === send_piwigo_infos ===
     /**
      * Allow Piwigo to send anonymous usage statistics to the Piwigo project.
      */
-    private static bool $sendPiwigoInfos = true;
+    private bool $sendPiwigoInfos = true;
 
-    public static function sendPiwigoInfos(): bool
+    public function sendPiwigoInfos(): bool
     {
-        return self::$sendPiwigoInfos;
+        return $this->sendPiwigoInfos;
     }
 
-    public static function setSendPiwigoInfos(bool $value): void
+    public function setSendPiwigoInfos(bool $value): void
     {
-        self::$sendPiwigoInfos = $value;
+        $this->sendPiwigoInfos = $value;
     }
 
     // === send_piwigo_infos_last_notice ===
     /**
      * Date the admin was last shown the usage-statistics opt-in notice.
      */
-    private static ?string $sendPiwigoInfosLastNotice = null;
+    private ?string $sendPiwigoInfosLastNotice = null;
 
-    public static function sendPiwigoInfosLastNotice(): ?string
+    public function sendPiwigoInfosLastNotice(): ?string
     {
-        return self::$sendPiwigoInfosLastNotice;
+        return $this->sendPiwigoInfosLastNotice;
     }
 
-    public static function setSendPiwigoInfosLastNotice(?string $value): void
+    public function setSendPiwigoInfosLastNotice(?string $value): void
     {
-        self::$sendPiwigoInfosLastNotice = $value;
+        $this->sendPiwigoInfosLastNotice = $value;
     }
 
     // === send_piwigo_infos_origin_hash ===
     /**
      * Anonymous installation hash included in usage statistics.
      */
-    private static ?string $sendPiwigoInfosOriginHash = null;
+    private ?string $sendPiwigoInfosOriginHash = null;
 
-    public static function sendPiwigoInfosOriginHash(): ?string
+    public function sendPiwigoInfosOriginHash(): ?string
     {
-        return self::$sendPiwigoInfosOriginHash;
+        return $this->sendPiwigoInfosOriginHash;
     }
 
-    public static function setSendPiwigoInfosOriginHash(?string $value): void
+    public function setSendPiwigoInfosOriginHash(?string $value): void
     {
-        self::$sendPiwigoInfosOriginHash = $value;
+        $this->sendPiwigoInfosOriginHash = $value;
     }
 
     // === send_piwigo_infos_period ===
     /**
      * Minimum seconds between two "send Piwigo infos" telemetry pings.
      */
-    private static int $sendPiwigoInfosPeriod = 7 * 24 * 60 * 60;
+    private int $sendPiwigoInfosPeriod = 7 * 24 * 60 * 60;
 
-    public static function sendPiwigoInfosPeriod(): int
+    public function sendPiwigoInfosPeriod(): int
     {
-        return self::$sendPiwigoInfosPeriod;
+        return $this->sendPiwigoInfosPeriod;
     }
 
-    public static function setSendPiwigoInfosPeriod(int $value): void
+    public function setSendPiwigoInfosPeriod(int $value): void
     {
-        self::$sendPiwigoInfosPeriod = $value;
+        $this->sendPiwigoInfosPeriod = $value;
     }
 
     // === send_piwigo_infos_update_url ===
     /**
      * Base URL the "send Piwigo infos" telemetry ping is posted to.
      */
-    private static string $sendPiwigoInfosUpdateUrl = \Piwigo\Core\AppInfo::URL;
+    private string $sendPiwigoInfosUpdateUrl = \Piwigo\Core\AppInfo::URL;
 
-    public static function sendPiwigoInfosUpdateUrl(): string
+    public function sendPiwigoInfosUpdateUrl(): string
     {
-        return self::$sendPiwigoInfosUpdateUrl;
+        return $this->sendPiwigoInfosUpdateUrl;
     }
 
-    public static function setSendPiwigoInfosUpdateUrl(string $value): void
+    public function setSendPiwigoInfosUpdateUrl(string $value): void
     {
-        self::$sendPiwigoInfosUpdateUrl = $value;
+        $this->sendPiwigoInfosUpdateUrl = $value;
     }
 
     // === session_gc_probability ===
@@ -3092,96 +3127,96 @@ final class CurrentConfig
      * Probability weight (out of 100) that a PHP session GC run is triggered per
      * request.
      */
-    private static int $sessionGcProbability = 1;
+    private int $sessionGcProbability = 1;
 
-    public static function sessionGcProbability(): int
+    public function sessionGcProbability(): int
     {
-        return self::$sessionGcProbability;
+        return $this->sessionGcProbability;
     }
 
-    public static function setSessionGcProbability(int $value): void
+    public function setSessionGcProbability(int $value): void
     {
-        self::$sessionGcProbability = $value;
+        $this->sessionGcProbability = $value;
     }
 
     // === session_length ===
     /**
      * PHP session lifetime in seconds (sets cookie_lifetime and gc_maxlifetime).
      */
-    private static int $sessionLength = 3600;
+    private int $sessionLength = 3600;
 
-    public static function sessionLength(): int
+    public function sessionLength(): int
     {
-        return self::$sessionLength;
+        return $this->sessionLength;
     }
 
-    public static function setSessionLength(int $value): void
+    public function setSessionLength(int $value): void
     {
-        self::$sessionLength = $value;
+        $this->sessionLength = $value;
     }
 
     // === session_name ===
     /**
      * PHP session cookie name used by Piwigo.
      */
-    private static string $sessionName = 'pwg_id';
+    private string $sessionName = 'pwg_id';
 
-    public static function sessionName(): string
+    public function sessionName(): string
     {
-        return self::$sessionName;
+        return $this->sessionName;
     }
 
-    public static function setSessionName(string $value): void
+    public function setSessionName(string $value): void
     {
-        self::$sessionName = $value;
+        $this->sessionName = $value;
     }
 
     // === session_save_handler ===
     /**
      * Session storage backend: db (database) or files.
      */
-    private static string $sessionSaveHandler = 'db';
+    private string $sessionSaveHandler = 'db';
 
-    public static function sessionSaveHandler(): string
+    public function sessionSaveHandler(): string
     {
-        return self::$sessionSaveHandler;
+        return $this->sessionSaveHandler;
     }
 
-    public static function setSessionSaveHandler(string $value): void
+    public function setSessionSaveHandler(string $value): void
     {
-        self::$sessionSaveHandler = $value;
+        $this->sessionSaveHandler = $value;
     }
 
     // === session_use_cookies ===
     /**
      * Store the session ID in a cookie (PHP session.use_cookies).
      */
-    private static bool $sessionUseCookies = true;
+    private bool $sessionUseCookies = true;
 
-    public static function sessionUseCookies(): bool
+    public function sessionUseCookies(): bool
     {
-        return self::$sessionUseCookies;
+        return $this->sessionUseCookies;
     }
 
-    public static function setSessionUseCookies(bool $value): void
+    public function setSessionUseCookies(bool $value): void
     {
-        self::$sessionUseCookies = $value;
+        $this->sessionUseCookies = $value;
     }
 
     // === session_use_ip_address ===
     /**
      * Bind sessions to the client IP address to reduce session-hijacking risk.
      */
-    private static bool $sessionUseIpAddress = true;
+    private bool $sessionUseIpAddress = true;
 
-    public static function sessionUseIpAddress(): bool
+    public function sessionUseIpAddress(): bool
     {
-        return self::$sessionUseIpAddress;
+        return $this->sessionUseIpAddress;
     }
 
-    public static function setSessionUseIpAddress(bool $value): void
+    public function setSessionUseIpAddress(bool $value): void
     {
-        self::$sessionUseIpAddress = $value;
+        $this->sessionUseIpAddress = $value;
     }
 
     // === session_use_only_cookies ===
@@ -3189,16 +3224,16 @@ final class CurrentConfig
      * Reject session IDs passed in the URL; require cookie only (PHP
      * session.use_only_cookies).
      */
-    private static bool $sessionUseOnlyCookies = true;
+    private bool $sessionUseOnlyCookies = true;
 
-    public static function sessionUseOnlyCookies(): bool
+    public function sessionUseOnlyCookies(): bool
     {
-        return self::$sessionUseOnlyCookies;
+        return $this->sessionUseOnlyCookies;
     }
 
-    public static function setSessionUseOnlyCookies(bool $value): void
+    public function setSessionUseOnlyCookies(bool $value): void
     {
-        self::$sessionUseOnlyCookies = $value;
+        $this->sessionUseOnlyCookies = $value;
     }
 
     // === session_use_trans_sid ===
@@ -3206,288 +3241,288 @@ final class CurrentConfig
      * Allow the session ID to be transmitted in the URL query string (PHP
      * session.use_trans_sid).
      */
-    private static bool $sessionUseTransSid = false;
+    private bool $sessionUseTransSid = false;
 
-    public static function sessionUseTransSid(): bool
+    public function sessionUseTransSid(): bool
     {
-        return self::$sessionUseTransSid;
+        return $this->sessionUseTransSid;
     }
 
-    public static function setSessionUseTransSid(bool $value): void
+    public function setSessionUseTransSid(bool $value): void
     {
-        self::$sessionUseTransSid = $value;
+        $this->sessionUseTransSid = $value;
     }
 
     // === show_exif ===
     /**
      * Display EXIF metadata on the photo detail page.
      */
-    private static bool $showExif = true;
+    private bool $showExif = true;
 
-    public static function showExif(): bool
+    public function showExif(): bool
     {
-        return self::$showExif;
+        return $this->showExif;
     }
 
-    public static function setShowExif(bool $value): void
+    public function setShowExif(bool $value): void
     {
-        self::$showExif = $value;
+        $this->showExif = $value;
     }
 
     // === show_gt ===
     /**
      * Show the Go-to navigation widget on photo detail pages.
      */
-    private static bool $showGt = false;
+    private bool $showGt = false;
 
-    public static function showGt(): bool
+    public function showGt(): bool
     {
-        return self::$showGt;
+        return $this->showGt;
     }
 
-    public static function setShowGt(bool $value): void
+    public function setShowGt(bool $value): void
     {
-        self::$showGt = $value;
+        $this->showGt = $value;
     }
 
     // === show_iptc ===
     /**
      * Display IPTC metadata on the photo detail page.
      */
-    private static bool $showIptc = false;
+    private bool $showIptc = false;
 
-    public static function showIptc(): bool
+    public function showIptc(): bool
     {
-        return self::$showIptc;
+        return $this->showIptc;
     }
 
-    public static function setShowIptc(bool $value): void
+    public function setShowIptc(bool $value): void
     {
-        self::$showIptc = $value;
+        $this->showIptc = $value;
     }
 
     // === show_mobile_app_banner_in_admin ===
     /**
      * Show the "get the mobile app" banner while browsing the admin.
      */
-    private static bool $showMobileAppBannerInAdmin = true;
+    private bool $showMobileAppBannerInAdmin = true;
 
-    public static function showMobileAppBannerInAdmin(): bool
+    public function showMobileAppBannerInAdmin(): bool
     {
-        return self::$showMobileAppBannerInAdmin;
+        return $this->showMobileAppBannerInAdmin;
     }
 
-    public static function setShowMobileAppBannerInAdmin(bool $value): void
+    public function setShowMobileAppBannerInAdmin(bool $value): void
     {
-        self::$showMobileAppBannerInAdmin = $value;
+        $this->showMobileAppBannerInAdmin = $value;
     }
 
     // === show_mobile_app_banner_in_gallery ===
     /**
      * Show the "get the mobile app" banner while browsing the gallery.
      */
-    private static bool $showMobileAppBannerInGallery = false;
+    private bool $showMobileAppBannerInGallery = false;
 
-    public static function showMobileAppBannerInGallery(): bool
+    public function showMobileAppBannerInGallery(): bool
     {
-        return self::$showMobileAppBannerInGallery;
+        return $this->showMobileAppBannerInGallery;
     }
 
-    public static function setShowMobileAppBannerInGallery(bool $value): void
+    public function setShowMobileAppBannerInGallery(bool $value): void
     {
-        self::$showMobileAppBannerInGallery = $value;
+        $this->showMobileAppBannerInGallery = $value;
     }
 
     // === show_newsletter_subscription ===
     /**
      * Show the newsletter subscription link in the gallery menu.
      */
-    private static bool $showNewsletterSubscription = true;
+    private bool $showNewsletterSubscription = true;
 
-    public static function showNewsletterSubscription(): bool
+    public function showNewsletterSubscription(): bool
     {
-        return self::$showNewsletterSubscription;
+        return $this->showNewsletterSubscription;
     }
 
-    public static function setShowNewsletterSubscription(bool $value): void
+    public function setShowNewsletterSubscription(bool $value): void
     {
-        self::$showNewsletterSubscription = $value;
+        $this->showNewsletterSubscription = $value;
     }
 
     // === show_piwigo_latest_news ===
     /**
      * Show the latest Piwigo project news on the admin dashboard.
      */
-    private static bool $showPiwigoLatestNews = true;
+    private bool $showPiwigoLatestNews = true;
 
-    public static function showPiwigoLatestNews(): bool
+    public function showPiwigoLatestNews(): bool
     {
-        return self::$showPiwigoLatestNews;
+        return $this->showPiwigoLatestNews;
     }
 
-    public static function setShowPiwigoLatestNews(bool $value): void
+    public function setShowPiwigoLatestNews(bool $value): void
     {
-        self::$showPiwigoLatestNews = $value;
+        $this->showPiwigoLatestNews = $value;
     }
 
     // === show_queries ===
     /**
      * Append executed SQL queries to the page HTML for debugging.
      */
-    private static bool $showQueries = false;
+    private bool $showQueries = false;
 
-    public static function showQueries(): bool
+    public function showQueries(): bool
     {
-        return self::$showQueries;
+        return $this->showQueries;
     }
 
-    public static function setShowQueries(bool $value): void
+    public function setShowQueries(bool $value): void
     {
-        self::$showQueries = $value;
+        $this->showQueries = $value;
     }
 
     // === show_template_in_side_menu ===
     /**
      * Show the active theme name in the gallery sidebar.
      */
-    private static bool $showTemplateInSideMenu = false;
+    private bool $showTemplateInSideMenu = false;
 
-    public static function showTemplateInSideMenu(): bool
+    public function showTemplateInSideMenu(): bool
     {
-        return self::$showTemplateInSideMenu;
+        return $this->showTemplateInSideMenu;
     }
 
-    public static function setShowTemplateInSideMenu(bool $value): void
+    public function setShowTemplateInSideMenu(bool $value): void
     {
-        self::$showTemplateInSideMenu = $value;
+        $this->showTemplateInSideMenu = $value;
     }
 
     // === show_thumbnail_caption ===
     /**
      * Show the photo title below thumbnails in album index pages.
      */
-    private static bool $showThumbnailCaption = true;
+    private bool $showThumbnailCaption = true;
 
-    public static function showThumbnailCaption(): bool
+    public function showThumbnailCaption(): bool
     {
-        return self::$showThumbnailCaption;
+        return $this->showThumbnailCaption;
     }
 
-    public static function setShowThumbnailCaption(bool $value): void
+    public function setShowThumbnailCaption(bool $value): void
     {
-        self::$showThumbnailCaption = $value;
+        $this->showThumbnailCaption = $value;
     }
 
     // === show_version ===
     /**
      * Display the Piwigo version string in the page footer and emails.
      */
-    private static bool $showVersion = false;
+    private bool $showVersion = false;
 
-    public static function showVersion(): bool
+    public function showVersion(): bool
     {
-        return self::$showVersion;
+        return $this->showVersion;
     }
 
-    public static function setShowVersion(bool $value): void
+    public function setShowVersion(bool $value): void
     {
-        self::$showVersion = $value;
+        $this->showVersion = $value;
     }
 
     // === slideshow_period ===
     /**
      * Default interval in seconds between photos in the slideshow.
      */
-    private static int $slideshowPeriod = 4;
+    private int $slideshowPeriod = 4;
 
-    public static function slideshowPeriod(): int
+    public function slideshowPeriod(): int
     {
-        return self::$slideshowPeriod;
+        return $this->slideshowPeriod;
     }
 
-    public static function setSlideshowPeriod(int $value): void
+    public function setSlideshowPeriod(int $value): void
     {
-        self::$slideshowPeriod = $value;
+        $this->slideshowPeriod = $value;
     }
 
     // === slideshow_period_max ===
     /**
      * Maximum selectable interval in seconds for the slideshow.
      */
-    private static int $slideshowPeriodMax = 10;
+    private int $slideshowPeriodMax = 10;
 
-    public static function slideshowPeriodMax(): int
+    public function slideshowPeriodMax(): int
     {
-        return self::$slideshowPeriodMax;
+        return $this->slideshowPeriodMax;
     }
 
-    public static function setSlideshowPeriodMax(int $value): void
+    public function setSlideshowPeriodMax(int $value): void
     {
-        self::$slideshowPeriodMax = $value;
+        $this->slideshowPeriodMax = $value;
     }
 
     // === slideshow_period_min ===
     /**
      * Minimum selectable interval in seconds for the slideshow.
      */
-    private static int $slideshowPeriodMin = 1;
+    private int $slideshowPeriodMin = 1;
 
-    public static function slideshowPeriodMin(): int
+    public function slideshowPeriodMin(): int
     {
-        return self::$slideshowPeriodMin;
+        return $this->slideshowPeriodMin;
     }
 
-    public static function setSlideshowPeriodMin(int $value): void
+    public function setSlideshowPeriodMin(int $value): void
     {
-        self::$slideshowPeriodMin = $value;
+        $this->slideshowPeriodMin = $value;
     }
 
     // === slideshow_period_step ===
     /**
      * Step size in seconds for the slideshow interval selector.
      */
-    private static int $slideshowPeriodStep = 1;
+    private int $slideshowPeriodStep = 1;
 
-    public static function slideshowPeriodStep(): int
+    public function slideshowPeriodStep(): int
     {
-        return self::$slideshowPeriodStep;
+        return $this->slideshowPeriodStep;
     }
 
-    public static function setSlideshowPeriodStep(int $value): void
+    public function setSlideshowPeriodStep(int $value): void
     {
-        self::$slideshowPeriodStep = $value;
+        $this->slideshowPeriodStep = $value;
     }
 
     // === slideshow_repeat ===
     /**
      * Loop the slideshow back to the first photo after the last.
      */
-    private static bool $slideshowRepeat = true;
+    private bool $slideshowRepeat = true;
 
-    public static function slideshowRepeat(): bool
+    public function slideshowRepeat(): bool
     {
-        return self::$slideshowRepeat;
+        return $this->slideshowRepeat;
     }
 
-    public static function setSlideshowRepeat(bool $value): void
+    public function setSlideshowRepeat(bool $value): void
     {
-        self::$slideshowRepeat = $value;
+        $this->slideshowRepeat = $value;
     }
 
     // === smtp_host ===
     /**
      * SMTP server hostname (and optional port) for outgoing email.
      */
-    private static string $smtpHost = '';
+    private string $smtpHost = '';
 
-    public static function smtpHost(): string
+    public function smtpHost(): string
     {
-        return self::$smtpHost;
+        return $this->smtpHost;
     }
 
-    public static function setSmtpHost(string $value): void
+    public function setSmtpHost(string $value): void
     {
-        self::$smtpHost = $value;
+        $this->smtpHost = $value;
     }
 
     // === smtp_password ===
@@ -3495,48 +3530,48 @@ final class CurrentConfig
      * SMTP authentication password.
      */
     #[Sensitive]
-    private static string $smtpPassword = '';
+    private string $smtpPassword = '';
 
-    public static function smtpPassword(): string
+    public function smtpPassword(): string
     {
-        return self::$smtpPassword;
+        return $this->smtpPassword;
     }
 
-    public static function setSmtpPassword(string $value): void
+    public function setSmtpPassword(string $value): void
     {
-        self::$smtpPassword = $value;
+        $this->smtpPassword = $value;
     }
 
     // === smtp_secure ===
     /**
      * SMTP connection security: null (none), ssl, or tls.
      */
-    private static ?string $smtpSecure = null;
+    private ?string $smtpSecure = null;
 
-    public static function smtpSecure(): ?string
+    public function smtpSecure(): ?string
     {
-        return self::$smtpSecure;
+        return $this->smtpSecure;
     }
 
-    public static function setSmtpSecure(?string $value): void
+    public function setSmtpSecure(?string $value): void
     {
-        self::$smtpSecure = $value;
+        $this->smtpSecure = $value;
     }
 
     // === smtp_user ===
     /**
      * SMTP authentication username.
      */
-    private static string $smtpUser = '';
+    private string $smtpUser = '';
 
-    public static function smtpUser(): string
+    public function smtpUser(): string
     {
-        return self::$smtpUser;
+        return $this->smtpUser;
     }
 
-    public static function setSmtpUser(string $value): void
+    public function setSmtpUser(string $value): void
     {
-        self::$smtpUser = $value;
+        $this->smtpUser = $value;
     }
 
     // === standard_pages_selected_logo ===
@@ -3544,16 +3579,16 @@ final class CurrentConfig
      * Which logo the "standard pages" theme fallback displays: 'piwigo_logo',
      * 'custom_logo', 'gallery_title', or 'none'.
      */
-    private static string $standardPagesSelectedLogo = 'piwigo_logo';
+    private string $standardPagesSelectedLogo = 'piwigo_logo';
 
-    public static function standardPagesSelectedLogo(): string
+    public function standardPagesSelectedLogo(): string
     {
-        return self::$standardPagesSelectedLogo;
+        return $this->standardPagesSelectedLogo;
     }
 
-    public static function setStandardPagesSelectedLogo(string $value): void
+    public function setStandardPagesSelectedLogo(string $value): void
     {
-        self::$standardPagesSelectedLogo = $value;
+        $this->standardPagesSelectedLogo = $value;
     }
 
     // === standard_pages_selected_logo_path ===
@@ -3561,112 +3596,112 @@ final class CurrentConfig
      * Disk-relative path (under the 'local' disk) of the uploaded custom logo
      * used by the "standard pages" theme fallback; null until one is uploaded.
      */
-    private static ?string $standardPagesSelectedLogoPath = null;
+    private ?string $standardPagesSelectedLogoPath = null;
 
-    public static function standardPagesSelectedLogoPath(): ?string
+    public function standardPagesSelectedLogoPath(): ?string
     {
-        return self::$standardPagesSelectedLogoPath;
+        return $this->standardPagesSelectedLogoPath;
     }
 
-    public static function setStandardPagesSelectedLogoPath(?string $value): void
+    public function setStandardPagesSelectedLogoPath(?string $value): void
     {
-        self::$standardPagesSelectedLogoPath = $value;
+        $this->standardPagesSelectedLogoPath = $value;
     }
 
     // === standard_pages_selected_skin ===
     /**
      * Skin used by the "standard pages" theme fallback (login/register/...).
      */
-    private static string $standardPagesSelectedSkin = 'default';
+    private string $standardPagesSelectedSkin = 'default';
 
-    public static function standardPagesSelectedSkin(): string
+    public function standardPagesSelectedSkin(): string
     {
-        return self::$standardPagesSelectedSkin;
+        return $this->standardPagesSelectedSkin;
     }
 
-    public static function setStandardPagesSelectedSkin(string $value): void
+    public function setStandardPagesSelectedSkin(string $value): void
     {
-        self::$standardPagesSelectedSkin = $value;
+        $this->standardPagesSelectedSkin = $value;
     }
 
     // === stat_compare_year_displayed ===
     /**
      * Number of years of photo statistics shown in the comparison chart.
      */
-    private static int $statCompareYearDisplayed = 5;
+    private int $statCompareYearDisplayed = 5;
 
-    public static function statCompareYearDisplayed(): int
+    public function statCompareYearDisplayed(): int
     {
-        return self::$statCompareYearDisplayed;
+        return $this->statCompareYearDisplayed;
     }
 
-    public static function setStatCompareYearDisplayed(int $value): void
+    public function setStatCompareYearDisplayed(int $value): void
     {
-        self::$statCompareYearDisplayed = $value;
+        $this->statCompareYearDisplayed = $value;
     }
 
     // === tag_letters_column_number ===
     /**
      * Number of columns in the alphabetical tag index layout.
      */
-    private static int $tagLettersColumnNumber = 4;
+    private int $tagLettersColumnNumber = 4;
 
-    public static function tagLettersColumnNumber(): int
+    public function tagLettersColumnNumber(): int
     {
-        return self::$tagLettersColumnNumber;
+        return $this->tagLettersColumnNumber;
     }
 
-    public static function setTagLettersColumnNumber(int $value): void
+    public function setTagLettersColumnNumber(int $value): void
     {
-        self::$tagLettersColumnNumber = $value;
+        $this->tagLettersColumnNumber = $value;
     }
 
     // === tag_url_style ===
     /**
      * URL format for tag links: id, tag, or id-tag.
      */
-    private static string $tagUrlStyle = 'id-tag';
+    private string $tagUrlStyle = 'id-tag';
 
-    public static function tagUrlStyle(): string
+    public function tagUrlStyle(): string
     {
-        return self::$tagUrlStyle;
+        return $this->tagUrlStyle;
     }
 
-    public static function setTagUrlStyle(string $value): void
+    public function setTagUrlStyle(string $value): void
     {
-        self::$tagUrlStyle = $value;
+        $this->tagUrlStyle = $value;
     }
 
     // === tags_default_display_mode ===
     /**
      * Default tag-listing display mode: cloud or letters.
      */
-    private static string $tagsDefaultDisplayMode = 'cloud';
+    private string $tagsDefaultDisplayMode = 'cloud';
 
-    public static function tagsDefaultDisplayMode(): string
+    public function tagsDefaultDisplayMode(): string
     {
-        return self::$tagsDefaultDisplayMode;
+        return $this->tagsDefaultDisplayMode;
     }
 
-    public static function setTagsDefaultDisplayMode(string $value): void
+    public function setTagsDefaultDisplayMode(string $value): void
     {
-        self::$tagsDefaultDisplayMode = $value;
+        $this->tagsDefaultDisplayMode = $value;
     }
 
     // === tags_levels ===
     /**
      * Number of font-size levels used in the tag cloud.
      */
-    private static int $tagsLevels = 5;
+    private int $tagsLevels = 5;
 
-    public static function tagsLevels(): int
+    public function tagsLevels(): int
     {
-        return self::$tagsLevels;
+        return $this->tagsLevels;
     }
 
-    public static function setTagsLevels(int $value): void
+    public function setTagsLevels(int $value): void
     {
-        self::$tagsLevels = $value;
+        $this->tagsLevels = $value;
     }
 
     // === template_combine_files ===
@@ -3674,48 +3709,48 @@ final class CurrentConfig
      * Merge JavaScript/CSS files together at render time to reduce the number of
      * HTTP requests.
      */
-    private static bool $templateCombineFiles = true;
+    private bool $templateCombineFiles = true;
 
-    public static function templateCombineFiles(): bool
+    public function templateCombineFiles(): bool
     {
-        return self::$templateCombineFiles;
+        return $this->templateCombineFiles;
     }
 
-    public static function setTemplateCombineFiles(bool $value): void
+    public function setTemplateCombineFiles(bool $value): void
     {
-        self::$templateCombineFiles = $value;
+        $this->templateCombineFiles = $value;
     }
 
     // === template_compile_check ===
     /**
      * Recompile Latte templates when source files change (disable in production).
      */
-    private static bool $templateCompileCheck = true;
+    private bool $templateCompileCheck = true;
 
-    public static function templateCompileCheck(): bool
+    public function templateCompileCheck(): bool
     {
-        return self::$templateCompileCheck;
+        return $this->templateCompileCheck;
     }
 
-    public static function setTemplateCompileCheck(bool $value): void
+    public function setTemplateCompileCheck(bool $value): void
     {
-        self::$templateCompileCheck = $value;
+        $this->templateCompileCheck = $value;
     }
 
     // === template_force_compile ===
     /**
      * Always recompile Latte templates on every request.
      */
-    private static bool $templateForceCompile = false;
+    private bool $templateForceCompile = false;
 
-    public static function templateForceCompile(): bool
+    public function templateForceCompile(): bool
     {
-        return self::$templateForceCompile;
+        return $this->templateForceCompile;
     }
 
-    public static function setTemplateForceCompile(bool $value): void
+    public function setTemplateForceCompile(bool $value): void
     {
-        self::$templateForceCompile = $value;
+        $this->templateForceCompile = $value;
     }
 
     // === themes_dir ===
@@ -3723,48 +3758,48 @@ final class CurrentConfig
      * Root-relative path to the directory containing installed themes (compose
      * with CurrentPaths::get()->root for an absolute filesystem path).
      */
-    private static string $themesDir = 'themes/';
+    private string $themesDir = 'themes/';
 
-    public static function themesDir(): string
+    public function themesDir(): string
     {
-        return self::$themesDir;
+        return $this->themesDir;
     }
 
-    public static function setThemesDir(string $value): void
+    public function setThemesDir(string $value): void
     {
-        self::$themesDir = $value;
+        $this->themesDir = $value;
     }
 
     // === tiff_representative_ext ===
     /**
      * Image extension used when generating a representative for TIFF originals.
      */
-    private static string $tiffRepresentativeExt = 'png';
+    private string $tiffRepresentativeExt = 'png';
 
-    public static function tiffRepresentativeExt(): string
+    public function tiffRepresentativeExt(): string
     {
-        return self::$tiffRepresentativeExt;
+        return $this->tiffRepresentativeExt;
     }
 
-    public static function setTiffRepresentativeExt(string $value): void
+    public function setTiffRepresentativeExt(string $value): void
     {
-        self::$tiffRepresentativeExt = $value;
+        $this->tiffRepresentativeExt = $value;
     }
 
     // === top_number ===
     /**
      * Number of items shown in top ranking lists (most visited, best rated, etc.).
      */
-    private static int $topNumber = 15;
+    private int $topNumber = 15;
 
-    public static function topNumber(): int
+    public function topNumber(): int
     {
-        return self::$topNumber;
+        return $this->topNumber;
     }
 
-    public static function setTopNumber(int $value): void
+    public function setTopNumber(int $value): void
     {
-        self::$topNumber = $value;
+        $this->topNumber = $value;
     }
 
     // === trusted_proxies ===
@@ -3772,96 +3807,96 @@ final class CurrentConfig
      * Comma-separated CIDR list of reverse proxies whose forwarded headers are
      * trusted.
      */
-    private static string $trustedProxies = '';
+    private string $trustedProxies = '';
 
-    public static function trustedProxies(): string
+    public function trustedProxies(): string
     {
-        return self::$trustedProxies;
+        return $this->trustedProxies;
     }
 
-    public static function setTrustedProxies(string $value): void
+    public function setTrustedProxies(string $value): void
     {
-        self::$trustedProxies = $value;
+        $this->trustedProxies = $value;
     }
 
     // === uniqueness_mode ===
     /**
      * Algorithm used to detect duplicate uploads: md5sum or filename.
      */
-    private static string $uniquenessMode = 'md5sum';
+    private string $uniquenessMode = 'md5sum';
 
-    public static function uniquenessMode(): string
+    public function uniquenessMode(): string
     {
-        return self::$uniquenessMode;
+        return $this->uniquenessMode;
     }
 
-    public static function setUniquenessMode(string $value): void
+    public function setUniquenessMode(string $value): void
     {
-        self::$uniquenessMode = $value;
+        $this->uniquenessMode = $value;
     }
 
     // === update_notify_check_period ===
     /**
      * Interval in seconds between automatic checks for Piwigo updates.
      */
-    private static int $updateNotifyCheckPeriod = 86400;
+    private int $updateNotifyCheckPeriod = 86400;
 
-    public static function updateNotifyCheckPeriod(): int
+    public function updateNotifyCheckPeriod(): int
     {
-        return self::$updateNotifyCheckPeriod;
+        return $this->updateNotifyCheckPeriod;
     }
 
-    public static function setUpdateNotifyCheckPeriod(int $value): void
+    public function setUpdateNotifyCheckPeriod(int $value): void
     {
-        self::$updateNotifyCheckPeriod = $value;
+        $this->updateNotifyCheckPeriod = $value;
     }
 
     // === update_notify_last_check ===
     /**
      * Timestamp of the last update-availability check.
      */
-    private static ?string $updateNotifyLastCheck = null;
+    private ?string $updateNotifyLastCheck = null;
 
-    public static function updateNotifyLastCheck(): ?string
+    public function updateNotifyLastCheck(): ?string
     {
-        return self::$updateNotifyLastCheck;
+        return $this->updateNotifyLastCheck;
     }
 
-    public static function setUpdateNotifyLastCheck(?string $value): void
+    public function setUpdateNotifyLastCheck(?string $value): void
     {
-        self::$updateNotifyLastCheck = $value;
+        $this->updateNotifyLastCheck = $value;
     }
 
     // === update_notify_reminder_period ===
     /**
      * Interval in seconds between repeated update reminder notifications.
      */
-    private static int $updateNotifyReminderPeriod = 604800;
+    private int $updateNotifyReminderPeriod = 604800;
 
-    public static function updateNotifyReminderPeriod(): int
+    public function updateNotifyReminderPeriod(): int
     {
-        return self::$updateNotifyReminderPeriod;
+        return $this->updateNotifyReminderPeriod;
     }
 
-    public static function setUpdateNotifyReminderPeriod(int $value): void
+    public function setUpdateNotifyReminderPeriod(int $value): void
     {
-        self::$updateNotifyReminderPeriod = $value;
+        $this->updateNotifyReminderPeriod = $value;
     }
 
     // === upload_detect_duplicate ===
     /**
      * Check for duplicate photos by checksum when uploading.
      */
-    private static bool $uploadDetectDuplicate = true;
+    private bool $uploadDetectDuplicate = true;
 
-    public static function uploadDetectDuplicate(): bool
+    public function uploadDetectDuplicate(): bool
     {
-        return self::$uploadDetectDuplicate;
+        return $this->uploadDetectDuplicate;
     }
 
-    public static function setUploadDetectDuplicate(bool $value): void
+    public function setUploadDetectDuplicate(bool $value): void
     {
-        self::$uploadDetectDuplicate = $value;
+        $this->uploadDetectDuplicate = $value;
     }
 
     // === upload_dir ===
@@ -3869,144 +3904,144 @@ final class CurrentConfig
      * Root-relative path to the directory where uploaded files are stored (compose
      * with CurrentPaths::get()->root for an absolute filesystem path).
      */
-    private static string $uploadDir = 'upload/';
+    private string $uploadDir = 'upload/';
 
-    public static function uploadDir(): string
+    public function uploadDir(): string
     {
-        return self::$uploadDir;
+        return $this->uploadDir;
     }
 
-    public static function setUploadDir(string $value): void
+    public function setUploadDir(string $value): void
     {
-        self::$uploadDir = $value;
+        $this->uploadDir = $value;
     }
 
     // === upload_form_all_types ===
     /**
      * Allow uploading any file type, not just images and videos.
      */
-    private static bool $uploadFormAllTypes = false;
+    private bool $uploadFormAllTypes = false;
 
-    public static function uploadFormAllTypes(): bool
+    public function uploadFormAllTypes(): bool
     {
-        return self::$uploadFormAllTypes;
+        return $this->uploadFormAllTypes;
     }
 
-    public static function setUploadFormAllTypes(bool $value): void
+    public function setUploadFormAllTypes(bool $value): void
     {
-        self::$uploadFormAllTypes = $value;
+        $this->uploadFormAllTypes = $value;
     }
 
     // === upload_form_automatic_rotation ===
     /**
      * Automatically rotate uploaded photos based on their EXIF orientation tag.
      */
-    private static bool $uploadFormAutomaticRotation = true;
+    private bool $uploadFormAutomaticRotation = true;
 
-    public static function uploadFormAutomaticRotation(): bool
+    public function uploadFormAutomaticRotation(): bool
     {
-        return self::$uploadFormAutomaticRotation;
+        return $this->uploadFormAutomaticRotation;
     }
 
-    public static function setUploadFormAutomaticRotation(bool $value): void
+    public function setUploadFormAutomaticRotation(bool $value): void
     {
-        self::$uploadFormAutomaticRotation = $value;
+        $this->uploadFormAutomaticRotation = $value;
     }
 
     // === upload_form_chunk_size ===
     /**
      * Chunk size in KB for multi-part file uploads via the upload form.
      */
-    private static int $uploadFormChunkSize = 500;
+    private int $uploadFormChunkSize = 500;
 
-    public static function uploadFormChunkSize(): int
+    public function uploadFormChunkSize(): int
     {
-        return self::$uploadFormChunkSize;
+        return $this->uploadFormChunkSize;
     }
 
-    public static function setUploadFormChunkSize(int $value): void
+    public function setUploadFormChunkSize(int $value): void
     {
-        self::$uploadFormChunkSize = $value;
+        $this->uploadFormChunkSize = $value;
     }
 
     // === upload_form_max_file_size ===
     /**
      * Maximum file size in MB accepted by the upload form.
      */
-    private static int $uploadFormMaxFileSize = 1000;
+    private int $uploadFormMaxFileSize = 1000;
 
-    public static function uploadFormMaxFileSize(): int
+    public function uploadFormMaxFileSize(): int
     {
-        return self::$uploadFormMaxFileSize;
+        return $this->uploadFormMaxFileSize;
     }
 
-    public static function setUploadFormMaxFileSize(int $value): void
+    public function setUploadFormMaxFileSize(int $value): void
     {
-        self::$uploadFormMaxFileSize = $value;
+        $this->uploadFormMaxFileSize = $value;
     }
 
     // === url_port ===
     /**
      * Port included in generated URLs: none, or a port number string.
      */
-    private static string $urlPort = 'none';
+    private string $urlPort = 'none';
 
-    public static function urlPort(): string
+    public function urlPort(): string
     {
-        return self::$urlPort;
+        return $this->urlPort;
     }
 
-    public static function setUrlPort(string $value): void
+    public function setUrlPort(string $value): void
     {
-        self::$urlPort = $value;
+        $this->urlPort = $value;
     }
 
     // === use_exif ===
     /**
      * Read EXIF metadata from uploaded photos and store it in the database.
      */
-    private static bool $useExif = true;
+    private bool $useExif = true;
 
-    public static function useExif(): bool
+    public function useExif(): bool
     {
-        return self::$useExif;
+        return $this->useExif;
     }
 
-    public static function setUseExif(bool $value): void
+    public function setUseExif(bool $value): void
     {
-        self::$useExif = $value;
+        $this->useExif = $value;
     }
 
     // === use_iptc ===
     /**
      * Read IPTC metadata from uploaded photos and store it in the database.
      */
-    private static bool $useIptc = false;
+    private bool $useIptc = false;
 
-    public static function useIptc(): bool
+    public function useIptc(): bool
     {
-        return self::$useIptc;
+        return $this->useIptc;
     }
 
-    public static function setUseIptc(bool $value): void
+    public function setUseIptc(bool $value): void
     {
-        self::$useIptc = $value;
+        $this->useIptc = $value;
     }
 
     // === use_proxy ===
     /**
      * Send outgoing HTTP requests from Piwigo through a proxy server.
      */
-    private static bool $useProxy = false;
+    private bool $useProxy = false;
 
-    public static function useProxy(): bool
+    public function useProxy(): bool
     {
-        return self::$useProxy;
+        return $this->useProxy;
     }
 
-    public static function setUseProxy(bool $value): void
+    public function setUseProxy(bool $value): void
     {
-        self::$useProxy = $value;
+        $this->useProxy = $value;
     }
 
     // === use_standard_pages ===
@@ -4014,112 +4049,112 @@ final class CurrentConfig
      * Whether the current theme falls back to Piwigo's own "standard pages"
      * (login/register/forgot-password/...) instead of its own.
      */
-    private static bool $useStandardPages = true;
+    private bool $useStandardPages = true;
 
-    public static function useStandardPages(): bool
+    public function useStandardPages(): bool
     {
-        return self::$useStandardPages;
+        return $this->useStandardPages;
     }
 
-    public static function setUseStandardPages(bool $value): void
+    public function setUseStandardPages(bool $value): void
     {
-        self::$useStandardPages = $value;
+        $this->useStandardPages = $value;
     }
 
     // === user_can_delete_comment ===
     /**
      * Allow a registered user to delete their own comments.
      */
-    private static bool $userCanDeleteComment = false;
+    private bool $userCanDeleteComment = false;
 
-    public static function userCanDeleteComment(): bool
+    public function userCanDeleteComment(): bool
     {
-        return self::$userCanDeleteComment;
+        return $this->userCanDeleteComment;
     }
 
-    public static function setUserCanDeleteComment(bool $value): void
+    public function setUserCanDeleteComment(bool $value): void
     {
-        self::$userCanDeleteComment = $value;
+        $this->userCanDeleteComment = $value;
     }
 
     // === user_can_edit_comment ===
     /**
      * Allow a registered user to edit their own comments.
      */
-    private static bool $userCanEditComment = false;
+    private bool $userCanEditComment = false;
 
-    public static function userCanEditComment(): bool
+    public function userCanEditComment(): bool
     {
-        return self::$userCanEditComment;
+        return $this->userCanEditComment;
     }
 
-    public static function setUserCanEditComment(bool $value): void
+    public function setUserCanEditComment(bool $value): void
     {
-        self::$userCanEditComment = $value;
+        $this->userCanEditComment = $value;
     }
 
     // === webmaster_id ===
     /**
      * User ID of the designated webmaster account.
      */
-    private static int $webmasterId = 1;
+    private int $webmasterId = 1;
 
-    public static function webmasterId(): int
+    public function webmasterId(): int
     {
-        return self::$webmasterId;
+        return $this->webmasterId;
     }
 
-    public static function setWebmasterId(int $value): void
+    public function setWebmasterId(int $value): void
     {
-        self::$webmasterId = $value;
+        $this->webmasterId = $value;
     }
 
     // === week_starts_on ===
     /**
      * First day of the week in calendar views: monday or sunday.
      */
-    private static string $weekStartsOn = 'monday';
+    private string $weekStartsOn = 'monday';
 
-    public static function weekStartsOn(): string
+    public function weekStartsOn(): string
     {
-        return self::$weekStartsOn;
+        return $this->weekStartsOn;
     }
 
-    public static function setWeekStartsOn(string $value): void
+    public function setWeekStartsOn(string $value): void
     {
-        self::$weekStartsOn = $value;
+        $this->weekStartsOn = $value;
     }
 
     // === ws_max_images_per_page ===
     /**
      * Maximum number of photos returned per page by the web-service API.
      */
-    private static int $wsMaxImagesPerPage = 500;
+    private int $wsMaxImagesPerPage = 500;
 
-    public static function wsMaxImagesPerPage(): int
+    public function wsMaxImagesPerPage(): int
     {
-        return self::$wsMaxImagesPerPage;
+        return $this->wsMaxImagesPerPage;
     }
 
-    public static function setWsMaxImagesPerPage(int $value): void
+    public function setWsMaxImagesPerPage(int $value): void
     {
-        self::$wsMaxImagesPerPage = $value;
+        $this->wsMaxImagesPerPage = $value;
     }
 
     // === ws_max_users_per_page ===
     /**
      * Maximum number of users returned per page by the web-service API.
      */
-    private static int $wsMaxUsersPerPage = 1000;
+    private int $wsMaxUsersPerPage = 1000;
 
-    public static function wsMaxUsersPerPage(): int
+    public function wsMaxUsersPerPage(): int
     {
-        return self::$wsMaxUsersPerPage;
+        return $this->wsMaxUsersPerPage;
     }
 
-    public static function setWsMaxUsersPerPage(int $value): void
+    public function setWsMaxUsersPerPage(int $value): void
     {
-        self::$wsMaxUsersPerPage = $value;
+        $this->wsMaxUsersPerPage = $value;
     }
 
     // ---- Custom-shaped properties (non-trivial coercion) ---------------
@@ -4129,22 +4164,22 @@ final class CurrentConfig
      * Selectable API-key expiration presets, in days (plus the literal 'custom' entry).
      * @var list<string>
      */
-    private static array $apiKeyDuration = ['30', '90', '180', '365', 'custom'];
+    private array $apiKeyDuration = ['30', '90', '180', '365', 'custom'];
 
     /**
      * @return list<string>
      */
-    public static function apiKeyDuration(): array
+    public function apiKeyDuration(): array
     {
-        return self::$apiKeyDuration;
+        return $this->apiKeyDuration;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setApiKeyDuration(array $value): void
+    public function setApiKeyDuration(array $value): void
     {
-        self::$apiKeyDuration = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
+        $this->apiKeyDuration = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
     }
 
     // === api_key_forbidden_methods ===
@@ -4152,22 +4187,22 @@ final class CurrentConfig
      * Web-service method names that API-key callers are not allowed to invoke.
      * @var list<string>
      */
-    private static array $apiKeyForbiddenMethods = ['pwg.users.generatePasswordLink', 'pwg.users.getAuthKey', 'pwg.users.setMainUser', 'pwg.users.setInfo', 'pwg.plugins.performAction', 'pwg.themes.performAction', 'pwg.extensions.ignoreUpdate', 'pwg.extensions.update'];
+    private array $apiKeyForbiddenMethods = ['pwg.users.generatePasswordLink', 'pwg.users.getAuthKey', 'pwg.users.setMainUser', 'pwg.users.setInfo', 'pwg.plugins.performAction', 'pwg.themes.performAction', 'pwg.extensions.ignoreUpdate', 'pwg.extensions.update'];
 
     /**
      * @return list<string>
      */
-    public static function apiKeyForbiddenMethods(): array
+    public function apiKeyForbiddenMethods(): array
     {
-        return self::$apiKeyForbiddenMethods;
+        return $this->apiKeyForbiddenMethods;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setApiKeyForbiddenMethods(array $value): void
+    public function setApiKeyForbiddenMethods(array $value): void
     {
-        self::$apiKeyForbiddenMethods = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
+        $this->apiKeyForbiddenMethods = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
     }
 
     // === available_permission_levels ===
@@ -4175,22 +4210,22 @@ final class CurrentConfig
      * Ordered list of numeric permission levels visible in the UI.
      * @var list<int>
      */
-    private static array $availablePermissionLevels = [0, 1, 2, 4, 8];
+    private array $availablePermissionLevels = [0, 1, 2, 4, 8];
 
     /**
      * @return list<int>
      */
-    public static function availablePermissionLevels(): array
+    public function availablePermissionLevels(): array
     {
-        return self::$availablePermissionLevels;
+        return $this->availablePermissionLevels;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setAvailablePermissionLevels(array $value): void
+    public function setAvailablePermissionLevels(array $value): void
     {
-        self::$availablePermissionLevels = count($value) > 0
+        $this->availablePermissionLevels = count($value) > 0
             ? array_values(array_map(static fn (mixed $x): int => is_scalar($x) ? (int) $x : 0, $value))
             : [0, 1, 2, 4, 8];
     }
@@ -4216,22 +4251,22 @@ final class CurrentConfig
      * anywhere.
      * @var array<mixed>|null
      */
-    private static ?array $blkMenubar = null;
+    private ?array $blkMenubar = null;
 
     /**
      * @return array<mixed>|null
      */
-    public static function blkMenubar(): ?array
+    public function blkMenubar(): ?array
     {
-        return self::$blkMenubar;
+        return $this->blkMenubar;
     }
 
     /**
      * @param array<mixed>|null $value
      */
-    public static function setBlkMenubar(?array $value): void
+    public function setBlkMenubar(?array $value): void
     {
-        self::$blkMenubar = $value;
+        $this->blkMenubar = $value;
     }
 
     // === cache_sizes ===
@@ -4241,22 +4276,22 @@ final class CurrentConfig
      * maintenance load.
      * @var array<mixed>|null
      */
-    private static ?array $cacheSizes = null;
+    private ?array $cacheSizes = null;
 
     /**
      * @return array<mixed>|null
      */
-    public static function cacheSizes(): ?array
+    public function cacheSizes(): ?array
     {
-        return self::$cacheSizes;
+        return $this->cacheSizes;
     }
 
     /**
      * @param array<mixed>|null $value
      */
-    public static function setCacheSizes(?array $value): void
+    public function setCacheSizes(?array $value): void
     {
-        self::$cacheSizes = $value;
+        $this->cacheSizes = $value;
     }
 
     // === chmod_value ===
@@ -4265,9 +4300,9 @@ final class CurrentConfig
      * under Apache, 0755 otherwise, unless explicitly overridden. Null means
      * "not explicitly overridden": the SAPI-dependent default below applies.
      */
-    private static ?int $chmodValue = null;
+    private ?int $chmodValue = null;
 
-    public static function chmodValue(): int
+    public function chmodValue(): int
     {
         // Real bug, found live: this SAPI-only heuristic (byte-identical to
         // the pre-rewrite $conf['chmod_value'] default) assumes whichever
@@ -4286,15 +4321,15 @@ final class CurrentConfig
         // Browser-test request (loopback + header), so this doesn't
         // narrow that side at all -- it only widens the CLI side to match.
         if (\Piwigo\Core\Env::testModeIsActive()) {
-            return self::$chmodValue ?? 0777;
+            return $this->chmodValue ?? 0777;
         }
 
-        return self::$chmodValue ?? (substr_compare(\PHP_SAPI, 'apa', 0, 3) === 0 ? 0777 : 0755);
+        return $this->chmodValue ?? (substr_compare(\PHP_SAPI, 'apa', 0, 3) === 0 ? 0777 : 0755);
     }
 
-    public static function setChmodValue(?int $value): void
+    public function setChmodValue(?int $value): void
     {
-        self::$chmodValue = $value;
+        $this->chmodValue = $value;
     }
 
     // === default_filters_views ===
@@ -4366,23 +4401,23 @@ final class CurrentConfig
      * drives the search filters admin page.
      * @var array<string, array{access: string, default: bool}>
      */
-    private static array $defaultFiltersViews = self::DEFAULT_FILTERS_VIEWS;
+    private array $defaultFiltersViews = self::DEFAULT_FILTERS_VIEWS;
 
     /**
      * @return array<string, array{access: string, default: bool}>
      */
-    public static function defaultFiltersViews(): array
+    public function defaultFiltersViews(): array
     {
-        return self::$defaultFiltersViews;
+        return $this->defaultFiltersViews;
     }
 
     /**
      * @param array<mixed>|null $value
      */
-    public static function setDefaultFiltersViews(?array $value): void
+    public function setDefaultFiltersViews(?array $value): void
     {
         if ($value === null) {
-            self::$defaultFiltersViews = self::DEFAULT_FILTERS_VIEWS;
+            $this->defaultFiltersViews = self::DEFAULT_FILTERS_VIEWS;
             return;
         }
         $result = [];
@@ -4395,7 +4430,7 @@ final class CurrentConfig
                 ]
                 : $defaultEntry;
         }
-        self::$defaultFiltersViews = $result;
+        $this->defaultFiltersViews = $result;
     }
 
     // === empty_lounge_running ===
@@ -4404,16 +4439,16 @@ final class CurrentConfig
      * ImageService::emptyLounge() is running, used to detect a concurrent/
      * stalled run. Absent when no run is in progress.
      */
-    private static ?string $emptyLoungeRunning = null;
+    private ?string $emptyLoungeRunning = null;
 
-    public static function emptyLoungeRunning(): ?string
+    public function emptyLoungeRunning(): ?string
     {
-        return self::$emptyLoungeRunning;
+        return $this->emptyLoungeRunning;
     }
 
-    public static function setEmptyLoungeRunning(?string $value): void
+    public function setEmptyLoungeRunning(?string $value): void
     {
-        self::$emptyLoungeRunning = $value;
+        $this->emptyLoungeRunning = $value;
     }
 
     // === extents_for_templates ===
@@ -4422,22 +4457,22 @@ final class CurrentConfig
      * theme engine.
      * @var array<mixed>
      */
-    private static array $extentsForTemplates = [];
+    private array $extentsForTemplates = [];
 
     /**
      * @return array<mixed>
      */
-    public static function extentsForTemplates(): array
+    public function extentsForTemplates(): array
     {
-        return self::$extentsForTemplates;
+        return $this->extentsForTemplates;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setExtentsForTemplates(array $value): void
+    public function setExtentsForTemplates(array $value): void
     {
-        self::$extentsForTemplates = $value;
+        $this->extentsForTemplates = $value;
     }
 
     // === file_ext ===
@@ -4445,22 +4480,22 @@ final class CurrentConfig
      * Full list of file extensions Piwigo will manage (pictures plus extras).
      * @var list<string>
      */
-    private static array $fileExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'tiff', 'tif', 'mpg', 'zip', 'avi', 'mp3', 'ogg', 'pdf', 'svg', 'heic'];
+    private array $fileExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'tiff', 'tif', 'mpg', 'zip', 'avi', 'mp3', 'ogg', 'pdf', 'svg', 'heic'];
 
     /**
      * @return list<string>
      */
-    public static function fileExtensions(): array
+    public function fileExtensions(): array
     {
-        return self::$fileExtensions;
+        return $this->fileExtensions;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setFileExtensions(array $value): void
+    public function setFileExtensions(array $value): void
     {
-        self::$fileExtensions = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
+        $this->fileExtensions = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
     }
 
     // === filter_pages ===
@@ -4524,22 +4559,22 @@ final class CurrentConfig
      * Pages on which the tag/date filter UI is displayed.
      * @var array<string, array<string, bool>>
      */
-    private static array $filterPages = self::DEFAULT_FILTER_PAGES;
+    private array $filterPages = self::DEFAULT_FILTER_PAGES;
 
     /**
      * @return array<string, array<string, bool>>
      */
-    public static function filterPages(): array
+    public function filterPages(): array
     {
-        return self::$filterPages;
+        return $this->filterPages;
     }
 
     /**
      * @param array<string, array<string, bool>> $value
      */
-    public static function setFilterPages(array $value): void
+    public function setFilterPages(array $value): void
     {
-        self::$filterPages = $value;
+        $this->filterPages = $value;
     }
 
     // === filters_views ===
@@ -4549,22 +4584,22 @@ final class CurrentConfig
      * saved. Absent (falls back to defaultFiltersViews()) until then.
      * @var array<mixed>|null
      */
-    private static ?array $filtersViews = null;
+    private ?array $filtersViews = null;
 
     /**
      * @return array<mixed>|null
      */
-    public static function filtersViews(): ?array
+    public function filtersViews(): ?array
     {
-        return self::$filtersViews;
+        return $this->filtersViews;
     }
 
     /**
      * @param array<mixed>|null $value
      */
-    public static function setFiltersViews(?array $value): void
+    public function setFiltersViews(?array $value): void
     {
-        self::$filtersViews = $value;
+        $this->filtersViews = $value;
     }
 
     // === format_ext ===
@@ -4573,22 +4608,22 @@ final class CurrentConfig
      * photos.
      * @var list<string>
      */
-    private static array $formatExtensions = ['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd'];
+    private array $formatExtensions = ['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd'];
 
     /**
      * @return list<string>
      */
-    public static function formatExtensions(): array
+    public function formatExtensions(): array
     {
-        return self::$formatExtensions;
+        return $this->formatExtensions;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setFormatExtensions(array $value): void
+    public function setFormatExtensions(array $value): void
     {
-        self::$formatExtensions = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
+        $this->formatExtensions = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
     }
 
     // === header_notes ===
@@ -4596,22 +4631,22 @@ final class CurrentConfig
      * Additional HTML messages shown in the gallery header for all users.
      * @var list<string>
      */
-    private static array $headerNotes = [];
+    private array $headerNotes = [];
 
     /**
      * @return list<string>
      */
-    public static function headerNotes(): array
+    public function headerNotes(): array
     {
-        return self::$headerNotes;
+        return $this->headerNotes;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setHeaderNotes(array $value): void
+    public function setHeaderNotes(array $value): void
     {
-        self::$headerNotes = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
+        $this->headerNotes = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
     }
 
     // === history_sections_cache ===
@@ -4620,22 +4655,22 @@ final class CurrentConfig
      * plugin adds a new section.
      * @var list<string>|null
      */
-    private static ?array $historySectionsCache = null;
+    private ?array $historySectionsCache = null;
 
     /**
      * @return list<string>|null
      */
-    public static function historySectionsCache(): ?array
+    public function historySectionsCache(): ?array
     {
-        return self::$historySectionsCache;
+        return $this->historySectionsCache;
     }
 
     /**
      * @param array<mixed>|null $value
      */
-    public static function setHistorySectionsCache(?array $value): void
+    public function setHistorySectionsCache(?array $value): void
     {
-        self::$historySectionsCache = $value === null ? null : array_values(array_filter($value, is_string(...)));
+        $this->historySectionsCache = $value === null ? null : array_values(array_filter($value, is_string(...)));
     }
 
     // === links ===
@@ -4643,22 +4678,22 @@ final class CurrentConfig
      * Additional navigation links shown in the gallery menu.
      * @var array<mixed>
      */
-    private static array $links = [];
+    private array $links = [];
 
     /**
      * @return array<mixed>
      */
-    public static function links(): array
+    public function links(): array
     {
-        return self::$links;
+        return $this->links;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setLinks(array $value): void
+    public function setLinks(array $value): void
     {
-        self::$links = $value;
+        $this->links = $value;
     }
 
     // === metadata_keyword_separator_regex ===
@@ -4666,32 +4701,32 @@ final class CurrentConfig
      * PCRE regex used to split keyword strings extracted from EXIF/IPTC
      * metadata.
      */
-    private static string $metadataKeywordSeparatorRegex = '/[.,;]/';
+    private string $metadataKeywordSeparatorRegex = '/[.,;]/';
 
-    public static function metadataKeywordSeparatorRegex(): string
+    public function metadataKeywordSeparatorRegex(): string
     {
-        return self::$metadataKeywordSeparatorRegex;
+        return $this->metadataKeywordSeparatorRegex;
     }
 
-    public static function setMetadataKeywordSeparatorRegex(string $value): void
+    public function setMetadataKeywordSeparatorRegex(string $value): void
     {
-        self::$metadataKeywordSeparatorRegex = $value !== '' ? $value : '/[.,;]/';
+        $this->metadataKeywordSeparatorRegex = $value !== '' ? $value : '/[.,;]/';
     }
 
     // === nbm_max_treatment_timeout_percent ===
     /**
      * Fraction of the PHP max_execution_time budget NBM may consume per batch.
      */
-    private static float $nbmMaxTreatmentTimeoutPercent = 0.8;
+    private float $nbmMaxTreatmentTimeoutPercent = 0.8;
 
-    public static function nbmMaxTreatmentTimeoutPercent(): float
+    public function nbmMaxTreatmentTimeoutPercent(): float
     {
-        return self::$nbmMaxTreatmentTimeoutPercent;
+        return $this->nbmMaxTreatmentTimeoutPercent;
     }
 
-    public static function setNbmMaxTreatmentTimeoutPercent(float $value): void
+    public function setNbmMaxTreatmentTimeoutPercent(float $value): void
     {
-        self::$nbmMaxTreatmentTimeoutPercent = $value;
+        $this->nbmMaxTreatmentTimeoutPercent = $value;
     }
 
     // === order_by ===
@@ -4707,16 +4742,16 @@ final class CurrentConfig
     // install/config.sql's own seed row. filterOrderEntries() (the shared
     // {field,dir}[] validator) is deleted -- nothing needs it once neither
     // order_by nor order_by_inside_category models that shape.
-    private static string $orderBy = 'ORDER BY date_available DESC, file ASC, id ASC';
+    private string $orderBy = 'ORDER BY date_available DESC, file ASC, id ASC';
 
-    public static function orderBy(): string
+    public function orderBy(): string
     {
-        return self::$orderBy;
+        return $this->orderBy;
     }
 
-    public static function setOrderBy(string $value): void
+    public function setOrderBy(string $value): void
     {
-        self::$orderBy = $value;
+        $this->orderBy = $value;
     }
 
     // === order_by_custom ===
@@ -4725,16 +4760,16 @@ final class CurrentConfig
      * a raw "ORDER BY ..." SQL fragment string, same real shape as order_by
      * itself (see its own docblock).
      */
-    private static ?string $orderByCustom = null;
+    private ?string $orderByCustom = null;
 
-    public static function orderByCustom(): ?string
+    public function orderByCustom(): ?string
     {
-        return self::$orderByCustom;
+        return $this->orderByCustom;
     }
 
-    public static function setOrderByCustom(?string $value): void
+    public function setOrderByCustom(?string $value): void
     {
-        self::$orderByCustom = $value;
+        $this->orderByCustom = $value;
     }
 
     // === order_by_inside_category ===
@@ -4742,16 +4777,16 @@ final class CurrentConfig
      * Active sort order applied within album listings -- a raw
      * "ORDER BY ..." SQL fragment string (see order_by's own docblock).
      */
-    private static string $orderByInsideCategory = 'ORDER BY date_available DESC, file ASC, id ASC';
+    private string $orderByInsideCategory = 'ORDER BY date_available DESC, file ASC, id ASC';
 
-    public static function orderByInsideCategory(): string
+    public function orderByInsideCategory(): string
     {
-        return self::$orderByInsideCategory;
+        return $this->orderByInsideCategory;
     }
 
-    public static function setOrderByInsideCategory(string $value): void
+    public function setOrderByInsideCategory(string $value): void
     {
-        self::$orderByInsideCategory = $value;
+        $this->orderByInsideCategory = $value;
     }
 
     // === order_by_inside_category_custom ===
@@ -4759,16 +4794,16 @@ final class CurrentConfig
      * Admin-defined custom sort order that overrides order_by_inside_category
      * when set (see order_by's own docblock).
      */
-    private static ?string $orderByInsideCategoryCustom = null;
+    private ?string $orderByInsideCategoryCustom = null;
 
-    public static function orderByInsideCategoryCustom(): ?string
+    public function orderByInsideCategoryCustom(): ?string
     {
-        return self::$orderByInsideCategoryCustom;
+        return $this->orderByInsideCategoryCustom;
     }
 
-    public static function setOrderByInsideCategoryCustom(?string $value): void
+    public function setOrderByInsideCategoryCustom(?string $value): void
     {
-        self::$orderByInsideCategoryCustom = $value;
+        $this->orderByInsideCategoryCustom = $value;
     }
 
     // === picture_ext ===
@@ -4776,22 +4811,22 @@ final class CurrentConfig
      * File extensions recognised as displayable photo types.
      * @var list<string>
      */
-    private static array $pictureExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    private array $pictureExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
     /**
      * @return list<string>
      */
-    public static function pictureExtensions(): array
+    public function pictureExtensions(): array
     {
-        return self::$pictureExtensions;
+        return $this->pictureExtensions;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setPictureExtensions(array $value): void
+    public function setPictureExtensions(array $value): void
     {
-        self::$pictureExtensions = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
+        $this->pictureExtensions = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
     }
 
     // === picture_informations ===
@@ -4800,20 +4835,20 @@ final class CurrentConfig
      * page.
      * @var array<string, bool>
      */
-    private static array $pictureInformations = [];
+    private array $pictureInformations = [];
 
     /**
      * @return array<string, bool>
      */
-    public static function pictureInformations(): array
+    public function pictureInformations(): array
     {
-        return self::$pictureInformations;
+        return $this->pictureInformations;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setPictureInformations(array $value): void
+    public function setPictureInformations(array $value): void
     {
         $out = [];
         foreach ($value as $key => $val) {
@@ -4821,7 +4856,7 @@ final class CurrentConfig
                 $out[$key] = $val;
             }
         }
-        self::$pictureInformations = $out;
+        $this->pictureInformations = $out;
     }
 
     // === random_index_redirect ===
@@ -4829,20 +4864,20 @@ final class CurrentConfig
      * URL mapping for random-index redirects used by shuffle features.
      * @var array<string,string>
      */
-    private static array $randomIndexRedirect = [];
+    private array $randomIndexRedirect = [];
 
     /**
      * @return array<string,string>
      */
-    public static function randomIndexRedirect(): array
+    public function randomIndexRedirect(): array
     {
-        return self::$randomIndexRedirect;
+        return $this->randomIndexRedirect;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setRandomIndexRedirect(array $value): void
+    public function setRandomIndexRedirect(array $value): void
     {
         $result = [];
         foreach ($value as $key => $val) {
@@ -4850,7 +4885,7 @@ final class CurrentConfig
                 $result[(string) $key] = (string) $val;
             }
         }
-        self::$randomIndexRedirect = $result;
+        $this->randomIndexRedirect = $result;
     }
 
     // === rate_items ===
@@ -4858,22 +4893,22 @@ final class CurrentConfig
      * Available rating values displayed in the rating widget.
      * @var list<int>
      */
-    private static array $rateItems = [0, 1, 2, 3, 4, 5];
+    private array $rateItems = [0, 1, 2, 3, 4, 5];
 
     /**
      * @return list<int>
      */
-    public static function rateItems(): array
+    public function rateItems(): array
     {
-        return self::$rateItems;
+        return $this->rateItems;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setRateItems(array $value): void
+    public function setRateItems(array $value): void
     {
-        self::$rateItems = array_values(array_map(static fn (mixed $x): int => is_scalar($x) ? (int) $x : 0, $value));
+        $this->rateItems = array_values(array_map(static fn (mixed $x): int => is_scalar($x) ? (int) $x : 0, $value));
     }
 
     // === recent_post_dates ===
@@ -4898,11 +4933,11 @@ final class CurrentConfig
      * means "not explicitly set": the getter lazily builds the default VO
      * below (a property default can't call `new` directly).
      */
-    private static ?NotificationConfig $recentPostDates = null;
+    private ?NotificationConfig $recentPostDates = null;
 
-    public static function recentPostDates(): NotificationConfig
+    public function recentPostDates(): NotificationConfig
     {
-        return self::$recentPostDates ??= new NotificationConfig(
+        return $this->recentPostDates ??= new NotificationConfig(
             rss: new NotificationChannelConfig(maxDates: 5, maxElements: 6, maxCats: 6),
             nbm: new NotificationChannelConfig(maxDates: 7, maxElements: 3, maxCats: 9),
         );
@@ -4911,7 +4946,7 @@ final class CurrentConfig
     /**
      * @param array<mixed> $value
      */
-    public static function setRecentPostDates(array $value): void
+    public function setRecentPostDates(array $value): void
     {
         $build = static function (string $key) use ($value): NotificationChannelConfig {
             $default = self::DEFAULT_RECENT_POST_DATES[$key];
@@ -4922,7 +4957,7 @@ final class CurrentConfig
                 maxCats: isset($src['max_cats']) && is_int($src['max_cats']) ? $src['max_cats'] : $default['max_cats'],
             );
         };
-        self::$recentPostDates = new NotificationConfig(rss: $build('RSS'), nbm: $build('NBM'));
+        $this->recentPostDates = new NotificationConfig(rss: $build('RSS'), nbm: $build('NBM'));
     }
 
     // === show_exif_fields ===
@@ -4930,22 +4965,22 @@ final class CurrentConfig
      * List of EXIF field names to display on the photo detail page.
      * @var list<string>
      */
-    private static array $showExifFields = ['Make', 'Model', 'DateTimeOriginal', 'COMPUTED;ApertureFNumber'];
+    private array $showExifFields = ['Make', 'Model', 'DateTimeOriginal', 'COMPUTED;ApertureFNumber'];
 
     /**
      * @return list<string>
      */
-    public static function showExifFields(): array
+    public function showExifFields(): array
     {
-        return self::$showExifFields;
+        return $this->showExifFields;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setShowExifFields(array $value): void
+    public function setShowExifFields(array $value): void
     {
-        self::$showExifFields = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
+        $this->showExifFields = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
     }
 
     // === show_iptc_mapping ===
@@ -4963,26 +4998,26 @@ final class CurrentConfig
      * Mapping of IPTC field codes to human-readable labels for display.
      * @var array<string,string>
      */
-    private static array $showIptcMapping = self::DEFAULT_SHOW_IPTC_MAPPING;
+    private array $showIptcMapping = self::DEFAULT_SHOW_IPTC_MAPPING;
 
     /**
      * @return array<string,string>
      */
-    public static function showIptcMapping(): array
+    public function showIptcMapping(): array
     {
-        return self::$showIptcMapping;
+        return $this->showIptcMapping;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setShowIptcMapping(array $value): void
+    public function setShowIptcMapping(array $value): void
     {
         $result = [];
         foreach ($value as $k => $val) {
             $result[(string) $k] = is_scalar($val) ? (string) $val : '';
         }
-        self::$showIptcMapping = $result;
+        $this->showIptcMapping = $result;
     }
 
     // === sync_chars_regex ===
@@ -4990,16 +5025,16 @@ final class CurrentConfig
      * Regex that matches valid filename characters during filesystem
      * synchronisation.
      */
-    private static string $syncCharsRegex = '/^[a-zA-Z0-9-_.]+$/';
+    private string $syncCharsRegex = '/^[a-zA-Z0-9-_.]+$/';
 
-    public static function syncCharsRegex(): string
+    public function syncCharsRegex(): string
     {
-        return self::$syncCharsRegex;
+        return $this->syncCharsRegex;
     }
 
-    public static function setSyncCharsRegex(string $value): void
+    public function setSyncCharsRegex(string $value): void
     {
-        self::$syncCharsRegex = $value !== '' ? $value : '/^[a-zA-Z0-9-_.]+$/';
+        $this->syncCharsRegex = $value !== '' ? $value : '/^[a-zA-Z0-9-_.]+$/';
     }
 
     // === sync_exclude_folders ===
@@ -5007,22 +5042,22 @@ final class CurrentConfig
      * Folder names excluded from filesystem synchronisation.
      * @var list<string>
      */
-    private static array $syncExcludeFolders = [];
+    private array $syncExcludeFolders = [];
 
     /**
      * @return list<string>
      */
-    public static function syncExcludeFolders(): array
+    public function syncExcludeFolders(): array
     {
-        return self::$syncExcludeFolders;
+        return $this->syncExcludeFolders;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setSyncExcludeFolders(array $value): void
+    public function setSyncExcludeFolders(array $value): void
     {
-        self::$syncExcludeFolders = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
+        $this->syncExcludeFolders = array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $value));
     }
 
     // === update_notify_last_notification ===
@@ -5032,23 +5067,23 @@ final class CurrentConfig
      * check.
      * @var array{version?: mixed, notified_on?: mixed}|null
      */
-    private static ?array $updateNotifyLastNotification = null;
+    private ?array $updateNotifyLastNotification = null;
 
     /**
      * @return array{version?: mixed, notified_on?: mixed}|null
      */
-    public static function updateNotifyLastNotification(): ?array
+    public function updateNotifyLastNotification(): ?array
     {
-        return self::$updateNotifyLastNotification;
+        return $this->updateNotifyLastNotification;
     }
 
     /**
      * @param array<mixed>|null $value
      */
-    public static function setUpdateNotifyLastNotification(?array $value): void
+    public function setUpdateNotifyLastNotification(?array $value): void
     {
         if ($value === null) {
-            self::$updateNotifyLastNotification = null;
+            $this->updateNotifyLastNotification = null;
             return;
         }
         $result = [];
@@ -5058,7 +5093,7 @@ final class CurrentConfig
         if (array_key_exists('notified_on', $value)) {
             $result['notified_on'] = $value['notified_on'];
         }
-        self::$updateNotifyLastNotification = $result;
+        $this->updateNotifyLastNotification = $result;
     }
 
     // === use_exif_mapping ===
@@ -5073,26 +5108,26 @@ final class CurrentConfig
      * Mapping of EXIF field names to Piwigo photo attribute names for import.
      * @var array<string,string>
      */
-    private static array $useExifMapping = self::DEFAULT_USE_EXIF_MAPPING;
+    private array $useExifMapping = self::DEFAULT_USE_EXIF_MAPPING;
 
     /**
      * @return array<string,string>
      */
-    public static function useExifMapping(): array
+    public function useExifMapping(): array
     {
-        return self::$useExifMapping;
+        return $this->useExifMapping;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setUseExifMapping(array $value): void
+    public function setUseExifMapping(array $value): void
     {
         $result = [];
         foreach ($value as $k => $val) {
             $result[(string) $k] = is_scalar($val) ? (string) $val : '';
         }
-        self::$useExifMapping = $result;
+        $this->useExifMapping = $result;
     }
 
     // === use_iptc_mapping ===
@@ -5111,26 +5146,26 @@ final class CurrentConfig
      * Mapping of IPTC field codes to Piwigo photo attribute names for import.
      * @var array<string,string>
      */
-    private static array $useIptcMapping = self::DEFAULT_USE_IPTC_MAPPING;
+    private array $useIptcMapping = self::DEFAULT_USE_IPTC_MAPPING;
 
     /**
      * @return array<string,string>
      */
-    public static function useIptcMapping(): array
+    public function useIptcMapping(): array
     {
-        return self::$useIptcMapping;
+        return $this->useIptcMapping;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setUseIptcMapping(array $value): void
+    public function setUseIptcMapping(array $value): void
     {
         $result = [];
         foreach ($value as $k => $val) {
             $result[(string) $k] = is_scalar($val) ? (string) $val : '';
         }
-        self::$useIptcMapping = $result;
+        $this->useIptcMapping = $result;
     }
 
     // === user_fields ===
@@ -5140,7 +5175,7 @@ final class CurrentConfig
      * column-name mapping as a plain array instead.
      * @var array{id: string, username: string, password: string, email: string}
      */
-    private static array $userFields = [
+    private array $userFields = [
         'id' => 'id',
         'username' => 'username',
         'password' => 'password',
@@ -5150,17 +5185,17 @@ final class CurrentConfig
     /**
      * @return array{id: string, username: string, password: string, email: string}
      */
-    public static function userFields(): array
+    public function userFields(): array
     {
-        return self::$userFields;
+        return $this->userFields;
     }
 
     /**
      * @param array<mixed> $value
      */
-    public static function setUserFields(array $value): void
+    public function setUserFields(array $value): void
     {
-        self::$userFields = [
+        $this->userFields = [
             'id' => isset($value['id']) && is_scalar($value['id']) ? (string) $value['id'] : 'id',
             'username' => isset($value['username']) && is_scalar($value['username']) ? (string) $value['username'] : 'username',
             'password' => isset($value['password']) && is_scalar($value['password']) ? (string) $value['password'] : 'password',
@@ -5177,19 +5212,19 @@ final class CurrentConfig
      * to do at boot time (`$themesDir . '/'`, `$dataLocation . 'combined/'`,
      * `$dataLocation . 'i/'`).
      */
-    public static function themesPath(): string
+    public function themesPath(): string
     {
-        return self::themesDir() . '/';
+        return $this->themesDir() . '/';
     }
 
-    public static function combinedDir(): string
+    public function combinedDir(): string
     {
-        return self::dataLocation() . 'combined/';
+        return $this->dataLocation() . 'combined/';
     }
 
-    public static function derivativeDir(): string
+    public function derivativeDir(): string
     {
-        return self::dataLocation() . 'i/';
+        return $this->dataLocation() . 'i/';
     }
 
     // ---- Bulk / test / legacy-bridge helpers -----------------------------
@@ -5204,12 +5239,18 @@ final class CurrentConfig
      *
      * @return array<string, mixed>
      */
-    private static function all(): array
+    private function all(): array
     {
         $out = [];
-        $reflection = new \ReflectionClass(self::class);
-        foreach ($reflection->getProperties(\ReflectionProperty::IS_STATIC | \ReflectionProperty::IS_PRIVATE) as $property) {
-            $value = $property->getValue();
+        $reflection = new \ReflectionClass($this);
+        foreach ($reflection->getProperties(\ReflectionProperty::IS_PRIVATE) as $property) {
+            // Excludes $fallback (the current() shim's own static memo, not
+            // a real config key) -- IS_PRIVATE alone matches static
+            // properties too, isStatic() is the only way to tell them apart.
+            if ($property->isStatic()) {
+                continue;
+            }
+            $value = $property->getValue($this);
             $out[$property->getName()] = $property->getAttributes(Sensitive::class) !== [] ? str_repeat('*', 8) : $value;
         }
 
@@ -5222,9 +5263,9 @@ final class CurrentConfig
      *
      * @return array<string,mixed>
      */
-    public static function dumpForLog(): array
+    public function dumpForLog(): array
     {
-        return self::all();
+        return $this->all();
     }
 
     /**
@@ -5258,14 +5299,18 @@ final class CurrentConfig
      * equivalent guard on Kernel's and ShutdownHandler's own
      * test-isolation reset methods. Restores every property to its own
      * declared default, reflectively -- replaces the former
-     * `self::$data = [];` (trivial when everything read through one
+     * `$this->data = [];` (trivial when everything read through one
      * untyped bag; every property now needs its own reset).
      */
-    public static function reset(): void
+    public function reset(): void
     {
-        $reflection = new \ReflectionClass(self::class);
-        foreach ($reflection->getProperties(\ReflectionProperty::IS_STATIC | \ReflectionProperty::IS_PRIVATE) as $property) {
-            $property->setValue(null, $property->getDefaultValue());
+        $reflection = new \ReflectionClass($this);
+        foreach ($reflection->getProperties(\ReflectionProperty::IS_PRIVATE) as $property) {
+            // Excludes $fallback -- same reasoning as all()'s own guard above.
+            if ($property->isStatic()) {
+                continue;
+            }
+            $property->setValue($this, $property->getDefaultValue());
         }
     }
 }

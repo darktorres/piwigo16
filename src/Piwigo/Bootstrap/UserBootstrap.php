@@ -93,6 +93,7 @@ final class UserBootstrap
             $eventDispatcher,
             $pageState,
             $currentUser,
+            \Piwigo\Bootstrap\RequestBootstrap::currentConfig(),
         );
         $userService = new \Piwigo\Users\UserService(
             \Piwigo\Bootstrap\RequestBootstrap::lang(),
@@ -106,13 +107,14 @@ final class UserBootstrap
             $eventDispatcher,
             $this->deploymentPolicy,
             $currentUser,
+            \Piwigo\Bootstrap\RequestBootstrap::currentConfig(),
         );
 
-        $guest_id_int = \Piwigo\Config\CurrentConfig::guestId();
+        $guest_id_int = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->guestId();
 
         // by default we start with guest
         $user = [];
-        $user['id'] = \Piwigo\Config\CurrentConfig::guestId();
+        $user['id'] = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->guestId();
 
         $session_cookie_name = session_name();
         $session_cookie_name = is_string($session_cookie_name) ? $session_cookie_name : '';
@@ -250,7 +252,7 @@ final class UserBootstrap
         // docblock for why isInitialized() can't substitute.
         $currentUser->markRealUserResolved();
 
-        if (\Piwigo\Config\CurrentConfig::browserLanguage() and ($this->accessControl->isAGuest() or $this->accessControl->isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
+        if (\Piwigo\Bootstrap\RequestBootstrap::currentConfig()->browserLanguage() and ($this->accessControl->isAGuest() or $this->accessControl->isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
             $user['language'] = $language;
             $currentUser->updateLanguage($language);
         }

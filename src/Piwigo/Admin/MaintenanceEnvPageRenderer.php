@@ -63,6 +63,7 @@ final class MaintenanceEnvPageRenderer
         private readonly \Piwigo\Tag\TagService $tagService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly Lang $lang,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -71,7 +72,7 @@ final class MaintenanceEnvPageRenderer
         $template = $this->currentTemplate->get();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->currentConfig, $this->persistentCache)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+
@@ -103,7 +104,7 @@ final class MaintenanceEnvPageRenderer
             $container_name = '(unofficial) ' . $container_name;
         }
 
-        $cache_sizes = \Piwigo\Config\CurrentConfig::cacheSizes();
+        $cache_sizes = $this->currentConfig->cacheSizes();
 
         $time_elapsed_since_last_calc = null;
         if ($cache_sizes !== null && is_array($cache_sizes[3] ?? null) && (is_string($cache_sizes[3]['value'] ?? null) || is_int($cache_sizes[3]['value'] ?? null))) {
@@ -150,7 +151,7 @@ final class MaintenanceEnvPageRenderer
             $template->assign('GRAPHICS_LIBRARY', $graphics_library);
         }
 
-        if (\Piwigo\Config\CurrentConfig::galleryLocked()) {
+        if ($this->currentConfig->galleryLocked()) {
             $template->assign(
                 [
                     'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),

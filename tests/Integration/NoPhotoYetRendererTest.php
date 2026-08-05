@@ -98,17 +98,21 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
         $userService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Users\UserService::class);
         if (! $userService instanceof \Piwigo\Users\UserService) {
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
         }
-        $this->renderer = new NoPhotoYetRenderer(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Image\ImageEntity::class), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()), new RedirectService(\Piwigo\Core\Lang::current(), $userService), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService());
+        $this->renderer = new NoPhotoYetRenderer(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Image\ImageEntity::class), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), new RedirectService(\Piwigo\Core\Lang::current(), $userService), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService(), \Piwigo\Config\CurrentConfig::current());
 
         // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
         // isAdmin() directly (real class methods), which read

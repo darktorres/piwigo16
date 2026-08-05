@@ -43,6 +43,7 @@ function randomIndexRedirectResolverTestAccessControl(): AccessControl
         new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess(),
         new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled(),
         CurrentUser::current(),
+        \Piwigo\Config\CurrentConfig::current(),
     );
 }
 

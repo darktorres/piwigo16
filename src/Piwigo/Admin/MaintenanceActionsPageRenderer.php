@@ -63,6 +63,7 @@ final class MaintenanceActionsPageRenderer
         private readonly \Piwigo\Tag\TagService $tagService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly Lang $lang,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -76,7 +77,7 @@ final class MaintenanceActionsPageRenderer
         $this->filesystemIntegrityChecker->fsQuickCheck();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->currentConfig, $this->persistentCache)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+
@@ -115,7 +116,7 @@ final class MaintenanceActionsPageRenderer
         // dance that used to live here was permanently dead -- $cache_sizes was
         // always null, meaning $time_elapsed_since_last_calc below never
         // actually populated.
-        $cache_sizes = \Piwigo\Config\CurrentConfig::cacheSizes();
+        $cache_sizes = $this->currentConfig->cacheSizes();
         $time_elapsed_since_last_calc = null;
         if ($cache_sizes !== null) {
             $last_calc_row = $cache_sizes[3] ?? null;
@@ -166,7 +167,7 @@ final class MaintenanceActionsPageRenderer
         switch (PwgImage::get_library()) {
             case 'ext_imagick':
                 $library = 'External ImageMagick';
-                $ext_imagick_dir = \Piwigo\Config\CurrentConfig::extImagickDir();
+                $ext_imagick_dir = $this->currentConfig->extImagickDir();
                 $returnarray = [];
                 exec($ext_imagick_dir . PwgImage::get_ext_imagick_command() . ' -version', $returnarray);
                 $returnarray_line0 = $returnarray[0] ?? '';
@@ -193,7 +194,7 @@ final class MaintenanceActionsPageRenderer
                 break;
         }
 
-        if (\Piwigo\Config\CurrentConfig::galleryLocked()) {
+        if ($this->currentConfig->galleryLocked()) {
             $template->assign(
                 [
                     'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),

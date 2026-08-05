@@ -72,6 +72,7 @@ final class BatchManagerGlobalPageRenderer
         private readonly CategoryService $categoryService,
         private readonly ImageService $imageService,
         private readonly \Piwigo\Html\HtmlService $htmlRenderer,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -179,7 +180,7 @@ final class BatchManagerGlobalPageRenderer
             $redirect = false;
 
             $tagService = $this->tagService;
-            $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
+            $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig);
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = $this->currentUser->get()
@@ -421,7 +422,7 @@ final class BatchManagerGlobalPageRenderer
                     }
                     foreach ($post['del_derivatives_type'] as $type) {
                         if (is_string($type)) {
-                            new DerivativeCacheService()
+                            new DerivativeCacheService($this->currentConfig)
                                 ->deleteElementDerivatives($derivative_infos, $type);
                         }
                     }
@@ -461,7 +462,7 @@ final class BatchManagerGlobalPageRenderer
         $page_start = $pageStart;
 
         new FilterPanelRenderer()
-            ->render($this->lang, $template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService, $this->htmlRenderer);
+            ->render($this->lang, $template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService, $this->htmlRenderer, $this->currentConfig);
 
         // +-------------------------------------------------------------------+
         // |                            caddie options                             |
@@ -493,7 +494,7 @@ final class BatchManagerGlobalPageRenderer
         );
 
         // metadata
-        $site_reader = new LocalSiteReader('./', new \Piwigo\Metadata\MetadataService($this->lang, new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())), $this->currentLogger, $this->eventDispatcher));
+        $site_reader = new LocalSiteReader('./', $this->currentConfig, new \Piwigo\Metadata\MetadataService($this->lang, new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig));
         $used_metadata = implode(', ', $site_reader->get_metadata_attributes());
 
         $template->assign(
@@ -527,8 +528,8 @@ final class BatchManagerGlobalPageRenderer
             } else {
                 $nb_images = is_numeric($batchManagerGlobalRequest->displayRaw) ? intval($batchManagerGlobalRequest->displayRaw) : 0;
             }
-        } elseif (in_array(\Piwigo\Config\CurrentConfig::batchManagerImagesPerPageGlobal(), [20, 50, 100], true)) {
-            $nb_images = \Piwigo\Config\CurrentConfig::batchManagerImagesPerPageGlobal();
+        } elseif (in_array($this->currentConfig->batchManagerImagesPerPageGlobal(), [20, 50, 100], true)) {
+            $nb_images = $this->currentConfig->batchManagerImagesPerPageGlobal();
         } else {
             $nb_images = 20;
         }
@@ -536,7 +537,7 @@ final class BatchManagerGlobalPageRenderer
         $nb_thumbs_page = 0;
 
         if (count($cat_elements_id) > 0) {
-            $nav_bar = new \Piwigo\Core\PaginationService()
+            $nav_bar = new \Piwigo\Core\PaginationService($this->currentConfig)
                 ->createNavigationBar($base_url . $this->urlService->getQueryStringDiff(['start']), count($cat_elements_id), $page_start, $nb_images);
             $template->assign('navbar', $nav_bar);
 
@@ -558,13 +559,13 @@ final class BatchManagerGlobalPageRenderer
             } else {
                 // order_by is a raw "ORDER BY ..." SQL fragment string --
                 // see CurrentConfig::orderBy()'s own docblock.
-                $order_by = \Piwigo\Config\CurrentConfig::orderBy();
+                $order_by = $this->currentConfig->orderBy();
             }
 
             if ($is_category) {
                 $category_info = $this->categoryService->getCategoryInfo($filter_category_id);
 
-                $order_by = \Piwigo\Config\CurrentConfig::orderByInsideCategory();
+                $order_by = $this->currentConfig->orderByInsideCategory();
                 $category_image_order = $category_info !== null ? ($category_info['image_order'] ?? null) : null;
                 if (is_string($category_image_order) && $category_image_order !== '') {
                     $order_by = ' ORDER BY ' . $category_image_order;
@@ -595,7 +596,7 @@ final class BatchManagerGlobalPageRenderer
                     array_merge(
                         $row,
                         [
-                            'thumb' => new DerivativeImage($thumb_params, $src_image),
+                            'thumb' => new DerivativeImage($thumb_params, $src_image, $this->currentConfig),
                             'TITLE' => $ttitle,
                             'FILE_SRC' => DerivativeImage::url(ImageStdParams::LARGE, $src_image),
                             'U_EDIT' => $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $row_id,

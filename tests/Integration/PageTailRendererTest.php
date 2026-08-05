@@ -52,12 +52,16 @@ final class PageTailRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current()));
         // footer.tpl's own {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
@@ -80,7 +84,8 @@ final class PageTailRendererTest extends IntegrationTestCase
             new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
             new \Piwigo\PluginConfig\EventDispatcher(),
             \Piwigo\Core\PageState::current(),
-            CurrentTemplate::current()
+            CurrentTemplate::current(),
+            \Piwigo\Config\CurrentConfig::current()
         );
     }
 
@@ -96,8 +101,8 @@ final class PageTailRendererTest extends IntegrationTestCase
 
     public function test_render_to_string_includes_the_query_debug_list_when_show_queries_is_enabled(): void
     {
-        CurrentConfig::setShowQueries(true);
-        CurrentConfig::setShowGt(false);
+        CurrentConfig::current()->setShowQueries(true);
+        CurrentConfig::current()->setShowGt(false);
         PageState::current()->debugOutput = '<li>SELECT 1 -- pagetailrenderer test query</li>';
 
         $output = $this->renderer->renderToString(microtime(true));
@@ -108,8 +113,8 @@ final class PageTailRendererTest extends IntegrationTestCase
 
     public function test_render_to_string_omits_the_debug_list_when_show_queries_is_disabled(): void
     {
-        CurrentConfig::setShowQueries(false);
-        CurrentConfig::setShowGt(false);
+        CurrentConfig::current()->setShowQueries(false);
+        CurrentConfig::current()->setShowGt(false);
         PageState::current()->debugOutput = '<li>should-not-appear</li>';
 
         $output = $this->renderer->renderToString(microtime(true));
@@ -120,8 +125,8 @@ final class PageTailRendererTest extends IntegrationTestCase
 
     public function test_render_to_string_includes_generation_time_and_query_count_when_show_gt_is_enabled(): void
     {
-        CurrentConfig::setShowQueries(false);
-        CurrentConfig::setShowGt(true);
+        CurrentConfig::current()->setShowQueries(false);
+        CurrentConfig::current()->setShowGt(true);
         PageState::current()->countQueries = 7;
         PageState::current()->queriesTime = 1.234567;
 
@@ -137,7 +142,7 @@ final class PageTailRendererTest extends IntegrationTestCase
 
     public function test_render_to_string_adds_the_mobile_theme_toggle_link_when_mobile_theme_is_active(): void
     {
-        CurrentConfig::setMobilTheme('mobile');
+        CurrentConfig::current()->setMobilTheme('mobile');
         $_SESSION['pwg_mobile_theme'] = true;
         $_SERVER['REQUEST_URI'] = '/test/mobile-toggle-path';
 
@@ -155,7 +160,7 @@ final class PageTailRendererTest extends IntegrationTestCase
 
     public function test_render_to_string_omits_the_mobile_theme_toggle_link_when_mobile_theme_is_disabled(): void
     {
-        CurrentConfig::setMobilTheme('');
+        CurrentConfig::current()->setMobilTheme('');
 
         $output = $this->renderer->renderToString(microtime(true));
 

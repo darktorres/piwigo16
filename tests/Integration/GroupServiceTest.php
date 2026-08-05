@@ -68,21 +68,25 @@ final class GroupServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
         $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class);
         $auditRepo = EntityManagerFactory::build()->getRepository(AuditLogEntity::class);
-        $this->configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
-        $this->service = new GroupService($this->repo, new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new AuditService($auditRepo), $this->configService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current());
+        $this->configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current());
+        $this->service = new GroupService($this->repo, new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new AuditService($auditRepo), $this->configService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), CurrentConfig::current());
 
         // Only addAccess()/duplicate()/merge() need this (see class docblock)
         // -- PermissionCacheInvalidator::invalidate() -> CurrentConfigService::current()->get()
         // would otherwise throw "not initialised" the moment any of their
         // real success paths run.
-        CurrentConfigService::current()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
     }
 
     public function test_create_rejects_an_already_used_name(): void
@@ -225,7 +229,7 @@ final class GroupServiceTest extends IntegrationTestCase
             $result = $this->service->delete([GroupId::from(999999)]);
 
             self::assertSame([], $result);
-            self::assertSame('all', CurrentConfig::emailAdminOnNewUser());
+            self::assertSame('all', CurrentConfig::current()->emailAdminOnNewUser());
         } finally {
             $this->configService->confUpdateParam('email_admin_on_new_user', 'none', true);
         }
@@ -239,7 +243,7 @@ final class GroupServiceTest extends IntegrationTestCase
             $result = $this->service->delete([GroupId::from(999999)]);
 
             self::assertSame([], $result);
-            self::assertSame('group:555555', CurrentConfig::emailAdminOnNewUser());
+            self::assertSame('group:555555', CurrentConfig::current()->emailAdminOnNewUser());
         } finally {
             $this->configService->confUpdateParam('email_admin_on_new_user', 'none', true);
         }

@@ -41,10 +41,14 @@ enum ExtensionType: string
      */
     public function pemCategoryId(): int
     {
+        // Enum cases can't take constructor-injected dependencies -- this
+        // is the CurrentConfig::current() shim's own established use case
+        // (a caller with no possible $this-based instance property),
+        // matching the Ws/Pwg*.php static-dispatch precedent.
         return match ($this) {
-            self::Plugin => CurrentConfig::pemPluginsCategory(),
-            self::Theme => CurrentConfig::pemThemesCategory(),
-            self::Language => CurrentConfig::pemLanguagesCategory(),
+            self::Plugin => CurrentConfig::current()->pemPluginsCategory(),
+            self::Theme => CurrentConfig::current()->pemThemesCategory(),
+            self::Language => CurrentConfig::current()->pemLanguagesCategory(),
         };
     }
 
@@ -69,7 +73,7 @@ enum ExtensionType: string
     {
         return match ($this) {
             self::Plugin => \Piwigo\Admin\PluginLoader::pluginsPath(),
-            self::Theme => CurrentConfig::themesPath(),
+            self::Theme => CurrentConfig::current()->themesPath(),
             self::Language => \Piwigo\Core\CurrentPaths::get()->root . 'language/',
         };
     }

@@ -36,7 +36,7 @@ final class ThemeCatalog
             $id = $row['id'];
             $name = $row['name'];
 
-            $mobile_theme = \Piwigo\Config\CurrentConfig::mobilTheme();
+            $mobile_theme = \Piwigo\Config\CurrentConfig::current()->mobilTheme();
             if ($id === $mobile_theme) {
                 if (! $showMobile) {
                     continue;
@@ -75,7 +75,7 @@ final class ThemeCatalog
         // correctly pre-fix only because public/themes is itself a symlink
         // back to the real themes/, not because the CWD-relative read was
         // actually safe).
-        $themes_dir = CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::themesDir();
+        $themes_dir = CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->themesDir();
 
         return file_exists($themes_dir . '/' . $themeId . '/themeconf.inc.php');
     }

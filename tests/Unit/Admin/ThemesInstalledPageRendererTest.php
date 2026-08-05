@@ -242,7 +242,7 @@ function themesInstalledLifecycle(): ExtensionLifecycle
 
     $activityRepo = EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class);
 
-    return new ExtensionLifecycle(Lang::current(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher()), $pluginMigrationRepo, new \Piwigo\Activity\ActivityService($activityRepo), themesInstalledLifecycleUserService(), new HtmlService());
+    return new ExtensionLifecycle(Lang::current(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new \Piwigo\Activity\ActivityService($activityRepo), themesInstalledLifecycleUserService(), new HtmlService(), new CurrentConfig());
 }
 
 /**
@@ -262,10 +262,11 @@ function themesInstalledLifecycleUserService(): \Piwigo\Users\UserService
         new \Piwigo\Activity\ActivityService(EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
         new HtmlService(),
         $conn,
-        new \Piwigo\Session\SessionService(EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class)),
+        new \Piwigo\Session\SessionService(EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class), new \Piwigo\Config\CurrentConfig()),
         new \Piwigo\PluginConfig\EventDispatcher(),
         new \Piwigo\Config\DeploymentPolicy(),
-        new \Piwigo\Users\CurrentUser(),
+        new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
+        new \Piwigo\Config\CurrentConfig(),
     );
 }
 
@@ -294,15 +295,15 @@ function writeThemesInstalledFixtureTheme(string $fixtureRoot, string $id, array
 $themesInstalledFixtureRoot = null;
 
 beforeEach(function () use (&$themesInstalledFixtureRoot): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     $themesInstalledFixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-page-renderer-test-' . bin2hex(random_bytes(4)) . '/';
     mkdir($themesInstalledFixtureRoot . 'themes', 0o777, true);
     Kernel::boot(Paths::fromRoot($themesInstalledFixtureRoot));
-    CurrentConfig::setThemesDir(rtrim($themesInstalledFixtureRoot, '/') . '/themes');
+    CurrentConfig::current()->setThemesDir(rtrim($themesInstalledFixtureRoot, '/') . '/themes');
 });
 
 afterEach(function () use (&$themesInstalledFixtureRoot): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     Kernel::reset();
     if (is_string($themesInstalledFixtureRoot) && is_dir($themesInstalledFixtureRoot)) {
         FilesystemHelper::deltree($themesInstalledFixtureRoot);

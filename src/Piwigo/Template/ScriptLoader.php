@@ -247,7 +247,7 @@ final class ScriptLoader
      */
     private static function do_combine(array $scripts, int $load_mode): array
     {
-        $combiner = new FileCombiner(\Piwigo\Auth\AccessControl::currentForCaching(), 'js', self::urlService(), \Piwigo\Core\CurrentPaths::get(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Template\CurrentTemplate::current(), $scripts);
+        $combiner = new FileCombiner(\Piwigo\Auth\AccessControl::currentForCaching(), 'js', self::urlService(), \Piwigo\Core\CurrentPaths::get(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), $scripts);
         return $combiner->combine();
     }
 
@@ -271,7 +271,7 @@ final class ScriptLoader
                         $scripts[$precedent]->load_mode = $load;
                         $changed = true;
                     }
-                    if ($load === 2 && $scripts[$precedent]->load_mode === 2 && ($scripts[$precedent]->is_remote(self::urlService()) or ! \Piwigo\Config\CurrentConfig::templateCombineFiles())) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
+                    if ($load === 2 && $scripts[$precedent]->load_mode === 2 && ($scripts[$precedent]->is_remote(self::urlService()) or ! \Piwigo\Config\CurrentConfig::current()->templateCombineFiles())) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
                         $scripts[$precedent]->load_mode = 1;
                         $changed = true;
                     }

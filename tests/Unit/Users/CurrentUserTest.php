@@ -15,28 +15,28 @@ use Piwigo\Users\UserStatus;
 // directly; no reset() needed.
 
 beforeEach(function (): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
 });
 
 afterEach(function (): void {
-    CurrentConfig::reset();
+    \Piwigo\Config\CurrentConfig::current()->reset();
     Kernel::reset();
 });
 
 test('isInitialized is false before attachGlobals runs', function (): void {
-    $currentUser = new CurrentUser();
+    $currentUser = new CurrentUser(new CurrentConfig());
 
     expect($currentUser->isInitialized())->toBeFalse();
 });
 
 test('get throws before attachGlobals or set has run', function (): void {
-    $currentUser = new CurrentUser();
+    $currentUser = new CurrentUser(new CurrentConfig());
 
     $currentUser->get();
 })->throws(LogicException::class);
 
 test('attachGlobals seeds a guest user', function (): void {
-    $currentUser = new CurrentUser();
+    $currentUser = new CurrentUser(new CurrentConfig());
     $currentUser->attachGlobals();
     $user = $currentUser->get();
 
@@ -46,7 +46,7 @@ test('attachGlobals seeds a guest user', function (): void {
         ->and($user->enabledHigh)->toBeFalse()
         ->and($user->language)->toBe(AppInfo::DEFAULT_LANGUAGE)
         ->and($user->theme)->toBe(AppInfo::DEFAULT_TEMPLATE)
-        ->and($user->id->value)->toBe(CurrentConfig::guestId());
+        ->and($user->id->value)->toBe(new CurrentConfig()->guestId());
 });
 
 test('attachGlobals is idempotent -- does not clobber a real set() user', function (): void {
@@ -59,7 +59,7 @@ test('attachGlobals is idempotent -- does not clobber a real set() user', functi
         status: UserStatus::Admin,
         enabledHigh: true,
     );
-    $currentUser = new CurrentUser();
+    $currentUser = new CurrentUser(new CurrentConfig());
     $currentUser->set($real);
 
     $currentUser->attachGlobals();
@@ -68,7 +68,7 @@ test('attachGlobals is idempotent -- does not clobber a real set() user', functi
 });
 
 test('updateLanguage replaces the instance with a language-updated copy', function (): void {
-    $currentUser = new CurrentUser();
+    $currentUser = new CurrentUser(new CurrentConfig());
     $currentUser->attachGlobals();
 
     $currentUser->updateLanguage('fr_FR');
@@ -77,7 +77,7 @@ test('updateLanguage replaces the instance with a language-updated copy', functi
 });
 
 test('reset clears the real-user-resolved flag back to false', function (): void {
-    $currentUser = new CurrentUser();
+    $currentUser = new CurrentUser(new CurrentConfig());
     $currentUser->markRealUserResolved();
     expect($currentUser->wasRealUserResolved())->toBeTrue();
 

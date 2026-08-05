@@ -57,13 +57,17 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         // 'used'=true (real default) + 'add_notes'=true, forced directly
         // rather than depending on PageFilterHelper::scriptBasename()'s own
         // $_SERVER-based page-name resolution in a CLI test process.
-        CurrentConfig::setFilterPages(['default' => ['used' => true, 'cancel' => false, 'add_notes' => true]]);
+        $currentConfig->setFilterPages(['default' => ['used' => true, 'cancel' => false, 'add_notes' => true]]);
 
         $this->conn = DbConnection::build();
 
@@ -72,8 +76,8 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         $_SESSION = [];
         PageState::current()->reset();
         $this->filterState = new FilterState();
-        $this->sessionService = new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class));
-        $this->translator = new Translator();
+        $this->sessionService = new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current());
+        $this->translator = new Translator(\Piwigo\Config\CurrentConfig::current());
     }
 
     #[\Override]
@@ -117,7 +121,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     {
         $_GET['filter'] = 'start-recent-30';
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), CurrentConfig::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
 
         self::assertTrue($this->filterState->isEnabled());
         $categories = $this->filterState->categories();
@@ -151,7 +155,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     public function test_initialize_reads_cached_categories_from_the_session_without_recomputing_when_not_stale(): void
     {
         $_GET['filter'] = 'start-recent-14';
-        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), CurrentConfig::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
         self::assertSame(2, $this->filterState->categories()[2]['nb_images']);
 
         // A brand-new, real "recent" image inserted into category 2 -- a
@@ -170,7 +174,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         try {
             unset($_GET['filter']);
             $this->filterState->reset();
-            new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+            new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), CurrentConfig::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
 
             self::assertTrue($this->filterState->isEnabled());
             self::assertSame(2, $this->filterState->categories()[2]['nb_images']);
@@ -189,7 +193,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
             'date' => date('Ymd'),
         ];
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), CurrentConfig::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
 
         self::assertTrue($this->filterState->isEnabled());
         // Recomputed (not left at the stale/absent cached value) -- the
@@ -209,7 +213,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
             'date' => date('Ymd'),
         ];
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), CurrentConfig::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
 
         self::assertTrue($this->filterState->isEnabled());
         $checkKey = $_SESSION['pwg_filter_check_key'];
@@ -219,14 +223,18 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     public function test_initialize_disables_and_clears_the_session_when_the_page_filter_is_cancelled(): void
     {
         $_GET['filter'] = 'start-recent-7';
-        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), CurrentConfig::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
         self::assertTrue($_SESSION['pwg_filter_enabled']);
 
         unset($_GET['filter']);
-        CurrentConfig::setFilterPages(['default' => ['used' => true, 'cancel' => true, 'add_notes' => true]]);
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->setFilterPages(['default' => ['used' => true, 'cancel' => true, 'add_notes' => true]]);
         $this->filterState->reset();
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), CurrentConfig::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
 
         self::assertFalse($this->filterState->isEnabled());
         self::assertArrayNotHasKey('pwg_filter_enabled', $_SESSION);
@@ -240,7 +248,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     {
         // Never touched $_GET['filter'] or $_SESSION at all -- the plain
         // "nothing ever enabled this" default path.
-        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), CurrentConfig::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
 
         self::assertFalse($this->filterState->isEnabled());
     }
@@ -249,7 +257,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     {
         $_GET['filter'] = 'not-a-real-filter-token';
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), CurrentConfig::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
 
         self::assertFalse($this->filterState->isEnabled());
     }
@@ -267,7 +275,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         // rather than one this method itself could ever have written.
         $_SESSION['pwg_filter_check_key'] = 'not-an-array';
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), CurrentConfig::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
 
         self::assertTrue($this->filterState->isEnabled());
         // Recomputed from the fallback default (time=0 unconditionally
@@ -294,7 +302,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'status' => 'admin', 'level' => 8, 'forbidden_categories' => '1,2', 'recent_period' => 7]));
         $_GET['filter'] = 'start-recent-30';
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, \Piwigo\Core\Lang::current(), CurrentConfig::current(), $this->conn)->initializeFromRequest(\Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
 
         self::assertTrue($this->filterState->isEnabled());
         self::assertSame([], $this->filterState->categories());

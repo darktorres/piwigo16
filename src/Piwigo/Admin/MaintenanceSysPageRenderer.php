@@ -29,7 +29,7 @@ final class MaintenanceSysPageRenderer
     /**
      * @param array<string, array{icon: string, label: string}> $maintActions
      */
-    public function render(Lang $lang, AccessControl $accessControl, array $maintActions, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, AccessControl $accessControl, array $maintActions, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
 
@@ -42,7 +42,7 @@ final class MaintenanceSysPageRenderer
             if (Request\MaintenanceSysMethodRequest::fromGlobals()->isActivitySysGetList) {
                 $data = [];
 
-                $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+                $user_fields = $currentConfig->userFields();
                 $username_field = $user_fields['username'];
                 $id_field = $user_fields['id'];
 

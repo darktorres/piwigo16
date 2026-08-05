@@ -51,7 +51,7 @@ final class HistoryPageRenderer
      * regardless, so there was never a real bridge here even in
      * principle.
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
         $conn = DbConnection::build();
@@ -115,7 +115,7 @@ final class HistoryPageRenderer
             // literal 'id'/'username' column names, unlike sibling admin pages
             // (e.g. admin/batch_manager_unit.php) that already read this mapping.
             /** @var array<string, string> $user_fields */
-            $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+            $user_fields = $currentConfig->userFields();
 
             $form_param_user_id = \Piwigo\Common\ValueObject\UserId::tryFrom($form_param['user_id']);
             $form_param_username = $form_param_user_id === null ? null : \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
@@ -137,7 +137,7 @@ final class HistoryPageRenderer
 
         $template->assign('display_thumbnails', $display_thumbnails);
         $template->assign('display_thumbnail_selected', $form['display_thumbnail'] ?? null);
-        $template->assign('guest_id', \Piwigo\Config\CurrentConfig::guestId());
+        $template->assign('guest_id', $currentConfig->guestId());
         $template->assign('ADMIN_PAGE_TITLE', $lang->t('History'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'history');

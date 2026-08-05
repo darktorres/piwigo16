@@ -60,7 +60,7 @@ final class MenubarRenderer
      * write to, this method returns that value instead; every caller but
      * GalleryController ignores it.
      */
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, \Piwigo\Config\DeploymentPolicy $deploymentPolicy, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): ?int
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, \Piwigo\Config\DeploymentPolicy $deploymentPolicy, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig): ?int
     {
         $template = $currentTemplate->get();
         $section_context = $sectionContextRegistry->current();
@@ -69,13 +69,13 @@ final class MenubarRenderer
         // Built once, reused below -- was the same PermissionService recipe
         // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
         $permissionService = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class));
-        $tagService = new TagService($lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Tag\TagEntity::class), $permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(), $currentUser);
-        $categoryService = new CategoryService($lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $permissionService);
+        $tagService = new TagService($lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Tag\TagEntity::class), $permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(), $currentUser, $currentConfig);
+        $categoryService = new CategoryService($lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $permissionService, $currentConfig);
 
-        $menu = new BlockManager('menubar', \Piwigo\PluginConfig\EventDispatcher::get(), $currentTemplate);
+        $menu = new BlockManager('menubar', \Piwigo\PluginConfig\EventDispatcher::get(), $currentTemplate, $currentConfig);
 
         // if guest_access is disabled, we only display the menus if the user is identified
-        if (\Piwigo\Config\CurrentConfig::guestAccess() or ! $accessControl->isAGuest()) {
+        if ($currentConfig->guestAccess() or ! $accessControl->isAGuest()) {
             $menu->load_registered_blocks();
         }
         $menu->prepare_display();
@@ -87,9 +87,9 @@ final class MenubarRenderer
         }
 
         // --------------------------------------------------------------- external links
-        if ((bool) ($block = $menu->get_block('mbLinks')) and ! self::emptyValue(\Piwigo\Config\CurrentConfig::links())) {
+        if ((bool) ($block = $menu->get_block('mbLinks')) and ! self::emptyValue($currentConfig->links())) {
             $block->data = [];
-            foreach (\Piwigo\Config\CurrentConfig::links() as $url => $url_data) {
+            foreach ($currentConfig->links() as $url => $url_data) {
                 if (! is_array($url_data)) {
                     $url_data = [
                         'label' => $url_data,
@@ -124,7 +124,7 @@ final class MenubarRenderer
         // -------------------------------------------------------------- categories
         $block = $menu->get_block('mbCategories');
         // ------------------------------------------------------------------------ filter
-        if (\Piwigo\Config\CurrentConfig::menubarFilterIcon() and ! self::emptyValue(\Piwigo\Config\CurrentConfig::filterPages()) and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
+        if ($currentConfig->menubarFilterIcon() and ! self::emptyValue($currentConfig->filterPages()) and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
             if ($filterState->isEnabled()) {
                 $template->assign(
                     'U_STOP_FILTER',
@@ -147,7 +147,7 @@ final class MenubarRenderer
 
         $categoryCountCategories = null;
         if ($block !== null) {
-            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState, $sessionService, Translator::get(), Lang::current()), $urlService, $filterState, $currentUser);
+            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState, $sessionService, Translator::get(), Lang::current(), $currentConfig), $urlService, $filterState, $currentUser);
             $categoryCountCategories = $categoriesMenu['categoryCountCategories'];
             $block->data = [
                 'NB_PICTURE' => $currentUser->get()
@@ -168,7 +168,7 @@ final class MenubarRenderer
         if (
             $section_context !== null
             and is_array($page_items)
-            and count($page_items) < \Piwigo\Config\CurrentConfig::relatedAlbumsMaximumItemsToCompute()
+            and count($page_items) < $currentConfig->relatedAlbumsMaximumItemsToCompute()
             and $block !== null
             and $page_items !== []
         ) {
@@ -205,7 +205,7 @@ final class MenubarRenderer
             $block->data = [];
             $tags = $tagService->getAvailableTags();
             usort($tags, $tagService->tagsCounterCompare(...));
-            $tag_cloud_items_number = \Piwigo\Config\CurrentConfig::menubarTagCloudItemsNumber();
+            $tag_cloud_items_number = $currentConfig->menubarTagCloudItemsNumber();
             $tags = array_slice($tags, 0, $tag_cloud_items_number);
             foreach ($tags as $tag) {
                 $block->data[] = array_merge(
@@ -246,7 +246,7 @@ final class MenubarRenderer
                   'NAME' => $lang->t('Most visited'),
               ];
 
-            if (\Piwigo\Config\CurrentConfig::rateEnabled()) {
+            if ($currentConfig->rateEnabled()) {
                 $block->data['best_rated'] =
                  [
                      'URL' => $urlService->makeIndexUrl([
@@ -287,7 +287,7 @@ final class MenubarRenderer
               [
                   'URL' => $urlService->makeIndexUrl(
                       [
-                          'chronology_field' => (\Piwigo\Config\CurrentConfig::calendarDatefield() === 'date_available'
+                          'chronology_field' => ($currentConfig->calendarDatefield() === 'date_available'
                                                   ? 'posted' : 'created'),
                           'chronology_style' => 'monthly',
                           'chronology_view' => 'calendar',
@@ -325,7 +325,7 @@ final class MenubarRenderer
                   'REL' => 'rel="search"',
               ];
 
-            if (\Piwigo\Config\CurrentConfig::activateComments()) {
+            if ($currentConfig->activateComments()) {
                 // comments link
                 $block->data['comments'] =
                   [
@@ -361,10 +361,10 @@ final class MenubarRenderer
                 [
                     'U_LOGIN' => $urlService->getRootUrl() . 'identification.php',
                     'U_LOST_PASSWORD' => $urlService->getRootUrl() . 'password.php',
-                    'AUTHORIZE_REMEMBERING' => \Piwigo\Config\CurrentConfig::authorizeRemembering(),
+                    'AUTHORIZE_REMEMBERING' => $currentConfig->authorizeRemembering(),
                 ]
             );
-            if (\Piwigo\Config\CurrentConfig::allowUserRegistration()) {
+            if ($currentConfig->allowUserRegistration()) {
                 $template->assign('U_REGISTER', $urlService->getRootUrl() . 'register.php');
             }
         } else {

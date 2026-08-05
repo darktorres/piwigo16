@@ -69,11 +69,11 @@ final class CalendarRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        CurrentConfig::current()->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        CurrentConfig::setDataLocation('data/');
-        CurrentConfig::setDataDirChecked('1');
+        CurrentConfig::current()->setDataLocation('data/');
+        CurrentConfig::current()->setDataDirChecked('1');
         Lang::current()->reset();
         Translator::get()->reset();
 
@@ -121,7 +121,7 @@ final class CalendarRendererTest extends IntegrationTestCase
 
     private function makeRenderer(): CalendarRenderer
     {
-        return new CalendarRenderer(Lang::current(), $this->htmlService, new Template(), $this->urlService, CurrentUser::current());
+        return new CalendarRenderer(Lang::current(), $this->htmlService, new Template(), $this->urlService, CurrentUser::current(), CurrentConfig::current());
     }
 
     /**
@@ -254,7 +254,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_groups_multiple_years_and_months_for_the_default_monthly_calendar_view(): void
     {
         $template = new Template();
-        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current());
+        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current());
 
         $result = $renderer->render(
             section: 'items',
@@ -302,7 +302,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_normalizes_chronology_date_to_ints_and_next_prev_navigation_still_works(): void
     {
         $template = new Template();
-        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current());
+        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current());
 
         $result = $renderer->render(
             section: 'items',

@@ -43,6 +43,7 @@ final class TagsController implements ControllerInterface
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Tag\TagService $tagService,
         private readonly \Piwigo\Html\HtmlService $htmlService,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Override]
@@ -67,7 +68,7 @@ final class TagsController implements ControllerInterface
             'tags' => 'tags.tpl',
         ]);
 
-        $default_display_mode = \Piwigo\Config\CurrentConfig::tagsDefaultDisplayMode();
+        $default_display_mode = $this->currentConfig->tagsDefaultDisplayMode();
 
         $display_mode = $default_display_mode;
         if (is_string($displayModeParam) && in_array($displayModeParam, ['cloud', 'letters'], true)) {
@@ -93,7 +94,7 @@ final class TagsController implements ControllerInterface
             // we want tags diplayed in alphabetic order
             usort($tags, $this->htmlService->tagAlphaCompare(...));
 
-            $tag_letters_column_number = \Piwigo\Config\CurrentConfig::tagLettersColumnNumber();
+            $tag_letters_column_number = $this->currentConfig->tagLettersColumnNumber();
 
             $current_letter = null;
             $nb_tags = count($tags);
@@ -164,7 +165,7 @@ final class TagsController implements ControllerInterface
             // we want only the first most represented tags, so we sort
             // them by counter and take the first tags
             usort($tags, $tagService->tagsCounterCompare(...));
-            $full_tag_cloud_items_number = \Piwigo\Config\CurrentConfig::fullTagCloudItemsNumber();
+            $full_tag_cloud_items_number = $this->currentConfig->fullTagCloudItemsNumber();
             $tags = array_slice($tags, 0, $full_tag_cloud_items_number);
 
             // depending on its counter and the other tags counter,
@@ -195,11 +196,11 @@ final class TagsController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theTagsPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig);
         }
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatchNotify(new LocEndTags());
         $this->htmlService
             ->flushPageMessages();

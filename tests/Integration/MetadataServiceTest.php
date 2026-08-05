@@ -45,21 +45,25 @@ final class MetadataServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        }
+        $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
         $currentLogger = new CurrentLogger();
         $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-        $this->service = new MetadataService(\Piwigo\Core\Lang::current(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $currentLogger, \Piwigo\PluginConfig\EventDispatcher::get());
+        $this->service = new MetadataService(\Piwigo\Core\Lang::current(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $currentLogger, \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current());
 
-        CurrentConfig::setUseIptc(false);
-        CurrentConfig::setUseExif(true);
-        CurrentConfig::setAllowHtmlInMetadata(false);
-        CurrentConfig::setMetadataKeywordSeparatorRegex('/[.,;]/');
-        CurrentConfig::setUseExifMapping(['author' => 'Artist', 'name' => 'ImageDescription']);
-        CurrentConfig::setUseIptcMapping([]);
+        CurrentConfig::current()->setUseIptc(false);
+        CurrentConfig::current()->setUseExif(true);
+        CurrentConfig::current()->setAllowHtmlInMetadata(false);
+        CurrentConfig::current()->setMetadataKeywordSeparatorRegex('/[.,;]/');
+        CurrentConfig::current()->setUseExifMapping(['author' => 'Artist', 'name' => 'ImageDescription']);
+        CurrentConfig::current()->setUseIptcMapping([]);
 
         // Self-contained scratch dir under this project's own _data/ (never
         // a real upload path) -- created here, torn down below.
@@ -210,7 +214,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_sync_metadata_attributes_omits_exif_fields_when_disabled(): void
     {
-        CurrentConfig::setUseExif(false);
+        CurrentConfig::current()->setUseExif(false);
 
         $attributes = $this->service->getSyncMetadataAttributes();
 
@@ -380,7 +384,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_iptc_data_strips_html_when_allow_html_in_metadata_is_disabled(): void
     {
-        CurrentConfig::setAllowHtmlInMetadata(false);
+        CurrentConfig::current()->setAllowHtmlInMetadata(false);
         $bytes = $this->makeJpegWithApp13Iptc([[5, '<b>Bold</b> Title']]);
         $path = $this->scratchDir . '/iptc-html-stripped.jpg';
         file_put_contents($path, $bytes);
@@ -392,7 +396,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_iptc_data_keeps_html_when_allow_html_in_metadata_is_enabled(): void
     {
-        CurrentConfig::setAllowHtmlInMetadata(true);
+        CurrentConfig::current()->setAllowHtmlInMetadata(true);
         $bytes = $this->makeJpegWithApp13Iptc([[5, '<b>Bold</b> Title']]);
         $path = $this->scratchDir . '/iptc-html-kept.jpg';
         file_put_contents($path, $bytes);
@@ -462,7 +466,7 @@ final class MetadataServiceTest extends IntegrationTestCase
         // unconditional strip_tags((string) $value) pass on every scalar
         // result value (tested on its own below) -- keeps this test
         // focused on the GPS composite math/wiring alone.
-        CurrentConfig::setAllowHtmlInMetadata(true);
+        CurrentConfig::current()->setAllowHtmlInMetadata(true);
         $path = $this->scratchDir . '/gps-valid.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
@@ -489,7 +493,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_exif_data_skips_out_of_range_gps_coordinates(): void
     {
-        CurrentConfig::setAllowHtmlInMetadata(true);
+        CurrentConfig::current()->setAllowHtmlInMetadata(true);
         $path = $this->scratchDir . '/gps-invalid.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
@@ -609,7 +613,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_sync_iptc_data_formats_a_valid_date_field(): void
     {
-        CurrentConfig::setUseIptcMapping(['date_creation' => '2#055']);
+        CurrentConfig::current()->setUseIptcMapping(['date_creation' => '2#055']);
         $bytes = $this->makeJpegWithApp13Iptc([[55, '20240315']]);
         $path = $this->scratchDir . '/iptc-date-valid.jpg';
         file_put_contents($path, $bytes);
@@ -621,7 +625,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_sync_iptc_data_falls_back_to_month_and_day_one_for_an_invalid_calendar_date(): void
     {
-        CurrentConfig::setUseIptcMapping(['date_creation' => '2#055']);
+        CurrentConfig::current()->setUseIptcMapping(['date_creation' => '2#055']);
         // 2023-02-30 does not exist -- checkdate() fails, and the method
         // "supposes the year is correct", resetting month/day to 1/1.
         $bytes = $this->makeJpegWithApp13Iptc([[55, '20230230']]);
@@ -635,7 +639,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_sync_iptc_data_normalizes_keywords_and_escapes_quotes(): void
     {
-        CurrentConfig::setUseIptcMapping(['keywords' => '2#025', 'title' => '2#005']);
+        CurrentConfig::current()->setUseIptcMapping(['keywords' => '2#025', 'title' => '2#005']);
         $titleValue = 'Bob\'s "Best" Shot';
         $bytes = $this->makeJpegWithApp13Iptc([
             [25, 'nature'],
@@ -659,7 +663,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_sync_exif_data_formats_a_full_datetime_field(): void
     {
-        CurrentConfig::setUseExifMapping(['date_creation' => 'DateTimeOriginal']);
+        CurrentConfig::current()->setUseExifMapping(['date_creation' => 'DateTimeOriginal']);
         $path = $this->scratchDir . '/exif-datetime-full.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
@@ -682,7 +686,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_sync_exif_data_formats_a_date_only_field(): void
     {
-        CurrentConfig::setUseExifMapping(['date_creation' => 'DateTimeOriginal']);
+        CurrentConfig::current()->setUseExifMapping(['date_creation' => 'DateTimeOriginal']);
         $path = $this->scratchDir . '/exif-date-only.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
@@ -707,7 +711,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_sync_exif_data_skips_a_date_field_that_matches_neither_datetime_pattern(): void
     {
-        CurrentConfig::setUseExifMapping(['date_creation' => 'DateTimeOriginal']);
+        CurrentConfig::current()->setUseExifMapping(['date_creation' => 'DateTimeOriginal']);
         $path = $this->scratchDir . '/exif-date-malformed.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
@@ -735,7 +739,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_sync_exif_data_treats_the_zero_datetime_as_empty_and_skips_it(): void
     {
-        CurrentConfig::setUseExifMapping(['date_creation' => 'DateTimeOriginal']);
+        CurrentConfig::current()->setUseExifMapping(['date_creation' => 'DateTimeOriginal']);
         $path = $this->scratchDir . '/exif-date-zero.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
@@ -758,7 +762,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_sync_exif_data_normalizes_keywords(): void
     {
-        CurrentConfig::setUseExifMapping(['keywords' => 'UserComment']);
+        CurrentConfig::current()->setUseExifMapping(['keywords' => 'UserComment']);
         $path = $this->scratchDir . '/exif-keywords.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
@@ -783,8 +787,8 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_sync_metadata_attributes_includes_iptc_fields_when_enabled(): void
     {
-        CurrentConfig::setUseIptc(true);
-        CurrentConfig::setUseIptcMapping(['title' => '2#005']);
+        CurrentConfig::current()->setUseIptc(true);
+        CurrentConfig::current()->setUseIptcMapping(['title' => '2#005']);
 
         $attributes = $this->service->getSyncMetadataAttributes();
 
@@ -795,7 +799,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_sync_metadata_detects_a_tiff_original_and_reads_exif_from_it_while_using_the_representative_for_dimensions(): void
     {
-        CurrentConfig::setUseExifMapping(['author' => 'Artist']);
+        CurrentConfig::current()->setUseExifMapping(['author' => 'Artist']);
         $originalRelative = '_data/metadata-service-test-scratch/tiff-original.tiff';
         $originalAbsolute = dirname(__DIR__, 2) . '/' . $originalRelative;
 
@@ -844,8 +848,8 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_sync_metadata_strips_newlines_from_name_and_author(): void
     {
-        CurrentConfig::setUseExif(false);
-        CurrentConfig::setUseIptc(false);
+        CurrentConfig::current()->setUseExif(false);
+        CurrentConfig::current()->setUseIptc(false);
         $relativePath = '_data/metadata-service-test-scratch/newline-fields.jpg';
         file_put_contents($this->scratchDir . '/newline-fields.jpg', $this->makePlainJpeg());
 
@@ -962,9 +966,9 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_sync_metadata_assigns_tags_from_a_keywords_csv_field(): void
     {
-        CurrentConfig::setUseExif(false);
-        CurrentConfig::setUseIptc(true);
-        CurrentConfig::setUseIptcMapping(['keywords' => '2#025']);
+        CurrentConfig::current()->setUseExif(false);
+        CurrentConfig::current()->setUseIptc(true);
+        CurrentConfig::current()->setUseIptcMapping(['keywords' => '2#025']);
 
         $relativePath = '_data/metadata-service-test-scratch/sync-tags.jpg';
         $bytes = $this->makeJpegWithApp13Iptc([[25, 'sync-nature'], [25, 'sync-travel']]);

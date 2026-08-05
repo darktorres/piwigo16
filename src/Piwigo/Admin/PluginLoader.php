@@ -49,10 +49,10 @@ final class PluginLoader
     /**
      * Loads all the registered plugins.
      */
-    public static function loadPlugins(LoadedPlugins $loadedPlugins, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Activity\ActivityService $activityService): void
+    public static function loadPlugins(LoadedPlugins $loadedPlugins, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Config\CurrentConfig $currentConfig): void
     {
         $loadedPlugins->set([]);
-        if (\Piwigo\Config\CurrentConfig::enablePlugins()) {
+        if ($currentConfig->enablePlugins()) {
             $plugins = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\PluginConfig\PluginEntity::class)->getDbPlugins('active');
             foreach ($plugins as $plugin) {// include main from a function to avoid using same function context
                 // Unboxed back to array here -- loadPlugin()/autoupdatePlugin()

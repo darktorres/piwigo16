@@ -441,7 +441,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         $base_url = $urlService->getRootUrl() . 'admin.php';
 
         $conn = DbConnection::build();
-        $notificationByMailService = new \Piwigo\Notification\NotificationByMailService(new \Piwigo\Notification\NotificationByMailRepository($conn), $sessionService, $currentConfig);
+        $notificationByMailService = new \Piwigo\Notification\NotificationByMailService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Notification\UserMailNotificationEntity::class), $sessionService);
 
         // Set null mail_address empty
         $notificationByMailService->nullifyBlankEmails();

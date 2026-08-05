@@ -844,7 +844,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         // layout). image 3 is fixture-dated 2024-07-04, the same
         // fixture row and month this file's own setUp() already
         // establishes.
-        $calendar = new CalendarMonthly(new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService);
+        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current());
         $calendar->chronology_field = 'posted';
         $calendar->initialize($this->makeScope('id = 3'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;

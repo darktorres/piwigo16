@@ -817,7 +817,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         EventDispatcher::get()->addTypedHandler(DeleteSite::class, $handler);
 
         try {
-            $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), EventDispatcher::get());
+            $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), EventDispatcher::get());
 
             self::assertNull($this->repo->findById((int) $categoryId));
             self::assertNull($siteRepo->findGalleriesUrlById($siteId));

@@ -68,19 +68,26 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
         $this->em = EntityManagerFactory::build($this->conn);
         $repo = new SearchRepository($this->em);
 
+        $userService = new \Piwigo\Users\UserService(\Piwigo\Core\Lang::current(), $this->em->getRepository(\Piwigo\Users\UserInfoEntity::class), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new \Piwigo\Activity\ActivityService($this->em->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), \Piwigo\Config\CurrentConfig::current()), EventDispatcher::get(), new \Piwigo\Config\DeploymentPolicy(), CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
+
         $this->service = new SearchService(
+            \Piwigo\Auth\AccessControl::current(),
             $repo,
             new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), $this->em->getRepository(CategoryEntity::class)),
             new CategoryService(
+                \Piwigo\Core\Lang::current(),
                 $this->em->getRepository(CategoryEntity::class),
-                new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), $this->em->getRepository(CategoryEntity::class))
+                new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), $this->em->getRepository(CategoryEntity::class)),
+                \Piwigo\Config\CurrentConfig::current(),
             ),
             new MailService(),
             new HtmlService(),
-            new RedirectService(),
-            new SessionService($this->em->getRepository(SessionEntity::class)),
+            new RedirectService(\Piwigo\Core\Lang::current(), $userService),
+            new SessionService($this->em->getRepository(SessionEntity::class), \Piwigo\Config\CurrentConfig::current()),
             EventDispatcher::get(),
             CurrentUser::current(),
+            \Piwigo\Core\Lang::current(),
+            \Piwigo\Config\CurrentConfig::current(),
         );
     }
 

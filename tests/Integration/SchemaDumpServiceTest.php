@@ -54,7 +54,7 @@ final class SchemaDumpServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        CurrentConfig::current()->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 

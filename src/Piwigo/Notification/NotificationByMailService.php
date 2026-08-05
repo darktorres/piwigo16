@@ -23,7 +23,6 @@ final readonly class NotificationByMailService
     public function __construct(
         private NotificationByMailRepository $repo,
         private SessionService $sessionService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     public function findAvailableCheckKey(): string

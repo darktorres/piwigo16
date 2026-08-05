@@ -1224,7 +1224,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         // hyphen) -- explode('-', ...) must split into exactly [execId,
         // startTime] for the (int) cast below to read the real timestamp,
         // not an unrelated string.
-        CurrentConfig::setEmptyLoungeRunning('staleexecid-' . (time() - 100));
+        CurrentConfig::current()->setEmptyLoungeRunning('staleexecid-' . (time() - 100));
         $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
         \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
@@ -1328,7 +1328,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
             $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
             \Piwigo\Config\CurrentConfigService::current()->reset();
             \Piwigo\Core\Kernel::reset();
-            CurrentConfig::reset();
+            CurrentConfig::current()->reset();
             imageServiceTestRrmdir($logDir);
         }
     } finally {
@@ -1370,7 +1370,7 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
             $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
             \Piwigo\Config\CurrentConfigService::current()->reset();
             \Piwigo\Core\Kernel::reset();
-            CurrentConfig::reset();
+            CurrentConfig::current()->reset();
         }
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
@@ -1400,7 +1400,7 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
             "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($staleValue)]
         );
-        CurrentConfig::setEmptyLoungeRunning($staleValue);
+        CurrentConfig::current()->setEmptyLoungeRunning($staleValue);
         $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
         \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
@@ -1415,7 +1415,7 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
             $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
             \Piwigo\Config\CurrentConfigService::current()->reset();
             \Piwigo\Core\Kernel::reset();
-            CurrentConfig::reset();
+            CurrentConfig::current()->reset();
         }
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
@@ -1454,7 +1454,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
             "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($freshLockValue)]
         );
-        CurrentConfig::setEmptyLoungeRunning($freshLockValue);
+        CurrentConfig::current()->setEmptyLoungeRunning($freshLockValue);
         $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
         \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
@@ -1490,7 +1490,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
             $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
             \Piwigo\Config\CurrentConfigService::current()->reset();
             \Piwigo\Core\Kernel::reset();
-            CurrentConfig::reset();
+            CurrentConfig::current()->reset();
             imageServiceTestRrmdir($logDir);
         }
     } finally {
@@ -1564,7 +1564,7 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
             "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($lockValue)]
         );
-        CurrentConfig::setEmptyLoungeRunning($lockValue);
+        CurrentConfig::current()->setEmptyLoungeRunning($lockValue);
         $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
         \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
@@ -1592,7 +1592,7 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
             $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
             \Piwigo\Config\CurrentConfigService::current()->reset();
             \Piwigo\Core\Kernel::reset();
-            CurrentConfig::reset();
+            CurrentConfig::current()->reset();
             imageServiceTestRrmdir($logDir);
         }
     } finally {
@@ -1622,7 +1622,7 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
             "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($staleValue)]
         );
-        CurrentConfig::setEmptyLoungeRunning($staleValue);
+        CurrentConfig::current()->setEmptyLoungeRunning($staleValue);
         $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
         \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
@@ -1637,7 +1637,7 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
             $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
             \Piwigo\Config\CurrentConfigService::current()->reset();
             \Piwigo\Core\Kernel::reset();
-            CurrentConfig::reset();
+            CurrentConfig::current()->reset();
         }
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
@@ -1658,7 +1658,7 @@ test('emptyLounge() returns null when a different, still-fresh execution already
         // Not stale (CurrentConfig::emptyLoungeRunning() defaults to null),
         // so the staleness check is skipped entirely and tryAcquireLoungeLock()
         // -- a real INSERT IGNORE -- finds the row above already taken.
-        CurrentConfig::setEmptyLoungeRunning(null);
+        CurrentConfig::current()->setEmptyLoungeRunning(null);
 
         try {
             $service = imageServiceTestNewService($repo, $conn);
@@ -1666,7 +1666,7 @@ test('emptyLounge() returns null when a different, still-fresh execution already
             expect($service->emptyLounge())->toBeNull();
         } finally {
             $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
-            CurrentConfig::reset();
+            CurrentConfig::current()->reset();
         }
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);

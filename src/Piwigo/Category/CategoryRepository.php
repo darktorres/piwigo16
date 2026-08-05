@@ -556,7 +556,7 @@ final class CategoryRepository extends EntityRepository
         $qb->orderBy(str_ireplace(
             'RAND()',
             SqlDialect::randomFunction() . '()',
-            str_replace('ORDER BY ', '', \Piwigo\Config\CurrentConfig::orderBy())
+            str_replace('ORDER BY ', '', \Piwigo\Config\CurrentConfig::current()->orderBy())
         ));
 
         $ids = $qb->executeQuery()
@@ -582,11 +582,11 @@ final class CategoryRepository extends EntityRepository
      */
     private static function resolveDqlOrderBy(string $imageAlias, ?string $imageCategoryAlias): ?array
     {
-        if (\Piwigo\Config\CurrentConfig::orderByCustom() !== null) {
+        if (\Piwigo\Config\CurrentConfig::current()->orderByCustom() !== null) {
             return null;
         }
 
-        return \Piwigo\Image\PhotoSortField::resolveDqlOrderBy(\Piwigo\Config\CurrentConfig::orderBy(), $imageAlias, $imageCategoryAlias);
+        return \Piwigo\Image\PhotoSortField::resolveDqlOrderBy(\Piwigo\Config\CurrentConfig::current()->orderBy(), $imageAlias, $imageCategoryAlias);
     }
 
     /**

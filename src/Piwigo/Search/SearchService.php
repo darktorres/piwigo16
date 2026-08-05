@@ -100,7 +100,7 @@ final readonly class SearchService
      */
     private function tagService(): TagService
     {
-        return $this->tagService ?? new TagService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class), $this->permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser);
+        return $this->tagService ?? new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class), $this->permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig);
     }
 
     public static function getSearchIdPattern(int|string $candidate): ?string

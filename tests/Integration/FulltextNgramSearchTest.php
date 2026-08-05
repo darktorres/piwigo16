@@ -73,7 +73,7 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::reset();
+        CurrentConfig::current()->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 

@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
-use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentApiCriteria;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\CommentId;

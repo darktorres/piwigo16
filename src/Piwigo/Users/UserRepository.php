@@ -1204,7 +1204,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     private static function resolveFavoritesDqlOrderBy(string $orderBySql): ?array
     {
-        if (\Piwigo\Config\CurrentConfig::orderByCustom() !== null) {
+        if (\Piwigo\Config\CurrentConfig::current()->orderByCustom() !== null) {
             return null;
         }
 

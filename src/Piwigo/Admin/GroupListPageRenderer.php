@@ -26,7 +26,6 @@ final class GroupListPageRenderer
         private readonly Translator $translator,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void

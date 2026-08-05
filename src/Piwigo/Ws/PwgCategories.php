@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
-use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
 use Exception;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
@@ -29,7 +27,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Template\RenderCategoryDescription;
@@ -193,7 +190,7 @@ final class PwgCategories
         if ($catClauses !== []) {
             $catConditions[] = new SqlCondition('(' . implode("\n    OR ", $catClauses) . ')', $catParams);
         }
-        $catConditions[] = self::permissionService()->getPermissionCriteria()->forbiddenCategoriesCondition('c.id');
+        $catConditions[] = $this->permissionService->getPermissionCriteria()->forbiddenCategoriesCondition('c.id');
 
         $cats = [];
         foreach ($this->categoryService->getIdsAndImageOrderWithConditions($catConditions) as $row) {
@@ -202,7 +199,7 @@ final class PwgCategories
 
         // -------------------------------------------------------- get the images
         if ($cats !== []) {
-            $permissionCriteria = self::permissionService()->getPermissionCriteria();
+            $permissionCriteria = $this->permissionService->getPermissionCriteria();
             $imagesCriteria = new CategoryImagesCriteria(
                 filterCriteria: WsHelper::stdImageSqlFilterCriteria($params, $service),
                 categoryIds: array_keys($cats),
@@ -273,7 +270,7 @@ final class PwgCategories
                 // find the complete list (given permissions) of albums linked to photos
                 $image_category_rows = $this->imageService->getCategoryLinksForImageIdsWithCondition(
                     $image_ids,
-                    self::permissionService()->getPermissionCriteria()
+                    $this->permissionService->getPermissionCriteria()
                 );
                 $categories_of_image = [];
                 foreach ($image_category_rows as $image_category_row) {
@@ -585,7 +582,7 @@ final class PwgCategories
                     // findRandomRepresentativeIdAmongSubcategories().
                     $subrow_image_id = $categoryService->getRandomRepresentativeIdAmongSubcategories(
                         $row['uppercats'],
-                        self::permissionService()->getPermissionCriteria()
+                        $this->permissionService->getPermissionCriteria()
                     );
 
                     if ($subrow_image_id !== null) {

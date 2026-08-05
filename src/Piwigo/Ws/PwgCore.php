@@ -48,7 +48,6 @@ use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -89,7 +88,6 @@ final class PwgCore
         private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
         private readonly Connection $connection,
         private readonly ImageRepository $imageRepository,
-        private readonly UserRepository $userRepository,
         private readonly Paths $paths,
         private readonly Lang $lang,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,

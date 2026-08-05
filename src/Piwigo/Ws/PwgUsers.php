@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthService;
@@ -67,7 +66,6 @@ final class PwgUsers
         private readonly CurrentLogger $currentLogger,
         private readonly PasswordService $passwordService,
         private readonly PreferencesService $preferencesService,
-        private readonly Connection $connection,
         private readonly ConfigService $configService,
     ) {}
 
@@ -95,12 +93,6 @@ final class PwgUsers
      */
     public function getList(array $params, PwgServer &$service): PwgError|array
     {
-        // $this->connection is shared across every query in this method,
-        // including the SELECT SQL_CALC_FOUND_ROWS.../SELECT FOUND_ROWS()
-        // pair below -- FOUND_ROWS() reflects the immediately-preceding
-        // query on the SAME connection/session, so this must stay one
-        // connection for the whole method.
-
         $available_permission_levels = $this->currentConfig->availablePermissionLevels();
 
         if (! (bool) preg_match(ValidationPattern::ORDER, $params['order'])) {

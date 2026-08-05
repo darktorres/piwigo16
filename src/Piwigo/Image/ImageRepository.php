@@ -1568,12 +1568,17 @@ final class ImageRepository extends EntityRepository
         // see SearchService's own docblock for the live-confirmed
         // 200/150 example). `width * 1.0` forces decimal-context
         // arithmetic on both platforms without needing a DQL CAST.
+        // NULLIF(height, 0) additionally guards a genuinely zero height
+        // (a real, if degenerate, row) -- MySQL's `/` silently returns
+        // NULL for a zero divisor, but Postgres raises a real "division
+        // by zero" error instead, confirmed live via SearchService's own
+        // identical ratio-bucket clause.
         if ($criteria->minRatio !== null) {
-            $qb->andWhere($alias . '.width * 1.0 / ' . $alias . '.height >= :filterMinRatio')
+            $qb->andWhere($alias . '.width * 1.0 / NULLIF(' . $alias . '.height, 0) >= :filterMinRatio')
                 ->setParameter('filterMinRatio', $criteria->minRatio);
         }
         if ($criteria->maxRatio !== null) {
-            $qb->andWhere($alias . '.width * 1.0 / ' . $alias . '.height <= :filterMaxRatio')
+            $qb->andWhere($alias . '.width * 1.0 / NULLIF(' . $alias . '.height, 0) <= :filterMaxRatio')
                 ->setParameter('filterMaxRatio', $criteria->maxRatio);
         }
         if ($criteria->maxLevel !== null) {

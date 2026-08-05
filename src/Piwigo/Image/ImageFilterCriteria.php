@@ -113,13 +113,18 @@ final readonly class ImageFilterCriteria
         // operands truncates to an integer (same real bug already fixed
         // in SearchService's/FilterResolver's/ImageRepository's own
         // ratio filters). `width*1.0` forces decimal-context arithmetic
-        // on both platforms without needing a CAST.
+        // on both platforms without needing a CAST. NULLIF(height, 0)
+        // additionally guards a genuinely zero height (a real, if
+        // degenerate, row) -- MySQL's `/` silently returns NULL for a
+        // zero divisor, but Postgres raises a real "division by zero"
+        // error instead, confirmed live via SearchService's own identical
+        // ratio-bucket clause.
         if ($this->minRatio !== null) {
-            $clauses[] = $tblPrefix . 'width*1.0/' . $tblPrefix . 'height >= :imgFilterMinRatio';
+            $clauses[] = $tblPrefix . 'width*1.0/NULLIF(' . $tblPrefix . 'height, 0) >= :imgFilterMinRatio';
             $parameters['imgFilterMinRatio'] = $this->minRatio;
         }
         if ($this->maxRatio !== null) {
-            $clauses[] = $tblPrefix . 'width*1.0/' . $tblPrefix . 'height <= :imgFilterMaxRatio';
+            $clauses[] = $tblPrefix . 'width*1.0/NULLIF(' . $tblPrefix . 'height, 0) <= :imgFilterMaxRatio';
             $parameters['imgFilterMaxRatio'] = $this->maxRatio;
         }
         if ($this->maxLevel !== null) {

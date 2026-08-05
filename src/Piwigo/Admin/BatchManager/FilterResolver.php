@@ -264,14 +264,19 @@ final readonly class FilterResolver
         // infer the bound :min_ratio/:max_ratio parameter's type as
         // integer too, rejecting a genuinely fractional ratio outright.
         // `width * 1.0` forces decimal-context arithmetic on both
-        // platforms without needing a DQL/SQL CAST.
+        // platforms without needing a DQL/SQL CAST. NULLIF(height, 0)
+        // additionally guards a genuinely zero height (a real, if
+        // degenerate, row) -- MySQL's `/` silently returns NULL for a
+        // zero divisor, but Postgres raises a real "division by zero"
+        // error instead, confirmed live via SearchService's own identical
+        // ratio-bucket clause.
         if (isset($dimension['min_ratio']) && is_numeric($dimension['min_ratio'])) {
-            $where[] = 'width * 1.0 / height >= :min_ratio';
+            $where[] = 'width * 1.0 / NULLIF(height, 0) >= :min_ratio';
             $params['min_ratio'] = (float) $dimension['min_ratio'];
         }
         if (isset($dimension['max_ratio']) && is_numeric($dimension['max_ratio'])) {
             // max_ratio is a floor value, so must be a bit increased.
-            $where[] = 'width * 1.0 / height < :max_ratio';
+            $where[] = 'width * 1.0 / NULLIF(height, 0) < :max_ratio';
             $params['max_ratio'] = (float) $dimension['max_ratio'] + 0.01;
         }
 

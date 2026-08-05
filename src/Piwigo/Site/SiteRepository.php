@@ -70,9 +70,28 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
 
     /**
      * Returns a site's galleries_url, or null if the id doesn't exist.
+     *
+     * pgsql support pass: real bug found live -- sites.id is a Postgres
+     * `smallint` column (Phase B's translation of MySQL's own `tinyint
+     * unsigned`, per the migration's documented widening rule). MySQL
+     * happily evaluates `id = 999999` as a plain false comparison against
+     * a tinyint column with no protocol-level range check, but
+     * PostgreSQL's extended query protocol enforces the bound
+     * parameter's inferred smallint type strictly and rejects an
+     * out-of-range value outright ("value ... is out of range for type
+     * smallint") before the query can even run -- confirmed live via a
+     * real `site=999999` admin request, an uncaught DBAL DriverException
+     * escaping past this controller's own graceful "site X does not
+     * exist" handling. No real row can ever have an id outside
+     * smallint's own -32768..32767 range, so short-circuiting to "not
+     * found" here is correct, not just error-silencing.
      */
     public function findGalleriesUrlById(int $id): ?string
     {
+        if ($id < -32768 || $id > 32767) {
+            return null;
+        }
+
         return $this->find($id)?->galleriesUrl;
     }
 

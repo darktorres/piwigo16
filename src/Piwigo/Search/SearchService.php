@@ -397,8 +397,20 @@ final readonly class SearchService
             // arithmetic on both platforms (a DECIMAL/numeric literal
             // operand promotes the whole expression) without needing a
             // DQL CAST -- DQL has none built in.
+            // pgsql support pass: real bug found live -- a genuinely
+            // zero i.height (a real, if degenerate, row the test fixture
+            // exercises on purpose) makes this division a literal
+            // divide-by-zero. MySQL's `/` silently returns NULL for that;
+            // Postgres raises a real "division by zero" DriverException,
+            // 500ing the whole request. NULLIF(i.height, 0) forces the
+            // divisor to a SQL NULL instead of a literal 0 for that one
+            // row, so the whole expression evaluates to NULL (matching
+            // MySQL's own NULL-on-zero-divisor behavior) rather than
+            // erroring -- a NULL comparison is simply false for every
+            // bucket, so a zero-height row still correctly falls through
+            // unclassified either way.
             $clauseForRatio = [
-                'Portrait' => 'i.width * 1.0 / i.height < 0.95',
+                'Portrait' => 'i.width * 1.0 / NULLIF(i.height, 0) < 0.95',
                 // Not `BETWEEN` -- a real DQL grammar limitation found
                 // empirically: SimpleConditionalExpression()'s own
                 // lookahead dispatch only walks past a *simple* path
@@ -412,9 +424,9 @@ final readonly class SearchService
                 // LHS parse fine (proven by the 3 buckets below), so this
                 // expresses the identical inclusive range via two ANDed
                 // comparisons instead (BETWEEN's own definition).
-                'square' => '(i.width * 1.0 / i.height >= 0.95 AND i.width * 1.0 / i.height <= 1.05)',
-                'Landscape' => '(i.width * 1.0 / i.height > 1.05 AND i.width * 1.0 / i.height < 2)',
-                'Panorama' => 'i.width * 1.0 / i.height >= 2',
+                'square' => '(i.width * 1.0 / NULLIF(i.height, 0) >= 0.95 AND i.width * 1.0 / NULLIF(i.height, 0) <= 1.05)',
+                'Landscape' => '(i.width * 1.0 / NULLIF(i.height, 0) > 1.05 AND i.width * 1.0 / NULLIF(i.height, 0) < 2)',
+                'Panorama' => 'i.width * 1.0 / NULLIF(i.height, 0) >= 2',
             ];
             $clauses = [];
             foreach ($ratios as $r) {
@@ -1113,11 +1125,13 @@ final readonly class SearchService
                     break;
                 case 'ratio':
                     assert($scope !== null);
-                    // Same real Postgres integer-division-truncation bug
-                    // as getRegularSearchResults()'s own ratio buckets --
-                    // see that call site's docblock. `width*1.0` forces
-                    // decimal-context arithmetic on both platforms.
-                    $clauses[] = $scope->get_sql('width*1.0/height', $token);
+                    // Same real Postgres integer-division-truncation and
+                    // divide-by-zero bugs as getRegularSearchResults()'s
+                    // own ratio buckets -- see that call site's docblock.
+                    // `width*1.0` forces decimal-context arithmetic on
+                    // both platforms; NULLIF(height, 0) guards a
+                    // genuinely zero height the same way.
+                    $clauses[] = $scope->get_sql('width*1.0/NULLIF(height, 0)', $token);
 
                     break;
                 case 'size':

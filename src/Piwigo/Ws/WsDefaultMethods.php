@@ -44,6 +44,7 @@ final class WsDefaultMethods
         private readonly PwgPermissions $pwgPermissions,
         private readonly PwgComments $pwgComments,
         private readonly PwgExtensions $pwgExtensions,
+        private readonly PwgGroups $pwgGroups,
     ) {}
 
     /**
@@ -1460,7 +1461,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.getList',
-            PwgGroups::getList(...),
+            $this->pwgGroups->getList(...),
             [
                 'group_id' => [
                     'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
@@ -1492,7 +1493,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.add',
-            PwgGroups::add(...),
+            $this->pwgGroups->add(...),
             [
                 'name' => [],
                 'is_default' => [
@@ -1509,7 +1510,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.delete',
-            PwgGroups::delete(...),
+            $this->pwgGroups->delete(...),
             [
                 'group_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -1526,7 +1527,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.setInfo',
-            PwgGroups::setInfo(...),
+            $this->pwgGroups->setInfo(...),
             [
                 'group_id' => [
                     'type' => WsParamType::ID,
@@ -1549,7 +1550,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.addUser',
-            PwgGroups::addUser(...),
+            $this->pwgGroups->addUser(...),
             [
                 'group_id' => [
                     'type' => WsParamType::ID,
@@ -1569,7 +1570,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.deleteUser',
-            PwgGroups::deleteUser(...),
+            $this->pwgGroups->deleteUser(...),
             [
                 'group_id' => [
                     'type' => WsParamType::ID,
@@ -1589,7 +1590,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.merge',
-            PwgGroups::merge(...),
+            $this->pwgGroups->merge(...),
             [
                 'destination_group_id' => [
                     'type' => WsParamType::ID,
@@ -1610,7 +1611,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.duplicate',
-            PwgGroups::duplicate(...),
+            $this->pwgGroups->duplicate(...),
             [
                 'group_id' => [
                     'type' => WsParamType::ID,

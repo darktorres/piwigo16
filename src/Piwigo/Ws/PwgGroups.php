@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use InvalidArgumentException;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
@@ -29,6 +28,12 @@ use Piwigo\Group\GroupService;
  */
 final class PwgGroups
 {
+    public function __construct(
+        private readonly GroupService $groupService,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Audit\AuditService $auditService,
+    ) {}
+
     /**
      * API method
      * Returns the list of groups
@@ -41,7 +46,7 @@ final class PwgGroups
      *   flag -- always present, always string.
      * @return PwgError|array{paging: PwgNamedStruct, groups: PwgNamedArray}
      */
-    public static function getList(array $params, PwgServer &$service): PwgError|array
+    public function getList(array $params, PwgServer &$service): PwgError|array
     {
         if (! (bool) preg_match(ValidationPattern::ORDER, $params['order'])) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter order');
@@ -75,19 +80,20 @@ final class PwgGroups
      *   bool default, WsParamType::BOOL -- always present.
      * @return mixed PwgError, or the result of the pwg.groups.getList invocation
      */
-    public static function add(array $params, PwgServer &$service): mixed
+    public function add(array $params, PwgServer &$service): mixed
     {
         $name = strip_tags(stripslashes($params['name']));
 
         try {
-            $inserted_id = self::groupService()->create($name, $params['is_default']);
+            $inserted_id = $this->groupService->create($name, $params['is_default']);
         } catch (InvalidArgumentException $e) {
             return new PwgError(WsError::INVALID_PARAM, $e->getMessage());
         }
 
         // [SEC-57]
-        $actor_id = \Piwigo\Users\CurrentUser::current()->get()->id->value;
-        \Piwigo\Bootstrap\CoreDomainAccessor::auditService()
+        $actor_id = $this->currentUser->get()
+            ->id->value;
+        $this->auditService
             ->record($actor_id, 'create', 'group', $inserted_id->value, null, [
                 'name' => $name,
             ]);
@@ -105,13 +111,13 @@ final class PwgGroups
      *   neither has a 'default' key -- both mandatory, always present;
      *   FORCE_ARRAY always coerces group_id to a list of positive ints.
      */
-    public static function delete(array $params, PwgServer &$service): PwgError|PwgNamedArray
+    public function delete(array $params, PwgServer &$service): PwgError|PwgNamedArray
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        $deleted_groups = self::groupService()->delete(array_values(array_map(GroupId::from(...), $params['group_id'])));
+        $deleted_groups = $this->groupService->delete(array_values(array_map(GroupId::from(...), $params['group_id'])));
         if ($deleted_groups === false) {
             return new PwgError(500, 'There is no group to delete');
         }
@@ -132,7 +138,7 @@ final class PwgGroups
      *   WsParamFlag::OPTIONAL with no 'default' key -- may be entirely absent.
      * @return mixed PwgError, or the result of the pwg.groups.getList invocation
      */
-    public static function setInfo(array $params, PwgServer &$service): mixed
+    public function setInfo(array $params, PwgServer &$service): mixed
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -148,7 +154,7 @@ final class PwgGroups
         }
 
         try {
-            self::groupService()->update(GroupId::from($params['group_id']), $updates);
+            $this->groupService->update(GroupId::from($params['group_id']), $updates);
         } catch (InvalidArgumentException $e) {
             return new PwgError(WsError::INVALID_PARAM, $e->getMessage());
         }
@@ -168,13 +174,13 @@ final class PwgGroups
      *   coerces to a list of positive ints.
      * @return mixed PwgError, or the result of the pwg.groups.getList invocation
      */
-    public static function addUser(array $params, PwgServer &$service): mixed
+    public function addUser(array $params, PwgServer &$service): mixed
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        $added = self::groupService()->addMembers(GroupId::from($params['group_id']), array_values(array_map(UserId::from(...), $params['user_id'])));
+        $added = $this->groupService->addMembers(GroupId::from($params['group_id']), array_values(array_map(UserId::from(...), $params['user_id'])));
         if (! $added) {
             return new PwgError(WsError::INVALID_PARAM, 'This group does not exist.');
         }
@@ -197,7 +203,7 @@ final class PwgGroups
      * result -- same by-name-dispatcher rationale as add()/setInfo() above.
      * @return PwgError|array{destination_group: mixed, deleted_group: mixed}
      */
-    public static function merge(array $params, PwgServer &$service): PwgError|array
+    public function merge(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -207,7 +213,7 @@ final class PwgGroups
             'group_id' => $params['merge_group_id'],
         ]);
 
-        $merged = self::groupService()->merge(GroupId::from($params['destination_group_id']), array_values(array_map(GroupId::from(...), $params['merge_group_id'])));
+        $merged = $this->groupService->merge(GroupId::from($params['destination_group_id']), array_values(array_map(GroupId::from(...), $params['merge_group_id'])));
         if (! $merged) {
             return new PwgError(WsError::INVALID_PARAM, 'All groups does not exist.');
         }
@@ -229,14 +235,14 @@ final class PwgGroups
      *   WsParamType::ID guarantees a plain int for group_id.
      * @return mixed PwgError, or the result of the pwg.groups.getList invocation
      */
-    public static function duplicate(array $params, PwgServer &$service): mixed
+    public function duplicate(array $params, PwgServer &$service): mixed
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
         try {
-            $inserted_id = self::groupService()->duplicate(GroupId::from($params['group_id']), $params['copy_name']);
+            $inserted_id = $this->groupService->duplicate(GroupId::from($params['group_id']), $params['copy_name']);
         } catch (InvalidArgumentException $e) {
             return new PwgError(WsError::INVALID_PARAM, $e->getMessage());
         }
@@ -256,13 +262,13 @@ final class PwgGroups
      *   coerces to a list of positive ints.
      * @return mixed PwgError, or the result of the pwg.groups.getList invocation
      */
-    public static function deleteUser(array $params, PwgServer &$service): mixed
+    public function deleteUser(array $params, PwgServer &$service): mixed
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        $removed = self::groupService()->removeMembers(GroupId::from($params['group_id']), array_values(array_map(UserId::from(...), $params['user_id'])));
+        $removed = $this->groupService->removeMembers(GroupId::from($params['group_id']), array_values(array_map(UserId::from(...), $params['user_id'])));
         if (! $removed) {
             return new PwgError(WsError::INVALID_PARAM, 'This group does not exist.');
         }
@@ -270,17 +276,5 @@ final class PwgGroups
         return $service->invoke('pwg.groups.getList', [
             'group_id' => $params['group_id'],
         ]);
-    }
-
-    /**
-     * Constructed identically across add()/delete()/setInfo()/addUser()/
-     * merge()/duplicate()/deleteUser() -- all static methods, no shared
-     * instance state to inject into, same "private static helper"
-     * precedent as Bootstrap\RequestBootstrap::activityService() /
-     * PwgComments::commentService().
-     */
-    private static function groupService(): GroupService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::groupService();
     }
 }

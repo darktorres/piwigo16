@@ -107,9 +107,11 @@ final class WsCategoriesMutationTest extends ContractTestCase
      */
     private function assignRanks(array $orderedIds): void
     {
+        $rank = $this->conn->getDatabasePlatform()
+            ->quoteSingleIdentifier('rank');
         foreach ($orderedIds as $index => $categoryId) {
             $this->conn->executeStatement(
-                'UPDATE ' . Tables::categories() . ' SET `rank` = ? WHERE id = ?',
+                "UPDATE " . Tables::categories() . " SET {$rank} = ? WHERE id = ?",
                 [$index + 1, $categoryId]
             );
         }
@@ -120,8 +122,10 @@ final class WsCategoriesMutationTest extends ContractTestCase
      */
     private function siblingOrder(int $parentId): array
     {
+        $rankIdentifier = $this->conn->getDatabasePlatform()
+            ->quoteSingleIdentifier('rank');
         $ids = $this->conn->fetchFirstColumn(
-            'SELECT id FROM ' . Tables::categories() . ' WHERE id_uppercat = ? ORDER BY `rank` ASC',
+            "SELECT id FROM " . Tables::categories() . " WHERE id_uppercat = ? ORDER BY {$rankIdentifier} ASC",
             [$parentId]
         );
 
@@ -424,12 +428,23 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame('Invalid param visible : not-a-bool', $response['message']);
     }
 
+    /**
+     * `visible`/`commentable` are genuine boolean columns -- native bool
+     * on Postgres, numeric on MySQL (same recurring raw-fetch
+     * normalization gap fixed throughout this pgsql support pass).
+     */
+    private function fetchCategoryBoolColumn(string $column, int $categoryId): int
+    {
+        $value = $this->conn->fetchOne('SELECT ' . $column . ' FROM ' . Tables::categories() . ' WHERE id = ?', [$categoryId]);
+        self::assertTrue(is_bool($value) || is_numeric($value), $column . ' must be a boolean or numeric value');
+
+        return (int) (bool) $value;
+    }
+
     public function test_setInfo_sets_visible_false(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
-        $before = $this->conn->fetchOne('SELECT visible FROM ' . Tables::categories() . ' WHERE id = ?', [$categoryId]);
-        self::assertIsNumeric($before);
-        self::assertSame(1, (int) $before);
+        self::assertSame(1, $this->fetchCategoryBoolColumn('visible', $categoryId));
 
         $response = $this->callWs('pwg.categories.setInfo', [
             'category_id' => $categoryId,
@@ -437,9 +452,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         ]);
 
         self::assertSame('ok', $response['stat']);
-        $after = $this->conn->fetchOne('SELECT visible FROM ' . Tables::categories() . ' WHERE id = ?', [$categoryId]);
-        self::assertIsNumeric($after);
-        self::assertSame(0, (int) $after);
+        self::assertSame(0, $this->fetchCategoryBoolColumn('visible', $categoryId));
     }
 
     /**
@@ -476,12 +489,8 @@ final class WsCategoriesMutationTest extends ContractTestCase
         ]);
 
         self::assertSame('ok', $response['stat']);
-        $parentCommentable = $this->conn->fetchOne('SELECT commentable FROM ' . Tables::categories() . ' WHERE id = ?', [$parentId]);
-        $childCommentable = $this->conn->fetchOne('SELECT commentable FROM ' . Tables::categories() . ' WHERE id = ?', [$childId]);
-        self::assertIsNumeric($parentCommentable);
-        self::assertIsNumeric($childCommentable);
-        self::assertSame(0, (int) $parentCommentable);
-        self::assertSame(0, (int) $childCommentable, 'apply_commentable_to_subalbums must propagate to the child');
+        self::assertSame(0, $this->fetchCategoryBoolColumn('commentable', $parentId));
+        self::assertSame(0, $this->fetchCategoryBoolColumn('commentable', $childId), 'apply_commentable_to_subalbums must propagate to the child');
     }
 
     public function test_setInfo_sets_commentable_without_subalbums(): void
@@ -495,12 +504,8 @@ final class WsCategoriesMutationTest extends ContractTestCase
         ]);
 
         self::assertSame('ok', $response['stat']);
-        $parentCommentable = $this->conn->fetchOne('SELECT commentable FROM ' . Tables::categories() . ' WHERE id = ?', [$parentId]);
-        $childCommentable = $this->conn->fetchOne('SELECT commentable FROM ' . Tables::categories() . ' WHERE id = ?', [$childId]);
-        self::assertIsNumeric($parentCommentable);
-        self::assertIsNumeric($childCommentable);
-        self::assertSame(0, (int) $parentCommentable);
-        self::assertSame(1, (int) $childCommentable, 'without apply_commentable_to_subalbums the child must be untouched');
+        self::assertSame(0, $this->fetchCategoryBoolColumn('commentable', $parentId));
+        self::assertSame(1, $this->fetchCategoryBoolColumn('commentable', $childId), 'without apply_commentable_to_subalbums the child must be untouched');
     }
 
     // ------------------------------------------------------- setRepresentative
@@ -893,9 +898,18 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $prefix = 'ct_orphans_bulk_' . uniqid() . '_';
 
         try {
+            // pgsql support pass: real bug found live -- a bound
+            // parameter appearing only inside a function call argument
+            // (CONCAT(?, n)) gives Postgres nothing to infer its type
+            // from ("could not determine data type of parameter $1"),
+            // confirmed live via a real PREPARE/EXECUTE against this
+            // exact table. An explicit ::text cast resolves it
+            // unconditionally; MySQL has no such ambiguity to begin with
+            // and accepts the bare parameter unchanged.
+            $textCast = $this->dbDriver === 'pgsql' ? '::text' : '';
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::images() . ' (file, path, md5sum, date_available)
-                 SELECT CONCAT(?, n), CONCAT(?, n), MD5(CONCAT(?, n)), ?
+                'INSERT INTO ' . Tables::images() . " (file, path, md5sum, date_available)
+                 SELECT CONCAT(?{$textCast}, n), CONCAT(?{$textCast}, n), MD5(CONCAT(?{$textCast}, n)), ?
                  FROM (
                      WITH RECURSIVE seq AS (
                          SELECT 1 AS n
@@ -903,7 +917,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
                          SELECT n + 1 FROM seq WHERE n < 1000
                      )
                      SELECT n FROM seq
-                 ) bulk_seq',
+                 ) bulk_seq",
                 [$prefix, $prefix, $prefix, '2026-08-01 00:00:00']
             );
 

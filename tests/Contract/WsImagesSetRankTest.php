@@ -100,8 +100,10 @@ final class WsImagesSetRankTest extends ContractTestCase
         $id = (int) $this->conn->lastInsertId();
         $this->imageIdsToDelete[] = $id;
 
+        $rankIdentifier = $this->conn->getDatabasePlatform()
+            ->quoteSingleIdentifier('rank');
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id, `rank`) VALUES (?, ?, ?)',
+            "INSERT INTO " . Tables::imageCategory() . " (image_id, category_id, {$rankIdentifier}) VALUES (?, ?, ?)",
             [$id, $categoryId, $rank]
         );
 
@@ -165,8 +167,10 @@ final class WsImagesSetRankTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
         self::assertSame(['image_id' => $imageId, 'category_id' => $freshCatId, 'rank' => 1], $response['result']);
 
+        $rankIdentifier = $this->conn->getDatabasePlatform()
+            ->quoteSingleIdentifier('rank');
         $stored = $this->conn->fetchOne(
-            'SELECT `rank` FROM ' . Tables::imageCategory() . ' WHERE image_id = ? AND category_id = ?',
+            "SELECT {$rankIdentifier} FROM " . Tables::imageCategory() . ' WHERE image_id = ? AND category_id = ?',
             [$imageId, $freshCatId]
         );
         self::assertSame(1, is_numeric($stored) ? (int) $stored : 0);

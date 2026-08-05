@@ -217,8 +217,10 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
         // The category has zero prior images, so the MAX(`rank`) aggregate
         // for it returns no row at all -- current_rank_of[$cat_id] defaults
         // to 0, then the 'auto' branch adds 1.
+        $rankIdentifier = $this->conn->getDatabasePlatform()
+            ->quoteSingleIdentifier('rank');
         $rank = $this->conn->fetchOne(
-            'SELECT `rank` FROM ' . Tables::imageCategory() . ' WHERE image_id = ? AND category_id = ?',
+            "SELECT {$rankIdentifier} FROM " . Tables::imageCategory() . ' WHERE image_id = ? AND category_id = ?',
             [$imageId, $freshCatId]
         );
         self::assertSame(1, is_numeric($rank) ? (int) $rank : 0);

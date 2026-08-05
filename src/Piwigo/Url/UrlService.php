@@ -987,8 +987,7 @@ final class UrlService implements UrlServiceInterface
 
         $currentUserId = \Piwigo\Users\CurrentUser::current()->get()->id;
 
-        $imageIds = \Piwigo\Db\EntityManagerFactory::build($this->conn ??= DbConnection::build())
-            ->getRepository(\Piwigo\Users\UserInfoEntity::class)
+        $imageIds = (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn ??= DbConnection::build()), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current()))
             ->findFavoriteImageIds($currentUserId);
 
         $favorites = [];

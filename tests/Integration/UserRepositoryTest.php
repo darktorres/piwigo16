@@ -41,7 +41,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class);
+        $this->repo = new UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\PluginConfig\EventDispatcher::get(), $currentConfig);
     }
 
     public function test_find_id_by_username_returns_a_fixture_user(): void

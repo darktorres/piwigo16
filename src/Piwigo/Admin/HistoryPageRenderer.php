@@ -49,7 +49,7 @@ final class HistoryPageRenderer
      * regardless, so there was never a real bridge here even in
      * principle.
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $template = $currentTemplate->get();
         $conn = DbConnection::build();
@@ -111,7 +111,7 @@ final class HistoryPageRenderer
 
         if ($form_param['user_id'] !== -1) {
             $form_param_user_id = \Piwigo\Common\ValueObject\UserId::tryFrom($form_param['user_id']);
-            $form_param_username = $form_param_user_id === null ? null : \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
+            $form_param_username = $form_param_user_id === null ? null : (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $eventDispatcher, $currentConfig))
                 ->findUsernameById($form_param_user_id);
             $form_param['user_name'] = $form_param_username?->value;
             $form_param['user_id'] = $form_param['user_name'] === null ? -1 : $form_param['user_id'];

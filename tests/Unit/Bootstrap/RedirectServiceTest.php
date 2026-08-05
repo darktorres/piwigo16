@@ -60,7 +60,7 @@ function redirect_service_test_user_service(): UserService
 
     return new UserService(
         redirect_service_test_lang(),
-        EntityManagerFactory::build($conn)->getRepository(UserInfoEntity::class),
+        new \Piwigo\Users\UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new \Piwigo\Config\CurrentConfig()),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
         new MailService(),
         new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),

@@ -102,7 +102,7 @@ final class PhotosAddDirectPageRenderer
         }
 
         if ((bool) $this->preferencesService->getParam('promote-mobile-apps', true)) {
-            $register_date = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
+            $register_date = (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
                 ->findEarliestRegistrationDate();
             $nb_cats = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class)
                 ->countAllCategories();

@@ -43,7 +43,7 @@ function core_update_service_test_user_service(): \Piwigo\Users\UserService
 
     return new \Piwigo\Users\UserService(
         core_update_service_test_lang(),
-        EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
+        new \Piwigo\Users\UserRepository(EntityManagerFactory::build($conn), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\CurrentConfig()),
         EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
         new \Piwigo\Mail\MailService(),
         core_update_service_test_activity_service(),

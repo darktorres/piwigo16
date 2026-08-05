@@ -116,7 +116,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
         return new \Piwigo\Users\UserService(
             Lang::current(),
-            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
+            new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current()),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             new \Piwigo\Mail\MailService(),
             $this->maintenanceActionDispatcherTestActivityService(),

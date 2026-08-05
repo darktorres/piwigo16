@@ -256,7 +256,7 @@ function themesInstalledLifecycleUserService(): \Piwigo\Users\UserService
 
     return new \Piwigo\Users\UserService(
         Lang::current(),
-        EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
+        new \Piwigo\Users\UserRepository(EntityManagerFactory::build($conn), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\CurrentConfig()),
         EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
         new \Piwigo\Mail\MailService(),
         new \Piwigo\Activity\ActivityService(EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),

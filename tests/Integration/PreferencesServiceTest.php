@@ -43,7 +43,7 @@ final class PreferencesServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->service = new PreferencesService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Users\CurrentUser::current());
+        $this->service = new PreferencesService(new UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\PluginConfig\EventDispatcher::get(), $currentConfig), \Piwigo\Users\CurrentUser::current());
 
         CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'preferences' => []]));
     }

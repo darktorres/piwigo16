@@ -67,7 +67,7 @@ use Piwigo\Common\ValueObject\UserId;
  * `src/`, so that remapping was never actually exercised in this
  * rewrite -- reversed, now mapped as {@see UserEntity}.
  */
-#[ORM\Entity(repositoryClass: UserRepository::class)]
+#[ORM\Entity]
 #[ORM\Table(name: 'user_infos')]
 final class UserInfoEntity
 {

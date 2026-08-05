@@ -496,7 +496,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                         $this->permissionService
                             ->addPermissionOnCategory($category_ids, array_map(
                                 static fn (\Piwigo\Common\ValueObject\UserId $id): int => $id->value,
-                                \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)->findAdminIds()
+                                (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))->findAdminIds()
                             ));
                     }
                 }

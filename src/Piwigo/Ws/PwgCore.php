@@ -586,7 +586,7 @@ final class PwgCore
         $connections_mode = $this->currentConfig->activityDisplayConnections();
         $admin_ids = [];
         if ($connections_mode === 'admins_only') {
-            $admin_id_objects = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class)->findAdminIds();
+            $admin_id_objects = (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->findAdminIds();
             $admin_ids = array_map(static fn (\Piwigo\Common\ValueObject\UserId $id): int => $id->value, $admin_id_objects);
         }
 

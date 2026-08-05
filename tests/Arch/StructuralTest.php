@@ -386,10 +386,10 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // (c) Structural exceptions -- Auth/AccessControl.php's one site is
     // inside currentForCaching()'s own designed degraded-fallback object
     // graph (never touches the real container, safe pre-boot read by
-    // design -- see that method's own docblock); Users/UserRepository.php/
-    // Category/CategoryRepository.php are Doctrine repositories with an
-    // ORM-fixed constructor, matching EventDispatcher's own established
-    // "Doctrine repositories" category from its Phase 4 conversion.
+    // design -- see that method's own docblock); Category/
+    // CategoryRepository.php is a Doctrine repository with an ORM-fixed
+    // constructor, matching EventDispatcher's own established "Doctrine
+    // repositories" category from its Phase 4 conversion.
     // CategoryRepository.php's own 3 sites (findImageIdsForCategories()/
     // resolveDqlOrderBy()) are a real, newly-found gap: introduced by this
     // branch's own later pgsql-portability commits (findCategoryRepository's
@@ -397,11 +397,12 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // pass already ran. TEMPORARY -- unlike the rest of this list,
     // CategoryRepository.php is not a permanent exception: it's in scope
     // for the same "stop extending EntityRepository" redesign sub-phase
-    // 11B already applies to UserRepository.php (its own real
+    // 11B already applied to Users/UserRepository.php (removed from this
+    // allow-list once that landed) -- CategoryRepository.php's own real
     // getRepository(CategoryEntity::class) call-site count turned out to
     // be 60+, far more than UserRepository's, so it's its own dedicated
-    // pass within that sub-phase, not a same-commit bundle). Remove this
-    // entry once that lands.
+    // pass within that same sub-phase, not a same-commit bundle. Remove
+    // this entry once that lands.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
@@ -431,7 +432,6 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Category/CategoryRepository.php',
-        '/src/Piwigo/Users/UserRepository.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentConfig::current(');
@@ -1249,8 +1249,8 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     // several read-only menu-rendering methods never threaded with the
     // explicit-param treatment `deleteCategories()`/`deleteSite()` got, since
     // they never construct anything requiring EventDispatcher themselves;
-    // UserRepository.php -- a Doctrine repository, whose constructor is
-    // fixed by the ORM and can't take extra application params at all;
+    // Admin/Extensions/ExtensionScanner.php -- no constructor at all, same
+    // "no wrapper needed" precedent as FilesystemHelper/HtmlService;
     // every Ws/Pwg*.php file + WsInitializer.php took real constructor
     // injection during their own Phase 10 sub-batches, so none remain on
     // this allow-list). RequestBootstrap.php/InstallWizard.php are
@@ -1258,10 +1258,14 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     // (RequestBootstrap also gained a new public eventDispatcher() resolver,
     // matching coreTabs()/sessionService()/translator()'s own precedent, for
     // public/admin.php's own legacy-style `new AdminShell(...)` manual
-    // construction).
+    // construction). Phase 11 sub-phase 11B: Users/UserRepository.php
+    // removed from this allow-list -- no longer a Doctrine repository with
+    // an ORM-fixed constructor, it now takes EventDispatcher via real
+    // constructor injection like everything else in this campaign.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
+        '/src/Piwigo/Admin/Extensions/ExtensionScanner.php',
         '/src/Piwigo/Admin/Install/InstallWizard.php',
         '/src/Piwigo/Admin/Tabsheet.php',
         '/src/Piwigo/Bootstrap/PageTail.php',
@@ -1278,7 +1282,6 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Template/ScriptLoader.php',
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
-        '/src/Piwigo/Users/UserRepository.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'EventDispatcher::get(');

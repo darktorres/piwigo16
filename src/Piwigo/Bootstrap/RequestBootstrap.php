@@ -560,7 +560,7 @@ final class RequestBootstrap
         // language files
         self::lang()->setDefaultLanguageProvider(new UserService(
             self::lang(),
-            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
+            new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             self::mailService(),
             self::activityService($conn),
@@ -634,7 +634,7 @@ final class RequestBootstrap
             // untyped array<string, mixed>), so its return is inferred as
             // mixed; narrow to the same CurrentConfig::adminTheme() fallback
             // already passed as the default value.
-            $admin_theme = new \Piwigo\Users\PreferencesService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), self::currentUser())
+            $admin_theme = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
                 ->getParam('admin_theme', self::currentConfig()->adminTheme());
             $admin_theme = is_string($admin_theme) ? $admin_theme : self::currentConfig()->adminTheme();
             $template = new Template(CurrentPaths::get()->root . 'themes/admin', $admin_theme);

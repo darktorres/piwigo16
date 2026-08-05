@@ -104,7 +104,7 @@ test('send returns immediately without touching the DB or network when telemetry
     // anything past the guard" reasoning as $configService above.
     $userService = new \Piwigo\Users\UserService(
         piwigoInfosSenderTestLang(),
-        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Users\UserInfoEntity::class),
+        new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\CurrentConfig()),
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Group\GroupEntity::class),
         new \Piwigo\Mail\MailService(),
         $activityService,

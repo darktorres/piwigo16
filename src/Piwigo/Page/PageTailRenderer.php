@@ -103,7 +103,7 @@ final readonly class PageTailRenderer
         if (! $this->accessControl->isAGuest()) {
             $template->assign(
                 'CONTACT_MAIL',
-                \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class)->getWebmasterMailAddress()
+                (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->getWebmasterMailAddress()
             );
         }
 

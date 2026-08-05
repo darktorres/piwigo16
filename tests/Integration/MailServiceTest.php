@@ -142,7 +142,7 @@ final class MailServiceTest extends IntegrationTestCase
     {
         return new UserService(
             Lang::current(),
-            EntityManagerFactory::build($this->conn)->getRepository(UserInfoEntity::class),
+            new \Piwigo\Users\UserRepository(EntityManagerFactory::build($this->conn), \Piwigo\PluginConfig\EventDispatcher::get(), CurrentConfig::current()),
             EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
             new MailService(),
             new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),

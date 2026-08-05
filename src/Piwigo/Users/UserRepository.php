@@ -7,7 +7,7 @@ namespace Piwigo\Users;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
-use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Auth\UserAuthKeyEntity;
@@ -16,6 +16,7 @@ use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ThemeEntity;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
@@ -24,6 +25,7 @@ use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\Projection\UserInfo;
 
 /**
@@ -41,7 +43,7 @@ use Piwigo\Users\Projection\UserInfo;
  * entirely -- `users`'s columns are fixed now, and every method that used
  * to take a `$userIdColumn`/`$usernameColumn`/`$emailColumn` parameter has
  * dropped it. Some methods below still stay on plain DBAL via
- * `$this->getEntityManager()->getConnection()` for their own remaining,
+ * `$this->em->getConnection()` for their own remaining,
  * unrelated blockers (documented per-method).
  *
  * `build_user()`/`getuserdata()`/`check_user_favorites()` (the original
@@ -53,10 +55,45 @@ use Piwigo\Users\Projection\UserInfo;
  * Category-domain rollup they depended on (`get_computed_categories()`)
  * is now `CategoryService::getComputedCategories()`.
  *
- * @extends EntityRepository<UserInfoEntity>
+ * Singleton/service-locator elimination campaign, Phase 11 sub-phase 11B:
+ * no longer `extends EntityRepository` -- Doctrine's own `RepositoryFactory`
+ * always constructs an `EntityRepository` subclass via a fixed
+ * `(EntityManagerInterface $em, ClassMetadata $class)` signature, which
+ * permanently blocked this class from ever taking `CurrentConfig`/
+ * `EventDispatcher` (its own 2 remaining shim reads,
+ * getWebmasterMailAddress()'s `CurrentConfig::webmasterId()`/
+ * `EventDispatcher::dispatchChange()`, and findVisibleFavoriteImageIds()'s
+ * `CurrentConfig::orderByCustom()`) via real constructor injection. Now a
+ * plain, container-shared service instead, matching every other converted
+ * class in this campaign; `UserInfoEntity`'s own `#[ORM\Entity]` mapping
+ * no longer names this class as its `repositoryClass` (dropped in the same
+ * commit), so `$em->getRepository(UserInfoEntity::class)` now returns a
+ * generic `Doctrine\ORM\EntityRepository<UserInfoEntity>` instead, and
+ * every DQL builder below reaches it inline
+ * (`$this->em->getRepository(UserInfoEntity::class)->createQueryBuilder(...)`,
+ * replacing the `$this->createQueryBuilder($alias)` sugar this class used
+ * to get for free from its own (former) EntityRepository parent) rather
+ * than through a private wrapper -- confirmed live that phpstan-doctrine's
+ * own DQL result-type inference (each `getResult()`'s row shape, e.g.
+ * `array{userId: UserId}`) only traces a literal
+ * `getRepository(X::class)->createQueryBuilder()` chain, not a call
+ * hidden behind a same-file helper method; a wrapper collapsed every
+ * `getResult()` below to `mixed`, cascading into ~25 real
+ * offsetAccess/foreach errors across every method using it.
  */
-final class UserRepository extends EntityRepository implements \Piwigo\Core\WebmasterMailProviderInterface
+final class UserRepository implements \Piwigo\Core\WebmasterMailProviderInterface
 {
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly CurrentConfig $currentConfig,
+    ) {}
+
+    private function find(UserId $userId): ?UserInfoEntity
+    {
+        return $this->em->find(UserInfoEntity::class, $userId);
+    }
+
     /**
      * Applies a permission/filter `SqlCondition` via `andWhere()`, binding
      * every one of its parameters -- same shared-helper shape as
@@ -124,9 +161,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     #[\Override]
     public function getWebmasterMailAddress(): string
     {
-        $webmaster_id = \Piwigo\Config\CurrentConfig::current()->webmasterId();
+        $webmaster_id = $this->currentConfig->webmasterId();
 
-        $values = $this->getEntityManager()
+        $values = $this->em
             ->createQueryBuilder()
             ->select('u.mailAddress')
             ->from(UserEntity::class, 'u')
@@ -143,7 +180,8 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         // non-null.
         $email = is_string($value) ? $value : '';
 
-        return \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetWebmasterMailAddress($email))->email;
+        return $this->eventDispatcher->dispatchChange(new GetWebmasterMailAddress($email))
+            ->email;
     }
 
     /**
@@ -158,7 +196,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findIdByUsername(Username $username): ?UserId
     {
-        $row = $this->getEntityManager()
+        $row = $this->em
             ->createQueryBuilder()
             ->select('u.id')
             ->from(UserEntity::class, 'u')
@@ -183,7 +221,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findIdByEmail(Email $email): ?UserId
     {
-        $row = $this->getEntityManager()
+        $row = $this->em
             ->createQueryBuilder()
             ->select('u.id')
             ->from(UserEntity::class, 'u')
@@ -212,7 +250,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findByUsernameCaseInsensitive(string $username): ?array
     {
-        $row = $this->getEntityManager()
+        $row = $this->em
             ->createQueryBuilder()
             ->select('u.id AS id', 'u.username AS username', 'u.mailAddress AS email')
             ->from(UserEntity::class, 'u')
@@ -243,7 +281,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function usernameExistsCaseInsensitive(Username $username): bool
     {
-        $value = $this->getEntityManager()
+        $value = $this->em
             ->createQueryBuilder()
             ->select('COUNT(u.id)')
             ->from(UserEntity::class, 'u')
@@ -263,7 +301,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function emailExists(Email $email, ?UserId $excludeUserId): bool
     {
-        $qb = $this->getEntityManager()
+        $qb = $this->em
             ->createQueryBuilder()
             ->select('COUNT(u.id)')
             ->from(UserEntity::class, 'u')
@@ -289,7 +327,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findUsernameById(UserId $userId): ?Username
     {
-        $values = $this->getEntityManager()
+        $values = $this->em
             ->createQueryBuilder()
             ->select('u.username')
             ->from(UserEntity::class, 'u')
@@ -314,7 +352,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findAllUsernames(): array
     {
-        $names = $this->getEntityManager()
+        $names = $this->em
             ->createQueryBuilder()
             ->select('u.username')
             ->from(UserEntity::class, 'u')
@@ -340,7 +378,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findAllUsernamesById(): array
     {
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->createQueryBuilder()
             ->select('u.id AS id', 'u.username AS username')
             ->from(UserEntity::class, 'u')
@@ -378,7 +416,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     public function insertUser(string $username, ?string $password, ?string $mailAddress): UserId
     {
         $entity = new UserEntity($username, $password, $mailAddress);
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->persist($entity);
         $em->flush();
 
@@ -403,7 +441,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function insertUserWithId(UserId $id, string $username, ?string $password): UserId
     {
-        $this->getEntityManager()
+        $this->em
             ->getConnection()
             ->createQueryBuilder()
             ->insert(Tables::users())
@@ -435,7 +473,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         foreach ($userIds as $userId) {
             $em->persist($this->buildUserInfoEntity($userId, $row));
         }
@@ -499,7 +537,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
 
         $entity->preferences = $preferences;
 
-        $this->getEntityManager()
+        $this->em
             ->flush();
     }
 
@@ -516,7 +554,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             $statusList[] = 'webmaster';
         }
 
-        $rows = $this->createQueryBuilder('ui')
+        $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
             ->select('ui.userId')
             ->where('ui.status IN (:statuses)')
             ->setParameter('statuses', $statusList)
@@ -561,7 +599,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function deleteUser(UserId $userId): void
     {
-        $em = $this->getEntityManager();
+        $em = $this->em;
 
         $em->createQueryBuilder()
             ->delete(UserAccessEntity::class, 'ua')
@@ -648,7 +686,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findAllUserIds(): array
     {
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->createQueryBuilder()
             ->select('u.id')
             ->from(UserEntity::class, 'u')
@@ -678,7 +716,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findDistinctUserIdsInTable(string $table): array
     {
-        return array_values(array_filter(array_map(static fn (mixed $v): ?UserId => UserId::tryFrom($v), $this->getEntityManager()
+        return array_values(array_filter(array_map(static fn (mixed $v): ?UserId => UserId::tryFrom($v), $this->em
             ->getConnection()
             ->createQueryBuilder()
             ->select('DISTINCT user_id')
@@ -700,7 +738,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->getConnection()
             ->createQueryBuilder()
             ->delete($table)
@@ -733,7 +771,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             UserRelatedTable::UserGroup => [UserGroupEntity::class, 'ug'],
         };
 
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->createQueryBuilder()
             ->select("DISTINCT {$alias}.userId")
             ->from($entityClass, $alias)
@@ -775,7 +813,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             UserRelatedTable::UserGroup => [UserGroupEntity::class, 'ug'],
         };
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->createQueryBuilder()
             ->delete($entityClass, $alias)
             ->where("{$alias}.userId IN (:userIds)")
@@ -816,7 +854,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function fetchBasicUserRow(UserId $userId): array|false
     {
-        $row = $this->getEntityManager()
+        $row = $this->em
             ->createQueryBuilder()
             ->select('u.username AS username', 'u.password AS password', 'u.mailAddress AS email')
             ->from(UserEntity::class, 'u')
@@ -854,7 +892,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function countUserInfosRows(UserId $userId): int
     {
-        $rows = $this->createQueryBuilder('ui')
+        $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
             ->select('COUNT(ui.userId) AS counter')
             ->leftJoin(ThemeEntity::class, 't', Join::WITH, 't.id = ui.theme')
             ->where('ui.userId = :userId')
@@ -888,7 +926,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function fetchUserInfosWithThemeName(UserId $userId): array|false
     {
-        $row = $this->getEntityManager()
+        $row = $this->em
             ->createQueryBuilder()
             ->select('ui', 't.name AS theme_name')
             ->from(UserInfoEntity::class, 'ui')
@@ -948,7 +986,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findAuthorizedFavoriteImageIds(UserId $userId, PermissionCriteria $criteria): array
     {
-        $qb = $this->getEntityManager()
+        $qb = $this->em
             ->createQueryBuilder()
             ->select('DISTINCT f.imageId')
             ->from(FavoriteEntity::class, 'f')
@@ -976,7 +1014,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findFavoriteImageIds(UserId $userId): array
     {
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->createQueryBuilder()
             ->select('f.imageId')
             ->from(FavoriteEntity::class, 'f')
@@ -1003,7 +1041,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return;
         }
 
-        $this->getEntityManager()
+        $this->em
             ->createQueryBuilder()
             ->delete(FavoriteEntity::class, 'f')
             ->where('f.imageId IN (:imageIds)')
@@ -1032,7 +1070,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function addFavorite(UserId $userId, int $imageId, bool $ignoreDuplicate = false): void
     {
-        new BatchWriter($this->getEntityManager()->getConnection())
+        new BatchWriter($this->em->getConnection())
             ->singleInsert(
                 Tables::favorites(),
                 [
@@ -1058,7 +1096,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function isFavorite(UserId $userId, int $imageId): bool
     {
-        $value = $this->getEntityManager()
+        $value = $this->em
             ->createQueryBuilder()
             ->select('COUNT(f.imageId)')
             ->from(FavoriteEntity::class, 'f')
@@ -1084,7 +1122,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function deleteAllFavorites(UserId $userId): void
     {
-        $this->getEntityManager()
+        $this->em
             ->createQueryBuilder()
             ->delete(FavoriteEntity::class, 'f')
             ->where('f.userId = :userId')
@@ -1130,9 +1168,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findVisibleFavoriteImageIds(UserId $userId, PermissionCriteria $criteria, string $orderBySql): array
     {
-        $dqlOrderBy = self::resolveFavoritesDqlOrderBy($orderBySql);
+        $dqlOrderBy = $this->resolveFavoritesDqlOrderBy($orderBySql);
         if ($dqlOrderBy !== null) {
-            $qb = $this->getEntityManager()
+            $qb = $this->em
                 ->createQueryBuilder()
                 ->select('i.id')
                 ->from(FavoriteEntity::class, 'f')
@@ -1178,7 +1216,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         }
 
         $orderBySql = self::normalizeOrderBySql($orderBySql);
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->getConnection()
             ->executeQuery(
                 <<<SQL
@@ -1202,9 +1240,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     /**
      * @return list<array{property: string, dir: 'ASC'|'DESC'}>|null
      */
-    private static function resolveFavoritesDqlOrderBy(string $orderBySql): ?array
+    private function resolveFavoritesDqlOrderBy(string $orderBySql): ?array
     {
-        if (\Piwigo\Config\CurrentConfig::current()->orderByCustom() !== null) {
+        if ($this->currentConfig->orderByCustom() !== null) {
             return null;
         }
 
@@ -1274,7 +1312,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
 
         $orderBySql = self::normalizeOrderBySql($orderBySql);
 
-        return $this->getEntityManager()
+        return $this->em
             ->getConnection()
             ->executeQuery(
                 <<<SQL
@@ -1309,7 +1347,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return;
         }
 
-        $this->getEntityManager()
+        $this->em
             ->createQueryBuilder()
             ->update(UserInfoEntity::class, 'ui')
             ->set('ui.status', ':status')
@@ -1344,7 +1382,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $qb = $em->createQueryBuilder()
             ->update(UserInfoEntity::class, 'ui')
             ->where('ui.userId IN (:userIds)')
@@ -1385,7 +1423,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $entity = $em->find(UserEntity::class, $userId);
         if ($entity === null) {
             return;
@@ -1418,7 +1456,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findEarliestRegistrationDate(): ?string
     {
-        $rows = $this->createQueryBuilder('ui')
+        $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
             ->select('ui.registrationDate')
             ->where('ui.registrationDate IS NOT NULL')
             ->orderBy('ui.userId', 'ASC')
@@ -1443,7 +1481,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findThemeUsageCounts(): array
     {
-        $rows = $this->createQueryBuilder('ui')
+        $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
             ->select('ui.theme', 'COUNT(ui.userId) AS themeCounter')
             ->groupBy('ui.theme')
             ->orderBy('ui.theme')
@@ -1470,7 +1508,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findLanguageUsageCounts(): array
     {
-        $rows = $this->createQueryBuilder('ui')
+        $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
             ->select('ui.language', 'COUNT(ui.userId) AS languageCounter')
             ->groupBy('ui.language')
             ->orderBy('ui.language')
@@ -1509,7 +1547,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findDistinctRegistrationYearMonths(): array
     {
-        $rows = $this->createQueryBuilder('ui')
+        $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
             ->select('ui.registrationDate AS registration_date')
             ->getQuery()
             ->getArrayResult();
@@ -1549,7 +1587,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findUserCountsByStatus(int $excludeUserId): array
     {
-        $rows = $this->createQueryBuilder('ui')
+        $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
             ->select('ui.status', 'COUNT(ui.userId) AS nbUsersOf')
             ->where('ui.userId != :excludeUserId')
             ->groupBy('ui.status')
@@ -1577,7 +1615,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findUserCountsByLevel(int $excludeUserId): array
     {
-        $rows = $this->createQueryBuilder('ui')
+        $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
             ->select('ui.level', 'COUNT(ui.userId) AS nbUsersOf')
             ->where('ui.userId != :excludeUserId')
             ->groupBy('ui.level')
@@ -1802,7 +1840,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         ?int $limit,
         int $offset
     ): PaginatedResult {
-        $conn = $this->getEntityManager()
+        $conn = $this->em
             ->getConnection();
 
         $usersTable = Tables::users();
@@ -1886,7 +1924,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findUserIdsExcludingStatus(string $excludedStatus): array
     {
-        $rows = $this->createQueryBuilder('ui')
+        $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
             ->select('ui.userId')
             ->where('ui.status != :status')
             ->setParameter('status', $excludedStatus)
@@ -1930,7 +1968,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return [];
         }
 
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->createQueryBuilder()
             ->select('ui.userId AS user_id', 'ui.status AS status', 'ui.language AS language', 'u.mailAddress AS email', 'u.username AS username')
             ->from(UserInfoEntity::class, 'ui')
@@ -1983,7 +2021,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return [];
         }
 
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->createQueryBuilder()
             ->select('u.username AS username', 'u.id AS id')
             ->from(UserEntity::class, 'u')
@@ -2045,7 +2083,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findMinRegistrationDateAfter(string $afterDate): ?string
     {
-        $value = $this->createQueryBuilder('ui')
+        $value = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
             ->select('MIN(ui.registrationDate)')
             ->where('ui.registrationDate > :afterDate')
             ->setParameter('afterDate', $afterDate)
@@ -2064,7 +2102,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function countAllUsers(): int
     {
-        $value = $this->getEntityManager()
+        $value = $this->em
             ->createQueryBuilder()
             ->select('COUNT(u.id)')
             ->from(UserEntity::class, 'u')
@@ -2095,7 +2133,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return [];
         }
 
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->createQueryBuilder()
             ->select('u.id AS id', 'ui.status AS status')
             ->from(UserEntity::class, 'u')
@@ -2147,7 +2185,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findPendingActivationKeyRows(): array
     {
-        $rows = $this->createQueryBuilder('ui')
+        $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
             ->select('ui.userId', 'ui.status', 'ui.activationKey')
             ->where('ui.activationKey IS NOT NULL')
             ->andWhere('ui.activationKeyExpire > CURRENT_TIMESTAMP()')

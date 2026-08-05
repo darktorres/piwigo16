@@ -97,7 +97,7 @@ final class UserBootstrap
         );
         $userService = new \Piwigo\Users\UserService(
             \Piwigo\Bootstrap\RequestBootstrap::lang(),
-            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
+            new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $eventDispatcher, \Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             $mailer,
             new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),

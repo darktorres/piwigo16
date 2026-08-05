@@ -486,7 +486,12 @@ jobs:
       - if: matrix.provider == 'pgsql'
         name: Start PHP built-in server
         run: |
-          php -S localhost:8080 -t . > /tmp/php-server.log 2>&1 &
+          # docs/PLAN.md gap-closure, 2026-07-23: -t public, not -t . -- this
+          # job was added later (Phase H) from the recovered pre-fix snapshot,
+          # so it never picked up the same docroot fix already propagated to
+          # every other Browser-suite job in this file (see the install-flow
+          # job's own comment above for the original verified reasoning).
+          php -S localhost:8080 -t public > /tmp/php-server.log 2>&1 &
           until curl -sf http://localhost:8080/index.php > /dev/null; do sleep 0.5; done
       - if: matrix.provider == 'pgsql'
         run: composer test:integration

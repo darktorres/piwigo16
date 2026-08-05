@@ -216,12 +216,14 @@ final class InstallWizardTest extends IntegrationTestCase
                 $errorCollector->reset();
             }
         }
-        Kernel::reset();
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        if (Kernel::isBooted()) {
+            $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+            if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+            }
+            $currentConfig->reset();
         }
-        $currentConfig->reset();
+        Kernel::reset();
         foreach ($this->createdDatabases as $dbName) {
             $db = $this->newMysqli('');
             $db->query(sprintf('DROP DATABASE IF EXISTS `%s`', $dbName));

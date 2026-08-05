@@ -35,12 +35,14 @@ final class EntityManagerSmokeTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Kernel::reset();
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        if (Kernel::isBooted()) {
+            $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+            if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+            }
+            $currentConfig->reset();
         }
-        $currentConfig->reset();
+        Kernel::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
     }

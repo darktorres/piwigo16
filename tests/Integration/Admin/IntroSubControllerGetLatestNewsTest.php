@@ -34,7 +34,7 @@ function intronewsInvoke(): mixed
 {
     $method = new ReflectionMethod(IntroSubController::class, 'getLatestNews');
 
-    return $method->invoke(null, \Piwigo\Core\Lang::current());
+    return $method->invoke(null, \Piwigo\Core\Lang::current(), \Piwigo\Config\CurrentConfig::current());
 }
 
 beforeEach(function (): void {

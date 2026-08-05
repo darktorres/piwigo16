@@ -78,6 +78,28 @@ final class WsUsersMutationTest extends ContractTestCase
     }
 
     /**
+     * ContractTestCase never boots a Kernel in-process (every real request
+     * goes through the actual HTTP server under test, a separate process
+     * with its own container) -- reads the real, DB-backed guest_id
+     * config value directly, matching this file's own established
+     * "query Tables::config() over SQL" idiom, and falling back to
+     * CurrentConfig::guestId()'s own compiled-in default (2) for the
+     * common case where the fixture never overrides it, the same
+     * fallback ConfigService::loadConfFromDb() itself would apply for a
+     * genuinely missing row.
+     */
+    private function guestId(): int
+    {
+        $raw = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'guest_id'");
+        if (! is_string($raw)) {
+            return 2;
+        }
+        $decoded = json_decode($raw, true);
+
+        return is_int($decoded) ? $decoded : 2;
+    }
+
+    /**
      * Inserts a real throwaway image row (with a tiny real file on disk)
      * directly via SQL, tracked for cleanup in tearDown().
      */
@@ -398,11 +420,7 @@ final class WsUsersMutationTest extends ContractTestCase
     public function test_delete_protects_the_guest_id(): void
     {
         $token = $this->getPwgToken();
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
-        }
-        $guestId = $currentConfig->guestId();
+        $guestId = $this->guestId();
 
         $response = $this->callWs('pwg.users.delete', [
             'user_id' => [$guestId],
@@ -879,11 +897,7 @@ final class WsUsersMutationTest extends ContractTestCase
     public function test_generatePasswordLink_guest_target_returns_error(): void
     {
         $token = $this->getPwgToken();
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
-        }
-        $guestId = $currentConfig->guestId();
+        $guestId = $this->guestId();
 
         $response = $this->callWsAllowingServerError('pwg.users.generatePasswordLink', [
             'user_id' => $guestId,

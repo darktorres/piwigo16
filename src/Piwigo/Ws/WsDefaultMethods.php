@@ -41,6 +41,7 @@ final class WsDefaultMethods
     // note in the plan for why the reverse ordering (this class first)
     // was tried and found broken.
     public function __construct(
+        private readonly PwgCategories $pwgCategories,
         private readonly PwgPermissions $pwgPermissions,
         private readonly PwgComments $pwgComments,
         private readonly PwgExtensions $pwgExtensions,
@@ -209,7 +210,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.getImages',
-            PwgCategories::getImages(...),
+            $this->pwgCategories->getImages(...),
             array_merge([
                 'cat_id' => [
                     'default' => null,
@@ -241,7 +242,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.getList',
-            PwgCategories::getList(...),
+            $this->pwgCategories->getList(...),
             [
                 'cat_id' => [
                     'default' => null,
@@ -896,7 +897,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.calculateOrphans',
-            PwgCategories::calculateOrphans(...),
+            $this->pwgCategories->calculateOrphans(...),
             [
                 'category_id' => [
                     'type' => WsParamType::ID,
@@ -911,7 +912,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.getAdminList',
-            PwgCategories::getAdminList(...),
+            $this->pwgCategories->getAdminList(...),
             [
                 'cat_id' => [
                     'default' => null,
@@ -940,7 +941,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.add',
-            PwgCategories::add(...),
+            $this->pwgCategories->add(...),
             [
                 'name' => [],
                 'parent' => [
@@ -978,7 +979,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.delete',
-            PwgCategories::delete(...),
+            $this->pwgCategories->delete(...),
             [
                 'category_id' => [
                     'flags' => WsParamFlag::ACCEPT_ARRAY,
@@ -999,7 +1000,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.move',
-            PwgCategories::move(...),
+            $this->pwgCategories->move(...),
             [
                 'category_id' => [
                     'flags' => WsParamFlag::ACCEPT_ARRAY,
@@ -1019,7 +1020,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.setRepresentative',
-            PwgCategories::setRepresentative(...),
+            $this->pwgCategories->setRepresentative(...),
             [
                 'category_id' => [
                     'type' => WsParamType::ID,
@@ -1037,7 +1038,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.deleteRepresentative',
-            PwgCategories::deleteRepresentative(...),
+            $this->pwgCategories->deleteRepresentative(...),
             [
                 'category_id' => [
                     'type' => WsParamType::ID,
@@ -1052,7 +1053,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.refreshRepresentative',
-            PwgCategories::refreshRepresentative(...),
+            $this->pwgCategories->refreshRepresentative(...),
             [
                 'category_id' => [
                     'type' => WsParamType::ID,
@@ -1299,7 +1300,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.setInfo',
-            PwgCategories::setInfo(...),
+            $this->pwgCategories->setInfo(...),
             [
                 'category_id' => [
                     'type' => WsParamType::ID,
@@ -1344,7 +1345,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.setRank',
-            PwgCategories::setRank(...),
+            $this->pwgCategories->setRank(...),
             [
                 'category_id' => [
                     'type' => WsParamType::ID,

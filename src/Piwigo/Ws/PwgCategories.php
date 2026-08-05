@@ -12,26 +12,33 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
 use Exception;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryTreeCache;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\PageState;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
 /**
@@ -41,10 +48,23 @@ use Piwigo\Users\UserService;
  */
 final class PwgCategories
 {
-    private static function categoryService(): CategoryService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
+    public function __construct(
+        private readonly CategoryService $categoryService,
+        private readonly PermissionService $permissionService,
+        private readonly ActivityService $activityService,
+        private readonly UserService $userService,
+        private readonly ImageService $imageService,
+        private readonly CategoryRepository $categoryRepository,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly UrlServiceInterface $urlService,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly CurrentConfig $currentConfig,
+        private readonly CurrentUser $currentUser,
+        private readonly AccessControl $accessControl,
+        private readonly \Doctrine\ORM\EntityManagerInterface $entityManager,
+        private readonly SessionService $sessionService,
+        private readonly PageState $pageState,
+    ) {}
 
     /**
      * Gap-closure Stage 4h: getList()'s rollup columns
@@ -60,50 +80,9 @@ final class PwgCategories
      * call site for why the admin branch deliberately bypasses this
      * instead).
      */
-    private static function categoryTreeCache(Connection $conn): CategoryTreeCache
+    private function categoryTreeCache(): CategoryTreeCache
     {
-        return new CategoryTreeCache(self::categoryService(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class), CachePools::categoryTree());
-    }
-
-    /**
-     * Constructed identically 5 times across getImages()/getList() --
-     * including once inside getList()'s per-category foreach loop -- takes
-     * the caller's own $conn instead of building a fresh one per call,
-     * same "shared connection passed in" precedent as
-     * Ws\PwgTags::activityService(Connection $conn).
-     */
-    private static function permissionService(): PermissionService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
-    }
-
-    /**
-     * Constructed identically 4 times across setInfo()/setRepresentative()/
-     * deleteRepresentative()/refreshRepresentative() -- none inside a loop,
-     * so (unlike permissionService() above) this builds its own connection
-     * per call, same shape as Ws\PwgComments::commentService().
-     */
-    private static function activityService(): ActivityService
-    {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
-    }
-
-    /**
-     * Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md): getList()'s
-     * own "which categories are forbidden for the guest identity" branch
-     * needs a real effective-permission computation for a user that isn't
-     * CurrentUser -- UserService::getUserData() already does exactly this
-     * unconditionally for any given user id (Stage 4b/4g), so this reuses
-     * it rather than re-deriving forbidden_categories by hand.
-     */
-    private static function userService(): UserService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-    }
-
-    private static function imageService(): \Piwigo\Image\ImageService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
+        return new CategoryTreeCache($this->categoryService, $this->categoryRepository, CachePools::categoryTree());
     }
 
     /**
@@ -165,15 +144,15 @@ final class PwgCategories
      *   registration, see WsHelper::stdImageSqlFilter()/WsHelper::stdImageSqlOrder().
      * @return PwgError|array{paging: PwgNamedStruct, images: PwgNamedArray}
      */
-    public static function getImages(array $params, PwgServer &$service): PwgError|array
+    public function getImages(array $params, PwgServer &$service): PwgError|array
     {
-        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        $urlService = $this->urlService;
 
         $params['cat_id'] = array_unique($params['cat_id']);
 
         if (count($params['cat_id']) > 0) {
             // do the categories really exist?
-            $db_cat_ids = self::categoryService()->getExistingIds(array_values($params['cat_id']));
+            $db_cat_ids = $this->categoryService->getExistingIds(array_values($params['cat_id']));
             $missing_cat_ids = array_diff($params['cat_id'], $db_cat_ids);
 
             if (count($missing_cat_ids) > 0) {
@@ -201,12 +180,12 @@ final class PwgCategories
         if ($catClauses !== []) {
             $catConditions[] = new SqlCondition('(' . implode("\n    OR ", $catClauses) . ')', $catParams);
         }
-        $catConditions[] = self::permissionService()->getSqlConditionFandFAsCondition([
+        $catConditions[] = $this->permissionService->getSqlConditionFandFAsCondition([
             'forbidden_categories' => 'id',
         ], true);
 
         $cats = [];
-        foreach (self::categoryService()->getIdsAndImageOrderWithConditions($catConditions) as $row) {
+        foreach ($this->categoryService->getIdsAndImageOrderWithConditions($catConditions) as $row) {
             $cats[$row['id']] = $row;
         }
 
@@ -222,7 +201,7 @@ final class PwgCategories
                 'categoryIds' => ArrayParameterType::INTEGER,
             ]);
 
-            $visibleImagesCondition = self::permissionService()->getSqlConditionFandFAsCondition([
+            $visibleImagesCondition = $this->permissionService->getSqlConditionFandFAsCondition([
                 'visible_images' => 'i.id',
             ], true);
             $where_clauses[] = $visibleImagesCondition->sql;
@@ -236,10 +215,10 @@ final class PwgCategories
             ) {
                 $order_by = $cats[$params['cat_id'][0]]['image_order'];
             }
-            $order_by = $order_by === '' ? \Piwigo\Config\CurrentConfig::current()->orderBy() : 'ORDER BY ' . $order_by;
+            $order_by = $order_by === '' ? $this->currentConfig->orderBy() : 'ORDER BY ' . $order_by;
             $favorite_ids = $urlService->getUserFavorites();
 
-            $paginated_images = self::imageService()->getWithConditionsPaginated(
+            $paginated_images = $this->imageService->getWithConditionsPaginated(
                 $where_clauses,
                 $order_by,
                 $params['per_page'],
@@ -269,9 +248,9 @@ final class PwgCategories
                     $image[$k] = $image_row[$k] ?? null;
                 }
 
-                $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementName(is_string($image['name']) ? $image['name'] : '', __FUNCTION__));
+                $nameEvent = $this->eventDispatcher->dispatchChange(new RenderElementName(is_string($image['name']) ? $image['name'] : '', __FUNCTION__));
                 $image['name'] = strip_tags($nameEvent->elementName);
-                $descriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
+                $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
                 $image['comment'] = $descriptionEvent->elementDescription;
 
                 $image = array_merge($image, WsHelper::stdGetUrls($image_row, $urlService));
@@ -286,9 +265,9 @@ final class PwgCategories
                 $category_ids = [];
 
                 // find the complete list (given permissions) of albums linked to photos
-                $image_category_rows = self::imageService()->getCategoryLinksForImageIdsWithCondition(
+                $image_category_rows = $this->imageService->getCategoryLinksForImageIdsWithCondition(
                     $image_ids,
-                    self::permissionService()->getSqlConditionFandFAsCondition([
+                    $this->permissionService->getSqlConditionFandFAsCondition([
                         'forbidden_categories' => 'category_id',
                     ], true)
                 );
@@ -302,7 +281,7 @@ final class PwgCategories
                 if (count($category_ids) > 0) {
                     // find details (for URL generation) about each album
                     $details_for_category = array_column(
-                        self::categoryService()->getCategoriesByIds(array_values(array_unique($category_ids))),
+                        $this->categoryService->getCategoriesByIds(array_values(array_unique($category_ids))),
                         null,
                         'id'
                     );
@@ -382,12 +361,11 @@ final class PwgCategories
      * Ws\PwgUsers::getList()'s own client-controlled response shape.
      * @return PwgError|array<int|string, mixed>
      */
-    public static function getList(array $params, PwgServer &$service): PwgError|array
+    public function getList(array $params, PwgServer &$service): PwgError|array
     {
-        $currentUser = \Piwigo\Users\CurrentUser::current()->get();
+        $currentUser = $this->currentUser->get();
 
-        $categoryConn = DbConnection::build();
-        $categoryService = self::categoryService();
+        $categoryService = $this->categoryService;
 
         if (! in_array($params['thumbnail_size'], array_keys(ImageStdParams::current()->get_defined_type_map()), true)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid thumbnail_size');
@@ -447,7 +425,7 @@ final class PwgCategories
             $where[] = 'status = "public"';
             $where[] = 'visible = 1';
 
-            $repr_user_id = \Piwigo\Config\CurrentConfig::current()->guestId();
+            $repr_user_id = $this->currentConfig->guestId();
             // UserService::getUserData() computes the same effective
             // (feature-1053-widened) forbidden-categories value for any
             // given user id that CurrentUser::forbiddenCategories already
@@ -458,20 +436,21 @@ final class PwgCategories
             // CategoryTreeCache already computes/caches for this same
             // user id, so feeding it back into that same cache pool here
             // cannot desync it.
-            $guest_userdata = self::userService()->getUserData(\Piwigo\Common\ValueObject\UserId::from($repr_user_id));
+            $guest_userdata = $this->userService->getUserData(\Piwigo\Common\ValueObject\UserId::from($repr_user_id));
             $guest_forbidden_categories = $guest_userdata['forbidden_categories'] ?? '0';
             $guest_forbidden_categories = is_string($guest_forbidden_categories) ? $guest_forbidden_categories : '0';
             $where[] = 'id NOT IN (:guestForbiddenCategories)';
             $bound_params['guestForbiddenCategories'] = self::csvToIntList($guest_forbidden_categories);
             $bound_types['guestForbiddenCategories'] = ArrayParameterType::INTEGER;
-            $rollupByCatId = self::categoryTreeCache($categoryConn)->getForUser($guest_userdata);
-        } elseif (\Piwigo\Auth\AccessControl::current()->isAdmin()) {
+            $rollupByCatId = $this->categoryTreeCache()
+                ->getForUser($guest_userdata);
+        } elseif ($this->accessControl->isAdmin()) {
             // in this very specific case, we don't want to hide empty
             // categories. Function calculate_permissions will only return
             // categories that are either locked or private and not permitted
             //
             // calculate_permissions does not consider empty categories as forbidden
-            $forbidden_categories = new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService(), \Piwigo\Cache\CachePools::permissions())
+            $forbidden_categories = new \Piwigo\Permission\ForbiddenCategoriesCache($this->permissionService, \Piwigo\Cache\CachePools::permissions())
                 ->getForUser($user_id, $currentUser->status->value);
             $where[] = 'id NOT IN (:adminForbiddenCategories)';
             $bound_params['adminForbiddenCategories'] = self::csvToIntList($forbidden_categories);
@@ -498,15 +477,16 @@ final class PwgCategories
             // EffectiveForbiddenCategoriesCache computes for this user id
             // (Stage 4b/4g) -- the same value any other CategoryTreeCache
             // consumer for this user already relies on, safe to share.
-            $rollupByCatId = self::categoryTreeCache($categoryConn)->getForUser($currentUser->toUserArray());
+            $rollupByCatId = $this->categoryTreeCache()
+                ->getForUser($currentUser->toUserArray());
         }
 
         $search_term = (isset($params['search']) and $params['search'] !== '') ? $params['search'] : null;
 
-        $paginated_cats = self::categoryService()->getListForWs(
+        $paginated_cats = $this->categoryService->getListForWs(
             $where,
             $search_term,
-            \Piwigo\Config\CurrentConfig::current()->linkedAlbumSearchLimit(),
+            $this->currentConfig->linkedAlbumSearchLimit(),
             $params['limit'],
             $params['cat_id'] > 0,
             $bound_params,
@@ -533,7 +513,7 @@ final class PwgCategories
         // management of the album thumbnail -- stops here
 
         $cats = [];
-        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        $urlService = $this->urlService;
         foreach ($rows as $row) {
             // Gap-closure Stage 4h: the rollup columns (nb_images/
             // count_images/count_categories/date_last/max_date_last)
@@ -577,17 +557,17 @@ final class PwgCategories
             assert(is_string($row['uppercats']));
 
             if ($params['fullname']) {
-                $row['name'] = strip_tags(\Piwigo\Bootstrap\PresentationAccessor::htmlService()->getCatDisplayNameCache($row['uppercats'], null));
+                $row['name'] = strip_tags($this->htmlRenderer->getCatDisplayNameCache($row['uppercats'], null));
             } else {
                 $row['name_raw'] = $row['name'];
 
-                $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', 'ws_categories_getList'));
+                $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', 'ws_categories_getList'));
                 $row['name'] = strip_tags($nameEvent->categoryName);
             }
 
             $row['comment_raw'] = $row['comment'];
 
-            $descriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryDescription(is_string($row['comment']) ? $row['comment'] : null, 'ws_categories_getList'));
+            $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryDescription(is_string($row['comment']) ? $row['comment'] : null, 'ws_categories_getList'));
             $row['comment'] = $descriptionEvent->categoryDescription ?? '';
 
             // management of the album thumbnail -- starts here
@@ -605,7 +585,7 @@ final class PwgCategories
                 $image_id = $row['user_representative_picture_id'];
             } elseif (is_numeric($row['representative_picture_id']) && (int) $row['representative_picture_id'] !== 0) { // if a representative picture is set, it has priority
                 $image_id = $row['representative_picture_id'];
-            } elseif (\Piwigo\Config\CurrentConfig::current()->allowRandomRepresentative()) {
+            } elseif ($this->currentConfig->allowRandomRepresentative()) {
                 // searching a random representant among elements in sub-categories
                 $image_id = $categoryService->getRandomImageInCategory($row);
             } else { // searching a random representant among representant of sub-categories
@@ -619,7 +599,7 @@ final class PwgCategories
                     // findRandomRepresentativeIdAmongSubcategories().
                     $subrow_image_id = $categoryService->getRandomRepresentativeIdAmongSubcategories(
                         $row['uppercats'],
-                        self::permissionService()->getSqlConditionFandFAsCondition([
+                        $this->permissionService->getSqlConditionFandFAsCondition([
                             'visible_categories' => 'id',
                         ])
                     );
@@ -646,7 +626,7 @@ final class PwgCategories
                     ? (int) $row['user_representative_picture_id']
                     : null;
 
-                if (\Piwigo\Config\CurrentConfig::current()->representativeCacheOnSubcats() and $cached_representative_id !== $image_id) {
+                if ($this->currentConfig->representativeCacheOnSubcats() and $cached_representative_id !== $image_id) {
                     $user_representative_updates_for[$row['id']] = $image_id;
                 }
 
@@ -658,7 +638,7 @@ final class PwgCategories
             // management of the album thumbnail -- stops here
 
             if (! is_string($row['image_order']) || $row['image_order'] === '') {
-                $row['image_order'] = str_replace('ORDER BY ', '', \Piwigo\Config\CurrentConfig::current()->orderBy());
+                $row['image_order'] = str_replace('ORDER BY ', '', $this->currentConfig->orderBy());
             }
 
             $cats[] = $row;
@@ -670,7 +650,7 @@ final class PwgCategories
             $thumbnail_src_of = [];
             $new_image_ids = [];
 
-            foreach (self::imageService()->getPathsAndLevelForIds($image_ids) as $row) {
+            foreach ($this->imageService->getPathsAndLevelForIds($image_ids) as $row) {
                 if ($row['level'] <= $currentUser->level) {
                     $thumbnail_src_of[$row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);
                 } else {
@@ -689,7 +669,7 @@ final class PwgCategories
                             if (isset($image_id) and ! in_array($image_id, $image_ids, true)) {
                                 $new_image_ids[] = $image_id;
                             }
-                            if (\Piwigo\Config\CurrentConfig::current()->representativeCacheOnLevel()) {
+                            if ($this->currentConfig->representativeCacheOnLevel()) {
                                 $category_id = $category['id'];
                                 if (is_int($category_id)) {
                                     $user_representative_updates_for[$category_id] = $image_id;
@@ -704,7 +684,7 @@ final class PwgCategories
             }
 
             if (count($new_image_ids) > 0) {
-                foreach (self::imageService()->getPathsForFileDeletion($new_image_ids) as $row) {
+                foreach ($this->imageService->getPathsForFileDeletion($new_image_ids) as $row) {
                     $thumbnail_src_of[$row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);
                 }
             }
@@ -768,14 +748,14 @@ final class PwgCategories
      *   always present.
      * @return array<string, mixed>
      */
-    public static function getAdminList(array $params, PwgServer &$service): array
+    public function getAdminList(array $params, PwgServer &$service): array
     {
         if (! isset($params['additional_output'])) {
             $params['additional_output'] = '';
         }
         $params['additional_output'] = array_map(trim(...), explode(',', $params['additional_output']));
 
-        $nb_images_of = self::categoryService()->getPhotoCountsByCategory();
+        $nb_images_of = $this->categoryService->getPhotoCountsByCategory();
 
         // pwg_db_real_escape_string
 
@@ -799,10 +779,10 @@ final class PwgCategories
         }
 
         $search_term = (isset($params['search']) and $params['search'] !== '') ? $params['search'] : null;
-        $paginated_admin_cats = self::categoryService()->getAdminListForWs(
+        $paginated_admin_cats = $this->categoryService->getAdminListForWs(
             $where,
             $search_term,
-            \Piwigo\Config\CurrentConfig::current()->linkedAlbumSearchLimit(),
+            $this->currentConfig->linkedAlbumSearchLimit(),
             $bound_params,
             $bound_types
         );
@@ -822,7 +802,7 @@ final class PwgCategories
             $row['nb_images'] = $nb_images_of[$id] ?? 0;
 
             assert(is_string($row['uppercats']));
-            $cat_display_name = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $cat_display_name = $this->htmlRenderer
                 ->getCatDisplayNameCache(
                     $row['uppercats'],
                     'admin.php?page=album-'
@@ -830,16 +810,16 @@ final class PwgCategories
 
             $row['name_raw'] = $row['name'];
 
-            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', 'ws_categories_getAdminList'));
+            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', 'ws_categories_getAdminList'));
             $row['name'] = strip_tags($nameEvent->categoryName);
             $row['fullname'] = strip_tags($cat_display_name);
 
             $row['comment_raw'] = $row['comment'];
-            $adminDescriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryDescription(is_string($row['comment']) ? $row['comment'] : '', 'ws_categories_getAdminList'));
+            $adminDescriptionEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryDescription(is_string($row['comment']) ? $row['comment'] : '', 'ws_categories_getAdminList'));
             $row['comment'] = $adminDescriptionEvent->categoryDescription;
 
             if (! is_string($row['image_order']) || $row['image_order'] === '') {
-                $row['image_order'] = str_replace('ORDER BY ', '', \Piwigo\Config\CurrentConfig::current()->orderBy());
+                $row['image_order'] = str_replace('ORDER BY ', '', $this->currentConfig->orderBy());
             }
 
             if (in_array('full_name_with_admin_links', $params['additional_output'], true)) {
@@ -855,7 +835,7 @@ final class PwgCategories
             if ($cats_ids !== []) {
                 $cats_ids = array_map(intval(...), array_filter($cats_ids, is_numeric(...)));
 
-                $nb_subcats_of = self::categoryService()->getSubcategoryCountsByParent(array_values($cats_ids));
+                $nb_subcats_of = $this->categoryService->getSubcategoryCountsByParent(array_values($cats_ids));
             }
 
             foreach ($cats as $idx => $cat) {
@@ -865,7 +845,7 @@ final class PwgCategories
         }
 
         $limit_reached = false;
-        if ($counter > \Piwigo\Config\CurrentConfig::current()->linkedAlbumSearchLimit()) {
+        if ($counter > $this->currentConfig->linkedAlbumSearchLimit()) {
             $limit_reached = true;
         }
 
@@ -876,7 +856,7 @@ final class PwgCategories
                 'category',
                 ['id', 'nb_images', 'name', 'uppercats', 'global_rank', 'status', 'test']
             ),
-            'limit' => \Piwigo\Config\CurrentConfig::current()->linkedAlbumSearchLimit(),
+            'limit' => $this->currentConfig->linkedAlbumSearchLimit(),
             'limit_reached' => $limit_reached,
         ];
     }
@@ -891,7 +871,7 @@ final class PwgCategories
      *   entirely absent.
      * @return PwgError|array{info: string, id: int|string}
      */
-    public static function add(array $params, PwgServer &$service): PwgError|array
+    public function add(array $params, PwgServer &$service): PwgError|array
     {
         if (isset($params['pwg_token']) and new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -902,7 +882,7 @@ final class PwgCategories
             // property), not a real persisted preference -- known
             // limitation, same as AlbumsPageRenderer's own POS_PREF
             // assignment.
-            \Piwigo\Config\CurrentConfig::current()->setNewcatDefaultPosition($params['position']);
+            $this->currentConfig->setNewcatDefaultPosition($params['position']);
         }
 
         // Docs/PLAN.md gap-closure, 2026-07-23: $params['visible']/
@@ -922,14 +902,13 @@ final class PwgCategories
         }
 
         if (! in_array($params['comment'], [null, ''], true)) {
-            $options['comment'] = (! \Piwigo\Config\CurrentConfig::current()->allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['comment']) : $params['comment'];
+            $options['comment'] = (! $this->currentConfig->allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['comment']) : $params['comment'];
         }
 
-        $categoryConn = DbConnection::build();
-        $creation_output = self::categoryService()->createVirtualCategory(
-            (! \Piwigo\Config\CurrentConfig::current()->allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
-            \Piwigo\Users\CurrentUser::current(),
+        $creation_output = $this->categoryService->createVirtualCategory(
+            (! $this->currentConfig->allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
+            $this->activityService,
+            $this->currentUser,
             $params['parent'],
             $options
         );
@@ -952,10 +931,10 @@ final class PwgCategories
      *   always coerces to a list of positive ints. rank: WsParamFlag::OPTIONAL
      *   (explicit flag) with no 'default' key -- may be entirely absent.
      */
-    public static function setRank(array $params, PwgServer &$service): ?PwgError
+    public function setRank(array $params, PwgServer &$service): ?PwgError
     {
         // does the category really exist?
-        $categories = self::categoryService()->getRankInfoByIds(array_values($params['category_id']));
+        $categories = $this->categoryService->getRankInfoByIds(array_values($params['category_id']));
 
         if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
@@ -970,7 +949,7 @@ final class PwgCategories
             $order_new_by_id = $order_new;
             sort($order_new_by_id, SORT_NUMERIC);
 
-            $cat_asc = self::categoryService()->getIdsByParentOrderedById($parent_id);
+            $cat_asc = $this->categoryService->getIdsByParentOrderedById($parent_id);
 
             if (strcmp(implode(',', $cat_asc), implode(',', $order_new_by_id)) !== 0) {
                 return new PwgError(WsError::INVALID_PARAM, 'you need to provide all sub-category ids for a given category');
@@ -978,7 +957,7 @@ final class PwgCategories
         } else {
             $params['category_id'] = implode('', $params['category_id']);
 
-            $order_old = self::categoryService()->getSiblingIdsExcludingOrderedByRank($parent_id, (int) $params['category_id']);
+            $order_old = $this->categoryService->getSiblingIdsExcludingOrderedByRank($parent_id, (int) $params['category_id']);
             $order_new = [];
             $was_inserted = false;
             $i = 1;
@@ -996,7 +975,7 @@ final class PwgCategories
             }
         }
         // set the global rank
-        self::categoryService()->saveCategoriesOrder($order_new);
+        $this->categoryService->saveCategoriesOrder($order_new);
 
         return null;
     }
@@ -1014,23 +993,20 @@ final class PwgCategories
      *   always present. pwg_token: WsParamFlag::OPTIONAL with no 'default' key --
      *   may be entirely absent.
      */
-    public static function setInfo(array $params, PwgServer &$service): ?PwgError
+    public function setInfo(array $params, PwgServer &$service): ?PwgError
     {
 
         if (isset($params['pwg_token']) and new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        $categoryConn = DbConnection::build();
-
         // does the category really exist?
-        $category = \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class)
-            ->findById($params['category_id']);
+        $category = $this->categoryRepository->findById($params['category_id']);
         if ($category === null) {
             return new PwgError(404, 'category_id not found');
         }
 
-        $categoryService = self::categoryService();
+        $categoryService = $this->categoryService;
 
         if (! in_array($params['status'], [null, ''], true)) {
             if (! in_array($params['status'], ['private', 'public'], true)) {
@@ -1066,7 +1042,7 @@ final class PwgCategories
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
                 $perform_update = true;
-                $update[$key] = (! \Piwigo\Config\CurrentConfig::current()->allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params[$key]) : $params[$key];
+                $update[$key] = (! $this->currentConfig->allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params[$key]) : $params[$key];
             }
         }
 
@@ -1086,7 +1062,7 @@ final class PwgCategories
             $categoryService->updateFields($params['category_id'], $updateFields);
         }
 
-        self::activityService()->record('album', $params['category_id'], 'edit', [
+        $this->activityService->record('album', $params['category_id'], 'edit', [
             'fields' => implode(',', array_keys($update)),
         ]);
 
@@ -1101,21 +1077,21 @@ final class PwgCategories
      *   'default' key -- both mandatory, always present, WsParamType::ID guarantees
      *   plain ints.
      */
-    public static function setRepresentative(array $params, PwgServer &$service): ?PwgError
+    public function setRepresentative(array $params, PwgServer &$service): ?PwgError
     {
         // does the category really exist?
-        if (! self::categoryService()->existsById($params['category_id'])) {
+        if (! $this->categoryService->existsById($params['category_id'])) {
             return new PwgError(404, 'category_id not found');
         }
 
         // does the image really exist?
-        if (! self::imageService()->existsById($params['image_id'])) {
+        if (! $this->imageService->existsById($params['image_id'])) {
             return new PwgError(404, 'image_id not found');
         }
 
         // apply change
-        self::categoryService()->setRepresentativeImage($params['category_id'], $params['image_id']);
-        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+        $this->categoryService->setRepresentativeImage($params['category_id'], $params['image_id']);
+        $this->entityManager->clear();
 
         // Gap-closure Stage 4h: was `UPDATE user_cache_categories SET
         // user_representative_picture_id = NULL WHERE cat_id = ...` --
@@ -1128,7 +1104,7 @@ final class PwgCategories
         // broader staleness as tolerable.
         CachePools::categoryTree()->clear();
 
-        self::activityService()->record('album', $params['category_id'], 'edit', [
+        $this->activityService->record('album', $params['category_id'], 'edit', [
             'image_id' => $params['image_id'],
         ]);
 
@@ -1139,28 +1115,28 @@ final class PwgCategories
      * API method
      *
      * Deletes the album thumbnail. Only possible if
-     * \Piwigo\Config\CurrentConfig::current()->allowRandomRepresentative() or if the album has no direct photos.
+     * CurrentConfig::allowRandomRepresentative() or if the album has no direct photos.
      *
      * @param array{category_id: int, ...} $params no 'default' key -- mandatory,
      *   always present, WsParamType::ID guarantees a plain int.
      */
-    public static function deleteRepresentative(array $params, PwgServer &$service): ?PwgError
+    public function deleteRepresentative(array $params, PwgServer &$service): ?PwgError
     {
         // does the category really exist?
-        if (! self::categoryService()->existsById($params['category_id'])) {
+        if (! $this->categoryService->existsById($params['category_id'])) {
             return new PwgError(404, 'category_id not found');
         }
 
-        $has_images = self::categoryService()->hasImages($params['category_id']);
+        $has_images = $this->categoryService->hasImages($params['category_id']);
 
-        if (! \Piwigo\Config\CurrentConfig::current()->allowRandomRepresentative() and $has_images) {
+        if (! $this->currentConfig->allowRandomRepresentative() and $has_images) {
             return new PwgError(401, 'not permitted');
         }
 
-        self::categoryService()->clearRepresentativeImage($params['category_id']);
-        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+        $this->categoryService->clearRepresentativeImage($params['category_id']);
+        $this->entityManager->clear();
 
-        self::activityService()->record('album', $params['category_id'], 'edit');
+        $this->activityService->record('album', $params['category_id'], 'edit');
 
         return null;
     }
@@ -1176,11 +1152,9 @@ final class PwgCategories
      *   CategoryService::getCategoryRepresentantProperties()'s own
      *   already-precise return type (this method's only real array return)
      */
-    public static function refreshRepresentative(array $params, PwgServer &$service): PwgError|array
+    public function refreshRepresentative(array $params, PwgServer &$service): PwgError|array
     {
-        $categoryConn = DbConnection::build();
-
-        $categoryService = self::categoryService();
+        $categoryService = $this->categoryService;
 
         // does the category really exist?
         if (! $categoryService->existsById($params['category_id'])) {
@@ -1193,11 +1167,10 @@ final class PwgCategories
 
         $categoryService->setRandomRepresentant([$params['category_id']]);
 
-        self::activityService()->record('album', $params['category_id'], 'edit');
+        $this->activityService->record('album', $params['category_id'], 'edit');
 
         // return url of the new representative
-        $category = \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class)
-            ->findById($params['category_id']);
+        $category = $this->categoryRepository->findById($params['category_id']);
         // the category's existence was already verified above, and nothing
         // in between could have deleted it
         assert($category !== null);
@@ -1210,7 +1183,7 @@ final class PwgCategories
             return new PwgError(500, 'unable to determine a new representative picture for this category');
         }
 
-        return $categoryService->getCategoryRepresentantProperties($representative_picture_id, \Piwigo\Bootstrap\PresentationAccessor::urlService(), ImageStdParams::SMALL);
+        return $categoryService->getCategoryRepresentantProperties($representative_picture_id, $this->urlService, ImageStdParams::SMALL);
     }
 
     /**
@@ -1224,7 +1197,7 @@ final class PwgCategories
      *   'type' flag, non-null default -- always a plain string. pwg_token: no
      *   'default' key, no flags -- mandatory, always present, plain string.
      */
-    public static function delete(array $params, PwgServer &$service): ?PwgError
+    public function delete(array $params, PwgServer &$service): ?PwgError
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -1264,19 +1237,19 @@ final class PwgCategories
             return null;
         }
 
-        $category_ids = self::categoryService()->getExistingIds($category_ids);
+        $category_ids = $this->categoryService->getExistingIds($category_ids);
 
         if (count($category_ids) === 0) {
             return null;
         }
 
-        $categoryService = self::categoryService();
+        $categoryService = $this->categoryService;
         $categoryService->deleteCategories(
             $category_ids,
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
-            \Piwigo\Bootstrap\PresentationAccessor::urlService(),
-            \Piwigo\Session\SessionService::get(),
-            \Piwigo\PluginConfig\EventDispatcher::get(),
+            $this->activityService,
+            $this->urlService,
+            $this->sessionService,
+            $this->eventDispatcher,
             $params['photo_deletion_mode']
         );
         $categoryService->updateGlobalRank();
@@ -1297,7 +1270,7 @@ final class PwgCategories
      *   mandatory, always present, plain string.
      * @return PwgError|array{new_ariane_string: string, updated_cats: array<int, array{cat_id: string, nb_sub_photos: int}>}
      */
-    public static function move(array $params, PwgServer &$service): PwgError|array
+    public function move(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -1331,14 +1304,14 @@ final class PwgCategories
         $categories_in_db = [];
         $update_cat_ids = [];
 
-        foreach (self::categoryService()->getMoveDetailsByIds($category_ids) as $row) {
+        foreach ($this->categoryService->getMoveDetailsByIds($category_ids) as $row) {
             $row_id = $row['id'];
             $categories_in_db[$row_id] = $row;
             $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $row['uppercats']), 0, -1));
 
             // we break on error at first physical category detected
             if (! in_array($row['dir'], [null, '', '0'], true)) {
-                $moveNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName($row['name'], 'ws_categories_move'));
+                $moveNameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($row['name'], 'ws_categories_move'));
                 $row_name = strip_tags($moveNameEvent->categoryName);
 
                 return new PwgError(
@@ -1368,19 +1341,19 @@ final class PwgCategories
         // move_categories function, not here
         // 0 as parent means "move categories at gallery root"
         if ($params['parent'] !== 0) {
-            $subcat_ids = self::categoryService()->getSubcatIds([$params['parent']]);
+            $subcat_ids = $this->categoryService->getSubcatIds([$params['parent']]);
             if (count($subcat_ids) === 0) {
                 return new PwgError(403, 'Unknown parent category id');
             }
         }
 
-        $pageState = \Piwigo\Core\PageState::current();
+        $pageState = $this->pageState;
         $pageState->infos = [];
         $pageState->errors = [];
 
-        self::categoryService()->moveCategories(
+        $this->categoryService->moveCategories(
             $category_ids,
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
+            $this->activityService,
             $pageState,
             $params['parent']
         );
@@ -1398,8 +1371,8 @@ final class PwgCategories
         }
 
         $cat_display_name = '';
-        foreach (self::categoryService()->getUppercatsColumns($category_ids) as $uppercats) {
-            $cat_display_name = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+        foreach ($this->categoryService->getUppercatsColumns($category_ids) as $uppercats) {
+            $cat_display_name = $this->htmlRenderer
                 ->getCatDisplayNameCache(
                     $uppercats,
                     'admin.php?page=album-'
@@ -1407,12 +1380,12 @@ final class PwgCategories
             $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $uppercats), 0, -1));
         }
 
-        $nb_photos_in = self::categoryService()->getPhotoCountsByCategory();
+        $nb_photos_in = $this->categoryService->getPhotoCountsByCategory();
 
         $update_cats = [];
         foreach (array_unique($update_cat_ids) as $update_cat) {
             $nb_sub_photos = 0;
-            $sub_cat_without_parent = array_diff(self::categoryService()->getSubcatIds([$update_cat]), [$update_cat]);
+            $sub_cat_without_parent = array_diff($this->categoryService->getSubcatIds([$update_cat]), [$update_cat]);
 
             foreach ($sub_cat_without_parent as $id_sub_cat) {
                 $nb_sub_photos += $nb_photos_in[$id_sub_cat] ?? 0;
@@ -1440,20 +1413,20 @@ final class PwgCategories
      *   positive ints.
      * @return array<int, array{nb_images_associated_outside: int, nb_images_becoming_orphan: int, nb_images_recursive: int}>
      */
-    public static function calculateOrphans(array $param, PwgServer &$service): array
+    public function calculateOrphans(array $param, PwgServer &$service): array
     {
         $category_id = $param['category_id'][0];
 
         $category = [];
-        $category['has_images'] = self::categoryService()->hasImages($category_id);
+        $category['has_images'] = $this->categoryService->hasImages($category_id);
 
         // number of sub-categories
-        $subcat_ids = self::categoryService()->getSubcatIds([$category_id]);
+        $subcat_ids = $this->categoryService->getSubcatIds([$category_id]);
 
         $category['nb_subcats'] = count($subcat_ids) - 1;
 
         // total number of images under this category (including sub-categories)
-        $image_ids_recursive = self::categoryService()->getDistinctLinkedImageIds($subcat_ids);
+        $image_ids_recursive = $this->categoryService->getDistinctLinkedImageIds($subcat_ids);
 
         $category['nb_images_recursive'] = count($image_ids_recursive);
 
@@ -1464,7 +1437,7 @@ final class PwgCategories
         if ($category['nb_images_recursive'] > 0) {
             // if we don't have "too many" photos, it's faster to compute the orphans with MySQL
             if ($category['nb_images_recursive'] < 1000) {
-                $image_ids_associated_outside = self::categoryService()->getNonOrphanImageIds($image_ids_recursive, $subcat_ids);
+                $image_ids_associated_outside = $this->categoryService->getNonOrphanImageIds($image_ids_recursive, $subcat_ids);
                 $category['nb_images_associated_outside'] = count($image_ids_associated_outside);
 
                 $image_ids_becoming_orphan = array_diff($image_ids_recursive, $image_ids_associated_outside);
@@ -1478,7 +1451,7 @@ final class PwgCategories
                 // flip directly.
                 $image_ids_recursive_keys = array_flip($image_ids_recursive);
 
-                $image_ids_associated_outside = self::categoryService()->getImageIdsOutsideCategories($subcat_ids);
+                $image_ids_associated_outside = $this->categoryService->getImageIdsOutsideCategories($subcat_ids);
                 $image_ids_not_orphan = [];
 
                 foreach ($image_ids_associated_outside as $image_id) {

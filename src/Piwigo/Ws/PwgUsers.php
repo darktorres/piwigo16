@@ -67,6 +67,7 @@ final class PwgUsers
         private readonly PasswordService $passwordService,
         private readonly PreferencesService $preferencesService,
         private readonly ConfigService $configService,
+        private readonly WsHelper $wsHelper,
     ) {}
 
     /**
@@ -770,7 +771,7 @@ final class PwgUsers
 
         $this->userService->checkUserFavorites();
 
-        $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
+        $order_by = $this->wsHelper->stdImageSqlOrder($params, 'i.');
         $order_by = $order_by === '' ? $this->currentConfig->orderBy() : 'ORDER BY ' . $order_by;
 
         $permission_condition = $this->permissionService->getPermissionCriteria();
@@ -789,7 +790,7 @@ final class PwgUsers
                 $image[$k] = $row[$k] ?? null;
             }
 
-            $images[] = array_merge($image, WsHelper::stdGetUrls($row, $this->urlService));
+            $images[] = array_merge($image, $this->wsHelper->stdGetUrls($row, $this->urlService));
         }
 
         $count = count($images);
@@ -806,7 +807,7 @@ final class PwgUsers
             'images' => new PwgNamedArray(
                 $images,
                 'image',
-                WsHelper::stdGetImageXmlAttributes()
+                $this->wsHelper->stdGetImageXmlAttributes()
             ),
         ];
     }

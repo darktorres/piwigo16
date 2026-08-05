@@ -103,12 +103,13 @@ final class WsServerTest extends ContractTestCase
     /**
      * See this file's own class docblock: unreachable through the real
      * ws.php entry point (WsInitializer::init() always calls setHandler()
-     * before setEncoder()), so this constructs a real PwgServer directly
-     * and calls setEncoder() without ever calling setHandler() --
-     * genuinely exercises run()'s own guard with a real request-handler-
-     * less object, not a mock of the class under test. No HTTP call
-     * needed: unlike the "unknown response format" branch above, this one
-     * returns instead of calling die(), so it's safe to invoke in-process.
+     * before setEncoder()), so this resolves a real PwgServer from the
+     * container directly and calls setEncoder() without ever calling
+     * setHandler() -- genuinely exercises run()'s own guard with a real
+     * request-handler-less object, not a mock of the class under test. No
+     * HTTP call needed: unlike the "unknown response format" branch above,
+     * this one returns instead of calling die(), so it's safe to invoke
+     * in-process.
      *
      * PwgError's own constructor mirrors a >= 400 code onto a real HTTP
      * status via PresentationAccessor::htmlService(), which needs
@@ -116,14 +117,21 @@ final class WsServerTest extends ContractTestCase
      * through the live Apache process's own bootstrap instead, but this
      * one calls run() directly in the PHPUnit CLI process, so it
      * boots/resets the Kernel locally, matching
-     * Integration\ContainerSmokeTest's own boot()-then-reset() pattern.
+     * Integration\ContainerSmokeTest's own boot()-then-reset() pattern. A
+     * real Paths is required, not a bare boot (Phase 11 sub-phase 11A):
+     * PwgServer now constructor-injects AccessControl, whose own chain
+     * (-> RedirectService -> Lang) resolves Paths, whose value the
+     * container can't guess without one -- same rationale as
+     * WsTopLevelTest::test_getMissingDerivatives_with_an_empty_gallery_returns_an_empty_array_early()'s
+     * own identical fix.
      */
     public function test_run_without_a_request_handler_returns_unknown_request_format(): void
     {
-        \Piwigo\Core\Kernel::boot();
+        \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 2)));
         $body = false;
         try {
-            $server = new PwgServer(\Piwigo\PluginConfig\EventDispatcher::get());
+            $server = \Piwigo\Core\Kernel::container()->get(PwgServer::class);
+            self::assertInstanceOf(PwgServer::class, $server);
             $encoder = new PwgJsonEncoder();
             $server->setEncoder('json', $encoder);
 

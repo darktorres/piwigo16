@@ -43,10 +43,12 @@ use Piwigo\Ws\WsHelper;
  * every row's `id`/`id_uppercat` comes straight off piwigo_categories'
  * `id`/`id_uppercat` columns (a real int PK / nullable int FK), never a
  * non-scalar value. test_categoriesFlatlistToTree_skips_*() below call the
- * method directly with a genuinely malformed row instead -- a real call to
- * the real public static method under test, not a mock, same precedent as
- * WsServerTest's own test_checkType_accepts_an_array_of_booleans() for an
- * equally WS-unreachable PwgServer::checkType() branch.
+ * method directly (via a locally-booted Kernel/container, same pattern as
+ * WsServerTest's own test_run_without_a_request_handler_returns_unknown_request_format())
+ * with a genuinely malformed row instead -- a real call to the real
+ * instance method under test, not a mock, same "unreachable through any
+ * real WS request" precedent as WsServerTest's own
+ * test_checkType_accepts_an_array_of_booleans() for PwgServer::checkType().
  */
 final class WsHelperTest extends ContractTestCase
 {
@@ -374,10 +376,18 @@ final class WsHelperTest extends ContractTestCase
      */
     public function test_categoriesFlatlistToTree_skips_a_row_with_a_non_scalar_id(): void
     {
-        $tree = WsHelper::categoriesFlatlistToTree([
-            ['id' => ['not', 'scalar']],
-            ['id' => 1, 'name' => 'Valid Root'],
-        ]);
+        \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 2)));
+        try {
+            $wsHelper = \Piwigo\Core\Kernel::container()->get(WsHelper::class);
+            self::assertInstanceOf(WsHelper::class, $wsHelper);
+
+            $tree = $wsHelper->categoriesFlatlistToTree([
+                ['id' => ['not', 'scalar']],
+                ['id' => 1, 'name' => 'Valid Root'],
+            ]);
+        } finally {
+            \Piwigo\Core\Kernel::reset();
+        }
 
         self::assertCount(1, $tree, 'the malformed row must be skipped entirely, not just left out of the tree');
         self::assertSame(1, $tree[0]['id']);
@@ -390,10 +400,18 @@ final class WsHelperTest extends ContractTestCase
      */
     public function test_categoriesFlatlistToTree_skips_a_child_row_with_a_non_scalar_uppercat_id(): void
     {
-        $tree = WsHelper::categoriesFlatlistToTree([
-            ['id' => 1, 'name' => 'Root'],
-            ['id' => 2, 'id_uppercat' => ['not', 'scalar'], 'name' => 'Bad Child'],
-        ]);
+        \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 2)));
+        try {
+            $wsHelper = \Piwigo\Core\Kernel::container()->get(WsHelper::class);
+            self::assertInstanceOf(WsHelper::class, $wsHelper);
+
+            $tree = $wsHelper->categoriesFlatlistToTree([
+                ['id' => 1, 'name' => 'Root'],
+                ['id' => 2, 'id_uppercat' => ['not', 'scalar'], 'name' => 'Bad Child'],
+            ]);
+        } finally {
+            \Piwigo\Core\Kernel::reset();
+        }
 
         self::assertCount(1, $tree, 'the malformed child row must never be attached anywhere');
         self::assertSame(1, $tree[0]['id']);

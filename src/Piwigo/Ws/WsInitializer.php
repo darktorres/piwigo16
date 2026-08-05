@@ -49,10 +49,16 @@ use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
  * memoized-early-return semantics are unchanged (still at most one
  * PwgServer/default-event registration per process), since PHP-DI's
  * default sharing already gives WsController/UserBootstrap the same
- * instance. `WsHelper::isInvokeAllowed(...)` stays a bare static
- * reference -- `WsHelper` itself is not in this campaign's scope (matches
- * `FilesystemHelper`/`DateHelper`'s own established "stays a plain static
- * utility" precedent).
+ * instance.
+ *
+ * Phase 11 sub-phase 11A: `WsHelper` converted to a real, constructor-
+ * injected instance class (Phase 10's own scope boundary excluding it was
+ * drawn before the `Ws/` layer converted, not a technical limit) --
+ * `isInvokeAllowed(...)` registration below now reads `$this->wsHelper`
+ * instead of the old bare `WsHelper::isInvokeAllowed(...)` static
+ * reference. `PwgServer` also gained 3 more constructor params here
+ * (`AccessControl`/`ApiKeyRequestFlag`/`CurrentConfig`) for its own
+ * remaining shim reads.
  */
 final class WsInitializer
 {
@@ -63,6 +69,10 @@ final class WsInitializer
         private readonly WsDefaultMethods $wsDefaultMethods,
         private readonly PwgCore $pwgCore,
         private readonly UrlServiceInterface $urlService,
+        private readonly WsHelper $wsHelper,
+        private readonly \Piwigo\Auth\AccessControl $accessControl,
+        private readonly \Piwigo\Core\ApiKeyRequestFlag $apiKeyRequestFlag,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     public function init(): PwgServer
@@ -77,7 +87,7 @@ final class WsInitializer
         // this ran); first-class-callable, same pattern as the 2
         // registrations below it.
         $this->eventDispatcher->addTypedHandler(WsAddMethods::class, $this->wsDefaultMethods->register(...));
-        $this->eventDispatcher->addTypedHandler(WsInvokeAllowed::class, WsHelper::isInvokeAllowed(...));
+        $this->eventDispatcher->addTypedHandler(WsInvokeAllowed::class, $this->wsHelper->isInvokeAllowed(...));
         // P23 batch 8e-4: relocated from include/ws_functions/pwg.php's own
         // top-level add_event_handler('get_history', 'get_history') call --
         // that file's lazy include_once (right before PwgServer::invoke()
@@ -91,7 +101,7 @@ final class WsInitializer
         $requestFormat = 'rest';
         $responseFormat = Request\WsFormatRequest::fromGlobals()->responseFormat;
 
-        $service = new PwgServer($this->eventDispatcher);
+        $service = new PwgServer($this->eventDispatcher, $this->accessControl, $this->apiKeyRequestFlag, $this->currentConfig);
 
         // $requestFormat is hardcoded to 'rest' above; the format-selection
         // switch stays for parity with $responseFormat's structure and in case

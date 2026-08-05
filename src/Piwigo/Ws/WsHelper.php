@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\UrlServiceInterface;
@@ -19,27 +20,41 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Image\PhotoSortField;
 use Piwigo\Image\SrcImage;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Event\WsInvokeAllowed;
 
 /**
  * P23 batch 8e: relocated verbatim from include/ws_functions.inc.php's 8
  * free functions -- shared helpers called from 2-4 of the
  * include/ws_functions/pwg.*.php namespace files each.
+ *
+ * Singleton/service-locator elimination campaign, Phase 11 sub-phase 11A:
+ * converted from a fully static utility to a real, constructor-injected
+ * instance class -- only isInvokeAllowed()/stdGetUrls() ever needed a
+ * collaborator (AccessControl/CurrentUser respectively), but PHP forbids
+ * mixing static and instance methods of the same name, and every real
+ * caller is already an instance-based Ws\Pwg* class post-Phase-10, so
+ * there was no remaining reason for any method here to stay static.
  */
 final class WsHelper
 {
+    public function __construct(
+        private readonly AccessControl $accessControl,
+        private readonly CurrentUser $currentUser,
+    ) {}
+
     /**
      * Event handler for method invocation security check. Sets $event->value
      * to a PwgError if the preconditions are not satisfied for method
      * invocation.
      */
-    public static function isInvokeAllowed(WsInvokeAllowed $event): WsInvokeAllowed
+    public function isInvokeAllowed(WsInvokeAllowed $event): WsInvokeAllowed
     {
         if (str_starts_with($event->methodName, 'reflection.')) { // OK for reflection
             return $event;
         }
 
-        if (! \Piwigo\Auth\AccessControl::current()->isAuthorizeStatus(AccessLevel::Guest) and
+        if (! $this->accessControl->isAuthorizeStatus(AccessLevel::Guest) and
             ! str_starts_with($event->methodName, 'pwg.session.')) {
             $event->value = new PwgError(401, 'Access denied');
             return $event;
@@ -75,7 +90,7 @@ final class WsHelper
      *
      * @param array{f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
      */
-    public static function stdImageSqlFilterCriteria(array $params, PwgServer $service): ImageFilterCriteria
+    public function stdImageSqlFilterCriteria(array $params, PwgServer $service): ImageFilterCriteria
     {
         foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
             if (isset($params[$datefield]) and ! DateHelper::isValidMysqlDatetime($params[$datefield])) {
@@ -114,7 +129,7 @@ final class WsHelper
      *   scalar (rejects arrays for any registered param lacking
      *   WsParamFlag::ACCEPT_ARRAY)
      */
-    public static function stdImageSqlOrder(array $params, string $tbl_name = ''): string
+    public function stdImageSqlOrder(array $params, string $tbl_name = ''): string
     {
         $ret = '';
         $order = $params['order'];
@@ -154,7 +169,7 @@ final class WsHelper
      * @param array<string, mixed> $image_row
      * @return array{page_url: string, element_url?: string, download_url: ?string, derivatives: array<string, array{url: string, width: int, height: int}>}
      */
-    public static function stdGetUrls(array $image_row, UrlServiceInterface $urlService): array
+    public function stdGetUrls(array $image_row, UrlServiceInterface $urlService): array
     {
         $ret = [];
 
@@ -170,7 +185,7 @@ final class WsHelper
         $provide_download_url = false;
 
         if ($src_image->is_original()) {// we have a photo
-            if (\Piwigo\Users\CurrentUser::current()->get()->enabledHigh) {
+            if ($this->currentUser->get()->enabledHigh) {
                 $ret['element_url'] = $src_image->get_url();
                 $provide_download_url = true;
             }
@@ -210,7 +225,7 @@ final class WsHelper
      *
      * @return string[]
      */
-    public static function stdGetImageXmlAttributes(): array
+    public function stdGetImageXmlAttributes(): array
     {
         return [
             'id', 'element_url', 'page_url', 'file', 'width', 'height', 'hit', 'date_available', 'date_creation',
@@ -220,7 +235,7 @@ final class WsHelper
     /**
      * @return string[]
      */
-    public static function stdGetCategoryXmlAttributes(): array
+    public function stdGetCategoryXmlAttributes(): array
     {
         return [
             'id', 'url', 'nb_images', 'total_nb_images', 'nb_categories', 'date_last', 'max_date_last', 'status',
@@ -230,7 +245,7 @@ final class WsHelper
     /**
      * @return string[]
      */
-    public static function stdGetTagXmlAttributes(): array
+    public function stdGetTagXmlAttributes(): array
     {
         return [
             'id', 'name', 'url_name', 'counter', 'url', 'page_url',
@@ -248,7 +263,7 @@ final class WsHelper
      * @param array<int|string, array<string, mixed>> $categories
      * @return list<array<string, mixed>>
      */
-    public static function categoriesFlatlistToTree(array $categories): array
+    public function categoriesFlatlistToTree(array $categories): array
     {
         $tree = [];
         $key_of_cat = [];
@@ -272,7 +287,7 @@ final class WsHelper
                 $uppercat_key = $key_of_cat[$uppercat_id];
                 if (! isset($categories[$uppercat_key]['sub_categories'])) {
                     $categories[$uppercat_key]['sub_categories'] =
-                      new PwgNamedArray([], 'category', self::stdGetCategoryXmlAttributes());
+                      new PwgNamedArray([], 'category', $this->stdGetCategoryXmlAttributes());
                 }
 
                 $sub_categories = $categories[$uppercat_key]['sub_categories'];

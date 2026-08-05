@@ -66,6 +66,7 @@ final class PwgCategories
         private readonly SessionService $sessionService,
         private readonly PageState $pageState,
         private readonly ImageStdParams $imageStdParams,
+        private readonly WsHelper $wsHelper,
     ) {}
 
     /**
@@ -201,7 +202,7 @@ final class PwgCategories
         if ($cats !== []) {
             $permissionCriteria = $this->permissionService->getPermissionCriteria();
             $imagesCriteria = new CategoryImagesCriteria(
-                filterCriteria: WsHelper::stdImageSqlFilterCriteria($params, $service),
+                filterCriteria: $this->wsHelper->stdImageSqlFilterCriteria($params, $service),
                 categoryIds: array_keys($cats),
                 // visible_images's own old fallthrough into forbidden_images
                 // (fieldName 'i.id' -> the images-table's own level check) --
@@ -213,7 +214,7 @@ final class PwgCategories
                 ),
             );
 
-            $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
+            $order_by = $this->wsHelper->stdImageSqlOrder($params, 'i.');
             if ($order_by === ''
                   and count($params['cat_id']) === 1
                   and isset($cats[$params['cat_id'][0]]['image_order'])
@@ -256,7 +257,7 @@ final class PwgCategories
                 $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
                 $image['comment'] = $descriptionEvent->elementDescription;
 
-                $image = array_merge($image, WsHelper::stdGetUrls($image_row, $urlService));
+                $image = array_merge($image, $this->wsHelper->stdGetUrls($image_row, $urlService));
 
                 $images[] = $image;
             }
@@ -342,7 +343,7 @@ final class PwgCategories
             'images' => new PwgNamedArray(
                 $images,
                 'image',
-                WsHelper::stdGetImageXmlAttributes()
+                $this->wsHelper->stdGetImageXmlAttributes()
             ),
         ];
     }
@@ -705,13 +706,13 @@ final class PwgCategories
         // management of the album thumbnail -- stops here
 
         if ($params['tree_output']) {
-            return WsHelper::categoriesFlatlistToTree($cats);
+            return $this->wsHelper->categoriesFlatlistToTree($cats);
         }
 
         $output['categories'] = new PwgNamedArray(
             $cats,
             'category',
-            WsHelper::stdGetCategoryXmlAttributes()
+            $this->wsHelper->stdGetCategoryXmlAttributes()
         );
 
         return $output;

@@ -39,6 +39,7 @@ final class PwgTags
         private readonly \Piwigo\Core\UrlServiceInterface $urlService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Doctrine\ORM\EntityManagerInterface $entityManager,
+        private readonly WsHelper $wsHelper,
     ) {}
 
     /**
@@ -72,7 +73,7 @@ final class PwgTags
             'tags' => new PwgNamedArray(
                 $tags,
                 'tag',
-                WsHelper::stdGetTagXmlAttributes()
+                $this->wsHelper->stdGetTagXmlAttributes()
             ),
         ];
     }
@@ -95,7 +96,7 @@ final class PwgTags
             'tags' => new PwgNamedArray(
                 $this->tagService->getAllTags($this->htmlRenderer),
                 'tag',
-                WsHelper::stdGetTagXmlAttributes()
+                $this->wsHelper->stdGetTagXmlAttributes()
             ),
         ];
     }
@@ -128,9 +129,9 @@ final class PwgTags
         unset($tags);
         $tag_ids = array_keys($tags_by_id);
 
-        $filterCriteria = WsHelper::stdImageSqlFilterCriteria($params, $service);
+        $filterCriteria = $this->wsHelper->stdImageSqlFilterCriteria($params, $service);
 
-        $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
+        $order_by = $this->wsHelper->stdImageSqlOrder($params, 'i.');
         if ($order_by !== '') {
             $order_by = 'ORDER BY ' . $order_by;
         }
@@ -190,7 +191,7 @@ final class PwgTags
                 $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
                 $image['comment'] = $descriptionEvent->elementDescription;
 
-                $image = array_merge($image, WsHelper::stdGetUrls($row, $urlService));
+                $image = array_merge($image, $this->wsHelper->stdGetUrls($row, $urlService));
 
                 $image_tag_ids = ($params['tag_mode_and']) ? $tag_ids : $image_tag_map[$row_id];
                 $image_tags = [];
@@ -217,7 +218,7 @@ final class PwgTags
                     ];
                 }
 
-                $image['tags'] = new PwgNamedArray($image_tags, 'tag', WsHelper::stdGetTagXmlAttributes());
+                $image['tags'] = new PwgNamedArray($image_tags, 'tag', $this->wsHelper->stdGetTagXmlAttributes());
                 $images[] = $image;
             }
 
@@ -237,7 +238,7 @@ final class PwgTags
             'images' => new PwgNamedArray(
                 $images,
                 'image',
-                WsHelper::stdGetImageXmlAttributes()
+                $this->wsHelper->stdGetImageXmlAttributes()
             ),
         ];
     }

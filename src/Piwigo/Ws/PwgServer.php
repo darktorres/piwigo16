@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Closure;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\WsError;
 use Piwigo\Core\WsParamFlag;
@@ -49,6 +51,9 @@ final class PwgServer
 
     public function __construct(
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly AccessControl $accessControl,
+        private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -368,7 +373,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             return new PwgError(405, 'This method requires HTTP POST');
         }
 
-        if (isset($method['options']['admin_only']) and (bool) $method['options']['admin_only'] and ! \Piwigo\Auth\AccessControl::current()->isAdmin()) {
+        if (isset($method['options']['admin_only']) and (bool) $method['options']['admin_only'] and ! $this->accessControl->isAdmin()) {
             return new PwgError(401, 'Access denied');
         }
 
@@ -559,10 +564,10 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         // list of prohibited methods (\Piwigo\Config\CurrentConfig::current()->apiKeyForbiddenMethods()) for API keys
         // if it is, access is refused (false)
         if (
-            ApiKeyRequestFlag::isActiveStatic()
+            $this->apiKeyRequestFlag->isActive()
             or (isset($_SESSION['connected_with']) and $_SESSION['connected_with'] === 'ws_session_login_api_key')
         ) {
-            $forbidden_methods = \Piwigo\Config\CurrentConfig::current()->apiKeyForbiddenMethods();
+            $forbidden_methods = $this->currentConfig->apiKeyForbiddenMethods();
 
             if (in_array($methodName, array_map(strval(...), array_filter($forbidden_methods, is_scalar(...))), true)) {
                 return false;

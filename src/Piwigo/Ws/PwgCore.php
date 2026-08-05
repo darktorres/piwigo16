@@ -94,6 +94,7 @@ final class PwgCore
         private readonly Translator $translator,
         private readonly ConfigService $configService,
         private readonly ImageStdParams $imageStdParams,
+        private readonly WsHelper $wsHelper,
     ) {}
 
     /**
@@ -141,7 +142,7 @@ final class PwgCore
 
         $qlimit = (int) min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
         $criteria = new MissingDerivativesCriteria(
-            filterCriteria: WsHelper::stdImageSqlFilterCriteria($params, $service),
+            filterCriteria: $this->wsHelper->stdImageSqlFilterCriteria($params, $service),
             ids: array_values($params['ids']),
         );
 
@@ -582,7 +583,7 @@ final class PwgCore
         // can't emit SQL metacharacters) -- now an ActivityListCriteria,
         // translated into bound conditions inside ActivityRepository
         // itself (see that class's own findPaginated() docblock).
-        $connections_mode = \Piwigo\Config\CurrentConfig::current()->activityDisplayConnections();
+        $connections_mode = $this->currentConfig->activityDisplayConnections();
         $admin_ids = [];
         if ($connections_mode === 'admins_only') {
             $admin_id_objects = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class)->findAdminIds();

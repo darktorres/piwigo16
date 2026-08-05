@@ -386,10 +386,22 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // (c) Structural exceptions -- Auth/AccessControl.php's one site is
     // inside currentForCaching()'s own designed degraded-fallback object
     // graph (never touches the real container, safe pre-boot read by
-    // design -- see that method's own docblock); Users/UserRepository.php
-    // is a Doctrine repository with an ORM-fixed constructor, matching
-    // EventDispatcher's own established "Doctrine repositories" category
-    // from its Phase 4 conversion.
+    // design -- see that method's own docblock); Users/UserRepository.php/
+    // Category/CategoryRepository.php are Doctrine repositories with an
+    // ORM-fixed constructor, matching EventDispatcher's own established
+    // "Doctrine repositories" category from its Phase 4 conversion.
+    // CategoryRepository.php's own 3 sites (findImageIdsForCategories()/
+    // resolveDqlOrderBy()) are a real, newly-found gap: introduced by this
+    // branch's own later pgsql-portability commits (findCategoryRepository's
+    // real portability bugs), landing after Phase 11's own inventory/audit
+    // pass already ran. TEMPORARY -- unlike the rest of this list,
+    // CategoryRepository.php is not a permanent exception: it's in scope
+    // for the same "stop extending EntityRepository" redesign sub-phase
+    // 11B already applies to UserRepository.php (its own real
+    // getRepository(CategoryEntity::class) call-site count turned out to
+    // be 60+, far more than UserRepository's, so it's its own dedicated
+    // pass within that sub-phase, not a same-commit bundle). Remove this
+    // entry once that lands.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
@@ -418,8 +430,8 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Template/ScriptLoader.php',
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
+        '/src/Piwigo/Category/CategoryRepository.php',
         '/src/Piwigo/Users/UserRepository.php',
-        '/src/Piwigo/Ws/PwgServer.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentConfig::current(');
@@ -667,19 +679,18 @@ test('AdminContext::isActiveStatic() transitional shim has a shrinking, known al
 });
 
 test('ApiKeyRequestFlag::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 1: real callers
-    // (Piwigo\Ws\PwgServer -- out of Phase 10's own scope; Piwigo\Session\
-    // SessionService -- Phase 4) aren't converted to constructor injection
-    // yet, so they use this static shim instead of the real isActive()
-    // instance method (see that method's own docblock). PwgCore.php took
-    // real constructor injection during its own Phase 10 sub-batch. Every
-    // phase that converts one more of these files should remove it from
-    // the allow-list below; once the allow-list is empty, delete
-    // isActiveStatic() itself and this test.
+    // Singleton/service-locator elimination campaign, Phase 1: real caller
+    // (Piwigo\Session\SessionService -- Phase 4) isn't converted to
+    // constructor injection yet, so it uses this static shim instead of
+    // the real isActive() instance method (see that method's own
+    // docblock). PwgCore.php took real constructor injection during its
+    // own Phase 10 sub-batch; Ws/PwgServer.php took it during Phase 11
+    // sub-phase 11A. Every phase that converts one more of these files
+    // should remove it from the allow-list below; once the allow-list is
+    // empty, delete isActiveStatic() itself and this test.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Ws/PwgServer.php',
         '/src/Piwigo/Session/SessionService.php',
     ];
 
@@ -1397,10 +1408,9 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
     // "AccessControl::current() transitional bridge" test below instead.
     // HtmlService.php/MailService.php/UrlService.php/MetadataService.php
     // are Phase-6-entangled (dozens of manual construction sites each).
-    // WsHelper.php stays out of Phase 10's own conversion scope (matches
-    // FilesystemHelper/DateHelper's established "stays a plain static
-    // utility" precedent); every Ws/Pwg*.php file + WsDefaultMethods.php
-    // itself closed out this shim during Phase 10. CommentService::
+    // WsHelper.php itself took real constructor injection during Phase 11
+    // sub-phase 11A (every Ws/Pwg*.php file + WsDefaultMethods.php itself
+    // closed out this shim during Phase 10). CommentService::
     // getNbAvailableComments() and
     // ActivityService::record() are the one method on each class still
     // reachable from a genuinely static context (no `$this`), same shape
@@ -1430,7 +1440,6 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Metadata/MetadataService.php',
         '/src/Piwigo/Permission/PermissionService.php',
         '/src/Piwigo/Url/UrlService.php',
-        '/src/Piwigo/Ws/WsHelper.php',
     ];
 
     $hits = [
@@ -1474,11 +1483,11 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
     // can't gain a new required param. Bootstrap/PageTail.php/
     // Bootstrap/RequestBootstrap.php resolve it the same way every other
     // Bootstrap/-internal file resolves a not-yet-constructor-injected
-    // collaborator. Ws/PwgServer.php/WsHelper.php stay out of Phase 10's
-    // own conversion scope; every Ws/Pwg*.php file + WsDefaultMethods.php
-    // itself closed out this shim during Phase 10. public/admin.php/
-    // public/random.php are raw entry-shell root files, no constructor to
-    // inject through.
+    // collaborator. Ws/PwgServer.php/WsHelper.php both took real
+    // constructor injection during Phase 11 sub-phase 11A (every other
+    // Ws/Pwg*.php file + WsDefaultMethods.php itself closed out this shim
+    // during Phase 10). public/admin.php/public/random.php are raw
+    // entry-shell root files, no constructor to inject through.
     // Every phase that converts one more of these files to constructor-
     // injected AccessControl should remove it from the allow-list below.
     $repoRoot = __DIR__ . '/../..';
@@ -1497,8 +1506,6 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Users/UserService.php',
-        '/src/Piwigo/Ws/PwgServer.php',
-        '/src/Piwigo/Ws/WsHelper.php',
     ];
 
     $hits = [

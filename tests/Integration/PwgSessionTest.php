@@ -65,7 +65,12 @@ final class PwgSessionTest extends IntegrationTestCase
         }
         $service = new SessionService($repo, $currentConfig);
 
-        $this->pwgSession = new PwgSession($service);
+        $currentLogger = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
+        if (! $currentLogger instanceof \Piwigo\Core\CurrentLogger) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentLogger::class);
+        }
+
+        $this->pwgSession = new PwgSession($service, $currentLogger);
     }
 
     #[\Override]

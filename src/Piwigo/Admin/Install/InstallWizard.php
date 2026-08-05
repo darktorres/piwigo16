@@ -776,7 +776,7 @@ define(\'DB_COLLATE\', \'\');
             // define()d and this block ran unconditionally in the original,
             // without SessionBootstrap::register()'s
             // session_save_handler === 'db' guard)
-            session_set_save_handler(new PwgSession(new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class), $this->currentConfig)));
+            session_set_save_handler(new PwgSession(new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class), $this->currentConfig), \Piwigo\Bootstrap\InstallBootstrap::currentLogger()));
             if (function_exists('ini_set')) {
                 ini_set('session.use_cookies', $this->currentConfig->sessionUseCookies());
                 ini_set('session.use_only_cookies', $this->currentConfig->sessionUseOnlyCookies());

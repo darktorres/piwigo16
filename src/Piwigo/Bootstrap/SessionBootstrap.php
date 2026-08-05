@@ -41,7 +41,11 @@ final class SessionBootstrap
             if (! $sessionService instanceof SessionService) {
                 throw new \LogicException('Container returned an unexpected type for ' . SessionService::class);
             }
-            session_set_save_handler(new PwgSession($sessionService));
+            $currentLogger = Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
+            if (! $currentLogger instanceof \Piwigo\Core\CurrentLogger) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentLogger::class);
+            }
+            session_set_save_handler(new PwgSession($sessionService, $currentLogger));
 
             if (function_exists('ini_set')) {
                 $session_use_cookies = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->sessionUseCookies();

@@ -9,6 +9,7 @@ final class PwgSession implements \SessionHandlerInterface
 {
     public function __construct(
         private readonly SessionService $service,
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     #[\Override]
@@ -56,7 +57,8 @@ final class PwgSession implements \SessionHandlerInterface
             return $this->service
                 ->sessionWrite($id, $data);
         } catch (\Throwable $e) {
-            \Piwigo\Core\CurrentLogger::getStatic()->warn('PwgSession::write() failed: ' . $e->getMessage());
+            $this->currentLogger->get()
+                ->warn('PwgSession::write() failed: ' . $e->getMessage());
 
             return false;
         }

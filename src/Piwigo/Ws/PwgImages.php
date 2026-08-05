@@ -94,6 +94,7 @@ final class PwgImages
         private readonly StorageRegistry $storageRegistry,
         private readonly ImageRepository $imageRepository,
         private readonly ImageStdParams $imageStdParams,
+        private readonly WsHelper $wsHelper,
     ) {}
 
     /**
@@ -397,7 +398,7 @@ final class PwgImages
         // open tail for the rest of the row and the page_url/element_url/
         // download_url/derivatives keys WsHelper::stdGetUrls() injects.
         /** @var array{id: int, file: string, name: string|null, comment: string|null, rating_score: string|null, ...} $image_row */
-        $image_row = array_merge($image_row, WsHelper::stdGetUrls($image_row, $this->urlService));
+        $image_row = array_merge($image_row, $this->wsHelper->stdGetUrls($image_row, $this->urlService));
 
         $image_row['name_raw'] = $image_row['name'];
         $nameEvent = $this->eventDispatcher->dispatchChange(new RenderElementName(is_string($image_row['name']) ? $image_row['name'] : '', __FUNCTION__));
@@ -542,7 +543,7 @@ final class PwgImages
         $ret['tags'] = new PwgNamedArray(
             $related_tags,
             'tag',
-            WsHelper::stdGetTagXmlAttributes()
+            $this->wsHelper->stdGetTagXmlAttributes()
         );
         if (isset($comment_post_data)) {
             $ret['comment_post'] = [
@@ -613,8 +614,9 @@ final class PwgImages
     public function search(array $params, PwgServer $service): array
     {
         $images = [];
-        $filterCondition = WsHelper::stdImageSqlFilterCriteria($params, $service)->toSqlCondition('i.');
-        $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
+        $filterCondition = $this->wsHelper->stdImageSqlFilterCriteria($params, $service)
+            ->toSqlCondition('i.');
+        $order_by = $this->wsHelper->stdImageSqlOrder($params, 'i.');
 
         $super_order_by = false;
         if ($order_by !== '') {
@@ -699,7 +701,7 @@ final class PwgImages
                 $descriptionEvent2 = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
                 $image['comment'] = $descriptionEvent2->elementDescription;
 
-                $image = array_merge($image, WsHelper::stdGetUrls($row, $this->urlService));
+                $image = array_merge($image, $this->wsHelper->stdGetUrls($row, $this->urlService));
                 $images[$image_ids[$image['id']]] = $image;
             }
             ksort($images, SORT_NUMERIC);
@@ -718,7 +720,7 @@ final class PwgImages
             'images' => new PwgNamedArray(
                 $images,
                 'image',
-                WsHelper::stdGetImageXmlAttributes()
+                $this->wsHelper->stdGetImageXmlAttributes()
             ),
         ];
     }

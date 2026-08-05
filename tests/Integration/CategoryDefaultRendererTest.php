@@ -16,7 +16,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocIndexThumbnailsSelection;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -95,7 +94,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $commentRepo = $em->getRepository(CommentEntity::class);
         self::assertInstanceOf(CommentRepository::class, $commentRepo);
 
-        $htmlService = new HtmlService();
+        $htmlService = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
         // thumbnails.tpl's own {assign var=derivative
         // value=$pwg->derivative(...)} constructs a real DerivativeImage per
         // thumbnail, whose get_url() now resolves UrlServiceInterface live

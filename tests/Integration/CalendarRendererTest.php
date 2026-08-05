@@ -86,7 +86,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2025-01-25 00:00:00' WHERE id = 5");
 
         $this->urlService = new CalendarRendererTestFakeUrlService();
-        $this->htmlService = new HtmlService();
+        $this->htmlService = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
         // Matches CalendarServiceTest's own fixture shape/guaranteed-shape
         // rationale: getSqlConditionFandF()'s forbidden_images fallthrough

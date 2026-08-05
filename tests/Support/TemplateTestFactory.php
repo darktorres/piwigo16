@@ -15,7 +15,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
-use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Template;
@@ -46,7 +45,7 @@ final class TemplateTestFactory
     {
         return new Template(
             self::resolve(CurrentConfig::class) ?? new CurrentConfig(),
-            self::resolve(Lang::class) ?? new Lang(new Translator(new CurrentConfig()), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
+            self::resolve(Lang::class) ?? new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
             self::resolve(AdminContext::class) ?? new AdminContext(),
             self::resolve(EventDispatcher::class) ?? new EventDispatcher(),
             self::resolve(PageState::class) ?? new PageState(),

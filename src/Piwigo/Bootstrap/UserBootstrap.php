@@ -18,7 +18,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\User\UserInit;
-use Piwigo\Html\HtmlService;
 use Piwigo\Session\SessionService;
 use Piwigo\Ws\PwgCore;
 use Piwigo\Ws\PwgError;
@@ -85,7 +84,7 @@ final class UserBootstrap
         $authService = new AuthService(
             new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
-            new HtmlService(),
+            \Piwigo\Bootstrap\RequestBootstrap::htmlService(),
             new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), $this->deploymentPolicy),
             new CookieService(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
@@ -101,7 +100,7 @@ final class UserBootstrap
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             $mailer,
             new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
-            new HtmlService(),
+            \Piwigo\Bootstrap\RequestBootstrap::htmlService(),
             $conn,
             $sessionService,
             $eventDispatcher,

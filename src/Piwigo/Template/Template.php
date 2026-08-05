@@ -23,7 +23,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -159,7 +158,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             \Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
             if (! is_writable($dir)) {
                 $this->lang->load('admin.lang');
-                new HtmlService()
+                $this->htmlRenderer()
                     ->fatalError(
                         $this->lang->t(
                             'Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation',
@@ -330,7 +329,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      * method now but keeps calling this via `self::` like every other
      * caller in this class. Resolves the container-shared instance
      * (singleton/service-locator elimination campaign, Phase 6), not a
-     * throwaway `new UrlService(new HtmlService())` -- see Image\SrcImage's
+     * throwaway `new UrlService($this->htmlRenderer())` -- see Image\SrcImage's
      * own docblock for why (RootPathOverride's cross-instance sharing
      * requirement).
      */
@@ -365,6 +364,27 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         }
 
         return $accessControl;
+    }
+
+    /**
+     * Container resolve, not a constructor property -- every real use in
+     * this class is `->fatalError(...)`, a defensive early-crash guard
+     * (missing param, non-writable dir, etc.), not real business logic.
+     * `HtmlRenderingInterface` is already bound in container.php, so this
+     * matches Core\FilesystemHelper::fatalError()'s own already-established
+     * precedent for this exact interface/method combination (see that
+     * method's own docblock) rather than growing this class's own
+     * constructor for a 14-site error-path-only usage (singleton/
+     * service-locator elimination campaign, Phase 11 sub-phase 11E).
+     */
+    private function htmlRenderer(): \Piwigo\Core\HtmlRenderingInterface
+    {
+        $htmlRenderer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\HtmlRenderingInterface::class);
+        if (! $htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\HtmlRenderingInterface::class);
+        }
+
+        return $htmlRenderer;
     }
 
     /**
@@ -727,7 +747,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
     public function parse(string $handle, bool $return = false): ?string
     {
         if (! isset($this->files[$handle])) {
-            new HtmlService()
+            $this->htmlRenderer()
                 ->fatalError("Template->parse(): Couldn't load template file for handle {$handle}");
         }
 
@@ -1079,24 +1099,24 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
     public function func_define_derivative(array $params, $smarty): void
     {
         $name = $params['name'] ?? null;
-        (! in_array($name, [null, false, 0, '0', '', []], true) && is_string($name)) or new HtmlService()
+        (! in_array($name, [null, false, 0, '0', '', []], true) && is_string($name)) or $this->htmlRenderer()
             ->fatalError('define_derivative missing name');
         if (isset($params['type'])) {
             $type = $params['type'];
-            is_string($type) or new HtmlService()
+            is_string($type) or $this->htmlRenderer()
                 ->fatalError('define_derivative type must be a string');
             $derivative = $this->imageStdParams()
                 ->get_by_type($type);
             $smarty->assign($name, $derivative);
             return;
         }
-        ! in_array($params['width'] ?? null, [null, false, 0, '0', '', []], true) or new HtmlService()->fatalError('define_derivative missing width');
-        ! in_array($params['height'] ?? null, [null, false, 0, '0', '', []], true) or new HtmlService()->fatalError('define_derivative missing height');
+        ! in_array($params['width'] ?? null, [null, false, 0, '0', '', []], true) or $this->htmlRenderer()->fatalError('define_derivative missing width');
+        ! in_array($params['height'] ?? null, [null, false, 0, '0', '', []], true) or $this->htmlRenderer()->fatalError('define_derivative missing height');
         $width = $params['width'];
         $height = $params['height'];
-        is_scalar($width) or new HtmlService()
+        is_scalar($width) or $this->htmlRenderer()
             ->fatalError('define_derivative width must be scalar');
-        is_scalar($height) or new HtmlService()
+        is_scalar($height) or $this->htmlRenderer()
             ->fatalError('define_derivative height must be scalar');
 
         $w = intval($width);
@@ -1110,7 +1130,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
                 $crop = $params['crop'] ? 1 : 0;
             } else {
                 $crop_val = $params['crop'];
-                is_numeric($crop_val) or new HtmlService()
+                is_numeric($crop_val) or $this->htmlRenderer()
                     ->fatalError('define_derivative crop must be numeric');
                 $crop = round((float) $crop_val / 100.0, 2);
             }
@@ -1120,21 +1140,21 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
                     $minw = $w;
                 } else {
                     $min_width = $params['min_width'];
-                    is_scalar($min_width) or new HtmlService()
+                    is_scalar($min_width) or $this->htmlRenderer()
                         ->fatalError('define_derivative min_width must be scalar');
                     $minw = intval($min_width);
                 }
-                $minw <= $w or new HtmlService()
+                $minw <= $w or $this->htmlRenderer()
                     ->fatalError('define_derivative invalid min_width');
                 if (in_array($params['min_height'] ?? null, [null, false, 0, '0', '', []], true)) {
                     $minh = $h;
                 } else {
                     $min_height = $params['min_height'];
-                    is_scalar($min_height) or new HtmlService()
+                    is_scalar($min_height) or $this->htmlRenderer()
                         ->fatalError('define_derivative min_height must be scalar');
                     $minh = intval($min_height);
                 }
-                $minh <= $h or new HtmlService()
+                $minh <= $h or $this->htmlRenderer()
                     ->fatalError('define_derivative invalid min_height');
             }
         }
@@ -1311,7 +1331,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     public function func_combine_css(array $params): void
     {
         if (in_array($params['path'] ?? null, [null, false, 0, '0', '', []], true) || ! is_string($params['path'])) {
-            new HtmlService()
+            $this->htmlRenderer()
                 ->fatalError('combine_css missing path');
         }
         $path = $params['path'];

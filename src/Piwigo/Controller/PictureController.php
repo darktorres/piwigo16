@@ -1213,7 +1213,7 @@ final class PictureController implements ControllerInterface
             ->render($image_id, $urlService, $picture, $url_self);
         if ($this->currentConfig->activateComments()) {
             new PictureCommentRenderer()
-                ->render($this->lang, $this->accessControl, $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->mailer);
+                ->render($this->lang, $this->accessControl, $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->mailer, $this->htmlService);
         }
         if ($metadata_showable and $this->sessionService->getSessionVar('show_metadata') !== null) {
             new PictureMetadataRenderer()

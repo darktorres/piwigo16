@@ -12,7 +12,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
@@ -51,7 +50,7 @@ use Piwigo\Users\UserService;
  */
 function redirect_service_test_lang(): Lang
 {
-    return new Lang(new Translator(new \Piwigo\Config\CurrentConfig()), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new \Piwigo\Config\CurrentConfig()), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 /**
@@ -85,7 +84,7 @@ function redirect_service_test_user_service(): UserService
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
         redirect_service_test_mail_service(),
         new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
-        new HtmlService(),
+        \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
         $conn,
         new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class),new \Piwigo\Config\CurrentConfig()),
         new EventDispatcher(),

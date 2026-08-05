@@ -21,7 +21,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Html\HtmlService;
 use Piwigo\Url\UrlService;
 
 /**
@@ -250,7 +249,7 @@ function themesInstalledLifecycle(): ExtensionLifecycle
         throw new \LogicException('Container returned an unexpected type');
     }
 
-    return new ExtensionLifecycle(Lang::current(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new \Piwigo\Activity\ActivityService($activityRepo), themesInstalledLifecycleUserService(), new HtmlService(), new CurrentConfig(), $wsContext, $accessControl);
+    return new ExtensionLifecycle(Lang::current(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new \Piwigo\Activity\ActivityService($activityRepo), themesInstalledLifecycleUserService(), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), new CurrentConfig(), $wsContext, $accessControl);
 }
 
 /**
@@ -272,7 +271,7 @@ function themesInstalledLifecycleUserService(): \Piwigo\Users\UserService
         EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
         $mailer,
         new \Piwigo\Activity\ActivityService(EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
-        new HtmlService(),
+        \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
         $conn,
         new \Piwigo\Session\SessionService(EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class), new \Piwigo\Config\CurrentConfig()),
         new \Piwigo\PluginConfig\EventDispatcher(),

@@ -211,7 +211,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $mailer = \Piwigo\Core\Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
-            $this->service = new CommentService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current()), $mailer, new HtmlService(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
+            $this->service = new CommentService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current()), $mailer, \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
         }
 
         private function accessControl(): \Piwigo\Auth\AccessControl
@@ -871,7 +871,7 @@ namespace Piwigo\Tests\Integration {
                 \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class),
                 new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current()),
                 $mailer,
-                new HtmlService(),
+                \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
                 \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
                 new \Piwigo\PluginConfig\EventDispatcher(),
                 \Piwigo\Core\PageState::current(),

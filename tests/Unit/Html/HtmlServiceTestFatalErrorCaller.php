@@ -22,16 +22,18 @@ use Piwigo\Http\ResponseReadyException;
 final class HtmlServiceTestFatalErrorCaller
 {
     /**
-     * fatalError()'s ErrorCollector::recordFatalStatic() message, captured
-     * via the container-shared instance's collected() -- the real
-     * recording path it now uses instead of trigger_error(E_USER_ERROR)
+     * fatalError()'s $this->errorCollector->recordFatal() message,
+     * captured via the container-shared instance's collected() -- the
+     * real recording path it now uses instead of trigger_error(E_USER_ERROR)
      * (deprecated as of PHP 8.4). Called unconditionally by fatalError()
      * regardless of isActive(), so no install()/Reflection state setup is
      * needed here. Resolved from the container (not a fresh `new
      * ErrorCollector()`) so this sees the exact same instance
-     * recordFatalStatic()'s shim writes to (singleton/service-locator
-     * elimination campaign, Phase 2) -- HtmlServiceTest.php's own
-     * beforeEach() already boots Kernel.
+     * HtmlServiceTestFactory::build() resolved ErrorCollector as one of
+     * HtmlService's own required constructor collaborators (singleton/
+     * service-locator elimination campaign, Phase 11 sub-phase 11E,
+     * originally Phase 2) -- HtmlServiceTest.php's own beforeEach()
+     * already boots Kernel.
      */
     public ?string $capturedErrorMessage = null;
 

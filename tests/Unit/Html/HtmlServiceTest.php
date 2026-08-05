@@ -27,13 +27,13 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 
 beforeEach(function (): void {
-    // HtmlService's own ProcessCache usage now goes through a transitional
-    // static shim (singleton/service-locator elimination campaign, Phase 1
-    // -- HtmlService isn't converted to constructor injection here, see
-    // that shim's own docblock), which needs a real container. A real
-    // Paths is required too, not just any booted Kernel: fatalError()'s
-    // own ErrorCollector::recordFatalStatic() shim (Phase 4) now resolves
-    // a DeploymentPolicy-dependent ErrorCollector, whose container factory
+    // ProcessCache/ErrorCollector are both real required constructor
+    // collaborators on HtmlService now (singleton/service-locator
+    // elimination campaign, Phase 11 sub-phase 11E, originally Phase 1/4)
+    // -- HtmlServiceTestFactory::build() resolves both from the real
+    // container when one is booted, which needs a real Paths too, not
+    // just any booted Kernel: ErrorCollector's own container factory
+    // resolves a DeploymentPolicy-dependent instance, whose own factory
     // itself needs Paths bound to autowire.
     Kernel::boot(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
     $processCache = Kernel::container()->get(ProcessCache::class);
@@ -77,14 +77,14 @@ function htmlServiceTestRootPathOverride(): \Piwigo\Url\RootPathOverride
 }
 
 test('renderCommentContent escapes html and linkifies bare URLs', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect(htmlServiceTestRenderCommentContent($service, '<script>alert(1)</script> see http://example.test/x'))
         ->toBe('&lt;script&gt;alert(1)&lt;/script&gt; see <a href="http://example.test/x" rel="nofollow">http://example.test/x</a>');
 });
 
 test('renderCommentContent underlines _word_', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect(htmlServiceTestRenderCommentContent($service, '_hello_'))
         ->toBe('<span style="text-decoration:underline;">hello</span>');
@@ -99,7 +99,7 @@ test('renderCommentContent bolds *word* only when a word character directly touc
     // behavior (confirmed empirically), not something this migration
     // changed -- "*bold*" surrounded by spaces is verifiably a silent
     // no-op, only "word*bold*word" (no space) actually triggers it.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect(htmlServiceTestRenderCommentContent($service, 'a *hello* b'))->toBe('a *hello* b')
         ->and(htmlServiceTestRenderCommentContent($service, 'x*hello*y'))
@@ -107,7 +107,7 @@ test('renderCommentContent bolds *word* only when a word character directly touc
 });
 
 test('renderCommentContent converts newlines to br tags', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect(htmlServiceTestRenderCommentContent($service, "a\nb"))->toBe('a<br />' . "\n" . 'b');
 });
@@ -124,7 +124,7 @@ test('renderCommentContent converts newlines to br tags', function (): void {
  */
 
 test('nameCompare sorts case-insensitively', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->nameCompare(['name' => 'banana'], ['name' => 'Apple']))->toBeGreaterThan(0)
         ->and($service->nameCompare(['name' => 'apple'], ['name' => 'apple']))->toBe(0);
@@ -137,7 +137,7 @@ test('nameCompare lowercases each side independently before comparing', function
     // same comparison sign by ASCII coincidence. Each case below keeps
     // the untested side already-lowercase so only the side under test
     // can flip the sign.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->nameCompare(['name' => 'BANANA'], ['name' => 'apple']))->toBeGreaterThan(0);
     expect($service->nameCompare(['name' => 'apple'], ['name' => 'BANANA']))->toBeLessThan(0);
@@ -145,7 +145,7 @@ test('nameCompare lowercases each side independently before comparing', function
 
 test('nameCompare defaults a missing/non-string name to empty string on each side independently', function (): void {
     // Kills line 316/317's EmptyStringToNotEmpty.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->nameCompare([], ['name' => 'apple']))->toBeLessThan(0);
     expect($service->nameCompare(['name' => 'apple'], []))->toBeGreaterThan(0);
@@ -156,7 +156,7 @@ test('fatalError uses the given title, falling back to the default only when nul
     // side of the ||), BooleanOrToBooleanAnd (&& can never be true for
     // both null and '' simultaneously, so neither would ever fall back),
     // and EmptyStringToNotEmpty.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
     $withCustomTitle = $caller->call($service, 'msg', 'My Custom Title', false);
@@ -174,7 +174,7 @@ test('fatalError omits the backtrace entirely when showTrace is false', function
     // building block is skipped, so $btrace_msg must still read back as
     // the real initial value for the final <pre> block to render with
     // nothing extra after the message.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
     $body = $caller->call($service, 'boom', 'T', false);
@@ -192,7 +192,7 @@ test('fatalError formats each real backtrace frame exactly as "#N\\t{class}::{fu
     // CALL SITE of frame N's own function, so frame #1's file/line
     // point at THIS call, not at HtmlServiceTestFatalErrorCaller.php
     // itself.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
     $callLine = __LINE__ + 1;
@@ -216,7 +216,7 @@ test('fatalError\'s backtrace loop covers frames 1 through the real stack depth,
     // level above fatalError()'s own debug_backtrace() call, so the
     // real last valid frame number is always exactly preCallDepth,
     // regardless of how deep the actual Pest/PHPUnit call stack is.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
     $body = $caller->call($service, 'boom', 'T', true);
@@ -233,7 +233,7 @@ test('fatalError falls back to an empty class prefix, not a placeholder, for a r
     // genuine plain-function frame (call_user_func_array, no enclosing
     // class) a few levels above this call -- confirmed live via a
     // throwaway debug_backtrace() dump of this exact call path.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
     $body = $caller->call($service, 'boom', 'T', true);
@@ -252,7 +252,7 @@ test('fatalError renders an empty, not placeholder, file/line for a real frame w
     // placeholder text before or inside them) for that one frame; no
     // other frame in this exact call chain has both file and line
     // empty, so this pattern can only appear here.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
     $body = $caller->call($service, 'boom', 'T', true);
@@ -269,7 +269,7 @@ test('fatalError joins the backtrace immediately after the message, with no stra
     // exact-match test alone can't tell them apart. What differs is the
     // very first frame: real code has nothing before "#1", while the
     // mutant prepends a stray ")\n" there instead.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
     $body = $caller->call($service, 'boom', 'T', true);
@@ -284,7 +284,7 @@ test('fatalError trims the trailing newline off the backtrace before it reaches 
     // produce a double newline -- the same double-newline shape the
     // showTrace=false test already pins down for the *empty*
     // $btrace_msg case, but here with a genuinely non-empty trace.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
     $body = $caller->call($service, 'boom', 'T', true);
@@ -298,7 +298,7 @@ test('fatalError pads the display with exactly 300 trailing spaces', function ()
     // just the padding, discarding the whole page built above),
     // DecrementInteger/IncrementInteger (299/301 spaces), and
     // UnwrapStrRepeat (str_repeat() removed, leaving a single space).
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
     $body = $caller->call($service, 'boom', 'T', false);
@@ -322,7 +322,7 @@ test('fatalError actually disables display_errors and raises error_reporting to 
     ini_set('display_errors', '1');
     error_reporting(0);
 
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
     try {
@@ -339,7 +339,7 @@ test('fatalError actually disables display_errors and raises error_reporting to 
 test('fatalError passes trigger_error() the tag-stripped message plus the backtrace, not the raw HTML message', function (): void {
     // Kills line 492's UnwrapStripTags (passing the raw, unstripped
     // $msg through instead).
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
     $caller->call($service, '<b>boom</b>', 'T', false);
@@ -353,7 +353,7 @@ test('fatalError passes trigger_error() the backtrace too, not just the stripped
     // sibling test above with showTrace=false: $btrace_msg is '' in
     // that case, so concatenating it or not is unobservable. Requires
     // showTrace=true to actually exercise a non-empty $btrace_msg.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
     $caller->call($service, '<b>boom</b>', 'T', true);
@@ -365,7 +365,7 @@ test('fatalError passes trigger_error() the backtrace too, not just the stripped
 test('fatalError throws a 500 response, not a neighboring status code', function (): void {
     // Kills line 500's DecrementInteger/IncrementInteger
     // (ResponseFactory::html($display, 499|501) instead of 500).
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
     $caller->call($service, 'boom', 'T', false);
@@ -374,7 +374,7 @@ test('fatalError throws a 500 response, not a neighboring status code', function
 });
 
 test('setStatusHeader sends the well-known reason phrase for a known code', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $service->setStatusHeader(404);
 
@@ -385,20 +385,20 @@ test('renderCategoryLiteralDescription strips disallowed tag markup but keeps th
     // strip_tags() removes only the tag markup itself, not the content inside
     // a disallowed tag (it isn't a sanitizer aware of <script>'s special
     // meaning) -- "x" survives, just unwrapped.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->renderCategoryLiteralDescription(new RenderCategoryLiteralDescription('<script>x</script><p>hello</p><b>world</b>'))->description)
         ->toBe('x<p>hello</p><b>world</b>');
 });
 
 test('renderCategoryLiteralDescription treats a null description as empty', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->renderCategoryLiteralDescription(new RenderCategoryLiteralDescription(null))->description)->toBe('');
 });
 
 test('pwgNl2br passes through falsy scalars unchanged', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->pwgNl2br(''))->toBe('')
         ->and($service->pwgNl2br(0))->toBe(0)
@@ -411,7 +411,7 @@ test('pwgNl2br passes through a real float zero unchanged, distinctly from int 0
     // 1.0` instead of `=== 0.0`) -- the sibling test's `0` is a genuine
     // int, strictly !== 0.0, so it can never reach this specific
     // disjunct at all.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->pwgNl2br(0.0))->toBe(0.0);
 });
@@ -421,7 +421,7 @@ test('pwgNl2br casts a real non-zero int/float to string before calling nl2br()'
     // string parameter under strict_types=1; confirmed live that
     // dropping the cast throws a genuine TypeError for a non-string,
     // non-early-returned value like a real int or float.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->pwgNl2br(42))->toBe('42');
     expect($service->pwgNl2br(3.14))->toBe('3.14');
@@ -438,19 +438,19 @@ test('pwgNl2br casts a real non-zero int/float to string before calling nl2br()'
  * identically with the mutation applied.
  */
 test('pwgNl2br passes through arrays unchanged', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->pwgNl2br(['a', 'b']))->toBe(['a', 'b']);
 });
 
 test('pwgNl2br converts newlines in a non-empty string', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->pwgNl2br("a\nb"))->toBe('a<br />' . "\n" . 'b');
 });
 
 test('renderElementName falls back to the filename when name is not set', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->renderElementName(['file' => 'my-photo.jpg']))->toBe('my-photo');
 });
@@ -459,14 +459,14 @@ test('renderElementName uses the given name when it is genuinely non-empty', fun
     // Kills line 673's NotIdenticalToIdentical -- the sibling test above
     // only reaches the "name unset" branch, never "name genuinely
     // present and non-empty".
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->renderElementName(['name' => 'My Photo Title', 'file' => 'my-photo.jpg']))->toBe('My Photo Title');
 });
 
 test('renderElementName falls back to the filename when name is explicitly an empty string, not just unset', function (): void {
     // Kills line 673's EmptyStringToNotEmpty.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->renderElementName(['name' => '', 'file' => 'my-photo.jpg']))->toBe('my-photo');
 });
@@ -474,7 +474,7 @@ test('renderElementName falls back to the filename when name is explicitly an em
 test('renderElementName falls back to an empty string when neither name nor file is set', function (): void {
     // Kills line 681's EmptyStringToNotEmpty (the `?? null` -> `is_string()
     // ? ... : ''` fallback passed into getNameFromFile()).
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->renderElementName([]))->toBe('');
 });
@@ -484,7 +484,7 @@ test('renderElementName throws when a render_element_name handler returns someth
     // fallback ternary this test used to kill was retired along with the
     // typed conversion, since the class-string key + instanceof check
     // make that failure mode structurally impossible to reach silently.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     // A real, untyped plugin handler is exactly what addEventHandler()
     // (not addTypedHandler()) accepts -- PHPStan can't see third-party
     // code, so this test registers the same way to genuinely exercise
@@ -501,21 +501,21 @@ test('renderElementName throws when a render_element_name handler returns someth
 });
 
 test('renderElementDescription returns empty string when comment is not set', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->renderElementDescription([]))->toBe('');
 });
 
 test('renderElementDescription uses the given comment when it is genuinely non-empty', function (): void {
     // Kills line 696's NotIdenticalToIdentical.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->renderElementDescription(['comment' => 'A lovely shot.']))->toBe('A lovely shot.');
 });
 
 test('renderElementDescription returns empty string when comment is explicitly an empty string, not just unset', function (): void {
     // Kills line 696's EmptyStringToNotEmpty.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->renderElementDescription(['comment' => '']))->toBe('');
 });
@@ -530,7 +530,7 @@ test('renderElementDescription never triggers render_element_description for a g
     // straight through, and the input here is already ''). A handler
     // that actually transforms its input is required to expose the
     // difference.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $handler = static fn (RenderElementDescription $e): RenderElementDescription => new RenderElementDescription('MODIFIED', $e->action);
     EventDispatcher::get()->addTypedHandler(RenderElementDescription::class, $handler);
 
@@ -546,7 +546,7 @@ test('renderElementDescription throws when a render_element_description handler 
     // fallback ternary this test used to kill was retired along with the
     // typed conversion, since the class-string key + instanceof check
     // make that failure mode structurally impossible to reach silently.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     // See RenderElementName's own sibling test above for why this uses
     // addEventHandler(), not addTypedHandler().
     $handler = static fn (): int => 42;
@@ -563,7 +563,7 @@ test('renderElementDescription throws when a render_element_description handler 
 test('tagAlphaCompare sorts by the transliterated tag name', function (): void {
     // Plain ASCII names -- no accent-transliteration ambiguity to worry
     // about (see StringHelperTest's own pwgTransliterate notes).
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->tagAlphaCompare(['name' => 'zebra'], ['name' => 'apple']))->toBeGreaterThan(0);
     expect($service->tagAlphaCompare(['name' => 'apple'], ['name' => 'apple']))->toBe(0);
@@ -571,7 +571,7 @@ test('tagAlphaCompare sorts by the transliterated tag name', function (): void {
 
 test('tagAlphaCompare defaults a missing/non-string name to empty string on each side independently', function (): void {
     // Kills line 332/333's EmptyStringToNotEmpty.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->tagAlphaCompare([], ['name' => 'apple']))->toBeLessThan(0);
     expect($service->tagAlphaCompare(['name' => 'apple'], []))->toBeGreaterThan(0);
@@ -588,7 +588,7 @@ test('tagAlphaCompare reuses an already-cached transliteration instead of recomp
     ProcessCache::setStatic(HtmlService::class . '::tagAlphaCompare', [
         'apple' => 'zzz-poison',
     ]);
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->tagAlphaCompare(['name' => 'apple'], ['name' => 'banana']))->toBeGreaterThan(0);
 });
@@ -598,7 +598,7 @@ test('tagAlphaCompare treats a non-array cached value as empty and recomputes bo
     // non-array raw value instead of falling back to [], which would
     // fatal on the very next array-offset read).
     ProcessCache::setStatic(HtmlService::class . '::tagAlphaCompare', 'not-an-array');
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->tagAlphaCompare(['name' => 'apple'], ['name' => 'zebra']))->toBeLessThan(0);
 });
@@ -608,7 +608,7 @@ test('tagAlphaCompare computes and caches both names, keyed by class name, for a
     // name silently never gets transliterated/cached) and line 350's
     // RemoveMethodCall/ConcatRemoveLeft/ConcatRemoveRight/
     // ConcatSwitchSides (the cache write itself, and its exact key).
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $service->tagAlphaCompare(['name' => 'apple'], ['name' => 'zebra']);
 
@@ -634,7 +634,7 @@ test('tagAlphaCompare computes and caches both names, keyed by class name, for a
  * identically.
  */
 test('getTagsContentTitle pluralizes based on the number of tags', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->getTagsContentTitle([['name' => 'one tag']]))->toContain('Tag')
         ->and($service->getTagsContentTitle([['name' => 'one tag']]))->not->toContain('Tags');
@@ -651,7 +651,7 @@ test('getTagsContentTitle builds the exact link markup, prefixed by the real roo
     htmlServiceTestRootPathOverride()->push('/gallery/');
 
     try {
-        $result = new HtmlService()->getTagsContentTitle([['name' => 'a']]);
+        $result = \Piwigo\Tests\Support\HtmlServiceTestFactory::build()->getTagsContentTitle([['name' => 'a']]);
 
         expect($result)->toBe('<a href="/gallery/tags.php" title="display available tags">Tag</a> ');
     } finally {
@@ -660,7 +660,7 @@ test('getTagsContentTitle builds the exact link markup, prefixed by the real roo
 });
 
 test('getThumbnailTitle appends visit/comment counts and a truncated comment, HTML-escaped', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $title = $service->getThumbnailTitle(['hit' => 5, 'nb_comments' => 2], 'My Photo', 'A <b>nice</b> shot');
 
@@ -672,7 +672,7 @@ test('getThumbnailTitle appends visit/comment counts and a truncated comment, HT
 });
 
 test('getThumbnailTitle omits the parenthesized details block when hit/comments are zero or absent', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->getThumbnailTitle([], 'My Photo'))->toBe('My Photo');
 });
@@ -682,7 +682,7 @@ test('getThumbnailTitle omits hit/nb_comments/rating_score at the exact int/floa
     // 0`) and 725's DecrementFloat (`!== -1.0`) -- the sibling test
     // above only reaches the "absent" branch, never "present and
     // exactly zero", which these mutations wrongly treat as non-zero.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $title = $service->getThumbnailTitle(['hit' => 0, 'nb_comments' => 0, 'rating_score' => 0.0], 'My Photo');
 
@@ -696,7 +696,7 @@ test('getThumbnailTitle includes hit/nb_comments/rating_score at exactly 1, not 
     // != 1, so this mutated boundary silently passes there too; and
     // line 725's NotIdenticalToIdentical (`=== 0.0` instead of `!==
     // 0.0`), never exercised by any rating_score value at all before.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $title = $service->getThumbnailTitle(['hit' => 1, 'nb_comments' => 1, 'rating_score' => 1.0], 'My Photo');
 
@@ -711,7 +711,7 @@ test('getThumbnailTitle treats a string "0" the same as a real int/float zero, n
     // a numeric STRING '0' is never ===/!== identical to an int/float 0
     // without the cast, so an uncast comparison would wrongly include
     // it.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $title = $service->getThumbnailTitle(['hit' => '0', 'nb_comments' => '0', 'rating_score' => '0'], 'My Photo');
 
@@ -724,7 +724,7 @@ test('getThumbnailTitle casts a numeric-string nb_comments to int before passing
     // STRING '5' through (instead of casting it first) throws a
     // TypeError under this file's declare(strict_types=1), it doesn't
     // silently coerce.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $title = $service->getThumbnailTitle(['nb_comments' => '5'], 'My Photo');
 
@@ -732,7 +732,7 @@ test('getThumbnailTitle casts a numeric-string nb_comments to int before passing
 });
 
 test('getThumbnailTitle truncates a long comment to 100 characters with an ellipsis', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $longComment = str_repeat('x', 150);
 
     $title = $service->getThumbnailTitle([], 'Title', $longComment);
@@ -745,7 +745,7 @@ test('getThumbnailTitle shows the parenthesized details block for exactly one no
     // of `> 0`) -- every other test here provides either zero or 3
     // non-zero metrics at once, neither of which distinguishes a
     // boundary shifted by exactly one detail.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $title = $service->getThumbnailTitle(['hit' => 5], 'My Photo');
 
@@ -756,7 +756,7 @@ test('getThumbnailTitle joins multiple details with ", " inside a single parenth
     // Kills line 734's ConcatRemoveLeft/ConcatRemoveRight/
     // ConcatSwitchSides (x2) -- an exact match on the full parenthesized
     // structure, not just substring containment.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $title = $service->getThumbnailTitle(['hit' => 5, 'nb_comments' => 2], 'My Photo');
 
@@ -775,7 +775,7 @@ test('getThumbnailTitle strips tags from the comment before counting its length 
     // 90 x's) stays comfortably under it -- the earlier single-<b>-tag
     // version (97 raw chars) never crossed the boundary either way and
     // couldn't actually distinguish the two.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $comment = str_repeat('<b>', 5) . str_repeat('x', 90) . str_repeat('</b>', 5);
 
     $title = $service->getThumbnailTitle([], 'Title', $comment);
@@ -790,7 +790,7 @@ test('getThumbnailTitle does not append an ellipsis at exactly the 100-character
     // no-ellipsis '' fallback) -- the sibling truncation test uses 150
     // chars, comfortably past any of these shifted boundaries either
     // way.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $exactly100 = str_repeat('x', 100);
     $exactly101 = str_repeat('x', 101);
 
@@ -802,7 +802,7 @@ test('getThumbnailTitle escapes a literal & surviving tag-stripping in the final
     // Kills line 742's UnwrapHtmlspecialchars -- every other test's
     // title/comment is free of HTML-special characters, so an unwrapped
     // htmlspecialchars() call is otherwise invisible.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $title = $service->getThumbnailTitle([], 'Fish & Chips');
 
@@ -815,7 +815,7 @@ test('getThumbnailTitle strips real tag markup out of the final title, not just 
     // there is otherwise invisible (htmlspecialchars() alone would
     // still escape a literal '&', which is what the sibling test above
     // actually exercises).
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $title = $service->getThumbnailTitle([], '<b>Bold</b>');
 
@@ -827,7 +827,7 @@ test('getThumbnailTitle throws when a get_thumbnail_title handler returns someth
     // fallback ternary this test used to kill was retired along with the
     // typed conversion, since the class-string key + instanceof check
     // make that failure mode structurally impossible to reach silently.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     // See RenderElementName's own sibling test above for why this uses
     // addEventHandler(), not addTypedHandler().
     $handler = static fn (): int => 42;
@@ -844,7 +844,7 @@ test('getThumbnailTitle throws when a get_thumbnail_title handler returns someth
 test('getCatDisplayName throws when a render_category_name handler returns something other than a RenderCategoryName instance', function (): void {
     // See RenderElementName's own sibling test above for why this uses
     // addEventHandler(), not addTypedHandler().
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $handler = static fn (): int => 42;
     EventDispatcher::get()->addEventHandler(RenderCategoryName::class, $handler);
 
@@ -863,7 +863,7 @@ test('getCatDisplayName joins multiple names with the level separator, and only 
     // to just the current name and losing everything built so far) --
     // both invisible with a single category, which every other test in
     // this file uses.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $result = $service->getCatDisplayName([
         ['id' => 1, 'name' => 'Nature'],
@@ -878,7 +878,7 @@ test('getCatDisplayName builds one link per category, in order, when url is an e
     // Kills line 126's ConcatEqualToEqual (`=` instead of `.=` on the
     // opening `<a href="...">` fragment, dropping everything built for
     // earlier categories in the same $url === '' branch).
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
     $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
 
@@ -901,7 +901,7 @@ test('getCatDisplayNameCache joins multiple names with a <span>-wrapped separato
         '3' => ['id' => 3, 'name' => 'Nature', 'permalink' => null],
         '7' => ['id' => 7, 'name' => 'Portraits', 'permalink' => null],
     ]);
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $result = $service->getCatDisplayNameCache('3,7', null);
 
@@ -912,7 +912,7 @@ test('getCatDisplayNameCache injects an auth param and wraps the whole chain in 
     ProcessCache::setStatic('cat_names', [
         '3' => ['id' => 3, 'name' => 'Nature', 'permalink' => null],
     ]);
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $result = $service->getCatDisplayNameCache('3', 'index.php?/category/', true, 'my-link-class', 'SECRETKEY');
 
@@ -932,7 +932,7 @@ test('getCatDisplayNameCache\'s singleLink href uses the LAST uppercats id, pref
         '3' => ['id' => 3, 'name' => 'Nature', 'permalink' => null],
         '7' => ['id' => 7, 'name' => 'Portraits', 'permalink' => null],
     ]);
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     try {
         $result = $service->getCatDisplayNameCache('3,7', 'index.php?/category/', true);
@@ -949,7 +949,7 @@ test('getCatDisplayNameCache throws when a render_category_name handler returns 
     ]);
     // See RenderElementName's own sibling test above for why this uses
     // addEventHandler(), not addTypedHandler().
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $handler = static fn (): int => 7;
     EventDispatcher::get()->addEventHandler(RenderCategoryName::class, $handler);
 
@@ -962,7 +962,7 @@ test('getCatDisplayNameCache throws when a render_category_name handler returns 
 });
 
 test('getCombinedCategoriesContentTitle renders a single category link without a remove-tag link', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $category = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
 
     // Independently computed from the same real UrlService primitive
@@ -977,7 +977,7 @@ test('getCombinedCategoriesContentTitle renders a single category link without a
 });
 
 test('getCombinedCategoriesContentTitle appends a remove-tag link referencing the other category when combining 2', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
     $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
 
@@ -1041,7 +1041,7 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
         htmlServiceTestRootPathOverride()->push('/gallery/');
 
         try {
-            $service = new HtmlService();
+            $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
             $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
             $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
 
@@ -1094,7 +1094,7 @@ test('getCombinedCategoriesContentTitle folds every other category into combined
     // never gets set -- 3 total is the minimum shape where $other_cats
     // still has something left (2 left after unset(), 1 remains after the
     // shift) to reach that branch at all.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
     $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
     $catC = ['id' => 9, 'name' => 'Travel', 'permalink' => null];
@@ -1128,7 +1128,7 @@ test('getCombinedCategoriesContentTitle folds every other category into combined
  * query string.
  */
 test('setStatusHeader accepts every well-known status code and the default fallback without a fatal/warning', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     foreach ([200, 301, 302, 304, 400, 401, 403, 500, 501, 503] as $code) {
         $service->setStatusHeader($code);
@@ -1152,7 +1152,7 @@ test('setStatusHeader resolves the exact well-known reason phrase for every know
         $captured[$event->code] = $event->text;
     };
     EventDispatcher::get()->addTypedHandler(SetStatusHeader::class, $handler);
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     try {
         $expected = [
@@ -1188,7 +1188,7 @@ test('setStatusHeader keeps the given text unchanged when it is genuinely non-em
         $captured = $event->text;
     };
     EventDispatcher::get()->addTypedHandler(SetStatusHeader::class, $handler);
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     try {
         $service->setStatusHeader(200, 'My Custom Reason');
@@ -1200,7 +1200,7 @@ test('setStatusHeader keeps the given text unchanged when it is genuinely non-em
 });
 
 test('registerDefaultMenubarBlocks does nothing for a BlockManager whose id is not "menubar"', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $menu = new BlockManager('sidebar', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current());
 
     $service->registerDefaultMenubarBlocks(new BlockManagerRegisterBlocks($menu));
@@ -1222,7 +1222,7 @@ function htmlServiceTestElementUrlProtection(HtmlService $service, string $url, 
 }
 
 test('getSrcImageUrlProtectionHandler uses "e" for an original image and "r" for a non-original representative', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $original = new SrcImage(['id' => 7, 'path' => 'upload/2026/07/photo.jpg', 'file' => 'photo.jpg']);
     $representative = new SrcImage(['id' => 9, 'path' => 'upload/2026/07/video.mp4', 'file' => 'video.mp4', 'representative_ext' => 'jpg']);
 
@@ -1237,7 +1237,7 @@ test('getSrcImageUrlProtectionHandler uses "e" for an original image and "r" for
 
 test('getElementUrlProtectionHandler passes a non-image extension through unchanged when protection is scoped to images', function (): void {
     CurrentConfig::current()->setOriginalUrlProtection('images');
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $result = htmlServiceTestElementUrlProtection($service, 'original-url-unchanged', ['id' => 3, 'path' => 'upload/video.mp4']);
 
@@ -1246,7 +1246,7 @@ test('getElementUrlProtectionHandler passes a non-image extension through unchan
 
 test('getElementUrlProtectionHandler builds an action url for an image extension when protection is scoped to images', function (): void {
     CurrentConfig::current()->setOriginalUrlProtection('images');
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $result = htmlServiceTestElementUrlProtection($service, 'ignored', ['id' => 3, 'path' => 'upload/photo.jpg']);
 
@@ -1256,7 +1256,7 @@ test('getElementUrlProtectionHandler builds an action url for an image extension
 test('getElementUrlProtectionHandler builds an action url for any extension when protection is not scoped to images', function (): void {
     // Default originalUrlProtection() is '' -- the images-only guard never
     // triggers, so even a non-image extension reaches the action url.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $result = htmlServiceTestElementUrlProtection($service, 'ignored', ['id' => 5, 'path' => 'upload/video.mp4']);
 
@@ -1269,7 +1269,7 @@ test('getElementUrlProtectionHandler defaults a missing id to an empty string, n
     // ternary fallback, unreachable via the coalesce alone since `''`
     // is already both int|string) -- every other test here always
     // provides a real 'id'.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $result = htmlServiceTestElementUrlProtection($service, 'ignored', ['path' => 'upload/video.mp4']);
 
@@ -1284,7 +1284,7 @@ test('getElementUrlProtectionHandler defaults a non-int-non-string id to an empt
     // ternary's own false branch never runs. A value that survives the
     // coalesce (non-null, so it isn't treated as absent) but is neither
     // an int nor a string is required to actually reach it.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     $result = htmlServiceTestElementUrlProtection($service, 'ignored', ['id' => 3.5, 'path' => 'upload/video.mp4']);
 
@@ -1306,7 +1306,7 @@ test('accessDenied renders a 401 page instead of redirecting when a real (non-gu
         status: \Piwigo\Users\UserStatus::Normal,
         enabledHigh: false,
     ));
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $redirectService = new HtmlServiceTestCapturingRedirectHttpService();
 
     // accessDenied() is `never`-typed and this branch always throws --
@@ -1341,7 +1341,7 @@ test('accessDenied renders a 401 page instead of redirecting when a real (non-gu
 });
 
 test('accessDenied redirects to identification.php with a double urlencoded REQUEST_URI when the user is unauthenticated', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $redirectService = new HtmlServiceTestCapturingRedirectHttpService();
     $_SERVER['REQUEST_URI'] = '/gallery/index.php?/category/5';
 
@@ -1363,7 +1363,7 @@ test('accessDenied redirects to identification.php with a double urlencoded REQU
 });
 
 test('accessDenied falls back to an empty redirect path when REQUEST_URI is missing or not a string', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $redirectService = new HtmlServiceTestCapturingRedirectHttpService();
     // A crafted 'REQUEST_URI' can never really be non-scalar over a real
     // web SAPI, but $_SERVER is untyped -- accessDenied() narrows
@@ -1386,7 +1386,7 @@ test('accessDenied falls back to an empty redirect path when REQUEST_URI is genu
     // array value, so the key always exists and the coalesce's own
     // fallback is never actually exercised; only is_string()'s later
     // check catches that case.
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $redirectService = new HtmlServiceTestCapturingRedirectHttpService();
     $hadRequestUri = array_key_exists('REQUEST_URI', $_SERVER);
     $originalRequestUri = $_SERVER['REQUEST_URI'] ?? null;
@@ -1410,7 +1410,7 @@ test('accessDenied prefixes the identification.php redirect with the real root u
     // indistinguishable with the sibling tests' default empty
     // getRootUrl().
     htmlServiceTestRootPathOverride()->push('/gallery/');
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $redirectService = new HtmlServiceTestCapturingRedirectHttpService();
     $_SERVER['REQUEST_URI'] = '/x';
 
@@ -1426,7 +1426,7 @@ test('accessDenied prefixes the identification.php redirect with the real root u
 });
 
 test('pageForbidden redirects to the given alternate url with a 403 status, a 5 second refresh, and the forbidden message', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $redirectService = new HtmlServiceTestCapturingRedirectHtmlService();
 
     try {
@@ -1449,7 +1449,7 @@ test('pageForbidden redirects to the given alternate url with a 403 status, a 5 
 });
 
 test('pageForbidden computes the default alternate url via makeIndexUrl when none is given', function (): void {
-    $service = new HtmlService();
+    $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
     $redirectService = new HtmlServiceTestCapturingRedirectHtmlService();
     $expectedUrl = \Piwigo\Tests\Support\UrlServiceTestFactory::build($service)->makeIndexUrl();
 
@@ -1568,7 +1568,7 @@ test('setStatusHeader sends a real HTTP/1.1 status line, with the given code and
     file_put_contents(
         $docRoot . '/index.php',
         '<?php require ' . var_export(dirname(__DIR__, 3) . '/vendor/autoload.php', true) . ';'
-        . '(new \Piwigo\Html\HtmlService())->setStatusHeader((int) ($_GET[\'code\'] ?? 404), (string) ($_GET[\'text\'] ?? \'\'));',
+        . '(new \Piwigo\Html\HtmlService(new \Piwigo\Config\CurrentConfig(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Core\ProcessCache(), new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy()), new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()), new \Piwigo\Template\CurrentTemplate(), new \Piwigo\Core\PageState(), new \Piwigo\Lang\Translator(new \Piwigo\Config\CurrentConfig())))->setStatusHeader((int) ($_GET[\'code\'] ?? 404), (string) ($_GET[\'text\'] ?? \'\'));',
     );
 
     [$proc, $port] = htmlServiceTestStartStatusHeaderServer($docRoot);
@@ -1601,7 +1601,7 @@ test('setStatusHeader falls back to HTTP/1.0 for a SERVER_PROTOCOL value that is
         $docRoot . '/index.php',
         '<?php require ' . var_export(dirname(__DIR__, 3) . '/vendor/autoload.php', true) . ';'
         . '$_SERVER[\'SERVER_PROTOCOL\'] = \'HTTP/9.9\';'
-        . '(new \Piwigo\Html\HtmlService())->setStatusHeader((int) ($_GET[\'code\'] ?? 404), (string) ($_GET[\'text\'] ?? \'\'));',
+        . '(new \Piwigo\Html\HtmlService(new \Piwigo\Config\CurrentConfig(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Core\ProcessCache(), new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy()), new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()), new \Piwigo\Template\CurrentTemplate(), new \Piwigo\Core\PageState(), new \Piwigo\Lang\Translator(new \Piwigo\Config\CurrentConfig())))->setStatusHeader((int) ($_GET[\'code\'] ?? 404), (string) ($_GET[\'text\'] ?? \'\'));',
     );
 
     [$proc, $port] = htmlServiceTestStartStatusHeaderServer($docRoot);
@@ -1649,7 +1649,7 @@ test('setStatusHeader actually calls header(), not a no-op, for a real request',
     file_put_contents(
         $docRoot . '/index.php',
         '<?php require ' . var_export(dirname(__DIR__, 3) . '/vendor/autoload.php', true) . ';'
-        . '(new \Piwigo\Html\HtmlService())->setStatusHeader((int) ($_GET[\'code\'] ?? 404), (string) ($_GET[\'text\'] ?? \'\'));',
+        . '(new \Piwigo\Html\HtmlService(new \Piwigo\Config\CurrentConfig(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Core\ProcessCache(), new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy()), new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()), new \Piwigo\Template\CurrentTemplate(), new \Piwigo\Core\PageState(), new \Piwigo\Lang\Translator(new \Piwigo\Config\CurrentConfig())))->setStatusHeader((int) ($_GET[\'code\'] ?? 404), (string) ($_GET[\'text\'] ?? \'\'));',
     );
 
     [$proc, $port] = htmlServiceTestStartStatusHeaderServer($docRoot);

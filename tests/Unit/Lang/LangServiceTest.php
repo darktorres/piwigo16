@@ -24,7 +24,7 @@ use Piwigo\Lang\Translator;
  */
 function langServiceTestNewLang(Paths $paths): Lang
 {
-    return new Lang(Translator::get(), new \Piwigo\Html\HtmlService(), $paths, new \Piwigo\Core\InstallationFlag());
+    return new Lang(Translator::get(), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), $paths, new \Piwigo\Core\InstallationFlag());
 }
 
 beforeEach(function (): void {

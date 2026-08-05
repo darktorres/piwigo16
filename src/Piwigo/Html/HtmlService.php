@@ -6,9 +6,11 @@ namespace Piwigo\Html;
 
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -26,18 +28,44 @@ use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Menu\RegisteredBlock;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
+use Piwigo\Users\CurrentUser;
 
 /**
  * HTML rendering helpers, error pages, and status/header utilities.
  *
- * Takes only an optional, lazy-defaulted CategoryRepository -- same
- * "no *required* constructor deps" shape as Piwigo\Url\UrlService (its
- * P17 sibling namespace). This class has hundreds of real
- * `new HtmlService()` construction sites, so getCatDisplayNameCache()'s
- * own CategoryRepository need (Legacy Coupling Retirement: DI+DBAL
- * migration, Phase 1b) follows MailService::$webmasterMailProvider's
- * established lazy-default pattern rather than a required param.
+ * Real constructor collaborators for the 8 shims this class read
+ * internally (CurrentConfig/EventDispatcher/ProcessCache/ErrorCollector/
+ * CurrentUser/CurrentTemplate/PageState/Translator), plus the same
+ * optional, lazy-defaulted CategoryRepository as before (Legacy Coupling
+ * Retirement: DI+DBAL migration, Phase 1b -- getCatDisplayNameCache()'s
+ * own need, following MailService::$webmasterMailProvider's established
+ * lazy-default pattern, since this class still has hundreds of real
+ * `new HtmlService(...)` construction sites and a DB-backed repository
+ * isn't worth forcing on every one of them) (singleton/service-locator
+ * elimination campaign, Phase 11 sub-phase 11E).
+ *
+ * `Lang`/`AccessControl` are NOT required constructor params, despite
+ * being shims this class reads -- both stay lazily-resolved private
+ * helpers below (same shape as urlService()), because both are genuine
+ * PHP-DI circular dependencies, not just churn: `Lang` itself requires
+ * `HtmlRenderingInterface` (this class implements it, so
+ * `HtmlService -> Lang -> HtmlRenderingInterface -> HtmlService` would be
+ * a hard autowiring cycle), and `AccessControl` requires
+ * `HtmlRenderingInterface` directly too. Since `UrlService` itself also
+ * requires `HtmlRenderingInterface` (this class is its own
+ * `htmlRenderer`), and `UrlServiceInterface` is one of the most widely
+ * autowired dependencies in the whole app, HtmlService sits on an
+ * unusually broad transitive dependency chain -- a required param here
+ * for anything that isn't provably side-effect-free at first resolution
+ * risks the exact class of regression found live during Template.php's
+ * own closure this same sub-phase (ImageStdParams's eager DB-touching
+ * factory breaking public/install.php merely by being resolved). Every
+ * one of the 8 required collaborators above was individually checked
+ * against config/container.php for a custom factory binding with a real
+ * side effect -- none has one, all are plain autowired classes.
  *
  * accessDenied()/badRequest()/pageNotFound()/pageForbidden() (Legacy
  * Coupling Retirement Phase 4b) take Piwigo\Core\RedirectServiceInterface
@@ -75,13 +103,54 @@ use Piwigo\Template\Template;
 final class HtmlService implements HtmlRenderingInterface
 {
     public function __construct(
+        private readonly CurrentConfig $currentConfig,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\ProcessCache $processCache,
+        private readonly ErrorCollector $errorCollector,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly PageState $pageState,
+        private readonly Translator $translator,
         private readonly ?CategoryRepository $categoryRepo = null,
     ) {}
 
     private function categoryRepo(): CategoryRepository
     {
         return $this->categoryRepo
-            ?? new CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), \Piwigo\Config\CurrentConfig::current());
+            ?? new CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), $this->currentConfig);
+    }
+
+    /**
+     * Container resolve, not a constructor property -- Lang's own
+     * constructor requires HtmlRenderingInterface (this class implements
+     * it), so a required param here would close a real cycle
+     * (`HtmlService -> Lang -> HtmlRenderingInterface -> HtmlService`).
+     * Same shape as urlService() below (singleton/service-locator
+     * elimination campaign, Phase 11 sub-phase 11E).
+     */
+    private function lang(): Lang
+    {
+        $lang = \Piwigo\Core\Kernel::container()->get(Lang::class);
+        if (! $lang instanceof Lang) {
+            throw new \LogicException('Container returned an unexpected type for ' . Lang::class);
+        }
+
+        return $lang;
+    }
+
+    /**
+     * Container resolve, not a constructor property -- AccessControl's own
+     * constructor requires HtmlRenderingInterface directly, same real-cycle
+     * reasoning as lang() above.
+     */
+    private function accessControl(): \Piwigo\Auth\AccessControl
+    {
+        $accessControl = \Piwigo\Core\Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
+        if (! $accessControl instanceof \Piwigo\Auth\AccessControl) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Auth\AccessControl::class);
+        }
+
+        return $accessControl;
     }
 
     private function urlService(): UrlServiceInterface
@@ -114,13 +183,13 @@ final class HtmlService implements HtmlRenderingInterface
     #[\Override]
     public function getCatDisplayName(array $catInformations, ?string $url = ''): string
     {
-        $level_separator = \Piwigo\Config\CurrentConfig::current()->levelSeparator();
+        $level_separator = $this->currentConfig->levelSeparator();
 
         $output = '';
         $is_first = true;
 
         foreach ($catInformations as $cat) {
-            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($cat['name']) ? $cat['name'] : '', 'get_cat_display_name'));
+            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($cat['name']) ? $cat['name'] : '', 'get_cat_display_name'));
             $cat['name'] = $nameEvent->categoryName;
 
             if ($is_first) {
@@ -162,7 +231,7 @@ final class HtmlService implements HtmlRenderingInterface
         ?string $linkClass = null,
         ?string $authKey = null,
     ): string {
-        $level_separator = \Piwigo\Config\CurrentConfig::current()->levelSeparator();
+        $level_separator = $this->currentConfig->levelSeparator();
 
         $add_url_params = [];
         if (isset($authKey)) {
@@ -174,12 +243,12 @@ final class HtmlService implements HtmlRenderingInterface
         // when Kernel::isBooted() is false (singleton/service-locator
         // elimination campaign, Phase 1's transitional shim), which would
         // otherwise make a subsequent getStatic() lose it entirely.
-        if (\Piwigo\Core\ProcessCache::hasStatic('cat_names')) {
-            $cat_names_raw = \Piwigo\Core\ProcessCache::getStatic('cat_names');
+        if ($this->processCache->has('cat_names')) {
+            $cat_names_raw = $this->processCache->get('cat_names');
         } else {
             $cat_names_raw = $this->categoryRepo()
                 ->findAllIdNamePermalink();
-            \Piwigo\Core\ProcessCache::setStatic('cat_names', $cat_names_raw);
+            $this->processCache->set('cat_names', $cat_names_raw);
         }
         // Narrowed once here (fix pattern #7): ProcessCache::getStatic() returns
         // mixed, proving the key exists does not prove the stored value is
@@ -202,7 +271,7 @@ final class HtmlService implements HtmlRenderingInterface
             $cat = $cat_names[$category_id] ?? null;
             $cat = is_array($cat) ? $cat : [];
 
-            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($cat['name'] ?? null) ? $cat['name'] : '', 'get_cat_display_name_cache'));
+            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($cat['name'] ?? null) ? $cat['name'] : '', 'get_cat_display_name_cache'));
             $cat['name'] = $nameEvent->categoryName;
 
             if ($is_first) {
@@ -253,14 +322,14 @@ final class HtmlService implements HtmlRenderingInterface
         // lazy categoryRepo() rather than building a second repository.
         $categoryConn = DbConnection::build();
         $cat_info = new CategoryService(
-            \Piwigo\Core\Lang::current(),
+            $this->lang(),
             $this->categoryRepo(),
             new \Piwigo\Permission\PermissionService(
                 new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)),
                 \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class),
-                new CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), \Piwigo\Config\CurrentConfig::current())
+                new CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig)
             ),
-            \Piwigo\Config\CurrentConfig::current()
+            $this->currentConfig
         )->getCategoryInfo($catId);
         // $catId isn't existence-validated by callers (WS/URL param) -- a
         // stale/forged id falls back to an empty breadcrumb.
@@ -346,7 +415,7 @@ final class HtmlService implements HtmlRenderingInterface
 
         // Narrowed once here (fix pattern #7): ProcessCache::getStatic() returns
         // mixed, so the stored value is still mixed even after this check.
-        $transliterated_raw = \Piwigo\Core\ProcessCache::getStatic(self::class . '::tagAlphaCompare');
+        $transliterated_raw = $this->processCache->get(self::class . '::tagAlphaCompare');
         $transliterated = is_array($transliterated_raw) ? $transliterated_raw : [];
 
         foreach ([$name_a, $name_b] as $tag_name) {
@@ -359,7 +428,7 @@ final class HtmlService implements HtmlRenderingInterface
             }
         }
 
-        \Piwigo\Core\ProcessCache::setStatic(self::class . '::tagAlphaCompare', $transliterated);
+        $this->processCache->set(self::class . '::tagAlphaCompare', $transliterated);
 
         $translit_a = is_string($transliterated[$name_a] ?? null) ? $transliterated[$name_a] : \Piwigo\Core\StringHelper::pwgTransliterate($name_a);
         $translit_b = is_string($transliterated[$name_b] ?? null) ? $transliterated[$name_b] : \Piwigo\Core\StringHelper::pwgTransliterate($name_b);
@@ -375,14 +444,14 @@ final class HtmlService implements HtmlRenderingInterface
     #[\Override]
     public function accessDenied(RedirectServiceInterface $redirectService): never
     {
-        if (\Piwigo\Users\CurrentUser::current()->isInitialized() and ! \Piwigo\Auth\AccessControl::current()->isAGuest()) {
+        if ($this->currentUser->isInitialized() and ! $this->accessControl()->isAGuest()) {
             $html = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="shortcut icon" type="image/x-icon" href="themes/default/icon/favicon.ico">
 <div style="display: flex; justify-content: center;align-items: center;height: 100vh;margin: 0;color: #3C3C3C;font-family: \'Open Sans\', sans-serif;font-size: 20px;font-style: normal;font-weight: 600;line-height: normal;">
   <div style="text-align:center;">
     <img src="themes/default/icon/warning-triangle.svg" alt="warning-triangle" >
-    <p style="max-width: 400px; margin-top 20px;">' . Lang::current()->t('You are not authorized to access the requested page') . '</p>
-    <a href="' . $this->urlService()->makeIndexUrl() . '" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">' . Lang::current()->t('Home') . '</a>
+    <p style="max-width: 400px; margin-top 20px;">' . $this->lang()->t('You are not authorized to access the requested page') . '</p>
+    <a href="' . $this->urlService()->makeIndexUrl() . '" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">' . $this->lang()->t('Home') . '</a>
   </div>
 </div>';
             throw new ResponseReadyException(ResponseFactory::html($html, 401));
@@ -408,7 +477,7 @@ final class HtmlService implements HtmlRenderingInterface
         $redirectService->redirectHtml(
             $alternateUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">' . Lang::current()->t('Forbidden') . '</h1><br>'
+<h1 style="text-align:left; font-size:36px;">' . $this->lang()->t('Forbidden') . '</h1><br>'
 . $msg . '</div>',
             5,
             403,
@@ -431,7 +500,7 @@ final class HtmlService implements HtmlRenderingInterface
         $redirectService->redirectHtml(
             $alternateUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">' . Lang::current()->t('Bad request') . '</h1><br>'
+<h1 style="text-align:left; font-size:36px;">' . $this->lang()->t('Bad request') . '</h1><br>'
 . $msg . '</div>',
             5,
             400,
@@ -457,7 +526,7 @@ final class HtmlService implements HtmlRenderingInterface
         $redirectService->redirectHtml(
             $alternateUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">' . Lang::current()->t('Page not found') . '</h1><br>'
+<h1 style="text-align:left; font-size:36px;">' . $this->lang()->t('Page not found') . '</h1><br>'
 . $msg . '</div>',
             5,
             404,
@@ -476,7 +545,8 @@ final class HtmlService implements HtmlRenderingInterface
     public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
     {
         if ($title === null || $title === '') {
-            $title = Lang::current()->t('Piwigo encountered a non recoverable error');
+            $title = $this->lang()
+                ->t('Piwigo encountered a non recoverable error');
         }
 
         $btrace_msg = '';
@@ -527,7 +597,7 @@ final class HtmlService implements HtmlRenderingInterface
         // the whole test process instead. Always recording (regardless of
         // isActive()) and always falling through to the real error page
         // below is both simpler and correct for every one of these cases.
-        ErrorCollector::recordFatalStatic(strip_tags($msg) . $btrace_msg);
+        $this->errorCollector->recordFatal(strip_tags($msg) . $btrace_msg);
 
         throw new ResponseReadyException(ResponseFactory::html($display, 500));
     }
@@ -547,8 +617,8 @@ final class HtmlService implements HtmlRenderingInterface
     #[\Override]
     public function getTagsContentTitle(array $tags): string
     {
-        return '<a href="' . $this->urlService()->getRootUrl() . 'tags.php" title="' . Lang::current()->t('display available tags') . '">'
-          . Lang::current()->t(count($tags) > 1 ? 'Tags' : 'Tag')
+        return '<a href="' . $this->urlService()->getRootUrl() . 'tags.php" title="' . $this->lang()->t('display available tags') . '">'
+          . $this->lang()->t(count($tags) > 1 ? 'Tags' : 'Tag')
           . '</a> ';
     }
 
@@ -567,7 +637,8 @@ final class HtmlService implements HtmlRenderingInterface
     #[\Override]
     public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string
     {
-        $title = Lang::current()->t('Albums') . ' ';
+        $title = $this->lang()
+            ->t('Albums') . ' ';
 
         $is_first = true;
         $all_categories = array_merge([$category], $combinedCategories);
@@ -601,12 +672,12 @@ final class HtmlService implements HtmlRenderingInterface
                 // any request that renders this markup, but this stays
                 // defensive (Phase 2 global-residual sweep: retargeted from
                 // $GLOBALS['template'] ?? null, same defensive shape).
-                $request_template = \Piwigo\Template\CurrentTemplate::current()->isInitialized() ? \Piwigo\Template\CurrentTemplate::current()->get() : null;
+                $request_template = $this->currentTemplate->isInitialized() ? $this->currentTemplate->get() : null;
                 $icon_dir = $request_template instanceof Template ? $request_template->themeConf('icon_dir') : '';
 
                 $title .=
                   '<a id="TagsGroupRemoveTag" href="' . $remove_url . '" style="border:none;" title="'
-                  . Lang::current()->t('remove this tag from the list')
+                  . $this->lang()->t('remove this tag from the list')
                   . '"><img src="'
                     . $this->urlService()->getRootUrl() . $icon_dir . '/remove_s.png'
                   . '" alt="x" style="vertical-align:bottom;" >'
@@ -647,7 +718,7 @@ final class HtmlService implements HtmlRenderingInterface
         }
 
         header("{$protocol} {$code} {$text}", true, $code);
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new SetStatusHeader($code, $text));
+        $this->eventDispatcher->dispatchNotify(new SetStatusHeader($code, $text));
     }
 
     /**
@@ -702,7 +773,7 @@ final class HtmlService implements HtmlRenderingInterface
     public function renderElementName(array $info): string
     {
         if (isset($info['name']) && is_string($info['name']) && $info['name'] !== '') {
-            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementName($info['name'], $info));
+            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderElementName($info['name'], $info));
 
             return $nameEvent->elementName;
         }
@@ -724,7 +795,7 @@ final class HtmlService implements HtmlRenderingInterface
     public function renderElementDescription(array $info, string $param = ''): string
     {
         if (isset($info['comment']) && is_string($info['comment']) && $info['comment'] !== '') {
-            $descEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementDescription($info['comment'], $param));
+            $descEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription($info['comment'], $param));
 
             return $descEvent->elementDescription;
         }
@@ -747,15 +818,15 @@ final class HtmlService implements HtmlRenderingInterface
         $details = [];
 
         if (isset($info['hit']) && is_numeric($info['hit']) && (int) $info['hit'] !== 0) {
-            $details[] = Lang::current()->t('%d visits', $info['hit']);
+            $details[] = $this->lang()->t('%d visits', $info['hit']);
         }
 
-        if (\Piwigo\Config\CurrentConfig::current()->rateEnabled() and isset($info['rating_score']) && is_numeric($info['rating_score']) && (float) $info['rating_score'] !== 0.0) {
-            $details[] = Lang::current()->t('rating score %s', $info['rating_score']);
+        if ($this->currentConfig->rateEnabled() and isset($info['rating_score']) && is_numeric($info['rating_score']) && (float) $info['rating_score'] !== 0.0) {
+            $details[] = $this->lang()->t('rating score %s', $info['rating_score']);
         }
 
         if (isset($info['nb_comments']) and is_numeric($info['nb_comments']) and (int) $info['nb_comments'] !== 0) {
-            $details[] = Translator::get()->plural('%d comment', '%d comments', (int) $info['nb_comments']);
+            $details[] = $this->translator->plural('%d comment', '%d comments', (int) $info['nb_comments']);
         }
 
         if (count($details) > 0) {
@@ -768,7 +839,7 @@ final class HtmlService implements HtmlRenderingInterface
         }
 
         $title = htmlspecialchars(strip_tags($title));
-        $titleEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetThumbnailTitle($title, $info));
+        $titleEvent = $this->eventDispatcher->dispatchChange(new GetThumbnailTitle($title, $info));
 
         return $titleEvent->title;
     }
@@ -794,10 +865,10 @@ final class HtmlService implements HtmlRenderingInterface
     public function getElementUrlProtectionHandler(GetElementUrl $event): GetElementUrl
     {
         $infos = $event->elementInfo;
-        if (\Piwigo\Config\CurrentConfig::current()->originalUrlProtection() === 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
+        if ($this->currentConfig->originalUrlProtection() === 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
             $path = $infos['path'] ?? null;
             $ext = \Piwigo\Core\StringHelper::getExtension(is_string($path) ? $path : null);
-            $picture_ext = \Piwigo\Config\CurrentConfig::current()->pictureExtensions();
+            $picture_ext = $this->currentConfig->pictureExtensions();
             if (! in_array($ext, $picture_ext, true)) {
                 return $event;
             }
@@ -817,9 +888,9 @@ final class HtmlService implements HtmlRenderingInterface
      */
     public function flushPageMessages(): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::current()->get();
+        $template = $this->currentTemplate->get();
         if ($template->get_template_vars('page_refresh') === null) {
-            $pageState = \Piwigo\Core\PageState::current();
+            $pageState = $this->pageState;
             $this->flushMessageMode('errors', $pageState->errors, $template);
             $this->flushMessageMode('infos', $pageState->infos, $template);
             $this->flushMessageMode('warnings', $pageState->warnings, $template);
@@ -845,7 +916,7 @@ final class HtmlService implements HtmlRenderingInterface
      */
     public function flushKeyedErrors(array $keyedErrors): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::current()->get();
+        $template = $this->currentTemplate->get();
         if ($template->get_template_vars('page_refresh') === null) {
             $this->flushMessageMode('errors', $keyedErrors, $template);
         }

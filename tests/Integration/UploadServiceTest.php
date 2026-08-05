@@ -20,7 +20,6 @@ use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\UploadFile;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
@@ -263,7 +262,7 @@ final class UploadServiceTest extends IntegrationTestCase
         CurrentConfig::current()->setLoungeActive(false);
         CurrentConfig::current()->setLoungeActivateThreshold(1_000_000);
 
-        $htmlService = new HtmlService();
+        $htmlService = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
         // RootPathOverride must be the one real, container-shared instance
         // (singleton/service-locator elimination campaign, Phase 6) --
         // addUploadedFileAddToCategories()'s own $urlService->setMakeFullUrl()

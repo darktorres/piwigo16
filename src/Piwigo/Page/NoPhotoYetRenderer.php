@@ -9,6 +9,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
@@ -16,7 +17,6 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Location\LocEndNoPhotoYet;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
@@ -61,6 +61,7 @@ final readonly class NoPhotoYetRenderer
         private readonly ErrorCollector $errorCollector,
         private readonly ProcessCache $processCache,
         private readonly CurrentConfigService $currentConfigService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function render(): void
@@ -81,7 +82,7 @@ final readonly class NoPhotoYetRenderer
                 // the "no photo yet" feature
                 $user_theme = $this->currentUser->get()
                     ->theme;
-                $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService($this->lang, new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), $this->eventDispatcher, $this->currentConfig), \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), \Piwigo\Db\DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig)->getDefaultTheme();
+                $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService($this->lang, new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), $this->eventDispatcher, $this->currentConfig), \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->htmlRenderer, \Piwigo\Db\DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig)->getDefaultTheme();
                 $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths->root . 'themes', $user_theme);
                 $this->currentTemplate->set($template);
 

@@ -13,7 +13,6 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageDuplicateField;
 use Piwigo\Image\ImageService;
 use Piwigo\Mail\MailService;
@@ -90,7 +89,7 @@ final class FilterResolverTest extends IntegrationTestCase
             $em->getRepository(\Piwigo\Group\GroupEntity::class),
             $mailer,
             new ActivityService($em->getRepository(\Piwigo\Activity\ActivityEntity::class)),
-            new HtmlService(),
+            \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
             $this->conn,
             $sessionService,
             new \Piwigo\PluginConfig\EventDispatcher(),

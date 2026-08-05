@@ -157,7 +157,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             $permissionService,
             \Piwigo\Config\CurrentConfig::current()
         );
-        $this->service = new CategoryAdminService($categoryService, $permissionService, new \Piwigo\Html\HtmlService());
+        $this->service = new CategoryAdminService($categoryService, $permissionService, \Piwigo\Tests\Support\HtmlServiceTestFactory::build());
     }
 
     private function userService(): \Piwigo\Users\UserService

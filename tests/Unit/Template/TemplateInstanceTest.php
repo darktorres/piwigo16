@@ -1331,12 +1331,13 @@ test('parse fatal-errors for a handle with no registered filename', function ():
 // --- func_combine_script / func_get_combined_scripts -----------------------
 
 /**
- * func_combine_script()/func_get_combined_scripts() log via ErrorCollector::
- * recordFatalStatic() (Template is still manually `new`'d at several call
- * sites, singleton/service-locator elimination campaign, Phase 6 -- see
- * that shim's own docblock), which resolves the container-shared instance
- * -- resolved here the same way, so drain() reads what the shim just wrote
- * instead of a disconnected fresh instance.
+ * func_combine_script()/func_get_combined_scripts() log via
+ * $this->errorCollector->recordFatal() (a real required constructor
+ * collaborator as of singleton/service-locator elimination campaign,
+ * Phase 11 sub-phase 11E; TemplateTestFactory::build() resolves the same
+ * container-shared instance when Kernel is booted) -- resolved here the
+ * same way, so drain() reads what Template's own call just wrote instead
+ * of a disconnected fresh instance.
  */
 function templateInstanceTestErrorCollector(): ErrorCollector
 {
@@ -1349,7 +1350,7 @@ function templateInstanceTestErrorCollector(): ErrorCollector
 }
 
 test('func_combine_script trigger_errors when id is missing', function (): void {
-    // func_combine_script() logs via ErrorCollector::recordFatalStatic()
+    // func_combine_script() logs via $this->errorCollector->recordFatal()
     // (not trigger_error(E_USER_ERROR), deprecated as of PHP 8.4 -- see
     // HtmlService::fatalError()'s own docblock) and simply returns, no
     // exception thrown -- checked directly via drain() instead of a
@@ -1544,7 +1545,7 @@ test('func_get_combined_scripts trigger_errors when load is missing', function (
     $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
     templateInstanceTestErrorCollector()->drain();
 
-    // The fatal signal (ErrorCollector::recordFatalStatic(), no exception) falls
+    // The fatal signal ($this->errorCollector->recordFatal(), no exception) falls
     // through to the very next line, which reads the still-missing
     // $params['load'] key directly (no isset()) -- a real "Undefined
     // array key" E_WARNING this handler must still absorb, confirmed live.

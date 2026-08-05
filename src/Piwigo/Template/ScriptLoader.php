@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Template;
 
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Html\HtmlService;
 
 final class ScriptLoader
 {
@@ -57,6 +56,28 @@ final class ScriptLoader
     public function __construct()
     {
         $this->clear();
+    }
+
+    /**
+     * Container resolve, not a constructor property -- this class has
+     * hundreds of real `new ScriptLoader()` construction sites (built
+     * fresh inside Template::__construct() itself), so a required param
+     * here would ripple across all of them for 2 defensive
+     * fatalError()-only error-path call sites. `HtmlRenderingInterface` is
+     * already bound in container.php; this file is already on
+     * StructuralTest.php's own `Kernel::container()` allow-list for its
+     * other remaining shim reads (singleton/service-locator elimination
+     * campaign, Phase 11 sub-phase 11F's own future closure), so no new
+     * exception is needed here (Phase 11 sub-phase 11E).
+     */
+    private function htmlRenderer(): \Piwigo\Core\HtmlRenderingInterface
+    {
+        $htmlRenderer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\HtmlRenderingInterface::class);
+        if (! $htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\HtmlRenderingInterface::class);
+        }
+
+        return $htmlRenderer;
     }
 
     /**
@@ -114,7 +135,7 @@ final class ScriptLoader
         if ($require !== []) {
             foreach ($require as $id) {
                 if (! isset($this->registered_scripts[$id])) {
-                    $this->load_known_required_script($id, 1) or new HtmlService()
+                    $this->load_known_required_script($id, 1) or $this->htmlRenderer()
                         ->fatalError("inline script not found require {$id}");
                 }
                 $s = $this->registered_scripts[$id];
@@ -344,7 +365,7 @@ final class ScriptLoader
             trigger_error("Undefined script {$script_id} is required by someone", E_USER_WARNING);
             return 0;
         }
-        $recursion_limiter < 5 or new HtmlService()
+        $recursion_limiter < 5 or $this->htmlRenderer()
             ->fatalError('combined script circular dependency');
         $script = $this->registered_scripts[$script_id];
         if (isset($script->extra['order'])) {

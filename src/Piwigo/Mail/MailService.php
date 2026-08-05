@@ -22,7 +22,6 @@ use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Event\Mail\BeforeParseMailTemplate;
 use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Event\Mail\RenderLostPasswordMailContent;
-use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
@@ -196,6 +195,26 @@ final class MailService implements MailerInterface
         return $errorCollector;
     }
 
+    /**
+     * Container resolve, not a constructor property -- same "pass-through
+     * only, this class sits on AccessControl's own transitively-autowired
+     * chain" reasoning as adminContext()/errorCollector()/processCache()/
+     * currentConfigService() above. Used only inside authService()/
+     * userService()'s own throwaway-fallback constructions below, for
+     * HtmlService.php's own newly-required constructor collaborators
+     * (singleton/service-locator elimination campaign, Phase 11 sub-phase
+     * 11E).
+     */
+    private function htmlRenderer(): \Piwigo\Core\HtmlRenderingInterface
+    {
+        $htmlRenderer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\HtmlRenderingInterface::class);
+        if (! $htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\HtmlRenderingInterface::class);
+        }
+
+        return $htmlRenderer;
+    }
+
     private function processCache(): ProcessCache
     {
         $processCache = \Piwigo\Core\Kernel::container()->get(ProcessCache::class);
@@ -250,7 +269,7 @@ final class MailService implements MailerInterface
             ?? new \Piwigo\Auth\AuthService(
                 new \Piwigo\Auth\AuthRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())),
                 new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)),
-                new HtmlService(),
+                $this->htmlRenderer(),
                 new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())), $this->deploymentPolicy),
                 new \Piwigo\Auth\CookieService(),
                 \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
@@ -281,7 +300,7 @@ final class MailService implements MailerInterface
             \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class),
             new self($this->lang, $this->currentConfig, $this->deploymentPolicy, $this->pageState, $this->paths, $this->sessionService, $this->translator, $this->eventDispatcher, $this->currentUser, $this->urlService),
             new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)),
-            new HtmlService(),
+            $this->htmlRenderer(),
             \Piwigo\Db\DbConnection::build(),
             $this->sessionService,
             $this->eventDispatcher,

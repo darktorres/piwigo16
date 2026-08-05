@@ -9,13 +9,13 @@ use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Template\RenderCommentAuthor;
 use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Event\User\UserCommentInsertion;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Session\SessionService;
@@ -75,12 +75,12 @@ final class PictureCommentRenderer
      *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
      *   genuinely string|null.
      */
-    public function render(Lang $lang, AccessControl $accessControl, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Core\MailerInterface $mailer): void
+    public function render(Lang $lang, AccessControl $accessControl, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Core\MailerInterface $mailer, HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
         $commentRepository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class);
-        $commentService = new CommentService($lang, $commentRepository, new EphemeralKeyService($currentConfig), $mailer, new HtmlService(), $urlService, $eventDispatcher, $pageState, $currentUser, $currentConfig);
+        $commentService = new CommentService($lang, $commentRepository, new EphemeralKeyService($currentConfig), $mailer, $htmlRenderer, $urlService, $eventDispatcher, $pageState, $currentUser, $currentConfig);
 
         $commentAction = null;
 
@@ -137,7 +137,7 @@ final class PictureCommentRenderer
                     $commentInfos[] = $lang->t('Your comment has been registered');
                     break;
                 case 'reject':
-                    new HtmlService()
+                    $htmlRenderer
                         ->setStatusHeader(403);
                     $commentErrors[] = $lang->t('Your comment has NOT been registered because it did not pass the validation rules');
                     break;

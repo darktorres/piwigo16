@@ -16,7 +16,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
-use Piwigo\Html\HtmlService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\ScriptLoader;
@@ -288,7 +287,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php'),
             \Piwigo\Core\PageState::current(),
             CurrentTemplate::current(),
-            new HtmlService(),
+            \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
             \Piwigo\Config\CurrentConfig::current(),
         );
     }

@@ -115,6 +115,18 @@ final class ContainerSmokeTest extends TestCase
         // one -- same "Kernel booted with no real Paths" reasoning as
         // MailerInterface above.
         \Piwigo\Core\UrlServiceInterface::class,
+        // Piwigo\Core\HtmlRenderingInterface resolves to Piwigo\Html\HtmlService,
+        // which now constructor-injects Piwigo\Core\ErrorCollector
+        // (singleton/service-locator elimination campaign, Phase 11
+        // sub-phase 11E), whose own DeploymentPolicy param's factory
+        // binding needs a real Paths to autowire -- same "Kernel booted
+        // with no real Paths" reasoning as MailerInterface above, via a
+        // different (ErrorCollector, not Lang) dependency chain.
+        \Piwigo\Core\HtmlRenderingInterface::class,
+        // Piwigo\Validation\InputValidator's own factory binding takes
+        // HtmlRenderingInterface directly, so it fails to resolve for the
+        // identical reason, one level removed.
+        \Piwigo\Validation\InputValidator::class,
     ];
 
     public function test_every_container_entry_resolves(): void

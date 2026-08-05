@@ -397,7 +397,7 @@ final class RequestBootstrap
         try {
             $conn->getNativeConnection();
         } catch (\Exception $e) {
-            new HtmlService()
+            self::htmlService()
                 ->fatalError(self::lang()->t($e->getMessage()));
         }
 
@@ -505,7 +505,7 @@ final class RequestBootstrap
         \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(TryLogUser::class, new AuthService(
             new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             self::activityService($conn),
-            new HtmlService(),
+            self::htmlService(),
             new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), self::deploymentPolicy()),
             new CookieService(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
@@ -565,7 +565,7 @@ final class RequestBootstrap
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             self::mailService(),
             self::activityService($conn),
-            new HtmlService(),
+            self::htmlService(),
             $conn,
             self::sessionService(),
             \Piwigo\PluginConfig\EventDispatcher::get(),
@@ -675,7 +675,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(self::lang(), \Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService()), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService(), self::currentConfig(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService())
+            new NoPhotoYetRenderer(self::lang(), \Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService()), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService(), self::currentConfig(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::htmlService())
                 ->render();
         }
 
@@ -719,7 +719,7 @@ final class RequestBootstrap
         $pageState->headerNotes = array_merge($pageState->headerNotes, self::currentConfig()->headerNotes());
 
         // default event handlers
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(RenderCategoryLiteralDescription::class, new HtmlService()->renderCategoryLiteralDescription(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(RenderCategoryLiteralDescription::class, self::htmlService()->renderCategoryLiteralDescription(...));
         if (! self::currentConfig()->allowHtmlDescriptions()) {
             // pwgNl2br() is a generic string transform reused by
             // RenderElementDescription's own default handler too -- a thin
@@ -728,7 +728,7 @@ final class RequestBootstrap
             \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
                 RenderCategoryDescription::class,
                 static function (RenderCategoryDescription $e): RenderCategoryDescription {
-                    $result = new HtmlService()
+                    $result = self::htmlService()
                         ->pwgNl2br($e->categoryDescription);
                     $e->categoryDescription = is_string($result) ? $result : null;
 
@@ -736,7 +736,7 @@ final class RequestBootstrap
                 },
             );
         }
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(RenderCommentContent::class, new HtmlService()->renderCommentContent(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(RenderCommentContent::class, self::htmlService()->renderCommentContent(...));
         // 'strip_tags' is PHP's own native function -- can't be retyped, so
         // this is a thin adapter closure instead, same reasoning as
         // pwgNl2br() above.
@@ -768,7 +768,7 @@ final class RequestBootstrap
                 return $e;
             },
         );
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(BlockManagerRegisterBlocks::class, new HtmlService()->registerDefaultMenubarBlocks(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(BlockManagerRegisterBlocks::class, self::htmlService()->registerDefaultMenubarBlocks(...));
         // Relocated from include/functions_comment.inc.php (deleted, P23 batch 8c)
         // -- that file's own top-level add_event_handler() call only ever ran via
         // its include_once at each real caller, all of which now construct
@@ -777,7 +777,7 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), new HtmlService(), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentUser(), self::currentConfig())->checkForSpam(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentUser(), self::currentConfig())->checkForSpam(...));
         // Item 16E: real listener for a previously-unregistered event --
         // Category\CategoryService::deleteSite() dispatches this instead
         // of reaching into Site\SiteRepository directly (a real deptrac
@@ -821,8 +821,8 @@ final class RequestBootstrap
         \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFilePsd(...));
         \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileEps(...));
         if (self::currentConfig()->originalUrlProtection() !== '') {
-            \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(GetElementUrl::class, new HtmlService()->getElementUrlProtectionHandler(...));
-            \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(GetSrcImageUrl::class, new HtmlService()->getSrcImageUrlProtectionHandler(...));
+            \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(GetElementUrl::class, self::htmlService()->getElementUrlProtectionHandler(...));
+            \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(GetSrcImageUrl::class, self::htmlService()->getSrcImageUrlProtectionHandler(...));
         }
         \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new Init());
 

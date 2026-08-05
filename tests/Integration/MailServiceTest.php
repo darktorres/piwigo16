@@ -20,7 +20,6 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Group\GroupEntity;
-use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailRecipientRepository;
 use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
@@ -151,7 +150,7 @@ final class MailServiceTest extends IntegrationTestCase
             EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
             $mailer,
             new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
-            new HtmlService(),
+            \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
             $this->conn,
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
             new \Piwigo\PluginConfig\EventDispatcher(),

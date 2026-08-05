@@ -23,7 +23,6 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Group\GroupEntity;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -160,7 +159,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         );
         $this->categoryService = new CategoryService(\Piwigo\Core\Lang::current(), $categoryRepo, $permissionService, \Piwigo\Config\CurrentConfig::current());
 
-        $htmlService = new HtmlService();
+        $htmlService = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
         // mainpage_categories.tpl's own {assign var=derivative
         // value=$pwg->derivative(...)} constructs a real DerivativeImage per
         // category thumbnail, whose get_url() now resolves UrlServiceInterface

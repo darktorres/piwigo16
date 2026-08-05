@@ -10,7 +10,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 
 // add_anomaly()/get_htlm_links_more_info() are CheckIntegrity's own pure
@@ -31,7 +30,7 @@ use Piwigo\Lang\Translator;
 // used throughout the campaign's own test fallout fixes.
 function checkIntegrityAddAnomalyTestLang(): Lang
 {
-    return new Lang(new Translator(new \Piwigo\Config\CurrentConfig()), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new \Piwigo\Config\CurrentConfig()), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 function checkIntegrityAddAnomalyNew(): CheckIntegrity

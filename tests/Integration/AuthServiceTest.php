@@ -122,7 +122,7 @@ namespace Piwigo\Tests\Integration {
             $this->service = new AuthService(
                 new AuthRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
                 new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)),
-                new HtmlService(),
+                \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
                 new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), new \Piwigo\Config\DeploymentPolicy()),
                 new CookieService(),
                 $this->failedLoginRepo,

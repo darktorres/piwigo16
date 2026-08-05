@@ -65,10 +65,24 @@ final class ExtensionScanner
         if ($type === ExtensionType::Language) {
             // Deliberately not \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             // -- this class is designed to be Unit-testable without a full
-            // app bootstrap (see ExtensionScannerTest's own docblock), and
-            // HtmlService has no mandatory dependencies worth centralizing
-            // via the container.
-            @uasort($found, new \Piwigo\Html\HtmlService()->nameCompare(...));
+            // app bootstrap (see ExtensionScannerTest's own docblock).
+            // HtmlService now has 8 required constructor collaborators
+            // (singleton/service-locator elimination campaign, Phase 11
+            // sub-phase 11E), but nameCompare() itself is a pure
+            // strcmp()-on-strtolower() comparator that touches none of
+            // them, so bare/throwaway instances are harmless here --
+            // same reasoning this file's own docblock already gives for
+            // staying boot-free.
+            @uasort($found, new \Piwigo\Html\HtmlService(
+                new \Piwigo\Config\CurrentConfig(),
+                new \Piwigo\PluginConfig\EventDispatcher(),
+                new \Piwigo\Core\ProcessCache(),
+                new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy()),
+                new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
+                new \Piwigo\Template\CurrentTemplate(),
+                new \Piwigo\Core\PageState(),
+                new \Piwigo\Lang\Translator(new \Piwigo\Config\CurrentConfig()),
+            )->nameCompare(...));
         }
 
         return $found;

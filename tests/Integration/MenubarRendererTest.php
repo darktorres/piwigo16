@@ -9,7 +9,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
-use Piwigo\Html\HtmlService;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -85,9 +84,9 @@ final class MenubarRendererTest extends IntegrationTestCase
         // every $menu->get_block(...) call in render() returns null and
         // the whole method is a no-op.
         EventDispatcher::get()->reset();
-        EventDispatcher::get()->addTypedHandler(BlockManagerRegisterBlocks::class, (new HtmlService())->registerDefaultMenubarBlocks(...));
+        EventDispatcher::get()->addTypedHandler(BlockManagerRegisterBlocks::class, (\Piwigo\Tests\Support\HtmlServiceTestFactory::build())->registerDefaultMenubarBlocks(...));
 
-        $htmlService = new HtmlService();
+        $htmlService = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
         $this->urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlService);
 
         $this->template = \Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default');

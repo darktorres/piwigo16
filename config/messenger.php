@@ -54,7 +54,7 @@ return [
         BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(
             new \Piwigo\Core\Lang(
                 new \Piwigo\Lang\Translator(\Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
-                new \Piwigo\Html\HtmlService(),
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
                 \Piwigo\Core\Paths::fromRoot(dirname(__DIR__)),
                 new \Piwigo\Core\InstallationFlag(),
             ),
@@ -74,7 +74,7 @@ return [
         ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(new MetadataService(
             new \Piwigo\Core\Lang(
                 new \Piwigo\Lang\Translator(\Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
-                new \Piwigo\Html\HtmlService(),
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
                 \Piwigo\Core\Paths::fromRoot(dirname(__DIR__)),
                 new \Piwigo\Core\InstallationFlag(),
             ),
@@ -86,7 +86,7 @@ return [
         SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(new MailService(
             new \Piwigo\Core\Lang(
                 new \Piwigo\Lang\Translator(\Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
-                new \Piwigo\Html\HtmlService(),
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
                 \Piwigo\Core\Paths::fromRoot(dirname(__DIR__)),
                 new \Piwigo\Core\InstallationFlag(),
             ),

@@ -10,7 +10,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
-use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 use Piwigo\Url\UrlService;
 
@@ -41,7 +40,7 @@ function coreTabsUrlService(): UrlServiceInterface
  */
 function coreTabsLang(): Lang
 {
-    return new Lang(new Translator(new CurrentConfig()), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig()), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 /**

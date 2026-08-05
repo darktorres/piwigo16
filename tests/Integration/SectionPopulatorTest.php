@@ -25,7 +25,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupEntity;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
@@ -134,8 +133,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->sessionService = new SessionService($em->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current());
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
-        $this->userService = new UserService(Lang::current(), new \Piwigo\Users\UserRepository($em, new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current()), $em->getRepository(GroupEntity::class), $mailer, new ActivityService($em->getRepository(ActivityEntity::class)), new HtmlService(), $this->conn, $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
-        $this->searchService = new SearchService(\Piwigo\Auth\AccessControl::current(), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, new HtmlService(), new RedirectService(Lang::current(), $this->userService), $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), Lang::current(), \Piwigo\Config\CurrentConfig::current(), $this->tagService);
+        $this->userService = new UserService(Lang::current(), new \Piwigo\Users\UserRepository($em, new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current()), $em->getRepository(GroupEntity::class), $mailer, new ActivityService($em->getRepository(ActivityEntity::class)), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), $this->conn, $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
+        $this->searchService = new SearchService(\Piwigo\Auth\AccessControl::current(), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), new RedirectService(Lang::current(), $this->userService), $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), Lang::current(), \Piwigo\Config\CurrentConfig::current(), $this->tagService);
         $this->sectionRepo = new SectionRepository($em);
         $this->filterState = new FilterState();
         $this->currentLogger = new CurrentLogger();
@@ -184,7 +183,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         return new SectionPopulator(
             Lang::current(),
             \Piwigo\Auth\AccessControl::current(),
-            new HtmlService(),
+            \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
             CurrentTemplate::current()->get(),
             $this->sectionRepo,
             $this->categoryService,

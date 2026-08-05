@@ -280,7 +280,7 @@ final class SearchServiceTest extends IntegrationTestCase
                 \Piwigo\Config\CurrentConfig::current()
             ),
             $this->mailService(),
-            new HtmlService(),
+            \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
             new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()),
             new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), \Piwigo\PluginConfig\EventDispatcher::get(),
             \Piwigo\Users\CurrentUser::current(),

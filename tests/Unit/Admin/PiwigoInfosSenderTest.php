@@ -10,7 +10,6 @@ use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 
@@ -40,7 +39,7 @@ afterEach(function (): void {
 // reasoning as every other collaborator in this file.
 function piwigoInfosSenderTestLang(): Lang
 {
-    return new Lang(new Translator(new CurrentConfig()), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig()), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 /**
@@ -130,7 +129,7 @@ test('send returns immediately without touching the DB or network when telemetry
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Group\GroupEntity::class),
         piwigoInfosSenderTestMailService(),
         $activityService,
-        new \Piwigo\Html\HtmlService(),
+        \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
         \Piwigo\Db\DbConnection::build(),
         new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Session\SessionEntity::class), new \Piwigo\Config\CurrentConfig()),
         new \Piwigo\PluginConfig\EventDispatcher(),

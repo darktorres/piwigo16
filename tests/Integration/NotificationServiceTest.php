@@ -94,7 +94,7 @@ final class NotificationServiceTest extends IntegrationTestCase
             \Piwigo\Auth\AccessControl::current(),
             new NotificationRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
             new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig)),
-            new HtmlService(),
+            \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
             \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
             new Translator(\Piwigo\Config\CurrentConfig::current()),
             \Piwigo\Users\CurrentUser::current(),

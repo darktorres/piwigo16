@@ -72,14 +72,14 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_all_tags_returns_every_fixture_tag_alphabetically(): void
         {
-            $names = array_column($this->service->getAllTags(new HtmlService()), 'name');
+            $names = array_column($this->service->getAllTags(\Piwigo\Tests\Support\HtmlServiceTestFactory::build()), 'name');
 
             self::assertSame(['family', 'nature', 'travel'], $names);
         }
 
         public function test_get_all_tags_sets_name_raw(): void
         {
-            $tags = $this->service->getAllTags(new HtmlService());
+            $tags = $this->service->getAllTags(\Piwigo\Tests\Support\HtmlServiceTestFactory::build());
 
             self::assertSame($tags[0]['name'], $tags[0]['name_raw']);
         }
@@ -434,7 +434,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_common_tags_returns_empty_for_no_items(): void
         {
-            self::assertSame([], $this->service->getCommonTags([], 10, new HtmlService()));
+            self::assertSame([], $this->service->getCommonTags([], 10, \Piwigo\Tests\Support\HtmlServiceTestFactory::build()));
         }
 
         // --- addTags() ---------------------------------------------------------
@@ -585,7 +585,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_get_tag_list_for_image_returns_the_images_tags_sorted_alphabetically(): void
         {
-            $result = $this->service->getTagListForImage(1, new HtmlService());
+            $result = $this->service->getTagListForImage(1, \Piwigo\Tests\Support\HtmlServiceTestFactory::build());
 
             self::assertSame(
                 ['~~3~~' => 'family', '~~1~~' => 'nature', '~~2~~' => 'travel'],
@@ -595,14 +595,14 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_tag_list_for_image_returns_empty_for_an_image_with_no_tags(): void
         {
-            self::assertSame([], $this->service->getTagListForImage(999_999, new HtmlService()));
+            self::assertSame([], $this->service->getTagListForImage(999_999, \Piwigo\Tests\Support\HtmlServiceTestFactory::build()));
         }
 
         // --- getTagListByIds() -----------------------------------------------------
 
         public function test_get_tag_list_by_ids_returns_the_matching_tags_sorted_alphabetically(): void
         {
-            $result = $this->service->getTagListByIds([1, 2], new HtmlService());
+            $result = $this->service->getTagListByIds([1, 2], \Piwigo\Tests\Support\HtmlServiceTestFactory::build());
 
             self::assertSame(
                 ['~~1~~' => 'nature', '~~2~~' => 'travel'],
@@ -625,7 +625,7 @@ namespace Piwigo\Tests\Integration {
             );
 
             try {
-                $result = $this->service->getTagListByIds([1], new HtmlService(), false);
+                $result = $this->service->getTagListByIds([1], \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), false);
 
                 $names = array_column($result, 'name');
                 sort($names);

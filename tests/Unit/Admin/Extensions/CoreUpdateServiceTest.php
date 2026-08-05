@@ -12,7 +12,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 use Piwigo\Url\UrlService;
 
@@ -47,7 +46,7 @@ function core_update_service_test_user_service(): \Piwigo\Users\UserService
         EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
         core_update_service_test_mail_service(),
         core_update_service_test_activity_service(),
-        new HtmlService(),
+        \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
         $conn,
         new \Piwigo\Session\SessionService(EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class), new \Piwigo\Config\CurrentConfig()),
         new \Piwigo\PluginConfig\EventDispatcher(),
@@ -64,7 +63,7 @@ function core_update_service_test_user_service(): \Piwigo\Users\UserService
 // is enough" reasoning as $activityService/$userService above.
 function core_update_service_test_lang(): Lang
 {
-    return new Lang(new Translator(new \Piwigo\Config\CurrentConfig()), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new \Piwigo\Config\CurrentConfig()), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 /**

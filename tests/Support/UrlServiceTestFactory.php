@@ -13,7 +13,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\WsContext;
-use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
@@ -41,7 +40,7 @@ final class UrlServiceTestFactory
     public static function build(?HtmlRenderingInterface $htmlRenderer = null, ?RootPathOverride $rootPathOverride = null): UrlService
     {
         return new UrlService(
-            $htmlRenderer ?? new HtmlService(),
+            $htmlRenderer ?? HtmlServiceTestFactory::build(),
             $rootPathOverride ?? new RootPathOverride(),
             self::resolve(SectionContextRegistry::class) ?? new SectionContextRegistry(),
             self::resolve(RequestMountDepth::class) ?? new RequestMountDepth(),
@@ -49,7 +48,7 @@ final class UrlServiceTestFactory
             self::resolve(DeploymentPolicy::class) ?? new DeploymentPolicy(),
             self::resolve(WsContext::class) ?? new WsContext(),
             self::resolve(CurrentUser::class) ?? new CurrentUser(new CurrentConfig()),
-            self::resolve(Lang::class) ?? new Lang(new Translator(new CurrentConfig()), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
+            self::resolve(Lang::class) ?? new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
             self::resolve(EventDispatcher::class) ?? new EventDispatcher(),
         );
     }

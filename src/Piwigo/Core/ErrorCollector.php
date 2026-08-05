@@ -154,24 +154,6 @@ final class ErrorCollector
     }
 
     /**
-     * @deprecated transitional bridge for callers not yet converted to
-     * constructor injection -- Piwigo\Template\Template and
-     * Piwigo\Html\HtmlService are both still manually `new`'d at dozens of
-     * call sites each (singleton/service-locator elimination campaign,
-     * Phase 6), so neither can take ErrorCollector via constructor
-     * injection yet. Delete once `grep -rn "ErrorCollector::recordFatalStatic("`
-     * outside tests/ returns nothing.
-     */
-    public static function recordFatalStatic(string $message): void
-    {
-        $instance = Kernel::container()->get(self::class);
-        if (! $instance instanceof self) {
-            throw new \LogicException('Container returned an unexpected type for ' . self::class);
-        }
-        $instance->recordFatal($message);
-    }
-
-    /**
      * @internal registered via set_error_handler() — trailing params are
      * optional to match the callable(int, string, string=, int=, array=):bool
      * signature set_error_handler() expects.

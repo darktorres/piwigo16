@@ -10,7 +10,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
-use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 
 function langTestRrmdir(string $dir): void
@@ -242,7 +241,7 @@ function langTestCallPoHeadersToLangInfo(Lang $lang, array $headers): array
  * setter explicitly on their own instance instead of passing it in here.
  *
  * All 4 required collaborators default to cheap, DB-free real objects
- * (new Translator(), new HtmlService(), Paths::fromRoot(), new
+ * (new Translator(), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), Paths::fromRoot(), new
  * InstallationFlag()) -- no test needs a fake for any of them except the
  * one HtmlRenderingInterface args()-fatalError test below, which needs to
  * observe/short-circuit fatalError() rather than let the real HtmlService
@@ -257,7 +256,7 @@ function langTestMake(
 ): Lang {
     return new Lang(
         $translator ?? new Translator(new \Piwigo\Config\CurrentConfig()),
-        $htmlRenderer ?? new HtmlService(),
+        $htmlRenderer ?? \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
         Paths::fromRoot($root ?? sys_get_temp_dir()),
         $installationFlag ?? new InstallationFlag(),
     );

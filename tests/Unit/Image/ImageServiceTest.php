@@ -349,7 +349,7 @@ function imageServiceTestLang(): \Piwigo\Core\Lang
 
     return new \Piwigo\Core\Lang(
         new \Piwigo\Lang\Translator(new CurrentConfig()),
-        new \Piwigo\Html\HtmlService(),
+        \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
         \Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()),
         new \Piwigo\Core\InstallationFlag(),
     );

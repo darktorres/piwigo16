@@ -7,7 +7,6 @@ use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Filter\FilterService;
-use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 use Piwigo\Session\SessionService;
 
@@ -33,7 +32,7 @@ use Piwigo\Session\SessionService;
 // used throughout this campaign's own test fallout fixes.
 function filterServiceTestLang(): Lang
 {
-    return new Lang(new Translator(new \Piwigo\Config\CurrentConfig()), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new \Piwigo\Config\CurrentConfig()), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 test('updateCatsWithFilteredData leaves cats untouched when the filter is disabled', function (): void {

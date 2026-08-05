@@ -81,6 +81,7 @@ final class PwgImages
         private readonly Paths $paths,
         private readonly StorageRegistry $storageRegistry,
         private readonly ImageRepository $imageRepository,
+        private readonly ImageStdParams $imageStdParams,
     ) {}
 
     /**
@@ -1639,7 +1640,7 @@ final class PwgImages
                 return [
                     'image_id' => $image['id'],
                     'src' => DerivativeImage::thumb_url($image),
-                    'square_src' => DerivativeImage::url(ImageStdParams::current()->get_by_type(ImageStdParams::SQUARE), $image),
+                    'square_src' => DerivativeImage::url($this->imageStdParams->get_by_type(ImageStdParams::SQUARE), $image),
                     'name' => $image['name'],
                     'add_status' => $add_status,
                 ];
@@ -1682,7 +1683,7 @@ final class PwgImages
             return [
                 'image_id' => $image_id,
                 'src' => DerivativeImage::thumb_url($image_infos),
-                'square_src' => DerivativeImage::url(ImageStdParams::current()->get_by_type(ImageStdParams::SQUARE), $image_infos),
+                'square_src' => DerivativeImage::url($this->imageStdParams->get_by_type(ImageStdParams::SQUARE), $image_infos),
                 'name' => $image_infos['name'],
                 'category' => [
                     'id' => $params['category'][0],

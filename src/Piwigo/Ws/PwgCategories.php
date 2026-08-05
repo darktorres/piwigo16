@@ -64,6 +64,7 @@ final class PwgCategories
         private readonly \Doctrine\ORM\EntityManagerInterface $entityManager,
         private readonly SessionService $sessionService,
         private readonly PageState $pageState,
+        private readonly ImageStdParams $imageStdParams,
     ) {}
 
     /**
@@ -367,7 +368,7 @@ final class PwgCategories
 
         $categoryService = $this->categoryService;
 
-        if (! in_array($params['thumbnail_size'], array_keys(ImageStdParams::current()->get_defined_type_map()), true)) {
+        if (! in_array($params['thumbnail_size'], array_keys($this->imageStdParams->get_defined_type_map()), true)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid thumbnail_size');
         }
 

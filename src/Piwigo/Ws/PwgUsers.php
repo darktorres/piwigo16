@@ -18,6 +18,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\DateHelper;
@@ -70,6 +71,7 @@ final class PwgUsers
         private readonly PasswordService $passwordService,
         private readonly PreferencesService $preferencesService,
         private readonly Connection $connection,
+        private readonly ConfigService $configService,
     ) {}
 
     /**
@@ -973,7 +975,7 @@ final class PwgUsers
             return new PwgError(403, 'This user cannot become a main user because he is not a webmaster.');
         }
 
-        \Piwigo\Config\CurrentConfigService::current()->get()->confUpdateParam('webmaster_id', $params['user_id']);
+        $this->configService->confUpdateParam('webmaster_id', $params['user_id']);
         return 'The main user has been changed.';
     }
 

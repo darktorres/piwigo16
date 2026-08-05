@@ -11,9 +11,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Event\WsAddMethods;
 
 // P23 batch 8e-8: relocated from include/ws_default_methods.inc.php's own
@@ -39,7 +42,13 @@ final class WsDefaultMethods
     // just a style issue), so this class can never be "finished ahead of"
     // the classes it wires together. See this phase's own investigation
     // note in the plan for why the reverse ordering (this class first)
-    // was tried and found broken.
+    // was tried and found broken. CurrentConfig/AccessControl/CurrentUser/
+    // ImageStdParams added once all 8 Pwg* classes had converted --
+    // register()'s own remaining CurrentConfig::current()/AccessControl::
+    // current()/CurrentUser::current()/ImageStdParams::current() reads
+    // were Phase-10-locked scaffolding the same way the Pwg* classes' own
+    // internal calls were (see Phase 9/5/4's own close-out notes), safe
+    // to close out only now.
     public function __construct(
         private readonly PwgCategories $pwgCategories,
         private readonly PwgCore $pwgCore,
@@ -50,6 +59,10 @@ final class WsDefaultMethods
         private readonly PwgTags $pwgTags,
         private readonly PwgUsers $pwgUsers,
         private readonly PwgImages $pwgImages,
+        private readonly CurrentConfig $currentConfig,
+        private readonly AccessControl $accessControl,
+        private readonly CurrentUser $currentUser,
+        private readonly ImageStdParams $imageStdParams,
     ) {}
 
     /**
@@ -61,13 +74,13 @@ final class WsDefaultMethods
 
         // guard against a misconfigured/empty value since max() requires a
         // non-empty array.
-        $available_permission_levels = \Piwigo\Config\CurrentConfig::current()->availablePermissionLevels();
+        $available_permission_levels = $this->currentConfig->availablePermissionLevels();
         $available_permission_levels = $available_permission_levels !== []
             ? $available_permission_levels
             : [0, 1, 2, 4, 8];
 
-        // \Piwigo\Config\CurrentConfig::current()->nbCommentPage() is a numeric config value (see admin/configuration.php).
-        $nb_comment_page = \Piwigo\Config\CurrentConfig::current()->nbCommentPage();
+        // $this->currentConfig->nbCommentPage() is a numeric config value (see admin/configuration.php).
+        $nb_comment_page = $this->currentConfig->nbCommentPage();
 
         $f_params = [
             'f_min_rate' => [
@@ -226,7 +239,7 @@ final class WsDefaultMethods
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => \Piwigo\Config\CurrentConfig::current()->wsMaxImagesPerPage(),
+                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -270,7 +283,7 @@ final class WsDefaultMethods
                 ],
                 'thumbnail_size' => [
                     'default' => ImageStdParams::THUMB,
-                    'info' => implode(',', array_keys(ImageStdParams::current()->get_defined_type_map())),
+                    'info' => implode(',', array_keys($this->imageStdParams->get_defined_type_map())),
                 ],
                 'search' => [
                     'default' => null,
@@ -321,7 +334,8 @@ final class WsDefaultMethods
                     'type' => WsParamType::ID,
                 ],
                 'author' => [
-                    'default' => \Piwigo\Auth\AccessControl::current()->isAGuest() ? 'guest' : \Piwigo\Users\CurrentUser::current()->get()->username,
+                    'default' => $this->accessControl->isAGuest() ? 'guest' : $this->currentUser->get()
+                        ->username,
                 ],
                 'content' => [],
                 'key' => [],
@@ -373,7 +387,7 @@ final class WsDefaultMethods
                 'query' => [],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => \Piwigo\Config\CurrentConfig::current()->wsMaxImagesPerPage(),
+                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -577,7 +591,7 @@ final class WsDefaultMethods
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => \Piwigo\Config\CurrentConfig::current()->wsMaxImagesPerPage(),
+                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -852,7 +866,7 @@ final class WsDefaultMethods
             $this->pwgImages->setMd5sum(...),
             [
                 'block_size' => [
-                    'default' => \Piwigo\Config\CurrentConfig::current()->checksumComputeBlocksize(),
+                    'default' => $this->currentConfig->checksumComputeBlocksize(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'pwg_token' => [],
@@ -1478,7 +1492,7 @@ final class WsDefaultMethods
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => \Piwigo\Config\CurrentConfig::current()->wsMaxUsersPerPage(),
+                    'maxValue' => $this->currentConfig->wsMaxUsersPerPage(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -1658,7 +1672,7 @@ final class WsDefaultMethods
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => \Piwigo\Config\CurrentConfig::current()->wsMaxUsersPerPage(),
+                    'maxValue' => $this->currentConfig->wsMaxUsersPerPage(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -2015,7 +2029,7 @@ final class WsDefaultMethods
             [
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => \Piwigo\Config\CurrentConfig::current()->wsMaxImagesPerPage(),
+                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -2332,7 +2346,7 @@ final class WsDefaultMethods
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'per_page' => [
-                    'default' => \Piwigo\Config\CurrentConfig::current()->commentsPageNbComments(),
+                    'default' => $this->currentConfig->commentsPageNbComments(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
             ],

@@ -424,6 +424,144 @@ final class BrowserTestHelpers
      * proving the session is actually authenticated (not just redirected).
      */
     /**
+     * pgsql support pass: every direct-DB-fixture helper below previously
+     * built its own `new \mysqli(...)` -- hardcoded to MySQL, confirmed
+     * live to throw "Access denied" against a real PIWIGO_DB_DRIVER=pgsql
+     * .env.test the moment any of these ran (VisualRegressionTest's own
+     * H::clearLoginLockout()/H::freezeImageHits() calls). This shared
+     * connect()/dbQuery()/dbEscape()/dbClose()/dbFetchAssoc()/dbFetchAll()
+     * set mirrors the identical dispatch shape RegenerateFixtureTest
+     * already established for its own raw INSERTs (that class's own
+     * private dbQuery()/dbEscape()/dbClose() -- not reusable here directly
+     * since this is a plain static class, not an IntegrationTestCase
+     * subclass), extended with the fetch helpers this file's own
+     * SELECT-driven methods (configValue(), imagePath(), ...) need that
+     * RegenerateFixtureTest's insert-only usage never did.
+     */
+    private static function connect(): \mysqli|\PgSql\Connection
+    {
+        $host = (string) getenv('PIWIGO_DB_HOST');
+        $user = (string) getenv('PIWIGO_DB_USER');
+        $password = getenv('PIWIGO_DB_PASSWORD');
+        $password = $password === false ? '' : $password;
+        $base = (string) getenv('PIWIGO_DB_BASE');
+
+        if (getenv('PIWIGO_DB_DRIVER') === 'pgsql') {
+            $connStringParts = ['host=' . $host, 'user=' . $user, 'dbname=' . $base];
+            if ($password !== '') {
+                $connStringParts[] = 'password=' . $password;
+            }
+
+            $conn = pg_connect(implode(' ', $connStringParts), PGSQL_CONNECT_FORCE_NEW);
+            if ($conn === false) {
+                throw new \RuntimeException('BrowserTestHelpers: pg_connect failed');
+            }
+
+            return $conn;
+        }
+
+        return new \mysqli($host, $user, $password, $base);
+    }
+
+    private static function dbQuery(\mysqli|\PgSql\Connection $db, string $sql): void
+    {
+        if ($db instanceof \mysqli) {
+            $db->query($sql);
+        } else {
+            pg_query($db, $sql);
+        }
+    }
+
+    private static function dbEscape(\mysqli|\PgSql\Connection $db, string $value): string
+    {
+        return $db instanceof \mysqli ? $db->real_escape_string($value) : pg_escape_string($db, $value);
+    }
+
+    private static function dbClose(\mysqli|\PgSql\Connection $db): void
+    {
+        if ($db instanceof \mysqli) {
+            $db->close();
+        } else {
+            pg_close($db);
+        }
+    }
+
+    /** @return array<string, float|int|string|null>|null */
+    private static function dbFetchAssoc(\mysqli|\PgSql\Connection $db, string $sql): ?array
+    {
+        if ($db instanceof \mysqli) {
+            $result = $db->query($sql);
+            if (! $result instanceof \mysqli_result) {
+                return null;
+            }
+            $row = $result->fetch_assoc();
+
+            return is_array($row) ? $row : null;
+        }
+
+        $result = pg_query($db, $sql);
+        if ($result === false) {
+            return null;
+        }
+        $row = pg_fetch_assoc($result);
+
+        return $row === false ? null : self::stringKeyed($row);
+    }
+
+    /** @return list<array<string, float|int|string|null>> */
+    private static function dbFetchAll(\mysqli|\PgSql\Connection $db, string $sql): array
+    {
+        if ($db instanceof \mysqli) {
+            $result = $db->query($sql);
+            if (! $result instanceof \mysqli_result) {
+                return [];
+            }
+            $rows = [];
+            while (is_array($row = $result->fetch_assoc())) {
+                $rows[] = $row;
+            }
+
+            return $rows;
+        }
+
+        $result = pg_query($db, $sql);
+        if ($result === false) {
+            return [];
+        }
+
+        $rows = [];
+        while (is_array($row = pg_fetch_assoc($result))) {
+            $rows[] = self::stringKeyed($row);
+        }
+
+        return $rows;
+    }
+
+    /**
+     * pg_fetch_assoc()'s own stub types its returned array's keys more
+     * loosely than the guaranteed-string-keyed reality of a PGSQL_ASSOC
+     * fetch -- rebuilt via explicit (string) cast the same way wsCall()
+     * above already normalizes a json_decode()'d array's keys, rather
+     * than fighting the stub with a suppression. Generic over TValue so
+     * this only reshapes keys, without also widening the real value type
+     * (string|null, per pg_fetch_assoc()'s own stub) the way a flat
+     * `mixed` return would.
+     *
+     * @template TValue
+     * @param array<mixed, TValue> $row
+     * @return array<string, TValue>
+     */
+    private static function stringKeyed(array $row): array
+    {
+        $normalized = [];
+        foreach ($row as $key => $value) {
+            $normalized[(string) $key] = $value;
+        }
+
+        return $normalized;
+    }
+
+    /**
      * AuthService::pwgLogin()'s IP-scoped lockout (user_failed_logins,
      * see that method's own docblock) counts *every* recent failed login
      * from a given IP, regardless of which test caused it -- every request
@@ -440,16 +578,11 @@ final class BrowserTestHelpers
      */
     public static function clearLoginLockout(): void
     {
-        $db = new \mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = self::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        $db->query(sprintf('DELETE FROM %suser_failed_logins', $prefix));
-        $db->close();
+        self::dbQuery($db, sprintf('DELETE FROM %suser_failed_logins', $prefix));
+        self::dbClose($db);
     }
 
     // PHPStan infers fill()/click() always resolve through Webpage's
@@ -844,16 +977,11 @@ final class BrowserTestHelpers
      */
     public static function truncateHistory(): void
     {
-        $db = new \mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = self::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        $db->query(sprintf('DELETE FROM %shistory', $prefix));
-        $db->close();
+        self::dbQuery($db, sprintf('DELETE FROM %shistory', $prefix));
+        self::dbClose($db);
     }
 
     /** Returns the pwg_token for the current session (must be logged in). */
@@ -882,16 +1010,11 @@ final class BrowserTestHelpers
      */
     public static function freezeImageHits(int $imageId, int $value): void
     {
-        $db = new \mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = self::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        $db->query(sprintf('UPDATE %simages SET hit = %d WHERE id = %d', $prefix, $value, $imageId));
-        $db->close();
+        self::dbQuery($db, sprintf('UPDATE %simages SET hit = %d WHERE id = %d', $prefix, $value, $imageId));
+        self::dbClose($db);
     }
 
     /**
@@ -902,29 +1025,17 @@ final class BrowserTestHelpers
      */
     public static function configValue(string $param): ?string
     {
-        $db = new \mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = self::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        $result = $db->query(sprintf(
+        $row = self::dbFetchAssoc($db, sprintf(
             "SELECT value FROM %sconfig WHERE param = '%s'",
             $prefix,
-            $db->real_escape_string($param)
+            self::dbEscape($db, $param)
         ));
-        $value = null;
-        if ($result instanceof \mysqli_result) {
-            $row = $result->fetch_assoc();
-            if (is_array($row) && is_string($row['value'] ?? null)) {
-                $value = $row['value'];
-            }
-        }
-        $db->close();
+        self::dbClose($db);
 
-        return $value;
+        return is_array($row) && is_string($row['value'] ?? null) ? $row['value'] : null;
     }
 
     /**
@@ -956,29 +1067,31 @@ final class BrowserTestHelpers
      */
     public static function setConfigValue(string $param, ?string $rawJsonValue): void
     {
-        $db = new \mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = self::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
         if ($rawJsonValue === null) {
-            $db->query(sprintf(
+            self::dbQuery($db, sprintf(
                 "UPDATE %sconfig SET value = NULL WHERE param = '%s'",
                 $prefix,
-                $db->real_escape_string($param)
+                self::dbEscape($db, $param)
             ));
         } else {
-            $db->query(sprintf(
-                "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE value = VALUES(value)",
+            // ON DUPLICATE KEY UPDATE has no Postgres equivalent -- ON
+            // CONFLICT (param) DO UPDATE SET is the real one, same as
+            // ContractTestCase::upsertConfig()'s own established branch
+            // (piwigo_config.param is the PRIMARY KEY on both platforms).
+            $upsertSql = $db instanceof \mysqli
+                ? "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE value = VALUES(value)"
+                : "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON CONFLICT (param) DO UPDATE SET value = EXCLUDED.value";
+            self::dbQuery($db, sprintf(
+                $upsertSql,
                 $prefix,
-                $db->real_escape_string($param),
-                $db->real_escape_string($rawJsonValue)
+                self::dbEscape($db, $param),
+                self::dbEscape($db, $rawJsonValue)
             ));
         }
-        $db->close();
+        self::dbClose($db);
         CachePools::config()->clear();
     }
 
@@ -1021,33 +1134,14 @@ final class BrowserTestHelpers
      */
     public static function snapshotDerivativeConfig(): array
     {
-        $db = new \mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = self::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
-        $settings = null;
-        $result = $db->query(sprintf('SELECT * FROM %sderivative_settings', $prefix));
-        if ($result instanceof \mysqli_result) {
-            $row = $result->fetch_assoc();
-            if (is_array($row)) {
-                $settings = $row;
-            }
-        }
+        $settings = self::dbFetchAssoc($db, sprintf('SELECT * FROM %sderivative_settings', $prefix));
+        $sizes = self::dbFetchAll($db, sprintf('SELECT * FROM %sderivative_size', $prefix));
 
-        $sizes = [];
-        $result = $db->query(sprintf('SELECT * FROM %sderivative_size', $prefix));
-        if ($result instanceof \mysqli_result) {
-            while (is_array($row = $result->fetch_assoc())) {
-                $sizes[] = $row;
-            }
-        }
-
-        $db->close();
+        self::dbClose($db);
 
         return ['settings' => $settings, 'sizes' => $sizes];
     }
@@ -1062,26 +1156,21 @@ final class BrowserTestHelpers
      */
     public static function restoreDerivativeConfig(array $snapshot): void
     {
-        $db = new \mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = self::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
-        $db->query(sprintf('DELETE FROM %sderivative_settings', $prefix));
+        self::dbQuery($db, sprintf('DELETE FROM %sderivative_settings', $prefix));
         if ($snapshot['settings'] !== null) {
             self::insertRow($db, $prefix . 'derivative_settings', $snapshot['settings']);
         }
 
-        $db->query(sprintf('DELETE FROM %sderivative_size', $prefix));
+        self::dbQuery($db, sprintf('DELETE FROM %sderivative_size', $prefix));
         foreach ($snapshot['sizes'] as $row) {
             self::insertRow($db, $prefix . 'derivative_size', $row);
         }
 
-        $db->close();
+        self::dbClose($db);
     }
 
     /**
@@ -1096,18 +1185,13 @@ final class BrowserTestHelpers
      */
     public static function setDerivativeSettingsRow(array $row): void
     {
-        $db = new \mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = self::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
-        $db->query(sprintf('DELETE FROM %sderivative_settings', $prefix));
+        self::dbQuery($db, sprintf('DELETE FROM %sderivative_settings', $prefix));
         self::insertRow($db, $prefix . 'derivative_settings', ['id' => 1] + $row);
-        $db->close();
+        self::dbClose($db);
     }
 
     /**
@@ -1123,22 +1207,17 @@ final class BrowserTestHelpers
      */
     public static function syncEnabledDerivativeSizes(array $rows): void
     {
-        $db = new \mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = self::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
         $names = array_map(static function (array $row) use ($db, $prefix): string {
             $rowName = $row['name'] ?? null;
             $name = is_string($rowName) ? $rowName : '';
-            $db->query(sprintf(
+            self::dbQuery($db, sprintf(
                 'DELETE FROM %sderivative_size WHERE name = \'%s\'',
                 $prefix,
-                $db->real_escape_string($name)
+                self::dbEscape($db, $name)
             ));
             self::insertRow($db, $prefix . 'derivative_size', $row);
 
@@ -1147,21 +1226,31 @@ final class BrowserTestHelpers
 
         $inClause = $names === []
             ? "'\\0'" // never matches a real name -- keeps the DELETE valid SQL when $rows is empty
-            : implode(', ', array_map(static fn (string $n): string => "'" . $db->real_escape_string($n) . "'", $names));
+            : implode(', ', array_map(static fn (string $n): string => "'" . self::dbEscape($db, $n) . "'", $names));
 
-        $db->query(sprintf(
+        self::dbQuery($db, sprintf(
             'DELETE FROM %sderivative_size WHERE enabled = 1 AND name NOT IN (%s)',
             $prefix,
             $inClause
         ));
 
-        $db->close();
+        self::dbClose($db);
     }
 
     /**
+     * Unquoted identifiers: every real column this is ever called with
+     * (derivative_settings/derivative_size, per the two callers above) is
+     * already lowercase snake_case with no reserved-word collisions on
+     * either platform (confirmed by reading both tables' real DDL) --
+     * matches the same "unquoted works identically" convention Phase B's
+     * schema authoring already established, rather than branching a
+     * quote-char per platform for a case that never actually needs it.
+     * Backtick quoting (the prior MySQL-only form) is simply invalid
+     * syntax on Postgres, so this can't stay driver-blind.
+     *
      * @param array<string, mixed> $row
      */
-    private static function insertRow(\mysqli $db, string $table, array $row): void
+    private static function insertRow(\mysqli|\PgSql\Connection $db, string $table, array $row): void
     {
         $columns = array_keys($row);
         $values = array_map(static function (mixed $value) use ($db): string {
@@ -1172,13 +1261,13 @@ final class BrowserTestHelpers
                 throw new \InvalidArgumentException('insertRow() only accepts scalar column values, got ' . get_debug_type($value));
             }
 
-            return "'" . $db->real_escape_string((string) $value) . "'";
+            return "'" . self::dbEscape($db, (string) $value) . "'";
         }, array_values($row));
 
-        $db->query(sprintf(
+        self::dbQuery($db, sprintf(
             'INSERT INTO %s (%s) VALUES (%s)',
             $table,
-            implode(', ', array_map(static fn (string $c): string => '`' . $c . '`', $columns)),
+            implode(', ', $columns),
             implode(', ', $values)
         ));
     }
@@ -1209,17 +1298,12 @@ final class BrowserTestHelpers
      */
     public static function setCategoryPrivate(int $categoryId, bool $private): void
     {
-        $db = new \mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = self::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
         $status = $private ? 'private' : 'public';
-        $db->query(sprintf("UPDATE %scategories SET status = '%s' WHERE id = %d", $prefix, $status, $categoryId));
-        $db->close();
+        self::dbQuery($db, sprintf("UPDATE %scategories SET status = '%s' WHERE id = %d", $prefix, $status, $categoryId));
+        self::dbClose($db);
 
         \Piwigo\Cache\CachePools::permissions()->clear();
         \Piwigo\Cache\CachePools::effectivePermissions()->clear();
@@ -1236,21 +1320,11 @@ final class BrowserTestHelpers
      */
     public static function imagePath(int $imageId): string
     {
-        $db = new \mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = self::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        $result = $db->query(sprintf('SELECT path FROM %simages WHERE id = %d', $prefix, $imageId));
-        if (! $result instanceof \mysqli_result) {
-            $db->close();
-            throw new \RuntimeException("imagePath(): query failed for image {$imageId}");
-        }
-        $row = $result->fetch_assoc();
-        $db->close();
+        $row = self::dbFetchAssoc($db, sprintf('SELECT path FROM %simages WHERE id = %d', $prefix, $imageId));
+        self::dbClose($db);
         $path = is_array($row) ? ($row['path'] ?? null) : null;
         if (! is_string($path)) {
             throw new \RuntimeException("imagePath(): no path found for image {$imageId}");
@@ -1271,20 +1345,15 @@ final class BrowserTestHelpers
      */
     public static function setGuestTheme(string $theme): void
     {
-        $db = new \mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = self::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        $db->query(sprintf(
+        self::dbQuery($db, sprintf(
             "UPDATE %suser_infos SET theme = '%s' WHERE user_id = 2",
             $prefix,
-            $db->real_escape_string($theme)
+            self::dbEscape($db, $theme)
         ));
-        $db->close();
+        self::dbClose($db);
     }
 
     /**
@@ -1311,50 +1380,22 @@ final class BrowserTestHelpers
         }
         file_put_contents($absPath, $binaryContent);
 
-        $db = new \mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
         // use_standard_pages already defaults to 'true' in the fixture --
         // set explicitly anyway so this helper is correct standalone.
-        // json_encode() each value per its own CurrentConfig property type
-        // (bool stays a bare true/false literal, the two string-typed
-        // paths get JSON-quoted) -- this write bypasses ConfigService::
-        // encode() entirely, so it has to match that convention by hand.
+        // Routed through setConfigValue() (rather than its own inline
+        // upsert, which previously duplicated that method's MySQL-only
+        // ON DUPLICATE KEY UPDATE) so the ON CONFLICT/cache-clear logic
+        // exists in exactly one place -- that method already clears
+        // CachePools::config() per call, closing the same "this write
+        // bypasses ConfigService entirely" gap this method's own prior
+        // single end-of-method clear() described.
         foreach ([
             'use_standard_pages' => true,
             'standard_pages_selected_logo' => 'custom_logo',
             'standard_pages_selected_logo_path' => $relativePath,
         ] as $param => $value) {
-            $jsonValue = json_encode($value);
-            if ($jsonValue === false) {
-                throw new ExpectationFailedException("json_encode failed for config param '{$param}'");
-            }
-
-            $escaped = $db->real_escape_string($jsonValue);
-            $db->query(sprintf(
-                "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE value = '%s'",
-                $prefix,
-                $param,
-                $escaped,
-                $escaped
-            ));
+            self::setConfigValue($param, self::jsonEncode($value));
         }
-        $db->close();
-
-        // This DB write bypasses ConfigService entirely, so the live
-        // Apache-served app's own CachePools::config() (filesystem-backed
-        // in this environment, real cross-process storage, not a
-        // per-process optimization) would otherwise keep serving whatever
-        // config it cached before this write -- same gap
-        // IntegrationTestCase::loadFixture()/setUp() close for the
-        // PHPUnit/Pest process, but that class isn't in play for Browser
-        // tests, which hit the real server over HTTP.
-        CachePools::config()->clear();
     }
 
     /** Reverts setCustomLogo() -- deletes the file and the 2 config keys it set (leaves use_standard_pages, already true by default). */
@@ -1371,19 +1412,14 @@ final class BrowserTestHelpers
             unlink($logoPath);
         }
 
-        $db = new \mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = self::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        $db->query(sprintf(
+        self::dbQuery($db, sprintf(
             "DELETE FROM %sconfig WHERE param IN ('standard_pages_selected_logo', 'standard_pages_selected_logo_path')",
             $prefix
         ));
-        $db->close();
+        self::dbClose($db);
 
         CachePools::config()->clear();
     }
@@ -1544,21 +1580,21 @@ final class BrowserTestHelpers
     }
 
     /**
-     * Runs a single-row SELECT directly against mysqli and returns its
-     * associative row, failing loudly instead of letting a raw
-     * mysqli_result|bool/array|null ambiguity leak into a caller's own
-     * narrowing.
+     * Runs a single-row SELECT directly against the connection and returns
+     * its associative row, failing loudly instead of letting a raw
+     * mysqli_result|bool/array|null (or pg_fetch_assoc's own false-on-
+     * empty) ambiguity leak into a caller's own narrowing. $db is typed
+     * \mysqli|\PgSql\Connection (not just \mysqli) so this stays usable by
+     * every real Browser test file that builds its own connection via
+     * PIWIGO_DB_DRIVER-aware code rather than only this class's own
+     * connect().
      *
      * @return array<string, float|int|string|null>
      */
-    public static function fetchAssocOrFail(\mysqli $db, string $sql): array
+    public static function fetchAssocOrFail(\mysqli|\PgSql\Connection $db, string $sql): array
     {
-        $result = $db->query($sql);
-        if (! $result instanceof \mysqli_result) {
-            throw new ExpectationFailedException('Query did not return a result set: ' . $sql);
-        }
-        $row = $result->fetch_assoc();
-        if (! is_array($row)) {
+        $row = self::dbFetchAssoc($db, $sql);
+        if ($row === null) {
             throw new ExpectationFailedException('Query returned no row: ' . $sql);
         }
 

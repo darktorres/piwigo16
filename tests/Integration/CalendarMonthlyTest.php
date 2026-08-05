@@ -285,7 +285,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [];
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
         $ret = $calendar->generate_category_content($template);
 
@@ -322,7 +322,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2024];
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
         $ret = $calendar->generate_category_content($template);
 
@@ -369,7 +369,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2024, 3];
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
         $ret = $calendar->generate_category_content($template);
 
@@ -455,7 +455,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $withStrings = $this->makeCalendar();
         $withStrings->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $withStrings->chronology_date = ['2024', '3'];
-        $templateStrings = new Template();
+        $templateStrings = \Piwigo\Tests\Support\TemplateTestFactory::build();
         $withStrings->generate_category_content($templateStrings);
 
         $navStrings = $this->digArray($templateStrings->get_template_vars('chronology_navigation_bars'), [0]);
@@ -465,7 +465,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $withInts = $this->makeCalendar();
         $withInts->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $withInts->chronology_date = [2024, 3];
-        $templateInts = new Template();
+        $templateInts = \Piwigo\Tests\Support\TemplateTestFactory::build();
         $withInts->generate_category_content($templateInts);
 
         $navInts = $this->digArray($templateInts->get_template_vars('chronology_navigation_bars'), [0]);
@@ -486,7 +486,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $yearLevel = $this->makeCalendar();
         $yearLevel->chronology_view = CalendarBase::CAL_VIEW_LIST;
         $yearLevel->chronology_date = [];
-        $yearTemplate = new Template();
+        $yearTemplate = \Piwigo\Tests\Support\TemplateTestFactory::build();
         self::assertFalse($yearLevel->generate_category_content($yearTemplate));
         $yearNav = $yearTemplate->get_template_vars('chronology_navigation_bars');
         self::assertSame(2024, $this->dig($yearNav, [0, 'items', 0, 'LABEL']));
@@ -496,7 +496,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $monthLevel = $this->makeCalendar();
         $monthLevel->chronology_view = CalendarBase::CAL_VIEW_LIST;
         $monthLevel->chronology_date = [2024];
-        $monthTemplate = new Template();
+        $monthTemplate = \Piwigo\Tests\Support\TemplateTestFactory::build();
         self::assertFalse($monthLevel->generate_category_content($monthTemplate));
         $monthNav = $monthTemplate->get_template_vars('chronology_navigation_bars');
         self::assertSame(3, $this->dig($monthNav, [0, 'items', 0, 'LABEL']));
@@ -515,7 +515,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $dayLevel = $this->makeCalendar();
         $dayLevel->chronology_view = CalendarBase::CAL_VIEW_LIST;
         $dayLevel->chronology_date = [2024, 3];
-        $dayTemplate = new Template();
+        $dayTemplate = \Piwigo\Tests\Support\TemplateTestFactory::build();
         self::assertFalse($dayLevel->generate_category_content($dayTemplate));
         $dayItems = $this->digArray($dayTemplate->get_template_vars('chronology_navigation_bars'), [0, 'items']);
         self::assertCount(31, $dayItems);
@@ -563,7 +563,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
         self::assertSame('date_creation', $calendar->date_field);
 
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
         $ret = $calendar->generate_category_content($template);
 
         self::assertTrue($ret);
@@ -597,7 +597,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar->chronology_date = [2025];
         $calendar->initialize($this->makeScope('id IN (4,5)'));
 
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
         $ret = $calendar->generate_category_content($template);
 
         self::assertFalse($ret);
@@ -664,7 +664,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_view = CalendarBase::CAL_VIEW_LIST;
         $calendar->chronology_date = [2024, 'any'];
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 
@@ -691,7 +691,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2024, 'any'];
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 
@@ -724,7 +724,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [1999, 6];
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 
@@ -752,7 +752,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar->initialize($this->makeScope('id IN (1,2,3)'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [];
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 
@@ -771,7 +771,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar->initialize($this->makeScope('id IN (4,5)'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2025];
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 
@@ -795,7 +795,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
             $calendar->initialize($this->makeScope('id = 1'));
             $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
             $calendar->chronology_date = [2024, 9];
-            $template = new Template();
+            $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
             $calendar->generate_category_content($template);
 
@@ -822,7 +822,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar->initialize($this->makeScope('id = 3'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2024, 7];
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 
@@ -849,7 +849,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar->initialize($this->makeScope('id = 3'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2024, 7];
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 

@@ -176,7 +176,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     private function makeTemplate(): Template
     {
-        return new Template(CurrentPaths::get()->root . 'themes', 'default');
+        return \Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default');
     }
 
     private function makePopulator(): SectionPopulator

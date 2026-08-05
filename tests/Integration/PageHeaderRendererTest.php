@@ -68,7 +68,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         // wiring this test never boots (same reasoning as SectionInitializerTest/
         // RedirectServiceTest/SectionPopulatorTest's own identical setUp).
         Lang::current()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
-        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
 
         $this->renderer = new PageHeaderRenderer();
     }

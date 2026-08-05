@@ -48,7 +48,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
         ImageStdParams::current()->load_from_db();
         CurrentUser::current()->attachGlobals();
 
-        $this->template = new Template();
+        $this->template = \Piwigo\Tests\Support\TemplateTestFactory::build();
     }
 
     #[\Override]

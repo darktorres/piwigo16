@@ -90,7 +90,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         $htmlService = new HtmlService();
         $this->urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlService);
 
-        $this->template = new Template(CurrentPaths::get()->root . 'themes', 'default');
+        $this->template = \Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default');
         CurrentTemplate::current()->set($this->template);
 
         // getRootUrl()/paramsForDuplication() read SectionContextRegistry

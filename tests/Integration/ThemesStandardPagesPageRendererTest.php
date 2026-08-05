@@ -219,7 +219,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // for the same defensive reason PageTailRendererTest's own setUp()
         // sets it: real RequestBootstrap-only wiring this isolated test
         // never boots otherwise.
-        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $this->renderer = $this->makeRenderer();
 
@@ -336,7 +336,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // setUp()'s own set() call populated; without reseeding here,
         // this renderer's own $this->currentTemplate->get() throws "not
         // initialised" against this fresh, unseeded container.
-        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
         $this->renderer = $this->makeRenderer();
     }
 

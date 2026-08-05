@@ -227,7 +227,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
     {
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [];
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
         self::assertFalse($calendar->generate_category_content($template));
 
@@ -250,7 +250,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
     {
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [2024];
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
         self::assertFalse($calendar->generate_category_content($template));
 
@@ -267,7 +267,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
     {
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [2025, 4];
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
         self::assertFalse($calendar->generate_category_content($template));
 
@@ -291,7 +291,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
     {
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [2024];
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 

@@ -87,7 +87,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         // Smarty's template_dir at the real themes/default/template/
         // directory that file lives in (same root shape every real
         // Template() call site uses, e.g. RequestBootstrap.php:568).
-        CurrentTemplate::current()->set(new Template(\Piwigo\Core\CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(\Piwigo\Core\CurrentPaths::get()->root . 'themes', 'default'));
         session_id('fixed-test-session-id'); // CsrfService::getToken() needs a session id, not a running session.
         unset($_POST['content']);
     }

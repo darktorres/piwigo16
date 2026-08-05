@@ -19,7 +19,7 @@ use Piwigo\Template\Template;
  *
  * Same "point CurrentPaths at a fresh temp root" Template construction
  * setup as PictureRateRendererTest.php's own docblock -- a real
- * `new Template()` still needs a writable data dir to construct at all.
+ * `\Piwigo\Tests\Support\TemplateTestFactory::build()` still needs a writable data dir to construct at all.
  */
 function current_template_test_rrmdir(string $dir): void
 {
@@ -65,7 +65,7 @@ test('get throws when no Template has ever been set', function (): void {
 
 test('set publishes a Template instance that get returns and isInitialized reports true', function (): void {
     $currentTemplate = new CurrentTemplate();
-    $template = new Template();
+    $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
     $currentTemplate->set($template);
 
@@ -75,7 +75,7 @@ test('set publishes a Template instance that get returns and isInitialized repor
 
 test('reset clears the published instance so get throws again', function (): void {
     $currentTemplate = new CurrentTemplate();
-    $currentTemplate->set(new Template());
+    $currentTemplate->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
     expect($currentTemplate->isInitialized())->toBeTrue();
 
     $currentTemplate->reset();
@@ -94,7 +94,7 @@ test('current() falls back to a memoized instance when Kernel is not booted', fu
     // *before* resetting Kernel (its constructor reaches CurrentPaths::
     // get(), which throws once Kernel is reset), then capture the root
     // and reset to reach the genuinely not-booted branch.
-    $template = new Template();
+    $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
     $root = CurrentPaths::get()->root;
     Kernel::reset();
 

@@ -93,7 +93,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         // that reads it back with raw SQL.
         $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'fs_quick_check_last_check'");
 
-        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
     }
 
     #[\Override]

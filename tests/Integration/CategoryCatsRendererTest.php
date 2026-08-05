@@ -175,7 +175,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
         $this->filterUpdater = new CategoryCatsRendererFakeFilterUpdater();
 
-        $this->template = new Template(CurrentPaths::get()->root . 'themes', 'default');
+        $this->template = \Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default');
 
         $currentLogger = new CurrentLogger();
         $currentLogger->set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));

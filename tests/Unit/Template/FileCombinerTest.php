@@ -600,7 +600,7 @@ test('combine reaches process_combinable for a single template combinable via fl
     $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), []);
 
     try {
-        CurrentTemplate::current()->set(new Template());
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
         $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
         $combinable->is_template = true;
         $combiner->add($combinable);
@@ -635,7 +635,7 @@ test('process_combinable\'s single-file cache key is sensitive to the combinable
     $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), []);
 
     try {
-        CurrentTemplate::current()->set(new Template());
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
 
         $a = new Combinable('same-id', 'themes/default/js/foo.js');
         $a->is_template = true;
@@ -666,7 +666,7 @@ test('process_combinable\'s single-file cache key is sensitive to the combinable
     $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), []);
 
     try {
-        CurrentTemplate::current()->set(new Template());
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
 
         $a = new Combinable('foo-js', 'themes/default/js/foo.js', '1.0');
         $a->is_template = true;
@@ -701,7 +701,7 @@ test('process_combinable\'s single-file cache filename exactly matches the crc32
     $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), []);
 
     try {
-        CurrentTemplate::current()->set(new Template());
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
         $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
         $combinable->is_template = true;
         $header = '';
@@ -735,7 +735,7 @@ test('process_combinable reuses an already-combined template file (matching a fi
     $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), []);
 
     try {
-        CurrentTemplate::current()->set(new Template());
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
         $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
         $combinable->is_template = true;
         $header = '';
@@ -781,7 +781,7 @@ test('process_combinable builds and writes a new combined JS file on a cache mis
     $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), []);
 
     try {
-        CurrentTemplate::current()->set(new Template());
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
         $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
         $combinable->is_template = true;
         $originalVersion = $combinable->version;
@@ -822,7 +822,7 @@ test('process_combinable builds and writes a new combined CSS file on a cache mi
     $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), []);
 
     try {
-        CurrentTemplate::current()->set(new Template());
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
         $combinable = new Combinable('foo-css', 'themes/default/css/foo.css');
         $combinable->is_template = true;
         $header = '';
@@ -861,7 +861,7 @@ test('process_combinable returns rendered content directly for a template combin
     $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), []);
 
     try {
-        $template = new Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
         $template->assign('value', 42);
         CurrentTemplate::current()->set($template);
         $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
@@ -894,7 +894,7 @@ test('process_combinable throws when a template combinable points at a file that
     $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), []);
 
     try {
-        CurrentTemplate::current()->set(new Template());
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
         $combinable = new Combinable('missing-js', 'themes/default/js/does-not-exist.js');
         $combinable->is_template = true;
         $header = '';
@@ -1253,7 +1253,7 @@ test('process_combinable registers the template file under a handle combining th
     CurrentConfig::current()->setDataDirChecked('1');
 
     $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), []);
-    $template = new Template();
+    $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
 
     try {
         CurrentTemplate::current()->set($template);
@@ -1288,7 +1288,7 @@ test('process_combinable notifies combinable_preparse listeners before parsing a
     $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Paths::fromRoot($root), EventDispatcher::get(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), []);
 
     try {
-        CurrentTemplate::current()->set(new Template());
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
         $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
         $combinable->is_template = true;
         $header = '';

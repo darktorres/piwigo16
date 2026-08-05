@@ -48,7 +48,7 @@ beforeEach(function (): void {
     }
     $currentConfig->setDataLocation('data/');
     $currentConfig->setDataDirChecked('1');
-    CurrentTemplate::current()->set(new Template($root));
+    CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build($root));
 });
 
 afterEach(function (): void {

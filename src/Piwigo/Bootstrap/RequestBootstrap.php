@@ -638,13 +638,13 @@ final class RequestBootstrap
             $admin_theme = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
                 ->getParam('admin_theme', self::currentConfig()->adminTheme());
             $admin_theme = is_string($admin_theme) ? $admin_theme : self::currentConfig()->adminTheme();
-            $template = new Template(CurrentPaths::get()->root . 'themes/admin', $admin_theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = self::currentUser()->get()->theme;
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws' and \Piwigo\Core\DeviceHelper::mobileTheme()) {
                 $theme = self::currentConfig()->mobilTheme();
             }
-            $template = new Template(CurrentPaths::get()->root . 'themes', $theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get()->root . 'themes', $theme);
         }
 
         // Legacy Coupling Retirement Track A / Phase 2 global-residual
@@ -675,7 +675,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(self::lang(), \Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService()), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService(), self::currentConfig())
+            new NoPhotoYetRenderer(self::lang(), \Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService()), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService(), self::currentConfig(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService())
                 ->render();
         }
 
@@ -1014,9 +1014,12 @@ final class RequestBootstrap
      * `install()` write (registering the real error handler/shutdown
      * function) is visible to every other consumer holding the same
      * shared instance (singleton/service-locator elimination campaign,
-     * Phase 2).
+     * Phase 2). Public (unlike most resolver helpers here): public/
+     * install.php's own `new InstallWizard(...)` manual construction needs
+     * this to satisfy Template's own new required collaborators (Phase 11
+     * sub-phase 11E).
      */
-    private static function errorCollector(): ErrorCollector
+    public static function errorCollector(): ErrorCollector
     {
         $errorCollector = Kernel::container()->get(ErrorCollector::class);
         if (! $errorCollector instanceof ErrorCollector) {
@@ -1024,6 +1027,22 @@ final class RequestBootstrap
         }
 
         return $errorCollector;
+    }
+
+    /**
+     * Public (unlike most resolver helpers here): public/install.php's own
+     * `new InstallWizard(...)` manual construction needs this to satisfy
+     * Template's own new required collaborators (singleton/service-locator
+     * elimination campaign, Phase 11 sub-phase 11E).
+     */
+    public static function processCache(): \Piwigo\Core\ProcessCache
+    {
+        $processCache = Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
+        if (! $processCache instanceof \Piwigo\Core\ProcessCache) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ProcessCache::class);
+        }
+
+        return $processCache;
     }
 
     /**
@@ -1195,9 +1214,12 @@ final class RequestBootstrap
 
     /**
      * Resolves the container-shared, immutable instance -- singleton/
-     * service-locator elimination campaign, Phase 3.
+     * service-locator elimination campaign, Phase 3. Public (unlike most
+     * resolver helpers here): public/install.php's own
+     * `new InstallWizard(...)` manual construction needs this to satisfy
+     * Template's own new required collaborators (Phase 11 sub-phase 11E).
      */
-    private static function adminContext(): \Piwigo\Core\AdminContext
+    public static function adminContext(): \Piwigo\Core\AdminContext
     {
         $adminContext = Kernel::container()->get(\Piwigo\Core\AdminContext::class);
         if (! $adminContext instanceof \Piwigo\Core\AdminContext) {

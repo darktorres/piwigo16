@@ -60,7 +60,7 @@ function makePictureCommentTestTemplate(): Template
     CurrentConfig::current()->setDataLocation('data/');
     CurrentConfig::current()->setDataDirChecked('1');
 
-    return new Template();
+    return \Piwigo\Tests\Support\TemplateTestFactory::build();
 }
 
 beforeEach(function (): void {

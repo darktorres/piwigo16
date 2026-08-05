@@ -6,12 +6,16 @@ namespace Piwigo\Mail;
 
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Event\Lifecycle\LoadingLang;
@@ -71,7 +75,18 @@ use Symfony\Component\Mime\Email;
  * real `new MailService(...)` call site was updated accordingly.
  * AccessControl stays a lazily-resolved private helper (see its own
  * docblock) -- a genuine circular dependency, not the same
- * too-many-call-sites reasoning.
+ * too-many-call-sites reasoning. AdminContext/ErrorCollector/ProcessCache/
+ * CurrentConfigService are 4 further lazily-resolved private helpers
+ * (same "container resolve, not a constructor property" shape as
+ * accessControl(), see that method's own docblock for why) added right
+ * after, for `buildMailTemplate()`'s own `new Template(...)` call, whose
+ * own constructor now requires them -- kept lazy because this class
+ * already sits on AccessControl's own transitively-autowired dependency
+ * chain (a required param here for a collaborator with any eager-
+ * side-effect container factory would force that cost merely by
+ * resolving AccessControl elsewhere -- confirmed for real with
+ * ImageStdParams during this same sub-phase, see its own private helper
+ * on Template for the full story, not a theoretical concern).
  *
  * Implements `Piwigo\Core\MailerInterface` (P23 batch 8c) so
  * L2aCoreDomain/L2bExtendedDomain classes that may not depend on this
@@ -136,6 +151,69 @@ final class MailService implements MailerInterface
         }
 
         return $accessControl;
+    }
+
+    /**
+     * Container resolve, not a constructor property -- these 4 exist
+     * purely to pass through to buildMailTemplate()'s own
+     * `new Template(...)` call (Template's own required collaborators,
+     * singleton/service-locator elimination campaign, Phase 11 sub-phase
+     * 11E), not read by MailService itself. Not a true PHP-DI circular
+     * dependency the way accessControl() above is, but a real, confirmed
+     * regression risk found live via a full-suite run: AccessControl's own
+     * constructor already requires RedirectServiceInterface ->
+     * Bootstrap\RedirectService -> Users\UserService -> Core\MailerInterface
+     * (this class, autowired), so resolving AccessControl anywhere already
+     * transitively autowires MailService -- a required param here for any
+     * collaborator with an eager-side-effect container factory would mean
+     * every such resolution also pays that cost. ImageStdParams was
+     * originally on this list too (its own container factory
+     * unconditionally calls load_from_db() against a real DB connection --
+     * a subprocess test with no `derivative_settings` table hit exactly
+     * this), but Template itself now resolves it lazily internally (see
+     * Template::imageStdParams()'s own docblock), so this class doesn't
+     * need to pass it through at all any more. Kept lazy here, matching
+     * accessControl()'s own established shape, so nothing forces this
+     * cost outside an actual buildMailTemplate() call.
+     */
+    private function adminContext(): AdminContext
+    {
+        $adminContext = \Piwigo\Core\Kernel::container()->get(AdminContext::class);
+        if (! $adminContext instanceof AdminContext) {
+            throw new \LogicException('Container returned an unexpected type for ' . AdminContext::class);
+        }
+
+        return $adminContext;
+    }
+
+    private function errorCollector(): ErrorCollector
+    {
+        $errorCollector = \Piwigo\Core\Kernel::container()->get(ErrorCollector::class);
+        if (! $errorCollector instanceof ErrorCollector) {
+            throw new \LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
+        }
+
+        return $errorCollector;
+    }
+
+    private function processCache(): ProcessCache
+    {
+        $processCache = \Piwigo\Core\Kernel::container()->get(ProcessCache::class);
+        if (! $processCache instanceof ProcessCache) {
+            throw new \LogicException('Container returned an unexpected type for ' . ProcessCache::class);
+        }
+
+        return $processCache;
+    }
+
+    private function currentConfigService(): CurrentConfigService
+    {
+        $currentConfigService = \Piwigo\Core\Kernel::container()->get(CurrentConfigService::class);
+        if (! $currentConfigService instanceof CurrentConfigService) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfigService::class);
+        }
+
+        return $currentConfigService;
     }
 
     private function webmasterMailAddress(): string
@@ -433,7 +511,7 @@ final class MailService implements MailerInterface
      */
     public function getMailTemplate(string $emailFormat): Template
     {
-        return new Template($this->paths->root . 'themes', 'default', 'template/mail/' . $emailFormat);
+        return new Template($this->currentConfig, $this->lang, $this->adminContext(), $this->eventDispatcher, $this->pageState, $this->errorCollector(), $this->processCache(), $this->currentConfigService(), $this->paths->root . 'themes', 'default', 'template/mail/' . $emailFormat);
     }
 
     public function getStrEmailFormat(bool $isHtml): string

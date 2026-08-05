@@ -44,7 +44,7 @@ beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::current()->setDataLocation('data/');
     CurrentConfig::current()->setDataDirChecked('1');
-    CurrentTemplate::current()->set(new Template());
+    CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
 });
 
 afterEach(function (): void {

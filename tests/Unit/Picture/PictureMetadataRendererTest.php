@@ -54,7 +54,7 @@ beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot($root));
     picture_metadata_test_current_config()->setDataLocation('data/');
     picture_metadata_test_current_config()->setDataDirChecked('1');
-    CurrentTemplate::current()->set(new Template());
+    CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
 });
 
 afterEach(function (): void {

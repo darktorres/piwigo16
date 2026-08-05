@@ -12,31 +12,39 @@ declare(strict_types=1);
 namespace Piwigo\Template;
 
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\DeviceHelper;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Event\CombinedCss;
 use Piwigo\Template\Event\CombinedScript;
 use Smarty\Smarty;
 
 /**
  * Legacy Coupling Retirement Phase 8, 8d: the data_dir_checked write
- * inside __construct() goes through CurrentConfigService::get() (Tier 2)
+ * inside __construct() goes through $this->currentConfigService->get()
  * -- safe even though the write fires from the constructor itself, not a
  * method called later, because every real construction site
  * (Bootstrap\RequestBootstrap.php x2, Admin\Install\InstallWizard.php) now
  * runs after its own path has already activated CurrentConfigService
  * (RequestBootstrap::connect() resolves one before finalize() ever
  * constructs a Template; InstallWizard is only ever constructed after
- * InstallBootstrap::activateConfigService()).
+ * InstallBootstrap::activateConfigService()). Constructor-injecting
+ * CurrentConfigService itself is safe regardless of that ordering --
+ * per its own docblock, it's a plain nullable-reference wrapper that
+ * "touches nothing until get() is actually called" (singleton/
+ * service-locator elimination campaign, Phase 11 sub-phase 11E).
  *
  * Every `mixed` below stays that way by design: assign()/append()/
  * get_template_vars() mirror Smarty's own arbitrary-value assign()
@@ -109,6 +117,14 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
     public $index_buttons = [];
 
     public function __construct(
+        private readonly CurrentConfig $currentConfig,
+        private readonly Lang $lang,
+        private readonly AdminContext $adminContext,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
+        private readonly ErrorCollector $errorCollector,
+        private readonly ProcessCache $processCache,
+        private readonly CurrentConfigService $currentConfigService,
         string $root = '.',
         string $theme = '',
         string $path = 'template'
@@ -123,7 +139,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         // int=2 "per-template debug window" mode Smarty's own $debugging
         // property supports (vendor/smarty/smarty/src/Smarty.php) isn't a
         // reachable value here, so no is_int() passthrough is needed.
-        $this->smarty->debugging = \Piwigo\Config\CurrentConfig::current()->debugTemplate();
+        $this->smarty->debugging = $this->currentConfig->debugTemplate();
         if (! $this->smarty->debugging) {
             $this->smarty->error_reporting = error_reporting() & ~E_NOTICE;
         }
@@ -132,24 +148,24 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         // vendor/smarty/smarty/src/Smarty.php), whose own @var docblocks
         // (int / boolean respectively) don't carry the same bool|int
         // flexibility as $debugging above.
-        $compile_check = \Piwigo\Config\CurrentConfig::current()->templateCompileCheck();
+        $compile_check = $this->currentConfig->templateCompileCheck();
         $this->smarty->compile_check = (int) $compile_check;
-        $this->smarty->force_compile = \Piwigo\Config\CurrentConfig::current()->templateForceCompile();
+        $this->smarty->force_compile = $this->currentConfig->templateForceCompile();
 
-        $conf_data_location = \Piwigo\Config\CurrentConfig::current()->dataLocation();
+        $conf_data_location = $this->currentConfig->dataLocation();
 
-        if (\Piwigo\Config\CurrentConfig::current()->dataDirChecked() === null) {
+        if ($this->currentConfig->dataDirChecked() === null) {
             $dir = CurrentPaths::get()->root . $conf_data_location;
             \Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
             if (! is_writable($dir)) {
-                Lang::current()->load('admin.lang');
+                $this->lang->load('admin.lang');
                 new HtmlService()
                     ->fatalError(
-                        Lang::current()->t(
+                        $this->lang->t(
                             'Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation',
                             $conf_data_location
                         ),
-                        Lang::current()->t('an error happened'),
+                        $this->lang->t('an error happened'),
                         false // show trace
                     );
             }
@@ -203,7 +219,8 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
                 // json_encode() produces the JSON-quoted text
                 // hydrate()'s 'string' branch expects back, not a bare
                 // JSON number that decodes to an int instead.
-                \Piwigo\Config\CurrentConfigService::current()->get()->confUpdateParam('data_dir_checked', '1');
+                $this->currentConfigService->get()
+                    ->confUpdateParam('data_dir_checked', '1');
             } catch (\Doctrine\DBAL\Exception) {
             }
         }
@@ -213,9 +230,9 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
 
         $this->smarty->setCompileDir($compile_dir);
 
-        $this->smarty->assign('pwg', new PwgTemplateAdapter(\Piwigo\Core\Lang::current()));
-        $this->smarty->registerPlugin('modifiercompiler', 'translate', self::modcompiler_translate(...));
-        $this->smarty->registerPlugin('modifiercompiler', 'translate_dec', self::modcompiler_translate_dec(...));
+        $this->smarty->assign('pwg', new PwgTemplateAdapter($this->lang));
+        $this->smarty->registerPlugin('modifiercompiler', 'translate', $this->modcompiler_translate(...));
+        $this->smarty->registerPlugin('modifiercompiler', 'translate_dec', $this->modcompiler_translate_dec(...));
         $this->smarty->registerPlugin('modifier', 'sprintf', 'sprintf');
         $this->smarty->registerPlugin('modifier', 'urlencode', 'urlencode');
         $this->smarty->registerPlugin('modifier', 'intval', 'intval');
@@ -248,20 +265,21 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         $this->smarty->registerFilter('pre', self::prefilter_white_space(...));
         $this->smarty->registerPlugin('modifier', 'url_is_remote', self::urlService()->urlIsRemote(...));
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
-        $this->smarty->registerPlugin('modifier', 'l10n', Lang::current()->t(...));
+        $this->smarty->registerPlugin('modifier', 'l10n', $this->lang->t(...));
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
-        // Deliberately lazy (unlike the other AccessControl::current()-free
-        // modifiers above) -- AccessControl::current()'s dependency chain
-        // (RedirectService -> UserService -> a real DB connection) can
-        // throw before any template ever actually pipes a value through
-        // `is_admin`/`is_classic_user`; the old static
-        // AccessControl::isAdmin() never had this problem since a static
-        // first-class callable needs no instance to resolve at
-        // registration time. Found live: InstallWizard::render() builds a
-        // Template before the submitted DB credentials are known to be
-        // valid, which must not fail merely because the constructor ran.
-        $this->smarty->registerPlugin('modifier', 'is_admin', static fn (string $userStatus = ''): bool => AccessControl::current()->isAdmin($userStatus));
-        $this->smarty->registerPlugin('modifier', 'is_classic_user', static fn (string $userStatus = ''): bool => AccessControl::current()->isClassicUser($userStatus));
+        // Deliberately lazy (unlike the other collaborator-backed modifiers
+        // above) -- accessControl()'s dependency chain (RedirectService ->
+        // UserService -> a real DB connection) can throw before any
+        // template ever actually pipes a value through `is_admin`/
+        // `is_classic_user`; a container-resolved instance was never taken
+        // as a constructor property for exactly this reason (same
+        // circular-dependency-adjacent shape as MailService/UrlService's
+        // own accessControl() helper). Found live: InstallWizard::render()
+        // builds a Template before the submitted DB credentials are known
+        // to be valid, which must not fail merely because the constructor
+        // ran.
+        $this->smarty->registerPlugin('modifier', 'is_admin', fn (string $userStatus = ''): bool => $this->accessControl()->isAdmin($userStatus));
+        $this->smarty->registerPlugin('modifier', 'is_classic_user', fn (string $userStatus = ''): bool => $this->accessControl()->isClassicUser($userStatus));
         $this->smarty->registerPlugin('modifier', 'get_device', DeviceHelper::getDevice(...));
         $this->smarty->registerPlugin('modifier', 'is_file', 'is_file');
         $this->smarty->registerPlugin('modifier', 'strpos', 'strpos');
@@ -270,21 +288,21 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         $this->smarty->registerPlugin('modifier', 'sizeOf', 'sizeOf');
         $this->smarty->registerPlugin('modifier', 'array_key_exists', 'array_key_exists');
 
-        if (\Piwigo\Config\CurrentConfig::current()->compiledTemplateCacheLanguage()) {
+        if ($this->currentConfig->compiledTemplateCacheLanguage()) {
             $this->smarty->registerFilter('post', self::postfilter_language(...));
         }
 
         $this->smarty->setTemplateDir([]);
         if ($theme !== '') {
             $this->set_theme($root, $theme, $path);
-            if (! AdminContext::isActiveStatic()) {
+            if (! $this->adminContext->isActive()) {
                 $this->set_prefilter('header', self::prefilter_local_css(...));
             }
         } else {
             $this->set_template_dir($root);
         }
 
-        $lang_info = Lang::current()->langInfo();
+        $lang_info = $this->lang->langInfo();
         if (isset($lang_info['code']) and ! isset($lang_info['jquery_code'])) {
             $lang_info['jquery_code'] = $lang_info['code'];
         }
@@ -293,24 +311,27 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             $lang_info['plupload_code'] = str_replace('-', '_', $lang_info['jquery_code']);
         }
 
-        Lang::current()->setLangInfo($lang_info);
+        $this->lang->setLangInfo($lang_info);
         $this->smarty->assign('lang_info', $lang_info);
 
-        if (! AdminContext::isActiveStatic()) {
-            $this->set_extents(\Piwigo\Config\CurrentConfig::current()->extentsForTemplates(), CurrentPaths::get()->root . 'template-extension/', true, $theme);
+        if (! $this->adminContext->isActive()) {
+            $this->set_extents($this->currentConfig->extentsForTemplates(), CurrentPaths::get()->root . 'template-extension/', true, $theme);
         }
     }
 
     /**
-     * Container resolve, not a constructor property -- this constructor
-     * takes only 3 plain strings and has 8 real construction sites; none
-     * of its own methods run during construction, so a new required
-     * dependency would ripple for no benefit. `private static` (not
-     * `private`) so it's reachable from make_script_src() below, which is
-     * itself static. Resolves the container-shared instance (singleton/
-     * service-locator elimination campaign, Phase 6), not a throwaway
-     * `new UrlService(new HtmlService())` -- see Image\SrcImage's own
-     * docblock for why (RootPathOverride's cross-instance sharing
+     * Container resolve, not a constructor property -- `UrlServiceInterface`
+     * is not one of the `@deprecated transitional bridge` shims this class
+     * closes (singleton/service-locator elimination campaign, Phase 11
+     * sub-phase 11E), so it stays on this established, already-correct
+     * pattern rather than being folded into the new required-collaborator
+     * list above for no reason. `private static` (not `private`) so it's
+     * reachable from make_script_src() below, which is itself an instance
+     * method now but keeps calling this via `self::` like every other
+     * caller in this class. Resolves the container-shared instance
+     * (singleton/service-locator elimination campaign, Phase 6), not a
+     * throwaway `new UrlService(new HtmlService())` -- see Image\SrcImage's
+     * own docblock for why (RootPathOverride's cross-instance sharing
      * requirement).
      */
     private static function urlService(): UrlServiceInterface
@@ -321,6 +342,55 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         }
 
         return $urlService;
+    }
+
+    /**
+     * Container resolve, not a constructor property -- AccessControl's own
+     * dependency chain (RedirectServiceInterface -> Bootstrap\RedirectService
+     * -> Users\UserService -> Core\MailerInterface -> Mail\MailService ->
+     * Core\UrlServiceInterface) means a required constructor param on any
+     * class this deep in that graph risks a circular dependency PHP-DI
+     * can't autowire; kept lazy here too so the `is_admin`/`is_classic_user`
+     * modifiers registered in __construct() above don't force an eager
+     * resolve (and eager DB connect) merely by constructing a Template --
+     * same reasoning as MailService::accessControl()/UrlService's own
+     * equivalent (singleton/service-locator elimination campaign, Phase 11
+     * sub-phase 11E).
+     */
+    private function accessControl(): AccessControl
+    {
+        $accessControl = \Piwigo\Core\Kernel::container()->get(AccessControl::class);
+        if (! $accessControl instanceof AccessControl) {
+            throw new \LogicException('Container returned an unexpected type for ' . AccessControl::class);
+        }
+
+        return $accessControl;
+    }
+
+    /**
+     * Container resolve, not a constructor property -- a real, confirmed
+     * regression found live via a curl smoke test of public/install.php:
+     * ImageStdParams's own container factory (config/container.php)
+     * unconditionally calls load_from_db() against a real DB connection.
+     * A required constructor param here would force that DB read merely
+     * by constructing a Template, or (worse) merely by *any* caller
+     * satisfying this class's own constructor signature -- InstallWizard's
+     * own real construction site had to resolve this eagerly just to
+     * build a Template, before install.php has ever confirmed the schema
+     * exists (the exact `piwigo_derivative_settings` table doesn't exist
+     * yet on a fresh install). Kept lazy here, matching accessControl()'s
+     * own shape, so nothing forces this cost except func_define_derivative()
+     * actually running (singleton/service-locator elimination campaign,
+     * Phase 11 sub-phase 11E).
+     */
+    private function imageStdParams(): ImageStdParams
+    {
+        $imageStdParams = \Piwigo\Core\Kernel::container()->get(ImageStdParams::class);
+        if (! $imageStdParams instanceof ImageStdParams) {
+            throw new \LogicException('Container returned an unexpected type for ' . ImageStdParams::class);
+        }
+
+        return $imageStdParams;
     }
 
     /**
@@ -342,7 +412,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         if (
             $theme !== 'default'
             and in_array(\Piwigo\Core\PageFilterHelper::scriptBasename(), ['identification', 'register', 'password', 'profile'], true)
-            and ((bool) ($themeconf['use_standard_pages'] ?? false) or \Piwigo\Config\CurrentConfig::current()->useStandardPages())
+            and ((bool) ($themeconf['use_standard_pages'] ?? false) or $this->currentConfig->useStandardPages())
         ) {
             $theme = 'standard_pages';
             $themeconf = $this->load_themeconf($root . '/' . $theme);
@@ -673,8 +743,8 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         $save_compile_id = $this->smarty->compile_id;
         $this->load_external_filters($handle);
 
-        $lang_info = Lang::current()->langInfo();
-        if (\Piwigo\Config\CurrentConfig::current()->compiledTemplateCacheLanguage() and isset($lang_info['code']) and is_string($lang_info['code'])) {
+        $lang_info = $this->lang->langInfo();
+        if ($this->currentConfig->compiledTemplateCacheLanguage() and isset($lang_info['code']) and is_string($lang_info['code'])) {
             $this->smarty->compile_id .= '_' . $lang_info['code'];
         }
 
@@ -726,7 +796,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
                 foreach ($scripts as $script) {
                     $content[] =
                         '<script type="text/javascript" src="'
-                        . self::make_script_src($script)
+                        . $this->make_script_src($script)
                         . '"></script>';
                 }
 
@@ -743,7 +813,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
                 $href .= '?v' . ((bool) $combi->version ? $combi->version : AppInfo::VERSION);
             }
             // trigger the event for eventual use of a cdn
-            $combinedCssEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new CombinedCss($href, $combi));
+            $combinedCssEvent = $this->eventDispatcher->dispatchChange(new CombinedCss($href, $combi));
             $href = $combinedCssEvent->href;
             $content[] = '<link rel="stylesheet" type="text/css" href="' . $href . '">';
         }
@@ -798,7 +868,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         if ((bool) $this->smarty->debugging) {
             $this->smarty->assign(
                 [
-                    'AAAA_DEBUG_TOTAL_TIME__' => \Piwigo\Core\TimingHelper::getElapsedTime(\Piwigo\Core\PageState::current()->requestStart, \Piwigo\Core\TimingHelper::getMoment()),
+                    'AAAA_DEBUG_TOTAL_TIME__' => \Piwigo\Core\TimingHelper::getElapsedTime($this->pageState->requestStart, \Piwigo\Core\TimingHelper::getMoment()),
                 ]
             );
             // Genuine bug, found live while closing this line's own
@@ -850,7 +920,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      * @see Lang::current()->t()
      * @param array<int, string> $params
      */
-    public static function modcompiler_translate(array $params): string
+    public function modcompiler_translate(array $params): string
     {
 
         switch (count($params)) {
@@ -861,22 +931,37 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
                 // -- it's always a real string here since $params[0] is a
                 // template-compiled string literal expression, but narrow
                 // explicitly since the callee's return type is opaque.
-                if (\Piwigo\Config\CurrentConfig::current()->compiledTemplateCacheLanguage()
+                if ($this->currentConfig->compiledTemplateCacheLanguage()
                   && is_string($key)
-                  && Lang::current()->has($key)
+                  && $this->lang->has($key)
                 ) {
-                    return var_export(Lang::current()->t($key), true);
+                    return var_export($this->lang->t($key), true);
                 }
+                // Deliberately NOT $this->lang->t(...) -- this string is
+                // literal PHP source text Smarty splices into the compiled
+                // templates_c cache file (Smarty's own "modifiercompiler"
+                // mechanism -- see this method's own registration in
+                // __construct()), executed later by a Smarty-internal
+                // render function with no `$this` of this Template
+                // instance available. Reached whenever the translation
+                // can't be resolved at compile time (cache-by-language is
+                // off -- the common, default case -- or the key is a
+                // runtime variable, or it's an unknown key): a permanent
+                // exception (singleton/service-locator elimination
+                // campaign, Phase 11 sub-phase 11E's own close-out note),
+                // not an unconverted shim caller.
                 return '\Piwigo\Core\Lang::current()->t(' . $params[0] . ')';
 
             default:
-                if (\Piwigo\Config\CurrentConfig::current()->compiledTemplateCacheLanguage()) {
+                if ($this->currentConfig->compiledTemplateCacheLanguage()) {
                     $ret = 'sprintf(';
-                    $ret .= self::modcompiler_translate([$params[0]]);
+                    $ret .= $this->modcompiler_translate([$params[0]]);
                     $ret .= ',' . implode(',', array_slice($params, 1));
                     $ret .= ')';
                     return $ret;
                 }
+                // Same permanent-exception reasoning as the single-param
+                // branch above.
                 return '\Piwigo\Core\Lang::current()->t(' . $params[0] . ',' . implode(',', array_slice($params, 1)) . ')';
         }
     }
@@ -888,23 +973,25 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      * @see Lang::current()->plural()
      * @param array<int, string> $params
      */
-    public static function modcompiler_translate_dec(array $params): string
+    public function modcompiler_translate_dec(array $params): string
     {
-        if (\Piwigo\Config\CurrentConfig::current()->compiledTemplateCacheLanguage()) {
+        if ($this->currentConfig->compiledTemplateCacheLanguage()) {
             $ret = 'sprintf(';
-            if ((bool) Lang::current()->langInfo()['zero_plural']) {
+            if ((bool) $this->lang->langInfo()['zero_plural']) {
                 $ret .= '($tmp=(' . $params[0] . '))>1||$tmp==0';
             } else {
                 $ret .= '($tmp=(' . $params[0] . '))>1';
             }
             $ret .= '?';
-            $ret .= self::modcompiler_translate([$params[2]]);
+            $ret .= $this->modcompiler_translate([$params[2]]);
             $ret .= ':';
-            $ret .= self::modcompiler_translate([$params[1]]);
+            $ret .= $this->modcompiler_translate([$params[1]]);
             $ret .= ',$tmp';
             $ret .= ')';
             return $ret;
         }
+        // Permanent exception -- see modcompiler_translate()'s own comment
+        // on its identical single-param-branch return above.
         return '\Piwigo\Core\Lang::current()->plural(' . $params[1] . ',' . $params[2] . ',' . $params[0] . ')';
     }
 
@@ -998,7 +1085,8 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             $type = $params['type'];
             is_string($type) or new HtmlService()
                 ->fatalError('define_derivative type must be a string');
-            $derivative = ImageStdParams::current()->get_by_type($type);
+            $derivative = $this->imageStdParams()
+                ->get_by_type($type);
             $smarty->assign($name, $derivative);
             return;
         }
@@ -1051,7 +1139,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             }
         }
 
-        $smarty->assign($name, ImageStdParams::current()->get_custom($w, $h, $crop, $minw, $minh));
+        $smarty->assign($name, $this->imageStdParams()->get_custom($w, $h, $crop, $minw, $minh));
     }
 
     /**
@@ -1075,7 +1163,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             // the real replacement/reasoning. This return is what actually
             // prevents $params['id'] from being read below when it's
             // genuinely missing/non-string.
-            ErrorCollector::recordFatalStatic("combine_script: missing 'id' parameter");
+            $this->errorCollector->recordFatal("combine_script: missing 'id' parameter");
 
             return;
         }
@@ -1088,7 +1176,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
                     break;
                 case 'async': $load = 2;
                     break;
-                default: ErrorCollector::recordFatalStatic("combine_script: invalid 'load' parameter");
+                default: $this->errorCollector->recordFatal("combine_script: invalid 'load' parameter");
             }
         }
 
@@ -1122,7 +1210,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
     public function func_get_combined_scripts(array $params): string
     {
         if (! isset($params['load'])) {
-            ErrorCollector::recordFatalStatic("get_combined_scripts: missing 'load' parameter");
+            $this->errorCollector->recordFatal("get_combined_scripts: missing 'load' parameter");
         }
         $load = $params['load'] === 'header' ? 0 : 1;
         $content = [];
@@ -1134,7 +1222,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             foreach ($scripts[0] as $script) {
                 $content[] =
                   '<script type="text/javascript" src="'
-                  . self::make_script_src($script)
+                  . $this->make_script_src($script)
                   . '"></script>';
             }
             if ((bool) count($this->scriptLoader->inline_scripts)) {
@@ -1151,7 +1239,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
                 foreach ($scripts[1] as $id => $script) {
                     $content[] =
                       's=document.createElement(\'script\'); s.type=\'text/javascript\'; s.async=true; s.src=\''
-                      . self::make_script_src($script)
+                      . $this->make_script_src($script)
                       . '\';';
                     $content[] = 'after = after.parentNode.insertBefore(s, after);';
                 }
@@ -1167,7 +1255,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param Combinable $script
      */
-    private static function make_script_src($script): string
+    private function make_script_src($script): string
     {
         $ret = '';
         if ($script->is_remote(self::urlService())) {
@@ -1179,7 +1267,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             }
         }
         // trigger the event for eventual use of a cdn
-        $combinedScriptEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new CombinedScript($ret, $script));
+        $combinedScriptEvent = $this->eventDispatcher->dispatchChange(new CombinedScript($ret, $script));
 
         return self::urlService()->embellishUrl($combinedScriptEvent->src);
     }
@@ -1473,7 +1561,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         }
         $dir = $real_dir;
         $cache_key = 'themeconf:' . $dir;
-        if (! ProcessCache::hasStatic($cache_key)) {
+        if (! $this->processCache->has($cache_key)) {
             $themeconf = [];
             // themeconf.inc.php may set this to push extra template
             // variables, instead of reaching for $this/$template directly
@@ -1484,19 +1572,19 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             include $dir . '/themeconf.inc.php';
             $this->assign($theme_template_vars);
             // Put themeconf in cache
-            ProcessCache::setStatic($cache_key, $themeconf);
+            $this->processCache->set($cache_key, $themeconf);
 
             // Return the just-computed value directly rather than falling
-            // through to the getStatic() read below -- setStatic() is a
-            // silent no-op when Kernel::isBooted() is false (singleton/
-            // service-locator elimination campaign, Phase 1's transitional
-            // shim), which would otherwise make the read-back lose this
-            // freshly-computed $themeconf entirely.
+            // through to the get() read below -- purely to skip a redundant
+            // array lookup, not for correctness (unlike the old *Static()
+            // shim, $this->processCache is a real, always-present
+            // constructor property now, so there's no not-booted-fallback
+            // edge case to worry about here anymore).
             return $themeconf;
         }
 
         /** @var array<string, mixed> $cached */
-        $cached = ProcessCache::getStatic($cache_key);
+        $cached = $this->processCache->get($cache_key);
 
         return $cached;
     }

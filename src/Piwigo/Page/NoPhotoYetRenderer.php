@@ -6,9 +6,13 @@ namespace Piwigo\Page;
 
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Location\LocEndNoPhotoYet;
@@ -53,6 +57,10 @@ final readonly class NoPhotoYetRenderer
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Core\MailerInterface $mailer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly PageState $pageState,
+        private readonly ErrorCollector $errorCollector,
+        private readonly ProcessCache $processCache,
+        private readonly CurrentConfigService $currentConfigService,
     ) {}
 
     public function render(): void
@@ -74,7 +82,7 @@ final readonly class NoPhotoYetRenderer
                 $user_theme = $this->currentUser->get()
                     ->theme;
                 $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService($this->lang, new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), $this->eventDispatcher, $this->currentConfig), \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), \Piwigo\Db\DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig)->getDefaultTheme();
-                $template = new Template($this->paths->root . 'themes', $user_theme);
+                $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths->root . 'themes', $user_theme);
                 $this->currentTemplate->set($template);
 
                 $noPhotoYetAction = Request\NoPhotoYetRequest::fromGlobals()->action;

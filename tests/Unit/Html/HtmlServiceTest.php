@@ -1030,7 +1030,7 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
         CurrentConfig::current()->setDataLocation('data/');
         CurrentConfig::current()->setDataDirChecked('1');
 
-        $template = new \Piwigo\Template\Template();
+        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
         $template->assign('themeconf', ['icon_dir' => '/my-theme/icons']);
         CurrentTemplate::current()->set($template);
         // A non-empty root url is required to kill line 576's

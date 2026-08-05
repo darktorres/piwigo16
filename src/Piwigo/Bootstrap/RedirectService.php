@@ -87,6 +87,50 @@ final class RedirectService implements RedirectServiceInterface
         return $currentConfig;
     }
 
+    /**
+     * Resolve helpers matching the 3 above -- added for Template's own new
+     * required collaborators (singleton/service-locator elimination
+     * campaign, Phase 11 sub-phase 11E), same "Kernel-container-resolving
+     * static helper" shape, not constructor-injected, since this class's
+     * own `new Template(...)` construction sites are the only real
+     * consumer.
+     */
+    private static function adminContext(): \Piwigo\Core\AdminContext
+    {
+        $adminContext = Kernel::container()->get(\Piwigo\Core\AdminContext::class);
+        if (! $adminContext instanceof \Piwigo\Core\AdminContext) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\AdminContext::class);
+        }
+        return $adminContext;
+    }
+
+    private static function errorCollector(): \Piwigo\Core\ErrorCollector
+    {
+        $errorCollector = Kernel::container()->get(\Piwigo\Core\ErrorCollector::class);
+        if (! $errorCollector instanceof \Piwigo\Core\ErrorCollector) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ErrorCollector::class);
+        }
+        return $errorCollector;
+    }
+
+    private static function processCache(): \Piwigo\Core\ProcessCache
+    {
+        $processCache = Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
+        if (! $processCache instanceof \Piwigo\Core\ProcessCache) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ProcessCache::class);
+        }
+        return $processCache;
+    }
+
+    private static function currentConfigService(): \Piwigo\Config\CurrentConfigService
+    {
+        $currentConfigService = Kernel::container()->get(\Piwigo\Config\CurrentConfigService::class);
+        if (! $currentConfigService instanceof \Piwigo\Config\CurrentConfigService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfigService::class);
+        }
+        return $currentConfigService;
+    }
+
     #[\Override]
     public function redirectHttp(string $url, int $status = 302): never
     {
@@ -123,10 +167,10 @@ final class RedirectService implements RedirectServiceInterface
                 'no_fallback' => true,
                 'local' => true,
             ]);
-            $template = new Template($paths->root . 'themes', $this->userService->getDefaultTheme());
+            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), \Piwigo\Core\PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), $paths->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         } elseif (\Piwigo\Core\AdminContext::isActiveStatic()) {
-            $template = new Template(CurrentPaths::get()->root . 'themes', $this->userService->getDefaultTheme());
+            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), \Piwigo\Core\PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get()->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         }
 

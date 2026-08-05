@@ -538,7 +538,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // delete_compiled_templates() runs before the persistent-cache
         // guard -- needs a real Template instance, unset by default since
         // this test never boots a full RequestBootstrap.
-        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         // HtmlService::fatalError() always throws ResponseReadyException
         // regardless of ErrorCollector::isActive() (see its own docblock)
@@ -602,7 +602,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
     public function test_compiled_templates_purges_a_real_initialized_persistent_cache(): void
     {
-        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         // A dedicated local instance, not $this->dispatcher (built in
         // setUp() with no persistent cache) -- constructor injection means

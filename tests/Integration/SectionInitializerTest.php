@@ -117,7 +117,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         Kernel::boot();
         CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current()));
         Lang::current()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
-        CurrentTemplate::current()->set(new Template(\Piwigo\Core\CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(\Piwigo\Core\CurrentPaths::get()->root . 'themes', 'default'));
         CurrentConfig::current()->setSendPiwigoInfos(false);
     }
 

@@ -104,7 +104,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         unset($_POST['c13y_submit_correction'], $_POST['c13y_submit_ignore'], $_POST['c13y_selection']);
 
-        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
     }
 
     #[\Override]

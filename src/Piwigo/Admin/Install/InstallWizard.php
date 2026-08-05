@@ -25,11 +25,15 @@ use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
+use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
@@ -41,6 +45,7 @@ use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Mail\MailService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
@@ -175,6 +180,11 @@ final class InstallWizard
         private readonly \Piwigo\Config\CurrentConfigService $currentConfigService,
         private readonly CurrentConfig $currentConfig,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly AdminContext $adminContext,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
+        private readonly ErrorCollector $errorCollector,
+        private readonly ProcessCache $processCache,
     ) {
         $conf_data_location = LegacyFileConf::read()['data_location'] ?? null;
         if (! is_string($conf_data_location)) {
@@ -368,7 +378,7 @@ final class InstallWizard
         }
 
         // --------------------------------------------- template initialization
-        $template = new Template($this->paths->root . 'themes/admin', 'clear');
+        $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths->root . 'themes/admin', 'clear');
         \Piwigo\Template\CurrentTemplate::current()->set($template);
         $template->set_filenames([
             'install' => 'install.tpl',

@@ -91,7 +91,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         // other Integration test constructing a real Template directly
         // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
         CurrentConfigService::current()->set($this->configService);
-        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
         $currentLogger = Kernel::container()->get(CurrentLogger::class);

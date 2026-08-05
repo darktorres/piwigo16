@@ -48,7 +48,7 @@ $nb_image_page = is_numeric($rawNbImagePage) ? (int) $rawNbImagePage : 15;
 
 $conn = \Piwigo\Db\DbConnection::build();
 
-$permissionCriteria = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class))->getPermissionCriteria();
+$permissionCriteria = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), CurrentConfig::current()))->getPermissionCriteria();
 $condition = \Piwigo\Permission\SqlCondition::combine(
     'AND',
     $permissionCriteria->forbiddenCategoriesCondition('category_id'),

@@ -134,7 +134,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // root/theme='default' points Smarty's template_dir at the real
         // themes/default/template/ directory thumbnails.tpl lives in, same
         // real-root shape every real Template() construction site uses.
-        $this->template = new Template(CurrentPaths::get()->root . 'themes', 'default');
+        $this->template = \Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default');
 
         return $this->template;
     }

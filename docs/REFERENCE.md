@@ -376,12 +376,15 @@ file needs to exist inside the image.
 - PHP 8.5 (`ext-calendar`, `ext-ctype`, `ext-curl`, `ext-dom`,
   `ext-fileinfo`, `ext-filter`, `ext-gd`, `ext-iconv`, `ext-intl`,
   `ext-libxml`, `ext-mbstring`, `ext-mysqli`, `ext-openssl`, `ext-pcntl`,
-  `ext-session`, `ext-simplexml`, `ext-zip`, `ext-zlib`; `pcov` for
-  coverage)
+  `ext-pgsql`, `ext-session`, `ext-simplexml`, `ext-zip`, `ext-zlib`;
+  `pcov` for coverage)
 - Composer 2.x
 - Node 24, bun, [`just`](https://github.com/casey/just)
 - MySQL 9.7 (or MariaDB 12.x / PostgreSQL 18 — see `ADR-0003`'s provider
-  matrix) + a webserver serving this checkout, for anything beyond
+  matrix, real and working via `PIWIGO_DB_DRIVER=pgsql`/`mysqli`, not just
+  a target — the `db-multi-provider` CI job runs the full Integration/
+  Contract/Browser suites against a real PostgreSQL 18 service container
+  on every push) + a webserver serving this checkout, for anything beyond
   `composer test`
 
 ### Setup
@@ -392,6 +395,18 @@ bun install
 node_modules/.bin/playwright install chromium
 cp .env.example .env.test   # fill in the .env.test block; see Tests below
 ```
+
+Set `PIWIGO_DB_DRIVER=mysqli` (default) or `PIWIGO_DB_DRIVER=pgsql` in
+`.env`/`.env.test` to pick the provider — see `.env.example`'s own
+commented pgsql block for the matching `PIWIGO_DB_PORT`/credential shape.
+Schema for either provider comes from Doctrine Migrations
+(`bin/piwigo migrations:migrate`), the real mechanism both a fresh
+install and an existing install's own upgrade path run through — not a
+one-time generator. `bin/piwigo schema:dump` regenerates the checked-in
+`install/piwigo_structure-{mysql,pgsql}.sql` snapshots from the current
+connection's live (post-migration) schema; CI's `db-multi-provider` job
+fails on any drift between that snapshot and what a fresh
+`migrations:migrate` run actually produces.
 
 `just` runs recipes across both stacks (`just --list`).
 
@@ -691,8 +706,9 @@ redeploy.
 
 New ADRs follow a standard template (status/context/decision/consequences)
 — see any entry below for the shape. Six real decisions on record, all
-`Accepted`; three have a real amendment against current state, noted
-inline:
+`Accepted`; two (`ADR-0013`, `ADR-0026`) have a real amendment against
+current state; `ADR-0002`/`ADR-0003` carry historical/status notes that no
+longer represent a divergence — all noted inline:
 
 **ADR-0001 — Pest 4 replaces PHPUnit.** Sole PHP test framework, including
 browser E2E via `pest-plugin-browser`. Vitest stays, separately, for
@@ -701,18 +717,29 @@ TypeScript unit tests. Still accurate.
 **ADR-0002 — Clean fork, no in-place upgrade from upstream Piwigo.**
 Existing installs adopt v17 via a one-time `bin/piwigo import:legacy`
 migration (not built yet — see Architecture → "What's genuinely not built
-yet" above), not a rolling upgrade. *Amendment*: the ADR's own text says
-version-to-version upgrades within v17 "use Doctrine Migrations" — that
-mechanism was later replaced entirely by one static
-`install/piwigo_structure-mysql.sql` file. The no-in-place-upgrade-from-
-upstream decision itself still holds; only the intra-fork migration
-mechanism changed.
+yet" above), not a rolling upgrade. The no-in-place-upgrade-from-upstream
+decision itself still holds. *History, not a current amendment*: the
+ADR's own text says version-to-version upgrades within v17 "use Doctrine
+Migrations" — that mechanism was later replaced by one static
+`install/piwigo_structure-mysql.sql` file, then reinstated for real (the
+pgsql-support pass) as the actual live mechanism both a fresh install and
+an existing install's own upgrade path run through
+(`bin/piwigo migrations:migrate`) — matching the ADR's own original text
+again, not diverging from it. `install/piwigo_structure-{mysql,pgsql}.sql`
+still exist, now as generated, human-reviewable schema snapshots + a CI
+drift guard (`bin/piwigo schema:dump`), not the install-time source of
+truth.
 
 **ADR-0003 — Hard-required bleeding-edge stack, no capability gating.**
 PHP 8.5, MySQL 9.7 (MariaDB 12.x / PostgreSQL 18 in the provider matrix),
-Node 24 — hard requirements, no version-compatibility shims. Still
-accurate; re-verify at any point this drifts, since it's an explicitly
-fast-moving target by design.
+Node 24 — hard requirements, no version-compatibility shims. *History, not
+a current amendment*: the provider matrix's MariaDB/PostgreSQL half was
+originally just a target, not yet reachable (the install wizard was
+hardcoded to MySQL only). Now real and working — `PIWIGO_DB_DRIVER=pgsql`/
+`mysqli`, a driver field in the install form, and the `db-multi-provider`
+CI job exercising all 3 providers on every push (see Development →
+Requirements above). Re-verify at any point this drifts, since it's an
+explicitly fast-moving target by design.
 
 **ADR-0013 — FrankenPHP worker-mode runtime.** Decided: FrankenPHP (Caddy
 + PHP 8.5) in worker mode as the primary production runtime, Apache/

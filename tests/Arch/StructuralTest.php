@@ -257,6 +257,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Auth/AccessControl.php',
         '/src/Piwigo/Core/Lang.php',
         '/src/Piwigo/Config/CurrentConfig.php',
+        '/src/Piwigo/Ws/WsInitializer.php',
     ];
 
     $hits = [
@@ -419,10 +420,7 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Users/UserRepository.php',
-        '/src/Piwigo/Ws/PwgCategories.php',
-        '/src/Piwigo/Ws/PwgComments.php',
         '/src/Piwigo/Ws/PwgCore.php',
-        '/src/Piwigo/Ws/PwgExtensions.php',
         '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/PwgServer.php',
         '/src/Piwigo/Ws/PwgUsers.php',
@@ -517,7 +515,6 @@ test('CurrentConfigService::current() transitional bridge has a shrinking, known
         '/src/Piwigo/Image/ImageService.php',
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Ws/PwgCore.php',
-        '/src/Piwigo/Ws/PwgExtensions.php',
         '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/PwgUsers.php',
         '/public/install.php',
@@ -633,8 +630,6 @@ test('PageState::current() transitional bridge has a shrinking, known allow-list
         '/src/Piwigo/Html/HtmlService.php',
         '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Template/Template.php',
-        '/src/Piwigo/Ws/PwgCategories.php',
-        '/src/Piwigo/Ws/PwgComments.php',
         '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/PwgUsers.php',
     ];
@@ -877,7 +872,6 @@ test('SessionService::get() transitional bridge has a shrinking, known allow-lis
         '/src/Piwigo/Core/DeviceHelper.php',
         '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Tag/TagService.php',
-        '/src/Piwigo/Ws/PwgCategories.php',
         '/src/Piwigo/Ws/PwgUsers.php',
     ];
 
@@ -1288,11 +1282,8 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Users/UserRepository.php',
-        '/src/Piwigo/Ws/PwgCategories.php',
-        '/src/Piwigo/Ws/PwgComments.php',
         '/src/Piwigo/Ws/PwgCore.php',
         '/src/Piwigo/Ws/PwgImages.php',
-        '/src/Piwigo/Ws/PwgTags.php',
         '/src/Piwigo/Ws/PwgUsers.php',
         '/src/Piwigo/Ws/WsInitializer.php',
     ];
@@ -1369,7 +1360,6 @@ test('CurrentTemplate::current() transitional bridge has a shrinking, known allo
         '/src/Piwigo/Html/HtmlService.php',
         '/src/Piwigo/Template/CssLoader.php',
         '/src/Piwigo/Template/ScriptLoader.php',
-        '/src/Piwigo/Ws/PwgExtensions.php',
     ];
 
     $hits = [
@@ -1455,10 +1445,7 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Metadata/MetadataService.php',
         '/src/Piwigo/Permission/PermissionService.php',
         '/src/Piwigo/Url/UrlService.php',
-        '/src/Piwigo/Ws/PwgCategories.php',
-        '/src/Piwigo/Ws/PwgComments.php',
         '/src/Piwigo/Ws/PwgCore.php',
-        '/src/Piwigo/Ws/PwgGroups.php',
         '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/PwgUsers.php',
         '/src/Piwigo/Ws/WsDefaultMethods.php',
@@ -1527,9 +1514,7 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Users/UserService.php',
-        '/src/Piwigo/Ws/PwgCategories.php',
         '/src/Piwigo/Ws/PwgCore.php',
-        '/src/Piwigo/Ws/PwgExtensions.php',
         '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/PwgServer.php',
         '/src/Piwigo/Ws/PwgUsers.php',

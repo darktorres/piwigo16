@@ -79,9 +79,12 @@ function nbmUserMailNotificationRow(int $userId): ?array
         return null;
     }
 
+    // user_mail_notification.enabled is a genuine boolean column on
+    // Postgres -- pg_fetch_assoc() represents it as 't'/'f', which a
+    // naive (int) cast silently mishandles.
     return [
         'check_key' => $row['check_key'],
-        'enabled' => (int) $row['enabled'],
+        'enabled' => H::dbToBool($row['enabled']) ? 1 : 0,
         'last_send' => is_string($row['last_send'] ?? null) ? $row['last_send'] : null,
     ];
 }
@@ -93,12 +96,16 @@ function nbmSetUserMailNotificationRow(int $userId, ?array $row): void
     H::dbQuery($db, sprintf('DELETE FROM %suser_mail_notification WHERE user_id = %d', nbmDbPrefix(), $userId));
     if ($row !== null) {
         $lastSend = $row['last_send'] === null ? 'NULL' : "'" . H::dbEscape($db, $row['last_send']) . "'";
+        // Same boolean-column-vs-integer-literal bug as elsewhere in this
+        // file's own reads -- a bare 0/1 literal is valid MySQL
+        // tinyint(1) input but Postgres rejects it outright.
+        $sqlEnabled = $db instanceof \mysqli ? (string) $row['enabled'] : ($row['enabled'] !== 0 ? 'true' : 'false');
         H::dbQuery($db, sprintf(
-            "INSERT INTO %suser_mail_notification (user_id, check_key, enabled, last_send) VALUES (%d, '%s', %d, %s)",
+            "INSERT INTO %suser_mail_notification (user_id, check_key, enabled, last_send) VALUES (%d, '%s', %s, %s)",
             nbmDbPrefix(),
             $userId,
             H::dbEscape($db, $row['check_key']),
-            $row['enabled'],
+            $sqlEnabled,
             $lastSend
         ));
     }

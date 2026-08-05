@@ -62,10 +62,14 @@ function introDeleteImage(int $imageId): void
 function introSetCategoryVisible(int $categoryId, bool $visible): void
 {
     $db = introDbConnect();
+    // categories.visible is a genuine boolean column on Postgres -- a
+    // bare 0/1 literal is valid MySQL tinyint(1) input but Postgres
+    // rejects it outright.
+    $sqlValue = $db instanceof \mysqli ? ($visible ? '1' : '0') : ($visible ? 'true' : 'false');
     H::dbQuery($db, sprintf(
-        'UPDATE %scategories SET visible = %d WHERE id = %d',
+        'UPDATE %scategories SET visible = %s WHERE id = %d',
         introDbPrefix(),
-        $visible ? 1 : 0,
+        $sqlValue,
         $categoryId
     ));
     H::dbClose($db);
@@ -541,7 +545,13 @@ it('shows the newsletter subscription promo panel for an account old enough with
     $configSnapshot = H::snapshotConfig(['show_newsletter_subscription']);
 
     H::dbQuery($db, "UPDATE {$prefix}user_infos SET registration_date = '2020-01-01 00:00:00' WHERE user_id = 1");
-    H::dbQuery($db, "UPDATE {$prefix}user_infos SET preferences = JSON_SET(COALESCE(preferences, JSON_OBJECT()), '\$.show_newsletter_subscription', TRUE) WHERE user_id = 1");
+    // JSON_SET()/JSON_OBJECT() are MySQL-only -- Postgres's own
+    // jsonb_set() takes a `{key}` path array (not a `$.key` string) and
+    // an already-jsonb new value, verified live.
+    $preferencesExpr = $db instanceof \mysqli
+        ? "JSON_SET(COALESCE(preferences, JSON_OBJECT()), '\$.show_newsletter_subscription', TRUE)"
+        : "jsonb_set(COALESCE(preferences, '{}'::jsonb), '{show_newsletter_subscription}', 'true'::jsonb)";
+    H::dbQuery($db, "UPDATE {$prefix}user_infos SET preferences = {$preferencesExpr} WHERE user_id = 1");
     H::dbClose($db);
 
     try {

@@ -78,18 +78,27 @@ function pictureFavoriteExists(int $imageId, int $userId): bool
 }
 
 /** Inserts a real comment row directly (matches RegenerateFixtureTest's own direct-insert shape) and returns its id. */
+/**
+ * comments.validated is a genuine boolean column on Postgres -- a bare
+ * 0/1 literal is valid MySQL tinyint(1) input but Postgres rejects it
+ * outright ("column is of type boolean but expression is of type
+ * integer"), confirmed live. Matches RegenerateFixtureTest's own
+ * $sqlTrue/$sqlFalse convention for the identical column.
+ */
 function pictureInsertComment(int $imageId, string $author, string $content, bool $validated, ?int $authorId = null): int
 {
     $db = pictureDbConnect();
     $prefix = pictureDbPrefix();
+    $sqlTrue = $db instanceof \mysqli ? '1' : 'true';
+    $sqlFalse = $db instanceof \mysqli ? '0' : 'false';
     H::dbQuery($db, sprintf(
-        "INSERT INTO %scomments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date) VALUES (%d, NOW(), '%s', '127.0.0.9', %s, '%s', %d, %s)",
+        "INSERT INTO %scomments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date) VALUES (%d, NOW(), '%s', '127.0.0.9', %s, '%s', %s, %s)",
         $prefix,
         $imageId,
         H::dbEscape($db, $author),
         $authorId === null ? 'NULL' : (string) $authorId,
         H::dbEscape($db, $content),
-        $validated ? 1 : 0,
+        $validated ? $sqlTrue : $sqlFalse,
         $validated ? 'NOW()' : 'NULL'
     ));
     $id = H::dbInsertId($db);
@@ -105,7 +114,9 @@ function pictureCommentRow(int $commentId): ?array
     $row = H::dbFetchAssoc($db, sprintf('SELECT validated FROM %scomments WHERE id = %d', pictureDbPrefix(), $commentId));
     H::dbClose($db);
 
-    return is_array($row) ? ['validated' => (int) $row['validated']] : null;
+    // pg_fetch_assoc() represents a boolean column as 't'/'f' -- a naive
+    // (int) cast silently mishandles both.
+    return is_array($row) ? ['validated' => H::dbToBool($row['validated']) ? 1 : 0] : null;
 }
 
 function pictureCategoryRepresentativeId(int $categoryId): ?int
@@ -495,7 +506,7 @@ it("edits a comment's own content via the edit_comment action, validating it as 
     // (CommentService::updateComment(): `!commentsValidation() ||
     // isAdmin()`), regardless of the fixture's own comments_validation
     // setting.
-    expect((int) $row['validated'])->toBe(1);
+    expect(H::dbToBool($row['validated']) ? 1 : 0)->toBe(1);
 });
 
 it('navigates between previous/next/first/last items across a 3-photo album, ordered by title', function (): void {
@@ -1533,7 +1544,7 @@ it('flashes an admin-authorization message via the session when a non-admin\'s c
         H::dbClose($db);
         @unlink($userSession['cookieJar']);
 
-        expect((int) $row['validated'])->toBe(0);
+        expect(H::dbToBool($row['validated']) ? 1 : 0)->toBe(0);
         expect($finalBody)->toContain('An administrator must authorize your comment before it becomes visible.');
         expect($finalBody)->toContain('Your comment has been registered');
     } finally {
@@ -1674,7 +1685,7 @@ it('logs a PHP warning and still renders when a plugin-registered user_comment_c
         $row = H::fetchAssocOrFail($db, sprintf('SELECT content, validated FROM %scomments WHERE id = %d', pictureDbPrefix(), $commentId));
         H::dbClose($db);
         expect($row['content'])->toBe('Bogus action content update ' . $marker);
-        expect((int) $row['validated'])->toBe(0);
+        expect(H::dbToBool($row['validated']) ? 1 : 0)->toBe(0);
     } finally {
         $cleanupDb = pictureDbConnect();
         H::dbQuery($cleanupDb, sprintf("DELETE FROM %splugins WHERE id = '%s'", pictureDbPrefix(), $pluginId));

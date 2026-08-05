@@ -40,14 +40,23 @@ function commentsInsert(int $imageId, string $author, string $content, bool $val
 {
     $db = commentsDbConnect();
     $prefix = commentsDbPrefix();
+    // comments.validated is a genuine `boolean` column on Postgres (not
+    // the smallint-with-integer-range convention this codebase uses
+    // elsewhere) -- a bare 0/1 literal is valid MySQL tinyint(1) input
+    // but Postgres rejects it outright ("column is of type boolean but
+    // expression is of type integer"), confirmed live. Matches
+    // RegenerateFixtureTest's own $sqlTrue/$sqlFalse convention for the
+    // identical column.
+    $sqlTrue = $db instanceof \mysqli ? '1' : 'true';
+    $sqlFalse = $db instanceof \mysqli ? '0' : 'false';
     H::dbQuery($db, sprintf(
-        "INSERT INTO %scomments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date, email) VALUES (%d, NOW(), '%s', '127.0.0.8', %s, '%s', %d, %s, %s)",
+        "INSERT INTO %scomments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date, email) VALUES (%d, NOW(), '%s', '127.0.0.8', %s, '%s', %s, %s, %s)",
         $prefix,
         $imageId,
         H::dbEscape($db, $author),
         $authorId === null ? 'NULL' : (string) $authorId,
         H::dbEscape($db, $content),
-        $validated ? 1 : 0,
+        $validated ? $sqlTrue : $sqlFalse,
         $validated ? 'NOW()' : 'NULL',
         $email === null ? 'NULL' : "'" . H::dbEscape($db, $email) . "'"
     ));
@@ -73,7 +82,12 @@ function commentsValidatedFlag(int $commentId): ?int
     $row = H::dbFetchAssoc($db, sprintf('SELECT validated FROM %scomments WHERE id = %d', commentsDbPrefix(), $commentId));
     H::dbClose($db);
 
-    return is_array($row) ? (int) $row['validated'] : null;
+    // validated is a genuine boolean column -- pg_fetch_assoc() returns
+    // it as the string 't'/'f', which a naive (int) cast silently
+    // mishandles (both (int) 'f' and (int) 't' are 0). H::dbToBool()
+    // normalizes it correctly on either driver before re-widening to the
+    // int this function's own callers assert against (->toBe(0)/->toBe(1)).
+    return is_array($row) ? (H::dbToBool($row['validated']) ? 1 : 0) : null;
 }
 
 it('lists, paginates and keyword-filters real comments for an admin', function (): void {

@@ -29,7 +29,7 @@ function ratingPageInsertRate(int $imageId, int $userId, string $anonymousId, in
     $db = H::connect();
     $prefix = ratingPageDbPrefix();
     H::dbQuery($db, sprintf(
-        "INSERT INTO %srate (user_id, element_id, anonymous_id, rate, date) VALUES (%d, %d, '%s', %d, CURDATE())",
+        "INSERT INTO %srate (user_id, element_id, anonymous_id, rate, date) VALUES (%d, %d, '%s', %d, CURRENT_DATE)",
         $prefix,
         $userId,
         $imageId,

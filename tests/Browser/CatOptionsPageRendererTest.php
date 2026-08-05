@@ -130,7 +130,7 @@ it('falsifies commentable for a chosen album via the falsify submission', functi
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
         $assoc = H::dbFetchAssoc($db, sprintf('SELECT commentable FROM %scategories WHERE id = 1', $prefix));
         H::dbClose($db);
-        expect(is_array($assoc) ? (int) $assoc['commentable'] : -1)->toBe(0);
+        expect(is_array($assoc) ? (H::dbToBool($assoc['commentable']) ? 1 : 0) : -1)->toBe(0);
     } finally {
         // Fixture category 1 starts commentable=1 -- restore it via the
         // real trueify submission (the sibling of falsify, distinct

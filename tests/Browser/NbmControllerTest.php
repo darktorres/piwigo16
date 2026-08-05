@@ -36,7 +36,10 @@ function nbmEnabledForKey(string $checkKey): ?int
     ));
     H::dbClose($db);
 
-    return is_array($row) && isset($row['enabled']) ? (int) $row['enabled'] : null;
+    // enabled is a genuine boolean column on Postgres -- pg_fetch_assoc()
+    // represents it as 't'/'f', which a naive (int) cast silently
+    // mishandles.
+    return is_array($row) && isset($row['enabled']) ? (H::dbToBool($row['enabled']) ? 1 : 0) : null;
 }
 
 const NBM_REGULAR_USER_KEY = 'ghijkl9876543210';

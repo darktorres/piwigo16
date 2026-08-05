@@ -511,6 +511,34 @@ final class BrowserTestHelpers
         return is_array($row) && is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
     }
 
+    /**
+     * Normalizes a raw value read back from a genuine boolean column
+     * (comments.validated, categories.visible, user_infos.enabled_high,
+     * ...) into a real PHP bool -- real bug found live: pg_fetch_assoc()
+     * represents a boolean column as the single-character string 't'/'f'
+     * (confirmed live, not mysqli's own '1'/'0' or native 1/0), and BOTH
+     * `(bool) $value` and `(int) $value` are silently wrong for that
+     * string shape ('f' is a non-empty, non-"0" string -- (bool) 'f' is
+     * true; (int) 'f' is 0, useless for round-tripping a `true` value
+     * back). mysqli's own possible shapes ('1'/'0' string, or 1/0 int
+     * under native-type mode) are also handled explicitly rather than
+     * assumed truthy/falsy, so this is correct for either driver.
+     */
+    public static function dbToBool(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_int($value)) {
+            return $value !== 0;
+        }
+        if (is_string($value)) {
+            return $value === 't' || $value === '1';
+        }
+
+        return (bool) $value;
+    }
+
     /** @return array<string, float|int|string|null>|null */
     public static function dbFetchAssoc(\mysqli|\PgSql\Connection $db, string $sql): ?array
     {

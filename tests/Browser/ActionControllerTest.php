@@ -186,6 +186,20 @@ function actionDbConnect(): \mysqli|\PgSql\Connection
     return H::connect();
 }
 
+/**
+ * user_infos.enabled_high is a genuine boolean column on Postgres -- a
+ * bare 0/1 literal is valid MySQL tinyint(1) input but Postgres rejects
+ * it outright ("column is of type boolean but expression is of type
+ * integer").
+ */
+function actionSetEnabledHigh(int $userId, bool $enabled): void
+{
+    $db = actionDbConnect();
+    $sqlValue = $db instanceof \mysqli ? ($enabled ? '1' : '0') : ($enabled ? 'true' : 'false');
+    H::dbQuery($db, sprintf('UPDATE %suser_infos SET enabled_high = %s WHERE user_id = %d', actionDbPrefix(), $sqlValue, $userId));
+    H::dbClose($db);
+}
+
 function actionDbPrefix(): string
 {
     $prefix = getenv('PIWIGO_DB_PREFIX');
@@ -450,9 +464,7 @@ it('denies HD download of an oversized original to a guest with no HD access', f
     // has enabledHigh=false when a webmaster has explicitly disabled it
     // for that account, so this test flips it for real rather than
     // assuming a default that doesn't hold.
-    $db = actionDbConnect();
-    H::dbQuery($db, sprintf('UPDATE %suser_infos SET enabled_high = 0 WHERE user_id = 2', actionDbPrefix()));
-    H::dbClose($db);
+    actionSetEnabledHigh(2, false);
 
     $img = imagecreatetruecolor(2000, 1500);
     if ($img === false) {
@@ -472,9 +484,7 @@ it('denies HD download of an oversized original to a guest with no HD access', f
         expect($result['status'])->toBe(401);
         expect($result['body'])->toContain('Access denied e');
     } finally {
-        $restoreDb = actionDbConnect();
-        H::dbQuery($restoreDb, sprintf('UPDATE %suser_infos SET enabled_high = 1 WHERE user_id = 2', actionDbPrefix()));
-        H::dbClose($restoreDb);
+        actionSetEnabledHigh(2, true);
         H::wsCall($page, 'pwg.categories.delete', [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
@@ -624,9 +634,7 @@ it('bypasses the no-HD-access restriction for an admin download carrying a valid
     // off, isolating is_admin_download's withEnabledHigh(true) bypass from
     // AccessControl::isAdmin() itself (already true for this whole file's
     // session, and not what's under test here).
-    $db = actionDbConnect();
-    H::dbQuery($db, sprintf('UPDATE %suser_infos SET enabled_high = 0 WHERE user_id = 1', actionDbPrefix()));
-    H::dbClose($db);
+    actionSetEnabledHigh(1, false);
 
     $img = imagecreatetruecolor(2000, 1500);
     if ($img === false) {
@@ -651,9 +659,7 @@ it('bypasses the no-HD-access restriction for an admin download carrying a valid
         expect($withToken['status'])->toBe(200);
         expect(strlen($withToken['body']))->toBeGreaterThan(0);
     } finally {
-        $restoreDb = actionDbConnect();
-        H::dbQuery($restoreDb, sprintf('UPDATE %suser_infos SET enabled_high = 1 WHERE user_id = 1', actionDbPrefix()));
-        H::dbClose($restoreDb);
+        actionSetEnabledHigh(1, true);
         H::wsCall($page, 'pwg.categories.delete', [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',

@@ -196,10 +196,14 @@ function suHasUserAccess(int $userId, int $catId): bool
 function suSetCategoryVisible(int $catId, bool $visible): void
 {
     $db = suConnect();
+    // categories.visible is a genuine boolean column on Postgres -- a
+    // bare 0/1 literal is valid MySQL tinyint(1) input but Postgres
+    // rejects it outright.
+    $sqlValue = $db instanceof \mysqli ? ($visible ? '1' : '0') : ($visible ? 'true' : 'false');
     H::dbQuery($db, sprintf(
-        'UPDATE %scategories SET visible = %d WHERE id = %d',
+        'UPDATE %scategories SET visible = %s WHERE id = %d',
         suDbPrefix(),
-        $visible ? 1 : 0,
+        $sqlValue,
         $catId
     ));
     H::dbClose($db);
@@ -211,7 +215,7 @@ function suCategoryVisible(int $catId): ?bool
     $row = H::dbFetchAssoc($db, sprintf('SELECT visible FROM %scategories WHERE id = %d', suDbPrefix(), $catId));
     H::dbClose($db);
 
-    return is_array($row) && isset($row['visible']) ? (bool) $row['visible'] : null;
+    return is_array($row) && isset($row['visible']) ? H::dbToBool($row['visible']) : null;
 }
 
 function suSetCategoryGlobalRankNull(int $catId): void

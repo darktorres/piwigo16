@@ -1184,8 +1184,14 @@ it('generates a previously-unregistered custom size once its own key is register
         // writes a second key here.
         $key = '150x100_a';
         $db = idcDb();
+        // JSON_OBJECT() is MySQL-only -- Postgres's own function is
+        // jsonb_build_object() (verified live, matches custom_json's real
+        // jsonb column type directly).
+        $jsonObjectExpr = $db instanceof \mysqli
+            ? "JSON_OBJECT('%s', %d)"
+            : "jsonb_build_object('%s', %d)";
         H::dbQuery($db, sprintf(
-            "UPDATE %sderivative_settings SET custom_json = JSON_OBJECT('%s', %d)",
+            'UPDATE %sderivative_settings SET custom_json = ' . $jsonObjectExpr,
             idcPrefix(),
             H::dbEscape($db, $key),
             time()

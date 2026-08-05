@@ -91,6 +91,14 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
     }
 
     /**
+     * @return list<string>
+     */
+    private function psqlCliCommand(): array
+    {
+        return ['psql', '-U' . $this->dbUser, '-h' . $this->dbHost, '-d' . $this->dbName, '-q', '-t'];
+    }
+
+    /**
      * Spawns a real, separate OS process that: acquires $lockName, sleeps
      * briefly, inserts a minimal images row with $md5sum, then releases
      * the lock -- simulating a second, concurrent upload of the exact same
@@ -107,22 +115,48 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
      */
     private function spawnBackgroundLockHolderThatInsertsThenReleases(string $lockName, string $md5sum, string $file)
     {
-        $sql = sprintf(
-            "SELECT GET_LOCK('%s', 5); SELECT SLEEP(0.3); INSERT INTO %s (file, path, md5sum) VALUES ('%s', 'upload/%s', '%s'); SELECT RELEASE_LOCK('%s');",
-            $lockName,
-            Tables::images(),
-            $file,
-            $file,
-            $md5sum,
-            $lockName,
-        );
-
-        $cmd = $this->mysqlCliCommand();
-        $cmd[] = '-e';
-        $cmd[] = $sql;
+        // pgsql support pass: real bugs found live -- GET_LOCK()/
+        // RELEASE_LOCK()/SLEEP() are all MySQL-only, and the CLI client
+        // itself differs (mysql -e vs psql -c). The advisory-lock key
+        // must be the exact same derived bigint
+        // Db\AdvisorySessionLock::key() computes (this shell script has
+        // no access to that PHP-side helper, so it's replicated here as
+        // a literal), and Postgres's own GET_LOCK(name, timeout)
+        // equivalent is a session-level lock_timeout GUC set before a
+        // plain (indefinitely-blocking) pg_advisory_lock() call.
+        if ($this->dbDriver === 'pgsql') {
+            $key = \Piwigo\Db\AdvisorySessionLock::key($lockName);
+            $sql = sprintf(
+                "SET lock_timeout = '5s'; SELECT pg_advisory_lock(%d); SELECT pg_sleep(0.3); INSERT INTO %s (file, path, md5sum) VALUES ('%s', 'upload/%s', '%s'); SELECT pg_advisory_unlock(%d);",
+                $key,
+                Tables::images(),
+                $file,
+                $file,
+                $md5sum,
+                $key,
+            );
+            $cmd = $this->psqlCliCommand();
+            $cmd[] = '-c';
+            $cmd[] = $sql;
+            $env = $this->dbPass !== '' ? array_merge(getenv(), ['PGPASSWORD' => $this->dbPass]) : null;
+        } else {
+            $sql = sprintf(
+                "SELECT GET_LOCK('%s', 5); SELECT SLEEP(0.3); INSERT INTO %s (file, path, md5sum) VALUES ('%s', 'upload/%s', '%s'); SELECT RELEASE_LOCK('%s');",
+                $lockName,
+                Tables::images(),
+                $file,
+                $file,
+                $md5sum,
+                $lockName,
+            );
+            $cmd = $this->mysqlCliCommand();
+            $cmd[] = '-e';
+            $cmd[] = $sql;
+            $env = null;
+        }
 
         $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
-        $proc = proc_open($cmd, $descriptors, $pipes);
+        $proc = proc_open($cmd, $descriptors, $pipes, null, $env);
         self::assertIsResource($proc, 'proc_open failed for the background lock-holder process');
         fclose($pipes[1]);
         fclose($pipes[2]);
@@ -190,8 +224,8 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
         $heldLockName = $this->uploadUniquenessLockName($heldMd5sum);
 
         $holderConn = DbConnection::build();
-        $acquired = $holderConn->fetchOne('SELECT GET_LOCK(?, ?)', [$heldLockName, 5]);
-        self::assertSame(1, $acquired, 'the unrelated value\'s lock must genuinely be held for this test to prove anything');
+        $acquired = \Piwigo\Db\AdvisorySessionLock::acquire($holderConn, $heldLockName, 5);
+        self::assertTrue($acquired, 'the unrelated value\'s lock must genuinely be held for this test to prove anything');
 
         try {
             $sum = md5($this->pngBytes() . uniqid('', true));
@@ -220,7 +254,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
 
             self::assertLessThan(2.0, $elapsed, 'must never wait on a lock scoped to a completely different value');
         } finally {
-            $holderConn->executeStatement('SELECT RELEASE_LOCK(?)', [$heldLockName]);
+            \Piwigo\Db\AdvisorySessionLock::release($holderConn, $heldLockName);
         }
     }
 
@@ -237,8 +271,8 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
         $lockName = $this->uploadUniquenessLockName($sum);
 
         $holderConn = DbConnection::build();
-        $acquired = $holderConn->fetchOne('SELECT GET_LOCK(?, ?)', [$lockName, 5]);
-        self::assertSame(1, $acquired, 'the same value\'s lock must genuinely be held for this test to prove anything');
+        $acquired = \Piwigo\Db\AdvisorySessionLock::acquire($holderConn, $lockName, 5);
+        self::assertTrue($acquired, 'the same value\'s lock must genuinely be held for this test to prove anything');
 
         try {
             $chunkResponse = $this->callWs('pwg.images.addChunk', [
@@ -267,7 +301,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
 
             self::assertLessThan(2.0, $elapsed, 'check_uniqueness=false must never block on another request\'s held lock');
         } finally {
-            $holderConn->executeStatement('SELECT RELEASE_LOCK(?)', [$lockName]);
+            \Piwigo\Db\AdvisorySessionLock::release($holderConn, $lockName);
         }
     }
 }

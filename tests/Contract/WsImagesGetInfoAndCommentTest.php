@@ -235,7 +235,7 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
             'SELECT validated FROM ' . Tables::comments() . ' WHERE content = ?',
             [$content]
         );
-        self::assertSame(0, is_numeric($validated) ? (int) $validated : -1);
+        self::assertSame(0, is_bool($validated) || is_numeric($validated) ? (int) (bool) $validated : -1);
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::comments() . ' WHERE content = ?', [$content]);
     }

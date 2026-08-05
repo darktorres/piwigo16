@@ -67,7 +67,9 @@ return [
             \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
             \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(),
             \Piwigo\Bootstrap\CoreDomainAccessor::imageService(),
-            \Piwigo\Bootstrap\RequestBootstrap::currentConfig()
+            \Piwigo\Bootstrap\RequestBootstrap::currentConfig(),
+            \Piwigo\Bootstrap\InfrastructureAccessor::wsContext(),
+            \Piwigo\Bootstrap\RequestBootstrap::currentUser()
         ),
         GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService(\Piwigo\Bootstrap\RequestBootstrap::currentConfig())),
         RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService(\Piwigo\Bootstrap\RequestBootstrap::currentConfig())),
@@ -81,7 +83,9 @@ return [
             new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
             \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(),
             \Piwigo\PluginConfig\EventDispatcher::get(),
-            \Piwigo\Bootstrap\RequestBootstrap::currentConfig()
+            \Piwigo\Bootstrap\RequestBootstrap::currentConfig(),
+            \Piwigo\Bootstrap\RequestBootstrap::currentUser(),
+            \Piwigo\Bootstrap\RequestBootstrap::sessionService()
         )),
         SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(new MailService(
             new \Piwigo\Core\Lang(

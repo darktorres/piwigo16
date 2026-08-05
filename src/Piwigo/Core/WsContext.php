@@ -18,8 +18,9 @@ namespace Piwigo\Core;
  * dispatched through ws.php),
  * never mutated afterward during a request -- no "current instance"
  * concept needed at all (same lesson as the Phase 0 `CurrentPersistentCache`
- * pilot). isActiveStatic() is a `@deprecated` transitional bridge for
- * callers not yet converted to constructor injection.
+ * pilot). Its own `isActiveStatic()` transitional bridge was deleted in
+ * Phase 11 sub-phase 11G once Admin\Upload\UploadService::addUploadedFile()
+ * (its last real caller) converted to real constructor injection.
  */
 final class WsContext
 {
@@ -30,32 +31,5 @@ final class WsContext
     public function isActive(): bool
     {
         return $this->active;
-    }
-
-    /**
-     * @deprecated transitional bridge for callers not yet converted to
-     * constructor injection -- Piwigo\Url\UrlService (still manually
-     * `new`'d at dozens of call sites, Phase 6), and Piwigo\Admin\Upload\UploadService::
-     * addUploadedFile() (reachable from the still-static Ws\PwgImages
-     * dispatch layer, Phase 10) all keep using this shim. Gracefully falls
-     * back to false (the same value an unset instance already defaults
-     * to) when Kernel hasn't booted -- these callers are reached by many
-     * Unit tests that never boot a container at all, matching the
-     * `InstallationFlag::isActiveStatic()` shim's own established
-     * reasoning. Delete once `grep -rn "WsContext::isActiveStatic("`
-     * outside tests/ returns nothing.
-     */
-    public static function isActiveStatic(): bool
-    {
-        if (! Kernel::isBooted()) {
-            return false;
-        }
-
-        $instance = Kernel::container()->get(self::class);
-        if (! $instance instanceof self) {
-            throw new \LogicException('Container returned an unexpected type for ' . self::class);
-        }
-
-        return $instance->isActive();
     }
 }

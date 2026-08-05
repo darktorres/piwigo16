@@ -6,7 +6,6 @@ namespace Piwigo\Users;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
-use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
@@ -75,7 +74,28 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         private \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private \Piwigo\Users\CurrentUser $currentUser,
         private \Piwigo\Config\CurrentConfig $currentConfig,
+        private \Piwigo\Core\InstallationFlag $installationFlag,
+        private \Piwigo\Core\ProcessCache $processCache,
     ) {}
+
+    /**
+     * Container resolve, not a constructor property -- AccessControl's own
+     * dependency chain (RedirectServiceInterface -> Bootstrap\RedirectService
+     * -> Users\UserService, i.e. this class) means a required constructor
+     * param here would be a genuine circular dependency PHP-DI can't
+     * autowire, same reasoning as Mail\MailService/Url\UrlService/
+     * Template\Template's own identical accessControl() helper (singleton/
+     * service-locator elimination campaign, Phase 11 sub-phase 11G).
+     */
+    private function accessControl(): \Piwigo\Auth\AccessControl
+    {
+        $accessControl = \Piwigo\Core\Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
+        if (! $accessControl instanceof \Piwigo\Auth\AccessControl) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Auth\AccessControl::class);
+        }
+
+        return $accessControl;
+    }
 
     /**
      * Phase 1k DI-chain audit: the same PermissionService recipe was
@@ -129,7 +149,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             return $this->lang->t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 
-        if (\Piwigo\Core\InstallationFlag::isActiveStatic() && ! $isEmpty) {
+        if ($this->installationFlag->isActive() && ! $isEmpty) {
             if ($this->repo->emailExists($email, $userId)) {
                 return $this->lang->t('this email address is already in use');
             }
@@ -146,7 +166,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
 
         $username = Username::tryFrom($login);
-        if (\Piwigo\Core\InstallationFlag::isActiveStatic() && $username !== null) {
+        if ($this->installationFlag->isActive() && $username !== null) {
             if ($this->repo->usernameExistsCaseInsensitive($username)) {
                 return $this->lang->t('this login is already used');
             }
@@ -461,8 +481,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // when Kernel::isBooted() is false (singleton/service-locator
         // elimination campaign, Phase 1's transitional shim), which would
         // otherwise make a subsequent getStatic() lose it entirely.
-        if (\Piwigo\Core\ProcessCache::hasStatic('default_user')) {
-            $defaultUserCached = \Piwigo\Core\ProcessCache::getStatic('default_user');
+        if ($this->processCache->has('default_user')) {
+            $defaultUserCached = $this->processCache->get('default_user');
         } else {
             $defaultUserId = UserId::from($this->currentConfig->defaultUserId());
 
@@ -470,10 +490,10 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             if ($row !== null) {
                 $rowArray = $row->toArray();
                 unset($rowArray['user_id'], $rowArray['status'], $rowArray['registration_date'], $rowArray['last_visit'], $rowArray['last_visit_from_history']);
-                \Piwigo\Core\ProcessCache::setStatic('default_user', $rowArray);
+                $this->processCache->set('default_user', $rowArray);
                 $defaultUserCached = $rowArray;
             } else {
-                \Piwigo\Core\ProcessCache::setStatic('default_user', false);
+                $this->processCache->set('default_user', false);
                 $defaultUserCached = false;
             }
         }
@@ -749,7 +769,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $effective_level = is_int($effective_level_raw) || is_string($effective_level_raw) ? $effective_level_raw : '0';
 
         $effective = new EffectiveForbiddenCategoriesCache(
-            \Piwigo\Auth\AccessControl::current(),
+            $this->accessControl(),
             $this->permissionService(),
             $this->categoryService(),
             new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
@@ -1102,7 +1122,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function saveEditContext(?string $sectionUrl, int|string|null $imageId): void
     {
-        if (! AccessControl::current()->isAdmin() or $sectionUrl === null or $imageId === null) {
+        if (! $this->accessControl()->isAdmin() or $sectionUrl === null or $imageId === null) {
             return;
         }
 
@@ -1263,7 +1283,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             }
 
             if (! self::emptyValue($params['password'] ?? null)) {
-                if (! AccessControl::current()->isWebmaster()) {
+                if (! $this->accessControl()->isWebmaster()) {
                     $password_protected_users = [$this->currentConfig->guestId()];
 
                     $admin_ids = array_map(
@@ -1296,7 +1316,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (! self::emptyValue($params['status'] ?? null)) {
             $status_param = $params['status'] ?? null;
-            if (in_array($status_param, ['webmaster', 'admin'], true) and ! AccessControl::current()->isWebmaster()) {
+            if (in_array($status_param, ['webmaster', 'admin'], true) and ! $this->accessControl()->isWebmaster()) {
                 return [
                     'error' => [
                         'code ' => 403,

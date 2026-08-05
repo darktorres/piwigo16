@@ -98,7 +98,17 @@ function upload_service_test_make(): UploadService
         throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
 
-    return new UploadService(Lang::current(), upload_service_test_current_logger(), $storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig);
+    $wsContext = Kernel::container()->get(\Piwigo\Core\WsContext::class);
+    if (! $wsContext instanceof \Piwigo\Core\WsContext) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\WsContext::class);
+    }
+
+    $currentUser = Kernel::container()->get(\Piwigo\Users\CurrentUser::class);
+    if (! $currentUser instanceof \Piwigo\Users\CurrentUser) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\CurrentUser::class);
+    }
+
+    return new UploadService(Lang::current(), upload_service_test_current_logger(), $storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser);
 }
 
 beforeEach(function (): void {

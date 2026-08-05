@@ -225,6 +225,23 @@ final class MailService implements MailerInterface
         return $processCache;
     }
 
+    /**
+     * Same reasoning as processCache() above -- used only inside
+     * userService()'s own throwaway-fallback construction below, for
+     * UserService's own new required InstallationFlag/ProcessCache
+     * collaborators (singleton/service-locator elimination campaign,
+     * Phase 11 sub-phase 11G).
+     */
+    private function installationFlag(): \Piwigo\Core\InstallationFlag
+    {
+        $installationFlag = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\InstallationFlag::class);
+        if (! $installationFlag instanceof \Piwigo\Core\InstallationFlag) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\InstallationFlag::class);
+        }
+
+        return $installationFlag;
+    }
+
     private function currentConfigService(): CurrentConfigService
     {
         $currentConfigService = \Piwigo\Core\Kernel::container()->get(CurrentConfigService::class);
@@ -307,6 +324,8 @@ final class MailService implements MailerInterface
             $this->deploymentPolicy,
             $this->currentUser,
             $this->currentConfig,
+            $this->installationFlag(),
+            $this->processCache(),
         );
     }
 

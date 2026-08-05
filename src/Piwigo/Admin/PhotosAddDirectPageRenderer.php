@@ -56,6 +56,7 @@ final class PhotosAddDirectPageRenderer
         private readonly \Piwigo\Users\PreferencesService $preferencesService,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly \Piwigo\Core\WsContext $wsContext,
     ) {}
 
     /**
@@ -218,7 +219,7 @@ final class PhotosAddDirectPageRenderer
 
         $htmlRenderer = $this->htmlRenderer;
 
-        $uploadService = new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig);
+        $uploadService = new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser);
 
         // +-------------------------------------------------------------------+
         // | Photo selection                                                    |

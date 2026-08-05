@@ -53,6 +53,8 @@ function core_update_service_test_user_service(): \Piwigo\Users\UserService
         new \Piwigo\Config\DeploymentPolicy(),
         new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
         new \Piwigo\Config\CurrentConfig(),
+        new \Piwigo\Core\InstallationFlag(),
+        new \Piwigo\Core\ProcessCache(),
     );
 }
 

@@ -50,7 +50,7 @@ final class LocalSiteReader
     private function metadataService(): MetadataService
     {
         return $this->metadataService
-            ?? new MetadataService(\Piwigo\Core\Lang::current(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), new \Piwigo\Core\CurrentLogger(), \Piwigo\PluginConfig\EventDispatcher::get(), $this->currentConfig);
+            ?? new MetadataService(\Piwigo\Core\Lang::current(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), new \Piwigo\Core\CurrentLogger(), \Piwigo\PluginConfig\EventDispatcher::get(), $this->currentConfig, new \Piwigo\Users\CurrentUser($this->currentConfig), \Piwigo\Session\SessionService::get());
     }
 
     /**

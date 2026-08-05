@@ -163,10 +163,10 @@ test('autoUpdate() stays silent for an admin user inside an active WS request', 
     });
 
     try {
-        // WsContext::isActiveStatic() resolves the container-shared
-        // instance (singleton/service-locator elimination campaign, Phase
-        // 3) -- KernelContainerOverride::with() gives this one test a real
-        // container with WsContext bound active, then tears it back down.
+        // PluginMaintain takes WsContext via real constructor injection
+        // (Phase 11 sub-phase 11D) -- KernelContainerOverride::with() gives
+        // this one test a real container with WsContext bound active, then
+        // tears it back down.
         // The user status must be seeded INSIDE the callback, once the
         // container exists -- seeding beforehand only reaches the pre-boot
         // memoized CurrentUser::current() fallback, which is a different

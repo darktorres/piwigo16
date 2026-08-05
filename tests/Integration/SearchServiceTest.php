@@ -286,6 +286,8 @@ final class SearchServiceTest extends IntegrationTestCase
             \Piwigo\Users\CurrentUser::current(),
             \Piwigo\Core\Lang::current(),
             \Piwigo\Config\CurrentConfig::current(),
+            new \Piwigo\Core\CurrentLogger(),
+            new \Piwigo\Config\DeploymentPolicy(),
         );
     }
 
@@ -347,6 +349,8 @@ final class SearchServiceTest extends IntegrationTestCase
             \Piwigo\Users\CurrentUser::current(),
             \Piwigo\Core\Lang::current(),
             \Piwigo\Config\CurrentConfig::current(),
+            new \Piwigo\Core\CurrentLogger(),
+            new \Piwigo\Config\DeploymentPolicy(),
         );
     }
 

@@ -136,6 +136,8 @@ test('send returns immediately without touching the DB or network when telemetry
         new \Piwigo\Config\DeploymentPolicy(),
         new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
         new \Piwigo\Config\CurrentConfig(),
+        new \Piwigo\Core\InstallationFlag(),
+        new \Piwigo\Core\ProcessCache(),
     );
     $imageService = new \Piwigo\Image\ImageService(
         piwigoInfosSenderTestLang(),
@@ -164,6 +166,8 @@ test('send returns immediately without touching the DB or network when telemetry
         new \Piwigo\PluginConfig\EventDispatcher(),
         new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
         new \Piwigo\Config\CurrentConfig(),
+        new \Piwigo\Core\CurrentLogger(),
+        new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Session\SessionEntity::class), new \Piwigo\Config\CurrentConfig()),
     );
     $groupService = new \Piwigo\Group\GroupService(
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Group\GroupEntity::class),

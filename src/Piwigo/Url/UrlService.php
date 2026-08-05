@@ -97,6 +97,38 @@ final class UrlService implements UrlServiceInterface
     }
 
     /**
+     * Container resolve, not a constructor property -- the only real use
+     * in this class is the one `new TagService(...)` construction below. A
+     * required constructor param here would ripple to every real
+     * `new UrlService(...)` construction site across the app (Phase 6:
+     * still manually `new`'d at dozens of sites) for a single caller, the
+     * same low-blast-radius reasoning as accessControl() above (singleton/
+     * service-locator elimination campaign, Phase 11 sub-phase 11G).
+     */
+    private function currentLogger(): \Piwigo\Core\CurrentLogger
+    {
+        $currentLogger = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
+        if (! $currentLogger instanceof \Piwigo\Core\CurrentLogger) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentLogger::class);
+        }
+
+        return $currentLogger;
+    }
+
+    /**
+     * Same reasoning as currentLogger() above.
+     */
+    private function sessionService(): \Piwigo\Session\SessionService
+    {
+        $sessionService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Session\SessionService::class);
+        if (! $sessionService instanceof \Piwigo\Session\SessionService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Session\SessionService::class);
+        }
+
+        return $sessionService;
+    }
+
+    /**
      * Returns a prefix for each url link on displayed page and returns an
      * empty string for current path.
      */
@@ -775,7 +807,7 @@ final class UrlService implements UrlServiceInterface
             }
 
             $tagConn = DbConnection::build();
-            $page['tags'] = new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn), $this->currentConfig)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig)
+            $page['tags'] = new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn), $this->currentConfig)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), $this->sessionService())
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
                 $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');

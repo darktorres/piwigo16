@@ -60,6 +60,8 @@ final readonly class TagService
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Users\CurrentUser $currentUser,
         private \Piwigo\Config\CurrentConfig $currentConfig,
+        private \Piwigo\Core\CurrentLogger $currentLogger,
+        private \Piwigo\Session\SessionService $sessionService,
     ) {
         $this->tagIdFromTagNameCache = new TagIdCache();
     }
@@ -79,7 +81,7 @@ final readonly class TagService
      */
     private function newImageService(): ImageService
     {
-        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityLogger, \Piwigo\Session\SessionService::get(), $this->eventDispatcher, $this->currentConfig);
+        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityLogger, $this->sessionService, $this->eventDispatcher, $this->currentConfig);
     }
 
     /**
@@ -559,7 +561,7 @@ final readonly class TagService
             return;
         }
 
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = $this->currentLogger->get();
 
         $taglistBefore = $this->getImageTagIds(array_keys($tagsOf));
         $logger->debug('taglist_before', $taglistBefore);

@@ -96,6 +96,8 @@ final class FilterResolverTest extends IntegrationTestCase
             new \Piwigo\Config\DeploymentPolicy(),
             \Piwigo\Users\CurrentUser::current(),
             \Piwigo\Config\CurrentConfig::current(),
+            new \Piwigo\Core\InstallationFlag(),
+            new \Piwigo\Core\ProcessCache(),
         );
 
         $this->resolver = new FilterResolver($imageService, $categoryService, $caddieRepo, $userService);

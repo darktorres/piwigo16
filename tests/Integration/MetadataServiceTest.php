@@ -56,7 +56,7 @@ final class MetadataServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $currentLogger = new CurrentLogger();
         $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-        $this->service = new MetadataService(\Piwigo\Core\Lang::current(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $currentLogger, \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current());
+        $this->service = new MetadataService(\Piwigo\Core\Lang::current(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $currentLogger, \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Session\SessionService::get());
 
         CurrentConfig::current()->setUseIptc(false);
         CurrentConfig::current()->setUseExif(true);

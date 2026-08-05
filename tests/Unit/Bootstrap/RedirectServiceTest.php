@@ -91,6 +91,8 @@ function redirect_service_test_user_service(): UserService
         new DeploymentPolicy(),
         new CurrentUser(new \Piwigo\Config\CurrentConfig()),
         new \Piwigo\Config\CurrentConfig(),
+        new \Piwigo\Core\InstallationFlag(),
+        new \Piwigo\Core\ProcessCache(),
     );
 }
 

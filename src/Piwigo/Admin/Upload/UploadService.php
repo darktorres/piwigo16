@@ -93,6 +93,8 @@ final class UploadService
         private readonly \Piwigo\Metadata\MetadataService $metadataService,
         private readonly \Piwigo\Image\ImageService $imageService,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Core\WsContext $wsContext,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     /**
@@ -438,7 +440,7 @@ final class UploadService
                     if (in_array($finfo_type, ['image/svg', 'image/svg+xml'], true) and $original_extension !== 'svg') {
                         unlink($source_filepath);
                         $error_msg = 'File extension "' . $original_extension . '" for file "' . $original_filename . '" does not match file MIME type "' . $finfo_type . '"';
-                        if (\Piwigo\Core\WsContext::isActiveStatic() && $service !== null) {
+                        if ($this->wsContext->isActive() && $service !== null) {
                             $service->sendResponse(new PwgError(415, $error_msg));
                             exit;
                         }
@@ -543,7 +545,8 @@ final class UploadService
                     'width' => $file_infos['width'],
                     'height' => $file_infos['height'],
                     'md5sum' => $md5sum,
-                    'added_by' => \Piwigo\Users\CurrentUser::current()->get()->id->value,
+                    'added_by' => $this->currentUser->get()
+                        ->id->value,
                     'rotation' => $rotation,
                 ];
 
@@ -572,7 +575,8 @@ final class UploadService
                     'width' => $file_infos['width'],
                     'height' => $file_infos['height'],
                     'md5sum' => $md5sum,
-                    'added_by' => \Piwigo\Users\CurrentUser::current()->get()->id->value,
+                    'added_by' => $this->currentUser->get()
+                        ->id->value,
                     'rotation' => $rotation,
                 ];
 

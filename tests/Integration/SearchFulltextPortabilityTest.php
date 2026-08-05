@@ -69,7 +69,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
 
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
-        $userService = new \Piwigo\Users\UserService(\Piwigo\Core\Lang::current(), new \Piwigo\Users\UserRepository($this->em, EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current()), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), $mailer, new \Piwigo\Activity\ActivityService($this->em->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), \Piwigo\Config\CurrentConfig::current()), EventDispatcher::get(), new \Piwigo\Config\DeploymentPolicy(), CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
+        $userService = new \Piwigo\Users\UserService(\Piwigo\Core\Lang::current(), new \Piwigo\Users\UserRepository($this->em, EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current()), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), $mailer, new \Piwigo\Activity\ActivityService($this->em->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), \Piwigo\Config\CurrentConfig::current()), EventDispatcher::get(), new \Piwigo\Config\DeploymentPolicy(), CurrentUser::current(), \Piwigo\Config\CurrentConfig::current(), new \Piwigo\Core\InstallationFlag(), new \Piwigo\Core\ProcessCache());
 
         $this->service = new SearchService(
             \Piwigo\Auth\AccessControl::current(),
@@ -89,6 +89,8 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             CurrentUser::current(),
             \Piwigo\Core\Lang::current(),
             \Piwigo\Config\CurrentConfig::current(),
+            new \Piwigo\Core\CurrentLogger(),
+            new \Piwigo\Config\DeploymentPolicy(),
         );
     }
 

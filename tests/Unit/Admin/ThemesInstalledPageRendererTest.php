@@ -278,6 +278,8 @@ function themesInstalledLifecycleUserService(): \Piwigo\Users\UserService
         new \Piwigo\Config\DeploymentPolicy(),
         new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
         new \Piwigo\Config\CurrentConfig(),
+        new \Piwigo\Core\InstallationFlag(),
+        new \Piwigo\Core\ProcessCache(),
     );
 }
 

@@ -69,7 +69,7 @@ test('render appends nothing when both show_exif and show_iptc are disabled', fu
     picture_metadata_test_current_config()->setShowIptc(false);
     $renderer = new PictureMetadataRenderer();
 
-    $renderer->render(\Piwigo\Core\Lang::current(), [], new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current());
+    $renderer->render(\Piwigo\Core\Lang::current(), [], new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Session\SessionService::get());
 
     expect(CurrentTemplate::current()->get()->get_template_vars('metadata'))->toBeNull();
 });

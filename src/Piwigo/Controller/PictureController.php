@@ -118,6 +118,7 @@ final class PictureController implements ControllerInterface
         private readonly PictureRateRenderer $pictureRateRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly \Piwigo\Lang\Translator $translator,
     ) {}
 
     private function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
@@ -1217,7 +1218,7 @@ final class PictureController implements ControllerInterface
         }
         if ($metadata_showable and $this->sessionService->getSessionVar('show_metadata') !== null) {
             new PictureMetadataRenderer()
-                ->render($this->lang, $picture, $this->currentLogger, $this->eventDispatcher, $this->currentTemplate, $this->currentConfig);
+                ->render($this->lang, $picture, $this->currentLogger, $this->eventDispatcher, $this->currentTemplate, $this->currentConfig, $this->currentUser, $this->sessionService);
         }
 
         // include menubar
@@ -1225,7 +1226,7 @@ final class PictureController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if ($this->currentConfig->pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
             new MenubarRenderer()
-                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig);
+                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
         }
 
         // The slideshow branch above may have set $refresh/$url_link

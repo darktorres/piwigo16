@@ -63,9 +63,10 @@ namespace Piwigo\Tests\Integration {
             $this->setUpConnectionFromEnv();
             \Piwigo\Core\Kernel::boot();
             $installationFlag = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\InstallationFlag::class);
-            if ($installationFlag instanceof \Piwigo\Core\InstallationFlag) {
-                $installationFlag->mark();
+            if (! $installationFlag instanceof \Piwigo\Core\InstallationFlag) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\InstallationFlag::class);
             }
+            $installationFlag->mark();
 
             if (! self::$fixtureReady) {
                 $this->resetDatabase();
@@ -94,7 +95,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $mailer = \Piwigo\Core\Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
-            $this->service = new UserService(Lang::current(), new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), $mailer, new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
+            $this->service = new UserService(Lang::current(), new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), $mailer, new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current(), $installationFlag, new \Piwigo\Core\ProcessCache());
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
@@ -1078,7 +1079,11 @@ namespace Piwigo\Tests\Integration {
             // shared instance.
             $mailer = \Piwigo\Core\Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
-            $service = new UserService(Lang::current(), new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), $mailer, new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(externalAuthentification: true), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
+            $installationFlag = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\InstallationFlag::class);
+            if (! $installationFlag instanceof \Piwigo\Core\InstallationFlag) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\InstallationFlag::class);
+            }
+            $service = new UserService(Lang::current(), new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), $mailer, new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(externalAuthentification: true), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current(), $installationFlag, new \Piwigo\Core\ProcessCache());
 
             try {
                 self::assertSame(0, $this->fetchOneInt(

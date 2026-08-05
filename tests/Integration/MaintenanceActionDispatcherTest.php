@@ -130,6 +130,8 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new \Piwigo\Config\DeploymentPolicy(),
             new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
             new \Piwigo\Config\CurrentConfig(),
+            new \Piwigo\Core\InstallationFlag(),
+            new \Piwigo\Core\ProcessCache(),
         );
     }
 
@@ -189,6 +191,8 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new \Piwigo\PluginConfig\EventDispatcher(),
             $currentUser,
             CurrentConfig::current(),
+            new \Piwigo\Core\CurrentLogger(),
+            new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfig::current()),
         );
     }
 

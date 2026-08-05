@@ -157,6 +157,8 @@ final class MailServiceTest extends IntegrationTestCase
             new \Piwigo\Config\DeploymentPolicy(),
             \Piwigo\Users\CurrentUser::current(),
             \Piwigo\Config\CurrentConfig::current(),
+            new \Piwigo\Core\InstallationFlag(),
+            new \Piwigo\Core\ProcessCache(),
         );
     }
 

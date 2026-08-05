@@ -81,6 +81,10 @@ final class UserBootstrap
         if (! $mailer instanceof \Piwigo\Core\MailerInterface) {
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\MailerInterface::class);
         }
+        $installationFlag = Kernel::container()->get(\Piwigo\Core\InstallationFlag::class);
+        if (! $installationFlag instanceof \Piwigo\Core\InstallationFlag) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\InstallationFlag::class);
+        }
         $authService = new AuthService(
             new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
@@ -107,6 +111,8 @@ final class UserBootstrap
             $this->deploymentPolicy,
             $currentUser,
             \Piwigo\Bootstrap\RequestBootstrap::currentConfig(),
+            $installationFlag,
+            \Piwigo\Bootstrap\RequestBootstrap::processCache(),
         );
 
         $guest_id_int = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->guestId();

@@ -1753,6 +1753,43 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * single-pass MySQL-only trick, same portable tradeoff already
      * accepted elsewhere in this pass.
      *
+     * Real second Postgres bug found live, fixed here too: `SELECT
+     * DISTINCT` combined with an `ORDER BY` expression not literally
+     * present in the SELECT list is rejected outright ("for SELECT
+     * DISTINCT, ORDER BY expressions must appear in select list") --
+     * hit for real via `Ws\PwgUsers::getList()`'s own case-insensitive
+     * `ORDER BY LOWER(username)` substitution (`username` alone is
+     * selected, `LOWER(username)` isn't literally the same text).
+     * `SELECT DISTINCT` is switched to `GROUP BY u.id` to fix this
+     * (`GROUP BY`'s functional-dependency exception, unlike `DISTINCT`'s
+     * strict same-row-literal requirement, permits an ORDER BY
+     * expression built purely from the grouped table's own columns with
+     * no matching SELECT-list entry).
+     *
+     * A real second, more subtle bug found live *fixing that first one*,
+     * caught only once this ran against a real WS call exercising every
+     * $displayColumns field, not just the narrower set this class's own
+     * Integration tests happened to cover: PostgreSQL's own GROUP BY
+     * functional-dependency rule is narrower than MySQL's -- confirmed
+     * directly against its own docs after a live "column ui.status must
+     * appear in the GROUP BY clause" failure -- it only ever recognizes a
+     * table's *own* primary key, never transitively through a join the
+     * way MySQL's optimizer does (MySQL: grouping by u.id, joined 1:1 to
+     * ui via a unique ui.user_id, makes every ui.* column functionally
+     * dependent too; Postgres: never, regardless of join shape). Every
+     * `ui.*` column $displayColumns can carry (confirmed via
+     * Ws\PwgUsers::getList()'s own real `$display` construction --
+     * status/level/language/theme/nb_image_page/recent_period/expand/
+     * show_nb_comments/show_nb_hits/enabled_high/registration_date/
+     * last_visit, `ug.*` never appears there at all) is wrapped in
+     * `ANY_VALUE()` below -- genuinely correct here, not just
+     * quieting the error, since `ui` is a real one-row-per-user INNER
+     * JOIN (confirmed: `ui.user_id` is user_infos' own primary key), so
+     * ANY_VALUE() only ever has exactly one real candidate value to
+     * return, same reasoning already established for
+     * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}'s
+     * own ANY_VALUE(u.mail_address) fix.
+     *
      * @param  array<string, string>  $displayColumns
      * @return PaginatedResult<array<string, mixed>>
      */
@@ -1774,10 +1811,10 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
 
         $columnPairs = [];
         foreach ($displayColumns as $field => $alias) {
-            $columnPairs[] = $field . ' AS ' . $alias;
+            $columnPairs[] = (str_starts_with($field, 'u.') ? $field : 'ANY_VALUE(' . $field . ')') . ' AS ' . $alias;
         }
         if ($includeLastVisitFromHistory) {
-            $columnPairs[] = 'ui.last_visit_from_history AS last_visit_from_history';
+            $columnPairs[] = 'ANY_VALUE(ui.last_visit_from_history) AS last_visit_from_history';
         }
         $columnsSql = implode(', ', $columnPairs);
 
@@ -1806,8 +1843,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         }
 
         $sql = <<<SQL
-            SELECT DISTINCT {$columnsSql}
+            SELECT {$columnsSql}
             {$joinSql}
+            GROUP BY u.id
             ORDER BY {$orderBy}
             SQL;
 

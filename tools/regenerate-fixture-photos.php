@@ -26,10 +26,11 @@ use Piwigo\Tests\Browser\Helpers\FixturePhotoGenerator;
  * baselines drift out of sync with the real, current fixture content.
  *
  * Reads DB credentials from the environment (PIWIGO_DB_HOST/USER/PASSWORD/
- * BASE/PREFIX) -- same variables tools/reimport-fixture.sh already exports
- * via `set -a; source .env.test; set +a` before invoking this script, and
- * the same names Tests\Browser\Helpers\BrowserTestHelpers's own direct-
- * mysqli test helpers use.
+ * BASE/PREFIX/DRIVER) -- same variables tools/reimport-fixture.sh already
+ * exports via `set -a; source .env.test; set +a` before invoking this
+ * script, and the same names Tests\Browser\Helpers\BrowserTestHelpers's own
+ * direct-mysqli/pgsql test helpers use. PIWIGO_DB_DRIVER branching matches
+ * IntegrationTestCase::newPgsqlConnection()'s own connection-string shape.
  */
 $host = (string) getenv('PIWIGO_DB_HOST');
 $user = (string) getenv('PIWIGO_DB_USER');
@@ -38,25 +39,56 @@ $password = $password === false ? '' : $password;
 $base = (string) getenv('PIWIGO_DB_BASE');
 $prefix = getenv('PIWIGO_DB_PREFIX');
 $prefix = $prefix === false ? 'piwigo_' : $prefix;
+$driver = getenv('PIWIGO_DB_DRIVER');
+$driver = $driver === 'pgsql' ? 'pgsql' : 'mysqli';
 
-$db = new mysqli($host, $user, $password, $base);
-if ($db->connect_errno !== 0) {
-    fwrite(STDERR, "regenerate-fixture-photos.php: DB connection failed: {$db->connect_error}\n");
-    exit(1);
-}
+$rows = [];
+if ($driver === 'pgsql') {
+    $connStringParts = ['host=' . $host, 'user=' . $user, 'dbname=' . $base];
+    if ($password !== '') {
+        $connStringParts[] = 'password=' . $password;
+    }
 
-$result = $db->query(sprintf(
-    'SELECT id, path FROM %simages WHERE id BETWEEN 1 AND 5 ORDER BY id',
-    $db->real_escape_string($prefix)
-));
-if (! $result instanceof mysqli_result) {
-    fwrite(STDERR, "regenerate-fixture-photos.php: failed to query {$prefix}images.\n");
-    exit(1);
+    $pgConn = pg_connect(implode(' ', $connStringParts), PGSQL_CONNECT_FORCE_NEW);
+    if ($pgConn === false) {
+        fwrite(STDERR, "regenerate-fixture-photos.php: DB connection failed.\n");
+        exit(1);
+    }
+
+    $pgResult = pg_query($pgConn, sprintf('SELECT id, path FROM %simages WHERE id BETWEEN 1 AND 5 ORDER BY id', $prefix));
+    if ($pgResult === false) {
+        fwrite(STDERR, "regenerate-fixture-photos.php: failed to query {$prefix}images.\n");
+        exit(1);
+    }
+
+    $rows = pg_fetch_all($pgResult, PGSQL_ASSOC);
+    pg_close($pgConn);
+} else {
+    $db = new mysqli($host, $user, $password, $base);
+    if ($db->connect_errno !== 0) {
+        fwrite(STDERR, "regenerate-fixture-photos.php: DB connection failed: {$db->connect_error}\n");
+        exit(1);
+    }
+
+    $result = $db->query(sprintf(
+        'SELECT id, path FROM %simages WHERE id BETWEEN 1 AND 5 ORDER BY id',
+        $db->real_escape_string($prefix)
+    ));
+    if (! $result instanceof mysqli_result) {
+        fwrite(STDERR, "regenerate-fixture-photos.php: failed to query {$prefix}images.\n");
+        exit(1);
+    }
+
+    while (($row = $result->fetch_assoc()) !== null) {
+        $rows[] = $row;
+    }
+
+    $db->close();
 }
 
 $projectRoot = dirname(__DIR__) . '/';
 $count = 0;
-while (($row = $result->fetch_assoc()) !== null) {
+foreach ($rows as $row) {
     $id = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
     $path = is_string($row['path'] ?? null) ? $row['path'] : '';
     if ($id < 1 || $id > 5 || $path === '') {
@@ -66,7 +98,5 @@ while (($row = $result->fetch_assoc()) !== null) {
     FixturePhotoGenerator::write($id, $projectRoot . $path);
     $count++;
 }
-
-$db->close();
 
 echo "regenerate-fixture-photos.php: wrote {$count} fixture photo(s).\n";

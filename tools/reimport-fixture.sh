@@ -42,6 +42,16 @@
 # uses (PIWIGO_DB_HOST/USER/PASSWORD/BASE/PREFIX) — no PIWIGO_DB_PORT support,
 # matching that class, which doesn't read one either.
 #
+# pgsql support pass: branches on PIWIGO_DB_DRIVER the same way
+# IntegrationTestCase::loadFixture()/RegenerateFixtureTest already do —
+# tests/Fixtures/piwigo-17.0-pgsql.sql (the real pg_dump sibling, same file
+# IntegrationTestCase::pgsqlFixturePath() derives) loaded via `psql -v
+# ON_ERROR_STOP=1`, matching that class's own loadFixtureViaPsql() flags
+# exactly (a bare psql run here isn't piped through proc_open, so the
+# EPIPE-on-unread-stdout gotcha documented there doesn't apply — this
+# script lets psql's own preamble SELECT print straight to the terminal).
+#
+
 # `piwigo_sites` id=1's own `galleries_url` is committed in the fixture as
 # an absolute filesystem path (Piwigo\Core\Paths::$root . 'galleries/',
 # matching exactly what Admin\Install\InstallWizard seeds it with on a real
@@ -81,36 +91,68 @@ set -a
 source .env.test
 set +a
 
-mysql_args=(-h"${PIWIGO_DB_HOST}" -u"${PIWIGO_DB_USER}")
-if [ -n "${PIWIGO_DB_PASSWORD:-}" ]; then
-  mysql_args+=(-p"${PIWIGO_DB_PASSWORD}")
-fi
-
-mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" < tests/Fixtures/piwigo-17.0.sql
-
-until mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "SELECT COUNT(*) FROM ${PIWIGO_DB_PREFIX}images;" > /dev/null 2>&1; do
-  sleep 0.5
-done
-
-# tests/Fixtures/piwigo-17.0.sql ships an entirely empty `themes` table (no
-# INSERT rows at all) -- ThemeCatalog::getPwgThemes() reads this table
-# directly, so ANY profile-save submission (ProfileController's own form, or
-# ConfigurationSubController's "default" tab, both funnel through the same
-# ProfileFormHandler::saveFromPost()) hits its `in_array($post['theme'],
-# array_keys(getPwgThemes()), true)` guard against an empty haystack and
-# 500s with "[Hacking attempt] incorrect theme value" -- confirmed live,
-# independently, from two separate Browser test files. Seeded here (once,
-# for the whole suite) rather than per-test, now that a second file hit the
-# same wall.
-mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "INSERT INTO ${PIWIGO_DB_PREFIX}themes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON DUPLICATE KEY UPDATE name = 'Default';"
-
 # This script always runs from the project root (composer.json's own
 # `test:browser`/`test:visual` scripts invoke it as `bash tools/reimport-fixture.sh`
 # from there) -- $(pwd)/ is this checkout's real Paths::$root value.
 real_root="$(pwd)/"
-mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "UPDATE ${PIWIGO_DB_PREFIX}sites SET galleries_url = '${real_root}galleries/' WHERE id = 1;"
 
-mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "UPDATE ${PIWIGO_DB_PREFIX}categories SET lastmodified = '2026-08-02 00:00:00';"
+if [ "${PIWIGO_DB_DRIVER:-mysqli}" = "pgsql" ]; then
+  psql_args=(-v ON_ERROR_STOP=1 -q -U"${PIWIGO_DB_USER}" -h"${PIWIGO_DB_HOST}" -d"${PIWIGO_DB_BASE}")
+  if [ -n "${PIWIGO_DB_PASSWORD:-}" ]; then
+    export PGPASSWORD="${PIWIGO_DB_PASSWORD}"
+  fi
+
+  psql "${psql_args[@]}" -f tests/Fixtures/piwigo-17.0-pgsql.sql
+
+  until psql "${psql_args[@]}" -c "SELECT COUNT(*) FROM ${PIWIGO_DB_PREFIX}images;" > /dev/null 2>&1; do
+    sleep 0.5
+  done
+
+  # tests/Fixtures/piwigo-17.0-pgsql.sql ships an entirely empty `themes`
+  # table -- same real gap as the mysql fixture below, same fix, ON
+  # CONFLICT being the real Postgres equivalent of ON DUPLICATE KEY UPDATE
+  # (piwigo_themes.id is the PRIMARY KEY on both platforms).
+  psql "${psql_args[@]}" -c "INSERT INTO ${PIWIGO_DB_PREFIX}themes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON CONFLICT (id) DO UPDATE SET name = 'Default';"
+
+  psql "${psql_args[@]}" -c "UPDATE ${PIWIGO_DB_PREFIX}sites SET galleries_url = '${real_root}galleries/' WHERE id = 1;"
+
+  # piwigo_categories has a real BEFORE UPDATE trigger (trg_categories_lastmodified,
+  # Phase B's port of MySQL's `ON UPDATE CURRENT_TIMESTAMP`) that
+  # unconditionally sets NEW.lastmodified = now() on every UPDATE,
+  # silently clobbering this literal value -- confirmed live. session_replication_role
+  # = replica (already used the same way, for FK checks, elsewhere in this
+  # codebase) suppresses user-defined triggers for the duration of this one
+  # statement, the same way MySQL's own ON UPDATE CURRENT_TIMESTAMP has no
+  # such guard to bypass in the first place.
+  psql "${psql_args[@]}" -c "BEGIN; SET session_replication_role = replica; UPDATE ${PIWIGO_DB_PREFIX}categories SET lastmodified = '2026-08-02 00:00:00'; SET session_replication_role = DEFAULT; COMMIT;"
+else
+  mysql_args=(-h"${PIWIGO_DB_HOST}" -u"${PIWIGO_DB_USER}")
+  if [ -n "${PIWIGO_DB_PASSWORD:-}" ]; then
+    mysql_args+=(-p"${PIWIGO_DB_PASSWORD}")
+  fi
+
+  mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" < tests/Fixtures/piwigo-17.0.sql
+
+  until mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "SELECT COUNT(*) FROM ${PIWIGO_DB_PREFIX}images;" > /dev/null 2>&1; do
+    sleep 0.5
+  done
+
+  # tests/Fixtures/piwigo-17.0.sql ships an entirely empty `themes` table (no
+  # INSERT rows at all) -- ThemeCatalog::getPwgThemes() reads this table
+  # directly, so ANY profile-save submission (ProfileController's own form, or
+  # ConfigurationSubController's "default" tab, both funnel through the same
+  # ProfileFormHandler::saveFromPost()) hits its `in_array($post['theme'],
+  # array_keys(getPwgThemes()), true)` guard against an empty haystack and
+  # 500s with "[Hacking attempt] incorrect theme value" -- confirmed live,
+  # independently, from two separate Browser test files. Seeded here (once,
+  # for the whole suite) rather than per-test, now that a second file hit the
+  # same wall.
+  mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "INSERT INTO ${PIWIGO_DB_PREFIX}themes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON DUPLICATE KEY UPDATE name = 'Default';"
+
+  mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "UPDATE ${PIWIGO_DB_PREFIX}sites SET galleries_url = '${real_root}galleries/' WHERE id = 1;"
+
+  mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "UPDATE ${PIWIGO_DB_PREFIX}categories SET lastmodified = '2026-08-02 00:00:00';"
+fi
 
 sudo rm -rf _data/cache/piwigo.*/
 sudo rm -rf _data/combined/*

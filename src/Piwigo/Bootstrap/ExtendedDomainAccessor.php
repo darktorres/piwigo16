@@ -7,7 +7,6 @@ namespace Piwigo\Bootstrap;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Core\Kernel;
-use Piwigo\History\HistoryService;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchService;
@@ -53,15 +52,6 @@ final class ExtendedDomainAccessor
         $service = Kernel::container()->get(MetadataService::class);
         if (! $service instanceof MetadataService) {
             throw new \LogicException('Container returned an unexpected type for ' . MetadataService::class);
-        }
-        return $service;
-    }
-
-    public static function historyService(): HistoryService
-    {
-        $service = Kernel::container()->get(HistoryService::class);
-        if (! $service instanceof HistoryService) {
-            throw new \LogicException('Container returned an unexpected type for ' . HistoryService::class);
         }
         return $service;
     }

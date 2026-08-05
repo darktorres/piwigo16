@@ -216,7 +216,11 @@ final class UserBootstrap
                 'password' => $userBootstrapRequest->password,
             ];
 
-            $login = PwgCore::sessionLogin($credentials, $service);
+            $pwgCore = Kernel::container()->get(PwgCore::class);
+            if (! $pwgCore instanceof PwgCore) {
+                throw new \LogicException('Container returned an unexpected type for ' . PwgCore::class);
+            }
+            $login = $pwgCore->sessionLogin($credentials, $service);
 
             if ($login !== true) {
                 $service->sendResponse($login);

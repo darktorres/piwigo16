@@ -6,7 +6,6 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Bootstrap\ExtendedDomainAccessor;
 use Piwigo\Comment\CommentService;
 use Piwigo\Core\Kernel;
-use Piwigo\History\HistoryService;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchService;
@@ -18,11 +17,12 @@ use Piwigo\Tests\Support\KernelContainerOverride;
  * (searchFilterRenderer()/notificationService()/notificationByMailService()/
  * permalinkService()/sectionPopulator()) were deleted once every real
  * caller converted to constructor injection, leaving zero remaining callers
- * for those 5 -- the other 6 (activityService()/commentService()/
- * searchService()/metadataService()/historyService()/rateService()) stay,
- * each still reached from at least one Ws/Pwg*.php static-dispatch call
- * site (Phase-10-locked) or config/messenger.php/Admin/Install's own
- * genuinely-static-context callers.
+ * for those 5; Phase 10 deleted a 6th (historyService()) once PwgCore's own
+ * conversion emptied its last remaining caller -- the other 5
+ * (activityService()/commentService()/searchService()/metadataService()/
+ * rateService()) stay, each still reached from at least one Ws/Pwg*.php
+ * static-dispatch call site (Phase-10-locked) or config/messenger.php/
+ * Admin/Install's own genuinely-static-context callers.
  *
  * commentService()'s own "zero coverage" gap (see /home/torres/.claude/
  * plans/piped-enchanting-spark.md, Wave 1) is closed below -- the
@@ -63,10 +63,6 @@ test('metadataService resolves a real MetadataService from the container', funct
     expect(ExtendedDomainAccessor::metadataService())->toBeInstanceOf(MetadataService::class);
 });
 
-test('historyService resolves a real HistoryService from the container', function (): void {
-    expect(ExtendedDomainAccessor::historyService())->toBeInstanceOf(HistoryService::class);
-});
-
 test('rateService resolves a real RateService from the container', function (): void {
     expect(ExtendedDomainAccessor::rateService())->toBeInstanceOf(RateService::class);
 });
@@ -98,13 +94,6 @@ test('metadataService throws when the container returns an unexpected type', fun
         static fn () => ExtendedDomainAccessor::metadataService()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . MetadataService::class);
-
-test('historyService throws when the container returns an unexpected type', function (): void {
-    KernelContainerOverride::withWrongTypeFor(
-        HistoryService::class,
-        static fn () => ExtendedDomainAccessor::historyService()
-    );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . HistoryService::class);
 
 test('rateService throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(

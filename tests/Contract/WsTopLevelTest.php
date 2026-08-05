@@ -291,7 +291,9 @@ final class WsTopLevelTest extends ContractTestCase
                     'f_min_date_created' => null,
                     'f_max_date_created' => null,
                 ];
-                $result = \Piwigo\Ws\PwgCore::getMissingDerivatives($params, $service);
+                $pwgCore = \Piwigo\Core\Kernel::container()->get(\Piwigo\Ws\PwgCore::class);
+                self::assertInstanceOf(\Piwigo\Ws\PwgCore::class, $pwgCore);
+                $result = $pwgCore->getMissingDerivatives($params, $service);
 
                 self::assertSame([], $result);
             } finally {

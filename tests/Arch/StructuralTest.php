@@ -420,7 +420,6 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Users/UserRepository.php',
-        '/src/Piwigo/Ws/PwgCore.php',
         '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/PwgServer.php',
         '/src/Piwigo/Ws/PwgUsers.php',
@@ -697,7 +696,6 @@ test('ApiKeyRequestFlag::isActiveStatic() transitional shim has a shrinking, kno
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Ws/PwgCore.php',
         '/src/Piwigo/Ws/PwgServer.php',
         '/src/Piwigo/Session/SessionService.php',
     ];
@@ -808,7 +806,6 @@ test('CurrentPaths::get()/isSet() transitional bridge has a shrinking, known all
         '/src/Piwigo/Template/FileCombiner.php',
         '/src/Piwigo/Template/ScriptLoader.php',
         '/src/Piwigo/Template/Template.php',
-        '/src/Piwigo/Ws/PwgCore.php',
         '/src/Piwigo/Ws/PwgImages.php',
     ];
 
@@ -1154,7 +1151,6 @@ test('InputValidator::createStatic() transitional shim has a shrinking, known al
         '/src/Piwigo/Controller/Request/PasswordRequest.php',
         '/src/Piwigo/Controller/Request/PictureRequest.php',
         '/src/Piwigo/Controller/Request/SearchQueryRequest.php',
-        '/src/Piwigo/Ws/PwgCore.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'InputValidator::createStatic(');
@@ -1206,7 +1202,6 @@ test('Translator::get() transitional bridge has a shrinking, known allow-list', 
         '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Menu/MenubarRenderer.php',
         '/src/Piwigo/Template/PwgTemplateAdapter.php',
-        '/src/Piwigo/Ws/PwgCore.php',
         '/src/Piwigo/Ws/PwgUsers.php',
     ];
 
@@ -1282,7 +1277,6 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Users/UserRepository.php',
-        '/src/Piwigo/Ws/PwgCore.php',
         '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/PwgUsers.php',
         '/src/Piwigo/Ws/WsInitializer.php',
@@ -1445,7 +1439,6 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Metadata/MetadataService.php',
         '/src/Piwigo/Permission/PermissionService.php',
         '/src/Piwigo/Url/UrlService.php',
-        '/src/Piwigo/Ws/PwgCore.php',
         '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/PwgUsers.php',
         '/src/Piwigo/Ws/WsDefaultMethods.php',
@@ -1514,7 +1507,6 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Users/UserService.php',
-        '/src/Piwigo/Ws/PwgCore.php',
         '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/PwgServer.php',
         '/src/Piwigo/Ws/PwgUsers.php',

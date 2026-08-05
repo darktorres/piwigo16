@@ -12,31 +12,48 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Caddie\CaddieRepository;
+use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Ws\GetHistory;
-use Piwigo\History\HistoryRepository;
+use Piwigo\Group\GroupService;
 use Piwigo\History\HistoryService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeUrlCodec;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
+use Piwigo\Tag\TagService;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 /**
  * P23 batch 8e-4: relocated from include/ws_functions/pwg.php.
@@ -55,66 +72,33 @@ use Piwigo\Search\SearchRepository;
  */
 final class PwgCore
 {
-    /**
-     * Constructed identically 3 times across sessionLogin()/
-     * sessionLogout() -- none inside a loop, so (unlike
-     * Ws\PwgUsers::authService(Connection $conn)) this builds its own
-     * connection per call, same shape as Ws\PwgUsers::apiKeyService().
-     */
-    private static function authService(): AuthService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::authService();
-    }
-
-    /**
-     * Constructed identically 4 times across this file (sessionGetStatus()/
-     * historyLog()/historyGet()/historySearch()) -- same DRY-extraction
-     * shape as authService() above, builds its own connection per call.
-     */
-    private static function historyService(): HistoryService
-    {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService();
-    }
-
-    private static function imageService(): \Piwigo\Image\ImageService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
-    }
-
-    private static function categoryService(): \Piwigo\Category\CategoryService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
-
-    private static function tagService(): \Piwigo\Tag\TagService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
-    }
-
-    private static function groupService(): \Piwigo\Group\GroupService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::groupService();
-    }
-
-    private static function userService(): \Piwigo\Users\UserService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-    }
-
-    private static function commentService(): \Piwigo\Comment\CommentService
-    {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::commentService();
-    }
-
-    private static function activityService(): \Piwigo\Activity\ActivityService
-    {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
-    }
-
-    private static function rateService(): \Piwigo\Rate\RateService
-    {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService();
-    }
+    public function __construct(
+        private readonly AuthService $authService,
+        private readonly HistoryService $historyService,
+        private readonly ImageService $imageService,
+        private readonly CategoryService $categoryService,
+        private readonly TagService $tagService,
+        private readonly GroupService $groupService,
+        private readonly UserService $userService,
+        private readonly CommentService $commentService,
+        private readonly ActivityService $activityService,
+        private readonly RateService $rateService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly AccessControl $accessControl,
+        private readonly CurrentUser $currentUser,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly UrlServiceInterface $urlService,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
+        private readonly Connection $connection,
+        private readonly ImageRepository $imageRepository,
+        private readonly UserRepository $userRepository,
+        private readonly Paths $paths,
+        private readonly Lang $lang,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly Translator $translator,
+    ) {}
 
     /**
      * API method
@@ -128,7 +112,7 @@ final class PwgCore
      *    via ws.php's $f_params.
      * @return PwgError|array{next_page?: int|string, urls?: string[]}
      */
-    public static function getMissingDerivatives(array $params, PwgServer &$service): PwgError|array
+    public function getMissingDerivatives(array $params, PwgServer &$service): PwgError|array
     {
         if ($params['types'] === []) {
             $types = array_keys(ImageStdParams::current()->get_defined_type_map());
@@ -140,7 +124,7 @@ final class PwgCore
         }
 
         $max_urls = $params['max_urls'];
-        $next_id_and_count = self::imageService()->getNextIdAndCount();
+        $next_id_and_count = $this->imageService->getNextIdAndCount();
         $max_id = $next_id_and_count['nextId'];
         $image_count = $next_id_and_count['count'];
 
@@ -155,9 +139,9 @@ final class PwgCore
 
         $uid = '&b=' . time();
 
-        \Piwigo\Config\CurrentConfig::current()->setQuestionMarkInUrls(true);
-        \Piwigo\Config\CurrentConfig::current()->setPhpExtensionInUrls(true);
-        \Piwigo\Config\CurrentConfig::current()->setDerivativeUrlStyle(2); // script
+        $this->currentConfig->setQuestionMarkInUrls(true);
+        $this->currentConfig->setPhpExtensionInUrls(true);
+        $this->currentConfig->setDerivativeUrlStyle(2); // script
 
         $qlimit = (int) min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
         $filterCondition = WsHelper::stdImageSqlFilter($params, $service, '');
@@ -168,12 +152,12 @@ final class PwgCore
         if ($params['ids'] !== []) {
             $where_clauses[] = 'id IN (:ids)';
             $boundParams['ids'] = $params['ids'];
-            $boundTypes['ids'] = \Doctrine\DBAL\ArrayParameterType::INTEGER;
+            $boundTypes['ids'] = ArrayParameterType::INTEGER;
         }
 
         $urls = [];
         do {
-            $rows = self::imageService()->getForMissingDerivatives($where_clauses, $start_id, $qlimit, $boundParams, $boundTypes);
+            $rows = $this->imageService->getForMissingDerivatives($where_clauses, $start_id, $qlimit, $boundParams, $boundTypes);
             $is_last = count($rows) < $qlimit;
 
             foreach ($rows as $image_row) {
@@ -184,7 +168,7 @@ final class PwgCore
                 }
 
                 foreach ($types as $type) {
-                    $derivative = new DerivativeImage($type, $src_image, \Piwigo\Config\CurrentConfig::current());
+                    $derivative = new DerivativeImage($type, $src_image, $this->currentConfig);
                     if ($type !== $derivative->get_type()) {
                         continue;
                     }
@@ -215,7 +199,7 @@ final class PwgCore
      * Returns Piwigo version
      * @param mixed[] $params
      */
-    public static function getVersion(array $params, PwgServer &$service): string
+    public function getVersion(array $params, PwgServer &$service): string
     {
         return AppInfo::VERSION;
     }
@@ -226,30 +210,30 @@ final class PwgCore
      * @param mixed[] $params
      * @return array{infos: PwgNamedArray}
      */
-    public static function getInfos(array $params, PwgServer &$service): array
+    public function getInfos(array $params, PwgServer &$service): array
     {
         $infos = [];
         $infos['version'] = AppInfo::VERSION;
 
-        $infos['nb_elements'] = self::imageService()->getTotalImageCount();
-        $infos['nb_categories'] = self::categoryService()->countAllCategories();
-        $infos['nb_virtual'] = self::categoryService()->countByDirNull(true);
-        $infos['nb_physical'] = self::categoryService()->countByDirNull(false);
-        $infos['nb_image_category'] = self::imageService()->getImageCategoryLinkCount();
-        $infos['nb_tags'] = self::tagService()->countAll();
-        $infos['nb_image_tag'] = self::tagService()->countAllImageTagLinks();
-        $infos['nb_users'] = self::userService()->getTotalUserCount();
-        $infos['nb_groups'] = self::groupService()->countAll();
-        $infos['nb_comments'] = self::commentService()->countAll();
+        $infos['nb_elements'] = $this->imageService->getTotalImageCount();
+        $infos['nb_categories'] = $this->categoryService->countAllCategories();
+        $infos['nb_virtual'] = $this->categoryService->countByDirNull(true);
+        $infos['nb_physical'] = $this->categoryService->countByDirNull(false);
+        $infos['nb_image_category'] = $this->imageService->getImageCategoryLinkCount();
+        $infos['nb_tags'] = $this->tagService->countAll();
+        $infos['nb_image_tag'] = $this->tagService->countAllImageTagLinks();
+        $infos['nb_users'] = $this->userService->getTotalUserCount();
+        $infos['nb_groups'] = $this->groupService->countAll();
+        $infos['nb_comments'] = $this->commentService->countAll();
 
         // first element
         if ($infos['nb_elements'] > 0) {
-            $infos['first_date'] = self::imageService()->getMinDateAvailable();
+            $infos['first_date'] = $this->imageService->getMinDateAvailable();
         }
 
         // unvalidated comments
         if ($infos['nb_comments'] > 0) {
-            $infos['nb_unvalidated_comments'] = self::commentService()->countUnvalidated();
+            $infos['nb_unvalidated_comments'] = $this->commentService->countUnvalidated();
         }
 
         // Cache size: not computed here on purpose. A real answer means
@@ -281,9 +265,9 @@ final class PwgCore
      * @param mixed[] $params
      * @return array{infos: PwgNamedArray}
      */
-    public static function getCacheSize(array $params, PwgServer &$service): array
+    public function getCacheSize(array $params, PwgServer &$service): array
     {
-        $data_location = \Piwigo\Config\CurrentConfig::current()->dataLocation();
+        $data_location = $this->currentConfig->dataLocation();
         // Real bug fix, not just a straight port: $data_location ('_data/')
         // is a path relative to the install root, not to whatever the PHP
         // process's CWD happens to be -- every other real call site of
@@ -302,7 +286,7 @@ final class PwgCore
         // cache directory -- confirmed live: cache_size reported a bogus
         // ~4KB and tsizes was always null (public/_data has no
         // templates_c/ at all) rather than the real, much larger sizes.
-        $root = \Piwigo\Core\CurrentPaths::get()->root;
+        $root = $this->paths->root;
 
         // Cache size
         $path_cache = $root . $data_location;
@@ -391,11 +375,12 @@ final class PwgCore
      *    WsParamFlag::FORCE_ARRAY|WsParamType::ID, mandatory (no 'default') -- always
      *    a list of positive ints.
      */
-    public static function caddieAdd(array $params, PwgServer &$service): int
+    public function caddieAdd(array $params, PwgServer &$service): int
     {
-        $user_id = \Piwigo\Users\CurrentUser::current()->get()->id->value;
+        $user_id = $this->currentUser->get()
+            ->id->value;
 
-        return new CaddieRepository(DbConnection::build())
+        return new CaddieRepository($this->connection)
             ->addElements($user_id, $params['image_id']);
     }
 
@@ -407,7 +392,7 @@ final class PwgCore
      *    WS_TYPE flag, null default -- string|null. image_id:
      *    WsParamFlag::OPTIONAL with no 'default' -- may be entirely absent.
      */
-    public static function ratesDelete(array $params, PwgServer &$service): int
+    public function ratesDelete(array $params, PwgServer &$service): int
     {
         $anonymous_id = (! in_array($params['anonymous_id'], [null, ''], true)) ? $params['anonymous_id'] : null;
         $image_id = (isset($params['image_id']) and $params['image_id'] !== 0) ? $params['image_id'] : null;
@@ -419,10 +404,10 @@ final class PwgCore
         // ran on the connection, completely disconnected from this DELETE.
         // executeStatement() both runs the query for real and returns its
         // actual affected-row count.
-        $changes = self::rateService()->deleteByOptionalConditions($params['user_id'], $anonymous_id, $image_id);
-        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+        $changes = $this->rateService->deleteByOptionalConditions($params['user_id'], $anonymous_id, $image_id);
+        $this->entityManager->clear();
         if ($changes > 0) {
-            self::rateService()->updateRatingScore();
+            $this->rateService->updateRatingScore();
         }
         return $changes;
     }
@@ -434,9 +419,9 @@ final class PwgCore
      *    username: no WS_TYPE flag, mandatory -- always a plain string.
      *    password: no WS_TYPE flag, null default -- string|null.
      */
-    public static function sessionLogin(array $params, PwgServer &$service): PwgError|true
+    public function sessionLogin(array $params, PwgServer &$service): PwgError|true
     {
-        if (ApiKeyRequestFlag::isActiveStatic()) {
+        if ($this->apiKeyRequestFlag->isActive()) {
             return new PwgError(401, 'Cannot use this method with an api key');
         }
 
@@ -448,12 +433,12 @@ final class PwgCore
             // "value is regex-validated to a shape that can't need SQL
             // escaping" rationale as Bootstrap\UserBootstrap's
             // HTTP_X_PIWIGO_API fix (Phase 1d).
-            $authenticate = self::authService()->authKeyLogin($params['username'] . ':' . $params['password']);
+            $authenticate = $this->authService->authKeyLogin($params['username'] . ':' . $params['password']);
             if ($authenticate) {
                 $_SESSION['connected_with'] = 'ws_session_login_api_key';
                 return true;
             }
-        } elseif (self::authService()->tryLogUser($params['username'], $params['password'], false)) {
+        } elseif ($this->authService->tryLogUser($params['username'], $params['password'], false)) {
             $_SESSION['connected_with'] = 'ws_session_login';
             return true;
         }
@@ -465,14 +450,14 @@ final class PwgCore
      * Performs a logout
      * @param mixed[] $params
      */
-    public static function sessionLogout(array $params, PwgServer &$service): PwgError|true
+    public function sessionLogout(array $params, PwgServer &$service): PwgError|true
     {
-        if (ApiKeyRequestFlag::isActiveStatic()) {
+        if ($this->apiKeyRequestFlag->isActive()) {
             return new PwgError(401, 'Cannot use this method with an api key');
         }
 
-        if (! \Piwigo\Auth\AccessControl::current()->isAGuest()) {
-            self::authService()->logoutUser();
+        if (! $this->accessControl->isAGuest()) {
+            $this->authService->logoutUser();
         }
         return true;
     }
@@ -483,12 +468,12 @@ final class PwgCore
      * @param mixed[] $params
      * @return array<string, mixed>
      */
-    public static function sessionGetStatus(array $params, PwgServer &$service): array
+    public function sessionGetStatus(array $params, PwgServer &$service): array
     {
 
-        $currentUser = \Piwigo\Users\CurrentUser::current()->get();
+        $currentUser = $this->currentUser->get();
         $res = [];
-        $res['username'] = \Piwigo\Auth\AccessControl::current()->isAGuest() ? 'guest' : stripslashes($currentUser->username);
+        $res['username'] = $this->accessControl->isAGuest() ? 'guest' : stripslashes($currentUser->username);
         $res['status'] = $currentUser->status->value;
         $res['theme'] = $currentUser->theme;
         $res['language'] = $currentUser->language;
@@ -501,7 +486,7 @@ final class PwgCore
         // already retargeted.
         $res['current_datetime'] = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
         $res['version'] = AppInfo::VERSION;
-        $res['save_visits'] = self::historyService()->isLoggingAllowed();
+        $res['save_visits'] = $this->historyService->isLoggingAllowed();
         $res['connected_with'] = $_SESSION['connected_with'] ?? null;
 
         // Piwigo Remote Sync does not support receiving the new (version 14) output "save_visits"
@@ -517,8 +502,8 @@ final class PwgCore
             $res['available_sizes'] = array_keys(ImageStdParams::current()->get_defined_type_map());
         }
 
-        if (\Piwigo\Auth\AccessControl::current()->isAdmin()) {
-            $upload_ext_list = (\Piwigo\Config\CurrentConfig::current()->uploadFormAllTypes()) ? \Piwigo\Config\CurrentConfig::current()->fileExtensions() : \Piwigo\Config\CurrentConfig::current()->pictureExtensions();
+        if ($this->accessControl->isAdmin()) {
+            $upload_ext_list = ($this->currentConfig->uploadFormAllTypes()) ? $this->currentConfig->fileExtensions() : $this->currentConfig->pictureExtensions();
 
             $res['upload_file_types'] = implode(
                 ',',
@@ -530,7 +515,7 @@ final class PwgCore
                 )
             );
 
-            $chunk_size = \Piwigo\Config\CurrentConfig::current()->uploadFormChunkSize();
+            $chunk_size = $this->currentConfig->uploadFormChunkSize();
             $res['upload_form_chunk_size'] = $chunk_size;
         }
 
@@ -552,7 +537,7 @@ final class PwgCore
      * echoes $param back for the WS client, same by-design shape.
      * @return PwgError|array{result_lines: array<int, array<string, mixed>>, page_offset: int, end_page: bool, params: array<string, mixed>}
      */
-    public static function getActivityList(array $param, PwgServer &$service): PwgError|array
+    public function getActivityList(array $param, PwgServer &$service): PwgError|array
     {
         foreach (['date_min', 'date_max'] as $datefield) {
             $datefield_value = $param[$datefield] ?? null;
@@ -656,10 +641,10 @@ final class PwgCore
             ]);
         }
 
-        if (\Piwigo\Config\CurrentConfig::current()->activityDisplayConnections() === 'none') {
+        if ($this->currentConfig->activityDisplayConnections() === 'none') {
             $conditions[] = new SqlCondition("action NOT IN ('login', 'logout')");
-        } elseif (\Piwigo\Config\CurrentConfig::current()->activityDisplayConnections() === 'admins_only') {
-            $admin_ids = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class)->findAdminIds();
+        } elseif ($this->currentConfig->activityDisplayConnections() === 'admins_only') {
+            $admin_ids = $this->userRepository->findAdminIds();
             $conditions[] = new SqlCondition(
                 "NOT (action IN ('login', 'logout') AND object_id NOT IN (:adminIds))",
                 [
@@ -676,7 +661,7 @@ final class PwgCore
         $more_rows_available = true;
 
         while (count($output_lines) < $page_size and $more_rows_available) {
-            $rows = self::activityService()->getPaginated($where, $nb_rows_to_fetch, $page_offset);
+            $rows = $this->activityService->getPaginated($where, $nb_rows_to_fetch, $page_offset);
 
             if (count($rows) < $nb_rows_to_fetch) {
                 $more_rows_available = false;
@@ -771,7 +756,7 @@ final class PwgCore
         $username_of = [];
         $user_id_list = [];
         if (count($user_ids) > 0) {
-            $username_of = self::userService()->getUsernamesByIds(array_keys($user_ids));
+            $username_of = $this->userService->getUsernamesByIds(array_keys($user_ids));
         }
 
         foreach ($output_lines as $idx => $output_line) {
@@ -826,10 +811,10 @@ final class PwgCore
      *    null default -- string|null. is_download: WsParamType::BOOL, default
      *    false (non-null) -- always bool.
      */
-    public static function historyLog(array $params, PwgServer &$service): void
+    public function historyLog(array $params, PwgServer &$service): void
     {
         $section = null;
-        if (! in_array($params['section'], [null, ''], true) and in_array($params['section'], new DbInfo(DbConnection::build())->getEnums(Tables::history(), 'section'), true)) {
+        if (! in_array($params['section'], [null, ''], true) and in_array($params['section'], new DbInfo($this->connection)->getEnums(Tables::history(), 'section'), true)) {
             $section = $params['section'];
         }
 
@@ -848,7 +833,7 @@ final class PwgCore
         // when visiting a photo (which is currently, in version 14, the only event registered
         // by pwg.history.log) we should also increment images.hit
         if ($params['image_id'] !== 0) {
-            \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class)->incrementVisitCounter($params['image_id']);
+            $this->imageRepository->incrementVisitCounter($params['image_id']);
         }
 
         $image_type = 'picture';
@@ -856,7 +841,7 @@ final class PwgCore
             $image_type = 'high';
         }
 
-        self::historyService()->logVisit(
+        $this->historyService->logVisit(
             $params['image_id'],
             $image_type,
             section: $section,
@@ -873,9 +858,9 @@ final class PwgCore
      * still override history search behavior by registering its own
      * GetHistory handler at a higher priority.
      */
-    public static function historyGet(GetHistory $event): GetHistory
+    public function historyGet(GetHistory $event): GetHistory
     {
-        $event->data = self::historyService()
+        $event->data = $this->historyService
             ->getHistory($event->data, $event->search, $event->types);
 
         return $event;
@@ -896,9 +881,9 @@ final class PwgCore
      *    pageNumber: WsParamType::INT|POSITIVE, null default -- int|null.
      * @return array<string, mixed>
      */
-    public static function historySearch(array $param, PwgServer &$service): array
+    public function historySearch(array $param, PwgServer &$service): array
     {
-        $conn = DbConnection::build();
+        $conn = $this->connection;
 
         /** @var array<string, mixed> $page */
         $page = [];
@@ -907,9 +892,9 @@ final class PwgCore
         $types = array_merge(['none'], new DbInfo($conn)->getEnums(Tables::history(), 'image_type'));
 
         $display_thumbnails = [
-            'no_display_thumbnail' => Lang::current()->t('No display'),
-            'display_thumbnail_classic' => Lang::current()->t('Classic display'),
-            'display_thumbnail_hoverbox' => Lang::current()->t('Hoverbox display'),
+            'no_display_thumbnail' => $this->lang->t('No display'),
+            'display_thumbnail_classic' => $this->lang->t('Classic display'),
+            'display_thumbnail_hoverbox' => $this->lang->t('Hoverbox display'),
         ];
 
         // +-----------------------------------------------------------------------+
@@ -922,14 +907,14 @@ final class PwgCore
 
         // date start
         if (! in_array($param['start'], [null, ''], true)) {
-            \Piwigo\Validation\InputValidator::createStatic()
+            $this->inputValidator
                 ->validate('start', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
             $search['fields']['date-after'] = $param['start'];
         }
 
         // date end
         if (! in_array($param['end'], [null, ''], true)) {
-            \Piwigo\Validation\InputValidator::createStatic()
+            $this->inputValidator
                 ->validate('end', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
             $search['fields']['date-before'] = $param['end'];
         }
@@ -938,7 +923,7 @@ final class PwgCore
         if ($param['types'] === []) {
             $search['fields']['types'] = $types;
         } else {
-            \Piwigo\Validation\InputValidator::createStatic()
+            $this->inputValidator
                 ->validate('types', $param, true, '/^(' . implode('|', $types) . ')$/');
             $search['fields']['types'] = $param['types'];
         }
@@ -969,7 +954,7 @@ final class PwgCore
         }
 
         // thumbnails
-        \Piwigo\Validation\InputValidator::createStatic()
+        $this->inputValidator
             ->validate('display_thumbnail', $param, false, '/^(' . implode('|', array_keys($display_thumbnails)) . ')$/');
 
         $search['fields']['display_thumbnail'] = $param['display_thumbnail'];
@@ -1014,7 +999,7 @@ final class PwgCore
         // the page actually displays instead of a SQL_CALC_FOUND_ROWS-based
         // LIMIT/OFFSET pagination -- a real, non-trivial optimization
         // opportunity on large history tables, not a defect.
-        $historyEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetHistory([], $page['search'], $types));
+        $historyEvent = $this->eventDispatcher->dispatchChange(new GetHistory([], $page['search'], $types));
         // GetHistory::$data is a non-nullable PHP `array` property --
         // dispatchChange()'s own instanceof check already guarantees a real
         // array here, unlike the old mixed-returning trigger_change() --
@@ -1024,7 +1009,7 @@ final class PwgCore
         // keep the per-element defensive filter for that.
         /** @var array<int, array<string, mixed>> $data */
         $data = array_values(array_filter($historyEvent->data, is_array(...)));
-        $historyService = self::historyService();
+        $historyService = $this->historyService;
         usort($data, $historyService->historyCompare(...));
 
         $page['nb_lines'] = count($data);
@@ -1120,7 +1105,7 @@ final class PwgCore
 
         if (count($user_ids) > 0) {
             $username_of = [];
-            foreach (self::userService()->getUsernamesByIds(array_map(strval(...), array_keys($user_ids))) as $id => $username) {
+            foreach ($this->userService->getUsernamesByIds(array_map(strval(...), array_keys($user_ids))) as $id => $username) {
                 $username_of[(string) $id] = stripslashes($username);
             }
         }
@@ -1133,16 +1118,16 @@ final class PwgCore
         // false positive).
         $full_cat_path = [];
         if (count($category_ids) > 0) {
-            $uppercats_of = self::categoryService()->getUppercatsById(array_map(intval(...), $category_ids));
+            $uppercats_of = $this->categoryService->getUppercatsById(array_map(intval(...), $category_ids));
 
             foreach ($uppercats_of as $category_id => $uppercats) {
-                $full_cat_path[$category_id] = \Piwigo\Bootstrap\PresentationAccessor::htmlService()->getCatDisplayNameCache(
+                $full_cat_path[$category_id] = $this->htmlRenderer->getCatDisplayNameCache(
                     $uppercats,
                     'admin.php?page=album-'
                 );
 
                 $uppercats = explode(',', $uppercats);
-                $name_of_category[$category_id] = \Piwigo\Bootstrap\PresentationAccessor::htmlService()->getCatDisplayNameCache(
+                $name_of_category[$category_id] = $this->htmlRenderer->getCatDisplayNameCache(
                     end($uppercats),
                     'admin.php?page=album-'
                 );
@@ -1151,7 +1136,7 @@ final class PwgCore
 
         $image_infos = [];
         if (count($image_ids) > 0) {
-            $image_infos = self::imageService()->getHistoryDisplayInfoByIds(array_keys($image_ids));
+            $image_infos = $this->imageService->getHistoryDisplayInfoByIds(array_keys($image_ids));
         }
 
         // Not a real global: written, read (including via the closure
@@ -1160,20 +1145,20 @@ final class PwgCore
         // `global` keyword was always redundant; kept as a plain local.
         $name_of_tag = [];
         if ($has_tags) {
-            foreach (self::tagService()->getAll() as $tag) {
+            foreach ($this->tagService->getAll() as $tag) {
                 $tag_row = [
                     'id' => $tag->id->value,
                     'name' => $tag->name,
                     'url_name' => $tag->urlName,
                 ];
-                $tagRowNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName($tag->name, $tag_row));
+                $tagRowNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($tag->name, $tag_row));
                 $name_of_tag[(string) $tag->id->value] = $tagRowNameEvent->tagName;
             }
         }
 
         $page_start = $page['start'];
 
-        $nb_logs_page = \Piwigo\Config\CurrentConfig::current()->nbLogsPage();
+        $nb_logs_page = $this->currentConfig->nbLogsPage();
 
         $i = 0;
         $first_line = $page_start + 1;
@@ -1226,7 +1211,7 @@ final class PwgCore
                 $summary['total_filesize'] = $running_total_filesize + (is_scalar($filesize_value) ? intval($filesize_value) : 0);
             }
 
-            if (is_numeric($line_user_id) and (int) $line_user_id === \Piwigo\Config\CurrentConfig::current()->guestId()) {
+            if (is_numeric($line_user_id) and (int) $line_user_id === $this->currentConfig->guestId()) {
                 $ip_key = $line_ip ?? '';
                 // 'guests_IP' is only ever set to array by this same loop
                 // (initialized to [] above, then always reassigned as array below).
@@ -1258,7 +1243,7 @@ final class PwgCore
                 $user_string .= $user_id_key;
             }
             $user_string .= '&nbsp;<a href="';
-            $user_string .= \Piwigo\Bootstrap\PresentationAccessor::urlService()
+            $user_string .= $this->urlService
                 ->getRootUrl() . 'admin.php?page=history';
             $user_string .= '&amp;search_id=' . $search_id;
             $user_string .= '&amp;user_id=' . $user_id_key;
@@ -1287,9 +1272,9 @@ final class PwgCore
             $image_id = '';
             $cat_name = '';
             if ($line_image_id !== null) {
-                $image_edit_string = \Piwigo\Bootstrap\PresentationAccessor::urlService()
+                $image_edit_string = $this->urlService
                     ->getRootUrl() . 'admin.php?page=photo-' . $line_image_id;
-                $picture_url = \Piwigo\Bootstrap\PresentationAccessor::urlService()
+                $picture_url = $this->urlService
                     ->makePictureUrl(
                         [
                             'image_id' => $line_image_id,
@@ -1315,7 +1300,7 @@ final class PwgCore
 
                 if (isset($image_infos[$line_image_id]['label'])) {
                     $label = $image_infos[$line_image_id]['label'];
-                    $labelEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementDescription(is_string($label) ? $label : ''));
+                    $labelEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($label) ? $label : ''));
                     $image_title .= ' ' . $labelEvent->elementDescription;
                 } else {
                     $image_edit_string = '';
@@ -1382,8 +1367,8 @@ final class PwgCore
                     'EDIT_IMAGE' => $image_edit_string,
                     'TYPE' => $line_image_type,
                     'SECTION' => $line_section,
-                    'FULL_CATEGORY_PATH' => $line_category_id !== null && isset($full_cat_path[$line_category_id]) ? strip_tags($full_cat_path[$line_category_id]) : Lang::current()->t('Root') . $line_category_id,
-                    'CATEGORY' => $line_category_id !== null && isset($name_of_category[$line_category_id]) ? $name_of_category[$line_category_id] : Lang::current()->t('Root') . $line_category_id,
+                    'FULL_CATEGORY_PATH' => $line_category_id !== null && isset($full_cat_path[$line_category_id]) ? strip_tags($full_cat_path[$line_category_id]) : $this->lang->t('Root') . $line_category_id,
+                    'CATEGORY' => $line_category_id !== null && isset($name_of_category[$line_category_id]) ? $name_of_category[$line_category_id] : $this->lang->t('Root') . $line_category_id,
                     'SEARCH_ID' => $line_search_id,
                     'TAGS' => explode(',', (string) $tag_names),
                     'TAGIDS' => explode(',', $tag_ids),
@@ -1406,7 +1391,7 @@ final class PwgCore
             // we delete the "guest" from the $username_of hash so that it is
             // avoided in next steps
             // CurrentConfig::current()->guestId() is SCHEMA-typed 'int' only.
-            $guest_id_key = (string) \Piwigo\Config\CurrentConfig::current()->guestId();
+            $guest_id_key = (string) $this->currentConfig->guestId();
             $username_of = array_diff_key($username_of, [
                 $guest_id_key => true,
             ]);
@@ -1436,20 +1421,20 @@ final class PwgCore
 
         $search_summary =
         [
-            'NB_LINES' => Translator::get()->plural(
+            'NB_LINES' => $this->translator->plural(
                 '%d line filtered',
                 '%d lines filtered',
                 $page_nb_lines
             ),
             'FILESIZE' => $summary_total_filesize !== 0 ? ceil($summary_total_filesize / 1024) : 0,
-            'USERS' => Translator::get()->plural(
+            'USERS' => $this->translator->plural(
                 '%d user',
                 '%d users',
                 $summary_nb_members + $summary_nb_guests
             ),
             'MEMBERS' => $member_strings,
             'SORTED_MEMBERS' => $sorted_members,
-            'GUESTS' => Translator::get()->plural(
+            'GUESTS' => $this->translator->plural(
                 '%d guest',
                 '%d guests',
                 $summary_nb_guests

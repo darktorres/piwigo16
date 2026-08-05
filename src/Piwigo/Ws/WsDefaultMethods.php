@@ -42,6 +42,7 @@ final class WsDefaultMethods
     // was tried and found broken.
     public function __construct(
         private readonly PwgCategories $pwgCategories,
+        private readonly PwgCore $pwgCore,
         private readonly PwgPermissions $pwgPermissions,
         private readonly PwgComments $pwgComments,
         private readonly PwgExtensions $pwgExtensions,
@@ -111,14 +112,14 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.getVersion',
-            PwgCore::getVersion(...),
+            $this->pwgCore->getVersion(...),
             null,
             'Returns the Piwigo version.'
         );
 
         $service->addMethod(
             'pwg.getInfos',
-            PwgCore::getInfos(...),
+            $this->pwgCore->getInfos(...),
             null,
             'Returns general informations.',
             options: [
@@ -128,7 +129,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.getCacheSize',
-            PwgCore::getCacheSize(...),
+            $this->pwgCore->getCacheSize(...),
             null,
             'Returns general informations.',
             options: [
@@ -138,7 +139,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.activity.getList',
-            PwgCore::getActivityList(...),
+            $this->pwgCore->getActivityList(...),
             [
                 'page' => [
                     'default' => null,
@@ -195,7 +196,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.caddie.add',
-            PwgCore::caddieAdd(...),
+            $this->pwgCore->caddieAdd(...),
             [
                 'image_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -283,7 +284,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.getMissingDerivatives',
-            PwgCore::getMissingDerivatives(...),
+            $this->pwgCore->getMissingDerivatives(...),
             array_merge([
                 'types' => [
                     'default' => null,
@@ -490,7 +491,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.rates.delete',
-            PwgCore::ratesDelete(...),
+            $this->pwgCore->ratesDelete(...),
             [
                 'user_id' => [
                     'type' => WsParamType::ID,
@@ -512,14 +513,14 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.session.getStatus',
-            PwgCore::sessionGetStatus(...),
+            $this->pwgCore->sessionGetStatus(...),
             null,
             'Gets information about the current session. Also provides a token useable with admin methods.'
         );
 
         $service->addMethod(
             'pwg.session.login',
-            PwgCore::sessionLogin(...),
+            $this->pwgCore->sessionLogin(...),
             [
                 'username' => [],
                 'password' => [
@@ -534,7 +535,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.session.logout',
-            PwgCore::sessionLogout(...),
+            $this->pwgCore->sessionLogout(...),
             null,
             'Ends the current session.'
         );
@@ -2029,7 +2030,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.history.log',
-            PwgCore::historyLog(...),
+            $this->pwgCore->historyLog(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -2054,7 +2055,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.history.search',
-            PwgCore::historySearch(...),
+            $this->pwgCore->historySearch(...),
             [
                 'start' => [
                     'default' => null,

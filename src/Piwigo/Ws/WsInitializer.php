@@ -53,15 +53,19 @@ final class WsInitializer
         // registrations below it.
         //
         // Singleton/service-locator elimination campaign, Phase 10:
-        // WsDefaultMethods is a real, container-resolved instance now
-        // (its own register() is no longer static) -- WsInitializer
-        // itself stays static until every Pwg* class it also wires
-        // (PwgCore::historyGet() below) has converted, so this is a
-        // transitional inline container-resolve, not yet a constructor
-        // param.
+        // WsDefaultMethods/PwgCore are real, container-resolved instances
+        // now (neither register() nor historyGet() is static any more) --
+        // WsInitializer itself stays static (its own $server cache is the
+        // last piece of this file still needing conversion), so these are
+        // transitional inline container-resolves, not yet constructor
+        // params.
         $wsDefaultMethods = \Piwigo\Core\Kernel::container()->get(WsDefaultMethods::class);
         if (! $wsDefaultMethods instanceof WsDefaultMethods) {
             throw new \LogicException('Container returned an unexpected type for ' . WsDefaultMethods::class);
+        }
+        $pwgCore = \Piwigo\Core\Kernel::container()->get(PwgCore::class);
+        if (! $pwgCore instanceof PwgCore) {
+            throw new \LogicException('Container returned an unexpected type for ' . PwgCore::class);
         }
         \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(WsAddMethods::class, $wsDefaultMethods->register(...));
         \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(WsInvokeAllowed::class, WsHelper::isInvokeAllowed(...));
@@ -73,7 +77,7 @@ final class WsInitializer
         // call could fire; now that pwg.php's functions are class methods
         // (autoloaded, no include-time side effect to hook this to), it
         // registers here instead, unconditionally, once per WS request.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(GetHistory::class, PwgCore::historyGet(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(GetHistory::class, $pwgCore->historyGet(...));
 
         $requestFormat = 'rest';
         $responseFormat = Request\WsFormatRequest::fromGlobals()->responseFormat;

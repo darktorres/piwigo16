@@ -359,6 +359,142 @@ jobs:
 
   # ── DB-backed suites ─────────────────────────────────────────────────────
 
+  # Proves the real install-via-Migrations path (bin/piwigo migrations:migrate)
+  # and the schema:dump drift guard across all 3 providers in ADR-0003's
+  # matrix. mysql/mariadb legs stay lean (Unit/Db, Unit/Config, Arch smoke +
+  # migrate + schema-drift check) since MySQL is already comprehensively
+  # covered by the integration/contract/browser jobs below; MariaDB has no
+  # other CI coverage at all, but this job's own smoke+migration proof is
+  # its intended scope, not a full-suite duplication. The pgsql leg
+  # additionally runs the full Integration/Contract/Browser suites -- now
+  # that Phase G ported IntegrationTestCase/BrowserTestHelpers off their
+  # former mysqli-only hardcoding, this is the one leg with no other job
+  # anywhere proving Postgres for real.
+  #
+  # `HTTP_X_PIWIGO_ENV=test` is required on every bin/piwigo invocation
+  # below -- Piwigo\Core\Env::testModeEnvFile() only loads .env.test (vs.
+  # production .env) when that var is set; a bin/piwigo command run
+  # without it silently targets whatever .env would resolve to instead
+  # (confirmed live: an unprefixed `schema:dump` run during this phase's
+  # own verification overwrote install/piwigo_structure-mysql.sql from an
+  # unrelated database before being caught and reverted). Every real Pest
+  # suite (Integration/Contract/Browser/Unit/Arch) sets this for its own
+  # process automatically via tests/bootstrap.php, so only the raw
+  # bin/piwigo steps below need the explicit prefix.
+  db-multi-provider:
+    name: DB layer (${{ matrix.provider }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - provider: mysql
+            image: mysql:9.7
+            port: 3306
+            driver: mysqli
+            user: root
+          - provider: mariadb
+            image: mariadb:12
+            port: 3306
+            driver: mysqli
+            user: root
+          - provider: pgsql
+            image: postgres:18
+            port: 5432
+            driver: pgsql
+            user: postgres
+    services:
+      db:
+        image: ${{ matrix.image }}
+        env:
+          # mysql/mariadb read the MYSQL_* vars, postgres reads POSTGRES_*
+          # -- each image ignores the vars meant for the other, so a single
+          # combined env block covers all 3 matrix legs.
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: piwigo_test
+          POSTGRES_PASSWORD: root
+          POSTGRES_DB: piwigo_test
+        ports:
+          - ${{ matrix.port }}:${{ matrix.port }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          # pgsql (native driver, matching ADR-0021's mysqli-not-pdo_mysql
+          # precedent) added on top of the standard set -- unused but
+          # harmless on the mysql/mariadb legs.
+          extensions: ${{ env.PHP_EXTENSIONS }},pgsql
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      - if: matrix.provider == 'pgsql'
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - if: matrix.provider == 'pgsql'
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - if: matrix.provider == 'pgsql'
+        run: bun install --frozen-lockfile
+      - if: matrix.provider == 'pgsql'
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
+      - name: Install Playwright + Chromium
+        if: matrix.provider == 'pgsql' && steps.playwright-cache.outputs.cache-hit != 'true'
+        run: bunx playwright install --with-deps chromium
+      - name: Install Chromium system deps only (browser binary cached)
+        if: matrix.provider == 'pgsql' && steps.playwright-cache.outputs.cache-hit == 'true'
+        run: bunx playwright install-deps chromium
+      - name: Wait for the database to accept connections
+        run: |
+          if [ "${{ matrix.provider }}" = "pgsql" ]; then
+            until PGPASSWORD=root pg_isready -h 127.0.0.1 -p ${{ matrix.port }} -U postgres > /dev/null 2>&1; do sleep 0.5; done
+          else
+            until mysqladmin ping -h127.0.0.1 -P${{ matrix.port }} -uroot -proot --silent > /dev/null 2>&1; do sleep 0.5; done
+          fi
+      - name: Write .env.test
+        run: |
+          cat > .env.test <<ENVEOF
+          PIWIGO_DB_HOST=127.0.0.1
+          PIWIGO_DB_PORT=${{ matrix.port }}
+          PIWIGO_DB_USER=${{ matrix.user }}
+          PIWIGO_DB_PASSWORD=root
+          PIWIGO_DB_BASE=piwigo_test
+          PIWIGO_DB_PREFIX=piwigo_
+          PIWIGO_DB_DRIVER=${{ matrix.driver }}
+          PIWIGO_BASE_URL=http://localhost:8080
+          ENVEOF
+      - run: mkdir -p local && touch local/.installed.test
+      - run: php bin/piwigo migrations:migrate --no-interaction
+        env:
+          HTTP_X_PIWIGO_ENV: test
+      - run: vendor/bin/pest tests/Unit/Db tests/Unit/Config tests/Arch
+      - run: php bin/piwigo schema:dump
+        env:
+          HTTP_X_PIWIGO_ENV: test
+      - name: Verify install/piwigo_structure-{mysql,pgsql}.sql has no drift
+        # mariadb intentionally shares mysql's own dump file (SchemaDumpService
+        # collapses the detected label to just 'mysql'/'pgsql', never a 3rd
+        # 'mariadb' -- see that class's own docblock) -- both legs' dumps are
+        # checked against the same committed file.
+        run: git diff --exit-code -- install/piwigo_structure-mysql.sql install/piwigo_structure-pgsql.sql
+      - if: matrix.provider == 'pgsql'
+        name: Start PHP built-in server
+        run: |
+          php -S localhost:8080 -t . > /tmp/php-server.log 2>&1 &
+          until curl -sf http://localhost:8080/index.php > /dev/null; do sleep 0.5; done
+      - if: matrix.provider == 'pgsql'
+        run: composer test:integration
+      - if: matrix.provider == 'pgsql'
+        run: composer test:contract
+      - if: matrix.provider == 'pgsql'
+        run: composer test:browser
+
   integration:
     name: Pest (integration)
     runs-on: ubuntu-latest

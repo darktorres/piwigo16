@@ -115,11 +115,12 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly CurrentConfig $currentConfig,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly \Piwigo\Lang\Translator $translator,
     ) {}
 
     private function imageService(Connection $conn): ImageService
     {
-        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig);
+        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
     }
 
     #[\Override]

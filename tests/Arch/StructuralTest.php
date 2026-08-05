@@ -258,6 +258,8 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Core/Lang.php',
         '/src/Piwigo/Config/CurrentConfig.php',
         '/src/Piwigo/Users/UserService.php',
+        '/src/Piwigo/Category/CategoryService.php',
+        '/src/Piwigo/Tag/TagService.php',
     ];
 
     $hits = [
@@ -1073,12 +1075,13 @@ test('Translator::get() transitional bridge has a shrinking, known allow-list', 
     // (MailService's own former snapshot/clone-for-switchLangTo()/
     // switchLangBack() reads now go through $this->translator instead).
     // Ws/PwgCore.php and Ws/PwgUsers.php took real constructor injection
-    // during their own Phase 10 sub-batches. CategoryService.php's 2 sites
-    // are both unreachable any other way: getDisplayImagesCount() is a
-    // genuinely static method (no $this to inject through), and
-    // moveCategories()'s only real caller is Ws/PwgCategories.php (also
-    // Phase-10-converted, but this call is inside moveCategories() itself,
-    // a method reachable from a genuinely static context). Menu/
+    // during their own Phase 10 sub-batches. CategoryService.php's
+    // remaining site is unreachable any other way: getDisplayImagesCount()
+    // is a genuinely static method (no $this to inject through). Phase 11
+    // sub-phase 11G: CategoryService.php itself gained a real Translator
+    // constructor param for every real instance-context call (including
+    // moveCategories(), previously misdocumented here as "unreachable" --
+    // it's a real instance method, now closed for real). Menu/
     // MenubarRenderer.php takes no constructor deps by design (every
     // dependency an explicit render() parameter instead, see FilterState's
     // own precedent) and only needs Translator for one internal, throwaway

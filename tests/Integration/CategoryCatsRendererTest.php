@@ -157,7 +157,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $em->getRepository(GroupEntity::class),
             $categoryRepo
         );
-        $this->categoryService = new CategoryService(\Piwigo\Core\Lang::current(), $categoryRepo, $permissionService, \Piwigo\Config\CurrentConfig::current());
+        $this->categoryService = new CategoryService(\Piwigo\Core\Lang::current(), $categoryRepo, $permissionService, \Piwigo\Config\CurrentConfig::current(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Lang\Translator::get());
 
         $htmlService = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
         // mainpage_categories.tpl's own {assign var=derivative

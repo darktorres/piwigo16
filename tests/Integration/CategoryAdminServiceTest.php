@@ -155,7 +155,9 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             \Piwigo\Core\Lang::current(),
             new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()),
             $permissionService,
-            \Piwigo\Config\CurrentConfig::current()
+            \Piwigo\Config\CurrentConfig::current(),
+            new \Piwigo\PluginConfig\EventDispatcher(),
+            \Piwigo\Lang\Translator::get()
         );
         $this->service = new CategoryAdminService($categoryService, $permissionService, \Piwigo\Tests\Support\HtmlServiceTestFactory::build());
     }

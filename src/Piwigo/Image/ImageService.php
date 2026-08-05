@@ -52,6 +52,7 @@ final readonly class ImageService
         private SessionService $sessionService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Config\CurrentConfig $currentConfig,
+        private \Piwigo\Lang\Translator $translator,
     ) {}
 
     /**
@@ -70,7 +71,9 @@ final readonly class ImageService
             $this->lang,
             new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig),
             new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig)),
-            $this->currentConfig
+            $this->currentConfig,
+            $this->eventDispatcher,
+            $this->translator
         );
     }
 

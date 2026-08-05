@@ -81,7 +81,24 @@ final readonly class TagService
      */
     private function newImageService(): ImageService
     {
-        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityLogger, $this->sessionService, $this->eventDispatcher, $this->currentConfig);
+        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityLogger, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator());
+    }
+
+    /**
+     * Container resolve, not a constructor property -- same "avoid a 2nd
+     * touch of every manual `new TagService(...)` call site for a single
+     * one-line delegation" reasoning as newImageService()'s own docblock
+     * above (singleton/service-locator elimination campaign, Phase 11
+     * sub-phase 11G).
+     */
+    private function translator(): \Piwigo\Lang\Translator
+    {
+        $translator = \Piwigo\Core\Kernel::container()->get(\Piwigo\Lang\Translator::class);
+        if (! $translator instanceof \Piwigo\Lang\Translator) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Lang\Translator::class);
+        }
+
+        return $translator;
     }
 
     /**

@@ -80,6 +80,8 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
                 new \Piwigo\Category\CategoryRepository($this->em, \Piwigo\Config\CurrentConfig::current()),
                 new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository($this->em, \Piwigo\Config\CurrentConfig::current())),
                 \Piwigo\Config\CurrentConfig::current(),
+                new \Piwigo\PluginConfig\EventDispatcher(),
+                \Piwigo\Lang\Translator::get(),
             ),
             $mailer,
             \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),

@@ -329,7 +329,9 @@ final class HtmlService implements HtmlRenderingInterface
                 \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class),
                 new CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig)
             ),
-            $this->currentConfig
+            $this->currentConfig,
+            $this->eventDispatcher,
+            $this->translator
         )->getCategoryInfo($catId);
         // $catId isn't existence-validated by callers (WS/URL param) -- a
         // stale/forged id falls back to an empty breadcrumb.

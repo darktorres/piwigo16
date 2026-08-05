@@ -277,7 +277,9 @@ final class SearchServiceTest extends IntegrationTestCase
                 \Piwigo\Core\Lang::current(),
                 new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()),
                 new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current())),
-                \Piwigo\Config\CurrentConfig::current()
+                \Piwigo\Config\CurrentConfig::current(),
+                new \Piwigo\PluginConfig\EventDispatcher(),
+                \Piwigo\Lang\Translator::get()
             ),
             $this->mailService(),
             \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
@@ -340,7 +342,9 @@ final class SearchServiceTest extends IntegrationTestCase
                 \Piwigo\Core\Lang::current(),
                 new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()),
                 new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current())),
-                \Piwigo\Config\CurrentConfig::current()
+                \Piwigo\Config\CurrentConfig::current(),
+                new \Piwigo\PluginConfig\EventDispatcher(),
+                \Piwigo\Lang\Translator::get()
             ),
             $this->mailService(),
             $htmlRenderer,

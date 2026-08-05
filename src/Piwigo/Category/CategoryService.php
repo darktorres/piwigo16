@@ -61,7 +61,28 @@ final readonly class CategoryService
         private CategoryRepository $repo,
         private PermissionService $permissionService,
         private \Piwigo\Config\CurrentConfig $currentConfig,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private Translator $translator,
     ) {}
+
+    /**
+     * Container resolve, not a constructor property -- AccessControl's own
+     * dependency chain (RedirectServiceInterface -> Bootstrap\RedirectService
+     * -> Users\UserService -> ... ) means a required constructor param here
+     * risks a genuine circular dependency PHP-DI can't autowire, same shape
+     * as Mail\MailService/Url\UrlService/Template\Template/Users\UserService's
+     * own identical accessControl() helper (singleton/service-locator
+     * elimination campaign, Phase 11 sub-phase 11G).
+     */
+    private function accessControl(): \Piwigo\Auth\AccessControl
+    {
+        $accessControl = \Piwigo\Core\Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
+        if (! $accessControl instanceof \Piwigo\Auth\AccessControl) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Auth\AccessControl::class);
+        }
+
+        return $accessControl;
+    }
 
     /**
      * `Activity` is L2bExtendedDomain; `CategoryService` is L2aCoreDomain
@@ -81,12 +102,12 @@ final readonly class CategoryService
      */
     private function imageService(ActivityLoggerInterface $activityLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): ImageService
     {
-        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $activityLogger, $sessionService, $eventDispatcher, $this->currentConfig);
+        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $activityLogger, $sessionService, $eventDispatcher, $this->currentConfig, $this->translator);
     }
 
     private function userRepository(): UserRepository
     {
-        return new UserRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), \Piwigo\PluginConfig\EventDispatcher::get(), $this->currentConfig);
+        return new UserRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig);
     }
 
     /**
@@ -259,7 +280,7 @@ final readonly class CategoryService
     public function getPreferredImageOrders(): array
     {
 
-        $orders = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetCategoryPreferredImageOrders([
+        $orders = $this->eventDispatcher->dispatchChange(new GetCategoryPreferredImageOrders([
             [$this->lang->t('Default'), '', true],
             [$this->lang->t('Photo title, A &rarr; Z'), 'name ASC', true],
             [$this->lang->t('Photo title, Z &rarr; A'), 'name DESC', true],
@@ -271,7 +292,7 @@ final readonly class CategoryService
             [$this->lang->t('Rating score, low &rarr; high'), 'rating_score ASC', $this->currentConfig->rateEnabled()],
             [$this->lang->t('Visits, high &rarr; low'), 'hit DESC', true],
             [$this->lang->t('Visits, low &rarr; high'), 'hit ASC', true],
-            [$this->lang->t('Permissions'), 'level DESC', \Piwigo\Auth\AccessControl::current()->isAdmin()],
+            [$this->lang->t('Permissions'), 'level DESC', $this->accessControl()->isAdmin()],
         ]))->orders;
 
         $result = [];
@@ -583,7 +604,7 @@ final readonly class CategoryService
 
             $globalRank = $cat['global_rank'];
             $cats[$idx]['LEVEL'] = substr_count(is_string($globalRank) ? $globalRank : '', '.') + 1;
-            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName($cat['name'], $cat));
+            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($cat['name'], $cat));
             $cats[$idx]['name'] = $nameEvent->categoryName;
 
             if (isset($commonCats[$catId])) {
@@ -723,7 +744,7 @@ final readonly class CategoryService
             $selectedIdStr = is_scalar($selectedId) ? (string) $selectedId : null;
             $selectedIdUppercat = $selectedCategory['id_uppercat'] ?? null;
             $selectedIdUppercatStr = is_scalar($selectedIdUppercat) ? (string) $selectedIdUppercat : null;
-            $menuNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName($row['name'], 'get_categories_menu'));
+            $menuNameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($row['name'], 'get_categories_menu'));
             $row = array_merge(
                 $row,
                 [
@@ -805,7 +826,7 @@ final readonly class CategoryService
                     (3 * substr_count(is_string($globalRank) ? $globalRank : '', '.'))
                 );
                 $option .= '- ';
-                $selectNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($category['name']) ? $category['name'] : '', 'display_select_categories'));
+                $selectNameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($category['name']) ? $category['name'] : '', 'display_select_categories'));
                 $option .= strip_tags($selectNameEvent->categoryName);
             }
             $id = $category['id'];
@@ -1012,7 +1033,7 @@ final readonly class CategoryService
         $categoryIds = $this->repo->findCategoryIdsBySite($id);
         $this->deleteCategories($categoryIds, $activityLogger, $urlService, $sessionService, $eventDispatcher);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new DeleteSite($id));
+        $this->eventDispatcher->dispatchNotify(new DeleteSite($id));
     }
 
     /**
@@ -1779,7 +1800,7 @@ final readonly class CategoryService
             $this->setCatStatus(array_map(intval(...), array_keys($categories)), 'private');
         }
 
-        $pageState->addInfo(Translator::get()->plural(
+        $pageState->addInfo($this->translator->plural(
             '%d album moved',
             '%d albums moved',
             count($categories)
@@ -1931,7 +1952,7 @@ final readonly class CategoryService
             $this->permissionService->addPermissionOnCategory((int) $insertedId, array_unique(array_merge($adminIds, [$currentUserId])));
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new CreateVirtualCategory(array_merge([
+        $this->eventDispatcher->dispatchNotify(new CreateVirtualCategory(array_merge([
             'id' => $insertedId,
         ], $insert)));
         $activityLogger->record('album', $insertedId, 'add');

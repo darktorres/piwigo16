@@ -84,6 +84,7 @@ final class BatchManagerUnitPageRenderer
         private readonly \Piwigo\Html\HtmlService $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly \Piwigo\Lang\Translator $translator,
     ) {}
 
     /**
@@ -314,7 +315,7 @@ final class BatchManagerUnitPageRenderer
             }
 
             $tagService = $this->tagService;
-            $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig);
+            $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
 
             foreach ($images as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this

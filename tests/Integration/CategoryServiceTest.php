@@ -224,7 +224,9 @@ final class CategoryServiceTest extends IntegrationTestCase
             \Piwigo\Core\Lang::current(),
             $this->repo,
             new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig)),
-            \Piwigo\Config\CurrentConfig::current()
+            \Piwigo\Config\CurrentConfig::current(),
+            EventDispatcher::get(),
+            \Piwigo\Lang\Translator::get()
         );
 
         CurrentUser::current()->set(User::fromUserArray(['id' => 1]));

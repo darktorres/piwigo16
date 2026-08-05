@@ -70,7 +70,7 @@ final class MenubarRenderer
         // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
         $permissionService = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $currentConfig));
         $tagService = new TagService($lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Tag\TagEntity::class), $permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger, $sessionService);
-        $categoryService = new CategoryService($lang, new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig);
+        $categoryService = new CategoryService($lang, new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator);
 
         $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate, $currentConfig);
 
@@ -147,7 +147,7 @@ final class MenubarRenderer
 
         $categoryCountCategories = null;
         if ($block !== null) {
-            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState, $sessionService, $translator, $lang, $currentConfig), $urlService, $filterState, $currentUser);
+            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState, $sessionService, $translator, $lang, $currentConfig, $eventDispatcher), $urlService, $filterState, $currentUser);
             $categoryCountCategories = $categoriesMenu['categoryCountCategories'];
             $block->data = [
                 'NB_PICTURE' => $currentUser->get()

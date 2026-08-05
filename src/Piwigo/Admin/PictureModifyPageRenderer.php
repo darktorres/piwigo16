@@ -61,6 +61,7 @@ final class PictureModifyPageRenderer
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly \Piwigo\Lang\Translator $translator,
     ) {}
 
     public function render(string $adminPhotoBaseUrl): void
@@ -84,7 +85,7 @@ final class PictureModifyPageRenderer
         $template = $this->currentTemplate->get();
 
         $conn = DbConnection::build();
-        $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig);
+        $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
         $htmlRenderer = $this->htmlRenderer;
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
@@ -208,7 +209,9 @@ final class PictureModifyPageRenderer
                     $this->lang,
                     new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig),
                     $this->permissionService,
-                    $this->currentConfig
+                    $this->currentConfig,
+                    $this->eventDispatcher,
+                    $this->translator
                 )->setRandomRepresentant($no_longer_thumbnail_for);
             }
 

@@ -69,6 +69,7 @@ final class FilterResolverTest extends IntegrationTestCase
             $sessionService,
             new \Piwigo\PluginConfig\EventDispatcher(),
             CurrentConfig::current(),
+            \Piwigo\Lang\Translator::get(),
         );
         $categoryService = new CategoryService(
             \Piwigo\Core\Lang::current(),
@@ -79,6 +80,8 @@ final class FilterResolverTest extends IntegrationTestCase
                 new \Piwigo\Category\CategoryRepository($em, CurrentConfig::current()),
             ),
             \Piwigo\Config\CurrentConfig::current(),
+            new \Piwigo\PluginConfig\EventDispatcher(),
+            \Piwigo\Lang\Translator::get(),
         );
         $caddieRepo = $em->getRepository(\Piwigo\Caddie\CaddieEntity::class);
         $mailer = \Piwigo\Core\Kernel::container()->get(MailService::class);

@@ -70,7 +70,9 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
                 \Piwigo\Core\Lang::current(),
                 new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig),
                 new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig)),
-                \Piwigo\Config\CurrentConfig::current()
+                \Piwigo\Config\CurrentConfig::current(),
+                new \Piwigo\PluginConfig\EventDispatcher(),
+                \Piwigo\Lang\Translator::get()
             ),
             new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig),
             $this->pool

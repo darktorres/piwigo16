@@ -183,7 +183,7 @@ final class BatchManagerGlobalPageRenderer
             $redirect = false;
 
             $tagService = $this->tagService;
-            $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig);
+            $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = $this->currentUser->get()

@@ -146,6 +146,7 @@ test('send returns immediately without touching the DB or network when telemetry
         new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Session\SessionEntity::class), new \Piwigo\Config\CurrentConfig()),
         new \Piwigo\PluginConfig\EventDispatcher(),
         new \Piwigo\Config\CurrentConfig(),
+        new \Piwigo\Lang\Translator(new \Piwigo\Config\CurrentConfig()),
     );
     $permissionService = new \Piwigo\Permission\PermissionService(
         new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build()),
@@ -157,6 +158,8 @@ test('send returns immediately without touching the DB or network when telemetry
         new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(), new \Piwigo\Config\CurrentConfig()),
         $permissionService,
         new \Piwigo\Config\CurrentConfig(),
+        new \Piwigo\PluginConfig\EventDispatcher(),
+        new \Piwigo\Lang\Translator(new \Piwigo\Config\CurrentConfig()),
     );
     $tagService = new \Piwigo\Tag\TagService(
         piwigoInfosSenderTestLang(),

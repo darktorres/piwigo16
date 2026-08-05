@@ -52,7 +52,7 @@ function makeCalendarService(): CalendarService
 
     return new CalendarService(
         $permissionService,
-        new CategoryService(Lang::current(), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\Config\CurrentConfig::current()), $permissionService, \Piwigo\Config\CurrentConfig::current()),
+        new CategoryService(Lang::current(), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\Config\CurrentConfig::current()), $permissionService, \Piwigo\Config\CurrentConfig::current(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Lang\Translator::get()),
     );
 }
 

@@ -98,6 +98,24 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     }
 
     /**
+     * Container resolve, not a constructor property -- used only inside
+     * categoryService()'s own throwaway construction below; a required
+     * param here would ripple across every one of this class's own real
+     * `new UserService(...)` construction sites for a single caller
+     * (singleton/service-locator elimination campaign, Phase 11 sub-phase
+     * 11G).
+     */
+    private function translator(): \Piwigo\Lang\Translator
+    {
+        $translator = \Piwigo\Core\Kernel::container()->get(\Piwigo\Lang\Translator::class);
+        if (! $translator instanceof \Piwigo\Lang\Translator) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Lang\Translator::class);
+        }
+
+        return $translator;
+    }
+
+    /**
      * Phase 1k DI-chain audit: the same PermissionService recipe was
      * repeated verbatim at 3 call sites in this file. Not a constructor
      * param -- $conn is already available, and readonly class means no
@@ -117,7 +135,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     private function categoryService(): CategoryService
     {
-        return new CategoryService($this->lang, new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $this->currentConfig), $this->permissionService(), $this->currentConfig);
+        return new CategoryService($this->lang, new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $this->currentConfig), $this->permissionService(), $this->currentConfig, $this->eventDispatcher, $this->translator());
     }
 
     /**

@@ -128,7 +128,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $em = \Piwigo\Db\EntityManagerFactory::build($this->conn);
         $categoryRepo = new \Piwigo\Category\CategoryRepository($em, CurrentConfig::current());
         $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo);
-        $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $this->permissionService, \Piwigo\Config\CurrentConfig::current());
+        $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $this->permissionService, \Piwigo\Config\CurrentConfig::current(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Lang\Translator::get());
         $this->sessionService = new SessionService($em->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current());
         $this->tagService = new TagService(Lang::current(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), CurrentConfig::current(), new \Piwigo\Core\CurrentLogger(), $this->sessionService);
         $mailer = Kernel::container()->get(MailService::class);
@@ -202,6 +202,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             \Piwigo\Core\PageState::current(),
             \Piwigo\Users\CurrentUser::current(),
             \Piwigo\Config\CurrentConfig::current(),
+            \Piwigo\Lang\Translator::get(),
         );
     }
 

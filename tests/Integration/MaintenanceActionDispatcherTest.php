@@ -67,6 +67,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
             new \Piwigo\PluginConfig\EventDispatcher(),
             \Piwigo\Config\CurrentConfig::current(),
+            \Piwigo\Lang\Translator::get(),
         );
     }
 
@@ -158,6 +159,8 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), \Piwigo\Config\CurrentConfig::current()),
             $this->maintenanceActionDispatcherTestPermissionService(),
             \Piwigo\Config\CurrentConfig::current(),
+            new \Piwigo\PluginConfig\EventDispatcher(),
+            \Piwigo\Lang\Translator::get(),
         );
     }
 

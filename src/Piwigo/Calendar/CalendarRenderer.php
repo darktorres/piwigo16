@@ -51,6 +51,8 @@ final readonly class CalendarRenderer
         private UrlServiceInterface $urlService,
         private \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private \Piwigo\Lang\Translator $translator,
     ) {}
 
     /**
@@ -78,7 +80,7 @@ final readonly class CalendarRenderer
         $permissionService = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig));
         $calendarService = new CalendarService(
             $permissionService,
-            new CategoryService($this->lang, new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig), $permissionService, $this->currentConfig)
+            new CategoryService($this->lang, new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, $this->translator)
         );
 
         if ($section === 'categories') { // we will regenerate the items by including subcats elements

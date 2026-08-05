@@ -129,6 +129,20 @@ final class UrlService implements UrlServiceInterface
     }
 
     /**
+     * Same reasoning as currentLogger()/sessionService() above -- used only
+     * inside the one `new CategoryService(...)` construction below.
+     */
+    private function translator(): \Piwigo\Lang\Translator
+    {
+        $translator = \Piwigo\Core\Kernel::container()->get(\Piwigo\Lang\Translator::class);
+        if (! $translator instanceof \Piwigo\Lang\Translator) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Lang\Translator::class);
+        }
+
+        return $translator;
+    }
+
+    /**
      * Returns a prefix for each url link on displayed page and returns an
      * empty string for current path.
      */
@@ -679,7 +693,9 @@ final class UrlService implements UrlServiceInterface
                 $this->lang,
                 new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig),
                 new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig)),
-                $this->currentConfig
+                $this->currentConfig,
+                $this->eventDispatcher,
+                $this->translator()
             );
 
             while (isset($tokens[$nextToken])) {

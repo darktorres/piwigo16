@@ -422,7 +422,6 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Users/UserRepository.php',
         '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/PwgServer.php',
-        '/src/Piwigo/Ws/PwgUsers.php',
         '/src/Piwigo/Ws/WsDefaultMethods.php',
     ];
 
@@ -549,7 +548,6 @@ test('DeploymentPolicy::current() transitional bridge has a shrinking, known all
         '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Search/SearchService.php',
         '/src/Piwigo/Url/UrlService.php',
-        '/src/Piwigo/Ws/PwgUsers.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'DeploymentPolicy::current(');
@@ -630,7 +628,6 @@ test('PageState::current() transitional bridge has a shrinking, known allow-list
         '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Ws/PwgImages.php',
-        '/src/Piwigo/Ws/PwgUsers.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PageState::current(');
@@ -732,7 +729,6 @@ test('CurrentLogger::getStatic() transitional shim has a shrinking, known allow-
         '/src/Piwigo/Admin/Upload/UploadService.php',
         '/src/Piwigo/Tag/TagService.php',
         '/src/Piwigo/Image/ImageService.php',
-        '/src/Piwigo/Ws/PwgUsers.php',
         '/src/Piwigo/Ws/PwgImages.php',
     ];
 
@@ -869,7 +865,6 @@ test('SessionService::get() transitional bridge has a shrinking, known allow-lis
         '/src/Piwigo/Core/DeviceHelper.php',
         '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Tag/TagService.php',
-        '/src/Piwigo/Ws/PwgUsers.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'SessionService::get(');
@@ -1202,7 +1197,6 @@ test('Translator::get() transitional bridge has a shrinking, known allow-list', 
         '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Menu/MenubarRenderer.php',
         '/src/Piwigo/Template/PwgTemplateAdapter.php',
-        '/src/Piwigo/Ws/PwgUsers.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'Translator::get(');
@@ -1278,7 +1272,6 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Users/UserRepository.php',
         '/src/Piwigo/Ws/PwgImages.php',
-        '/src/Piwigo/Ws/PwgUsers.php',
         '/src/Piwigo/Ws/WsInitializer.php',
     ];
 
@@ -1440,7 +1433,6 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Permission/PermissionService.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Ws/PwgImages.php',
-        '/src/Piwigo/Ws/PwgUsers.php',
         '/src/Piwigo/Ws/WsDefaultMethods.php',
         '/src/Piwigo/Ws/WsHelper.php',
     ];
@@ -1509,7 +1501,6 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Users/UserService.php',
         '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/PwgServer.php',
-        '/src/Piwigo/Ws/PwgUsers.php',
         '/src/Piwigo/Ws/WsDefaultMethods.php',
         '/src/Piwigo/Ws/WsHelper.php',
     ];

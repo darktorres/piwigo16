@@ -14,25 +14,32 @@ namespace Piwigo\Ws;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Auth\ApiKeyRepository;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthService;
+use Piwigo\Auth\PasswordService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Event\User\WsUsersGetList;
+use Piwigo\Group\GroupService;
+use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
-use Piwigo\Permission\PermissionRepository;
+use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
 
 /**
@@ -42,45 +49,28 @@ use Piwigo\Users\UserService;
  */
 final class PwgUsers
 {
-    private static function userService(): UserService
-    {
-        return new UserService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), DbConnection::build(), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\DeploymentPolicy::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
-    }
-
-    /**
-     * Constructed repeatedly across getList()/getAuthKey()/
-     * generatePasswordLink() -- including once inside getList()'s
-     * per-user foreach loop. Unlike Ws\PwgTags::activityService(Connection $conn) /
-     * Bootstrap\RequestBootstrap::activityService(Connection $conn), this
-     * method takes no $conn parameter -- it simply delegates to
-     * Bootstrap\CoreDomainAccessor::authService() on every call.
-     */
-    private static function authService(): AuthService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::authService();
-    }
-
-    /**
-     * Constructed identically 8 times across createApiKey()/
-     * revokeApiKey()/editApiKey()/getApiKey() -- none inside a loop, so
-     * (unlike authService() above) this builds its own connection per
-     * call, same shape as PwgComments::commentService()/
-     * PwgGroups::groupService().
-     */
-    private static function apiKeyService(): ApiKeyService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::apiKeyService();
-    }
-
-    private static function groupService(): \Piwigo\Group\GroupService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::groupService();
-    }
-
-    private static function imageService(): \Piwigo\Image\ImageService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
-    }
+    public function __construct(
+        private readonly UserService $userService,
+        private readonly AuthService $authService,
+        private readonly ApiKeyService $apiKeyService,
+        private readonly GroupService $groupService,
+        private readonly ImageService $imageService,
+        private readonly AccessControl $accessControl,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentConfig $currentConfig,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly Lang $lang,
+        private readonly Translator $translator,
+        private readonly SessionService $sessionService,
+        private readonly UrlServiceInterface $urlService,
+        private readonly MailService $mailService,
+        private readonly PermissionService $permissionService,
+        private readonly PageState $pageState,
+        private readonly CurrentLogger $currentLogger,
+        private readonly PasswordService $passwordService,
+        private readonly PreferencesService $preferencesService,
+        private readonly Connection $connection,
+    ) {}
 
     /**
      * API method
@@ -104,25 +94,24 @@ final class PwgUsers
      * field list), not a single fixed row shape.
      * @return PwgError|array<int|string, mixed>
      */
-    public static function getList(array $params, PwgServer &$service): PwgError|array
+    public function getList(array $params, PwgServer &$service): PwgError|array
     {
-        // Shared across every query in this method, including the
-        // SELECT SQL_CALC_FOUND_ROWS.../SELECT FOUND_ROWS() pair below --
-        // FOUND_ROWS() reflects the immediately-preceding query on the
-        // SAME connection/session, so this must stay one connection for
-        // the whole method, not DbConnection::build() per query.
-        $conn = DbConnection::build();
+        // $this->connection is shared across every query in this method,
+        // including the SELECT SQL_CALC_FOUND_ROWS.../SELECT FOUND_ROWS()
+        // pair below -- FOUND_ROWS() reflects the immediately-preceding
+        // query on the SAME connection/session, so this must stay one
+        // connection for the whole method.
 
-        // \Piwigo\Config\CurrentConfig::current()->userFields() maps generic field names to table-specific DB
+        // $this->currentConfig->userFields() maps generic field names to table-specific DB
         // column names (see Piwigo\Users\UserService for the same pattern);
         // extracted once here since this function reads id/username/
         // email repeatedly below.
-        $user_fields = \Piwigo\Config\CurrentConfig::current()->userFields();
+        $user_fields = $this->currentConfig->userFields();
         $user_field_id = $user_fields['id'];
         $user_field_username = $user_fields['username'];
         $user_field_email = $user_fields['email'];
 
-        $available_permission_levels = \Piwigo\Config\CurrentConfig::current()->availablePermissionLevels();
+        $available_permission_levels = $this->currentConfig->availablePermissionLevels();
 
         if (! (bool) preg_match(ValidationPattern::ORDER, $params['order'])) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter order');
@@ -158,7 +147,7 @@ final class PwgUsers
         if (isset($params['filter']) && $params['filter'] !== '') {
             $filtered_groups = array_map(
                 strval(...),
-                self::groupService()->getIdsByNameLike('%' . $params['filter'] . '%')
+                $this->groupService->getIdsByNameLike('%' . $params['filter'] . '%')
             );
             $filter_where_clause = '(u.' . $user_field_username . ' LIKE :filterLike OR '
             . 'u.' . $user_field_email . ' LIKE :filterLike';
@@ -210,7 +199,7 @@ final class PwgUsers
         }
 
         if (isset($params['status']) && $params['status'] !== []) {
-            $params['status'] = array_intersect($params['status'], new DbInfo($conn)->getEnums(Tables::userInfos(), 'status'));
+            $params['status'] = array_intersect($params['status'], new DbInfo($this->connection)->getEnums(Tables::userInfos(), 'status'));
             if (count($params['status']) > 0) {
                 $where_clauses[] = 'ui.status IN (:status)';
                 $bound_params['status'] = array_values($params['status']);
@@ -317,7 +306,7 @@ final class PwgUsers
         }
 
         $apply_limit = $params['per_page'] !== 0 || $display_flags !== [];
-        $paginated_users = self::userService()->getListForWs(
+        $paginated_users = $this->userService->getListForWs(
             $user_field_id,
             $display,
             isset($display['ui.last_visit']),
@@ -352,7 +341,7 @@ final class PwgUsers
                 // a dedicated $group_row (instead of reusing $row from the loop
                 // above, which iterates a differently-shaped result set) keeps
                 // PHPStan's per-loop type inference precise.
-                foreach (self::groupService()->getMembershipsForUserIds(array_keys($users)) as $group_row) {
+                foreach ($this->groupService->getMembershipsForUserIds(array_keys($users)) as $group_row) {
                     $group_user_id = is_numeric($group_row['user_id']) ? (int) $group_row['user_id'] : null;
                     $group_id = is_numeric($group_row['group_id']) ? (int) $group_row['group_id'] : null;
                     if ($group_user_id === null || $group_id === null || ! isset($users[$group_user_id]) || ! is_array($users[$group_user_id]['groups'] ?? null)) {
@@ -380,7 +369,7 @@ final class PwgUsers
                     $users[$cur_user_id]['last_visit'] = $last_visit;
 
                     if (! SqlDialect::getBoolean($cur_user['last_visit_from_history']) and in_array($last_visit, [null, ''], true)) {
-                        $last_visit = self::authService()->getUserLastVisitFromHistory($cur_user_id, true);
+                        $last_visit = $this->authService->getUserLastVisitFromHistory($cur_user_id, true);
                         $users[$cur_user_id]['last_visit'] = $last_visit;
                     }
 
@@ -398,7 +387,8 @@ final class PwgUsers
         // dispatchChange()'s own instanceof check guarantees a real array
         // here, unlike the old mixed-returning trigger_change(), so no
         // fallback-to-original-$users guard is needed anymore.
-        $users = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new WsUsersGetList($users))->users;
+        $users = $this->eventDispatcher->dispatchChange(new WsUsersGetList($users))
+            ->users;
         if ($params['per_page'] === 0 && $display_flags === []) {
             $method_result = $users_id_arr;
         } else {
@@ -440,7 +430,7 @@ final class PwgUsers
      * and PwgServer::invoke() is itself a generic by-name dispatcher across
      * every registered WS method, each with its own distinct return shape.
      */
-    public static function add(array $params, PwgServer &$service): mixed
+    public function add(array $params, PwgServer &$service): mixed
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -450,14 +440,14 @@ final class PwgUsers
             return new PwgError(WsError::INVALID_PARAM, 'Name field must not be empty');
         }
 
-        if (\Piwigo\Config\CurrentConfig::current()->doublePasswordTypeInAdmin()) {
+        if ($this->currentConfig->doublePasswordTypeInAdmin()) {
             if (($params['password'] ?? '') !== ($params['password_confirm'] ?? '')) {
-                return new PwgError(WsError::INVALID_PARAM, Lang::current()->t('The passwords do not match'));
+                return new PwgError(WsError::INVALID_PARAM, $this->lang->t('The passwords do not match'));
             }
         }
 
         if ($params['auto_password']) {
-            $params['password'] = SessionService::get()->generateKey(mt_rand(15, 20));
+            $params['password'] = $this->sessionService->generateKey(mt_rand(15, 20));
         }
 
         // register_user() genuinely requires a string password; a client that
@@ -465,7 +455,7 @@ final class PwgUsers
         // otherwise reach it with null and crash inside pwg_password_hash() ->
         // password_hash() (a real string-typed native function).
         if ($params['password'] === null) {
-            return new PwgError(WsError::INVALID_PARAM, Lang::current()->t('Please, enter a password'));
+            return new PwgError(WsError::INVALID_PARAM, $this->lang->t('Please, enter a password'));
         }
 
         // Preserves the pre-SEC-31 behavior for this real caller (admin-
@@ -474,19 +464,19 @@ final class PwgUsers
         // UserService::registerUser() itself never puts that message in
         // errors (it would let an attacker enumerate accounts through the
         // public self-registration form).
-        $result = self::userService()
+        $result = $this->userService
             ->registerUser(
                 $params['username'],
                 $params['password'],
                 $params['email'],
-                \Piwigo\Bootstrap\PresentationAccessor::urlService(),
+                $this->urlService,
                 false, // notify admin
                 false // $params['send_password_by_mail']
             );
 
         $errors = $result['errors'];
         if ($result['duplicateUsername']) {
-            array_unshift($errors, Lang::current()->t('this login is already used'));
+            array_unshift($errors, $this->lang->t('this login is already used'));
         }
 
         $user_id = $result['userId'] ?? false;
@@ -510,13 +500,13 @@ final class PwgUsers
      *
      * @return PwgError|array{auth_key: string, user_id: int, created_on: string, duration: int, expired_on: string, key_type: string, auth_key_id: string}
      */
-    public static function getAuthKey(array $params, PwgServer &$service): PwgError|array
+    public function getAuthKey(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        $authkey = self::authService()->createUserAuthKey($params['user_id']);
+        $authkey = $this->authService->createUserAuthKey($params['user_id']);
 
         if ($authkey === false) {
             return new PwgError(WsError::INVALID_PARAM, 'invalid user_id');
@@ -533,24 +523,24 @@ final class PwgUsers
      *   neither has a 'default' key -- both mandatory, always present;
      *   FORCE_ARRAY always coerces user_id to a list of positive ints.
      */
-    public static function delete(array $params, PwgServer &$service): PwgError|string
+    public function delete(array $params, PwgServer &$service): PwgError|string
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        $currentUser = \Piwigo\Users\CurrentUser::current()->get();
+        $currentUser = $this->currentUser->get();
 
         $protected_users = [
             $currentUser->id->value,
-            \Piwigo\Config\CurrentConfig::current()->guestId(),
-            \Piwigo\Config\CurrentConfig::current()->defaultUserId(),
-            \Piwigo\Config\CurrentConfig::current()->webmasterId(),
+            $this->currentConfig->guestId(),
+            $this->currentConfig->defaultUserId(),
+            $this->currentConfig->webmasterId(),
         ];
 
         // an admin can't delete other admin/webmaster
         if ($currentUser->status === \Piwigo\Users\UserStatus::Admin) {
-            $protected_users = array_merge($protected_users, self::userService()->getAdminIds());
+            $protected_users = array_merge($protected_users, $this->userService->getAdminIds());
         }
 
         // protect some users
@@ -564,13 +554,13 @@ final class PwgUsers
 
         $counter = 0;
 
-        $user_service = self::userService();
+        $user_service = $this->userService;
         foreach ($params['user_id'] as $user_id) {
             $user_service->deleteUser(\Piwigo\Common\ValueObject\UserId::from($user_id));
             $counter++;
         }
 
-        return Translator::get()->plural(
+        return $this->translator->plural(
             '%d user deleted',
             '%d users deleted',
             $counter
@@ -591,13 +581,13 @@ final class PwgUsers
      * Return type genuinely can't be narrower than mixed -- same
      * invoke()-forwarding rationale as add() above.
      */
-    public static function setInfo(array $params, PwgServer &$service): mixed
+    public function setInfo(array $params, PwgServer &$service): mixed
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        $updated_users = self::userService()->checkAndSaveUserInfos($params, \Piwigo\Core\PageState::current());
+        $updated_users = $this->userService->checkAndSaveUserInfos($params, $this->pageState);
 
         if (isset($updated_users['error'])) {
             // UserService::checkAndSaveUserInfos() is declared to return plain
@@ -632,25 +622,25 @@ final class PwgUsers
      *   ws.php registration at all -- harmless no-ops, not part of the real
      *   shape.)
      */
-    public static function setMyInfo(array $params, PwgServer &$service): PwgError|string
+    public function setMyInfo(array $params, PwgServer &$service): PwgError|string
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (AccessControl::current()->isAGuest()) {
+        if ($this->accessControl->isAGuest()) {
             return new PwgError(401, 'Access Denied');
         }
 
-        $currentUser = \Piwigo\Users\CurrentUser::current()->get();
+        $currentUser = $this->currentUser->get();
 
         // ACTIVATE_COMMENTS
-        if (! \Piwigo\Config\CurrentConfig::current()->activateComments()) {
+        if (! $this->currentConfig->activateComments()) {
             unset($params['show_nb_comments']);
         }
 
         // ALLOW_USER_CUSTOMIZATION
-        if (! \Piwigo\Config\CurrentConfig::current()->allowUserCustomization()) {
+        if (! $this->currentConfig->allowUserCustomization()) {
             unset(
                 $params['nb_image_page'],
                 $params['theme'],
@@ -663,7 +653,7 @@ final class PwgUsers
         }
 
         // SPECIAL_USER
-        $special_user = in_array($currentUser->id->value, [\Piwigo\Config\CurrentConfig::current()->guestId(), \Piwigo\Config\CurrentConfig::current()->defaultUserId()], true);
+        $special_user = in_array($currentUser->id->value, [$this->currentConfig->guestId(), $this->currentConfig->defaultUserId()], true);
         if ($special_user) {
             unset(
                 $params['password'],
@@ -674,15 +664,15 @@ final class PwgUsers
 
         if (isset($params['password']) && $params['password'] !== '') {
             if (($params['new_password'] ?? '') !== ($params['conf_new_password'] ?? '')) {
-                return new PwgError(403, Lang::current()->t('The passwords do not match'));
+                return new PwgError(403, $this->lang->t('The passwords do not match'));
             }
 
-            // \Piwigo\Config\CurrentConfig::current()->userFields() maps generic field names to table-specific
+            // $this->currentConfig->userFields() maps generic field names to table-specific
             // DB column names (see Piwigo\Users\UserService for the same
             // pattern).
-            $user_fields = \Piwigo\Config\CurrentConfig::current()->userFields();
+            $user_fields = $this->currentConfig->userFields();
 
-            $current_password = self::authService()->getPasswordHash($currentUser->id->value, $user_fields['id'], $user_fields['username'], $user_fields['password']);
+            $current_password = $this->authService->getPasswordHash($currentUser->id->value, $user_fields['id'], $user_fields['username'], $user_fields['password']);
             $current_password ??= '';
 
             // $params['password'] is declared string via this function's own
@@ -691,8 +681,8 @@ final class PwgUsers
             // precise type after the merge, so it's read back as mixed here.
             $params_password = is_string($params['password']) ? $params['password'] : '';
 
-            if (! \Piwigo\Bootstrap\CoreDomainAccessor::passwordService()->verify($params_password, $current_password)) {
-                return new PwgError(403, Lang::current()->t('Current password is wrong'));
+            if (! $this->passwordService->verify($params_password, $current_password)) {
+                return new PwgError(403, $this->lang->t('Current password is wrong'));
             }
 
             $params['password'] = $params['new_password'] ?? null;
@@ -710,7 +700,7 @@ final class PwgUsers
         );
 
         $params['user_id'] = [$currentUser->id->value];
-        $updated_users = self::userService()->checkAndSaveUserInfos($params, \Piwigo\Core\PageState::current());
+        $updated_users = $this->userService->checkAndSaveUserInfos($params, $this->pageState);
 
         if (isset($updated_users['error'])) {
             // UserService::checkAndSaveUserInfos() is declared to return plain
@@ -724,7 +714,7 @@ final class PwgUsers
             return new PwgError($error_code, $error_message);
         }
 
-        return Lang::current()->t('Your changes have been applied.');
+        return $this->lang->t('Your changes have been applied.');
     }
 
     /**
@@ -741,7 +731,7 @@ final class PwgUsers
      *   Users\User::$preferences' own by-design arbitrary per-user
      *   key-value shape (User.php's own $preferences docblock)
      */
-    public static function preferencesSet(array $params, PwgServer &$service): PwgError|array
+    public function preferencesSet(array $params, PwgServer &$service): PwgError|array
     {
         if (! (bool) preg_match('/^[a-zA-Z0-9_-]+$/', $params['param'])) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid param name #' . $params['param'] . '#');
@@ -752,9 +742,10 @@ final class PwgUsers
             $value = json_decode($value, true);
         }
 
-        \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->updateParam($params['param'], $value);
+        $this->preferencesService->updateParam($params['param'], $value);
 
-        return \Piwigo\Users\CurrentUser::current()->get()->preferences;
+        return $this->currentUser->get()
+            ->preferences;
     }
 
     /**
@@ -764,18 +755,18 @@ final class PwgUsers
      * @param array{image_id: int, ...} $params no 'default' key -- mandatory,
      *   always present, WsParamType::ID guarantees a plain int.
      */
-    public static function favoritesAdd(array $params, PwgServer &$service): PwgError|true
+    public function favoritesAdd(array $params, PwgServer &$service): PwgError|true
     {
-        if (AccessControl::current()->isAGuest()) {
+        if ($this->accessControl->isAGuest()) {
             return new PwgError(403, 'User must be logged in.');
         }
 
         // does the image really exist?
-        if (! self::imageService()->existsById($params['image_id'])) {
+        if (! $this->imageService->existsById($params['image_id'])) {
             return new PwgError(404, 'image_id not found');
         }
 
-        self::userService()->addFavorite(\Piwigo\Users\CurrentUser::current()->get()->id, $params['image_id'], ignoreDuplicate: true);
+        $this->userService->addFavorite($this->currentUser->get()->id, $params['image_id'], ignoreDuplicate: true);
 
         return true;
     }
@@ -787,18 +778,18 @@ final class PwgUsers
      * @param array{image_id: int, ...} $params no 'default' key -- mandatory,
      *   always present, WsParamType::ID guarantees a plain int.
      */
-    public static function favoritesRemove(array $params, PwgServer &$service): PwgError|true
+    public function favoritesRemove(array $params, PwgServer &$service): PwgError|true
     {
-        if (AccessControl::current()->isAGuest()) {
+        if ($this->accessControl->isAGuest()) {
             return new PwgError(403, 'User must be logged in.');
         }
 
         // does the image really exist?
-        if (! self::imageService()->existsById($params['image_id'])) {
+        if (! $this->imageService->existsById($params['image_id'])) {
             return new PwgError(404, 'image_id not found');
         }
 
-        self::userService()->removeFavorite(\Piwigo\Users\CurrentUser::current()->get()->id, $params['image_id']);
+        $this->userService->removeFavorite($this->currentUser->get()->id, $params['image_id']);
 
         return true;
     }
@@ -813,24 +804,24 @@ final class PwgUsers
      *   present, string|null.
      * @return false|array{paging: PwgNamedStruct, images: PwgNamedArray}
      */
-    public static function favoritesGetList(array $params, PwgServer &$service): false|array
+    public function favoritesGetList(array $params, PwgServer &$service): false|array
     {
 
-        if (AccessControl::current()->isAGuest()) {
+        if ($this->accessControl->isAGuest()) {
             return false;
         }
 
-        self::userService()->checkUserFavorites();
+        $this->userService->checkUserFavorites();
 
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
-        $order_by = $order_by === '' ? \Piwigo\Config\CurrentConfig::current()->orderBy() : 'ORDER BY ' . $order_by;
+        $order_by = $order_by === '' ? $this->currentConfig->orderBy() : 'ORDER BY ' . $order_by;
 
-        $permission_condition = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class))->getSqlConditionFandFAsCondition([
+        $permission_condition = $this->permissionService->getSqlConditionFandFAsCondition([
             'visible_images' => 'id',
         ]);
 
         $images = [];
-        foreach (self::userService()->getVisibleFavoriteImages(\Piwigo\Users\CurrentUser::current()->get()->id, $permission_condition, $order_by) as $row) {
+        foreach ($this->userService->getVisibleFavoriteImages($this->currentUser->get()->id, $permission_condition, $order_by) as $row) {
             $image = [];
 
             foreach (['id', 'width', 'height', 'hit'] as $k) {
@@ -843,7 +834,7 @@ final class PwgUsers
                 $image[$k] = $row[$k] ?? null;
             }
 
-            $images[] = array_merge($image, WsHelper::stdGetUrls($row, \Piwigo\Bootstrap\PresentationAccessor::urlService()));
+            $images[] = array_merge($image, WsHelper::stdGetUrls($row, $this->urlService));
         }
 
         $count = count($images);
@@ -876,7 +867,7 @@ final class PwgUsers
      *   bool default, WsParamType::BOOL -- always present.
      * @return PwgError|array{generated_link: string, send_by_mail: string|false|null, time_validation: string}
      */
-    public static function generatePasswordLink(array $params, PwgServer &$service): PwgError|array
+    public function generatePasswordLink(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -885,60 +876,59 @@ final class PwgUsers
         $lost_user_id = \Piwigo\Common\ValueObject\UserId::from($params['user_id']);
 
         // check if user exist
-        if (self::userService()->getUsername($lost_user_id) === null) {
+        if ($this->userService->getUsername($lost_user_id) === null) {
             return new PwgError(WsError::INVALID_PARAM, 'This user does not exist.');
         }
 
         // UserService::getUserData() is declared to return
         // array<string, mixed> (its own @return docblock); narrow the
         // specific fields this function consumes to their real column types.
-        $user_lost = self::userService()->getUserData($lost_user_id);
+        $user_lost = $this->userService->getUserData($lost_user_id);
         $user_lost_status = is_string($user_lost['status']) ? $user_lost['status'] : '';
 
         // Cannot perform this action for a guest or generic user
-        if (AccessControl::current()->isAGuest($user_lost_status) or AccessControl::current()->isGeneric($user_lost_status)) {
+        if ($this->accessControl->isAGuest($user_lost_status) or $this->accessControl->isGeneric($user_lost_status)) {
             return new PwgError(403, 'Password reset is not allowed for this user');
         }
 
         // Only webmaster can perform this action for another webmaster
-        if (\Piwigo\Users\CurrentUser::current()->get()->status === \Piwigo\Users\UserStatus::Admin && $user_lost_status === 'webmaster') {
+        if ($this->currentUser->get()->status === \Piwigo\Users\UserStatus::Admin && $user_lost_status === 'webmaster') {
             return new PwgError(403, 'You cannot perform this action');
         }
 
-        $conn = DbConnection::build();
-        $first_login = self::authService()->hasAlreadyLoggedIn($params['user_id']);
+        $first_login = $this->authService->hasAlreadyLoggedIn($params['user_id']);
         $send_by_mail_response = null;
-        $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : self::userService()->getDefaultLanguage();
-        $lang_to_use = $first_login ? self::userService()->getDefaultLanguage() : $user_lost_language;
+        $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : $this->userService->getDefaultLanguage();
+        $lang_to_use = $first_login ? $this->userService->getDefaultLanguage() : $user_lost_language;
 
-        \Piwigo\Bootstrap\PresentationAccessor::mailService()
+        $this->mailService
             ->switchLangTo($lang_to_use);
-        $generate_link = self::authService()->generatePasswordLink($params['user_id'], \Piwigo\Bootstrap\PresentationAccessor::urlService(), $first_login);
+        $generate_link = $this->authService->generatePasswordLink($params['user_id'], $this->urlService, $first_login);
 
         $user_lost_email = is_string($user_lost['email']) ? $user_lost['email'] : null;
 
-        // \Piwigo\Config\CurrentConfig::current()->galleryTitle() is a raw config string; pwg_generate_set/
+        // $this->currentConfig->galleryTitle() is a raw config string; pwg_generate_set/
         // reset_password_mail() both require a real string for their 3rd
         // parameter.
-        $gallery_title = \Piwigo\Config\CurrentConfig::current()->galleryTitle();
+        $gallery_title = $this->currentConfig->galleryTitle();
 
         if ($params['send_by_mail'] and ! in_array($user_lost_email, [null, ''], true)) {
             $user_lost_username = is_string($user_lost['username']) ? $user_lost['username'] : '';
             if ($first_login) {
-                $email_params = \Piwigo\Bootstrap\PresentationAccessor::mailService()
+                $email_params = $this->mailService
                     ->generateSetPasswordMail($user_lost_username, $generate_link['password_link'], $gallery_title, $generate_link['time_validation']);
             } else {
-                $email_params = \Piwigo\Bootstrap\PresentationAccessor::mailService()
+                $email_params = $this->mailService
                     ->generateResetPasswordMail($user_lost_username, $generate_link['password_link'], $gallery_title, $generate_link['time_validation']);
             }
             // Here we remove the display of errors because they prevent the response from being parsed
-            if (@\Piwigo\Bootstrap\PresentationAccessor::mailService()->mail($user_lost_email, $email_params)) {
+            if (@$this->mailService->mail($user_lost_email, $email_params)) {
                 $send_by_mail_response = 'Mail sent at : ' . $user_lost_email;
             } else {
                 $send_by_mail_response = false;
             }
         }
-        \Piwigo\Bootstrap\PresentationAccessor::mailService()
+        $this->mailService
             ->switchLangBack();
 
         return [
@@ -957,10 +947,10 @@ final class PwgUsers
      *   'default' key -- both mandatory, always present, WsParamType::ID guarantees
      *   a plain int for user_id.
      */
-    public static function setMainUser(array $params, PwgServer &$service): PwgError|string
+    public function setMainUser(array $params, PwgServer &$service): PwgError|string
     {
         // check if not webmaster
-        if (! AccessControl::current()->isWebmaster()) {
+        if (! $this->accessControl->isWebmaster()) {
             return new PwgError(403, 'You cannot perform this action');
         }
 
@@ -972,11 +962,11 @@ final class PwgUsers
         $new_main_user_id = \Piwigo\Common\ValueObject\UserId::from($params['user_id']);
 
         // checl if user exist
-        if (self::userService()->getUsername($new_main_user_id) === null) {
+        if ($this->userService->getUsername($new_main_user_id) === null) {
             return new PwgError(WsError::INVALID_PARAM, 'This user does not exist.');
         }
 
-        $new_main_user = self::userService()->getUserData($new_main_user_id);
+        $new_main_user = $this->userService->getUserData($new_main_user_id);
 
         // check if the user to set as main user is not webmaster
         if ($new_main_user['status'] !== 'webmaster') {
@@ -997,11 +987,11 @@ final class PwgUsers
      *   WsParamType::INT|WsParamType::POSITIVE guarantees a plain int.
      * @return PwgError|array{auth_key: string, apikey_secret: string, apikey_name: string, user_id: int, created_on: string, duration: int, key_type: string, expired_on: string}
      */
-    public static function createApiKey(array $params, PwgServer &$service): PwgError|array
+    public function createApiKey(array $params, PwgServer &$service): PwgError|array
     {
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = $this->currentLogger->get();
 
-        if (AccessControl::current()->isAGuest() or ! self::apiKeyService()->connectedWithPwgUi()) {
+        if ($this->accessControl->isAGuest() or ! $this->apiKeyService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
 
@@ -1025,9 +1015,10 @@ final class PwgUsers
         // it can never be 0 here.
         $duration = $params['duration'];
 
-        $user_id = \Piwigo\Users\CurrentUser::current()->get()->id->value;
+        $user_id = $this->currentUser->get()
+            ->id->value;
 
-        $secret = self::apiKeyService()->create($user_id, $duration, $key_name);
+        $secret = $this->apiKeyService->create($user_id, $duration, $key_name);
 
         $logger->info('[api_key][user_id=' . $user_id . '][action=create][key_name=' . $params['key_name'] . ']');
 
@@ -1042,25 +1033,26 @@ final class PwgUsers
      * @param array{pkid: string, pwg_token: string, ...} $params neither has a
      *   'default' key -- both mandatory, always present, no 'type' flag.
      */
-    public static function revokeApiKey(array $params, PwgServer &$service): PwgError|string
+    public function revokeApiKey(array $params, PwgServer &$service): PwgError|string
     {
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = $this->currentLogger->get();
 
-        if (AccessControl::current()->isAGuest() or ! self::apiKeyService()->connectedWithPwgUi()) {
+        if ($this->accessControl->isAGuest() or ! $this->apiKeyService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
 
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, Lang::current()->t('Invalid security token'));
+            return new PwgError(403, $this->lang->t('Invalid security token'));
         }
 
         if (! (bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['pkid'])) {
-            return new PwgError(403, Lang::current()->t('Invalid pkid format'));
+            return new PwgError(403, $this->lang->t('Invalid pkid format'));
         }
 
-        $user_id = \Piwigo\Users\CurrentUser::current()->get()->id->value;
+        $user_id = $this->currentUser->get()
+            ->id->value;
 
-        $revoked_key = self::apiKeyService()->revoke($user_id, $params['pkid']);
+        $revoked_key = $this->apiKeyService->revoke($user_id, $params['pkid']);
 
         if ($revoked_key !== true) {
             return new PwgError(403, $revoked_key);
@@ -1068,7 +1060,7 @@ final class PwgUsers
 
         $logger->info('[api_key][user_id=' . $user_id . '][action=revoke][pkid=' . $params['pkid'] . ']');
 
-        return Lang::current()->t('API Key has been successfully revoked.');
+        return $this->lang->t('API Key has been successfully revoked.');
     }
 
     /**
@@ -1080,32 +1072,33 @@ final class PwgUsers
      *   none has a 'default' key -- all mandatory, always present, no 'type'
      *   flag.
      */
-    public static function editApiKey(array $params, PwgServer &$service): PwgError|string
+    public function editApiKey(array $params, PwgServer &$service): PwgError|string
     {
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = $this->currentLogger->get();
 
-        if (AccessControl::current()->isAGuest()) {
+        if ($this->accessControl->isAGuest()) {
             return new PwgError(401, 'Acces Denied');
         }
 
-        if (! self::apiKeyService()->connectedWithPwgUi()) {
+        if (! $this->apiKeyService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
 
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, Lang::current()->t('Invalid security token'));
+            return new PwgError(403, $this->lang->t('Invalid security token'));
         }
 
         if (! (bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['pkid'])) {
-            return new PwgError(403, Lang::current()->t('Invalid pkid format'));
+            return new PwgError(403, $this->lang->t('Invalid pkid format'));
         }
 
         // realEscapeString() dropped: ApiKeyRepository::updateName()
         // parameterizes apikey_name instead of interpolating it, same
         // "dead pre-escaping" rationale as createApiKey() above.
         $key_name = $params['key_name'];
-        $user_id = \Piwigo\Users\CurrentUser::current()->get()->id->value;
-        $edited_key = self::apiKeyService()->edit($user_id, $params['pkid'], $key_name);
+        $user_id = $this->currentUser->get()
+            ->id->value;
+        $edited_key = $this->apiKeyService->edit($user_id, $params['pkid'], $key_name);
 
         if ($edited_key !== true) {
             return new PwgError(403, $edited_key);
@@ -1113,7 +1106,7 @@ final class PwgUsers
 
         $logger->info('[api_key][user_id=' . $user_id . '][action=edit][pkid=' . $params['pkid'] . '][new_name=' . $key_name . ']');
 
-        return Lang::current()->t('API Key has been successfully edited.');
+        return $this->lang->t('API Key has been successfully edited.');
     }
 
     /**
@@ -1125,13 +1118,13 @@ final class PwgUsers
      *   mandatory, always present, no 'type' flag.
      * @return PwgError|string|list<array{auth_key: string, apikey_secret: string, apikey_name: string, created_on: string, duration: ?int, expired_on: string, revoked_on: ?string, last_used_on: ?string, last_notified_on: ?string, created_on_format: string, expired_on_format: string, last_used_on_since: string, is_expired: bool, expiration: string, expired_on_since: string, revoked_on_since: ?string, revoked_on_message: ?string}>
      */
-    public static function getApiKey(array $params, PwgServer &$service): PwgError|array|string
+    public function getApiKey(array $params, PwgServer &$service): PwgError|array|string
     {
-        if (AccessControl::current()->isAGuest()) {
+        if ($this->accessControl->isAGuest()) {
             return new PwgError(401, 'Acces Denied');
         }
 
-        if (! self::apiKeyService()->connectedWithPwgUi()) {
+        if (! $this->apiKeyService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
 
@@ -1146,9 +1139,10 @@ final class PwgUsers
         // "requires a string $user_id", which was itself just describing
         // the bug). Every other ApiKeyService method here (create/revoke/
         // edit) already passes a plain int for the same user id value.
-        $user_id = \Piwigo\Users\CurrentUser::current()->get()->id->value;
-        $api_keys = self::apiKeyService()->get($user_id);
+        $user_id = $this->currentUser->get()
+            ->id->value;
+        $api_keys = $this->apiKeyService->get($user_id);
 
-        return ((bool) $api_keys) ? $api_keys : Lang::current()->t('No API key found');
+        return ((bool) $api_keys) ? $api_keys : $this->lang->t('No API key found');
     }
 }

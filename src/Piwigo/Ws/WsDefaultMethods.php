@@ -48,6 +48,7 @@ final class WsDefaultMethods
         private readonly PwgExtensions $pwgExtensions,
         private readonly PwgGroups $pwgGroups,
         private readonly PwgTags $pwgTags,
+        private readonly PwgUsers $pwgUsers,
     ) {}
 
     /**
@@ -1631,7 +1632,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.getList',
-            PwgUsers::getList(...),
+            $this->pwgUsers->getList(...),
             [
                 'user_id' => [
                     'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
@@ -1705,7 +1706,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.add',
-            PwgUsers::add(...),
+            $this->pwgUsers->add(...),
             [
                 'username' => [],
                 'auto_password' => [
@@ -1737,7 +1738,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.delete',
-            PwgUsers::delete(...),
+            $this->pwgUsers->delete(...),
             [
                 'user_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -1754,7 +1755,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.getAuthKey',
-            PwgUsers::getAuthKey(...),
+            $this->pwgUsers->getAuthKey(...),
             [
                 'user_id' => [
                     'type' => WsParamType::ID,
@@ -1770,7 +1771,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.setInfo',
-            PwgUsers::setInfo(...),
+            $this->pwgUsers->setInfo(...),
             [
                 'user_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -1842,7 +1843,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.setMyInfo',
-            PwgUsers::setMyInfo(...),
+            $this->pwgUsers->setMyInfo(...),
             [
                 'email' => [
                     'flags' => WsParamFlag::OPTIONAL,
@@ -1971,7 +1972,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.preferences.set',
-            PwgUsers::preferencesSet(...),
+            $this->pwgUsers->preferencesSet(...),
             [
                 'param' => [],
                 'value' => [
@@ -1987,7 +1988,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.favorites.add',
-            PwgUsers::favoritesAdd(...),
+            $this->pwgUsers->favoritesAdd(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -1998,7 +1999,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.favorites.remove',
-            PwgUsers::favoritesRemove(...),
+            $this->pwgUsers->favoritesRemove(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -2009,7 +2010,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.favorites.getList',
-            PwgUsers::favoritesGetList(...),
+            $this->pwgUsers->favoritesGetList(...),
             [
                 'per_page' => [
                     'default' => 100,
@@ -2201,7 +2202,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.generatePasswordLink',
-            PwgUsers::generatePasswordLink(...),
+            $this->pwgUsers->generatePasswordLink(...),
             [
                 'user_id' => [
                     'type' => WsParamType::ID,
@@ -2223,7 +2224,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.setMainUser',
-            PwgUsers::setMainUser(...),
+            $this->pwgUsers->setMainUser(...),
             [
                 'user_id' => [
                     'type' => WsParamType::ID,
@@ -2241,7 +2242,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.api_key.create',
-            PwgUsers::createApiKey(...),
+            $this->pwgUsers->createApiKey(...),
             [
                 'key_name' => [],
                 'duration' => [
@@ -2259,7 +2260,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.api_key.revoke',
-            PwgUsers::revokeApiKey(...),
+            $this->pwgUsers->revokeApiKey(...),
             [
                 'pkid' => [],
                 'pwg_token' => [],
@@ -2273,7 +2274,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.api_key.edit',
-            PwgUsers::editApiKey(...),
+            $this->pwgUsers->editApiKey(...),
             [
                 'key_name' => [],
                 'pkid' => [],
@@ -2288,7 +2289,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.api_key.get',
-            PwgUsers::getApiKey(...),
+            $this->pwgUsers->getApiKey(...),
             [
                 'pwg_token' => [],
             ],

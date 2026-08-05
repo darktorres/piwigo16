@@ -9,6 +9,7 @@ use Piwigo\Admin\Extensions\PluginMigrationEntity;
 use Piwigo\Admin\Extensions\PluginMigrationRepository;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\ThemesInstalledPageRenderer;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -17,6 +18,7 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
+use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Html\HtmlService;
@@ -242,7 +244,13 @@ function themesInstalledLifecycle(): ExtensionLifecycle
 
     $activityRepo = EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class);
 
-    return new ExtensionLifecycle(Lang::current(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new \Piwigo\Activity\ActivityService($activityRepo), themesInstalledLifecycleUserService(), new HtmlService(), new CurrentConfig());
+    $wsContext = Kernel::container()->get(WsContext::class);
+    $accessControl = Kernel::container()->get(AccessControl::class);
+    if (! $wsContext instanceof WsContext || ! $accessControl instanceof AccessControl) {
+        throw new \LogicException('Container returned an unexpected type');
+    }
+
+    return new ExtensionLifecycle(Lang::current(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new \Piwigo\Activity\ActivityService($activityRepo), themesInstalledLifecycleUserService(), new HtmlService(), new CurrentConfig(), $wsContext, $accessControl);
 }
 
 /**

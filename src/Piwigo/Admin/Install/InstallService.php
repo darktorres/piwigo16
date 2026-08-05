@@ -90,6 +90,8 @@ final class InstallService
             \Piwigo\Bootstrap\CoreDomainAccessor::userService(),
             \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             \Piwigo\Config\CurrentConfig::current(),
+            \Piwigo\Bootstrap\InfrastructureAccessor::wsContext(),
+            \Piwigo\Bootstrap\CoreDomainAccessor::accessControl(),
         );
         $fs_themes = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $urlService, \Piwigo\Core\Lang::current());

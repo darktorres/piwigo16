@@ -15,6 +15,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Template\Template;
 
@@ -43,6 +44,7 @@ final class LanguagesNewPageRenderer
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly WsContext $wsContext,
     ) {}
 
     /**
@@ -75,7 +77,7 @@ final class LanguagesNewPageRenderer
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig);
+        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl);
 
         // +-----------------------------------------------------------------------+
         // |                           setup check                                 |

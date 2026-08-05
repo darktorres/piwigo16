@@ -21,6 +21,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
+use Piwigo\Core\WsContext;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Template\Template;
@@ -47,6 +48,7 @@ final class PwgExtensions
         private readonly \Piwigo\Admin\Extensions\CoreUpdateService $coreUpdateService,
         private readonly \Piwigo\Core\RedirectServiceInterface $redirectService,
         private readonly PemCatalog $pemCatalog,
+        private readonly WsContext $wsContext,
     ) {}
 
     /**
@@ -141,6 +143,8 @@ final class PwgExtensions
             $this->userService,
             $this->htmlRenderer,
             $this->currentConfig,
+            $this->wsContext,
+            $this->accessControl,
         );
         $fsEntry = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService, $this->lang)[$params['plugin']] ?? null;
@@ -194,6 +198,8 @@ final class PwgExtensions
             $this->userService,
             $this->htmlRenderer,
             $this->currentConfig,
+            $this->wsContext,
+            $this->accessControl,
         );
         $fsEntry = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $urlService, $this->lang)[$params['theme']] ?? null;
@@ -256,7 +262,7 @@ final class PwgExtensions
         $repo = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
         $pemCatalog = $this->pemCatalog;
         $pluginMigrationRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
-        $lifecycle = new ExtensionLifecycle($this->lang, $repo, $pemCatalog, $urlService, $this->configService, $pluginMigrationRepo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig);
+        $lifecycle = new ExtensionLifecycle($this->lang, $repo, $pemCatalog, $urlService, $this->configService, $pluginMigrationRepo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl);
 
         if ($type === ExtensionType::Plugin) {
             $dbPluginsById = $repo->findAll(ExtensionType::Plugin);

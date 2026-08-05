@@ -34,11 +34,8 @@ final class WsContext
 
     /**
      * @deprecated transitional bridge for callers not yet converted to
-     * constructor injection -- Piwigo\Admin\PluginMaintain (a base class
-     * extended by every third-party plugin's own maintain class -- its
-     * constructor signature isn't this campaign's to change),
-     * Piwigo\Url\UrlService (still manually `new`'d at dozens of call
-     * sites, Phase 6), and Piwigo\Admin\Upload\UploadService::
+     * constructor injection -- Piwigo\Url\UrlService (still manually
+     * `new`'d at dozens of call sites, Phase 6), and Piwigo\Admin\Upload\UploadService::
      * addUploadedFile() (reachable from the still-static Ws\PwgImages
      * dispatch layer, Phase 10) all keep using this shim. Gracefully falls
      * back to false (the same value an unset instance already defaults

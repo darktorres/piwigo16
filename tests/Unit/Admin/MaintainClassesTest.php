@@ -6,6 +6,11 @@ use Piwigo\Admin\DummyPluginMaintain;
 use Piwigo\Admin\DummyThemeMaintain;
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Admin\ThemeMaintain;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
+use Piwigo\Core\WsContext;
+use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
  * PluginMaintain/ThemeMaintain -- the no-op default maintenance-hook base
@@ -27,15 +32,26 @@ use Piwigo\Admin\ThemeMaintain;
  * despite being genuinely exercised here.
  */
 test('PluginMaintain\'s base install/activate/deactivate/uninstall/update are all no-ops returning null', function (): void {
-    $errors = [];
-    $maintain = new PluginMaintain('some-plugin');
+    KernelContainerOverride::with(
+        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        static function (): void {
+            $wsContext = Kernel::container()->get(WsContext::class);
+            $accessControl = Kernel::container()->get(AccessControl::class);
+            if (! $wsContext instanceof WsContext || ! $accessControl instanceof AccessControl) {
+                throw new \LogicException('Container returned an unexpected type');
+            }
 
-    expect($maintain->install('1.0', $errors))->toBeNull();
-    expect($maintain->activate('1.0', $errors))->toBeNull();
-    expect($maintain->deactivate())->toBeNull();
-    expect($maintain->uninstall())->toBeNull();
-    $maintain->update('1.0', '2.0', $errors);
-    expect($errors)->toBe([]);
+            $errors = [];
+            $maintain = new PluginMaintain('some-plugin', $wsContext, $accessControl);
+
+            expect($maintain->install('1.0', $errors))->toBeNull();
+            expect($maintain->activate('1.0', $errors))->toBeNull();
+            expect($maintain->deactivate())->toBeNull();
+            expect($maintain->uninstall())->toBeNull();
+            $maintain->update('1.0', '2.0', $errors);
+            expect($errors)->toBe([]);
+        }
+    );
 });
 
 test('ThemeMaintain\'s base activate/deactivate/delete are all no-ops returning null', function (): void {
@@ -49,15 +65,26 @@ test('ThemeMaintain\'s base activate/deactivate/delete are all no-ops returning 
 });
 
 test('DummyPluginMaintain returns null for every hook when no procedural plugin_* function is defined', function (): void {
-    $errors = [];
-    $maintain = new DummyPluginMaintain('legacy-plugin');
+    KernelContainerOverride::with(
+        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        static function (): void {
+            $wsContext = Kernel::container()->get(WsContext::class);
+            $accessControl = Kernel::container()->get(AccessControl::class);
+            if (! $wsContext instanceof WsContext || ! $accessControl instanceof AccessControl) {
+                throw new \LogicException('Container returned an unexpected type');
+            }
 
-    expect(function_exists('plugin_install'))->toBeFalse();
-    expect($maintain->install('1.0', $errors))->toBeNull();
-    expect($maintain->activate('1.0', $errors))->toBeNull();
-    expect($maintain->deactivate())->toBeNull();
-    expect($maintain->uninstall())->toBeNull();
-    $maintain->update('1.0', '2.0', $errors);
+            $errors = [];
+            $maintain = new DummyPluginMaintain('legacy-plugin', $wsContext, $accessControl);
+
+            expect(function_exists('plugin_install'))->toBeFalse();
+            expect($maintain->install('1.0', $errors))->toBeNull();
+            expect($maintain->activate('1.0', $errors))->toBeNull();
+            expect($maintain->deactivate())->toBeNull();
+            expect($maintain->uninstall())->toBeNull();
+            $maintain->update('1.0', '2.0', $errors);
+        }
+    );
 });
 
 test('DummyThemeMaintain returns null for every hook when no procedural theme_* function is defined', function (): void {
@@ -90,7 +117,15 @@ test('DummyPluginMaintain forwards to the real plugin_install/plugin_activate/pl
         return "uninstall-return:$plugin_id";
     }
 
-    $maintain = new \Piwigo\Admin\DummyPluginMaintain('subprocess-plugin');
+    \Piwigo\Core\Env::loadEnvFile(__REPO_ROOT__);
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
+    $wsContext = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\WsContext::class);
+    $accessControl = \Piwigo\Core\Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
+    if (! $wsContext instanceof \Piwigo\Core\WsContext || ! $accessControl instanceof \Piwigo\Auth\AccessControl) {
+        throw new \LogicException('Container returned an unexpected type');
+    }
+
+    $maintain = new \Piwigo\Admin\DummyPluginMaintain('subprocess-plugin', $wsContext, $accessControl);
 
     $installErrors = [];
     $installResult = $maintain->install('1.0', $installErrors);
@@ -109,6 +144,7 @@ test('DummyPluginMaintain forwards to the real plugin_install/plugin_activate/pl
     ]);
     PHP;
 
+    $script = str_replace('__REPO_ROOT__', var_export(dirname($autoloadPath, 2), true), $script);
     $cmd = [PHP_BINARY, '-r', 'require ' . var_export($autoloadPath, true) . ';' . $script];
     $descriptors = [
         0 => ['file', '/dev/null', 'r'],

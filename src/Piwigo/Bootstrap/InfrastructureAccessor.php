@@ -7,6 +7,7 @@ namespace Piwigo\Bootstrap;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\WsContext;
 use Piwigo\Storage\StorageRegistry;
 
 /**
@@ -76,5 +77,21 @@ final class InfrastructureAccessor
             throw new \LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
         }
         return $storageRegistry;
+    }
+
+    /**
+     * Same rationale as currentLogger()/storageRegistry() above -- gives a
+     * still-static caller (e.g. Admin\Install\InstallService's own
+     * genuinely-static-context install flow) the real, container-shared
+     * WsContext instance, singleton/service-locator elimination campaign,
+     * Phase 11 sub-phase 11D.
+     */
+    public static function wsContext(): WsContext
+    {
+        $wsContext = Kernel::container()->get(WsContext::class);
+        if (! $wsContext instanceof WsContext) {
+            throw new \LogicException('Container returned an unexpected type for ' . WsContext::class);
+        }
+        return $wsContext;
     }
 }

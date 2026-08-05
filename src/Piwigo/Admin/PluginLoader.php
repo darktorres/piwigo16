@@ -8,7 +8,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Lifecycle\PluginsLoaded;
 use Piwigo\PluginConfig\PluginRepository;
@@ -49,7 +51,7 @@ final class PluginLoader
     /**
      * Loads all the registered plugins.
      */
-    public static function loadPlugins(LoadedPlugins $loadedPlugins, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Config\CurrentConfig $currentConfig): void
+    public static function loadPlugins(LoadedPlugins $loadedPlugins, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Config\CurrentConfig $currentConfig, WsContext $wsContext, AccessControl $accessControl): void
     {
         $loadedPlugins->set([]);
         if ($currentConfig->enablePlugins()) {
@@ -60,7 +62,7 @@ final class PluginLoader
                 // param, which a readonly Plugin object can't support (same
                 // "unbox where genuinely needed" shape as
                 // CategoryCatsRenderer's own unboxing).
-                self::loadPlugin($plugin->toArray(), $loadedPlugins, $activityService);
+                self::loadPlugin($plugin->toArray(), $loadedPlugins, $activityService, $wsContext, $accessControl);
             }
             $eventDispatcher->dispatchNotify(new PluginsLoaded());
         }
@@ -75,13 +77,13 @@ final class PluginLoader
      *   loadPlugins(), unboxes the repository's typed row there since this
      *   method needs mutable array semantics, not a readonly object)
      */
-    private static function loadPlugin(array $plugin, LoadedPlugins $loadedPlugins, \Piwigo\Activity\ActivityService $activityService): void
+    private static function loadPlugin(array $plugin, LoadedPlugins $loadedPlugins, \Piwigo\Activity\ActivityService $activityService, WsContext $wsContext, AccessControl $accessControl): void
     {
         $plugin_id = $plugin['id'];
 
         $file_name = self::pluginsPath() . $plugin_id . '/main.inc.php';
         if (file_exists($file_name)) {
-            self::autoupdatePlugin($plugin, $activityService);
+            self::autoupdatePlugin($plugin, $activityService, $wsContext, $accessControl);
             $loadedPlugins->add($plugin_id, $plugin);
             include_once $file_name;
         }
@@ -95,7 +97,7 @@ final class PluginLoader
      *   be updated if version changes - matches loadPlugin()'s own param
      *   shape (its only caller, already guards 'id' to string)
      */
-    private static function autoupdatePlugin(array &$plugin, \Piwigo\Activity\ActivityService $activityService): void
+    private static function autoupdatePlugin(array &$plugin, \Piwigo\Activity\ActivityService $activityService, WsContext $wsContext, AccessControl $accessControl): void
     {
         $plugin_id = $plugin['id'];
 
@@ -145,7 +147,7 @@ final class PluginLoader
                 // name (=plugin_id) and a class name can't have a "-". So we have to replace with a "_"
                 $classname = str_replace('-', '_', $classname);
 
-                $plugin_maintain = new $classname($plugin_id);
+                $plugin_maintain = new $classname($plugin_id, $wsContext, $accessControl);
                 if (! $plugin_maintain instanceof PluginMaintain) {
                     throw new \LogicException("PluginLoader::autoupdatePlugin(): {$classname} does not extend PluginMaintain");
                 }

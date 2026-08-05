@@ -9,6 +9,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
@@ -432,7 +433,7 @@ final class RequestBootstrap
         self::imageStdParams();
 
         session_start();
-        PluginLoader::loadPlugins(self::loadedPlugins(), \Piwigo\PluginConfig\EventDispatcher::get(), self::activityService($conn), self::currentConfig());
+        PluginLoader::loadPlugins(self::loadedPlugins(), \Piwigo\PluginConfig\EventDispatcher::get(), self::activityService($conn), self::currentConfig(), self::wsContext(), self::accessControl());
 
         if (self::currentConfig()->piwigoInstalledVersion() === null) {
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
@@ -1176,6 +1177,20 @@ final class RequestBootstrap
         }
 
         return $wsContext;
+    }
+
+    /**
+     * Resolves the container-shared instance -- singleton/service-locator
+     * elimination campaign, Phase 7.
+     */
+    private static function accessControl(): AccessControl
+    {
+        $accessControl = Kernel::container()->get(AccessControl::class);
+        if (! $accessControl instanceof AccessControl) {
+            throw new \LogicException('Container returned an unexpected type for ' . AccessControl::class);
+        }
+
+        return $accessControl;
     }
 
     /**

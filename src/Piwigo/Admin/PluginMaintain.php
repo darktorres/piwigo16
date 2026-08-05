@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Auth\AccessControl;
+use Piwigo\Core\WsContext;
+
 /**
  * Used to declare maintenance methods of a plugin.
  */
@@ -20,7 +23,9 @@ class PluginMaintain
      * @param string $plugin_id
      */
     public function __construct(
-        protected $plugin_id
+        protected $plugin_id,
+        private readonly WsContext $wsContext,
+        private readonly AccessControl $accessControl,
     ) {}
 
     /**
@@ -81,7 +86,7 @@ class PluginMaintain
      */
     public function autoUpdate(): void
     {
-        if (\Piwigo\Auth\AccessControl::current()->isAdmin() && ! \Piwigo\Core\WsContext::isActiveStatic()) {
+        if ($this->accessControl->isAdmin() && ! $this->wsContext->isActive()) {
             trigger_error('Function PluginMaintain::autoUpdate deprecated', E_USER_WARNING);
         }
     }

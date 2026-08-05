@@ -1067,19 +1067,20 @@ test('RequestMountDepth::currentStatic() transitional shim has a shrinking, know
 
 test('WsContext::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {
     // Singleton/service-locator elimination campaign, Phase 3:
-    // Piwigo\Admin\PluginMaintain (a base class extended by every
-    // third-party plugin's own maintain class -- its constructor
-    // signature isn't this campaign's to change), Piwigo\Url\UrlService
-    // (Phase 6), and Piwigo\Admin\Upload\UploadService::addUploadedFile()
-    // (reachable from the still-static Ws\PwgImages dispatch layer, Phase
-    // 10) all use this static shim instead of the real isActive() instance
-    // method (see that method's own docblock). Every phase that converts
-    // one more of these files should remove it from the allow-list below;
-    // once empty, delete the shim and this test.
+    // Piwigo\Url\UrlService (Phase 6), and
+    // Piwigo\Admin\Upload\UploadService::addUploadedFile() (reachable from
+    // the still-static Ws\PwgImages dispatch layer, Phase 10) use this
+    // static shim instead of the real isActive() instance method (see
+    // that method's own docblock). PluginMaintain.php closed this shim in
+    // Phase 11 sub-phase 11D -- real constructor injection now that
+    // external PEM plugin constructor compatibility is no longer a
+    // blocker (v17 already breaks all PEM extension compatibility).
+    // Every phase that converts one more of these files should remove it
+    // from the allow-list below; once empty, delete the shim and this
+    // test.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Admin/PluginMaintain.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Admin/Upload/UploadService.php',
     ];
@@ -1430,8 +1431,9 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
     // AccessControl::currentForCaching() instead -- see that method's own
     // docblock -- which doesn't match this test's `current(` search
     // pattern, so they simply never appear as a hit here. PluginMaintain.php
-    // is a plugin-extensible base class whose own constructor contract
-    // can't gain a new required param. Bootstrap/PageTail.php/
+    // closed this shim in Phase 11 sub-phase 11D -- real constructor
+    // injection now that external PEM plugin constructor compatibility is
+    // no longer a blocker. Bootstrap/PageTail.php/
     // Bootstrap/RequestBootstrap.php resolve it the same way every other
     // Bootstrap/-internal file resolves a not-yet-constructor-injected
     // collaborator. Ws/PwgServer.php/WsHelper.php both took real
@@ -1446,7 +1448,6 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
     $allowedFiles = [
         '/public/admin.php',
         '/public/random.php',
-        '/src/Piwigo/Admin/PluginMaintain.php',
         '/src/Piwigo/Bootstrap/PageTail.php',
         '/src/Piwigo/Bootstrap/RequestBootstrap.php',
         '/src/Piwigo/Category/CategoryService.php',

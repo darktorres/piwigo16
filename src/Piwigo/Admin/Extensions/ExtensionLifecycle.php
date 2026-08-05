@@ -9,12 +9,14 @@ use Piwigo\Admin\DummyPluginMaintain;
 use Piwigo\Admin\DummyThemeMaintain;
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Admin\ThemeMaintain;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Users\UserService;
 
@@ -78,6 +80,8 @@ final readonly class ExtensionLifecycle
         private UserService $userService,
         private \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
+        private WsContext $wsContext,
+        private AccessControl $accessControl,
     ) {}
 
     /**
@@ -506,7 +510,7 @@ final readonly class ExtensionLifecycle
 
         if (file_exists($fileToInclude . '.class.php')) {
             include_once $fileToInclude . '.class.php';
-            $maintain = new $classname($pluginId);
+            $maintain = new $classname($pluginId, $this->wsContext, $this->accessControl);
             if (! $maintain instanceof PluginMaintain) {
                 throw new \LogicException("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
             }
@@ -517,7 +521,7 @@ final readonly class ExtensionLifecycle
         if (file_exists($fileToInclude . '.inc.php')) {
             include_once $fileToInclude . '.inc.php';
             if (class_exists($classname)) {
-                $maintain = new $classname($pluginId);
+                $maintain = new $classname($pluginId, $this->wsContext, $this->accessControl);
                 if (! $maintain instanceof PluginMaintain) {
                     throw new \LogicException("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
                 }
@@ -526,7 +530,7 @@ final readonly class ExtensionLifecycle
             }
         }
 
-        return new DummyPluginMaintain($pluginId);
+        return new DummyPluginMaintain($pluginId, $this->wsContext, $this->accessControl);
     }
 
     private function buildThemeMaintain(string $themeId): ThemeMaintain

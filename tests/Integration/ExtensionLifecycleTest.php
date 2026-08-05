@@ -87,7 +87,11 @@ namespace Piwigo\Tests\Integration {
             self::assertInstanceOf(\Piwigo\Users\UserService::class, $userService);
             $htmlService = Kernel::container()->get(\Piwigo\Html\HtmlService::class);
             self::assertInstanceOf(\Piwigo\Html\HtmlService::class, $htmlService);
-            $this->lifecycle = new ExtensionLifecycle(\Piwigo\Core\Lang::current(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig);
+            $wsContext = Kernel::container()->get(\Piwigo\Core\WsContext::class);
+            self::assertInstanceOf(\Piwigo\Core\WsContext::class, $wsContext);
+            $accessControl = Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
+            self::assertInstanceOf(\Piwigo\Auth\AccessControl::class, $accessControl);
+            $this->lifecycle = new ExtensionLifecycle(\Piwigo\Core\Lang::current(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig, $wsContext, $accessControl);
 
             $currentConfig->setEnableExtensionsInstall(true);
             $currentConfig->setPhpExtensionInUrls(false);

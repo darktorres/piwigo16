@@ -662,6 +662,8 @@ define(\'DB_COLLATE\', \'\');
             \Piwigo\Bootstrap\CoreDomainAccessor::userService(),
             \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             $this->currentConfig,
+            \Piwigo\Bootstrap\InfrastructureAccessor::wsContext(),
+            \Piwigo\Bootstrap\CoreDomainAccessor::accessControl(),
         )->performAction(ExtensionType::Language, 'activate', $this->language, $this->fsLanguages[$this->language] ?? null);
 
         // fill CurrentConfig::$data from the freshly-seeded config table

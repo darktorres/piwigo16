@@ -107,7 +107,11 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         if (! $userService instanceof \Piwigo\Users\UserService) {
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
         }
-        $this->renderer = new ThemesInstalledPageRenderer(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), new RedirectService(\Piwigo\Core\Lang::current(), $userService), $urlService, $this->configService, $currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), $activityService, $userService, new HtmlService(), CurrentConfig::current());
+        $wsContext = Kernel::container()->get(\Piwigo\Core\WsContext::class);
+        if (! $wsContext instanceof \Piwigo\Core\WsContext) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\WsContext::class);
+        }
+        $this->renderer = new ThemesInstalledPageRenderer(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), new RedirectService(\Piwigo\Core\Lang::current(), $userService), $urlService, $this->configService, $currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), $activityService, $userService, new HtmlService(), CurrentConfig::current(), $wsContext);
 
         $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);

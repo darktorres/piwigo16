@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\PluginMaintain;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -57,6 +59,17 @@ function pluginMaintainSetUserStatus(UserStatus $status): void
     ));
 }
 
+function pluginMaintainBuild(): PluginMaintain
+{
+    $wsContext = Kernel::container()->get(WsContext::class);
+    $accessControl = Kernel::container()->get(AccessControl::class);
+    if (! $wsContext instanceof WsContext || ! $accessControl instanceof AccessControl) {
+        throw new \LogicException('Container returned an unexpected type');
+    }
+
+    return new PluginMaintain('some-plugin', $wsContext, $accessControl);
+}
+
 test('autoUpdate() triggers its deprecation warning for an admin user outside a WS request', function (): void {
     $capturedLevel = null;
     $capturedMessage = null;
@@ -79,7 +92,7 @@ test('autoUpdate() triggers its deprecation warning for an admin user outside a 
             [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
             static function (): void {
                 pluginMaintainSetUserStatus(UserStatus::Admin);
-                new PluginMaintain('some-plugin')->autoUpdate();
+                pluginMaintainBuild()->autoUpdate();
             }
         );
     } finally {
@@ -108,7 +121,7 @@ test('autoUpdate() stays silent for a webmaster user (a higher status than admin
             [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
             static function (): void {
                 pluginMaintainSetUserStatus(UserStatus::Webmaster);
-                new PluginMaintain('some-plugin')->autoUpdate();
+                pluginMaintainBuild()->autoUpdate();
             }
         );
     } finally {
@@ -131,7 +144,7 @@ test('autoUpdate() stays silent for a normal (non-admin) user', function (): voi
             [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
             static function (): void {
                 pluginMaintainSetUserStatus(UserStatus::Normal);
-                new PluginMaintain('some-plugin')->autoUpdate();
+                pluginMaintainBuild()->autoUpdate();
             }
         );
     } finally {
@@ -167,7 +180,7 @@ test('autoUpdate() stays silent for an admin user inside an active WS request', 
             ],
             static function (): void {
                 pluginMaintainSetUserStatus(UserStatus::Admin);
-                new PluginMaintain('some-plugin')->autoUpdate();
+                pluginMaintainBuild()->autoUpdate();
             }
         );
     } finally {

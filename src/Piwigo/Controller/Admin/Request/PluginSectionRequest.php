@@ -62,15 +62,15 @@ final readonly class PluginSectionRequest
         public array $sections,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArray($_GET);
+        return self::fromArray($_GET, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $source
      */
-    public static function fromArray(array $source): self
+    public static function fromArray(array $source, InputValidator $inputValidator): self
     {
         $section_param = $source['section'] ?? '';
         $section_str = is_string($section_param) ? $section_param : '';
@@ -80,7 +80,7 @@ final readonly class PluginSectionRequest
             static fn (string $segment): bool => $segment !== '',
         ));
 
-        $validator = InputValidator::createStatic();
+        $validator = $inputValidator;
         foreach ($sections as $section) {
             // Explicit "not literally .." check (not folded into the regex
             // below): a bare charset pattern can't distinguish "a dot
@@ -89,7 +89,7 @@ final readonly class PluginSectionRequest
             // fragile lookahead -- kept as a plain, obviously-correct
             // comparison instead.
             if ($section === '..') {
-                InputValidator::fail('[Hacking attempt] the input parameter "section" is not valid');
+                $validator->fail('[Hacking attempt] the input parameter "section" is not valid');
             }
             // Known, accepted trade-off: InputValidator::emptyValue()
             // treats a literal '0' the same as an absent value, so a
@@ -103,7 +103,7 @@ final readonly class PluginSectionRequest
         }
 
         if (count($sections) < 2) {
-            InputValidator::fail('[Hacking attempt] the input parameter "section" is not valid');
+            $validator->fail('[Hacking attempt] the input parameter "section" is not valid');
         }
 
         $plugin_id = $sections[0];

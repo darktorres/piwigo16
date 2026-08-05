@@ -92,6 +92,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly CategoryService $categoryService,
         private readonly \Piwigo\Html\HtmlService $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
@@ -99,7 +100,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
     {
         $template = $this->currentTemplate->get();
 
-        $batchManagerRequest = Request\BatchManagerRequest::fromGlobals();
+        $batchManagerRequest = Request\BatchManagerRequest::fromGlobals($this->inputValidator);
 
         $user_id = $this->currentUser->get()
             ->id->value;
@@ -177,7 +178,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             $this->batchManagerUnitPageRenderer
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig)
+            new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->inputValidator)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }
@@ -279,7 +280,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             }
 
             if (isset($post['filter_category_use'])) {
-                \Piwigo\Validation\InputValidator::createStatic()
+                $this->inputValidator
                     ->validate('filter_category', $post, false, ValidationPattern::ID);
 
                 $_SESSION['bulk_manager_filter']['category'] = $post['filter_category'];
@@ -316,7 +317,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             }
 
             if (isset($post['filter_level_use'])) {
-                \Piwigo\Validation\InputValidator::createStatic()
+                $this->inputValidator
                     ->validate('filter_level', $post, false, '/^\d+$/');
 
                 // $_POST['filter_level'] is a numeric string (validated by

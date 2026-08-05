@@ -130,6 +130,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Mail\MailService $mailService,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     /**
@@ -162,7 +163,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         // -------------------------------------------------------- sections definitions
 
-        $configurationRequest = Request\ConfigurationRequest::fromGlobals();
+        $configurationRequest = Request\ConfigurationRequest::fromGlobals($this->inputValidator);
 
         $page_section = $configurationRequest->section;
         $page['section'] = $page_section;
@@ -295,7 +296,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                     if ($this->currentConfig->orderByCustom() === null and $this->currentConfig->orderByInsideCategoryCustom() === null) {
                         if (! self::emptyValue($post['order_by'] ?? null)) {
-                            \Piwigo\Validation\InputValidator::createStatic()
+                            $this->inputValidator
                                 ->validate('order_by', $post, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
 
                             // check_input_parameter() above fatal_error()s unless

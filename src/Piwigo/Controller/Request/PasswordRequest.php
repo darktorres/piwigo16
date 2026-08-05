@@ -38,18 +38,18 @@ final readonly class PasswordRequest
         public string $passwordConf,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArrays($_GET, $_POST);
+        return self::fromArrays($_GET, $_POST, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $get
      * @param array<int|string, mixed> $post
      */
-    public static function fromArrays(array $get, array $post): self
+    public static function fromArrays(array $get, array $post, InputValidator $inputValidator): self
     {
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('action', $get, false, '/^(lost|reset|lost_code|reset_end|none)$/');
         $action_raw = $get['action'] ?? null;
         $action = is_string($action_raw) ? $action_raw : null;

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Controller\Admin\Request\ThemeIdRequest;
+use Piwigo\Validation\InputValidator;
 
 /**
  * A mutation-testing sweep found fromArray()'s own `is_string($theme_raw)
@@ -17,27 +18,27 @@ use Piwigo\Controller\Admin\Request\ThemeIdRequest;
  * either input.
  */
 test('fromArray accepts a well-formed theme id', function (): void {
-    $request = ThemeIdRequest::fromArray(['theme' => 'my-theme_2']);
+    $request = ThemeIdRequest::fromArray(['theme' => 'my-theme_2'], new InputValidator());
 
     expect($request->themeId)->toBe('my-theme_2');
 });
 
 test('fromArray rejects a missing theme param', function (): void {
-    expect(fn (): ThemeIdRequest => ThemeIdRequest::fromArray([]))
+    expect(fn (): ThemeIdRequest => ThemeIdRequest::fromArray([], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
 test('fromArray rejects an empty theme param', function (): void {
-    expect(fn (): ThemeIdRequest => ThemeIdRequest::fromArray(['theme' => '']))
+    expect(fn (): ThemeIdRequest => ThemeIdRequest::fromArray(['theme' => ''], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
 test('fromArray rejects a theme param with a path separator', function (): void {
-    expect(fn (): ThemeIdRequest => ThemeIdRequest::fromArray(['theme' => '../../etc/passwd']))
+    expect(fn (): ThemeIdRequest => ThemeIdRequest::fromArray(['theme' => '../../etc/passwd'], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
 test('fromArray rejects a non-string theme param', function (): void {
-    expect(fn (): ThemeIdRequest => ThemeIdRequest::fromArray(['theme' => ['nested' => 'array']]))
+    expect(fn (): ThemeIdRequest => ThemeIdRequest::fromArray(['theme' => ['nested' => 'array']], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });

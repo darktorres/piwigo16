@@ -64,9 +64,9 @@ final readonly class BatchManagerRequest
         public array $urlFilterTokens,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArrays($_GET, $_POST, $_REQUEST);
+        return self::fromArrays($_GET, $_POST, $_REQUEST, $inputValidator);
     }
 
     /**
@@ -74,11 +74,11 @@ final readonly class BatchManagerRequest
      * @param array<int|string, mixed> $post
      * @param array<int|string, mixed> $request
      */
-    public static function fromArrays(array $get, array $post, array $request): self
+    public static function fromArrays(array $get, array $post, array $request, InputValidator $inputValidator): self
     {
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('selection', $post, true, ValidationPattern::ID);
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('display', $request, false, '/^(\d+|all)$/');
 
         $page_raw = $get['page'] ?? null;
@@ -98,7 +98,7 @@ final readonly class BatchManagerRequest
 
         $tab = 'global';
         if (isset($get['mode'])) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('mode', $get, false, '/^(global|unit)$/');
             $tab = is_string($get['mode']) ? $get['mode'] : 'global';
         }
@@ -108,7 +108,7 @@ final readonly class BatchManagerRequest
 
         $nb_orphans_deleted = null;
         if ($action === 'delete_orphans' && isset($get['nb_orphans_deleted'])) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('nb_orphans_deleted', $get, false, '/^\d+$/');
             $nb_orphans_deleted_raw = $get['nb_orphans_deleted'];
             $nb_orphans_deleted = is_numeric($nb_orphans_deleted_raw) ? (int) $nb_orphans_deleted_raw : 0;
@@ -116,7 +116,7 @@ final readonly class BatchManagerRequest
 
         $nb_md5sum_added = null;
         if ($action === 'sync_md5sum' && isset($get['nb_md5sum_added'])) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('nb_md5sum_added', $get, false, '/^\d+$/');
             $nb_md5sum_added_raw = $get['nb_md5sum_added'];
             $nb_md5sum_added = is_numeric($nb_md5sum_added_raw) ? (int) $nb_md5sum_added_raw : 0;

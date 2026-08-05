@@ -47,16 +47,16 @@ final readonly class SiteUpdateRequest
         public array $post,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArrays($_GET, $_POST);
+        return self::fromArrays($_GET, $_POST, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $get
      * @param array<int|string, mixed> $post
      */
-    public static function fromArrays(array $get, array $post): self
+    public static function fromArrays(array $get, array $post, InputValidator $inputValidator): self
     {
         $site_raw = $get['site'] ?? null;
         $site = is_string($site_raw) ? $site_raw : null;
@@ -64,7 +64,7 @@ final readonly class SiteUpdateRequest
         $cat_id_raw = $get['cat_id'] ?? null;
         $cat_id = null;
         if (isset($get['cat_id'])) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('cat_id', $get, false, ValidationPattern::ID);
             $cat_id = is_string($cat_id_raw) ? $cat_id_raw : null;
         }

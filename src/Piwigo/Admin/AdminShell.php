@@ -70,6 +70,7 @@ final class AdminShell
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Html\HtmlService $htmlService,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     /**
@@ -108,7 +109,7 @@ final class AdminShell
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        $adminShellRequest = Request\AdminShellRequest::fromGlobals();
+        $adminShellRequest = Request\AdminShellRequest::fromGlobals($this->inputValidator);
 
         // +-------------------------------------------------------------------+
         // | Filesystem checks                                                 |
@@ -259,7 +260,7 @@ final class AdminShell
         // $_GET['tab'] is often used to perform and
         // include('admin_page_'.$_GET['tab'].'.php') : we need to protect it to
         // avoid any unexpected file inclusion
-        \Piwigo\Validation\InputValidator::createStatic()
+        $this->inputValidator
             ->validate('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 
         // +-------------------------------------------------------------------+

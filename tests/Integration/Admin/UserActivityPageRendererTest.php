@@ -171,7 +171,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
         }
 
-        new UserActivityPageRenderer()->render(Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->coreTabs, CurrentTemplate::current(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService);
+        new UserActivityPageRenderer()->render(Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->coreTabs, CurrentTemplate::current(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new \Piwigo\Validation\InputValidator());
 
         $template = CurrentTemplate::current()->get();
         self::assertSame([], $template->get_template_vars('ulist'));

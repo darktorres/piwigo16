@@ -28,28 +28,28 @@ final readonly class SearchQueryRequest
         public mixed $tagId,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArray($_GET);
+        return self::fromArray($_GET, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $source
      */
-    public static function fromArray(array $source): self
+    public static function fromArray(array $source, InputValidator $inputValidator): self
     {
         $q_raw = $source['q'] ?? null;
         $q = is_string($q_raw) ? $q_raw : '';
 
         $hasCatId = isset($source['cat_id']);
         if ($hasCatId) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('cat_id', $source, false, ValidationPattern::ID);
         }
 
         $hasTagId = isset($source['tag_id']);
         if ($hasTagId) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('tag_id', $source, false, '/^\d+(,\d+)*$/');
         }
 

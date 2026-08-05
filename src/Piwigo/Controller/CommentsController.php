@@ -67,6 +67,7 @@ final class CommentsController implements ControllerInterface
         private readonly \Piwigo\Html\HtmlService $htmlService,
         private readonly \Piwigo\Core\MailerInterface $mailer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
@@ -155,7 +156,7 @@ final class CommentsController implements ControllerInterface
 
         $this->eventDispatcher->dispatchNotify(new LocBeginComments());
 
-        $commentsRequest = Request\CommentsRequest::fromGlobals($comments_page_nb_comments);
+        $commentsRequest = Request\CommentsRequest::fromGlobals($comments_page_nb_comments, $this->inputValidator);
 
         $since = $commentsRequest->since !== null ? intval($commentsRequest->since) : 4;
 

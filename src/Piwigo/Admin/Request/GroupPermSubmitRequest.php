@@ -33,22 +33,22 @@ final readonly class GroupPermSubmitRequest
         public mixed $groupId,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArrays($_GET, $_POST);
+        return self::fromArrays($_GET, $_POST, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $get
      * @param array<int|string, mixed> $post
      */
-    public static function fromArrays(array $get, array $post): self
+    public static function fromArrays(array $get, array $post, InputValidator $inputValidator): self
     {
         $isSubmitted = $post !== [];
         if ($isSubmitted) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('cat_true', $post, true, ValidationPattern::ID);
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('cat_false', $post, true, ValidationPattern::ID);
         }
 
@@ -72,7 +72,7 @@ final readonly class GroupPermSubmitRequest
             }
         }
 
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('group_id', $get, false, ValidationPattern::ID);
 
         return new self(

@@ -75,6 +75,7 @@ final class BatchManagerGlobalPageRenderer
         private readonly ImageService $imageService,
         private readonly \Piwigo\Html\HtmlService $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     /**
@@ -100,7 +101,7 @@ final class BatchManagerGlobalPageRenderer
 
         $this->eventDispatcher->dispatchNotify(new LocBeginElementSetGlobal());
 
-        $batchManagerGlobalRequest = Request\BatchManagerGlobalRequest::fromGlobals();
+        $batchManagerGlobalRequest = Request\BatchManagerGlobalRequest::fromGlobals($this->inputValidator);
 
         // +-------------------------------------------------------------------+
         // |                            current selection                          |

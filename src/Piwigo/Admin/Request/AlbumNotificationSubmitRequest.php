@@ -30,15 +30,15 @@ final readonly class AlbumNotificationSubmitRequest
         public mixed $group,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArray($_POST);
+        return self::fromArray($_POST, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $post
      */
-    public static function fromArray(array $post): self
+    public static function fromArray(array $post, InputValidator $inputValidator): self
     {
         $mail_content = $post['mail_content'] ?? null;
         $mail_content = is_string($mail_content) ? $mail_content : '';
@@ -56,7 +56,7 @@ final readonly class AlbumNotificationSubmitRequest
         // $users output. Confirmed while investigating a mutation-testing
         // gap, same redundancy as the `group` sentinel array below.
         if ($who === 'users' and is_array($post_users) and count($post_users) > 0) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('users', $post, true, \Piwigo\Core\ValidationPattern::ID);
 
             foreach ($post_users as $post_user_id) {
@@ -78,7 +78,7 @@ final readonly class AlbumNotificationSubmitRequest
         // doesn't list -- still produce identical (non-throwing) behavior
         // either way. `who === 'group'` is the only real gate here.
         if ($who === 'group' and ! in_array($group, [null, false, 0, '0', '', []], true)) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('group', $post, false, \Piwigo\Core\ValidationPattern::ID);
         }
 

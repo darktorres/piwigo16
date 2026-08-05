@@ -114,6 +114,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Tag\TagService $tagService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     private function imageService(Connection $conn): ImageService
@@ -136,7 +137,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 ->fatalError('synchronization is disabled');
         }
 
-        $siteUpdateRequest = Request\SiteUpdateRequest::fromGlobals();
+        $siteUpdateRequest = Request\SiteUpdateRequest::fromGlobals($this->inputValidator);
 
         if (! is_numeric($siteUpdateRequest->siteRaw)) {
             $this->htmlRenderer

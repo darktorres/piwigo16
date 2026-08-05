@@ -62,6 +62,7 @@ final class LanguagesSubController implements AdminSubControllerInterface
         private readonly LanguagesInstalledPageRenderer $languagesInstalledPageRenderer,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
@@ -75,7 +76,7 @@ final class LanguagesSubController implements AdminSubControllerInterface
         // docblock).
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page=languages'));
 
-        $tab = Request\ExtensionTabRequest::fromGlobals('/^(installed|update|new)$/')->tab;
+        $tab = Request\ExtensionTabRequest::fromGlobals('/^(installed|update|new)$/', $this->inputValidator)->tab;
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('languages');

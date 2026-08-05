@@ -33,17 +33,17 @@ final readonly class RatingRequest
         public bool $isUsersGuest,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArray($_GET);
+        return self::fromArray($_GET, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $get
      */
-    public static function fromArray(array $get): self
+    public static function fromArray(array $get, InputValidator $inputValidator): self
     {
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('display', $get, false, ValidationPattern::ID);
 
         $start = 0;

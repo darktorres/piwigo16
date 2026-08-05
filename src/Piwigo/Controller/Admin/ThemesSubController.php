@@ -70,6 +70,7 @@ final class ThemesSubController implements AdminSubControllerInterface
         private readonly ThemesInstalledPageRenderer $themesInstalledPageRenderer,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
@@ -83,7 +84,7 @@ final class ThemesSubController implements AdminSubControllerInterface
         // docblock).
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page=themes'));
 
-        $tab = Request\ExtensionTabRequest::fromGlobals('/^(installed|update|new|standard_pages)$/')->tab;
+        $tab = Request\ExtensionTabRequest::fromGlobals('/^(installed|update|new|standard_pages)$/', $this->inputValidator)->tab;
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('themes');

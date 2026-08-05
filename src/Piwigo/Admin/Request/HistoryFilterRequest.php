@@ -23,21 +23,21 @@ final readonly class HistoryFilterRequest
         public bool $hasAnyFilter,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArray($_GET);
+        return self::fromArray($_GET, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $source
      */
-    public static function fromArray(array $source): self
+    public static function fromArray(array $source, InputValidator $inputValidator): self
     {
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('filter_ip', $source, false, '/^[0-9.]+$/');
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('filter_image_id', $source, false, '/^\d+$/');
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('filter_user_id', $source, false, '/^\d+$/');
 
         $ip = $source['filter_ip'] ?? null;

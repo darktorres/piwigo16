@@ -72,6 +72,7 @@ final class MaintenanceActionDispatcher
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly Lang $lang,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -215,7 +216,7 @@ final class MaintenanceActionDispatcher
 
             case 'derivatives':
 
-                $types_str = Request\DerivativesTypeRequest::fromGlobals()->typesStr;
+                $types_str = Request\DerivativesTypeRequest::fromGlobals($this->inputValidator)->typesStr;
                 if ($types_str === 'all') {
                     new DerivativeCacheService($this->currentConfig)
                         ->clearDerivativeCache($types_str);

@@ -59,6 +59,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Permalink\PermalinkService $permalinkService,
         private readonly \Piwigo\Category\CategoryService $categoryService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
@@ -69,7 +70,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         $htmlRenderer = $this->htmlRenderer;
         $conn = DbConnection::build();
 
-        $permalinksRequest = Request\PermalinksRequest::fromGlobals();
+        $permalinksRequest = Request\PermalinksRequest::fromGlobals($this->inputValidator);
 
         $selected_cat = [];
         $post_cat_id = $permalinksRequest->catId;

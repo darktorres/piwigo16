@@ -39,6 +39,7 @@ final class AlbumNotificationPageRenderer
         private readonly \Piwigo\Html\HtmlService $htmlService,
         private readonly \Piwigo\Mail\MailService $mailService,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     /**
@@ -74,7 +75,7 @@ final class AlbumNotificationPageRenderer
         // +-------------------------------------------------------------------+
 
         // info by email to an access granted group of category informations
-        $albumNotificationSubmit = Request\AlbumNotificationSubmitRequest::fromGlobals();
+        $albumNotificationSubmit = Request\AlbumNotificationSubmitRequest::fromGlobals($this->inputValidator);
 
         if ($albumNotificationSubmit->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()

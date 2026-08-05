@@ -35,6 +35,7 @@ final class CatOptionsPageRenderer
         private readonly ActivityService $activityService,
         private readonly CategoryService $categoryService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     public function render(): void
@@ -44,7 +45,7 @@ final class CatOptionsPageRenderer
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        $catOptionsRequest = Request\CatOptionsRequest::fromGlobals();
+        $catOptionsRequest = Request\CatOptionsRequest::fromGlobals($this->inputValidator);
 
         if ($catOptionsRequest->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()

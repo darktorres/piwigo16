@@ -83,6 +83,7 @@ final class BatchManagerUnitPageRenderer
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Html\HtmlService $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     /**
@@ -103,7 +104,7 @@ final class BatchManagerUnitPageRenderer
         // |                        unit mode form submission                      |
         // +-------------------------------------------------------------------+
 
-        $batchManagerUnitRequest = Request\BatchManagerUnitRequest::fromGlobals();
+        $batchManagerUnitRequest = Request\BatchManagerUnitRequest::fromGlobals($this->inputValidator);
 
         if ($batchManagerUnitRequest->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()

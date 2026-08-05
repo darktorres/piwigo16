@@ -34,6 +34,7 @@ final class GroupPermPageRenderer
         private readonly GroupService $groupService,
         private readonly \Piwigo\Permission\PermissionService $permissionService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     public function render(): void
@@ -45,7 +46,7 @@ final class GroupPermPageRenderer
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        $groupPermSubmit = Request\GroupPermSubmitRequest::fromGlobals();
+        $groupPermSubmit = Request\GroupPermSubmitRequest::fromGlobals($this->inputValidator);
 
         if ($groupPermSubmit->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()

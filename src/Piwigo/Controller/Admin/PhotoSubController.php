@@ -53,6 +53,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Image\ImageService $imageService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
@@ -68,7 +69,7 @@ final class PhotoSubController implements AdminSubControllerInterface
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        $photoDispatch = Request\PhotoDispatchRequest::fromGlobals(self::KNOWN_TABS);
+        $photoDispatch = Request\PhotoDispatchRequest::fromGlobals(self::KNOWN_TABS, $this->inputValidator);
         $get_image_id = $photoDispatch->imageId;
 
         $adminPhotoBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $get_image_id;
@@ -100,7 +101,7 @@ final class PhotoSubController implements AdminSubControllerInterface
                 ->render();
         } elseif ($this->currentConfig->isFormatsEnabled()) {
             new PictureFormatsPageRenderer()
-                ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer);
+                ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator);
         }
     }
 }

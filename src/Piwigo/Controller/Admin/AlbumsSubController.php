@@ -33,12 +33,13 @@ final class AlbumsSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Category\CategoryService $categoryService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new AlbumsPageRenderer()
-            ->render($this->lang, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->categoryAdminService, $this->categoryService, $this->htmlRenderer);
+            ->render($this->lang, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->categoryAdminService, $this->categoryService, $this->htmlRenderer, $this->inputValidator);
     }
 }

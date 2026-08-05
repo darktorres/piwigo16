@@ -64,6 +64,7 @@ final class ActionController implements ControllerInterface
         private readonly \Piwigo\Permission\PermissionService $permissionService,
         private readonly \Piwigo\Image\ImageService $imageService,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
@@ -73,7 +74,7 @@ final class ActionController implements ControllerInterface
 
         $conn = DbConnection::build();
 
-        $actionRequest = Request\ActionRequest::fromGlobals($this->currentConfig->isFormatsEnabled());
+        $actionRequest = Request\ActionRequest::fromGlobals($this->currentConfig->isFormatsEnabled(), $this->inputValidator);
 
         $format = null;
         if ($actionRequest->formatRequested) {

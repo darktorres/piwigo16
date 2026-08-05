@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Request\AdminShellRequest;
+use Piwigo\Validation\InputValidator;
 
 test('fromArrays returns defaults for an empty GET/POST', function (): void {
-    $request = AdminShellRequest::fromArrays([], []);
+    $request = AdminShellRequest::fromArrays([], [], new InputValidator());
 
     expect($request->pluginsNewOrderPresent)->toBeFalse()
         ->and($request->pluginsNewOrder)->toBeNull()
@@ -16,24 +17,24 @@ test('fromArrays returns defaults for an empty GET/POST', function (): void {
 });
 
 test('fromArrays rejects a malformed page', function (): void {
-    expect(fn (): AdminShellRequest => AdminShellRequest::fromArrays(['page' => 'bad page!'], []))
+    expect(fn (): AdminShellRequest => AdminShellRequest::fromArrays(['page' => 'bad page!'], [], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
 test('fromArrays rejects a malformed section', function (): void {
-    expect(fn (): AdminShellRequest => AdminShellRequest::fromArrays(['section' => '123'], []))
+    expect(fn (): AdminShellRequest => AdminShellRequest::fromArrays(['section' => '123'], [], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
 test('fromArrays reports pluginsNewOrderPresent and passes the raw value through', function (): void {
-    $request = AdminShellRequest::fromArrays(['plugins_new_order' => 'foo,bar'], []);
+    $request = AdminShellRequest::fromArrays(['plugins_new_order' => 'foo,bar'], [], new InputValidator());
 
     expect($request->pluginsNewOrderPresent)->toBeTrue()
         ->and($request->pluginsNewOrder)->toBe('foo,bar');
 });
 
 test('fromArrays builds changeThemeUrlParams in page/tab/section order', function (): void {
-    $request = AdminShellRequest::fromArrays(['change_theme' => '1', 'section' => 'default', 'page' => 'configuration', 'tab' => 3], []);
+    $request = AdminShellRequest::fromArrays(['change_theme' => '1', 'section' => 'default', 'page' => 'configuration', 'tab' => 3], [], new InputValidator());
 
     expect(array_keys($request->changeThemeUrlParams))->toBe(['page', 'tab', 'section'])
         ->and($request->changeThemeUrlParams['page'])->toBe('configuration')
@@ -42,19 +43,19 @@ test('fromArrays builds changeThemeUrlParams in page/tab/section order', functio
 });
 
 test('fromArrays skips a non-scalar changeThemeUrlParams entry', function (): void {
-    $request = AdminShellRequest::fromArrays(['tab' => ['x']], []);
+    $request = AdminShellRequest::fromArrays(['tab' => ['x']], [], new InputValidator());
 
     expect($request->changeThemeUrlParams)->toBe([]);
 });
 
 test('fromArrays strips page/section/tag from testGet but keeps other keys', function (): void {
-    $request = AdminShellRequest::fromArrays(['page' => 'cat_list', 'section' => 'x', 'tag' => 'y', 'start' => '10'], []);
+    $request = AdminShellRequest::fromArrays(['page' => 'cat_list', 'section' => 'x', 'tag' => 'y', 'start' => '10'], [], new InputValidator());
 
     expect($request->testGet)->toBe(['start' => '10']);
 });
 
 test('fromArrays reports isPostNonEmpty when POST has data', function (): void {
-    $request = AdminShellRequest::fromArrays([], ['submit' => '1']);
+    $request = AdminShellRequest::fromArrays([], ['submit' => '1'], new InputValidator());
 
     expect($request->isPostNonEmpty)->toBeTrue();
 });

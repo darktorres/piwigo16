@@ -31,18 +31,18 @@ final readonly class AlbumsRequest
         public mixed $rawId,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArrays($_GET, $_POST);
+        return self::fromArrays($_GET, $_POST, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $get
      * @param array<int|string, mixed> $post
      */
-    public static function fromArrays(array $get, array $post): self
+    public static function fromArrays(array $get, array $post, InputValidator $inputValidator): self
     {
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('parent_id', $get, false, ValidationPattern::ID);
 
         $simpleAutoOrder = isset($post['simpleAutoOrder']);
@@ -51,7 +51,7 @@ final readonly class AlbumsRequest
         $id = '';
         $rawId = null;
         if ($simpleAutoOrder || $recursiveAutoOrder) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('id', $post, false, '/^-?\d+$/');
             $rawId = $post['id'] ?? null;
             $id = is_string($rawId) ? $rawId : '';

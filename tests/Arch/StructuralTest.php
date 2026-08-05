@@ -1094,76 +1094,23 @@ test('WsContext::isActiveStatic() transitional shim has a shrinking, known allow
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
-test('InputValidator::createStatic() transitional shim has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 3: every one
-    // of InputValidator's real construction sites turned out to be a
-    // `Request\*Request::fromGlobals()` static factory (P26/SEC-40, ~40
-    // files) or another still-static caller (Piwigo\Admin\AdminShell,
+test('src/Piwigo/ contains no InputValidator::createStatic() calls', function (): void {
+    // Phase 11 sub-phase 11C close-out: every one of InputValidator's
+    // ~43 real construction sites (39 pure Request DTO
+    // fromGlobals()/fromArray()/fromArrays() static factories, plus 4 real
+    // classes calling it directly -- Piwigo\Admin\AdminShell,
     // Piwigo\Controller\Admin\{BatchManagerSubController,
-    // ConfigurationSubController,NotificationByMailSubController},
-    // Piwigo\Ws\PwgCore) -- none has an instance context to receive
-    // constructor injection through, so this static shim (see
-    // createStatic()'s own docblock) is genuinely this class's *primary*
-    // entry point today, not a rare straggler. This allow-list is
-    // unusually large and won't shrink until Request DTOs' own
-    // `fromGlobals()` static-factory pattern is itself reworked -- a
-    // separate, not-yet-planned initiative, not part of this campaign.
+    // ConfigurationSubController,NotificationByMailSubController}) now
+    // takes InputValidator as an explicit constructor/method parameter
+    // instead of reaching for the createStatic() shim -- the shim itself
+    // (and fail()'s own former static form, which called it internally)
+    // is deleted, so this is a zero-tolerance regression guard now, not a
+    // shrinking allow-list.
     $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-        '/src/Piwigo/Admin/AdminShell.php',
-        '/src/Piwigo/Admin/Install/Request/InstallWizardRequest.php',
-        '/src/Piwigo/Admin/Maintenance/Request/DerivativesTypeRequest.php',
-        '/src/Piwigo/Admin/Request/AdminShellRequest.php',
-        '/src/Piwigo/Admin/Request/AlbumNotificationSubmitRequest.php',
-        '/src/Piwigo/Admin/Request/AlbumsRequest.php',
-        '/src/Piwigo/Admin/Request/BatchManagerGlobalRequest.php',
-        '/src/Piwigo/Admin/Request/BatchManagerUnitRequest.php',
-        '/src/Piwigo/Admin/Request/CatListRequest.php',
-        '/src/Piwigo/Admin/Request/CatOptionsRequest.php',
-        '/src/Piwigo/Admin/Request/GroupPermSubmitRequest.php',
-        '/src/Piwigo/Admin/Request/HistoryFilterRequest.php',
-        '/src/Piwigo/Admin/Request/LanguagesInstalledActionRequest.php',
-        '/src/Piwigo/Admin/Request/PhotosAddDirectRequest.php',
-        '/src/Piwigo/Admin/Request/PictureCoiRequest.php',
-        '/src/Piwigo/Admin/Request/PictureFormatsImageIdRequest.php',
-        '/src/Piwigo/Admin/Request/PictureModifyRequest.php',
-        '/src/Piwigo/Admin/Request/RatingRequest.php',
-        '/src/Piwigo/Admin/Request/UpdatesPwgRequest.php',
-        '/src/Piwigo/Admin/Request/UserActivityRequest.php',
-        '/src/Piwigo/Admin/Request/UserListFilterRequest.php',
-        '/src/Piwigo/Admin/Request/UserPermSubmitRequest.php',
-        '/src/Piwigo/Controller/Admin/BatchManagerSubController.php',
-        '/src/Piwigo/Controller/Admin/ConfigurationSubController.php',
-        '/src/Piwigo/Controller/Admin/NotificationByMailSubController.php',
-        '/src/Piwigo/Controller/Admin/Request/BatchManagerRequest.php',
-        '/src/Piwigo/Controller/Admin/Request/ConfigurationRequest.php',
-        '/src/Piwigo/Controller/Admin/Request/ExtensionTabRequest.php',
-        '/src/Piwigo/Controller/Admin/Request/MaintenanceDispatchRequest.php',
-        '/src/Piwigo/Controller/Admin/Request/NotificationByMailRequest.php',
-        '/src/Piwigo/Controller/Admin/Request/PermalinksRequest.php',
-        '/src/Piwigo/Controller/Admin/Request/PhotoDispatchRequest.php',
-        '/src/Piwigo/Controller/Admin/Request/PluginSectionRequest.php',
-        '/src/Piwigo/Controller/Admin/Request/SiteUpdateRequest.php',
-        '/src/Piwigo/Controller/Admin/Request/ThemeIdRequest.php',
-        '/src/Piwigo/Controller/Admin/Request/UpdatesTabRequest.php',
-        '/src/Piwigo/Controller/Request/ActionRequest.php',
-        '/src/Piwigo/Controller/Request/CommentsRequest.php',
-        '/src/Piwigo/Controller/Request/FeedRequest.php',
-        '/src/Piwigo/Controller/Request/IdentificationSubmitRequest.php',
-        '/src/Piwigo/Controller/Request/PasswordRequest.php',
-        '/src/Piwigo/Controller/Request/PictureRequest.php',
-        '/src/Piwigo/Controller/Request/SearchQueryRequest.php',
-    ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'InputValidator::createStatic(');
 
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
+    expect(describeCallSites($hits))->toBe([]);
 });
 
 test('Translator::get() transitional bridge has a shrinking, known allow-list', function (): void {

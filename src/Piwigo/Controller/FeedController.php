@@ -42,6 +42,7 @@ final class FeedController implements ControllerInterface
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
@@ -54,7 +55,7 @@ final class FeedController implements ControllerInterface
         $feed_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Feed\FeedEntity::class);
         $notificationService = $this->notificationService;
 
-        $feedRequest = Request\FeedRequest::fromGlobals();
+        $feedRequest = Request\FeedRequest::fromGlobals($this->inputValidator);
         $feed_id = $feedRequest->feedId;
         $image_only = $feedRequest->imageOnly;
         // Only read below when $image_only is false, which implies $feed_id

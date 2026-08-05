@@ -69,6 +69,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         private readonly MaintenanceActionsPageRenderer $maintenanceActionsPageRenderer,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
@@ -82,7 +83,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         // docblock).
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
-        $maintenanceDispatch = Request\MaintenanceDispatchRequest::fromGlobals();
+        $maintenanceDispatch = Request\MaintenanceDispatchRequest::fromGlobals($this->inputValidator);
 
         if ($maintenanceDispatch->requiresCsrfCheck) {
             new \Piwigo\Csrf\CsrfService()

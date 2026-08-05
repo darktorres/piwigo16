@@ -43,18 +43,17 @@ final readonly class InstallWizardRequest
         public bool $isSendCredentialsByMail,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArrays($_GET, $_POST);
+        return self::fromArrays($_GET, $_POST, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $get
      * @param array<int|string, mixed> $post
      */
-    public static function fromArrays(array $get, array $post): self
+    public static function fromArrays(array $get, array $post, InputValidator $inputValidator): self
     {
-        $inputValidator = InputValidator::createStatic();
         $inputValidator->validate('dl', $get, false, '/^[a-f0-9]{32}$/');
         $inputValidator->validate('dbdriver', $post, false, '/^(mysqli|pgsql)$/');
         $inputValidator->validate('dbport', $post, false, '/^\d{1,5}$/');

@@ -32,12 +32,13 @@ final class ThemeSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        $theme = Request\ThemeIdRequest::fromGlobals()->themeId;
+        $theme = Request\ThemeIdRequest::fromGlobals($this->inputValidator)->themeId;
 
         $fs_themes = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $this->urlService, $this->lang);

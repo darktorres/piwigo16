@@ -16,13 +16,13 @@ use Piwigo\Image\ImageStdParams;
  */
 final class PictureFormatsPageRenderer
 {
-    public function render(\Piwigo\Core\Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(\Piwigo\Core\Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer, \Piwigo\Validation\InputValidator $inputValidator): void
     {
         $template = $currentTemplate->get();
 
         $accessControl->checkStatus(AccessLevel::Administrator);
 
-        $image_id = Request\PictureFormatsImageIdRequest::fromGlobals()->imageId;
+        $image_id = Request\PictureFormatsImageIdRequest::fromGlobals($inputValidator)->imageId;
 
         $conn = DbConnection::build();
         $imageRow = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)

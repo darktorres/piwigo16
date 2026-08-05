@@ -22,19 +22,19 @@ final readonly class LanguagesInstalledActionRequest
         public ?string $languageId,
     ) {}
 
-    public static function fromGlobals(string $languageIdPattern): self
+    public static function fromGlobals(string $languageIdPattern, InputValidator $inputValidator): self
     {
-        return self::fromArray($_GET, $languageIdPattern);
+        return self::fromArray($_GET, $languageIdPattern, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $source
      */
-    public static function fromArray(array $source, string $languageIdPattern): self
+    public static function fromArray(array $source, string $languageIdPattern, InputValidator $inputValidator): self
     {
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('action', $source, false, '/^(activate|deactivate|set_default|delete)$/');
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('language', $source, false, $languageIdPattern);
 
         $action = $source['action'] ?? null;

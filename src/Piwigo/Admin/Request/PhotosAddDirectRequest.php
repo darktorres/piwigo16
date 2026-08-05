@@ -38,20 +38,20 @@ final readonly class PhotosAddDirectRequest
         public bool $hideWarningsPresent,
     ) {}
 
-    public static function fromGlobals(bool $isFormatsEnabled): self
+    public static function fromGlobals(bool $isFormatsEnabled, InputValidator $inputValidator): self
     {
-        return self::fromArrays($_GET, $_POST, $isFormatsEnabled);
+        return self::fromArrays($_GET, $_POST, $isFormatsEnabled, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $get
      * @param array<int|string, mixed> $post
      */
-    public static function fromArrays(array $get, array $post, bool $isFormatsEnabled): self
+    public static function fromArrays(array $get, array $post, bool $isFormatsEnabled, InputValidator $inputValidator): self
     {
         $batch_present = isset($get['batch']);
         if ($batch_present) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('batch', $get, false, '/^\d+(,\d+)*$/');
         }
         $batch_raw = $get['batch'] ?? null;
@@ -72,7 +72,7 @@ final readonly class PhotosAddDirectRequest
             // is PHP-falsy -- the two sets are complementary, so
             // validate()'s own emptyValue() short-circuit (the only place
             // $mandatory is read) can never trigger on this call.
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('formats', $get, false, ValidationPattern::ID, false);
             $formats_raw = $get['formats'] ?? null;
             $formats_id = is_string($formats_raw) ? $formats_raw : '';
@@ -81,7 +81,7 @@ final readonly class PhotosAddDirectRequest
         $album_present = isset($get['album']);
         $album_id = null;
         if ($album_present) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('album', $get, false, ValidationPattern::ID);
             $album_id = is_numeric($get['album']) ? (int) $get['album'] : null;
         }

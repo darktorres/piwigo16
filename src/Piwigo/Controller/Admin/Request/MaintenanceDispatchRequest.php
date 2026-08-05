@@ -19,20 +19,20 @@ final readonly class MaintenanceDispatchRequest
         public string $tab,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArray($_GET);
+        return self::fromArray($_GET, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $source
      */
-    public static function fromArray(array $source): self
+    public static function fromArray(array $source, InputValidator $inputValidator): self
     {
         $requiresCsrfCheck = isset($source['action']);
 
         if (isset($source['tab'])) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('tab', $source, false, '/^(actions|env|sys)$/');
             $tab_raw = $source['tab'];
             $tab = is_string($tab_raw) ? $tab_raw : 'actions';

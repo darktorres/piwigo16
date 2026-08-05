@@ -45,6 +45,7 @@ final class UpdatesPwgPageRenderer
         private readonly ExtensionUpdateChecker $extensionUpdateChecker,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     public function render(): void
@@ -65,7 +66,7 @@ final class UpdatesPwgPageRenderer
         */
         [$ct_env, $ct_build_version] = \Piwigo\Core\ContainerDetector::detect();
 
-        $updatesPwgRequest = Request\UpdatesPwgRequest::fromGlobals($ct_env);
+        $updatesPwgRequest = Request\UpdatesPwgRequest::fromGlobals($ct_env, $this->inputValidator);
         $step = $updatesPwgRequest->step;
         $upgrade_to = $updatesPwgRequest->upgradeTo;
 

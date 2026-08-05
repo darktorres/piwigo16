@@ -174,6 +174,7 @@ final class InstallWizard
         private readonly DbCredentials $dbCredentials,
         private readonly \Piwigo\Config\CurrentConfigService $currentConfigService,
         private readonly CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {
         $conf_data_location = LegacyFileConf::read()['data_location'] ?? null;
         if (! is_string($conf_data_location)) {
@@ -193,7 +194,7 @@ final class InstallWizard
     public function boot(): void
     {
         // download database config file if exists
-        $this->request = Request\InstallWizardRequest::fromGlobals();
+        $this->request = Request\InstallWizardRequest::fromGlobals($this->inputValidator);
 
         $dl_param = $this->request->dl;
         if ($dl_param !== null && file_exists($this->paths->root . $this->confDataLocation . 'pwg_' . $dl_param)) {

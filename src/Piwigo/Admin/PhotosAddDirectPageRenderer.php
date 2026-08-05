@@ -55,6 +55,7 @@ final class PhotosAddDirectPageRenderer
         private readonly \Piwigo\Image\ImageService $imageService,
         private readonly \Piwigo\Users\PreferencesService $preferencesService,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     /**
@@ -82,7 +83,7 @@ final class PhotosAddDirectPageRenderer
         $user_id = $this->currentUser->get()
             ->id->value;
 
-        $photosAddDirectRequest = Request\PhotosAddDirectRequest::fromGlobals($this->currentConfig->isFormatsEnabled());
+        $photosAddDirectRequest = Request\PhotosAddDirectRequest::fromGlobals($this->currentConfig->isFormatsEnabled(), $this->inputValidator);
 
         // +-------------------------------------------------------------------+
         // |                        batch management request                   |

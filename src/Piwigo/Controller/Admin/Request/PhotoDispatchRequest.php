@@ -31,18 +31,18 @@ final readonly class PhotoDispatchRequest
     /**
      * @param list<string> $knownTabs
      */
-    public static function fromGlobals(array $knownTabs): self
+    public static function fromGlobals(array $knownTabs, InputValidator $inputValidator): self
     {
-        return self::fromArray($_GET, $knownTabs);
+        return self::fromArray($_GET, $knownTabs, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $source
      * @param list<string> $knownTabs
      */
-    public static function fromArray(array $source, array $knownTabs): self
+    public static function fromArray(array $source, array $knownTabs, InputValidator $inputValidator): self
     {
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('image_id', $source, false, ValidationPattern::ID);
 
         $get_image_id_raw = $source['image_id'] ?? null;

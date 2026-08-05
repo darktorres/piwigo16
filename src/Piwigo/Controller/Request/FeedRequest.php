@@ -20,17 +20,17 @@ final readonly class FeedRequest
         public bool $imageOnly,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArray($_GET);
+        return self::fromArray($_GET, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $source
      */
-    public static function fromArray(array $source): self
+    public static function fromArray(array $source, InputValidator $inputValidator): self
     {
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('feed', $source, false, '/^[0-9a-z]{50}$/i');
 
         $feed_id = $source['feed'] ?? '';

@@ -325,7 +325,7 @@ final class InstallWizardTest extends IntegrationTestCase
             'PIWIGO_DB_PREFIX' => $prefix,
         ]);
 
-        $wizard = new InstallWizard(\Piwigo\Core\Lang::current(), $prefix, $this->paths, $dbCredentials, \Piwigo\Config\CurrentConfigService::current(), CurrentConfig::current());
+        $wizard = new InstallWizard(\Piwigo\Core\Lang::current(), $prefix, $this->paths, $dbCredentials, \Piwigo\Config\CurrentConfigService::current(), CurrentConfig::current(), new \Piwigo\Validation\InputValidator());
         $wizard->boot();
 
         return $wizard;
@@ -411,7 +411,7 @@ final class InstallWizardTest extends IntegrationTestCase
         // the CurrentPaths::get() shim. KernelContainerOverride::with()
         // rebinds Paths::class for just this test's own scope instead.
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            $wizard = new InstallWizard(\Piwigo\Core\Lang::current(), 'itest_', $this->paths, DbCredentials::current(), \Piwigo\Config\CurrentConfigService::current(), CurrentConfig::current());
+            $wizard = new InstallWizard(\Piwigo\Core\Lang::current(), 'itest_', $this->paths, DbCredentials::current(), \Piwigo\Config\CurrentConfigService::current(), CurrentConfig::current(), new \Piwigo\Validation\InputValidator());
 
             self::assertSame('_data/', $this->reflectPrivate($wizard, 'confDataLocation'));
         });
@@ -425,7 +425,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $this->expectExceptionMessage("Invalid \$conf['data_location'] configuration: expected a string.");
 
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            new InstallWizard(\Piwigo\Core\Lang::current(), 'itest_', $this->paths, DbCredentials::current(), \Piwigo\Config\CurrentConfigService::current(), CurrentConfig::current());
+            new InstallWizard(\Piwigo\Core\Lang::current(), 'itest_', $this->paths, DbCredentials::current(), \Piwigo\Config\CurrentConfigService::current(), CurrentConfig::current(), new \Piwigo\Validation\InputValidator());
         });
     }
 

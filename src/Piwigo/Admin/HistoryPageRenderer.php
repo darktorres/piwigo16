@@ -49,7 +49,7 @@ final class HistoryPageRenderer
      * regardless, so there was never a real bridge here even in
      * principle.
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Validation\InputValidator $inputValidator): void
     {
         $template = $currentTemplate->get();
         $conn = DbConnection::build();
@@ -67,7 +67,7 @@ final class HistoryPageRenderer
 
         $accessControl->checkStatus(AccessLevel::Administrator);
 
-        $historyFilter = Request\HistoryFilterRequest::fromGlobals();
+        $historyFilter = Request\HistoryFilterRequest::fromGlobals($inputValidator);
 
         $template->set_filename('history', 'history.tpl');
 

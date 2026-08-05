@@ -34,23 +34,23 @@ final readonly class IdentificationSubmitRequest
         public bool $isRememberMe,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArrays($_GET, $_POST);
+        return self::fromArrays($_GET, $_POST, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $get
      * @param array<int|string, mixed> $post
      */
-    public static function fromArrays(array $get, array $post): self
+    public static function fromArrays(array $get, array $post, InputValidator $inputValidator): self
     {
         $post_redirect = $post['redirect'] ?? null;
         $post_redirect_decoded = is_string($post_redirect) ? urldecode($post_redirect) : null;
 
         // security (level 1): the redirect must occur within Piwigo, so the
         // redirect param must start with the relative home url
-        InputValidator::createStatic()
+        $inputValidator
             ->validate(
                 'redirect_decoded',
                 [

@@ -24,19 +24,19 @@ final readonly class UserListFilterRequest
         public bool $showAddUser,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArray($_GET);
+        return self::fromArray($_GET, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $source
      */
-    public static function fromArray(array $source): self
+    public static function fromArray(array $source, InputValidator $inputValidator): self
     {
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('group', $source, false, ValidationPattern::ID);
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('user_id', $source, false, ValidationPattern::ID);
 
         $group = $source['group'] ?? null;

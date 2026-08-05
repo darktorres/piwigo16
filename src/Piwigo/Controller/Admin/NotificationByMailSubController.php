@@ -99,6 +99,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Mail\NotificationByMailSender $notificationByMailSender,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
@@ -110,7 +111,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
         $nbmSender = $this->notificationByMailSender;
 
-        $notificationByMailRequest = Request\NotificationByMailRequest::fromGlobals();
+        $notificationByMailRequest = Request\NotificationByMailRequest::fromGlobals($this->inputValidator);
         $page_mode = $notificationByMailRequest->pageMode;
         $post = $notificationByMailRequest->post;
 
@@ -160,11 +161,11 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                     $nbm_send_mail_as = $post['nbm_send_mail_as'] ?? null;
                     $post['nbm_send_mail_as'] = strip_tags(is_string($nbm_send_mail_as) ? $nbm_send_mail_as : '');
 
-                    \Piwigo\Validation\InputValidator::createStatic()
+                    $this->inputValidator
                         ->validate('nbm_send_html_mail', $post, false, '/^(true|false)$/');
-                    \Piwigo\Validation\InputValidator::createStatic()
+                    $this->inputValidator
                         ->validate('nbm_send_detailed_content', $post, false, '/^(true|false)$/');
-                    \Piwigo\Validation\InputValidator::createStatic()
+                    $this->inputValidator
                         ->validate('nbm_send_recent_post_dates', $post, false, '/^(true|false)$/');
 
                     $updated_param_count = 0;

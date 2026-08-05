@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Request\PictureCoiRequest;
+use Piwigo\Validation\InputValidator;
 
 test('fromArrays returns defaults for an empty GET/POST', function (): void {
-    $request = PictureCoiRequest::fromArrays([], []);
+    $request = PictureCoiRequest::fromArrays([], [], new InputValidator());
 
     expect($request->imageId)->toBe(0)
         ->and($request->isSubmitted)->toBeFalse()
@@ -13,30 +14,30 @@ test('fromArrays returns defaults for an empty GET/POST', function (): void {
 });
 
 test('fromArrays parses a numeric image_id', function (): void {
-    $request = PictureCoiRequest::fromArrays(['image_id' => '12'], []);
+    $request = PictureCoiRequest::fromArrays(['image_id' => '12'], [], new InputValidator());
 
     expect($request->imageId)->toBe(12);
 });
 
 test('fromArrays rejects a non-digit image_id', function (): void {
-    expect(fn (): PictureCoiRequest => PictureCoiRequest::fromArrays(['image_id' => '1; DROP TABLE'], []))
+    expect(fn (): PictureCoiRequest => PictureCoiRequest::fromArrays(['image_id' => '1; DROP TABLE'], [], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
 test('fromArrays reports isSubmitted when submit is present', function (): void {
-    $request = PictureCoiRequest::fromArrays([], ['submit' => '1']);
+    $request = PictureCoiRequest::fromArrays([], ['submit' => '1'], new InputValidator());
 
     expect($request->isSubmitted)->toBeTrue();
 });
 
 test('fromArrays leaves coi null when l is absent', function (): void {
-    $request = PictureCoiRequest::fromArrays([], ['submit' => '1', 't' => '0.1', 'r' => '0.2', 'b' => '0.3']);
+    $request = PictureCoiRequest::fromArrays([], ['submit' => '1', 't' => '0.1', 'r' => '0.2', 'b' => '0.3'], new InputValidator());
 
     expect($request->coi)->toBeNull();
 });
 
 test('fromArrays leaves coi null when l is an empty string', function (): void {
-    $request = PictureCoiRequest::fromArrays([], ['submit' => '1', 'l' => '']);
+    $request = PictureCoiRequest::fromArrays([], ['submit' => '1', 'l' => ''], new InputValidator());
 
     expect($request->coi)->toBeNull();
 });
@@ -48,7 +49,7 @@ test('fromArrays computes a 4-char coi code when l is a non-empty string', funct
         't' => '0',
         'r' => '1',
         'b' => '1',
-    ]);
+    ], new InputValidator());
 
     \PHPUnit\Framework\Assert::assertIsString($request->coi);
     expect($request->coi)->toBeString()
@@ -66,7 +67,7 @@ test('fromArrays computes the exact coi code, in l/t/r/b order', function (): vo
         't' => '0.25',
         'r' => '0.5',
         'b' => '1',
-    ]);
+    ], new InputValidator());
 
     expect($request->coi)->toBe('agnz');
 });
@@ -78,7 +79,7 @@ test('fromArrays treats a non-numeric t/r/b as an exact zero fraction, not some 
         't' => 'not-a-number',
         'r' => 'not-a-number',
         'b' => 'not-a-number',
-    ]);
+    ], new InputValidator());
 
     expect($request->coi)->toBe('aaaa');
 });

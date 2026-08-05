@@ -40,6 +40,7 @@ final class SearchController implements ControllerInterface
         private readonly \Piwigo\Image\ImageService $imageService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
@@ -106,7 +107,7 @@ final class SearchController implements ControllerInterface
             $fields = is_array($raw_fields) ? $raw_fields : $default_fields;
         }
 
-        $searchQuery = Request\SearchQueryRequest::fromGlobals();
+        $searchQuery = Request\SearchQueryRequest::fromGlobals($this->inputValidator);
 
         $words = [];
         $q = $searchQuery->q;

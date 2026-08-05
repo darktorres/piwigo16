@@ -47,21 +47,21 @@ final readonly class BatchManagerUnitRequest
         public int $display,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArrays($_GET, $_POST);
+        return self::fromArrays($_GET, $_POST, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $get
      * @param array<int|string, mixed> $post
      */
-    public static function fromArrays(array $get, array $post): self
+    public static function fromArrays(array $get, array $post, InputValidator $inputValidator): self
     {
         $is_submitted = isset($post['submit']);
         $element_ids = '';
         if ($is_submitted) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('element_ids', $post, false, '/^\d+(,\d+)*$/');
             $element_ids_raw = $post['element_ids'] ?? null;
             $element_ids = is_string($element_ids_raw) ? $element_ids_raw : '';
@@ -70,7 +70,7 @@ final readonly class BatchManagerUnitRequest
         $nb_photos_deleted_present = isset($post['nb_photos_deleted']);
         $nb_photos_deleted = 0;
         if ($nb_photos_deleted_present) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('nb_photos_deleted', $post, false, '/^\d+$/');
             $nb_photos_deleted = is_numeric($post['nb_photos_deleted']) ? (int) $post['nb_photos_deleted'] : 0;
         }

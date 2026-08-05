@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 use Piwigo\Controller\Admin\Request\SiteUpdateRequest;
+use Piwigo\Validation\InputValidator;
 
 test('fromArrays returns defaults for an empty GET/POST', function (): void {
-    $request = SiteUpdateRequest::fromArrays([], []);
+    $request = SiteUpdateRequest::fromArrays([], [], new InputValidator());
 
     expect($request->siteRaw)->toBeNull()
         ->and($request->quickSyncRequested)->toBeFalse()
@@ -14,30 +15,30 @@ test('fromArrays returns defaults for an empty GET/POST', function (): void {
 });
 
 test('fromArrays reads the raw site value', function (): void {
-    $request = SiteUpdateRequest::fromArrays(['site' => '2'], []);
+    $request = SiteUpdateRequest::fromArrays(['site' => '2'], [], new InputValidator());
 
     expect($request->siteRaw)->toBe('2');
 });
 
 test('fromArrays reports quickSyncRequested when quick_sync is present', function (): void {
-    $request = SiteUpdateRequest::fromArrays(['quick_sync' => '1'], []);
+    $request = SiteUpdateRequest::fromArrays(['quick_sync' => '1'], [], new InputValidator());
 
     expect($request->quickSyncRequested)->toBeTrue();
 });
 
 test('fromArrays validates and parses a numeric cat_id', function (): void {
-    $request = SiteUpdateRequest::fromArrays(['cat_id' => '42'], []);
+    $request = SiteUpdateRequest::fromArrays(['cat_id' => '42'], [], new InputValidator());
 
     expect($request->catId)->toBe('42');
 });
 
 test('fromArrays rejects a non-digit cat_id', function (): void {
-    expect(fn (): SiteUpdateRequest => SiteUpdateRequest::fromArrays(['cat_id' => 'abc'], []))
+    expect(fn (): SiteUpdateRequest => SiteUpdateRequest::fromArrays(['cat_id' => 'abc'], [], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
 test('fromArrays retains the full raw post bag', function (): void {
-    $request = SiteUpdateRequest::fromArrays([], ['sync' => 'files', 'cat' => '5']);
+    $request = SiteUpdateRequest::fromArrays([], ['sync' => 'files', 'cat' => '5'], new InputValidator());
 
     expect($request->post)->toBe(['sync' => 'files', 'cat' => '5']);
 });

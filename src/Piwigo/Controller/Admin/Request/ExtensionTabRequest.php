@@ -21,18 +21,18 @@ final readonly class ExtensionTabRequest
         public string $tab,
     ) {}
 
-    public static function fromGlobals(string $pattern): self
+    public static function fromGlobals(string $pattern, InputValidator $inputValidator): self
     {
-        return self::fromArray($_GET, $pattern);
+        return self::fromArray($_GET, $pattern, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $source
      */
-    public static function fromArray(array $source, string $pattern): self
+    public static function fromArray(array $source, string $pattern, InputValidator $inputValidator): self
     {
         if (isset($source['tab'])) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('tab', $source, false, $pattern);
             $tab_raw = $source['tab'];
             $tab = is_string($tab_raw) ? $tab_raw : 'installed';

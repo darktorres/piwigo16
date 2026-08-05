@@ -29,21 +29,21 @@ final readonly class UserActivityRequest
         private array $source,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArray($_GET);
+        return self::fromArray($_GET, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $source
      */
-    public static function fromArray(array $source): self
+    public static function fromArray(array $source, InputValidator $inputValidator): self
     {
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('photo', $source, false, ValidationPattern::ID);
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('album', $source, false, ValidationPattern::ID);
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('group', $source, false, ValidationPattern::ID);
 
         return new self(($source['type'] ?? null) === 'download_logs', $source);

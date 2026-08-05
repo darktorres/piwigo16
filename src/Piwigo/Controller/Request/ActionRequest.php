@@ -42,15 +42,15 @@ final readonly class ActionRequest
         public bool $downloadPresent,
     ) {}
 
-    public static function fromGlobals(bool $isFormatsEnabled): self
+    public static function fromGlobals(bool $isFormatsEnabled, InputValidator $inputValidator): self
     {
-        return self::fromArray($_GET, $isFormatsEnabled);
+        return self::fromArray($_GET, $isFormatsEnabled, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $get
      */
-    public static function fromArray(array $get, bool $isFormatsEnabled): self
+    public static function fromArray(array $get, bool $isFormatsEnabled, InputValidator $inputValidator): self
     {
         $id = null;
         if (isset($get['id']) and is_numeric($get['id'])) {
@@ -63,7 +63,7 @@ final readonly class ActionRequest
         $format_requested = $isFormatsEnabled && isset($get['format']);
         $format_id = null;
         if ($format_requested) {
-            InputValidator::createStatic()
+            $inputValidator
                 ->validate('format', $get, false, ValidationPattern::ID);
             $format_id = is_numeric($get['format']) ? (int) $get['format'] : null;
         }

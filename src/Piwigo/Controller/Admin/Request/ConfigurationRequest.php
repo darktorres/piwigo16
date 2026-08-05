@@ -48,9 +48,9 @@ final readonly class ConfigurationRequest
         public array $files,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArrays($_GET, $_POST, $_FILES);
+        return self::fromArrays($_GET, $_POST, $_FILES, $inputValidator);
     }
 
     /**
@@ -58,9 +58,9 @@ final readonly class ConfigurationRequest
      * @param array<int|string, mixed> $post
      * @param array<int|string, mixed> $files
      */
-    public static function fromArrays(array $get, array $post, array $files): self
+    public static function fromArrays(array $get, array $post, array $files, InputValidator $inputValidator): self
     {
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('section', $get, false, '/^[a-z]+$/i');
 
         $section_raw = $get['section'] ?? null;

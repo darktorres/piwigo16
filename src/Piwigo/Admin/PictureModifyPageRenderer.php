@@ -60,6 +60,7 @@ final class PictureModifyPageRenderer
         private readonly PermissionService $permissionService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     public function render(string $adminPhotoBaseUrl): void
@@ -88,7 +89,7 @@ final class PictureModifyPageRenderer
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        $pictureModifyRequest = Request\PictureModifyRequest::fromGlobals();
+        $pictureModifyRequest = Request\PictureModifyRequest::fromGlobals($this->inputValidator);
 
         $image_id = $pictureModifyRequest->imageId;
 

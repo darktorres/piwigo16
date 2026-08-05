@@ -117,6 +117,7 @@ final class PictureController implements ControllerInterface
         private readonly \Piwigo\Html\HtmlService $htmlService,
         private readonly PictureRateRenderer $pictureRateRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     private function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
@@ -280,7 +281,7 @@ final class PictureController implements ControllerInterface
             }
         }
 
-        $pictureRequest = Request\PictureRequest::fromGlobals();
+        $pictureRequest = Request\PictureRequest::fromGlobals($this->inputValidator);
         // Mutated below (the edit_comment case's own successful-submission
         // path) to reflect the original's unset($_POST['content']) --
         // read again much further down to decide whether to increment the

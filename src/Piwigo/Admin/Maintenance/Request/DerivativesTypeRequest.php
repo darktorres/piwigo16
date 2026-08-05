@@ -29,20 +29,20 @@ final readonly class DerivativesTypeRequest
         public string $typesStr,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArray($_GET);
+        return self::fromArray($_GET, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $source
      */
-    public static function fromArray(array $source): self
+    public static function fromArray(array $source, InputValidator $inputValidator): self
     {
         $types_str = $source['type'] ?? '';
         $types_str = is_string($types_str) ? $types_str : '';
 
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('type', [
                 'type' => $types_str,
             ], false, '/^[a-zA-Z0-9_]+$/');

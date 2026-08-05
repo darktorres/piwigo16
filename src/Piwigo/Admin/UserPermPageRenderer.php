@@ -32,6 +32,7 @@ final class UserPermPageRenderer
         private readonly CategoryService $categoryService,
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     public function render(): void
@@ -45,7 +46,7 @@ final class UserPermPageRenderer
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        $userPermSubmit = Request\UserPermSubmitRequest::fromGlobals();
+        $userPermSubmit = Request\UserPermSubmitRequest::fromGlobals($this->inputValidator);
 
         if ($userPermSubmit->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()

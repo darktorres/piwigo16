@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 use Piwigo\Auth\CookieService;
 use Piwigo\Controller\Request\IdentificationSubmitRequest;
+use Piwigo\Validation\InputValidator;
 
 test('fromArrays returns defaults for an empty GET/POST', function (): void {
-    $request = IdentificationSubmitRequest::fromArrays([], []);
+    $request = IdentificationSubmitRequest::fromArrays([], [], new InputValidator());
 
     expect($request->postRedirectDecoded)->toBeNull()
         ->and($request->getRedirect)->toBeNull()
@@ -18,32 +19,32 @@ test('fromArrays returns defaults for an empty GET/POST', function (): void {
 });
 
 test('fromArrays decodes redirect from GET', function (): void {
-    $request = IdentificationSubmitRequest::fromArrays(['redirect' => 'admin.php%3Fpage%3Dcat_list'], []);
+    $request = IdentificationSubmitRequest::fromArrays(['redirect' => 'admin.php%3Fpage%3Dcat_list'], [], new InputValidator());
 
     expect($request->getRedirect)->toBe('admin.php%3Fpage%3Dcat_list');
 });
 
 test('fromArrays returns null getRedirect for an empty string', function (): void {
-    $request = IdentificationSubmitRequest::fromArrays(['redirect' => ''], []);
+    $request = IdentificationSubmitRequest::fromArrays(['redirect' => ''], [], new InputValidator());
 
     expect($request->getRedirect)->toBeNull();
 });
 
 test('fromArrays reports hideRedirectErrorPresent when present', function (): void {
-    $request = IdentificationSubmitRequest::fromArrays(['hide_redirect_error' => '1'], []);
+    $request = IdentificationSubmitRequest::fromArrays(['hide_redirect_error' => '1'], [], new InputValidator());
 
     expect($request->hideRedirectErrorPresent)->toBeTrue();
 });
 
 test('fromArrays decodes postRedirectDecoded from a string POST redirect', function (): void {
     $decoded = new CookieService()->cookiePath() . 'admin.php?page=cat_list';
-    $request = IdentificationSubmitRequest::fromArrays([], ['redirect' => urlencode($decoded)]);
+    $request = IdentificationSubmitRequest::fromArrays([], ['redirect' => urlencode($decoded)], new InputValidator());
 
     expect($request->postRedirectDecoded)->toBe($decoded);
 });
 
 test('fromArrays rejects a decoded POST redirect outside the cookie path', function (): void {
-    expect(fn (): IdentificationSubmitRequest => IdentificationSubmitRequest::fromArrays([], ['redirect' => 'https%3A%2F%2Fevil.example%2F']))
+    expect(fn (): IdentificationSubmitRequest => IdentificationSubmitRequest::fromArrays([], ['redirect' => 'https%3A%2F%2Fevil.example%2F'], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
@@ -53,7 +54,7 @@ test('fromArrays parses a full login submission', function (): void {
         'username' => 'alice',
         'password' => 'secret',
         'remember_me' => '1',
-    ]);
+    ], new InputValidator());
 
     expect($request->isLoginSubmitted)->toBeTrue()
         ->and($request->username)->toBe('alice')
@@ -62,20 +63,20 @@ test('fromArrays parses a full login submission', function (): void {
 });
 
 test('fromArrays normalizes a non-string username to an empty string', function (): void {
-    $request = IdentificationSubmitRequest::fromArrays([], ['username' => ['x']]);
+    $request = IdentificationSubmitRequest::fromArrays([], ['username' => ['x']], new InputValidator());
 
     expect($request->username)->toBe('');
 });
 
 test('fromArrays keeps password null when absent', function (): void {
-    $request = IdentificationSubmitRequest::fromArrays([], ['login' => '1']);
+    $request = IdentificationSubmitRequest::fromArrays([], ['login' => '1'], new InputValidator());
 
     expect($request->password)->toBeNull();
 });
 
 test('fromArrays requires remember_me to be the literal string 1', function (): void {
-    expect(IdentificationSubmitRequest::fromArrays([], ['remember_me' => '0'])->isRememberMe)->toBeFalse()
-        ->and(IdentificationSubmitRequest::fromArrays([], ['remember_me' => '1'])->isRememberMe)->toBeTrue();
+    expect(IdentificationSubmitRequest::fromArrays([], ['remember_me' => '0'], new InputValidator())->isRememberMe)->toBeFalse()
+        ->and(IdentificationSubmitRequest::fromArrays([], ['remember_me' => '1'], new InputValidator())->isRememberMe)->toBeTrue();
 });
 
 /**
@@ -92,5 +93,5 @@ test('fromArrays requires remember_me to be the literal string 1', function (): 
  * producing the identical isRememberMe result either way.
  */
 test('fromArrays treats a non-string remember_me the same as absent', function (): void {
-    expect(IdentificationSubmitRequest::fromArrays([], ['remember_me' => ['1']])->isRememberMe)->toBeFalse();
+    expect(IdentificationSubmitRequest::fromArrays([], ['remember_me' => ['1']], new InputValidator())->isRememberMe)->toBeFalse();
 });

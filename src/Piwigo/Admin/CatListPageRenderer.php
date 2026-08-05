@@ -51,6 +51,7 @@ final class CatListPageRenderer
         private readonly \Piwigo\Category\CategoryService $categoryService,
         private readonly \Piwigo\Html\HtmlService $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     public function render(): void
@@ -61,7 +62,7 @@ final class CatListPageRenderer
 
         $this->eventDispatcher->dispatchNotify(new LocBeginCatList());
 
-        $catListRequest = Request\CatListRequest::fromGlobals();
+        $catListRequest = Request\CatListRequest::fromGlobals($this->inputValidator);
 
         if ($catListRequest->isCsrfCheckRequired) {
             new \Piwigo\Csrf\CsrfService()

@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Request\CatOptionsRequest;
+use Piwigo\Validation\InputValidator;
 
 test('fromArrays returns defaults for an empty GET/POST', function (): void {
-    $request = CatOptionsRequest::fromArrays([], []);
+    $request = CatOptionsRequest::fromArrays([], [], new InputValidator());
 
     expect($request->isSubmitted)->toBeFalse()
         ->and($request->catTrue)->toBe([])
@@ -20,7 +21,7 @@ test('fromArrays parses a falsify submission', function (): void {
     $request = CatOptionsRequest::fromArrays(['section' => 'visible'], [
         'falsify' => '1',
         'cat_true' => ['1', '2'],
-    ]);
+    ], new InputValidator());
 
     expect($request->isSubmitted)->toBeTrue()
         ->and($request->isFalsify)->toBeTrue()
@@ -30,28 +31,28 @@ test('fromArrays parses a falsify submission', function (): void {
 });
 
 test('fromArrays rejects a non-digit cat_true element', function (): void {
-    expect(fn (): CatOptionsRequest => CatOptionsRequest::fromArrays([], ['cat_true' => ['1; DROP TABLE']]))
+    expect(fn (): CatOptionsRequest => CatOptionsRequest::fromArrays([], ['cat_true' => ['1; DROP TABLE']], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
 test('fromArrays rejects a non-digit cat_false element', function (): void {
-    expect(fn (): CatOptionsRequest => CatOptionsRequest::fromArrays([], ['cat_false' => ['1; DROP TABLE']]))
+    expect(fn (): CatOptionsRequest => CatOptionsRequest::fromArrays([], ['cat_false' => ['1; DROP TABLE']], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
 test('fromArrays rejects a malformed section when POST is non-empty', function (): void {
-    expect(fn (): CatOptionsRequest => CatOptionsRequest::fromArrays(['section' => 'bad;section'], ['falsify' => '1']))
+    expect(fn (): CatOptionsRequest => CatOptionsRequest::fromArrays(['section' => 'bad;section'], ['falsify' => '1'], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
 test('fromArrays defaults sectionRaw to an empty string when section is present but not a string', function (): void {
-    $request = CatOptionsRequest::fromArrays(['section' => ['x']], []);
+    $request = CatOptionsRequest::fromArrays(['section' => ['x']], [], new InputValidator());
 
     expect($request->sectionRaw)->toBe('');
 });
 
 test('fromArrays defaults section to status for an unrecognized value', function (): void {
-    $request = CatOptionsRequest::fromArrays(['section' => 'unknown'], []);
+    $request = CatOptionsRequest::fromArrays(['section' => 'unknown'], [], new InputValidator());
 
     expect($request->section)->toBe('status')
         ->and($request->sectionRaw)->toBe('unknown');
@@ -61,7 +62,7 @@ test('fromArrays parses a trueify submission', function (): void {
     $request = CatOptionsRequest::fromArrays([], [
         'trueify' => '1',
         'cat_false' => ['3', '4'],
-    ]);
+    ], new InputValidator());
 
     expect($request->isTrueify)->toBeTrue()
         ->and($request->catFalse)->toBe([3, 4]);
@@ -69,6 +70,6 @@ test('fromArrays parses a trueify submission', function (): void {
 
 test('fromArrays recognizes all 4 known section values', function (): void {
     foreach (['comments', 'visible', 'status', 'representative'] as $section) {
-        expect(CatOptionsRequest::fromArrays(['section' => $section], [])->section)->toBe($section);
+        expect(CatOptionsRequest::fromArrays(['section' => $section], [], new InputValidator())->section)->toBe($section);
     }
 });

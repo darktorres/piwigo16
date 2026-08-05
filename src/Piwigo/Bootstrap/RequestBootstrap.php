@@ -1076,6 +1076,22 @@ final class RequestBootstrap
     }
 
     /**
+     * Public, same reason as currentTemplate()/currentConfig() above:
+     * public/admin.php's own legacy-style `new AdminShell(...)` manual
+     * construction needs a way to reach a container-shared InputValidator
+     * without going through the (now-closed) createStatic() shim.
+     */
+    public static function inputValidator(): \Piwigo\Validation\InputValidator
+    {
+        $inputValidator = Kernel::container()->get(\Piwigo\Validation\InputValidator::class);
+        if (! $inputValidator instanceof \Piwigo\Validation\InputValidator) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Validation\InputValidator::class);
+        }
+
+        return $inputValidator;
+    }
+
+    /**
      * Public, same reason as currentTemplate() above: public/admin.php's
      * own legacy-style `new AdminShell(...)` manual construction needs a
      * way to obtain the same container-shared instance every other

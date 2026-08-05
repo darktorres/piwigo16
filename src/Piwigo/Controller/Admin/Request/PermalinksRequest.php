@@ -35,18 +35,18 @@ final readonly class PermalinksRequest
         public ?string $dpsf,
     ) {}
 
-    public static function fromGlobals(): self
+    public static function fromGlobals(InputValidator $inputValidator): self
     {
-        return self::fromArrays($_GET, $_POST);
+        return self::fromArrays($_GET, $_POST, $inputValidator);
     }
 
     /**
      * @param array<int|string, mixed> $get
      * @param array<int|string, mixed> $post
      */
-    public static function fromArrays(array $get, array $post): self
+    public static function fromArrays(array $get, array $post, InputValidator $inputValidator): self
     {
-        InputValidator::createStatic()
+        $inputValidator
             ->validate('cat_id', $post, false, ValidationPattern::ID);
 
         $post_cat_id = isset($post['cat_id']) && is_numeric($post['cat_id']) ? (int) $post['cat_id'] : 0;

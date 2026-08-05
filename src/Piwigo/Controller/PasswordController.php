@@ -63,6 +63,7 @@ final class PasswordController implements ControllerInterface
         private readonly \Piwigo\Html\HtmlService $htmlService,
         private readonly \Piwigo\Mail\MailService $mailService,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     /**
@@ -99,7 +100,7 @@ final class PasswordController implements ControllerInterface
 
         $this->eventDispatcher->dispatchNotify(new LocBeginPassword());
 
-        $this->request = Request\PasswordRequest::fromGlobals();
+        $this->request = Request\PasswordRequest::fromGlobals($this->inputValidator);
         $action_param = $this->request->action;
 
         // ------------------------------------------------------- process form

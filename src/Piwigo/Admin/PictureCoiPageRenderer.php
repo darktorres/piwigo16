@@ -26,6 +26,7 @@ final class PictureCoiPageRenderer
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     public function render(): void
@@ -37,7 +38,7 @@ final class PictureCoiPageRenderer
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        $pictureCoiRequest = Request\PictureCoiRequest::fromGlobals();
+        $pictureCoiRequest = Request\PictureCoiRequest::fromGlobals($this->inputValidator);
         $image_id = $pictureCoiRequest->imageId;
 
         if ($pictureCoiRequest->isSubmitted) {

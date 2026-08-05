@@ -57,6 +57,7 @@ final class IdentificationController implements ControllerInterface
         private readonly \Piwigo\Auth\AuthService $authService,
         private readonly \Piwigo\Html\HtmlService $htmlService,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
@@ -79,7 +80,7 @@ final class IdentificationController implements ControllerInterface
 
         unset($_SESSION['reset_password_code']);
 
-        $identificationSubmit = Request\IdentificationSubmitRequest::fromGlobals();
+        $identificationSubmit = Request\IdentificationSubmitRequest::fromGlobals($this->inputValidator);
 
         $redirect_to = '';
         if ($identificationSubmit->getRedirect !== null) {

@@ -72,6 +72,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
         private readonly UpdatesPwgPageRenderer $updatesPwgPageRenderer,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
@@ -88,7 +89,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
         // docblock).
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page=updates'));
 
-        $tab = Request\UpdatesTabRequest::fromGlobals()->tab;
+        $tab = Request\UpdatesTabRequest::fromGlobals($this->inputValidator)->tab;
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('updates');

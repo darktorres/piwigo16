@@ -33,12 +33,13 @@ final class PluginSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly LoadedPlugins $loadedPlugins,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Validation\InputValidator $inputValidator,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        $pluginSection = PluginSectionRequest::fromGlobals();
+        $pluginSection = PluginSectionRequest::fromGlobals($this->inputValidator);
 
         if (! isset($this->loadedPlugins->get()[$pluginSection->pluginId])) {
             $this->htmlRenderer

@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Request\RatingRequest;
+use Piwigo\Validation\InputValidator;
 
 test('fromArray returns defaults for an empty GET', function (): void {
-    $request = RatingRequest::fromArray([]);
+    $request = RatingRequest::fromArray([], new InputValidator());
 
     expect($request->start)->toBe(0)
         ->and($request->elementsPerPage)->toBe(10)
@@ -19,7 +20,7 @@ test('fromArray returns defaults for an empty GET', function (): void {
 });
 
 test('fromArray parses start/display/order_by as ints', function (): void {
-    $request = RatingRequest::fromArray(['start' => '20', 'display' => '30', 'order_by' => '2']);
+    $request = RatingRequest::fromArray(['start' => '20', 'display' => '30', 'order_by' => '2'], new InputValidator());
 
     expect($request->start)->toBe(20)
         ->and($request->elementsPerPage)->toBe(30)
@@ -27,12 +28,12 @@ test('fromArray parses start/display/order_by as ints', function (): void {
 });
 
 test('fromArray rejects a non-digit display', function (): void {
-    expect(fn (): RatingRequest => RatingRequest::fromArray(['display' => '1; DROP TABLE']))
+    expect(fn (): RatingRequest => RatingRequest::fromArray(['display' => '1; DROP TABLE'], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
 test('fromArray exposes catRaw and catId separately', function (): void {
-    $request = RatingRequest::fromArray(['cat' => '12']);
+    $request = RatingRequest::fromArray(['cat' => '12'], new InputValidator());
 
     expect($request->catPresent)->toBeTrue()
         ->and($request->catRaw)->toBe('12')
@@ -40,7 +41,7 @@ test('fromArray exposes catRaw and catId separately', function (): void {
 });
 
 test('fromArray nulls catId but keeps catRaw for a non-numeric cat', function (): void {
-    $request = RatingRequest::fromArray(['cat' => 'abc']);
+    $request = RatingRequest::fromArray(['cat' => 'abc'], new InputValidator());
 
     expect($request->catPresent)->toBeTrue()
         ->and($request->catRaw)->toBe('abc')
@@ -48,7 +49,7 @@ test('fromArray nulls catId but keeps catRaw for a non-numeric cat', function ()
 });
 
 test('fromArray reports isUsersUser for users=user', function (): void {
-    $request = RatingRequest::fromArray(['users' => 'user']);
+    $request = RatingRequest::fromArray(['users' => 'user'], new InputValidator());
 
     expect($request->isUsersUser)->toBeTrue()
         ->and($request->isUsersGuest)->toBeFalse()
@@ -56,14 +57,14 @@ test('fromArray reports isUsersUser for users=user', function (): void {
 });
 
 test('fromArray reports isUsersGuest for users=guest', function (): void {
-    $request = RatingRequest::fromArray(['users' => 'guest']);
+    $request = RatingRequest::fromArray(['users' => 'guest'], new InputValidator());
 
     expect($request->isUsersGuest)->toBeTrue()
         ->and($request->isUsersUser)->toBeFalse();
 });
 
 test('fromArray reports neither flag for an unrecognized users value', function (): void {
-    $request = RatingRequest::fromArray(['users' => 'all']);
+    $request = RatingRequest::fromArray(['users' => 'all'], new InputValidator());
 
     expect($request->isUsersUser)->toBeFalse()
         ->and($request->isUsersGuest)->toBeFalse()

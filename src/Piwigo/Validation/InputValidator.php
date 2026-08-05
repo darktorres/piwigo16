@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Validation;
 
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\ValidationPattern;
 
 /**
@@ -17,54 +16,24 @@ use Piwigo\Core\ValidationPattern;
  * own migration).
  *
  * Container-shared instance (singleton/service-locator elimination
- * campaign, Phase 3): `$htmlRenderer` stayed a static-setter collaborator
- * originally because constructor-/parameter-injecting it would ripple
- * across every one of its ~90 real construction sites for zero benefit --
- * but every one of those sites turned out to be a `Request\*Request::
- * fromGlobals()` static factory (P26/SEC-40), with no instance context to
- * receive constructor injection through at all. `HtmlRenderingInterface`
- * is already bound in container.php, so this class needs no explicit
- * wiring any more (RequestBootstrap::configure()'s former
- * `setHtmlRenderer(new HtmlService())` call is gone, autowiring handles
- * it) -- createStatic() is the `@deprecated` transitional bridge those ~90
- * static factories use instead of `new self()` directly.
+ * campaign, Phase 3): `$htmlRenderer` was originally a static-setter
+ * collaborator because constructor-/parameter-injecting it would ripple
+ * across every one of its ~90 real construction sites -- every one of
+ * those sites turned out to be a `Request\*Request::fromGlobals()`/
+ * `fromArray()`/`fromArrays()` static factory (P26/SEC-40), with no
+ * instance context to receive constructor injection through directly.
+ * Phase 11 sub-phase 11C closed this for real: every one of those ~43
+ * real callers (39 pure Request DTOs plus 4 real classes calling this
+ * class directly) now takes `InputValidator` as an explicit parameter
+ * instead of reaching for a `createStatic()` transitional bridge --
+ * `HtmlRenderingInterface` is bound in container.php, so this class
+ * itself needs no explicit wiring, only its own callers do.
  */
 final class InputValidator
 {
     public function __construct(
         private readonly ?HtmlRenderingInterface $htmlRenderer = null,
     ) {}
-
-    /**
-     * @deprecated transitional bridge for the ~90 Request DTO static
-     * `fromGlobals()` factory methods (Admin/Request/, Controller/.../Request/)
-     * that construct this class outside any container-resolved object
-     * graph -- there is no instance context for those static factories to
-     * receive constructor injection through.
-     * Gracefully falls back to a bare, renderer-less instance (the same
-     * "never wired up" shape the static-setter version had before any
-     * `setHtmlRenderer()` call, still exercised directly by
-     * InputValidatorTest.php's own `new InputValidator()` sites) when
-     * Kernel hasn't booted -- fatalError() below already handles that
-     * case by throwing RuntimeException, matching every request-input
-     * rejection test in this codebase that predates this conversion.
-     * Delete once every Request DTO itself stops being a static factory
-     * (a separate, not-yet-planned initiative -- Request DTOs are their
-     * own architectural layer, not part of this campaign's scope).
-     */
-    public static function createStatic(): self
-    {
-        if (! Kernel::isBooted()) {
-            return new self();
-        }
-
-        $instance = Kernel::container()->get(self::class);
-        if (! $instance instanceof self) {
-            throw new \LogicException('Container returned an unexpected type for ' . self::class);
-        }
-
-        return $instance;
-    }
 
     private function fatalError(string $msg): never
     {
@@ -85,9 +54,9 @@ final class InputValidator
      * RuntimeException when no HtmlRenderingInterface is configured, same
      * as every existing validate() call site's own test already relies on).
      */
-    public static function fail(string $msg): never
+    public function fail(string $msg): never
     {
-        self::createStatic()->fatalError($msg);
+        $this->fatalError($msg);
     }
 
     /**

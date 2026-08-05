@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Install\Request\InstallWizardRequest;
+use Piwigo\Validation\InputValidator;
 
 test('fromArrays returns defaults for an empty GET/POST', function (): void {
-    $request = InstallWizardRequest::fromArrays([], []);
+    $request = InstallWizardRequest::fromArrays([], [], new InputValidator());
 
     expect($request->dl)->toBeNull()
         ->and($request->dbhost)->toBe('localhost')
@@ -25,13 +26,13 @@ test('fromArrays returns defaults for an empty GET/POST', function (): void {
 });
 
 test('fromArrays parses dl as a 32-char hex string', function (): void {
-    $request = InstallWizardRequest::fromArrays(['dl' => str_repeat('a', 32)], []);
+    $request = InstallWizardRequest::fromArrays(['dl' => str_repeat('a', 32)], [], new InputValidator());
 
     expect($request->dl)->toBe(str_repeat('a', 32));
 });
 
 test('fromArrays rejects a malformed dl', function (): void {
-    expect(fn (): InstallWizardRequest => InstallWizardRequest::fromArrays(['dl' => 'not-hex'], []))
+    expect(fn (): InstallWizardRequest => InstallWizardRequest::fromArrays(['dl' => 'not-hex'], [], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
@@ -42,13 +43,13 @@ test('fromArrays falls back to the localhost default when dbhost is explicitly s
     // (is_string() is true, only the `!== ''` check routes it to the
     // 'localhost' default) that a bare "not present at all" case can't
     // distinguish.
-    $request = InstallWizardRequest::fromArrays([], ['dbhost' => '']);
+    $request = InstallWizardRequest::fromArrays([], ['dbhost' => ''], new InputValidator());
 
     expect($request->dbhost)->toBe('localhost');
 });
 
 test('fromArrays treats an explicitly empty dl the same as a missing one', function (): void {
-    $request = InstallWizardRequest::fromArrays(['dl' => ''], []);
+    $request = InstallWizardRequest::fromArrays(['dl' => ''], [], new InputValidator());
 
     expect($request->dl)->toBeNull();
 });
@@ -59,7 +60,7 @@ test('fromArrays parses db credentials from POST', function (): void {
         'dbuser' => 'piwigo',
         'dbpasswd' => 'secret',
         'dbname' => 'piwigo_db',
-    ]);
+    ], new InputValidator());
 
     expect($request->dbhost)->toBe('db.example.test')
         ->and($request->dbuser)->toBe('piwigo')
@@ -68,36 +69,36 @@ test('fromArrays parses db credentials from POST', function (): void {
 });
 
 test('fromArrays parses dbdriver=pgsql from POST', function (): void {
-    $request = InstallWizardRequest::fromArrays([], ['dbdriver' => 'pgsql']);
+    $request = InstallWizardRequest::fromArrays([], ['dbdriver' => 'pgsql'], new InputValidator());
 
     expect($request->dbdriver)->toBe('pgsql');
 });
 
 test('fromArrays keeps mysqli for an explicit dbdriver=mysqli', function (): void {
-    $request = InstallWizardRequest::fromArrays([], ['dbdriver' => 'mysqli']);
+    $request = InstallWizardRequest::fromArrays([], ['dbdriver' => 'mysqli'], new InputValidator());
 
     expect($request->dbdriver)->toBe('mysqli');
 });
 
 test('fromArrays rejects a dbdriver value outside mysqli/pgsql', function (): void {
-    expect(fn (): InstallWizardRequest => InstallWizardRequest::fromArrays([], ['dbdriver' => 'sqlite']))
+    expect(fn (): InstallWizardRequest => InstallWizardRequest::fromArrays([], ['dbdriver' => 'sqlite'], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
 test('fromArrays parses dbport as an int from POST', function (): void {
-    $request = InstallWizardRequest::fromArrays([], ['dbport' => '5432']);
+    $request = InstallWizardRequest::fromArrays([], ['dbport' => '5432'], new InputValidator());
 
     expect($request->dbport)->toBe(5432);
 });
 
 test('fromArrays leaves dbport null when absent', function (): void {
-    $request = InstallWizardRequest::fromArrays([], []);
+    $request = InstallWizardRequest::fromArrays([], [], new InputValidator());
 
     expect($request->dbport)->toBeNull();
 });
 
 test('fromArrays rejects a non-numeric dbport', function (): void {
-    expect(fn (): InstallWizardRequest => InstallWizardRequest::fromArrays([], ['dbport' => 'not-a-port']))
+    expect(fn (): InstallWizardRequest => InstallWizardRequest::fromArrays([], ['dbport' => 'not-a-port'], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
@@ -107,7 +108,7 @@ test('fromArrays parses admin credentials from POST', function (): void {
         'admin_pass1' => 'pw1',
         'admin_pass2' => 'pw1',
         'admin_mail' => 'admin@example.test',
-    ]);
+    ], new InputValidator());
 
     expect($request->adminName)->toBe('webmaster')
         ->and($request->adminPass1)->toBe('pw1')
@@ -116,30 +117,30 @@ test('fromArrays parses admin credentials from POST', function (): void {
 });
 
 test('fromArrays keeps isNewsletterSubscribe true when install is not submitted, regardless of the checkbox', function (): void {
-    $request = InstallWizardRequest::fromArrays([], []);
+    $request = InstallWizardRequest::fromArrays([], [], new InputValidator());
 
     expect($request->isNewsletterSubscribe)->toBeTrue();
 });
 
 test('fromArrays reflects the checkbox once install is submitted', function (): void {
-    expect(InstallWizardRequest::fromArrays([], ['install' => '1'])->isNewsletterSubscribe)->toBeFalse()
-        ->and(InstallWizardRequest::fromArrays([], ['install' => '1', 'newsletter_subscribe' => '1'])->isNewsletterSubscribe)->toBeTrue();
+    expect(InstallWizardRequest::fromArrays([], ['install' => '1'], new InputValidator())->isNewsletterSubscribe)->toBeFalse()
+        ->and(InstallWizardRequest::fromArrays([], ['install' => '1', 'newsletter_subscribe' => '1'], new InputValidator())->isNewsletterSubscribe)->toBeTrue();
 });
 
 test('fromArrays strips tags from the language param', function (): void {
-    $request = InstallWizardRequest::fromArrays(['language' => '<script>en_UK</script>'], []);
+    $request = InstallWizardRequest::fromArrays(['language' => '<script>en_UK</script>'], [], new InputValidator());
 
     expect($request->languageParam)->toBe('en_UK');
 });
 
 test('fromArrays leaves languageParam null when absent', function (): void {
-    $request = InstallWizardRequest::fromArrays([], []);
+    $request = InstallWizardRequest::fromArrays([], [], new InputValidator());
 
     expect($request->languageParam)->toBeNull();
 });
 
 test('fromArrays reports isSendCredentialsByMail when present', function (): void {
-    $request = InstallWizardRequest::fromArrays([], ['send_credentials_by_mail' => '1']);
+    $request = InstallWizardRequest::fromArrays([], ['send_credentials_by_mail' => '1'], new InputValidator());
 
     expect($request->isSendCredentialsByMail)->toBeTrue();
 });

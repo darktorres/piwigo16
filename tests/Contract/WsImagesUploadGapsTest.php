@@ -149,10 +149,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
 
     public function test_add_in_filename_uniqueness_mode_rejects_a_known_filename(): void
     {
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('uniqueness_mode', '\"filename\"')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('uniqueness_mode', '"filename"');
         \Piwigo\Cache\CachePools::config()->clear();
 
         $response = $this->callWsAllowingServerError('pwg.images.add', [

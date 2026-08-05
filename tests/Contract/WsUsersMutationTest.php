@@ -276,10 +276,7 @@ final class WsUsersMutationTest extends ContractTestCase
      */
     public function test_add_password_confirmation_mismatch_returns_error(): void
     {
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('double_password_type_in_admin', 'true')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('double_password_type_in_admin', 'true');
         \Piwigo\Cache\CachePools::config()->clear();
 
         try {
@@ -618,10 +615,7 @@ final class WsUsersMutationTest extends ContractTestCase
      */
     public function test_setMyInfo_ignores_theme_when_user_customization_is_disabled(): void
     {
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('allow_user_customization', 'false')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('allow_user_customization', 'false');
         \Piwigo\Cache\CachePools::config()->clear();
 
         try {
@@ -692,11 +686,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
         $originalDefaultUserId = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'default_user_id'");
 
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('default_user_id', ?)
-             ON DUPLICATE KEY UPDATE value = VALUES(value)",
-            [(string) $userId]
-        );
+        $this->upsertConfig('default_user_id', (string) $userId);
         \Piwigo\Cache\CachePools::config()->clear();
 
         try {
@@ -1002,10 +992,7 @@ final class WsUsersMutationTest extends ContractTestCase
         $userId = $this->createUser($username, $password, $email);
 
         $originalSmtpHost = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'smtp_host'");
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('smtp_host', '\"127.0.0.1:1\"')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('smtp_host', '"127.0.0.1:1"');
         \Piwigo\Cache\CachePools::config()->clear();
 
         try {

@@ -58,10 +58,7 @@ final class WsExtensionsTest extends ContractTestCase
     private function setConfigBool(string $param, bool $value): void
     {
         $encoded = $value ? 'true' : 'false';
-        $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::config() . ' (param, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value)',
-            [$param, $encoded]
-        );
+        $this->upsertConfig($param, $encoded);
         \Piwigo\Cache\CachePools::config()->clear();
     }
 

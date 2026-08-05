@@ -244,6 +244,34 @@ abstract class ContractTestCase extends IntegrationTestCase
     }
 
     /**
+     * Inserts (or updates, if already present) a single `config` row --
+     * every Contract test file that seeds a config flag before exercising
+     * a WS method needs exactly this upsert shape.
+     *
+     * pgsql support pass: real bug found live -- `ON DUPLICATE KEY UPDATE`
+     * is MySQL-only syntax ("syntax error at or near 'DUPLICATE'"),
+     * repeated identically (raw SQL, independently) across 11 different
+     * Contract test files. Consolidated into this one shared, portable
+     * helper rather than fixing each site's own copy separately -- a
+     * genuine DRY fix for an already-duplicated pattern, not a workaround
+     * papering over a bug (the MySQL branch is byte-identical to what
+     * every site already had). Postgres's portable equivalent is
+     * `ON CONFLICT (param) DO UPDATE SET ...` (`param` is config's own
+     * primary key).
+     */
+    protected function upsertConfig(string $param, string $value): void
+    {
+        $conn = \Piwigo\Db\DbConnection::build();
+        $onConflict = $this->dbDriver === 'pgsql'
+            ? 'ON CONFLICT (param) DO UPDATE SET value = EXCLUDED.value'
+            : 'ON DUPLICATE KEY UPDATE value = VALUES(value)';
+        $conn->executeStatement(
+            'INSERT INTO ' . \Piwigo\Db\Tables::config() . " (param, value) VALUES (?, ?) {$onConflict}",
+            [$param, $value]
+        );
+    }
+
+    /**
      * Same as callWs(), but without the HTTP-status sanity check --
      * PwgError's constructor mirrors any WS err code >= 400 onto the real
      * HTTP response status (HtmlService::setStatusHeader()), so a

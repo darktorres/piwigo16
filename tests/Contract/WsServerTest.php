@@ -282,10 +282,7 @@ final class WsServerTest extends ContractTestCase
 
     public function test_invoke_when_guest_access_is_disabled_returns_access_denied_for_a_non_session_method(): void
     {
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('guest_access', 'false')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('guest_access', 'false');
         \Piwigo\Cache\CachePools::config()->clear();
 
         try {
@@ -320,10 +317,7 @@ final class WsServerTest extends ContractTestCase
      */
     public function test_invoke_when_web_services_are_disabled_returns_a_forbidden_page(): void
     {
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('allow_web_services', 'false')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('allow_web_services', 'false');
         \Piwigo\Cache\CachePools::config()->clear();
 
         try {

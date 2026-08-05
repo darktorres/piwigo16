@@ -307,10 +307,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
     {
         $original = $this->conn->fetchOne('SELECT comment FROM ' . Tables::images() . ' WHERE id = 1');
 
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('allow_html_descriptions', 'false')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('allow_html_descriptions', 'false');
         \Piwigo\Cache\CachePools::config()->clear();
 
         try {

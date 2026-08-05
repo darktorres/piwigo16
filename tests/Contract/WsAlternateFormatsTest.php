@@ -106,10 +106,7 @@ final class WsAlternateFormatsTest extends ContractTestCase
 
     public function test_empty_available_permission_levels_config_falls_back_to_the_default_set(): void
     {
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('available_permission_levels', '[]')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('available_permission_levels', '[]');
         \Piwigo\Cache\CachePools::config()->clear();
 
         try {

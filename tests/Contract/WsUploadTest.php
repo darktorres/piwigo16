@@ -633,12 +633,8 @@ final class WsUploadTest extends ContractTestCase
         // without disabling or working around it.
         $originalLoungeActive = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'lounge_active'");
         $originalLoungeThreshold = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'lounge_activate_threshold'");
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('lounge_active', 'false') ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('lounge_activate_threshold', '999999999') ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('lounge_active', 'false');
+        $this->upsertConfig('lounge_activate_threshold', '999999999');
         \Piwigo\Cache\CachePools::config()->clear();
 
         // update_mode's 'name' param is matched against the stored `file`
@@ -714,10 +710,7 @@ final class WsUploadTest extends ContractTestCase
 
     public function test_upload_format_of_with_an_unauthorized_extension_returns_error(): void
     {
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('enable_formats', 'true')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('enable_formats', 'true');
         \Piwigo\Cache\CachePools::config()->clear();
 
         try {
@@ -740,10 +733,7 @@ final class WsUploadTest extends ContractTestCase
 
     public function test_upload_format_of_adds_a_format_to_an_existing_photo(): void
     {
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('enable_formats', 'true')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('enable_formats', 'true');
         \Piwigo\Cache\CachePools::config()->clear();
 
         $formatId = null;

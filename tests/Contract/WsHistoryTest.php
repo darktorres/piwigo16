@@ -31,20 +31,14 @@ final class WsHistoryTest extends ContractTestCase
     /** Enables history logging for the admin session (fixture default: disabled). */
     private function enableHistoryForAdmin(): void
     {
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('history_admin', 'true')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('history_admin', 'true');
         \Piwigo\Cache\CachePools::config()->clear();
     }
 
     /** Enables history logging for guest (unauthenticated) visitors. */
     private function enableHistoryForGuest(): void
     {
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('history_guest', 'true')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('history_guest', 'true');
         \Piwigo\Cache\CachePools::config()->clear();
     }
     public function test_activityGetList_response_matches_schema(): void
@@ -195,10 +189,7 @@ final class WsHistoryTest extends ContractTestCase
         // json_decode() silently returns null and the value never
         // overrides the 'all' default; it must be stored quoted, same as
         // every other string config value this suite writes directly.
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('activity_display_connections', '\"none\"')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('activity_display_connections', '"none"');
         \Piwigo\Cache\CachePools::config()->clear();
 
         try {
@@ -226,10 +217,7 @@ final class WsHistoryTest extends ContractTestCase
      */
     public function test_activityGetList_admins_only_keeps_admin_logins_but_excludes_non_admin_logins(): void
     {
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('activity_display_connections', '\"admins_only\"')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('activity_display_connections', '"admins_only"');
         \Piwigo\Cache\CachePools::config()->clear();
 
         try {
@@ -1190,10 +1178,7 @@ final class WsHistoryTest extends ContractTestCase
     public function test_historySearch_pagination_window_skips_one_line_when_nb_logs_page_is_one(): void
     {
         $this->enableHistoryForAdmin();
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('nb_logs_page', '1')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('nb_logs_page', '1');
         \Piwigo\Cache\CachePools::config()->clear();
 
         try {

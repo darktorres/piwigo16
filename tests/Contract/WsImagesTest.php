@@ -126,10 +126,7 @@ final class WsImagesTest extends ContractTestCase
 
     public function test_exist_in_filename_mode_returns_id_for_a_known_filename(): void
     {
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('uniqueness_mode', '\"filename\"')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('uniqueness_mode', '"filename"');
         // Raw SQL bypasses ConfigService::confUpdateParam()'s own cache
         // clear -- CachePools::config() is a real FilesystemAdapter (no
         // ext-apcu here), files under _data/cache/ visible to both this
@@ -190,11 +187,9 @@ final class WsImagesTest extends ContractTestCase
         $absDir = dirname(__DIR__, 2) . '/' . $relDir;
         mkdir($absDir);
 
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('upload_dir', ?)
-             ON DUPLICATE KEY UPDATE value = VALUES(value)",
-            [json_encode($relDir)]
-        );
+        $encodedRelDir = json_encode($relDir);
+        self::assertIsString($encodedRelDir);
+        $this->upsertConfig('upload_dir', $encodedRelDir);
         \Piwigo\Cache\CachePools::config()->clear();
         chmod($absDir, 0o555);
 

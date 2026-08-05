@@ -83,10 +83,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
 
     private function enableFormats(): void
     {
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('enable_formats', 'true')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('enable_formats', 'true');
         \Piwigo\Cache\CachePools::config()->clear();
     }
 

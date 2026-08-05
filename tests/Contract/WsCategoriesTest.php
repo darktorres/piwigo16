@@ -525,10 +525,7 @@ final class WsCategoriesTest extends ContractTestCase
      */
     public function test_getList_picks_a_random_representative_when_enabled_and_none_is_set(): void
     {
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('allow_random_representative', 'true')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        $this->upsertConfig('allow_random_representative', 'true');
         \Piwigo\Cache\CachePools::config()->clear();
 
         try {

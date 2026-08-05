@@ -45,6 +45,7 @@ final class WsDefaultMethods
         private readonly PwgComments $pwgComments,
         private readonly PwgExtensions $pwgExtensions,
         private readonly PwgGroups $pwgGroups,
+        private readonly PwgTags $pwgTags,
     ) {}
 
     /**
@@ -539,7 +540,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.tags.getList',
-            PwgTags::getList(...),
+            $this->pwgTags->getList(...),
             [
                 'sort_by_counter' => [
                     'default' => false,
@@ -551,7 +552,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.tags.getImages',
-            PwgTags::getImages(...),
+            $this->pwgTags->getImages(...),
             array_merge([
                 'tag_id' => [
                     'default' => null,
@@ -1066,7 +1067,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.tags.getAdminList',
-            PwgTags::getAdminList(...),
+            $this->pwgTags->getAdminList(...),
             null,
             '<b>Admin only.</b>',
             options: [
@@ -1079,7 +1080,7 @@ final class WsDefaultMethods
         // deliberate current API shape, not a defect.
         $service->addMethod(
             'pwg.tags.add',
-            PwgTags::add(...),
+            $this->pwgTags->add(...),
             [
                 'name' => [],
             ],
@@ -1091,7 +1092,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.tags.delete',
-            PwgTags::delete(...),
+            $this->pwgTags->delete(...),
             [
                 'tag_id' => [
                     'type' => WsParamType::ID,
@@ -1107,7 +1108,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.tags.rename',
-            PwgTags::rename(...),
+            $this->pwgTags->rename(...),
             [
                 'tag_id' => [
                     'type' => WsParamType::ID,
@@ -1123,7 +1124,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.tags.duplicate',
-            PwgTags::duplicate(...),
+            $this->pwgTags->duplicate(...),
             [
                 'tag_id' => [
                     'type' => WsParamType::ID,
@@ -1140,7 +1141,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.tags.merge',
-            PwgTags::merge(...),
+            $this->pwgTags->merge(...),
             [
                 'destination_tag_id' => [
                     'type' => WsParamType::ID,

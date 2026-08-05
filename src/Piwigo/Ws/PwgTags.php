@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\TagId;
@@ -33,22 +32,14 @@ use Piwigo\Tag\TagService;
  */
 final class PwgTags
 {
-    private static function tagService(): TagService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
-    }
-
-    /**
-     * Constructed repeatedly across add()/rename()/duplicate()/merge()
-     * (including inside per-image loops in duplicate()/merge()) -- takes
-     * the caller's own $conn instead of building a fresh one per call,
-     * same "shared connection passed in" precedent as
-     * Bootstrap\RequestBootstrap::activityService(Connection $conn).
-     */
-    private static function activityService(Connection $conn): ActivityService
-    {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
-    }
+    public function __construct(
+        private readonly TagService $tagService,
+        private readonly ActivityService $activityService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Core\UrlServiceInterface $urlService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Doctrine\ORM\EntityManagerInterface $entityManager,
+    ) {}
 
     /**
      * API method
@@ -58,16 +49,16 @@ final class PwgTags
      *   WsParamType::BOOL -- always present.
      * @return array{tags: PwgNamedArray}
      */
-    public static function getList(array $params, PwgServer &$service): array
+    public function getList(array $params, PwgServer &$service): array
     {
-        $tags = self::tagService()->getAvailableTags();
+        $tags = $this->tagService->getAvailableTags();
         if ($params['sort_by_counter']) {
             usort($tags, static fn (array $a, array $b): int => $b['counter'] <=> $a['counter']);
         } else {
-            usort($tags, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->tagAlphaCompare(...));
+            usort($tags, $this->htmlRenderer->tagAlphaCompare(...));
         }
 
-        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        $urlService = $this->urlService;
         for ($i = 0; $i < count($tags); $i++) {
             $tags[$i]['url'] = $urlService->makeIndexUrl(
                 [
@@ -98,11 +89,11 @@ final class PwgTags
      *   entirely unvalidated request array, but the body doesn't read it.
      * @return array{tags: PwgNamedArray}
      */
-    public static function getAdminList(array $params, PwgServer &$service): array
+    public function getAdminList(array $params, PwgServer &$service): array
     {
         return [
             'tags' => new PwgNamedArray(
-                self::tagService()->getAllTags(\Piwigo\Bootstrap\PresentationAccessor::htmlService()),
+                $this->tagService->getAllTags($this->htmlRenderer),
                 'tag',
                 WsHelper::stdGetTagXmlAttributes()
             ),
@@ -124,9 +115,9 @@ final class PwgTags
      *   WsHelper::stdImageSqlFilter()/WsHelper::stdImageSqlOrder().
      * @return array{paging: PwgNamedStruct, images: PwgNamedArray}
      */
-    public static function getImages(array $params, PwgServer &$service): array
+    public function getImages(array $params, PwgServer &$service): array
     {
-        $tagService = self::tagService();
+        $tagService = $this->tagService;
 
         // first build all the tag_ids we are interested in
         $tags = $tagService->findTags($params['tag_id'], $params['tag_url_name'], $params['tag_name']);
@@ -171,7 +162,7 @@ final class PwgTags
         }
 
         $images = [];
-        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        $urlService = $this->urlService;
         if ($image_ids !== []) {
             $rank_of = array_flip($image_ids);
             $favorite_ids = $urlService->getUserFavorites();
@@ -197,9 +188,9 @@ final class PwgTags
                     $image[$k] = $row[$k] ?? null;
                 }
 
-                $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementName(is_string($image['name']) ? $image['name'] : '', __FUNCTION__));
+                $nameEvent = $this->eventDispatcher->dispatchChange(new RenderElementName(is_string($image['name']) ? $image['name'] : '', __FUNCTION__));
                 $image['name'] = strip_tags($nameEvent->elementName);
-                $descriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
+                $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
                 $image['comment'] = $descriptionEvent->elementDescription;
 
                 $image = array_merge($image, WsHelper::stdGetUrls($row, $urlService));
@@ -262,11 +253,9 @@ final class PwgTags
      *   always present.
      * @return PwgError|array{info: string, id: int|string, name: string, url_name: string}
      */
-    public static function add(array $params, PwgServer &$service): PwgError|array
+    public function add(array $params, PwgServer &$service): PwgError|array
     {
-        $conn = DbConnection::build();
-
-        $creation_output = self::tagService()->createTag($params['name']);
+        $creation_output = $this->tagService->createTag($params['name']);
 
         if (isset($creation_output['error'])) {
             return new PwgError(WsError::INVALID_PARAM, $creation_output['error']);
@@ -275,9 +264,9 @@ final class PwgTags
         $creation_id = $creation_output['id'];
         $creation_info = $creation_output['info'];
 
-        self::activityService($conn)->record('tag', $creation_id, 'add');
+        $this->activityService->record('tag', $creation_id, 'add');
 
-        $new_tag = self::tagService()->getById(TagId::from($creation_id));
+        $new_tag = $this->tagService->getById(TagId::from($creation_id));
 
         return [
             'info' => $creation_info,
@@ -296,20 +285,20 @@ final class PwgTags
      *   FORCE_ARRAY always coerces tag_id to a list of positive ints.
      * @return PwgError|array{id: array<int, int>}
      */
-    public static function delete(array $params, PwgServer &$service): PwgError|array
+    public function delete(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (self::tagService()->countExistingIds(array_values($params['tag_id'])) !== count($params['tag_id'])) {
+        if ($this->tagService->countExistingIds(array_values($params['tag_id'])) !== count($params['tag_id'])) {
             return new PwgError(WsError::INVALID_PARAM, 'All tags does not exist.');
         }
 
         $tag_ids = $params['tag_id'];
 
         if (count($tag_ids) > 0) {
-            self::tagService()->deleteTags(array_values(array_map(TagId::from(...), $params['tag_id'])));
+            $this->tagService->deleteTags(array_values(array_map(TagId::from(...), $params['tag_id'])));
             return [
                 'id' => $tag_ids,
             ];
@@ -329,36 +318,35 @@ final class PwgTags
      *   guarantees a plain int for tag_id.
      * @return PwgError|array<string, mixed>
      */
-    public static function rename(array $params, PwgServer &$service): PwgError|array
+    public function rename(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        $conn = DbConnection::build();
         $tag_id = $params['tag_id'];
         $tag_name = strip_tags(stripslashes($params['new_name']));
 
         // does the tag exist ?
-        if (! self::tagService()->existsById($tag_id)) {
+        if (! $this->tagService->existsById($tag_id)) {
             return new PwgError(WsError::INVALID_PARAM, 'This tag does not exist.');
         }
 
-        $existing_names = self::tagService()->getOtherNames($tag_id);
+        $existing_names = $this->tagService->getOtherNames($tag_id);
 
         if (in_array($tag_name, $existing_names, true)) {
             return new PwgError(WsError::INVALID_PARAM, 'This name is already token');
         }
 
-        self::activityService($conn)->record('tag', $tag_id, 'edit');
+        $this->activityService->record('tag', $tag_id, 'edit');
 
         if ($tag_name !== '') {
-            $urlNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagUrl($tag_name));
-            self::tagService()->renameTag(TagId::from($tag_id), $tag_name, $urlNameEvent->tagName);
+            $urlNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagUrl($tag_name));
+            $this->tagService->renameTag(TagId::from($tag_id), $tag_name, $urlNameEvent->tagName);
         }
-        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+        $this->entityManager->clear();
 
-        $renamed_tag = self::tagService()->getById(TagId::from($tag_id));
+        $renamed_tag = $this->tagService->getById(TagId::from($tag_id));
         assert($renamed_tag !== null);
 
         $tag = [
@@ -367,9 +355,9 @@ final class PwgTags
             'url_name' => $renamed_tag->urlName,
         ];
         $tag['raw_name'] = $tag['name'];
-        $renameNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName($tag['raw_name'], $tag));
+        $renameNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($tag['raw_name'], $tag));
         $tag['name'] = $renameNameEvent->tagName;
-        $altNamesEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetTagAltNames([], $tag['raw_name']));
+        $altNamesEvent = $this->eventDispatcher->dispatchChange(new GetTagAltNames([], $tag['raw_name']));
         $tag['alt_names'] = $altNamesEvent->value;
         return $tag;
     }
@@ -386,36 +374,36 @@ final class PwgTags
      * count is count($inserts)).
      * @return PwgError|array{id: int, name: string, url_name: string, count: int}
      */
-    public static function duplicate(array $params, PwgServer &$service): PwgError|array
+    public function duplicate(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        $conn = DbConnection::build();
         $tag_id = $params['tag_id'];
         $copy_name = $params['copy_name'];
 
         // does the tag exist ?
-        if (! self::tagService()->existsById($tag_id)) {
+        if (! $this->tagService->existsById($tag_id)) {
             return new PwgError(WsError::INVALID_PARAM, 'This tag does not exist.');
         }
 
-        if (self::tagService()->existsByName($copy_name)) {
+        if ($this->tagService->existsByName($copy_name)) {
             return new PwgError(WsError::INVALID_PARAM, 'This name is already taken.');
         }
 
-        $copyUrlNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagUrl($copy_name));
+        $copyUrlNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagUrl($copy_name));
         $copy_url_name = $copyUrlNameEvent->tagName;
-        $destination_tag_id = self::tagService()->duplicateTag($copy_name, $copy_url_name)->value;
-        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+        $destination_tag_id = $this->tagService->duplicateTag($copy_name, $copy_url_name)
+            ->value;
+        $this->entityManager->clear();
 
-        self::activityService($conn)->record('tag', $destination_tag_id, 'add', [
+        $this->activityService->record('tag', $destination_tag_id, 'add', [
             'action' => 'duplicate',
             'source_tag' => $tag_id,
         ]);
 
-        $destination_tag_image_ids = self::tagService()->getImageIdsForTagIds([TagId::from($tag_id)]);
+        $destination_tag_image_ids = $this->tagService->getImageIdsForTagIds([TagId::from($tag_id)]);
 
         $inserts = [];
 
@@ -424,13 +412,13 @@ final class PwgTags
                 'tag_id' => $destination_tag_id,
                 'image_id' => $image_id,
             ];
-            self::activityService($conn)->record('photo', $image_id, 'edit', [
+            $this->activityService->record('photo', $image_id, 'edit', [
                 'add-tag' => $destination_tag_id,
             ]);
         }
 
         if (count($inserts) > 0) {
-            self::tagService()->copyImageTagAssociations($inserts);
+            $this->tagService->copyImageTagAssociations($inserts);
         }
 
         return [
@@ -451,28 +439,27 @@ final class PwgTags
      *   FORCE_ARRAY always coerces to a list of positive ints.
      * @return PwgError|array{destination_tag: int, deleted_tag: array<int, int>, images_in_merged_tag: list<int>}
      */
-    public static function merge(array $params, PwgServer &$service): PwgError|array
+    public function merge(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        $conn = DbConnection::build();
         $all_tags = $params['merge_tag_id'];
         array_push($all_tags, $params['destination_tag_id']);
 
         $all_tags = array_unique($all_tags);
         $merge_tag = array_diff($params['merge_tag_id'], [$params['destination_tag_id']]);
 
-        if (self::tagService()->countExistingIds(array_values($all_tags)) !== count($all_tags)) {
+        if ($this->tagService->countExistingIds(array_values($all_tags)) !== count($all_tags)) {
             return new PwgError(WsError::INVALID_PARAM, 'All tags does not exist.');
         }
 
         $image_in_merge_tags = array_values(array_unique(
-            self::tagService()->getImageIdsForTagIds(array_map(TagId::from(...), array_values($merge_tag)))
+            $this->tagService->getImageIdsForTagIds(array_map(TagId::from(...), array_values($merge_tag)))
         ));
 
-        $image_in_dest = self::tagService()->getImageIdsForTagIds([TagId::from($params['destination_tag_id'])]);
+        $image_in_dest = $this->tagService->getImageIdsForTagIds([TagId::from($params['destination_tag_id'])]);
 
         $image_to_add = array_values(array_diff($image_in_merge_tags, $image_in_dest));
 
@@ -484,18 +471,18 @@ final class PwgTags
             ];
         }
 
-        self::tagService()->copyImageTagAssociations($inserts, ignore: true);
+        $this->tagService->copyImageTagAssociations($inserts, ignore: true);
 
-        self::activityService($conn)->record('tag', $params['destination_tag_id'], 'edit');
+        $this->activityService->record('tag', $params['destination_tag_id'], 'edit');
         foreach ($image_to_add as $image_id) {
-            self::activityService($conn)->record('photo', $image_id, 'edit', [
+            $this->activityService->record('photo', $image_id, 'edit', [
                 'tag-add' => $params['destination_tag_id'],
             ]);
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new MergeTags($params['destination_tag_id'], $merge_tag));
+        $this->eventDispatcher->dispatchNotify(new MergeTags($params['destination_tag_id'], $merge_tag));
 
-        self::tagService()->deleteTags(array_values(array_map(TagId::from(...), $merge_tag)));
+        $this->tagService->deleteTags(array_values(array_map(TagId::from(...), $merge_tag)));
 
         $image_in_merged = array_merge($image_in_dest, $image_to_add);
 

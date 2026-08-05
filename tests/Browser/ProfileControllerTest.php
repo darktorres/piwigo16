@@ -54,19 +54,14 @@ const PROFILE_TEST_PASS = 'regular_user_pass';
 /** Idempotently registers the 'default' theme -- see this file's own docblock for why this is necessary. */
 function profileEnsureDefaultThemeRegistered(): void
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $db->query(sprintf(
-        "INSERT INTO %sthemes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON DUPLICATE KEY UPDATE name = 'Default'",
-        $prefix
-    ));
-    $db->close();
+    $upsertSql = $db instanceof \mysqli
+        ? "INSERT INTO %sthemes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON DUPLICATE KEY UPDATE name = 'Default'"
+        : "INSERT INTO %sthemes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON CONFLICT (id) DO UPDATE SET name = 'Default'";
+    H::dbQuery($db, sprintf($upsertSql, $prefix));
+    H::dbClose($db);
 }
 
 beforeEach(function (): void {
@@ -96,21 +91,15 @@ function profileLogin(object $test): Webpage|PendingAwaitablePage|AwaitableWebpa
 /** @return array{nb_image_page: int, recent_period: int} */
 function profileUserSettings(): array
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         "SELECT ui.nb_image_page, ui.recent_period FROM %suser_infos ui INNER JOIN %susers u ON u.id = ui.user_id WHERE u.username = '%s'",
         $prefix,
         $prefix,
-        $db->real_escape_string(PROFILE_TEST_USER)
+        H::dbEscape($db, PROFILE_TEST_USER)
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
     if (! is_array($row)) {
         throw new RuntimeException('regular_user user_infos row not found');
     }
@@ -128,22 +117,16 @@ function profileUserSettings(): array
  */
 function profileUserToggleSettings(): array
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         "SELECT ui.expand, ui.show_nb_hits, ui.show_nb_comments FROM %suser_infos ui INNER JOIN %susers u ON u.id = ui.user_id WHERE u.username = '%s'",
         $prefix,
         $prefix,
-        $db->real_escape_string(PROFILE_TEST_USER)
+        H::dbEscape($db, PROFILE_TEST_USER)
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
     if (! is_array($row)) {
         throw new RuntimeException('regular_user user_infos row not found');
     }
@@ -222,21 +205,15 @@ it('rejects an empty nb_image_page and leaves the stored settings untouched', fu
 /** @return array{email: string, password: string}|null */
 function profileUserAuthRow(): ?array
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         "SELECT mail_address, password FROM %susers WHERE username = '%s'",
         $prefix,
-        $db->real_escape_string(PROFILE_TEST_USER)
+        H::dbEscape($db, PROFILE_TEST_USER)
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
 
     if (! is_array($row)) {
         return null;
@@ -399,22 +376,17 @@ it('omits the 3 boolFields from the POST and leaves expand/show_nb_hits/show_nb_
 
 function profileRestoreAuthRow(string $email, string $passwordHash): void
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "UPDATE %susers SET mail_address = %s, password = '%s' WHERE username = '%s'",
         $prefix,
-        $email === '' ? 'NULL' : "'" . $db->real_escape_string($email) . "'",
-        $db->real_escape_string($passwordHash),
-        $db->real_escape_string(PROFILE_TEST_USER)
+        $email === '' ? 'NULL' : "'" . H::dbEscape($db, $email) . "'",
+        H::dbEscape($db, $passwordHash),
+        H::dbEscape($db, PROFILE_TEST_USER)
     ));
-    $db->close();
+    H::dbClose($db);
 }
 
 it('changes both the email address and password given the correct current password', function (): void {
@@ -568,22 +540,16 @@ it('fatal-errors on an unrecognized lang cookie value (hacking attempt)', functi
 
 function profileUserLanguage(): string
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         "SELECT ui.language FROM %suser_infos ui INNER JOIN %susers u ON u.id = ui.user_id WHERE u.username = '%s'",
         $prefix,
         $prefix,
-        $db->real_escape_string(PROFILE_TEST_USER)
+        H::dbEscape($db, PROFILE_TEST_USER)
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
     if (! is_array($row)) {
         throw new RuntimeException('regular_user user_infos row not found');
     }
@@ -593,31 +559,21 @@ function profileUserLanguage(): string
 
 function profileSetUserLanguage(string $language): void
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "UPDATE %suser_infos ui INNER JOIN %susers u ON u.id = ui.user_id SET ui.language = '%s' WHERE u.username = '%s'",
         $prefix,
         $prefix,
-        $db->real_escape_string($language),
-        $db->real_escape_string(PROFILE_TEST_USER)
+        H::dbEscape($db, $language),
+        H::dbEscape($db, PROFILE_TEST_USER)
     ));
-    $db->close();
+    H::dbClose($db);
 }
 
 it('switches the interface language via a valid, different lang cookie and persists it to user_infos', function (): void {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
     // Same fixture gap/workaround shape as this file's own
@@ -630,11 +586,11 @@ it('switches the interface language via a valid, different lang cookie and persi
     // `array_key_exists($cookie_lang, LangService::getLanguages())` guard
     // would always fail and this couldn't reach the real switch path at
     // all.
-    $db->query(sprintf(
-        "INSERT INTO %slanguages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON DUPLICATE KEY UPDATE name = VALUES(name)",
-        $prefix
-    ));
-    $db->close();
+    $upsertSql = $db instanceof \mysqli
+        ? "INSERT INTO %slanguages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON DUPLICATE KEY UPDATE name = VALUES(name)"
+        : "INSERT INTO %slanguages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name";
+    H::dbQuery($db, sprintf($upsertSql, $prefix));
+    H::dbClose($db);
 
     $originalLanguage = profileUserLanguage();
     expect($originalLanguage)->toBe('en_UK');
@@ -666,31 +622,20 @@ it('switches the interface language via a valid, different lang cookie and persi
         @unlink($session['cookieJar']);
     } finally {
         profileSetUserLanguage($originalLanguage);
-        $db2 = new mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
-        $db2->query(sprintf("DELETE FROM %slanguages WHERE id = 'fr_FR'", $prefix));
-        $db2->close();
+        $db2 = H::connect();
+        H::dbQuery($db2, sprintf("DELETE FROM %slanguages WHERE id = 'fr_FR'", $prefix));
+        H::dbClose($db2);
     }
 });
 
 /** @return array{nb_image_page: int, recent_period: int} the guest (default_user_id=2) row's own current custom-settings values */
 function profileGuestDefaults(): array
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $result = $db->query('SELECT nb_image_page, recent_period FROM ' . $prefix . 'user_infos WHERE user_id = 2');
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    $row = H::dbFetchAssoc($db, 'SELECT nb_image_page, recent_period FROM ' . $prefix . 'user_infos WHERE user_id = 2');
+    H::dbClose($db);
     if (! is_array($row)) {
         throw new RuntimeException('guest (user_id=2) user_infos row not found');
     }
@@ -700,23 +645,18 @@ function profileGuestDefaults(): array
 
 function profileSetImageSettings(int $nbImagePage, int $recentPeriod): void
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         'UPDATE %suser_infos ui INNER JOIN %susers u ON u.id = ui.user_id SET ui.nb_image_page = %d, ui.recent_period = %d WHERE u.username = \'%s\'',
         $prefix,
         $prefix,
         $nbImagePage,
         $recentPeriod,
-        $db->real_escape_string(PROFILE_TEST_USER)
+        H::dbEscape($db, PROFILE_TEST_USER)
     ));
-    $db->close();
+    H::dbClose($db);
 }
 
 it('previews the guest-default values in the rendered form on reset-to-default, without persisting them', function (): void {

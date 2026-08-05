@@ -37,19 +37,13 @@ it('adds a batch of photo ids to the caddie and redirects to the batch manager',
     // status always 0 (see this suite's own empty_caddie test).
     expect($result['status'])->toBe(0);
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
-    $caddieCheck = $db->query(sprintf(
+    $db = H::connect();
+    $caddieRow = H::dbFetchAssoc($db, sprintf(
         'SELECT COUNT(*) AS c FROM %scaddie WHERE user_id = 1 AND element_id = %d',
         photosAddDirectDbPrefix(),
         $imageId
     ));
-    $caddieRow = $caddieCheck instanceof mysqli_result ? $caddieCheck->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
     expect(is_array($caddieRow) ? (int) $caddieRow['c'] : -1)->toBe(1);
 });
 
@@ -118,15 +112,10 @@ it('lists a real photo\'s existing formats when formats= targets a valid origina
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Photos Add Direct Formats Photo');
         @unlink($image);
 
-        $db = new mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = H::connect();
         $prefix = photosAddDirectDbPrefix();
-        $db->query(sprintf("INSERT INTO %simage_format (image_id, ext, filesize) VALUES (%d, 'tif', 2048)", $prefix, $imageId));
-        $db->close();
+        H::dbQuery($db, sprintf("INSERT INTO %simage_format (image_id, ext, filesize) VALUES (%d, 'tif', 2048)", $prefix, $imageId));
+        H::dbClose($db);
 
         $page = H::navigateOk($page, '/admin.php?page=photos_add&formats=' . $imageId);
 

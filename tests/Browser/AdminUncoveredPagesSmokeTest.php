@@ -372,12 +372,12 @@ it('admin popuphelp fatal-errors when a real get_popup_help_content hook returns
     PHP);
     $db = pluginSubDb();
     $prefix = pluginSubDbPrefix();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
         $prefix,
-        $db->real_escape_string($pluginId)
+        H::dbEscape($db, $pluginId)
     ));
-    $db->close();
+    H::dbClose($db);
 
     try {
         $page = H::loginAsAdmin($this);
@@ -390,8 +390,8 @@ it('admin popuphelp fatal-errors when a real get_popup_help_content hook returns
         expect($result['status'])->toBe(500);
     } finally {
         $db = pluginSubDb();
-        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
-        $db->close();
+        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbClose($db);
         pluginSubRemoveFixturePlugin($pluginId);
     }
 });
@@ -439,14 +439,9 @@ function pluginSubDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function pluginSubDb(): mysqli
+function pluginSubDb(): \mysqli|\PgSql\Connection
 {
-    return new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    return H::connect();
 }
 
 function pluginSubPluginsPath(): string
@@ -494,12 +489,12 @@ it('plugin page includes a real settings file from an active on-disk plugin', fu
     pluginSubWriteFixturePlugin($pluginId);
     $db = pluginSubDb();
     $prefix = pluginSubDbPrefix();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0')",
         $prefix,
-        $db->real_escape_string($pluginId)
+        H::dbEscape($db, $pluginId)
     ));
-    $db->close();
+    H::dbClose($db);
 
     try {
         $page = H::loginAsAdmin($this);
@@ -519,8 +514,8 @@ it('plugin page includes a real settings file from an active on-disk plugin', fu
         expect($result['body'])->toContain('CT_PLUGINSUB_INCLUDED');
     } finally {
         $db = pluginSubDb();
-        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
-        $db->close();
+        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbClose($db);
         pluginSubRemoveFixturePlugin($pluginId);
     }
 });
@@ -532,12 +527,12 @@ it('plugin page fatal-errors on a missing section file for a real active plugin'
     pluginSubWriteFixturePlugin($pluginId);
     $db = pluginSubDb();
     $prefix = pluginSubDbPrefix();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0')",
         $prefix,
-        $db->real_escape_string($pluginId)
+        H::dbEscape($db, $pluginId)
     ));
-    $db->close();
+    H::dbClose($db);
 
     try {
         $page = H::loginAsAdmin($this);
@@ -548,8 +543,8 @@ it('plugin page fatal-errors on a missing section file for a real active plugin'
             ->and($page->content())->toContain($pluginId . '/ct_missing.php');
     } finally {
         $db = pluginSubDb();
-        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
-        $db->close();
+        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbClose($db);
         pluginSubRemoveFixturePlugin($pluginId);
     }
 });

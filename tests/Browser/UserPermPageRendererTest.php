@@ -122,12 +122,7 @@ it('lists the newly-private album as forbidden once it stops being covered by th
 it('trueifies then falsifies direct user_access for a private album', function (): void {
     H::setCategoryPrivate(2, private: true);
     $page = H::loginAsAdmin($this);
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
@@ -142,8 +137,7 @@ it('trueifies then falsifies direct user_access for a private album', function (
         ]);
         expect($trueifyResult['status'])->toBe(200);
 
-        $row = $db->query(sprintf('SELECT COUNT(*) AS c FROM %suser_access WHERE user_id = 4 AND cat_id = 2', $prefix));
-        $assoc = $row instanceof mysqli_result ? $row->fetch_assoc() : null;
+        $assoc = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM %suser_access WHERE user_id = 4 AND cat_id = 2', $prefix));
         expect(is_array($assoc) ? (int) $assoc['c'] : -1)->toBe(1);
 
         // falsify then removes it again via removeUserAccess().
@@ -154,11 +148,10 @@ it('trueifies then falsifies direct user_access for a private album', function (
         ]);
         expect($falsifyResult['status'])->toBe(200);
 
-        $row2 = $db->query(sprintf('SELECT COUNT(*) AS c FROM %suser_access WHERE user_id = 4 AND cat_id = 2', $prefix));
-        $assoc2 = $row2 instanceof mysqli_result ? $row2->fetch_assoc() : null;
+        $assoc2 = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM %suser_access WHERE user_id = 4 AND cat_id = 2', $prefix));
         expect(is_array($assoc2) ? (int) $assoc2['c'] : -1)->toBe(0);
     } finally {
-        $db->query(sprintf('DELETE FROM %suser_access WHERE user_id = 4 AND cat_id = 2', $prefix));
-        $db->close();
+        H::dbQuery($db, sprintf('DELETE FROM %suser_access WHERE user_id = 4 AND cat_id = 2', $prefix));
+        H::dbClose($db);
     }
 });

@@ -101,18 +101,12 @@ it('falsifies (revokes) a private album\'s access for a group that currently has
         ]);
         expect($result['status'])->toBe(200);
 
-        $db = new mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = H::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        $row = $db->query(sprintf('SELECT COUNT(*) AS c FROM %sgroup_access WHERE group_id = 1 AND cat_id = 2', $prefix));
-        $assoc = $row instanceof mysqli_result ? $row->fetch_assoc() : null;
+        $assoc = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM %sgroup_access WHERE group_id = 1 AND cat_id = 2', $prefix));
         expect(is_array($assoc) ? (int) $assoc['c'] : -1)->toBe(0);
-        $db->close();
+        H::dbClose($db);
     } finally {
         // Restore the fixture's own group 1 <-> category 2 group_access row
         // via the real trueify submission (this class's own sibling
@@ -142,21 +136,15 @@ it('trueifies (grants) a private album\'s access for a group that currently lack
         ]);
         expect($result['status'])->toBe(200);
 
-        $db = new mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = H::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        $row = $db->query(sprintf('SELECT COUNT(*) AS c FROM %sgroup_access WHERE group_id = 3 AND cat_id = 2', $prefix));
-        $assoc = $row instanceof mysqli_result ? $row->fetch_assoc() : null;
+        $assoc = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM %sgroup_access WHERE group_id = 3 AND cat_id = 2', $prefix));
         expect(is_array($assoc) ? (int) $assoc['c'] : -1)->toBe(1);
 
         // Restore fixture state (group 3 had no access to category 2).
-        $db->query('DELETE FROM ' . $prefix . 'group_access WHERE group_id = 3 AND cat_id = 2');
-        $db->close();
+        H::dbQuery($db, 'DELETE FROM ' . $prefix . 'group_access WHERE group_id = 3 AND cat_id = 2');
+        H::dbClose($db);
     } finally {
         H::setCategoryPrivate(2, private: false);
     }

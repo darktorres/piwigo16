@@ -27,28 +27,23 @@ function permalinksDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function permalinksDb(): mysqli
+function permalinksDb(): \mysqli|\PgSql\Connection
 {
-    return new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    return H::connect();
 }
 
 /**
  * Reads a single category's current `permalink` column, or null if unset
  * (or the row doesn't exist). `is_array($row) && is_string($row['permalink']
  * ?? null)` mirrors BrowserTestHelpers::configValue()'s own narrowing --
- * mysqli::query() is typed `mysqli_result|bool` and fetch_assoc() is typed
- * `array|null|false`, so both a query error and a genuinely empty result
- * need guarding before any offset access.
+ * H::dbFetchAssoc() already returns `array<string, mixed>|null`, but the
+ * column itself could still be a real SQL NULL for an unset permalink, so
+ * the value narrowing stays even though the query-level null narrowing is
+ * now handled inside dbFetchAssoc() itself.
  */
-function permalinksCategoryPermalink(mysqli $db, string $prefix, int $catId): ?string
+function permalinksCategoryPermalink(\mysqli|\PgSql\Connection $db, string $prefix, int $catId): ?string
 {
-    $result = $db->query(sprintf('SELECT permalink FROM %scategories WHERE id = %d', $prefix, $catId));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $row = H::dbFetchAssoc($db, sprintf('SELECT permalink FROM %scategories WHERE id = %d', $prefix, $catId));
 
     return is_array($row) && is_string($row['permalink'] ?? null) ? $row['permalink'] : null;
 }
@@ -58,14 +53,13 @@ function permalinksCategoryPermalink(mysqli $db, string $prefix, int $catId): ?s
  * (that table's own PRIMARY KEY), or null if no such row exists -- same
  * narrowing rationale as permalinksCategoryPermalink() above.
  */
-function permalinksOldPermalinkCatId(mysqli $db, string $prefix, string $permalink): ?int
+function permalinksOldPermalinkCatId(\mysqli|\PgSql\Connection $db, string $prefix, string $permalink): ?int
 {
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         "SELECT cat_id FROM %sold_permalinks WHERE permalink = '%s'",
         $prefix,
-        $db->real_escape_string($permalink)
+        H::dbEscape($db, $permalink)
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
 
     return is_array($row) && is_numeric($row['cat_id'] ?? null) ? (int) $row['cat_id'] : null;
 }
@@ -85,7 +79,7 @@ it('rejects a set_permalink submission without a valid CSRF token', function ():
     $db = permalinksDb();
     $prefix = permalinksDbPrefix();
     $permalinkValue = permalinksCategoryPermalink($db, $prefix, 2);
-    $db->close();
+    H::dbClose($db);
     expect($permalinkValue)->toBeNull();
 });
 
@@ -152,13 +146,13 @@ it('sets a category permalink, lists it among active permalinks, clears it into 
 
         expect(permalinksOldPermalinkCatId($db, $prefix, $permalink))->toBeNull();
     } finally {
-        $db->query(sprintf('UPDATE %scategories SET permalink = NULL WHERE id = %d', $prefix, $catId));
-        $db->query(sprintf(
+        H::dbQuery($db, sprintf('UPDATE %scategories SET permalink = NULL WHERE id = %d', $prefix, $catId));
+        H::dbQuery($db, sprintf(
             "DELETE FROM %sold_permalinks WHERE permalink = '%s'",
             $prefix,
-            $db->real_escape_string($permalink)
+            H::dbEscape($db, $permalink)
         ));
-        $db->close();
+        H::dbClose($db);
     }
 });
 

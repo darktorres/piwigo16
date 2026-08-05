@@ -30,15 +30,9 @@ function catListPageDbPrefix(): string
 
 function catListPageCategoryExists(int $categoryId): bool
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
-    $result = $db->query(sprintf('SELECT COUNT(*) AS c FROM %scategories WHERE id = %d', catListPageDbPrefix(), $categoryId));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    $db = H::connect();
+    $row = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM %scategories WHERE id = %d', catListPageDbPrefix(), $categoryId));
+    H::dbClose($db);
 
     return is_array($row) && (int) $row['c'] > 0;
 }
@@ -233,12 +227,7 @@ it('deletes a virtual child album and redirects back to its own parent_id listin
 
 it('assigns U_SYNC (not U_DELETE) for a non-virtual (real dir) category when synchronization is enabled', function (): void {
     $page = H::loginAsAdmin($this);
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = catListPageDbPrefix();
 
     // Every album created via pwg.categories.add is virtual (dir=NULL) --
@@ -247,13 +236,13 @@ it('assigns U_SYNC (not U_DELETE) for a non-virtual (real dir) category when syn
     // CatModifyPageRendererTest's own physical-directory test); site_id=1
     // is the fixture's own real piwigo_sites row.
     $dirName = 'cat_list_physical_dir_' . uniqid();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %scategories (name, dir, site_id, status, uppercats) VALUES ('Cat List Physical Album', '%s', 1, 'public', '0')",
         $prefix,
-        $db->real_escape_string($dirName)
+        H::dbEscape($db, $dirName)
     ));
-    $categoryId = (int) $db->insert_id;
-    $db->query(sprintf('UPDATE %scategories SET uppercats = %d WHERE id = %d', $prefix, $categoryId, $categoryId));
+    $categoryId = H::dbInsertId($db);
+    H::dbQuery($db, sprintf('UPDATE %scategories SET uppercats = %d WHERE id = %d', $prefix, $categoryId, $categoryId));
 
     try {
         $page = H::navigateOk($page, '/admin.php?page=cat_list');
@@ -262,8 +251,8 @@ it('assigns U_SYNC (not U_DELETE) for a non-virtual (real dir) category when syn
         $page->assertNoJavaScriptErrors();
         H::assertNoServerErrors($page, 'cat_list with a non-virtual category');
     } finally {
-        $db->query(sprintf('DELETE FROM %scategories WHERE id = %d', $prefix, $categoryId));
-        $db->close();
+        H::dbQuery($db, sprintf('DELETE FROM %scategories WHERE id = %d', $prefix, $categoryId));
+        H::dbClose($db);
     }
 });
 

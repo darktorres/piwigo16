@@ -104,19 +104,13 @@ it('creates a new site for a real, existing directory, then deletes it via the C
         expect($createResult['status'])->toBe(200);
         expect($createResult['body'])->toContain('created');
 
-        $db = new mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = H::connect();
         $prefix = siteManagerDbPrefix();
-        $result = $db->query(sprintf(
+        $row = H::dbFetchAssoc($db, sprintf(
             "SELECT id FROM %ssites WHERE galleries_url LIKE '%%%s%%'",
             $prefix,
-            $db->real_escape_string($dirName)
+            H::dbEscape($db, $dirName)
         ));
-        $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
         expect($row)->not->toBeNull();
         $siteId = is_array($row) ? (int) $row['id'] : 0;
         expect($siteId)->toBeGreaterThan(0);
@@ -131,9 +125,8 @@ it('creates a new site for a real, existing directory, then deletes it via the C
         expect($deleteResult['status'])->toBe(200);
         expect($deleteResult['body'])->toContain('deleted');
 
-        $afterDelete = $db->query(sprintf('SELECT id FROM %ssites WHERE id = %d', $prefix, $siteId));
-        $afterRow = $afterDelete instanceof mysqli_result ? $afterDelete->fetch_assoc() : null;
-        $db->close();
+        $afterRow = H::dbFetchAssoc($db, sprintf('SELECT id FROM %ssites WHERE id = %d', $prefix, $siteId));
+        H::dbClose($db);
         expect($afterRow)->toBeNull();
     } finally {
         if (is_dir($absoluteDir)) {

@@ -17,12 +17,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 function extraFiltersSetImageAttrs(int $imageId, ?float $ratingScore = null, ?string $dateCreation = null): void
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
     $sets = [];
@@ -30,12 +25,12 @@ function extraFiltersSetImageAttrs(int $imageId, ?float $ratingScore = null, ?st
         $sets[] = 'rating_score = ' . $ratingScore;
     }
     if ($dateCreation !== null) {
-        $sets[] = "date_creation = '" . $db->real_escape_string($dateCreation) . "'";
+        $sets[] = "date_creation = '" . H::dbEscape($db, $dateCreation) . "'";
     }
     if ($sets !== []) {
-        $db->query(sprintf('UPDATE %simages SET %s WHERE id = %d', $prefix, implode(', ', $sets), $imageId));
+        H::dbQuery($db, sprintf('UPDATE %simages SET %s WHERE id = %d', $prefix, implode(', ', $sets), $imageId));
     }
-    $db->close();
+    H::dbClose($db);
 }
 
 /**
@@ -85,12 +80,7 @@ function extraFiltersSettledContent(Webpage|PendingAwaitablePage|AwaitableWebpag
  */
 function extraFiltersInsertRawSearchRow(array $rules): string
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
@@ -100,13 +90,13 @@ function extraFiltersInsertRawSearchRow(array $rules): string
         throw new RuntimeException('json_encode failed for raw search rules: ' . var_export($rules, true));
     }
 
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %ssearch (rules, created_on, created_by, search_uuid, forked_from) VALUES ('%s', NOW(), NULL, '%s', NULL)",
         $prefix,
-        $db->real_escape_string($rulesJson),
-        $db->real_escape_string($uuid)
+        H::dbEscape($db, $rulesJson),
+        H::dbEscape($db, $uuid)
     ));
-    $db->close();
+    H::dbClose($db);
 
     return $uuid;
 }

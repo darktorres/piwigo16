@@ -17,15 +17,9 @@ function pictureCoiDbPrefix(): string
 
 function pictureCoiValue(int $imageId): ?string
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
-    $result = $db->query(sprintf('SELECT coi FROM %simages WHERE id = %d', pictureCoiDbPrefix(), $imageId));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    $db = H::connect();
+    $row = H::dbFetchAssoc($db, sprintf('SELECT coi FROM %simages WHERE id = %d', pictureCoiDbPrefix(), $imageId));
+    H::dbClose($db);
 
     return is_array($row) && is_string($row['coi']) ? $row['coi'] : null;
 }
@@ -87,18 +81,13 @@ it('carries a real representative_ext into the deleted derivative_infos when set
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Picture Coi RepExt Photo');
     @unlink($image);
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = pictureCoiDbPrefix();
     // representative_ext is non-empty for a video/pdf/etc. upload (a
     // representative image with a different extension than the original
     // file) -- set directly here rather than via a real video/pdf upload,
     // which needs ffmpeg/imagemagick binaries this test env may not have.
-    $db->query(sprintf("UPDATE %simages SET representative_ext = 'jpg' WHERE id = %d", $prefix, $imageId));
+    H::dbQuery($db, sprintf("UPDATE %simages SET representative_ext = 'jpg' WHERE id = %d", $prefix, $imageId));
 
     try {
         $result = H::adminPost($page, '/admin.php?page=picture_coi&image_id=' . $imageId, [
@@ -112,7 +101,7 @@ it('carries a real representative_ext into the deleted derivative_infos when set
         expect($result['status'])->toBe(200);
         expect(pictureCoiValue($imageId))->not->toBeNull();
     } finally {
-        $db->close();
+        H::dbClose($db);
     }
 });
 

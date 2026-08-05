@@ -192,34 +192,27 @@ function identDbPrefix(): string
  */
 function identAddLanguage(string $code, string $name): void
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = identDbPrefix();
-    $db->query(sprintf(
-        "INSERT INTO %slanguages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON DUPLICATE KEY UPDATE version = VALUES(version)",
+    $upsertSql = $db instanceof \mysqli
+        ? "INSERT INTO %slanguages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON DUPLICATE KEY UPDATE version = VALUES(version)"
+        : "INSERT INTO %slanguages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON CONFLICT (id) DO UPDATE SET version = EXCLUDED.version";
+    H::dbQuery($db, sprintf(
+        $upsertSql,
         $prefix,
-        $db->real_escape_string($code),
-        $db->real_escape_string($name)
+        H::dbEscape($db, $code),
+        H::dbEscape($db, $name)
     ));
-    $db->close();
+    H::dbClose($db);
 }
 
 /** Reverts identAddLanguage(). */
 function identRemoveLanguage(string $code): void
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = identDbPrefix();
-    $db->query(sprintf("DELETE FROM %slanguages WHERE id = '%s'", $prefix, $db->real_escape_string($code)));
-    $db->close();
+    H::dbQuery($db, sprintf("DELETE FROM %slanguages WHERE id = '%s'", $prefix, H::dbEscape($db, $code)));
+    H::dbClose($db);
 }
 
 it('shows a cookies-blocked error and does not attempt to log in when no session cookie is sent', function (): void {

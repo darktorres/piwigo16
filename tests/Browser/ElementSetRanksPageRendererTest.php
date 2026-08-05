@@ -185,23 +185,19 @@ it('saves a manual rank_of_image POST as the real image_category rank order', fu
     expect($result['status'])->toBe(200);
     expect($result['body'])->toContain('Album updated successfully');
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
+    // `rank` is a reserved word on both platforms (MySQL 8.0.2+'s window
+    // functions, Postgres always) -- backtick/double-quote per platform.
+    $rankIdentifier = $db instanceof \mysqli ? '`rank`' : '"rank"';
+    $fetchedRows = H::dbFetchAll($db, sprintf('SELECT image_id, %1$s FROM %2$simage_category WHERE category_id = %3$d ORDER BY %1$s', $rankIdentifier, $prefix, $albumId));
     $rows = [];
-    $res = $db->query(sprintf('SELECT image_id, `rank` FROM %simage_category WHERE category_id = %d ORDER BY `rank`', $prefix, $albumId));
-    if ($res instanceof mysqli_result) {
-        while (is_array($row = $res->fetch_assoc())) {
-            $rows[] = ['image_id' => (int) $row['image_id'], 'rank' => (int) $row['rank']];
-        }
+    foreach ($fetchedRows as $row) {
+        $rows[] = ['image_id' => (int) $row['image_id'], 'rank' => (int) $row['rank']];
     }
-    $db->close();
+    H::dbClose($db);
 
     expect(array_column($rows, 'image_id'))->toBe([$imageIdB, $imageIdC, $imageIdA]);
     expect(array_column($rows, 'rank'))->toBe([1, 2, 3]);
@@ -234,16 +230,11 @@ it('builds a comma-joined user_define image_order string, filtering out an inval
     expect($result['status'])->toBe(200);
     expect($result['body'])->toContain('Album updated successfully');
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
     $row = H::fetchAssocOrFail($db, sprintf('SELECT image_order FROM %scategories WHERE id = %d', $prefix, $albumId));
-    $db->close();
+    H::dbClose($db);
 
     expect($row['image_order'])->toBe('file ASC,name DESC');
 
@@ -274,16 +265,11 @@ it('persists the literal `rank` ASC order string for the manual "rank" choice, w
     // class of source-string-vs-translation mismatch).
     expect($result['body'])->toContain('Images manual order saved');
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
     $row = H::fetchAssocOrFail($db, sprintf('SELECT image_order FROM %scategories WHERE id = %d', $prefix, $albumId));
-    $db->close();
+    H::dbClose($db);
 
     expect($row['image_order'])->toBe('`rank` ASC');
 
@@ -312,17 +298,11 @@ it('falls back to the filename-derived name when a photo has no explicit name', 
     $imageId = H::uploadPhotoViaApi($image, $albumId, '');
     @unlink($image);
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $result = $db->query(sprintf('SELECT file, name FROM %simages WHERE id = %d', $prefix, $imageId));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    $row = H::dbFetchAssoc($db, sprintf('SELECT file, name FROM %simages WHERE id = %d', $prefix, $imageId));
+    H::dbClose($db);
     if (! is_array($row)) {
         throw new RuntimeException("expected a real images row for id {$imageId}");
     }

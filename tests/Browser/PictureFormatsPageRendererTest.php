@@ -54,25 +54,20 @@ it('lists a real alternate-format file with its label, filesize in KB, and downl
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Picture Formats With Format Photo');
     @unlink($image);
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = pictureFormatsDbPrefix();
     // filesize is stored in KB; 2048 -> 2.0 KB rendered. NOT the
     // Lang::has('format TIF') branch -- no catalog anywhere in this repo
     // (including the reference 16.x branch) defines a "format XXX" msgid,
     // see this file's own top docblock; the label here is always the plain
     // strtoupper($ext) fallback ("TIF").
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %simage_format (image_id, ext, filesize) VALUES (%d, 'tif', 2048)",
         $prefix,
         $imageId
     ));
-    $formatId = (int) $db->insert_id;
-    $db->close();
+    $formatId = H::dbInsertId($db);
+    H::dbClose($db);
 
     try {
         $page = H::navigateOk($page, '/admin.php?page=picture_formats&image_id=' . $imageId);
@@ -81,14 +76,9 @@ it('lists a real alternate-format file with its label, filesize in KB, and downl
         $page->assertPresent('a[href*="format=' . $formatId . '"]');
         $page->assertNoJavaScriptErrors();
     } finally {
-        $db = new mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
-        $db->query(sprintf('DELETE FROM %simage_format WHERE format_id = %d', $prefix, $formatId));
-        $db->close();
+        $db = H::connect();
+        H::dbQuery($db, sprintf('DELETE FROM %simage_format WHERE format_id = %d', $prefix, $formatId));
+        H::dbClose($db);
     }
 });
 

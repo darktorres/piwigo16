@@ -26,29 +26,26 @@ function albumsPageDbPrefix(): string
 /** @return array<int, string> category id => name, ordered by rank ASC */
 function albumsPageChildrenOrderedByRank(int $parentId): array
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = albumsPageDbPrefix();
     // Root categories store id_uppercat as a real SQL NULL, never 0 --
     // `id_uppercat = 0` matches nothing for them, confirmed live against
     // the real fixture schema.
     $whereClause = $parentId === 0 ? 'id_uppercat IS NULL' : sprintf('id_uppercat = %d', $parentId);
-    $result = $db->query(sprintf(
-        'SELECT id, name FROM %scategories WHERE %s ORDER BY `rank` ASC',
+    // `rank` is a reserved word on both platforms (MySQL 8.0.2+'s window
+    // functions, Postgres always) -- backtick/double-quote per platform.
+    $rankIdentifier = $db instanceof \mysqli ? '`rank`' : '"rank"';
+    $rows = H::dbFetchAll($db, sprintf(
+        'SELECT id, name FROM %scategories WHERE %s ORDER BY %s ASC',
         $prefix,
-        $whereClause
+        $whereClause,
+        $rankIdentifier
     ));
     $ordered = [];
-    if ($result instanceof mysqli_result) {
-        while (is_array($row = $result->fetch_assoc())) {
-            $ordered[(int) $row['id']] = (string) $row['name'];
-        }
+    foreach ($rows as $row) {
+        $ordered[(int) $row['id']] = (string) $row['name'];
     }
-    $db->close();
+    H::dbClose($db);
 
     return $ordered;
 }

@@ -50,26 +50,36 @@ function tagsPageDbPrefix(): string
 // it to actually exercise "orphan" behavior.
 function tagsPageBackdateTag(int $tagId): void
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
-    $db->query(sprintf('UPDATE %stags SET lastmodified = DATE_SUB(NOW(), INTERVAL 2 DAY) WHERE id = %d', tagsPageDbPrefix(), $tagId));
-    $db->close();
+    $db = H::connect();
+    // DATE_SUB() is MySQL-only -- Postgres's own date arithmetic is
+    // `NOW() - INTERVAL '2 days'`. piwigo_tags also has a real BEFORE
+    // UPDATE trigger (trg_tags_lastmodified, Phase B's port of MySQL's
+    // `ON UPDATE CURRENT_TIMESTAMP`) that unconditionally sets
+    // NEW.lastmodified = now() on every UPDATE, which would otherwise
+    // silently clobber this backdated value -- same real bug already
+    // found live in tools/reimport-fixture.sh's own categories.lastmodified
+    // normalization. session_replication_role = replica (used the same
+    // way there) suppresses the trigger for this one statement.
+    $dateExpr = $db instanceof \mysqli
+        ? 'DATE_SUB(NOW(), INTERVAL 2 DAY)'
+        : "NOW() - INTERVAL '2 days'";
+    if ($db instanceof \mysqli) {
+        H::dbQuery($db, sprintf('UPDATE %stags SET lastmodified = %s WHERE id = %d', tagsPageDbPrefix(), $dateExpr, $tagId));
+    } else {
+        H::dbQuery($db, 'BEGIN');
+        H::dbQuery($db, 'SET session_replication_role = replica');
+        H::dbQuery($db, sprintf('UPDATE %stags SET lastmodified = %s WHERE id = %d', tagsPageDbPrefix(), $dateExpr, $tagId));
+        H::dbQuery($db, 'SET session_replication_role = DEFAULT');
+        H::dbQuery($db, 'COMMIT');
+    }
+    H::dbClose($db);
 }
 
 function tagsPageDeleteTag(int $tagId): void
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
-    $db->query(sprintf('DELETE FROM %stags WHERE id = %d', tagsPageDbPrefix(), $tagId));
-    $db->close();
+    $db = H::connect();
+    H::dbQuery($db, sprintf('DELETE FROM %stags WHERE id = %d', tagsPageDbPrefix(), $tagId));
+    H::dbClose($db);
 }
 
 it('renders the tag list including a real tagged photo\'s counter', function (): void {
@@ -210,17 +220,12 @@ it('joins real get_tag_alt_names hook results into a comma-separated alt_names v
         str_replace('__TAGS_PAGE_ALT_NAMES_TARGET__', $tagName, (string) file_get_contents($pluginSourcePath))
     );
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = tagsPageDbPrefix();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
         $prefix,
-        $db->real_escape_string($pluginId)
+        H::dbEscape($db, $pluginId)
     ));
 
     $page = H::loginAsAdmin($this);
@@ -237,8 +242,8 @@ it('joins real get_tag_alt_names hook results into a comma-separated alt_names v
         expect($result['body'])->toContain('Alt Name One, Alt Name Two');
     } finally {
         tagsPageDeleteTag($tagId);
-        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
-        $db->close();
+        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbClose($db);
         tagsPageRemoveFixturePlugin($pluginId);
     }
 });

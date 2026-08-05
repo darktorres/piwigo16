@@ -108,12 +108,7 @@ it('fatal-errors instead of silently swallowing a real render_tag_name hook that
     PHP);
 
     $page = H::loginAsAdmin($this);
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
@@ -138,10 +133,10 @@ it('fatal-errors instead of silently swallowing a real render_tag_name hook that
 
         \Piwigo\Cache\CachePools::tagCloud()->clear();
 
-        $db->query(sprintf(
+        H::dbQuery($db, sprintf(
             "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
             $prefix,
-            $db->real_escape_string($pluginId)
+            H::dbEscape($db, $pluginId)
         ));
 
         try {
@@ -155,10 +150,10 @@ it('fatal-errors instead of silently swallowing a real render_tag_name hook that
             $response = H::rawGet($page, '/tags.php?display_mode=letters');
             expect($response['status'])->toBe(500);
         } finally {
-            $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
+            H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
         }
     } finally {
-        $db->close();
+        H::dbClose($db);
         @unlink($dir . '/main.inc.php');
         if (is_dir($dir)) {
             rmdir($dir);

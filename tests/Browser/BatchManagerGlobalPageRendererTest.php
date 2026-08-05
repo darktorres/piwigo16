@@ -135,8 +135,7 @@ it('clears the title/date_creation via their own "remove" checkboxes instead of 
 
     $db = bmDbConnect();
     $prefix = bmDbPrefix();
-    $row = $db->query(sprintf('SELECT name FROM %simages WHERE id = %d', $prefix, $imageId));
-    $nameRow = $row instanceof mysqli_result ? $row->fetch_assoc() : null;
+    $nameRow = H::dbFetchAssoc($db, sprintf('SELECT name FROM %simages WHERE id = %d', $prefix, $imageId));
     expect(is_array($nameRow) ? $nameRow['name'] : 'MISSING')->toBeNull();
 
     $dateResult = bmPost($page, [
@@ -149,10 +148,9 @@ it('clears the title/date_creation via their own "remove" checkboxes instead of 
     ]);
     expect($dateResult['status'])->toBe(200);
 
-    $dateRow = $db->query(sprintf('SELECT date_creation FROM %simages WHERE id = %d', $prefix, $imageId));
-    $dateAssoc = $dateRow instanceof mysqli_result ? $dateRow->fetch_assoc() : null;
+    $dateAssoc = H::dbFetchAssoc($db, sprintf('SELECT date_creation FROM %simages WHERE id = %d', $prefix, $imageId));
     expect(is_array($dateAssoc) ? $dateAssoc['date_creation'] : 'MISSING')->toBeNull();
-    $db->close();
+    H::dbClose($db);
 });
 
 it('reports "no photo can be deleted" when confirm_deletion is sent with an empty selection', function (): void {
@@ -512,8 +510,8 @@ it('passes representative_ext through to the derivative-deletion payload when th
     // plain jpg upload carry a representative_ext), not an assertion on
     // the DB; the assertion below is on the real HTTP response.
     $db = bmDbConnect();
-    $db->query(sprintf("UPDATE %simages SET representative_ext = 'jpg' WHERE id = %d", bmDbPrefix(), $imageId));
-    $db->close();
+    H::dbQuery($db, sprintf("UPDATE %simages SET representative_ext = 'jpg' WHERE id = %d", bmDbPrefix(), $imageId));
+    H::dbClose($db);
 
     $result = bmPost($page, [
         'submit' => '1',

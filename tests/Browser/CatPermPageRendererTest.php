@@ -95,21 +95,14 @@ it('submits a status/group permission change and persists it', function (): void
     expect($result['status'])->toBe(200);
     expect($result['body'])->toContain('Album updated successfully');
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
-    $statusRow = $db->query(sprintf('SELECT status FROM %scategories WHERE id = %d', $prefix, $albumId));
-    $statusAssoc = $statusRow instanceof mysqli_result ? $statusRow->fetch_assoc() : null;
+    $statusAssoc = H::dbFetchAssoc($db, sprintf('SELECT status FROM %scategories WHERE id = %d', $prefix, $albumId));
     expect(is_array($statusAssoc) ? $statusAssoc['status'] : 'MISSING')->toBe('private');
 
-    $groupRow = $db->query(sprintf('SELECT group_id FROM %sgroup_access WHERE cat_id = %d', $prefix, $albumId));
-    $groupAssoc = $groupRow instanceof mysqli_result ? $groupRow->fetch_assoc() : null;
+    $groupAssoc = H::dbFetchAssoc($db, sprintf('SELECT group_id FROM %sgroup_access WHERE cat_id = %d', $prefix, $albumId));
     expect(is_array($groupAssoc) ? (int) $groupAssoc['group_id'] : -1)->toBe(3);
-    $db->close();
+    H::dbClose($db);
 });

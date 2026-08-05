@@ -125,17 +125,11 @@ it('falsifies commentable for a chosen album via the falsify submission', functi
 
         expect($result['status'])->toBe(200);
 
-        $db = new mysqli(
-            (string) getenv('PIWIGO_DB_HOST'),
-            (string) getenv('PIWIGO_DB_USER'),
-            (string) getenv('PIWIGO_DB_PASSWORD'),
-            (string) getenv('PIWIGO_DB_BASE')
-        );
+        $db = H::connect();
         $prefix = getenv('PIWIGO_DB_PREFIX');
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        $row = $db->query(sprintf('SELECT commentable FROM %scategories WHERE id = 1', $prefix));
-        $assoc = $row instanceof mysqli_result ? $row->fetch_assoc() : null;
-        $db->close();
+        $assoc = H::dbFetchAssoc($db, sprintf('SELECT commentable FROM %scategories WHERE id = 1', $prefix));
+        H::dbClose($db);
         expect(is_array($assoc) ? (int) $assoc['commentable'] : -1)->toBe(0);
     } finally {
         // Fixture category 1 starts commentable=1 -- restore it via the

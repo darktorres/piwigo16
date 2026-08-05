@@ -50,12 +50,7 @@ it('renders more than one year of history summary data and a real day-level mont
     $lastMonthYear = (int) $lastMonth->format('Y');
     $lastMonthMonth = (int) $lastMonth->format('n');
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
 
     // MySQL's UNIQUE KEY (year, month, day, hour) permits multiple rows
     // that share the same non-NULL columns whenever at least one indexed
@@ -66,8 +61,8 @@ it('renders more than one year of history summary data and a real day-level mont
     // duplicate-key INSERT. Deleting first makes this idempotent for real,
     // not just in appearance.
     $deleteSeeds = function () use ($db, $prefix, $lastMonthYear, $lastMonthMonth): void {
-        $db->query(sprintf('DELETE FROM %shistory_summary WHERE year IN (2019, 2020)', $prefix));
-        $db->query(sprintf(
+        H::dbQuery($db, sprintf('DELETE FROM %shistory_summary WHERE year IN (2019, 2020)', $prefix));
+        H::dbQuery($db, sprintf(
             'DELETE FROM %shistory_summary WHERE year = %d AND month = %d AND day = 10 AND hour IS NULL',
             $prefix,
             $lastMonthYear,
@@ -76,15 +71,15 @@ it('renders more than one year of history summary data and a real day-level mont
     };
     $deleteSeeds();
 
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         'INSERT INTO %shistory_summary (year, month, day, hour, nb_pages, history_id_from, history_id_to) VALUES (2019, NULL, NULL, NULL, 42, 1, 999000001)',
         $prefix
     ));
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         'INSERT INTO %shistory_summary (year, month, day, hour, nb_pages, history_id_from, history_id_to) VALUES (2020, NULL, NULL, NULL, 7, 1, 999000002)',
         $prefix
     ));
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         'INSERT INTO %shistory_summary (year, month, day, hour, nb_pages, history_id_from, history_id_to) VALUES (%d, %d, 10, NULL, 99, 1, 999000003)',
         $prefix,
         $lastMonthYear,
@@ -161,7 +156,7 @@ it('renders more than one year of history summary data and a real day-level mont
         expect($body)->toContain(sprintf('"%04d-%02d-10":99', $lastMonthYear, $lastMonthMonth));
     } finally {
         $deleteSeeds();
-        $db->close();
+        H::dbClose($db);
         @unlink($cookieJar);
     }
 });

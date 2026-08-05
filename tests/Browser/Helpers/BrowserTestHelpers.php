@@ -438,7 +438,7 @@ final class BrowserTestHelpers
      * SELECT-driven methods (configValue(), imagePath(), ...) need that
      * RegenerateFixtureTest's insert-only usage never did.
      */
-    private static function connect(): \mysqli|\PgSql\Connection
+    public static function connect(): \mysqli|\PgSql\Connection
     {
         $host = (string) getenv('PIWIGO_DB_HOST');
         $user = (string) getenv('PIWIGO_DB_USER');
@@ -463,7 +463,7 @@ final class BrowserTestHelpers
         return new \mysqli($host, $user, $password, $base);
     }
 
-    private static function dbQuery(\mysqli|\PgSql\Connection $db, string $sql): void
+    public static function dbQuery(\mysqli|\PgSql\Connection $db, string $sql): void
     {
         if ($db instanceof \mysqli) {
             $db->query($sql);
@@ -472,12 +472,12 @@ final class BrowserTestHelpers
         }
     }
 
-    private static function dbEscape(\mysqli|\PgSql\Connection $db, string $value): string
+    public static function dbEscape(\mysqli|\PgSql\Connection $db, string $value): string
     {
         return $db instanceof \mysqli ? $db->real_escape_string($value) : pg_escape_string($db, $value);
     }
 
-    private static function dbClose(\mysqli|\PgSql\Connection $db): void
+    public static function dbClose(\mysqli|\PgSql\Connection $db): void
     {
         if ($db instanceof \mysqli) {
             $db->close();
@@ -486,8 +486,33 @@ final class BrowserTestHelpers
         }
     }
 
+    /**
+     * The id an immediately-preceding INSERT (on the same connection, in
+     * this same request) generated for an auto-increment/identity primary
+     * key column -- mysqli's own `$db->insert_id` property has no
+     * Postgres equivalent (a genuinely different id-tracking model: no
+     * per-connection "last insert id" concept at all). `lastval()` is the
+     * real Postgres counterpart: it returns the most recently
+     * `nextval()`-consumed value for ANY sequence in the CURRENT session,
+     * which every SERIAL/IDENTITY-backed id column consumes automatically
+     * on insert (Phase B's schema-authoring pass), matching mysqli's own
+     * per-connection (not global) semantics closely enough for this
+     * suite's single-INSERT-then-read call shape. Verified live before
+     * porting every real `$db->insert_id` call site to this.
+     */
+    public static function dbInsertId(\mysqli|\PgSql\Connection $db): int
+    {
+        if ($db instanceof \mysqli) {
+            return (int) $db->insert_id;
+        }
+
+        $row = self::dbFetchAssoc($db, 'SELECT lastval() AS id');
+
+        return is_array($row) && is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
+    }
+
     /** @return array<string, float|int|string|null>|null */
-    private static function dbFetchAssoc(\mysqli|\PgSql\Connection $db, string $sql): ?array
+    public static function dbFetchAssoc(\mysqli|\PgSql\Connection $db, string $sql): ?array
     {
         if ($db instanceof \mysqli) {
             $result = $db->query($sql);
@@ -509,7 +534,7 @@ final class BrowserTestHelpers
     }
 
     /** @return list<array<string, float|int|string|null>> */
-    private static function dbFetchAll(\mysqli|\PgSql\Connection $db, string $sql): array
+    public static function dbFetchAll(\mysqli|\PgSql\Connection $db, string $sql): array
     {
         if ($db instanceof \mysqli) {
             $result = $db->query($sql);

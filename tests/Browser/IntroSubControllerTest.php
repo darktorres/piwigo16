@@ -30,14 +30,9 @@ function introDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function introDbConnect(): mysqli
+function introDbConnect(): \mysqli|\PgSql\Connection
 {
-    return new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    return H::connect();
 }
 
 /** Inserts an unlinked (orphan) image row and returns its id. */
@@ -45,14 +40,14 @@ function introInsertOrphanImage(): int
 {
     $db = introDbConnect();
     $file = 'ct_orphan_' . uniqid() . '.jpg';
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %simages (file, path, hit, level) VALUES ('%s', '%s', 0, 0)",
         introDbPrefix(),
-        $db->real_escape_string($file),
-        $db->real_escape_string($file)
+        H::dbEscape($db, $file),
+        H::dbEscape($db, $file)
     ));
-    $id = (int) $db->insert_id;
-    $db->close();
+    $id = H::dbInsertId($db);
+    H::dbClose($db);
 
     return $id;
 }
@@ -60,20 +55,20 @@ function introInsertOrphanImage(): int
 function introDeleteImage(int $imageId): void
 {
     $db = introDbConnect();
-    $db->query(sprintf('DELETE FROM %simages WHERE id = %d', introDbPrefix(), $imageId));
-    $db->close();
+    H::dbQuery($db, sprintf('DELETE FROM %simages WHERE id = %d', introDbPrefix(), $imageId));
+    H::dbClose($db);
 }
 
 function introSetCategoryVisible(int $categoryId, bool $visible): void
 {
     $db = introDbConnect();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         'UPDATE %scategories SET visible = %d WHERE id = %d',
         introDbPrefix(),
         $visible ? 1 : 0,
         $categoryId
     ));
-    $db->close();
+    H::dbClose($db);
 }
 
 it('renders the admin dashboard', function (): void {
@@ -168,22 +163,22 @@ function introInsertActivityRows(array $rows): void
     $now = Env::now();
     foreach ($rows as $row) {
         $occuredOn = (clone $now)->modify('-' . $row['daysAgo'] . ' day')->format('Y-m-d H:i:s');
-        $db->query(sprintf(
+        H::dbQuery($db, sprintf(
             "INSERT INTO %sactivity (object, object_id, action, session_idx, occured_on) VALUES ('%s', 1, '%s', 'ct_intro_session', '%s')",
             introDbPrefix(),
-            $db->real_escape_string($row['object']),
-            $db->real_escape_string($row['action']),
-            $db->real_escape_string($occuredOn)
+            H::dbEscape($db, $row['object']),
+            H::dbEscape($db, $row['action']),
+            H::dbEscape($db, $occuredOn)
         ));
     }
-    $db->close();
+    H::dbClose($db);
 }
 
 function introDeleteActivityRows(): void
 {
     $db = introDbConnect();
-    $db->query(sprintf("DELETE FROM %sactivity WHERE session_idx = 'ct_intro_session'", introDbPrefix()));
-    $db->close();
+    H::dbQuery($db, sprintf("DELETE FROM %sactivity WHERE session_idx = 'ct_intro_session'", introDbPrefix()));
+    H::dbClose($db);
 }
 
 it('smooths the activity chart into size groups when daily counts vary by more than 120%', function (): void {
@@ -260,14 +255,14 @@ it('smooths the activity chart into size groups when daily counts vary by more t
 function introInsertFakeImage(string $path): int
 {
     $db = introDbConnect();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %simages (file, path, hit, level) VALUES ('%s', '%s', 0, 0)",
         introDbPrefix(),
-        $db->real_escape_string(basename($path)),
-        $db->real_escape_string($path)
+        H::dbEscape($db, basename($path)),
+        H::dbEscape($db, $path)
     ));
-    $id = (int) $db->insert_id;
-    $db->close();
+    $id = H::dbInsertId($db);
+    H::dbClose($db);
 
     return $id;
 }
@@ -275,14 +270,14 @@ function introInsertFakeImage(string $path): int
 function introInsertImageFormat(int $imageId, string $ext, int $filesize): void
 {
     $db = introDbConnect();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %simage_format (image_id, ext, filesize) VALUES (%d, '%s', %d)",
         introDbPrefix(),
         $imageId,
-        $db->real_escape_string($ext),
+        H::dbEscape($db, $ext),
         $filesize
     ));
-    $db->close();
+    H::dbClose($db);
 }
 
 it('buckets storage-chart file extensions into Videos/Other/Formats groups', function (): void {
@@ -393,8 +388,8 @@ function introBulkInsertImages(int $count, string $marker): void
 {
     $db = introDbConnect();
     $prefix = introDbPrefix();
-    $escapedMarker = $db->real_escape_string($marker);
-    $db->query(sprintf(
+    $escapedMarker = H::dbEscape($db, $marker);
+    H::dbQuery($db, sprintf(
         "INSERT INTO %simages (file, path, hit, level)
          SELECT CONCAT('%s', n, '.jpg'), CONCAT('%s', n, '.jpg'), 0, 0
          FROM (
@@ -411,18 +406,18 @@ function introBulkInsertImages(int $count, string $marker): void
         $escapedMarker,
         $count
     ));
-    $db->close();
+    H::dbClose($db);
 }
 
 function introDeleteMarkedImages(string $marker): void
 {
     $db = introDbConnect();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "DELETE FROM %simages WHERE file LIKE '%s%%'",
         introDbPrefix(),
-        $db->real_escape_string($marker)
+        H::dbEscape($db, $marker)
     ));
-    $db->close();
+    H::dbClose($db);
 }
 
 it('forces a real orphan recount via ImageService::countOrphans() once the gallery is "big" (>= 100000 photos)', function (): void {
@@ -442,7 +437,7 @@ it('forces a real orphan recount via ImageService::countOrphans() once the galle
 
     $db = introDbConnect();
     $countRow = H::fetchAssocOrFail($db, 'SELECT COUNT(*) AS c FROM ' . introDbPrefix() . 'images');
-    $db->close();
+    H::dbClose($db);
     $needed = max(1, 100000 - (int) $countRow['c']);
 
     introBulkInsertImages($needed, $marker);
@@ -469,7 +464,7 @@ it('drops the storage-used decimal display once total disk usage exceeds 100GB',
     $marker = 'ct_intro_bigsize_' . uniqid();
 
     for ($i = 0; $i < 7; $i++) {
-        $db->query(sprintf(
+        H::dbQuery($db, sprintf(
             "INSERT INTO %simages (file, path, hit, level, filesize) VALUES ('%s_%d.jpg', '%s_%d.jpg', 0, 0, 16777215)",
             $prefix,
             $marker,
@@ -484,7 +479,7 @@ it('drops the storage-used decimal display once total disk usage exceeds 100GB',
         $prefix,
         $prefix
     ));
-    $db->close();
+    H::dbClose($db);
 
     $totalKb = (float) $totalRow['total_kb'];
     $expectedGb = $totalKb / (1024.0 * 1024.0);
@@ -512,18 +507,19 @@ function introSetUserColumn(int $userId, string $column, ?string $value): void
     $db = introDbConnect();
     $prefix = introDbPrefix();
     if ($value === null) {
-        $db->query(sprintf('UPDATE %suser_infos SET %s = NULL WHERE user_id = %d', $prefix, $column, $userId));
-        $db->close();
+        H::dbQuery($db, sprintf('UPDATE %suser_infos SET %s = NULL WHERE user_id = %d', $prefix, $column, $userId));
+        H::dbClose($db);
 
         return;
     }
-    $stmt = $db->prepare(sprintf('UPDATE %suser_infos SET %s = ? WHERE user_id = ?', $prefix, $column));
-    if (! $stmt instanceof mysqli_stmt) {
-        throw new RuntimeException('mysqli::prepare() failed for introSetUserColumn()');
-    }
-    $stmt->bind_param('si', $value, $userId);
-    $stmt->execute();
-    $db->close();
+    H::dbQuery($db, sprintf(
+        "UPDATE %suser_infos SET %s = '%s' WHERE user_id = %d",
+        $prefix,
+        $column,
+        H::dbEscape($db, $value),
+        $userId
+    ));
+    H::dbClose($db);
 }
 
 it('shows the newsletter subscription promo panel for an account old enough with enough albums and photos', function (): void {
@@ -544,9 +540,9 @@ it('shows the newsletter subscription promo panel for an account old enough with
     $originalPreferences = H::fetchAssocOrFail($db, "SELECT preferences FROM {$prefix}user_infos WHERE user_id = 1")['preferences'];
     $configSnapshot = H::snapshotConfig(['show_newsletter_subscription']);
 
-    $db->query("UPDATE {$prefix}user_infos SET registration_date = '2020-01-01 00:00:00' WHERE user_id = 1");
-    $db->query("UPDATE {$prefix}user_infos SET preferences = JSON_SET(COALESCE(preferences, JSON_OBJECT()), '\$.show_newsletter_subscription', TRUE) WHERE user_id = 1");
-    $db->close();
+    H::dbQuery($db, "UPDATE {$prefix}user_infos SET registration_date = '2020-01-01 00:00:00' WHERE user_id = 1");
+    H::dbQuery($db, "UPDATE {$prefix}user_infos SET preferences = JSON_SET(COALESCE(preferences, JSON_OBJECT()), '\$.show_newsletter_subscription', TRUE) WHERE user_id = 1");
+    H::dbClose($db);
 
     try {
         H::setConfigValue('show_newsletter_subscription', 'true');
@@ -641,18 +637,15 @@ it('skips malformed cached activity-week/day entries from a stale-but-still-"fre
         $db = introDbConnect();
         $prefix = introDbPrefix();
         $sessionId = null;
-        $result = $db->query("SELECT id FROM {$prefix}sessions");
-        if ($result instanceof mysqli_result) {
-            while (is_array($row = $result->fetch_assoc())) {
-                $candidate = (string) $row['id'];
-                if (str_ends_with($candidate, $sessionSuffix)) {
-                    $sessionId = $candidate;
-                    break;
-                }
+        foreach (H::dbFetchAll($db, "SELECT id FROM {$prefix}sessions") as $row) {
+            $candidate = (string) $row['id'];
+            if (str_ends_with($candidate, $sessionSuffix)) {
+                $sessionId = $candidate;
+                break;
             }
         }
         if ($sessionId === null) {
-            $db->close();
+            H::dbClose($db);
 
             throw new RuntimeException('Could not find the DB-backed session row for cookie suffix: ' . $sessionSuffix);
         }
@@ -685,13 +678,13 @@ it('skips malformed cached activity-week/day entries from a stale-but-still-"fre
         ]);
         $fragment = 'cache_activity_last_weeks|' . $malformedValue;
 
-        $stmt = $db->prepare("UPDATE {$prefix}sessions SET data = CONCAT(data, ?) WHERE id = ?");
-        if (! $stmt instanceof mysqli_stmt) {
-            throw new RuntimeException('mysqli::prepare() failed for the session-corruption UPDATE');
-        }
-        $stmt->bind_param('ss', $fragment, $sessionId);
-        $stmt->execute();
-        $db->close();
+        H::dbQuery($db, sprintf(
+            "UPDATE %ssessions SET data = CONCAT(data, '%s') WHERE id = '%s'",
+            $prefix,
+            H::dbEscape($db, $fragment),
+            H::dbEscape($db, $sessionId)
+        ));
+        H::dbClose($db);
 
         $html = $curl(H::baseUrl() . '/admin.php');
 

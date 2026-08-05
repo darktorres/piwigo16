@@ -31,15 +31,10 @@ it('protects other admin/webmaster users from deletion for a plain "admin"-statu
     ]);
     $userId = wsAddedUserId($addResult);
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $db->query(sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
+    H::dbQuery($db, sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
 
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
@@ -74,9 +69,9 @@ it('protects other admin/webmaster users from deletion for a plain "admin"-statu
         $adminPage->assertSee('fixture_admin');
         $adminPage->assertNoJavaScriptErrors();
     } finally {
-        $db->query(sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
-        $db->query(sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
-        $db->close();
+        H::dbQuery($db, sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
+        H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        H::dbClose($db);
     }
 });
 
@@ -174,21 +169,16 @@ function userListPageRendererDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function userListPageRendererDbConnect(): mysqli
+function userListPageRendererDbConnect(): \mysqli|\PgSql\Connection
 {
-    return new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    return H::connect();
 }
 
 it('defaults to line-view pagination of 5 for an admin with no saved view preference', function (): void {
     $db = userListPageRendererDbConnect();
     $prefix = userListPageRendererDbPrefix();
     $original = H::fetchAssocOrFail($db, "SELECT preferences FROM {$prefix}user_infos WHERE user_id = 1");
-    $db->query("UPDATE {$prefix}user_infos SET preferences = NULL WHERE user_id = 1");
+    H::dbQuery($db, "UPDATE {$prefix}user_infos SET preferences = NULL WHERE user_id = 1");
 
     try {
         $page = H::loginAsAdmin($this);
@@ -202,14 +192,13 @@ it('defaults to line-view pagination of 5 for an admin with no saved view prefer
     } finally {
         $original_preferences = $original['preferences'];
         if (is_string($original_preferences)) {
-            $stmt = $db->prepare("UPDATE {$prefix}user_infos SET preferences = ? WHERE user_id = 1");
-            if (! $stmt instanceof \mysqli_stmt) {
-                throw new RuntimeException('mysqli::prepare() failed for the preferences restore statement');
-            }
-            $stmt->bind_param('s', $original_preferences);
-            $stmt->execute();
+            H::dbQuery($db, sprintf(
+                "UPDATE %suser_infos SET preferences = '%s' WHERE user_id = 1",
+                $prefix,
+                H::dbEscape($db, $original_preferences)
+            ));
         }
-        $db->close();
+        H::dbClose($db);
     }
 });
 
@@ -217,7 +206,7 @@ it('switches to grid-view pagination default of 10 when the saved view preferenc
     $db = userListPageRendererDbConnect();
     $prefix = userListPageRendererDbPrefix();
     $original = H::fetchAssocOrFail($db, "SELECT preferences FROM {$prefix}user_infos WHERE user_id = 1");
-    $db->query("UPDATE {$prefix}user_infos SET preferences = '{\"user-manager-view\":\"tile\"}' WHERE user_id = 1");
+    H::dbQuery($db, "UPDATE {$prefix}user_infos SET preferences = '{\"user-manager-view\":\"tile\"}' WHERE user_id = 1");
 
     try {
         $page = H::loginAsAdmin($this);
@@ -228,15 +217,14 @@ it('switches to grid-view pagination default of 10 when the saved view preferenc
     } finally {
         $original_preferences = $original['preferences'];
         if (is_string($original_preferences)) {
-            $stmt = $db->prepare("UPDATE {$prefix}user_infos SET preferences = ? WHERE user_id = 1");
-            if (! $stmt instanceof \mysqli_stmt) {
-                throw new RuntimeException('mysqli::prepare() failed for the preferences restore statement');
-            }
-            $stmt->bind_param('s', $original_preferences);
-            $stmt->execute();
+            H::dbQuery($db, sprintf(
+                "UPDATE %suser_infos SET preferences = '%s' WHERE user_id = 1",
+                $prefix,
+                H::dbEscape($db, $original_preferences)
+            ));
         } else {
-            $db->query("UPDATE {$prefix}user_infos SET preferences = NULL WHERE user_id = 1");
+            H::dbQuery($db, "UPDATE {$prefix}user_infos SET preferences = NULL WHERE user_id = 1");
         }
-        $db->close();
+        H::dbClose($db);
     }
 });

@@ -50,44 +50,39 @@ function galDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function galDbConnect(): mysqli
+function galDbConnect(): \mysqli|\PgSql\Connection
 {
-    return new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    return H::connect();
 }
 
 function galSetCategoryComment(int $categoryId, ?string $comment): void
 {
     $db = galDbConnect();
     if ($comment === null) {
-        $db->query(sprintf('UPDATE %scategories SET comment = NULL WHERE id = %d', galDbPrefix(), $categoryId));
+        H::dbQuery($db, sprintf('UPDATE %scategories SET comment = NULL WHERE id = %d', galDbPrefix(), $categoryId));
     } else {
-        $db->query(sprintf(
+        H::dbQuery($db, sprintf(
             "UPDATE %scategories SET comment = '%s' WHERE id = %d",
             galDbPrefix(),
-            $db->real_escape_string($comment),
+            H::dbEscape($db, $comment),
             $categoryId
         ));
     }
-    $db->close();
+    H::dbClose($db);
 }
 
 function galClearCaddie(int $userId): void
 {
     $db = galDbConnect();
-    $db->query(sprintf('DELETE FROM %scaddie WHERE user_id = %d', galDbPrefix(), $userId));
-    $db->close();
+    H::dbQuery($db, sprintf('DELETE FROM %scaddie WHERE user_id = %d', galDbPrefix(), $userId));
+    H::dbClose($db);
 }
 
 function galSetNbImagePage(int $userId, int $value): void
 {
     $db = galDbConnect();
-    $db->query(sprintf('UPDATE %suser_infos SET nb_image_page = %d WHERE user_id = %d', galDbPrefix(), $value, $userId));
-    $db->close();
+    H::dbQuery($db, sprintf('UPDATE %suser_infos SET nb_image_page = %d WHERE user_id = %d', galDbPrefix(), $value, $userId));
+    H::dbClose($db);
 }
 
 /**
@@ -105,13 +100,13 @@ function galInsertQuickSearch(string $q): int
 {
     $db = galDbConnect();
     $rulesJson = json_encode(['q' => $q], JSON_THROW_ON_ERROR);
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %ssearch (search_uuid, created_on, created_by, forked_from, rules) VALUES (NULL, NOW(), 1, NULL, '%s')",
         galDbPrefix(),
-        $db->real_escape_string($rulesJson)
+        H::dbEscape($db, $rulesJson)
     ));
-    $searchId = (int) $db->insert_id;
-    $db->close();
+    $searchId = H::dbInsertId($db);
+    H::dbClose($db);
 
     return $searchId;
 }
@@ -119,8 +114,8 @@ function galInsertQuickSearch(string $q): int
 function galDeleteSearch(int $searchId): void
 {
     $db = galDbConnect();
-    $db->query(sprintf('DELETE FROM %ssearch WHERE id = %d', galDbPrefix(), $searchId));
-    $db->close();
+    H::dbQuery($db, sprintf('DELETE FROM %ssearch WHERE id = %d', galDbPrefix(), $searchId));
+    H::dbClose($db);
 }
 
 it('renders a category page with subcategories, exercising the main thumbnail/sort/edit-icon paths', function (): void {

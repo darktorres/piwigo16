@@ -562,12 +562,7 @@ it('saves the default tab (guest profile) and persists real user_infos values', 
 
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $guestRow = H::fetchAssocOrFail($db, 'SELECT nb_image_page, recent_period FROM ' . $prefix . 'user_infos WHERE user_id = 2');
 
     try {
@@ -589,11 +584,11 @@ it('saves the default tab (guest profile) and persists real user_infos values', 
         expect((int) $updated['nb_image_page'])->toBe(25);
         expect((int) $updated['recent_period'])->toBe(10);
     } finally {
-        $db->query(
+        H::dbQuery($db, 
             'UPDATE ' . $prefix . 'user_infos SET nb_image_page = ' . (int) $guestRow['nb_image_page']
             . ', recent_period = ' . (int) $guestRow['recent_period'] . ' WHERE user_id = 2'
         );
-        $db->close();
+        H::dbClose($db);
     }
 });
 
@@ -975,13 +970,8 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
 
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
-    $db->query(sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
+    $db = H::connect();
+    H::dbQuery($db, sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
 
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
@@ -992,9 +982,9 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
         $adminPage = H::navigateOk($adminPage, ctConfigSection('main'));
         $adminPage->assertSee('status is required to edit parameters');
     } finally {
-        $db->query(sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
-        $db->query(sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
-        $db->close();
+        H::dbQuery($db, sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
+        H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        H::dbClose($db);
     }
 });
 
@@ -1982,13 +1972,8 @@ it('sizes/watermark tabs: a plain "admin"-status user\'s submission is silently 
 
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
-    $db->query(sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
+    $db = H::connect();
+    H::dbQuery($db, sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
 
     $derivativeSnapshot = H::snapshotDerivativeConfig();
 
@@ -2030,9 +2015,9 @@ it('sizes/watermark tabs: a plain "admin"-status user\'s submission is silently 
         expect($watermarkResult['body'])->not->toContain('Fatal error');
     } finally {
         H::restoreDerivativeConfig($derivativeSnapshot);
-        $db->query(sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
-        $db->query(sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
-        $db->close();
+        H::dbQuery($db, sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
+        H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        H::dbClose($db);
     }
 });
 

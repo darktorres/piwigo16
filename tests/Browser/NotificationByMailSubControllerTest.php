@@ -59,27 +59,21 @@ function nbmDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function nbmDbConnect(): mysqli
+function nbmDbConnect(): \mysqli|\PgSql\Connection
 {
-    return new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    return H::connect();
 }
 
 /** @return array{check_key: string, enabled: int, last_send: ?string}|null */
 function nbmUserMailNotificationRow(int $userId): ?array
 {
     $db = nbmDbConnect();
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         'SELECT check_key, enabled, last_send FROM %suser_mail_notification WHERE user_id = %d',
         nbmDbPrefix(),
         $userId
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
 
     if (! is_array($row) || ! is_string($row['check_key'] ?? null)) {
         return null;
@@ -96,19 +90,19 @@ function nbmUserMailNotificationRow(int $userId): ?array
 function nbmSetUserMailNotificationRow(int $userId, ?array $row): void
 {
     $db = nbmDbConnect();
-    $db->query(sprintf('DELETE FROM %suser_mail_notification WHERE user_id = %d', nbmDbPrefix(), $userId));
+    H::dbQuery($db, sprintf('DELETE FROM %suser_mail_notification WHERE user_id = %d', nbmDbPrefix(), $userId));
     if ($row !== null) {
-        $lastSend = $row['last_send'] === null ? 'NULL' : "'" . $db->real_escape_string($row['last_send']) . "'";
-        $db->query(sprintf(
+        $lastSend = $row['last_send'] === null ? 'NULL' : "'" . H::dbEscape($db, $row['last_send']) . "'";
+        H::dbQuery($db, sprintf(
             "INSERT INTO %suser_mail_notification (user_id, check_key, enabled, last_send) VALUES (%d, '%s', %d, %s)",
             nbmDbPrefix(),
             $userId,
-            $db->real_escape_string($row['check_key']),
+            H::dbEscape($db, $row['check_key']),
             $row['enabled'],
             $lastSend
         ));
     }
-    $db->close();
+    H::dbClose($db);
 }
 
 /**
@@ -129,9 +123,8 @@ function nbmPost(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $mo
 function nbmUserMailAddress(int $userId): ?string
 {
     $db = nbmDbConnect();
-    $result = $db->query(sprintf('SELECT mail_address FROM %susers WHERE id = %d', nbmDbPrefix(), $userId));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    $row = H::dbFetchAssoc($db, sprintf('SELECT mail_address FROM %susers WHERE id = %d', nbmDbPrefix(), $userId));
+    H::dbClose($db);
 
     return is_array($row) && is_string($row['mail_address'] ?? null) ? $row['mail_address'] : null;
 }
@@ -140,16 +133,16 @@ function nbmSetUserMailAddress(int $userId, ?string $mailAddress): void
 {
     $db = nbmDbConnect();
     if ($mailAddress === null) {
-        $db->query(sprintf('UPDATE %susers SET mail_address = NULL WHERE id = %d', nbmDbPrefix(), $userId));
+        H::dbQuery($db, sprintf('UPDATE %susers SET mail_address = NULL WHERE id = %d', nbmDbPrefix(), $userId));
     } else {
-        $db->query(sprintf(
+        H::dbQuery($db, sprintf(
             "UPDATE %susers SET mail_address = '%s' WHERE id = %d",
             nbmDbPrefix(),
-            $db->real_escape_string($mailAddress),
+            H::dbEscape($db, $mailAddress),
             $userId
         ));
     }
-    $db->close();
+    H::dbClose($db);
 }
 
 /**

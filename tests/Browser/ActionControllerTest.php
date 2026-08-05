@@ -181,14 +181,9 @@ it('sends a Content-Disposition attachment header when download is requested', f
     }
 });
 
-function actionDbConnect(): mysqli
+function actionDbConnect(): \mysqli|\PgSql\Connection
 {
-    return new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    return H::connect();
 }
 
 function actionDbPrefix(): string
@@ -201,9 +196,8 @@ function actionDbPrefix(): string
 function actionImagePath(int $imageId): string
 {
     $db = actionDbConnect();
-    $result = $db->query(sprintf('SELECT path FROM %simages WHERE id = %d', actionDbPrefix(), $imageId));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    $row = H::dbFetchAssoc($db, sprintf('SELECT path FROM %simages WHERE id = %d', actionDbPrefix(), $imageId));
+    H::dbClose($db);
     if (! is_array($row) || ! is_string($row['path'] ?? null)) {
         throw new RuntimeException("actionImagePath(): no path found for image {$imageId}");
     }
@@ -240,12 +234,12 @@ it('serves a remote-storage photo through the guessMimeType() fallback when mime
     @unlink($image);
 
     $db = actionDbConnect();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "UPDATE %simages SET path = 'http://127.0.0.1:1/ct-remote-photo.jpg' WHERE id = %d",
         actionDbPrefix(),
         $imageId
     ));
-    $db->close();
+    H::dbClose($db);
 
     try {
         // A matching pwg_token flips is_admin_download=true (bypassing the
@@ -305,13 +299,13 @@ it('serves a photo through a real registered format id, logging a "high" visit',
     file_put_contents($formatFile, str_repeat('R', 4096));
 
     $db = actionDbConnect();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %simage_format (image_id, ext, filesize) VALUES (%d, 'ct_raw', 4)",
         actionDbPrefix(),
         $imageId
     ));
-    $formatId = (int) $db->insert_id;
-    $db->close();
+    $formatId = H::dbInsertId($db);
+    H::dbClose($db);
 
     try {
         $result = H::rawGet($page, '/action.php?format=' . $formatId);
@@ -321,8 +315,8 @@ it('serves a photo through a real registered format id, logging a "high" visit',
     } finally {
         @unlink($formatFile);
         $cleanupDb = actionDbConnect();
-        $cleanupDb->query(sprintf('DELETE FROM %simage_format WHERE format_id = %d', actionDbPrefix(), $formatId));
-        $cleanupDb->close();
+        H::dbQuery($cleanupDb, sprintf('DELETE FROM %simage_format WHERE format_id = %d', actionDbPrefix(), $formatId));
+        H::dbClose($cleanupDb);
         H::wsCall($page, 'pwg.categories.delete', [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
@@ -358,8 +352,8 @@ it('serves a photo\'s representative file via part=r when one is registered', fu
     file_put_contents($repFile, str_repeat('P', 2048));
 
     $db = actionDbConnect();
-    $db->query(sprintf("UPDATE %simages SET representative_ext = 'jpg' WHERE id = %d", actionDbPrefix(), $imageId));
-    $db->close();
+    H::dbQuery($db, sprintf("UPDATE %simages SET representative_ext = 'jpg' WHERE id = %d", actionDbPrefix(), $imageId));
+    H::dbClose($db);
 
     try {
         $result = H::rawGet($page, '/action.php?id=' . $imageId . '&part=r');
@@ -457,8 +451,8 @@ it('denies HD download of an oversized original to a guest with no HD access', f
     // for that account, so this test flips it for real rather than
     // assuming a default that doesn't hold.
     $db = actionDbConnect();
-    $db->query(sprintf('UPDATE %suser_infos SET enabled_high = 0 WHERE user_id = 2', actionDbPrefix()));
-    $db->close();
+    H::dbQuery($db, sprintf('UPDATE %suser_infos SET enabled_high = 0 WHERE user_id = 2', actionDbPrefix()));
+    H::dbClose($db);
 
     $img = imagecreatetruecolor(2000, 1500);
     if ($img === false) {
@@ -479,8 +473,8 @@ it('denies HD download of an oversized original to a guest with no HD access', f
         expect($result['body'])->toContain('Access denied e');
     } finally {
         $restoreDb = actionDbConnect();
-        $restoreDb->query(sprintf('UPDATE %suser_infos SET enabled_high = 1 WHERE user_id = 2', actionDbPrefix()));
-        $restoreDb->close();
+        H::dbQuery($restoreDb, sprintf('UPDATE %suser_infos SET enabled_high = 1 WHERE user_id = 2', actionDbPrefix()));
+        H::dbClose($restoreDb);
         H::wsCall($page, 'pwg.categories.delete', [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
@@ -631,8 +625,8 @@ it('bypasses the no-HD-access restriction for an admin download carrying a valid
     // AccessControl::isAdmin() itself (already true for this whole file's
     // session, and not what's under test here).
     $db = actionDbConnect();
-    $db->query(sprintf('UPDATE %suser_infos SET enabled_high = 0 WHERE user_id = 1', actionDbPrefix()));
-    $db->close();
+    H::dbQuery($db, sprintf('UPDATE %suser_infos SET enabled_high = 0 WHERE user_id = 1', actionDbPrefix()));
+    H::dbClose($db);
 
     $img = imagecreatetruecolor(2000, 1500);
     if ($img === false) {
@@ -658,8 +652,8 @@ it('bypasses the no-HD-access restriction for an admin download carrying a valid
         expect(strlen($withToken['body']))->toBeGreaterThan(0);
     } finally {
         $restoreDb = actionDbConnect();
-        $restoreDb->query(sprintf('UPDATE %suser_infos SET enabled_high = 1 WHERE user_id = 1', actionDbPrefix()));
-        $restoreDb->close();
+        H::dbQuery($restoreDb, sprintf('UPDATE %suser_infos SET enabled_high = 1 WHERE user_id = 1', actionDbPrefix()));
+        H::dbClose($restoreDb);
         H::wsCall($page, 'pwg.categories.delete', [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',

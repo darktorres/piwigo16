@@ -26,14 +26,9 @@ function albumSubDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function albumSubDb(): mysqli
+function albumSubDb(): \mysqli|\PgSql\Connection
 {
-    return new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    return H::connect();
 }
 
 function albumSubPluginsPath(): string
@@ -105,10 +100,10 @@ it('fatal-errors instead of silently swallowing a real render_category_name hook
 
     try {
         albumSubWriteFixturePlugin($pluginId, $pluginSource);
-        $db->query(sprintf(
+        H::dbQuery($db, sprintf(
             "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
             $prefix,
-            $db->real_escape_string($pluginId)
+            H::dbEscape($db, $pluginId)
         ));
 
         try {
@@ -122,11 +117,11 @@ it('fatal-errors instead of silently swallowing a real render_category_name hook
             $response = H::rawGet($page, '/admin.php?page=album&cat_id=' . $albumId);
             expect($response['status'])->toBe(500);
         } finally {
-            $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
+            H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
             albumSubRemoveFixturePlugin($pluginId);
         }
     } finally {
-        $db->close();
+        H::dbClose($db);
         H::wsCall($page, 'pwg.categories.delete', [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',

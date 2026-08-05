@@ -130,16 +130,11 @@ function idcUploadSizedPhoto(object $test, string $albumName, int $width, int $h
  */
 function idcSetImageRotationCode(int $imageId, int $rotationCode): void
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $db->query(sprintf('UPDATE %simages SET rotation = %d WHERE id = %d', $prefix, $rotationCode, $imageId));
-    $db->close();
+    H::dbQuery($db, sprintf('UPDATE %simages SET rotation = %d WHERE id = %d', $prefix, $rotationCode, $imageId));
+    H::dbClose($db);
 }
 
 /**
@@ -173,14 +168,9 @@ function idcPixel(\GdImage $image, int $x, int $y): array
  * idcSetImageRotationCode()'s own established connect-query-close shape
  * rather than duplicating the connection boilerplate at every call site.
  */
-function idcDb(): mysqli
+function idcDb(): \mysqli|\PgSql\Connection
 {
-    return new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    return H::connect();
 }
 
 function idcPrefix(): string
@@ -196,16 +186,10 @@ function idcPrefix(): string
 function idcFetchOne(string $sql): ?array
 {
     $db = idcDb();
-    $result = $db->query($sql);
-    if (! $result instanceof mysqli_result) {
-        $db->close();
+    $row = H::dbFetchAssoc($db, $sql);
+    H::dbClose($db);
 
-        return null;
-    }
-    $row = $result->fetch_assoc();
-    $db->close();
-
-    return $row === false ? null : $row;
+    return $row;
 }
 
 /**
@@ -1100,8 +1084,8 @@ it('resolves the rotation angle live from EXIF when the DB rotation column is st
     // that state deterministically.
     $imageId = idcCreateTestPhoto($this, 'Derivative Rotation Null Album');
     $db = idcDb();
-    $db->query(sprintf('UPDATE %simages SET rotation = NULL WHERE id = %d', idcPrefix(), $imageId));
-    $db->close();
+    H::dbQuery($db, sprintf('UPDATE %simages SET rotation = NULL WHERE id = %d', idcPrefix(), $imageId));
+    H::dbClose($db);
 
     $result = idcGet('i.php?/' . idcDerivativePath(H::imagePath($imageId), 'th'));
     expect($result['status'])->toBe(200);
@@ -1148,8 +1132,8 @@ it('sends a long-lived Expires header when both the source file and the derivati
         touch($srcDiskPath, $old);
 
         $db = idcDb();
-        $db->query(sprintf("UPDATE %sderivative_size SET last_mod_time = %d WHERE name = 'square'", idcPrefix(), $old));
-        $db->close();
+        H::dbQuery($db, sprintf("UPDATE %sderivative_size SET last_mod_time = %d WHERE name = 'square'", idcPrefix(), $old));
+        H::dbClose($db);
 
         $result = idcGet('i.php?/' . idcDerivativePath($imagePath, 'sq'));
         expect($result['status'])->toBe(200);
@@ -1200,13 +1184,13 @@ it('generates a previously-unregistered custom size once its own key is register
         // writes a second key here.
         $key = '150x100_a';
         $db = idcDb();
-        $db->query(sprintf(
+        H::dbQuery($db, sprintf(
             "UPDATE %sderivative_settings SET custom_json = JSON_OBJECT('%s', %d)",
             idcPrefix(),
-            $db->real_escape_string($key),
+            H::dbEscape($db, $key),
             time()
         ));
-        $db->close();
+        H::dbClose($db);
 
         $imageId = idcCreateTestPhoto($this, 'Derivative Custom Success Album');
         $imagePath = H::imagePath($imageId);
@@ -1258,13 +1242,13 @@ it('ierrors 500 "dir create error" when the derivative cache directory cannot be
     copy($originalDiskPath, $newDiskDir . '/dummy.jpg');
 
     $db = idcDb();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "UPDATE %simages SET path = '%s' WHERE id = %d",
         idcPrefix(),
-        $db->real_escape_string($newRelPath),
+        H::dbEscape($db, $newRelPath),
         $imageId
     ));
-    $db->close();
+    H::dbClose($db);
 
     // Pre-create (and lock down) the derivative cache directory that would
     // otherwise be created on demand -- mkgetdir() only ever needs to
@@ -1306,8 +1290,8 @@ it('applies a configured non-zero sharpen amount when generating a standard-type
         expect(idcGet('i.php?/' . idcDerivativePath(H::imagePath($primeId), 'sq'))['status'])->toBe(200);
 
         $db = idcDb();
-        $db->query(sprintf("UPDATE %sderivative_size SET sharpen = '0.5000' WHERE name = 'square'", idcPrefix()));
-        $db->close();
+        H::dbQuery($db, sprintf("UPDATE %sderivative_size SET sharpen = '0.5000' WHERE name = 'square'", idcPrefix()));
+        H::dbClose($db);
 
         $imageId = idcCreateTestPhoto($this, 'Derivative Sharpen Album');
         $result = idcGet('i.php?/' . idcDerivativePath(H::imagePath($imageId), 'sq'));
@@ -1323,8 +1307,8 @@ it('clamps the JPEG compression quality to 75 when generating a 4xlarge derivati
     $snapshot = H::snapshotDerivativeConfig();
     try {
         $db = idcDb();
-        $db->query(sprintf("UPDATE %sderivative_size SET enabled = 1 WHERE name = '4xlarge'", idcPrefix()));
-        $db->close();
+        H::dbQuery($db, sprintf("UPDATE %sderivative_size SET enabled = 1 WHERE name = '4xlarge'", idcPrefix()));
+        H::dbClose($db);
 
         // A real crop/scale change isn't needed to leave the "0 changes"
         // fast path -- a stored rotation alone forces $changes>=1 (see the
@@ -1397,8 +1381,8 @@ it('never attempts sibling-derivative reuse when the source height is unknown', 
     // height null while width is set.
     $imageId = idcCreateTestPhoto($this, 'Derivative HeightNull Album');
     $db = idcDb();
-    $db->query(sprintf('UPDATE %simages SET height = NULL WHERE id = %d', idcPrefix(), $imageId));
-    $db->close();
+    H::dbQuery($db, sprintf('UPDATE %simages SET height = NULL WHERE id = %d', idcPrefix(), $imageId));
+    H::dbClose($db);
 
     $result = idcGet('i.php?/' . idcDerivativePath(H::imagePath($imageId), 'sq'));
     expect($result['status'])->toBe(200);

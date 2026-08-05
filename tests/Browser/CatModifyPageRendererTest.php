@@ -103,19 +103,14 @@ it('formats a multi-date info-title ("added between") when its photos span more 
     $imageIdB = H::uploadPhotoViaApi($imagePathB, $albumId, 'Multi Date Photo B ' . uniqid());
     @unlink($imagePathB);
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
     // Two widely-separated, distinct years (rather than the same year or
     // adjacent ones) so a MIN/MAX transposition bug would be obvious from
     // the ordering check below, not hidden by two nearly-identical values.
-    $db->query(sprintf('UPDATE %simages SET date_available = \'2019-03-10\' WHERE id = %d', $prefix, $imageIdA));
-    $db->query(sprintf('UPDATE %simages SET date_available = \'2024-11-20\' WHERE id = %d', $prefix, $imageIdB));
+    H::dbQuery($db, sprintf('UPDATE %simages SET date_available = \'2019-03-10\' WHERE id = %d', $prefix, $imageIdA));
+    H::dbQuery($db, sprintf('UPDATE %simages SET date_available = \'2024-11-20\' WHERE id = %d', $prefix, $imageIdB));
 
     try {
         $result = H::rawGet($page, '/admin.php?page=album&cat_id=' . $albumId . '&tab=properties');
@@ -132,7 +127,7 @@ it('formats a multi-date info-title ("added between") when its photos span more 
         }
         expect($minPos)->toBeLessThan($maxPos);
     } finally {
-        $db->close();
+        H::dbClose($db);
     }
 });
 
@@ -182,12 +177,7 @@ it('shows the delete-representative action when allow_random_representative is e
 it('shows the real physical directory info for a non-virtual (disk-synced) album', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
@@ -202,16 +192,16 @@ it('shows the real physical directory info for a non-virtual (disk-synced) album
     // tools/reimport-fixture.sh's own docblock for why it can't be).
     $realRoot = dirname(__DIR__, 2) . '/';
     $dirName = 'physical_test_dir_' . uniqid();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %scategories (name, dir, site_id, status, uppercats) VALUES ('Physical Test Album', '%s', 1, 'public', '0')",
         $prefix,
-        $db->real_escape_string($dirName)
+        H::dbEscape($db, $dirName)
     ));
-    $albumId = (int) $db->insert_id;
+    $albumId = H::dbInsertId($db);
     // uppercats must resolve to (at least) this category's own id for
     // getLocalDir()'s `id IN (uppercats)` lookup to find it -- a root
     // category (no parent) has uppercats equal to its own id.
-    $db->query(sprintf('UPDATE %scategories SET uppercats = %d WHERE id = %d', $prefix, $albumId, $albumId));
+    H::dbQuery($db, sprintf('UPDATE %scategories SET uppercats = %d WHERE id = %d', $prefix, $albumId, $albumId));
 
     try {
         $page = H::navigateOk($page, '/admin.php?page=album&cat_id=' . $albumId . '&tab=properties');
@@ -228,7 +218,7 @@ it('shows the real physical directory info for a non-virtual (disk-synced) album
             $realRoot . 'galleries/' . $dirName
         );
     } finally {
-        $db->query(sprintf('DELETE FROM %scategories WHERE id = %d', $prefix, $albumId));
-        $db->close();
+        H::dbQuery($db, sprintf('DELETE FROM %scategories WHERE id = %d', $prefix, $albumId));
+        H::dbClose($db);
     }
 });

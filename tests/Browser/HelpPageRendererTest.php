@@ -55,12 +55,7 @@ it('shows the English online-documentation message for an en_UK admin user', fun
 
 it('shows the French online-documentation message for a fr_ admin user', function (): void {
     $page = H::loginAsAdmin($this);
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
@@ -69,14 +64,14 @@ it('shows the French online-documentation message for a fr_ admin user', functio
     // request (then restoring it) is enough -- no separate user/session
     // needed, unlike the webmaster-required-warning tests elsewhere in this
     // batch.
-    $db->query(sprintf("UPDATE %suser_infos SET language = 'fr_FR' WHERE user_id = 1", $prefix));
+    H::dbQuery($db, sprintf("UPDATE %suser_infos SET language = 'fr_FR' WHERE user_id = 1", $prefix));
 
     try {
         $page = H::navigateOk($page, '/admin.php?page=help');
 
         $page->assertSee('Besoin d\'aide pour utiliser Piwigo');
     } finally {
-        $db->query(sprintf("UPDATE %suser_infos SET language = 'en_UK' WHERE user_id = 1", $prefix));
-        $db->close();
+        H::dbQuery($db, sprintf("UPDATE %suser_infos SET language = 'en_UK' WHERE user_id = 1", $prefix));
+        H::dbClose($db);
     }
 });

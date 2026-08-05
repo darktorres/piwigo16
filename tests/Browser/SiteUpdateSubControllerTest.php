@@ -67,27 +67,21 @@ function suDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function suConnect(): mysqli
+function suConnect(): \mysqli|\PgSql\Connection
 {
-    return new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    return H::connect();
 }
 
 function suCategoryIdByDir(int $siteId, string $dir): ?int
 {
     $db = suConnect();
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         "SELECT id FROM %scategories WHERE site_id = %d AND dir = '%s'",
         suDbPrefix(),
         $siteId,
-        $db->real_escape_string($dir)
+        H::dbEscape($db, $dir)
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
 
     return is_array($row) && isset($row['id']) ? (int) $row['id'] : null;
 }
@@ -95,13 +89,12 @@ function suCategoryIdByDir(int $siteId, string $dir): ?int
 function suImageIdByFile(string $file): ?int
 {
     $db = suConnect();
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         "SELECT id FROM %simages WHERE file = '%s'",
         suDbPrefix(),
-        $db->real_escape_string($file)
+        H::dbEscape($db, $file)
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
 
     return is_array($row) && isset($row['id']) ? (int) $row['id'] : null;
 }
@@ -109,13 +102,12 @@ function suImageIdByFile(string $file): ?int
 function suImageDateMetadataUpdate(int $imageId): ?string
 {
     $db = suConnect();
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         'SELECT date_metadata_update FROM %simages WHERE id = %d',
         suDbPrefix(),
         $imageId
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
 
     $value = is_array($row) ? ($row['date_metadata_update'] ?? null) : null;
 
@@ -125,9 +117,8 @@ function suImageDateMetadataUpdate(int $imageId): ?string
 function suImageLevel(int $imageId): ?int
 {
     $db = suConnect();
-    $result = $db->query(sprintf('SELECT level FROM %simages WHERE id = %d', suDbPrefix(), $imageId));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    $row = H::dbFetchAssoc($db, sprintf('SELECT level FROM %simages WHERE id = %d', suDbPrefix(), $imageId));
+    H::dbClose($db);
 
     $value = is_array($row) ? ($row['level'] ?? null) : null;
 
@@ -137,14 +128,13 @@ function suImageLevel(int $imageId): ?int
 function suImageFormatFilesize(int $imageId, string $ext): ?int
 {
     $db = suConnect();
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         "SELECT filesize FROM %simage_format WHERE image_id = %d AND ext = '%s'",
         suDbPrefix(),
         $imageId,
-        $db->real_escape_string($ext)
+        H::dbEscape($db, $ext)
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
 
     $value = is_array($row) ? ($row['filesize'] ?? null) : null;
 
@@ -154,75 +144,72 @@ function suImageFormatFilesize(int $imageId, string $ext): ?int
 function suGrantGroupAccess(int $groupId, int $catId): void
 {
     $db = suConnect();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         'INSERT INTO %sgroup_access (group_id, cat_id) VALUES (%d, %d)',
         suDbPrefix(),
         $groupId,
         $catId
     ));
-    $db->close();
+    H::dbClose($db);
 }
 
 function suGrantUserAccess(int $userId, int $catId): void
 {
     $db = suConnect();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         'INSERT INTO %suser_access (user_id, cat_id) VALUES (%d, %d)',
         suDbPrefix(),
         $userId,
         $catId
     ));
-    $db->close();
+    H::dbClose($db);
 }
 
 function suHasGroupAccess(int $groupId, int $catId): bool
 {
     $db = suConnect();
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         'SELECT 1 FROM %sgroup_access WHERE group_id = %d AND cat_id = %d',
         suDbPrefix(),
         $groupId,
         $catId
     ));
-    $found = $result instanceof mysqli_result && $result->num_rows > 0;
-    $db->close();
+    H::dbClose($db);
 
-    return $found;
+    return $row !== null;
 }
 
 function suHasUserAccess(int $userId, int $catId): bool
 {
     $db = suConnect();
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         'SELECT 1 FROM %suser_access WHERE user_id = %d AND cat_id = %d',
         suDbPrefix(),
         $userId,
         $catId
     ));
-    $found = $result instanceof mysqli_result && $result->num_rows > 0;
-    $db->close();
+    H::dbClose($db);
 
-    return $found;
+    return $row !== null;
 }
 
 function suSetCategoryVisible(int $catId, bool $visible): void
 {
     $db = suConnect();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         'UPDATE %scategories SET visible = %d WHERE id = %d',
         suDbPrefix(),
         $visible ? 1 : 0,
         $catId
     ));
-    $db->close();
+    H::dbClose($db);
 }
 
 function suCategoryVisible(int $catId): ?bool
 {
     $db = suConnect();
-    $result = $db->query(sprintf('SELECT visible FROM %scategories WHERE id = %d', suDbPrefix(), $catId));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    $row = H::dbFetchAssoc($db, sprintf('SELECT visible FROM %scategories WHERE id = %d', suDbPrefix(), $catId));
+    H::dbClose($db);
 
     return is_array($row) && isset($row['visible']) ? (bool) $row['visible'] : null;
 }
@@ -230,8 +217,8 @@ function suCategoryVisible(int $catId): ?bool
 function suSetCategoryGlobalRankNull(int $catId): void
 {
     $db = suConnect();
-    $db->query(sprintf('UPDATE %scategories SET global_rank = NULL WHERE id = %d', suDbPrefix(), $catId));
-    $db->close();
+    H::dbQuery($db, sprintf('UPDATE %scategories SET global_rank = NULL WHERE id = %d', suDbPrefix(), $catId));
+    H::dbClose($db);
 }
 
 /**
@@ -240,21 +227,19 @@ function suSetCategoryGlobalRankNull(int $catId): void
 function suImageTagNames(int $imageId): array
 {
     $db = suConnect();
-    $result = $db->query(sprintf(
+    $fetchedRows = H::dbFetchAll($db, sprintf(
         'SELECT t.name FROM %stags t INNER JOIN %simage_tag it ON it.tag_id = t.id WHERE it.image_id = %d ORDER BY t.name',
         suDbPrefix(),
         suDbPrefix(),
         $imageId
     ));
     $names = [];
-    if ($result instanceof mysqli_result) {
-        while (($row = $result->fetch_assoc()) !== null) {
-            if (is_array($row) && is_string($row['name'] ?? null)) {
-                $names[] = $row['name'];
-            }
+    foreach ($fetchedRows as $row) {
+        if (is_string($row['name'] ?? null)) {
+            $names[] = $row['name'];
         }
     }
-    $db->close();
+    H::dbClose($db);
 
     return $names;
 }
@@ -269,21 +254,21 @@ function suDeleteTagsByName(array $names): void
     }
 
     $db = suConnect();
-    $quoted = array_map(static fn (string $name): string => "'" . $db->real_escape_string($name) . "'", $names);
-    $db->query(sprintf('DELETE FROM %stags WHERE name IN (%s)', suDbPrefix(), implode(',', $quoted)));
-    $db->close();
+    $quoted = array_map(static fn (string $name): string => "'" . H::dbEscape($db, $name) . "'", $names);
+    H::dbQuery($db, sprintf('DELETE FROM %stags WHERE name IN (%s)', suDbPrefix(), implode(',', $quoted)));
+    H::dbClose($db);
 }
 
 function suInsertRemoteSite(string $url): int
 {
     $db = suConnect();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %ssites (galleries_url) VALUES ('%s')",
         suDbPrefix(),
-        $db->real_escape_string($url)
+        H::dbEscape($db, $url)
     ));
-    $id = (int) $db->insert_id;
-    $db->close();
+    $id = H::dbInsertId($db);
+    H::dbClose($db);
 
     return $id;
 }
@@ -291,8 +276,8 @@ function suInsertRemoteSite(string $url): int
 function suDeleteSite(int $id): void
 {
     $db = suConnect();
-    $db->query(sprintf('DELETE FROM %ssites WHERE id = %d', suDbPrefix(), $id));
-    $db->close();
+    H::dbQuery($db, sprintf('DELETE FROM %ssites WHERE id = %d', suDbPrefix(), $id));
+    H::dbClose($db);
 }
 
 function suGalleriesRoot(): string
@@ -804,13 +789,12 @@ it('propagates directly-granted group/user permissions onto newly-synced private
         assert($childBId !== null);
 
         $db = suConnect();
-        $rows = $db->query(sprintf(
+        $grandchildRow = H::dbFetchAssoc($db, sprintf(
             "SELECT id FROM %scategories WHERE site_id = 1 AND id_uppercat = %d",
             suDbPrefix(),
             $childBId
         ));
-        $grandchildRow = $rows instanceof mysqli_result ? $rows->fetch_assoc() : null;
-        $db->close();
+        H::dbClose($db);
         expect($grandchildRow)->not->toBeNull();
         assert(is_array($grandchildRow));
         $grandchildId = (int) $grandchildRow['id'];

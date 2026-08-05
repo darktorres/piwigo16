@@ -33,14 +33,9 @@ function searchFilterDataDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function searchFilterDataDb(): mysqli
+function searchFilterDataDb(): \mysqli|\PgSql\Connection
 {
-    return new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    return H::connect();
 }
 
 function searchFilterDataSetImageStats(int $imageId, int $width, int $height, ?float $ratingScore, int $filesize, ?string $dateCreation): void
@@ -48,8 +43,8 @@ function searchFilterDataSetImageStats(int $imageId, int $width, int $height, ?f
     $db = searchFilterDataDb();
     $prefix = searchFilterDataDbPrefix();
     $ratingSql = $ratingScore === null ? 'NULL' : (string) $ratingScore;
-    $dateSql = $dateCreation === null ? 'NULL' : "'" . $db->real_escape_string($dateCreation) . "'";
-    $db->query(sprintf(
+    $dateSql = $dateCreation === null ? 'NULL' : "'" . H::dbEscape($db, $dateCreation) . "'";
+    H::dbQuery($db, sprintf(
         'UPDATE %simages SET width = %d, height = %d, rating_score = %s, filesize = %d, date_creation = %s WHERE id = %d',
         $prefix,
         $width,
@@ -59,7 +54,7 @@ function searchFilterDataSetImageStats(int $imageId, int $width, int $height, ?f
         $dateSql,
         $imageId
     ));
-    $db->close();
+    H::dbClose($db);
 }
 
 /**
@@ -70,13 +65,12 @@ function searchFilterDataAdminUserId(): int
 {
     $db = searchFilterDataDb();
     $prefix = searchFilterDataDbPrefix();
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         "SELECT id FROM %susers WHERE username = '%s'",
         $prefix,
-        $db->real_escape_string(H::ADMIN_USER)
+        H::dbEscape($db, H::ADMIN_USER)
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
     if (! is_array($row) || ! is_numeric($row['id'] ?? null)) {
         throw new RuntimeException('could not resolve the admin user id for username ' . H::ADMIN_USER);
     }
@@ -93,8 +87,8 @@ function searchFilterDataSetAddedByNull(int $imageId): void
 {
     $db = searchFilterDataDb();
     $prefix = searchFilterDataDbPrefix();
-    $db->query(sprintf('UPDATE %simages SET added_by = NULL WHERE id = %d', $prefix, $imageId));
-    $db->close();
+    H::dbQuery($db, sprintf('UPDATE %simages SET added_by = NULL WHERE id = %d', $prefix, $imageId));
+    H::dbClose($db);
 }
 
 /**
@@ -106,8 +100,8 @@ function searchFilterDataSetImageDimsNull(int $imageId): void
 {
     $db = searchFilterDataDb();
     $prefix = searchFilterDataDbPrefix();
-    $db->query(sprintf('UPDATE %simages SET width = NULL, height = NULL WHERE id = %d', $prefix, $imageId));
-    $db->close();
+    H::dbQuery($db, sprintf('UPDATE %simages SET width = NULL, height = NULL WHERE id = %d', $prefix, $imageId));
+    H::dbClose($db);
 }
 
 /**
@@ -117,8 +111,8 @@ function searchFilterDataSetImageFilesizeNull(int $imageId): void
 {
     $db = searchFilterDataDb();
     $prefix = searchFilterDataDbPrefix();
-    $db->query(sprintf('UPDATE %simages SET filesize = NULL WHERE id = %d', $prefix, $imageId));
-    $db->close();
+    H::dbQuery($db, sprintf('UPDATE %simages SET filesize = NULL WHERE id = %d', $prefix, $imageId));
+    H::dbClose($db);
 }
 
 it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-filter intersection, across a cache-miss and a cache-hit load', function (): void {

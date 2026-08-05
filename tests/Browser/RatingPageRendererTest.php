@@ -26,34 +26,24 @@ function ratingPageDbPrefix(): string
 
 function ratingPageInsertRate(int $imageId, int $userId, string $anonymousId, int $rate): void
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = ratingPageDbPrefix();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %srate (user_id, element_id, anonymous_id, rate, date) VALUES (%d, %d, '%s', %d, CURDATE())",
         $prefix,
         $userId,
         $imageId,
-        $db->real_escape_string($anonymousId),
+        H::dbEscape($db, $anonymousId),
         $rate
     ));
-    $db->close();
+    H::dbClose($db);
 }
 
 function ratingPageDeleteRates(int $imageId): void
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
-    $db->query(sprintf('DELETE FROM %srate WHERE element_id = %d', ratingPageDbPrefix(), $imageId));
-    $db->close();
+    $db = H::connect();
+    H::dbQuery($db, sprintf('DELETE FROM %srate WHERE element_id = %d', ratingPageDbPrefix(), $imageId));
+    H::dbClose($db);
 }
 
 it('renders the rating report for a real rated photo, listing its rater', function (): void {

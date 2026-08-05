@@ -24,14 +24,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * else the shared dev DB currently contains.
  */
 
-function commentsDbConnect(): mysqli
+function commentsDbConnect(): \mysqli|\PgSql\Connection
 {
-    return new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    return H::connect();
 }
 
 function commentsDbPrefix(): string
@@ -45,19 +40,19 @@ function commentsInsert(int $imageId, string $author, string $content, bool $val
 {
     $db = commentsDbConnect();
     $prefix = commentsDbPrefix();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %scomments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date, email) VALUES (%d, NOW(), '%s', '127.0.0.8', %s, '%s', %d, %s, %s)",
         $prefix,
         $imageId,
-        $db->real_escape_string($author),
+        H::dbEscape($db, $author),
         $authorId === null ? 'NULL' : (string) $authorId,
-        $db->real_escape_string($content),
+        H::dbEscape($db, $content),
         $validated ? 1 : 0,
         $validated ? 'NOW()' : 'NULL',
-        $email === null ? 'NULL' : "'" . $db->real_escape_string($email) . "'"
+        $email === null ? 'NULL' : "'" . H::dbEscape($db, $email) . "'"
     ));
-    $id = (int) $db->insert_id;
-    $db->close();
+    $id = H::dbInsertId($db);
+    H::dbClose($db);
 
     return $id;
 }
@@ -66,9 +61,8 @@ function commentsInsert(int $imageId, string $author, string $content, bool $val
 function commentsRowCount(int $commentId): int
 {
     $db = commentsDbConnect();
-    $result = $db->query(sprintf('SELECT COUNT(*) AS c FROM %scomments WHERE id = %d', commentsDbPrefix(), $commentId));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    $row = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM %scomments WHERE id = %d', commentsDbPrefix(), $commentId));
+    H::dbClose($db);
 
     return is_array($row) ? (int) $row['c'] : 0;
 }
@@ -76,9 +70,8 @@ function commentsRowCount(int $commentId): int
 function commentsValidatedFlag(int $commentId): ?int
 {
     $db = commentsDbConnect();
-    $result = $db->query(sprintf('SELECT validated FROM %scomments WHERE id = %d', commentsDbPrefix(), $commentId));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    $row = H::dbFetchAssoc($db, sprintf('SELECT validated FROM %scomments WHERE id = %d', commentsDbPrefix(), $commentId));
+    H::dbClose($db);
 
     return is_array($row) ? (int) $row['validated'] : null;
 }
@@ -504,9 +497,8 @@ it('falls back to the filename-derived name when a photo has no explicit name', 
 
     $db = commentsDbConnect();
     $prefix = commentsDbPrefix();
-    $result = $db->query(sprintf('SELECT file, name FROM %simages WHERE id = %d', $prefix, $imageId));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    $row = H::dbFetchAssoc($db, sprintf('SELECT file, name FROM %simages WHERE id = %d', $prefix, $imageId));
+    H::dbClose($db);
     if (! is_array($row)) {
         throw new RuntimeException("expected a real images row for id {$imageId}");
     }
@@ -592,10 +584,10 @@ it('trigger_errors on an unrecognized comment_action from a real user_comment_ch
 
     $db = commentsDbConnect();
     $prefix = commentsDbPrefix();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
         $prefix,
-        $db->real_escape_string($pluginId)
+        H::dbEscape($db, $pluginId)
     ));
 
     try {
@@ -672,8 +664,8 @@ it('trigger_errors on an unrecognized comment_action from a real user_comment_ch
         expect($testErrorsLog)->toContain('Invalid comment action ct_unknown_action');
     } finally {
         $db = commentsDbConnect();
-        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
-        $db->close();
+        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbClose($db);
         @unlink($dir . '/main.inc.php');
         if (is_dir($dir)) {
             rmdir($dir);

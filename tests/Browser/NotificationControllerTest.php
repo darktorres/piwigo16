@@ -14,21 +14,15 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 /** @return array{id: string, userId: int, lastCheck: ?string}|null */
 function userFeedRow(string $feedId): ?array
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         "SELECT id, user_id, last_check FROM %suser_feed WHERE id = '%s'",
         $prefix,
-        $db->real_escape_string($feedId)
+        H::dbEscape($db, $feedId)
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
 
     if (! is_array($row)) {
         return null;

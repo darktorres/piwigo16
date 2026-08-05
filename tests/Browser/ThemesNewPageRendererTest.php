@@ -80,15 +80,10 @@ it('rejects an automatic-install request from a non-webmaster session', function
     ]);
     $userId = wsAddedUserId($addResult);
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $db->query(sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
+    H::dbQuery($db, sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
 
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
@@ -98,9 +93,9 @@ it('rejects an automatic-install request from a non-webmaster session', function
         $adminPage = H::navigateOk($adminPage, '/admin.php?page=themes&tab=new&revision=1&extension=1');
         $adminPage->assertSee('Webmaster status is required');
     } finally {
-        $db->query(sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
-        $db->query(sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
-        $db->close();
+        H::dbQuery($db, sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
+        H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        H::dbClose($db);
         H::restoreConfig($snapshot);
     }
 });

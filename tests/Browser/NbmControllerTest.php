@@ -26,21 +26,15 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 /** Reads the `enabled` column for a given check_key, or null if no such row exists. */
 function nbmEnabledForKey(string $checkKey): ?int
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         "SELECT enabled FROM %suser_mail_notification WHERE check_key = '%s'",
         $prefix,
-        $db->real_escape_string($checkKey)
+        H::dbEscape($db, $checkKey)
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
 
     return is_array($row) && isset($row['enabled']) ? (int) $row['enabled'] : null;
 }

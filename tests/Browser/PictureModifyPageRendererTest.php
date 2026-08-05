@@ -58,27 +58,21 @@ function pictureModifyDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function pictureModifyDbConnect(): mysqli
+function pictureModifyDbConnect(): \mysqli|\PgSql\Connection
 {
-    return new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    return H::connect();
 }
 
 /** @return array{name: ?string, author: ?string, comment: ?string, level: int, date_creation: ?string}|null */
 function pictureModifyImageRow(int $imageId): ?array
 {
     $db = pictureModifyDbConnect();
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         'SELECT name, author, comment, level, date_creation FROM %simages WHERE id = %d',
         pictureModifyDbPrefix(),
         $imageId
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
 
     if (! is_array($row)) {
         return null;
@@ -101,14 +95,13 @@ function pictureModifyImageRow(int $imageId): ?array
 function pictureModifyImageHasTag(int $imageId, int $tagId): bool
 {
     $db = pictureModifyDbConnect();
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         'SELECT COUNT(*) AS c FROM %simage_tag WHERE image_id = %d AND tag_id = %d',
         pictureModifyDbPrefix(),
         $imageId,
         $tagId
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
 
     return is_array($row) && (int) $row['c'] > 0;
 }
@@ -116,13 +109,12 @@ function pictureModifyImageHasTag(int $imageId, int $tagId): bool
 function pictureModifyCategoryRepresentativeId(int $categoryId): ?int
 {
     $db = pictureModifyDbConnect();
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         'SELECT representative_picture_id FROM %scategories WHERE id = %d',
         pictureModifyDbPrefix(),
         $categoryId
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
 
     if (! is_array($row) || $row['representative_picture_id'] === null) {
         return null;
@@ -134,13 +126,13 @@ function pictureModifyCategoryRepresentativeId(int $categoryId): ?int
 function pictureModifySetRotationCode(int $imageId, int $rotationCode): void
 {
     $db = pictureModifyDbConnect();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         'UPDATE %simages SET rotation = %d WHERE id = %d',
         pictureModifyDbPrefix(),
         $rotationCode,
         $imageId
     ));
-    $db->close();
+    H::dbClose($db);
 }
 
 /**
@@ -212,13 +204,12 @@ function pictureModifySync(Webpage|PendingAwaitablePage|AwaitableWebpage $page, 
 function pictureModifyImageIdByFile(string $file): ?int
 {
     $db = pictureModifyDbConnect();
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         "SELECT id FROM %simages WHERE file = '%s'",
         pictureModifyDbPrefix(),
-        $db->real_escape_string($file)
+        H::dbEscape($db, $file)
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
 
     return is_array($row) && isset($row['id']) ? (int) $row['id'] : null;
 }
@@ -226,14 +217,13 @@ function pictureModifyImageIdByFile(string $file): ?int
 function pictureModifyCategoryIdByDir(int $siteId, string $dir): ?int
 {
     $db = pictureModifyDbConnect();
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         "SELECT id FROM %scategories WHERE site_id = %d AND dir = '%s'",
         pictureModifyDbPrefix(),
         $siteId,
-        $db->real_escape_string($dir)
+        H::dbEscape($db, $dir)
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
 
     return is_array($row) && isset($row['id']) ? (int) $row['id'] : null;
 }
@@ -393,9 +383,8 @@ it('sets a plain (non-array) tag name and assigns the photo as its new album rep
 
     $db = pictureModifyDbConnect();
     $prefix = pictureModifyDbPrefix();
-    $row = $db->query(sprintf('SELECT representative_picture_id FROM %scategories WHERE id = %d', $prefix, $albumId));
-    $assoc = $row instanceof mysqli_result ? $row->fetch_assoc() : null;
-    $db->close();
+    $assoc = H::dbFetchAssoc($db, sprintf('SELECT representative_picture_id FROM %scategories WHERE id = %d', $prefix, $albumId));
+    H::dbClose($db);
     expect(is_array($assoc) ? (int) $assoc['representative_picture_id'] : -1)->toBe($imageId);
 });
 
@@ -579,12 +568,12 @@ it('fatal-errors instead of silently falling back when a picture_modify_before_u
         PHP);
 
     $pluginDb = pictureModifyDbConnect();
-    $pluginDb->query(sprintf(
+    H::dbQuery($pluginDb, sprintf(
         "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
         pictureModifyDbPrefix(),
         $pluginId
     ));
-    $pluginDb->close();
+    H::dbClose($pluginDb);
 
     try {
         $page = H::loginAsAdmin($this);
@@ -621,8 +610,8 @@ it('fatal-errors instead of silently falling back when a picture_modify_before_u
         expect($row['comment'] ?? null)->not->toBe('Bogus hook comment ' . $marker);
     } finally {
         $cleanupDb = pictureModifyDbConnect();
-        $cleanupDb->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", pictureModifyDbPrefix(), $pluginId));
-        $cleanupDb->close();
+        H::dbQuery($cleanupDb, sprintf("DELETE FROM %splugins WHERE id = '%s'", pictureModifyDbPrefix(), $pluginId));
+        H::dbClose($cleanupDb);
         @unlink($mainFile);
         @rmdir($pluginDir);
     }

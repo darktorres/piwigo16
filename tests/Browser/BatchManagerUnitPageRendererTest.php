@@ -48,19 +48,13 @@ function batchManagerUnitDbPrefix(): string
 /** @return array{name: ?string, author: ?string, level: int, comment: ?string, date_creation: ?string} */
 function batchManagerUnitImageRow(int $imageId): array
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
-    $result = $db->query(sprintf(
+    $db = H::connect();
+    $row = H::dbFetchAssoc($db, sprintf(
         'SELECT name, author, level, comment, date_creation FROM %simages WHERE id = %d',
         batchManagerUnitDbPrefix(),
         $imageId
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
     if (! is_array($row)) {
         throw new RuntimeException("expected a real image row for id {$imageId}");
     }
@@ -174,19 +168,13 @@ it('accepts a single non-array tag string for the per-image tags field', functio
 
     expect($result['status'])->toBe(200);
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
-    $tagRow = $db->query(sprintf(
+    $db = H::connect();
+    $tagAssoc = H::dbFetchAssoc($db, sprintf(
         'SELECT COUNT(*) AS c FROM %simage_tag WHERE image_id = %d AND tag_id = 2',
         batchManagerUnitDbPrefix(),
         $imageId
     ));
-    $tagAssoc = $tagRow instanceof mysqli_result ? $tagRow->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
     expect(is_array($tagAssoc) ? (int) $tagAssoc['c'] : -1)->toBe(1);
 });
 
@@ -225,12 +213,7 @@ it('highlights STORAGE_CATEGORY and honors a category-specific image_order for a
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch Unit Storage Cat Photo');
     @unlink($image);
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = batchManagerUnitDbPrefix();
     // pwg.images.addSimple() never populates storage_category_id (confirmed
     // live -- it stays NULL for every virtual-album upload), so the
@@ -238,8 +221,8 @@ it('highlights STORAGE_CATEGORY and honors a category-specific image_order for a
     // storage_category_id matches the active category filter) and the
     // per-category image_order override both need direct SQL, simulating
     // what a real physically-synced album would already have set.
-    $db->query(sprintf('UPDATE %simages SET storage_category_id = %d WHERE id = %d', $prefix, $albumId, $imageId));
-    $db->query(sprintf("UPDATE %scategories SET image_order = 'name ASC' WHERE id = %d", $prefix, $albumId));
+    H::dbQuery($db, sprintf('UPDATE %simages SET storage_category_id = %d WHERE id = %d', $prefix, $albumId, $imageId));
+    H::dbQuery($db, sprintf("UPDATE %scategories SET image_order = 'name ASC' WHERE id = %d", $prefix, $albumId));
 
     try {
         $filterResult = H::adminPost($page, '/admin.php?page=batch_manager', [
@@ -254,8 +237,8 @@ it('highlights STORAGE_CATEGORY and honors a category-specific image_order for a
         $page->assertNoJavaScriptErrors();
         H::assertNoServerErrors($page, 'batch_manager unit-mode storage-category/image-order branch');
     } finally {
-        $db->query(sprintf('UPDATE %scategories SET image_order = NULL WHERE id = %d', $prefix, $albumId));
-        $db->close();
+        H::dbQuery($db, sprintf('UPDATE %scategories SET image_order = NULL WHERE id = %d', $prefix, $albumId));
+        H::dbClose($db);
     }
 });
 

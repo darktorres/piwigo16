@@ -103,17 +103,12 @@ it('flags an installed-but-missing-from-disk plugin as STATE=missing with the un
     $page = H::loginAsAdmin($this);
     $pluginId = 'missing-plugin-' . uniqid();
 
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = pluginsInstalledDbPrefix();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0')",
         $prefix,
-        $db->real_escape_string($pluginId)
+        H::dbEscape($db, $pluginId)
     ));
 
     try {
@@ -122,8 +117,8 @@ it('flags an installed-but-missing-from-disk plugin as STATE=missing with the un
         $page->assertSee($pluginId);
         $page->assertSee('THIS PLUGIN IS MISSING BUT IT IS INSTALLED');
     } finally {
-        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
-        $db->close();
+        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbClose($db);
     }
 });
 
@@ -163,14 +158,9 @@ function pluginsInstalledRemoveFixturePlugin(string $pluginId): void
     }
 }
 
-function pluginsInstalledDb(): mysqli
+function pluginsInstalledDb(): \mysqli|\PgSql\Connection
 {
-    return new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    return H::connect();
 }
 
 it('flags a plugin whose PEM extension id is in the locally-merged list as STATE=merged, overwrites its description, and persists the DB state flip to inactive', function (): void {
@@ -196,10 +186,10 @@ it('flags a plugin whose PEM extension id is in the locally-merged list as STATE
 
     $db = pluginsInstalledDb();
     $prefix = pluginsInstalledDbPrefix();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '3.0.0')",
         $prefix,
-        $db->real_escape_string($pluginId)
+        H::dbEscape($db, $pluginId)
     ));
 
     try {
@@ -215,12 +205,12 @@ it('flags a plugin whose PEM extension id is in the locally-merged list as STATE
         $row = H::fetchAssocOrFail($db, sprintf(
             "SELECT state FROM %splugins WHERE id = '%s'",
             $prefix,
-            $db->real_escape_string($pluginId)
+            H::dbEscape($db, $pluginId)
         ));
         expect($row['state'])->toBe('inactive');
     } finally {
-        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
-        $db->close();
+        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbClose($db);
         pluginsInstalledRemoveFixturePlugin($pluginId);
     }
 });
@@ -277,10 +267,10 @@ it('resolves a settings URL from a real get_admin_plugin_menu_links hook via bot
     // Only the hook-registering plugin needs a DB row -- PluginLoader::
     // loadPlugins() only include_once's an active plugin's main.inc.php,
     // and only that file needs to actually run for the hook to register.
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
         $prefix,
-        $db->real_escape_string($hooksId)
+        H::dbEscape($db, $hooksId)
     ));
 
     try {
@@ -298,8 +288,8 @@ it('resolves a settings URL from a real get_admin_plugin_menu_links hook via bot
         $page->assertPresent('a[href="index.php?section=pwgtest-plugins-installed-target&foo=bar"]');
         $page->assertNoJavaScriptErrors();
     } finally {
-        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($hooksId)));
-        $db->close();
+        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $hooksId)));
+        H::dbClose($db);
         pluginsInstalledRemoveFixturePlugin($hooksId);
         pluginsInstalledRemoveFixturePlugin($targetId);
     }
@@ -343,10 +333,10 @@ it('skips malformed get_admin_plugin_menu_links entries instead of erroring, and
 
     $db = pluginsInstalledDb();
     $prefix = pluginsInstalledDbPrefix();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
         $prefix,
-        $db->real_escape_string($hooksId)
+        H::dbEscape($db, $hooksId)
     ));
 
     try {
@@ -357,8 +347,8 @@ it('skips malformed get_admin_plugin_menu_links entries instead of erroring, and
         $page->assertNoJavaScriptErrors();
         H::assertNoServerErrors($page, 'plugins_installed malformed menu-link entries');
     } finally {
-        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($hooksId)));
-        $db->close();
+        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $hooksId)));
+        H::dbClose($db);
         pluginsInstalledRemoveFixturePlugin($hooksId);
     }
 });
@@ -435,10 +425,10 @@ it('clears a stale $_SESSION[incompatible_plugins] entry once the on-disk plugin
 
     $db = pluginsInstalledDb();
     $prefix = pluginsInstalledDbPrefix();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
         $prefix,
-        $db->real_escape_string($pluginId)
+        H::dbEscape($db, $pluginId)
     ));
 
     try {
@@ -458,8 +448,8 @@ it('clears a stale $_SESSION[incompatible_plugins] entry once the on-disk plugin
         expect($probe['status'])->toBe(200);
         expect($probe['body'])->toBe('SESSION_UNSET');
     } finally {
-        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
-        $db->close();
+        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbClose($db);
         pluginsInstalledRemoveFixturePlugin($pluginId);
     }
 });
@@ -492,10 +482,10 @@ it('leaves a $_SESSION[incompatible_plugins] entry untouched when its recorded v
 
     $db = pluginsInstalledDb();
     $prefix = pluginsInstalledDbPrefix();
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
         $prefix,
-        $db->real_escape_string($pluginId)
+        H::dbEscape($db, $pluginId)
     ));
 
     try {
@@ -511,8 +501,8 @@ it('leaves a $_SESSION[incompatible_plugins] entry untouched when its recorded v
         expect($probe['status'])->toBe(200);
         expect($probe['body'])->toBe('SESSION_SET');
     } finally {
-        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
-        $db->close();
+        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbClose($db);
         pluginsInstalledRemoveFixturePlugin($pluginId);
     }
 });

@@ -122,21 +122,16 @@ it('shows the pending-comments counter when at least one unvalidated comment exi
     // PictureControllerTest's own pictureInsertComment() helper).
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
-    $db->query(sprintf(
+    $db = H::connect();
+    H::dbQuery($db, sprintf(
         "INSERT INTO %scomments (image_id, date, author, anonymous_id, content, validated) VALUES (%d, NOW(), '%s', '127.0.0.9', '%s', 0)",
         $prefix,
         $imageId,
-        $db->real_escape_string('AdminShell Test Author'),
-        $db->real_escape_string('Pending comment for AdminShell coverage')
+        H::dbEscape($db, 'AdminShell Test Author'),
+        H::dbEscape($db, 'Pending comment for AdminShell coverage')
     ));
-    $commentId = (int) $db->insert_id;
-    $db->close();
+    $commentId = H::dbInsertId($db);
+    H::dbClose($db);
 
     try {
         $page = H::navigateOk($page, '/admin.php?page=intro');
@@ -211,12 +206,7 @@ it('synchronizes users against the base table when externalAuthentification is e
 it('purges stale whats_new_* preferences and shows the whats-new popin for a user registered before the last major update', function (): void {
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
 
     $original = H::fetchAssocOrFail($db, "SELECT registration_date, preferences FROM {$prefix}user_infos WHERE user_id = 1");
 
@@ -227,10 +217,10 @@ it('purges stale whats_new_* preferences and shows the whats-new popin for a use
     // would come back false, and even if it didn't, registration_date >
     // lastMajorUpdate takes the OTHER branch), so both are overridden here
     // and restored in the finally block below.
-    $db->query(sprintf(
+    H::dbQuery($db, sprintf(
         "UPDATE %suser_infos SET registration_date = '2020-01-01 00:00:00', preferences = '%s' WHERE user_id = 1",
         $prefix,
-        $db->real_escape_string(H::jsonEncode(['whats_new_15' => true]))
+        H::dbEscape($db, H::jsonEncode(['whats_new_15' => true]))
     ));
 
     try {
@@ -252,16 +242,16 @@ it('purges stale whats_new_* preferences and shows the whats-new popin for a use
     } finally {
         $restoreRegistration = $original['registration_date'] === null
             ? 'NULL'
-            : "'" . $db->real_escape_string((string) $original['registration_date']) . "'";
+            : "'" . H::dbEscape($db, (string) $original['registration_date']) . "'";
         $restorePreferences = $original['preferences'] === null
             ? 'NULL'
-            : "'" . $db->real_escape_string((string) $original['preferences']) . "'";
-        $db->query(sprintf(
+            : "'" . H::dbEscape($db, (string) $original['preferences']) . "'";
+        H::dbQuery($db, sprintf(
             "UPDATE %suser_infos SET registration_date = %s, preferences = %s WHERE user_id = 1",
             $prefix,
             $restoreRegistration,
             $restorePreferences
         ));
-        $db->close();
+        H::dbClose($db);
     }
 });

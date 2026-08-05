@@ -112,21 +112,15 @@ function registerExtractKey(string $html): string
 
 function registerUserCount(string $username): int
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $result = $db->query(sprintf(
+    $row = H::dbFetchAssoc($db, sprintf(
         "SELECT COUNT(*) AS c FROM %susers WHERE username = '%s'",
         $prefix,
-        $db->real_escape_string($username)
+        H::dbEscape($db, $username)
     ));
-    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
-    $db->close();
+    H::dbClose($db);
 
     return is_array($row) ? (int) $row['c'] : -1;
 }
@@ -190,34 +184,27 @@ function registerDbPrefix(): string
  */
 function registerAddLanguage(string $code, string $name): void
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = registerDbPrefix();
-    $db->query(sprintf(
-        "INSERT INTO %slanguages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON DUPLICATE KEY UPDATE version = VALUES(version)",
+    $upsertSql = $db instanceof \mysqli
+        ? "INSERT INTO %slanguages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON DUPLICATE KEY UPDATE version = VALUES(version)"
+        : "INSERT INTO %slanguages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON CONFLICT (id) DO UPDATE SET version = EXCLUDED.version";
+    H::dbQuery($db, sprintf(
+        $upsertSql,
         $prefix,
-        $db->real_escape_string($code),
-        $db->real_escape_string($name)
+        H::dbEscape($db, $code),
+        H::dbEscape($db, $name)
     ));
-    $db->close();
+    H::dbClose($db);
 }
 
 /** Reverts registerAddLanguage(). */
 function registerRemoveLanguage(string $code): void
 {
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
     $prefix = registerDbPrefix();
-    $db->query(sprintf("DELETE FROM %slanguages WHERE id = '%s'", $prefix, $db->real_escape_string($code)));
-    $db->close();
+    H::dbQuery($db, sprintf("DELETE FROM %slanguages WHERE id = '%s'", $prefix, H::dbEscape($db, $code)));
+    H::dbClose($db);
 }
 
 it('registers a brand-new user, auto-logs them in, and creates the real DB row', function (): void {

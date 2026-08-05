@@ -19,12 +19,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 it('shows the missing-checksum counter when at least one photo has no md5sum', function (): void {
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $db = new mysqli(
-        (string) getenv('PIWIGO_DB_HOST'),
-        (string) getenv('PIWIGO_DB_USER'),
-        (string) getenv('PIWIGO_DB_PASSWORD'),
-        (string) getenv('PIWIGO_DB_BASE')
-    );
+    $db = H::connect();
 
     // Every fixture image ships a real, non-null md5sum (confirmed via a
     // direct read of tests/Fixtures/piwigo-17.0.sql's own INSERT) -- image
@@ -40,7 +35,7 @@ it('shows the missing-checksum counter when at least one photo has no md5sum', f
 
     $original = H::fetchAssocOrFail($db, "SELECT md5sum FROM {$prefix}images WHERE id = 1");
     expect($original['md5sum'] ?? null)->not->toBeNull('fixture precondition: image 1 must start with a real md5sum');
-    $db->query("UPDATE {$prefix}images SET md5sum = NULL WHERE id = 1");
+    H::dbQuery($db, "UPDATE {$prefix}images SET md5sum = NULL WHERE id = 1");
 
     try {
         $page = H::asAdmin($this);
@@ -51,11 +46,11 @@ it('shows the missing-checksum counter when at least one photo has no md5sum', f
         expect($html)->toContain('id="md5sum_to_add" data-origin="' . $expectedCount . '"');
     } finally {
         $md5sum = $original['md5sum'];
-        $db->query(sprintf(
+        H::dbQuery($db, sprintf(
             'UPDATE %simages SET md5sum = %s WHERE id = 1',
             $prefix,
-            $md5sum === null ? 'NULL' : "'" . $db->real_escape_string((string) $md5sum) . "'"
+            $md5sum === null ? 'NULL' : "'" . H::dbEscape($db, (string) $md5sum) . "'"
         ));
-        $db->close();
+        H::dbClose($db);
     }
 });

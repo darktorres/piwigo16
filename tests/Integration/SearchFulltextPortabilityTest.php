@@ -68,7 +68,9 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
         $this->em = EntityManagerFactory::build($this->conn);
         $repo = new SearchRepository($this->em);
 
-        $userService = new \Piwigo\Users\UserService(\Piwigo\Core\Lang::current(), new \Piwigo\Users\UserRepository($this->em, EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current()), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new \Piwigo\Activity\ActivityService($this->em->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), \Piwigo\Config\CurrentConfig::current()), EventDispatcher::get(), new \Piwigo\Config\DeploymentPolicy(), CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
+        $mailer = Kernel::container()->get(MailService::class);
+        self::assertInstanceOf(MailService::class, $mailer);
+        $userService = new \Piwigo\Users\UserService(\Piwigo\Core\Lang::current(), new \Piwigo\Users\UserRepository($this->em, EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current()), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), $mailer, new \Piwigo\Activity\ActivityService($this->em->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), \Piwigo\Config\CurrentConfig::current()), EventDispatcher::get(), new \Piwigo\Config\DeploymentPolicy(), CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
 
         $this->service = new SearchService(
             \Piwigo\Auth\AccessControl::current(),
@@ -80,7 +82,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
                 new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository($this->em, \Piwigo\Config\CurrentConfig::current())),
                 \Piwigo\Config\CurrentConfig::current(),
             ),
-            new MailService(),
+            $mailer,
             new HtmlService(),
             new RedirectService(\Piwigo\Core\Lang::current(), $userService),
             new SessionService($this->em->getRepository(SessionEntity::class), \Piwigo\Config\CurrentConfig::current()),

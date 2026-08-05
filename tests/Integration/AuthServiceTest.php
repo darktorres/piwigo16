@@ -675,9 +675,11 @@ namespace Piwigo\Tests\Integration {
 
         public function test_auth_key_login_rejects_an_api_key_with_the_wrong_secret(): void
         {
+            $mailer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Mail\MailService::class);
+            self::assertInstanceOf(\Piwigo\Mail\MailService::class, $mailer);
             $apiKeyService = new ApiKeyService(
                 \Piwigo\Core\Lang::current(),
-                new \Piwigo\Mail\MailService(),
+                $mailer,
                 new ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new \Piwigo\Config\DeploymentPolicy()),
                 new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
@@ -700,9 +702,11 @@ namespace Piwigo\Tests\Integration {
 
         public function test_auth_key_login_rejects_a_revoked_api_key(): void
         {
+            $mailer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Mail\MailService::class);
+            self::assertInstanceOf(\Piwigo\Mail\MailService::class, $mailer);
             $apiKeyService = new ApiKeyService(
                 \Piwigo\Core\Lang::current(),
-                new \Piwigo\Mail\MailService(),
+                $mailer,
                 new ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new \Piwigo\Config\DeploymentPolicy()),
                 new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),

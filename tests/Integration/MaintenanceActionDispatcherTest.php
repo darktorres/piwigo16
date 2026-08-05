@@ -113,12 +113,16 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
     private function maintenanceActionDispatcherTestUserService(): \Piwigo\Users\UserService
     {
         $conn = DbConnection::build();
+        $mailer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Mail\MailService::class);
+        if (! $mailer instanceof \Piwigo\Mail\MailService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Mail\MailService::class);
+        }
 
         return new \Piwigo\Users\UserService(
             Lang::current(),
             new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current()),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-            new \Piwigo\Mail\MailService(),
+            $mailer,
             $this->maintenanceActionDispatcherTestActivityService(),
             new HtmlService(),
             $conn,

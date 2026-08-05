@@ -261,12 +261,16 @@ function themesInstalledLifecycle(): ExtensionLifecycle
 function themesInstalledLifecycleUserService(): \Piwigo\Users\UserService
 {
     $conn = DbConnection::build();
+    $mailer = Kernel::container()->get(\Piwigo\Mail\MailService::class);
+    if (! $mailer instanceof \Piwigo\Mail\MailService) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Mail\MailService::class);
+    }
 
     return new \Piwigo\Users\UserService(
         Lang::current(),
         new \Piwigo\Users\UserRepository(EntityManagerFactory::build($conn), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\CurrentConfig()),
         EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-        new \Piwigo\Mail\MailService(),
+        $mailer,
         new \Piwigo\Activity\ActivityService(EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
         new HtmlService(),
         $conn,

@@ -58,9 +58,11 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
         $this->userId = (int) $userId;
 
         $this->em = EntityManagerFactory::build($this->conn);
+        $mailer = \Piwigo\Core\Kernel::container()->get(MailService::class);
+        self::assertInstanceOf(MailService::class, $mailer);
         $this->service = new ApiKeyService(
             \Piwigo\Core\Lang::current(),
-            new MailService(),
+            $mailer,
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new \Piwigo\Config\DeploymentPolicy()),
             new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),

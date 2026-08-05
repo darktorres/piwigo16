@@ -117,7 +117,9 @@ final class MailServiceTest extends IntegrationTestCase
         CurrentConfigService::current()->set($configService);
         $configService->loadConfFromDb();
 
-        $this->mailer = new MailService();
+        $mailer = Kernel::container()->get(MailService::class);
+        self::assertInstanceOf(MailService::class, $mailer);
+        $this->mailer = $mailer;
     }
 
     #[\Override]
@@ -140,11 +142,14 @@ final class MailServiceTest extends IntegrationTestCase
 
     private function buildUserService(): UserService
     {
+        $mailer = Kernel::container()->get(MailService::class);
+        self::assertInstanceOf(MailService::class, $mailer);
+
         return new UserService(
             Lang::current(),
             new \Piwigo\Users\UserRepository(EntityManagerFactory::build($this->conn), \Piwigo\PluginConfig\EventDispatcher::get(), CurrentConfig::current()),
             EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
-            new MailService(),
+            $mailer,
             new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
             new HtmlService(),
             $this->conn,
@@ -154,6 +159,34 @@ final class MailServiceTest extends IntegrationTestCase
             \Piwigo\Users\CurrentUser::current(),
             \Piwigo\Config\CurrentConfig::current(),
         );
+    }
+
+    /**
+     * Same real-container-resolved collaborators as $this->mailer's own
+     * setUp() construction, but with a caller-supplied
+     * MailRecipientRepositoryInterface swapped in.
+     */
+    private function mailServiceWithRecipientRepo(MailRecipientRepositoryInterface $repo): MailService
+    {
+        $lang = Kernel::container()->get(Lang::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        $deploymentPolicy = Kernel::container()->get(\Piwigo\Config\DeploymentPolicy::class);
+        $pageState = Kernel::container()->get(\Piwigo\Core\PageState::class);
+        $paths = Kernel::container()->get(\Piwigo\Core\Paths::class);
+        $sessionService = Kernel::container()->get(SessionService::class);
+        $translator = Kernel::container()->get(\Piwigo\Lang\Translator::class);
+        $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
+        $currentUser = Kernel::container()->get(CurrentUser::class);
+        $urlService = Kernel::container()->get(\Piwigo\Core\UrlServiceInterface::class);
+        if (! $lang instanceof Lang || ! $currentConfig instanceof CurrentConfig || ! $deploymentPolicy instanceof \Piwigo\Config\DeploymentPolicy
+            || ! $pageState instanceof \Piwigo\Core\PageState || ! $paths instanceof \Piwigo\Core\Paths || ! $sessionService instanceof SessionService
+            || ! $translator instanceof \Piwigo\Lang\Translator || ! $eventDispatcher instanceof EventDispatcher
+            || ! $currentUser instanceof CurrentUser || ! $urlService instanceof \Piwigo\Core\UrlServiceInterface
+        ) {
+            throw new \LogicException('Container returned an unexpected type');
+        }
+
+        return new MailService($lang, $currentConfig, $deploymentPolicy, $pageState, $paths, $sessionService, $translator, $eventDispatcher, $currentUser, $urlService, mailRecipientRepo: $repo);
     }
 
     private function setCurrentUserToFixtureAdmin(): void
@@ -509,7 +542,7 @@ final class MailServiceTest extends IntegrationTestCase
                 return $this->real->findByGroupAndLanguage($groupId, $language);
             }
         };
-        $mailer = new MailService(mailRecipientRepo: $repo);
+        $mailer = $this->mailServiceWithRecipientRepo($repo);
 
         // The single '' entry is `continue`d over without ever reaching
         // findByGroupAndLanguage()/switchLangTo() -- $return stays at its
@@ -553,7 +586,7 @@ final class MailServiceTest extends IntegrationTestCase
                 return [];
             }
         };
-        $mailer = new MailService(mailRecipientRepo: $repo);
+        $mailer = $this->mailServiceWithRecipientRepo($repo);
 
         self::assertTrue($mailer->mailGroup(1, ['content' => 'hi']));
     }

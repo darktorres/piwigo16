@@ -381,14 +381,16 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // method).
     //
     // (b) Too many real raw `new X(...)` construction sites, no DI
-    // involved, matching the established HtmlService/MailService/
-    // UrlService/Template precedent from every prior phase -- Image/
+    // involved, matching the established HtmlService/UrlService/Template
+    // precedent from every prior phase -- Image/
     // SrcImage.php (~20 sites, also its own class docblock), Csrf/
     // CsrfService.php (~50 sites, no constructor at all), Html/HtmlService.php,
-    // Mail/MailService.php, Url/UrlService.php, Template/Template.php,
+    // Url/UrlService.php, Template/Template.php,
     // Template/CssLoader.php, Template/ScriptLoader.php,
     // Template/FileCombiner.php, Template/PwgTemplateAdapter.php (the
-    // Template-family group).
+    // Template-family group). Mail/MailService.php closed this shim in
+    // Phase 11 sub-phase 11E -- real constructor injection now that the
+    // "too many manual construction sites" reasoning no longer holds.
     //
     // (c) Structural exceptions -- Auth/AccessControl.php's one site is
     // inside currentForCaching()'s own designed degraded-fallback object
@@ -425,7 +427,6 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Image/DerivativeImage.php',
         '/src/Piwigo/Image/LoungeMaintenance.php',
         '/src/Piwigo/Image/SrcImage.php',
-        '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Permission/PermissionService.php',
         '/src/Piwigo/Template/CssLoader.php',
         '/src/Piwigo/Template/FileCombiner.php',
@@ -543,7 +544,6 @@ test('DeploymentPolicy::current() transitional bridge has a shrinking, known all
 
     $allowedFiles = [
         '/src/Piwigo/Admin/Install/InstallWizard.php',
-        '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Search/SearchService.php',
         '/src/Piwigo/Url/UrlService.php',
     ];
@@ -606,13 +606,14 @@ test('PageState::current() transitional bridge has a shrinking, known allow-list
     // insertNewDataUserMailNotification() helpers (no $this there either,
     // same shape already established for CategoryService.php's own
     // moveCategories()-adjacent statics during the Translator phase).
-    // InstallWizard.php/RedirectService.php/MailService.php match
-    // DeploymentPolicy::current()'s own identical allow-list reasoning:
-    // RedirectService needs zero constructor args by design (early-crash
-    // fallback shape), MailService's authService() is a lazy-default
-    // helper for a rarely-needed dependency (~50 manual construction
-    // sites), and InstallWizard's one site is a one-off manual
-    // AuthService construction inside the install flow.
+    // InstallWizard.php/RedirectService.php match DeploymentPolicy::
+    // current()'s own identical allow-list reasoning: RedirectService
+    // needs zero constructor args by design (early-crash fallback shape),
+    // and InstallWizard's one site is a one-off manual AuthService
+    // construction inside the install flow. Mail/MailService.php closed
+    // this shim in Phase 11 sub-phase 11E -- real constructor injection
+    // (its own former authService() lazy-default helper now reads
+    // $this->deploymentPolicy instead).
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
@@ -623,7 +624,6 @@ test('PageState::current() transitional bridge has a shrinking, known allow-list
         '/src/Piwigo/Core/Logger.php',
         '/src/Piwigo/Core/TimingHelper.php',
         '/src/Piwigo/Html/HtmlService.php',
-        '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Template/Template.php',
     ];
 
@@ -793,7 +793,6 @@ test('CurrentPaths::get()/isSet() transitional bridge has a shrinking, known all
         '/src/Piwigo/Image/SrcImage.php',
         '/src/Piwigo/Job/MessengerFactory.php',
         '/src/Piwigo/Lang/LangService.php',
-        '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Metadata/MetadataService.php',
         '/src/Piwigo/Storage/StorageRegistry.php',
         '/src/Piwigo/Template/CssLoader.php',
@@ -862,16 +861,17 @@ test('SessionService::get() transitional bridge has a shrinking, known allow-lis
     // instance context to receive constructor injection through).
     // Ws/PwgUsers.php and Ws/PwgCategories.php took real constructor
     // injection during their own Phase 10 sub-batches. Tag/TagService.php's
-    // newImageService()/MailService.php's authService()/userService() are
-    // private lazy-default helpers on classes that deliberately avoid a
-    // required constructor dependency (~50 `new MailService()`/~45
-    // `new TagService()` construction sites each), matching
-    // FilesystemHelper's own "no wrapper needed" precedent.
+    // newImageService() is a private lazy-default helper on a class that
+    // deliberately avoids a required constructor dependency (~45
+    // `new TagService()` construction sites), matching FilesystemHelper's
+    // own "no wrapper needed" precedent. Mail/MailService.php closed this
+    // shim in Phase 11 sub-phase 11E -- its own former authService()/
+    // userService() lazy-default helpers now read $this->sessionService
+    // instead.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
         '/src/Piwigo/Core/DeviceHelper.php',
-        '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Tag/TagService.php',
     ];
 
@@ -1122,12 +1122,13 @@ test('Translator::get() transitional bridge has a shrinking, known allow-list', 
     // but Phase 8 converted it to constructor-injected Translator, so it's
     // no longer a caller. DateHelper.php is a stateless static utility (no
     // instance context to receive
-    // constructor injection through). HtmlService.php/MailService.php
-    // deliberately avoid a required constructor dependency (59/29 real
-    // `new` construction sites each), matching FilesystemHelper's own "no
-    // wrapper needed" precedent -- MailService.php also still needs the
-    // bare shim read (not just ->plural()) to snapshot/clone the current
-    // instance for its own switchLangTo()/switchLangBack() stack.
+    // constructor injection through). HtmlService.php deliberately avoids
+    // a required constructor dependency (59 real `new` construction
+    // sites), matching FilesystemHelper's own "no wrapper needed"
+    // precedent. Mail/MailService.php closed this shim in Phase 11
+    // sub-phase 11E -- real constructor injection, its own former
+    // snapshot/clone-for-switchLangTo()/switchLangBack() reads now go
+    // through $this->translator instead.
     // Ws/PwgCore.php and Ws/PwgUsers.php took real constructor injection
     // during their own Phase 10 sub-batches. CategoryService.php's 2 sites
     // are both unreachable any other way: getDisplayImagesCount() is a
@@ -1151,7 +1152,6 @@ test('Translator::get() transitional bridge has a shrinking, known allow-list', 
         '/src/Piwigo/Controller/Admin/NotificationByMailSubController.php',
         '/src/Piwigo/Core/DateHelper.php',
         '/src/Piwigo/Html/HtmlService.php',
-        '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Menu/MenubarRenderer.php',
         '/src/Piwigo/Template/PwgTemplateAdapter.php',
     ];
@@ -1187,9 +1187,7 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     // injection or an explicit method/render() parameter; only these stay
     // on the shim, each for one of the same 3 reasons already established
     // by earlier phases: **too many manual construction sites to justify a
-    // required param** (HtmlService.php 59 sites, MailService.php 29 sites,
-    // matching MailService's own precedent from the
-    // SessionService/Translator phases); **Phase-6-entangled, still
+    // required param** (HtmlService.php 59 sites); **Phase-6-entangled, still
     // manually `new`'d at dozens of sites** (SrcImage.php/DerivativeImage.php/
     // Template.php/CssLoader.php/ScriptLoader.php/UrlService.php/
     // RedirectService.php/MenubarRenderer.php -- the same UrlService-bridge
@@ -1215,6 +1213,8 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     // takes EventDispatcher as an explicit method param (matching
     // CurrentTemplate's own established precedent for this exact file
     // from Phase 5), threaded through all 29 real call sites.
+    // Mail/MailService.php also removed -- real constructor injection,
+    // the "too many manual construction sites" reasoning no longer holds.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
@@ -1227,7 +1227,6 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Html/HtmlService.php',
         '/src/Piwigo/Image/DerivativeImage.php',
         '/src/Piwigo/Image/SrcImage.php',
-        '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Menu/MenubarRenderer.php',
         '/src/Piwigo/Site/LocalSiteReader.php',
         '/src/Piwigo/Template/CssLoader.php',
@@ -1361,8 +1360,10 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
     // AccessControl.php itself now constructor-injects CurrentUser for
     // real (Phase 7), so it's off this allow-list -- see its own
     // "AccessControl::current() transitional bridge" test below instead.
-    // HtmlService.php/MailService.php/UrlService.php/MetadataService.php
+    // HtmlService.php/UrlService.php/MetadataService.php
     // are Phase-6-entangled (dozens of manual construction sites each).
+    // Mail/MailService.php closed this shim in Phase 11 sub-phase 11E --
+    // real constructor injection.
     // WsHelper.php itself took real constructor injection during Phase 11
     // sub-phase 11A (every Ws/Pwg*.php file + WsDefaultMethods.php itself
     // closed out this shim during Phase 10). CommentService::
@@ -1391,7 +1392,6 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Caddie/CaddieService.php',
         '/src/Piwigo/Comment/CommentService.php',
         '/src/Piwigo/Html/HtmlService.php',
-        '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Metadata/MetadataService.php',
         '/src/Piwigo/Permission/PermissionService.php',
         '/src/Piwigo/Url/UrlService.php',
@@ -1410,6 +1410,51 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
+test('Lang::current() transitional bridge has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 8: current()
+    // itself is a real, tagged `@deprecated transitional bridge` shim (see
+    // its own docblock) with the exact same "delete once grep returns
+    // nothing outside tests/" completion criterion as every other shim in
+    // this campaign -- but it never got its own companion arch test until
+    // now (a real process gap found live during Phase 11 sub-phase 11E,
+    // while closing Mail/MailService.php's own Lang::current() usage:
+    // MailService.php is NOT on this allow-list, already closed). Every
+    // remaining entry below is a real, current caller as of that same
+    // discovery, not yet individually re-verified against the same 3
+    // categories every other shim's allow-list documents (too-many-sites/
+    // genuinely-static/structural) -- Html/HtmlService.php, Template/
+    // Template.php, and Url/UrlService.php are expected to close as part
+    // of this same sub-phase's own remaining hub-class passes; shrink this
+    // list further as each one lands, same as every other allow-list in
+    // this file.
+    $repoRoot = __DIR__ . '/../..';
+
+    $allowedFiles = [
+        '/src/Piwigo/Admin/Install/InstallService.php',
+        '/src/Piwigo/Category/CategoryService.php',
+        '/src/Piwigo/Core/DateHelper.php',
+        '/src/Piwigo/Core/FilesystemHelper.php',
+        '/src/Piwigo/Core/RecentIconResolver.php',
+        '/src/Piwigo/Core/ThemeCatalog.php',
+        '/src/Piwigo/Html/HtmlService.php',
+        '/src/Piwigo/Menu/MenubarRenderer.php',
+        '/src/Piwigo/Permission/PermissionService.php',
+        '/src/Piwigo/Picture/PictureMetadataRenderer.php',
+        '/src/Piwigo/Site/LocalSiteReader.php',
+        '/src/Piwigo/Template/Template.php',
+        '/src/Piwigo/Url/UrlService.php',
+    ];
+
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'Lang::current(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
+});
+
 test('AccessControl::current() transitional bridge has a shrinking, known allow-list', function (): void {
     // Singleton/service-locator elimination campaign, Phase 7: current()
     // kept its original name (no `Static` suffix, matching every other
@@ -1417,10 +1462,21 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
     // disambiguate from). Unlike CurrentUser/CurrentTemplate/etc., this
     // shim has no memoized pre-boot fallback (a live container resolve on
     // every call instead) -- see the class's own docblock for why.
-    // HtmlService.php/MailService.php/UrlService.php/Template.php match
+    // HtmlService.php/UrlService.php/Template.php match
     // their own already-established too-many-manual-construction-sites
     // precedent (same files stay on every other large facade's own
-    // allow-list too). PermissionService.php/CategoryService.php/
+    // allow-list too). Mail/MailService.php closed this shim in Phase 11
+    // sub-phase 11E -- but NOT via a required constructor param like its
+    // other shim collaborators: MailService implements MailerInterface,
+    // and AccessControl's own dependency chain (RedirectServiceInterface
+    // -> Bootstrap\RedirectService -> Users\UserService -> MailerInterface)
+    // means a required param would be a genuine circular dependency PHP-DI
+    // can't autowire. Stays a private, lazily-resolved
+    // Kernel::container()->get(AccessControl::class) helper instead (same
+    // shape as this class's own former urlService() helper) -- doesn't
+    // match this test's literal `AccessControl::current(` search pattern,
+    // so it never appears as a hit here either way.
+    // PermissionService.php/CategoryService.php/
     // CommentService.php/UserService.php have real Ws/Pwg*.php-locked
     // callers (Phase-10-locked static dispatch). CssLoader.php/
     // ScriptLoader.php are NOT in this allow-list -- found live during
@@ -1456,7 +1512,6 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Category/CategoryService.php',
         '/src/Piwigo/Comment/CommentService.php',
         '/src/Piwigo/Html/HtmlService.php',
-        '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Permission/PermissionService.php',
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',

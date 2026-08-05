@@ -279,7 +279,7 @@ final class SearchServiceTest extends IntegrationTestCase
                 new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current())),
                 \Piwigo\Config\CurrentConfig::current()
             ),
-            new MailService(),
+            $this->mailService(),
             new HtmlService(),
             new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()),
             new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), \Piwigo\PluginConfig\EventDispatcher::get(),
@@ -312,6 +312,16 @@ final class SearchServiceTest extends IntegrationTestCase
         return $userService;
     }
 
+    private function mailService(): \Piwigo\Mail\MailService
+    {
+        $mailer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Mail\MailService::class);
+        if (! $mailer instanceof \Piwigo\Mail\MailService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Mail\MailService::class);
+        }
+
+        return $mailer;
+    }
+
     /**
      * Same dependency graph as setUp()'s own $this->service, but with a
      * caller-supplied $repo (for forcing an internal collision retry) and/or
@@ -330,7 +340,7 @@ final class SearchServiceTest extends IntegrationTestCase
                 new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current())),
                 \Piwigo\Config\CurrentConfig::current()
             ),
-            new MailService(),
+            $this->mailService(),
             $htmlRenderer,
             new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()),
             new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), \Piwigo\PluginConfig\EventDispatcher::get(),

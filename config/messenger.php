@@ -83,6 +83,22 @@ return [
             \Piwigo\PluginConfig\EventDispatcher::get(),
             \Piwigo\Bootstrap\RequestBootstrap::currentConfig()
         )),
-        SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(new MailService()),
+        SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(new MailService(
+            new \Piwigo\Core\Lang(
+                new \Piwigo\Lang\Translator(\Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
+                new \Piwigo\Html\HtmlService(),
+                \Piwigo\Core\Paths::fromRoot(dirname(__DIR__)),
+                new \Piwigo\Core\InstallationFlag(),
+            ),
+            \Piwigo\Bootstrap\RequestBootstrap::currentConfig(),
+            new \Piwigo\Config\DeploymentPolicy(),
+            new \Piwigo\Core\PageState(),
+            \Piwigo\Core\Paths::fromRoot(dirname(__DIR__)),
+            new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Session\SessionEntity::class), \Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
+            new \Piwigo\Lang\Translator(\Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
+            \Piwigo\PluginConfig\EventDispatcher::get(),
+            new \Piwigo\Users\CurrentUser(\Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
+            \Piwigo\Bootstrap\PresentationAccessor::urlService(),
+        )),
     ],
 ];

@@ -112,7 +112,11 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         if (! $userService instanceof \Piwigo\Users\UserService) {
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
         }
-        $this->renderer = new NoPhotoYetRenderer(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Image\ImageEntity::class), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), new RedirectService(\Piwigo\Core\Lang::current(), $userService), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService(), \Piwigo\Config\CurrentConfig::current());
+        $mailer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Mail\MailService::class);
+        if (! $mailer instanceof \Piwigo\Mail\MailService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Mail\MailService::class);
+        }
+        $this->renderer = new NoPhotoYetRenderer(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Image\ImageEntity::class), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), new RedirectService(\Piwigo\Core\Lang::current(), $userService), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), $mailer, \Piwigo\Config\CurrentConfig::current());
 
         // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
         // isAdmin() directly (real class methods), which read

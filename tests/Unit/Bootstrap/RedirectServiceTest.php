@@ -54,6 +54,27 @@ function redirect_service_test_lang(): Lang
     return new Lang(new Translator(new \Piwigo\Config\CurrentConfig()), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
+/**
+ * Same "no Kernel boot" reasoning as redirect_service_test_lang() above --
+ * every MailService::__construct() collaborator (singleton/service-locator
+ * elimination campaign, Phase 11 sub-phase 11E) built bare, DB-free.
+ */
+function redirect_service_test_mail_service(): MailService
+{
+    return new MailService(
+        redirect_service_test_lang(),
+        new \Piwigo\Config\CurrentConfig(),
+        new DeploymentPolicy(),
+        new \Piwigo\Core\PageState(),
+        Paths::fromRoot(sys_get_temp_dir()),
+        new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), new \Piwigo\Config\CurrentConfig()),
+        new Translator(new \Piwigo\Config\CurrentConfig()),
+        new EventDispatcher(),
+        new CurrentUser(new \Piwigo\Config\CurrentConfig()),
+        new \Piwigo\Url\UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
+    );
+}
+
 function redirect_service_test_user_service(): UserService
 {
     $conn = DbConnection::build();
@@ -62,7 +83,7 @@ function redirect_service_test_user_service(): UserService
         redirect_service_test_lang(),
         new \Piwigo\Users\UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new \Piwigo\Config\CurrentConfig()),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-        new MailService(),
+        redirect_service_test_mail_service(),
         new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
         new HtmlService(),
         $conn,

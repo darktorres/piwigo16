@@ -101,6 +101,13 @@ final class ContainerSmokeTest extends TestCase
         // guess without a real one -- same "Kernel booted with no real
         // Paths" reasoning as TemplateInterface above, one level removed.
         \Piwigo\Core\FilterUpdaterInterface::class,
+        // Piwigo\Core\MailerInterface resolves to Piwigo\Mail\MailService,
+        // which now constructor-injects Piwigo\Core\Lang (singleton/
+        // service-locator elimination campaign, Phase 11 sub-phase 11E),
+        // whose own Paths param the container can't guess without a real
+        // one -- same "Kernel booted with no real Paths" reasoning as
+        // FilterUpdaterInterface above.
+        \Piwigo\Core\MailerInterface::class,
     ];
 
     public function test_every_container_entry_resolves(): void

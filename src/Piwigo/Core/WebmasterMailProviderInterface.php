@@ -16,12 +16,13 @@ namespace Piwigo\Core;
  * L2aCoreDomain, a legal downward dependency). This interface replaces
  * that stub mechanism with real DI: `UserRepository implements` it (bound
  * in config/container.php for consistency with the other Core interfaces),
- * MailService takes an optional constructor instance (lazily defaulting to
- * the real UserRepository -- keeps `new MailService()` valid with no args,
- * still relied on by the 2 remaining bare production construction sites
- * plus every unit test's own direct construction, singleton/service-
- * locator elimination campaign Phase 6), and the unit tests pass an
- * anonymous fake instead of shadowing a global function.
+ * MailService takes an optional constructor param (lazily defaulting to
+ * the real UserRepository when unit tests don't need to substitute a fixed
+ * address), and the unit tests pass an anonymous fake instead of
+ * shadowing a global function. MailService's OTHER constructor params
+ * became required in Phase 11 sub-phase 11E (it no longer has a no-arg
+ * constructor), but this one stays optional-with-lazy-default on its own
+ * merits -- a genuine test seam, not a too-many-call-sites exception.
  */
 interface WebmasterMailProviderInterface
 {

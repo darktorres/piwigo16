@@ -43,6 +43,28 @@ function piwigoInfosSenderTestLang(): Lang
     return new Lang(new Translator(new CurrentConfig()), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
+/**
+ * Same "no Kernel::boot(), never actually read" reasoning as
+ * piwigoInfosSenderTestLang() above -- every MailService::__construct()
+ * shim collaborator (singleton/service-locator elimination campaign,
+ * Phase 11 sub-phase 11E) built bare, DB-free.
+ */
+function piwigoInfosSenderTestMailService(): \Piwigo\Mail\MailService
+{
+    return new \Piwigo\Mail\MailService(
+        piwigoInfosSenderTestLang(),
+        new CurrentConfig(),
+        new \Piwigo\Config\DeploymentPolicy(),
+        new \Piwigo\Core\PageState(),
+        Paths::fromRoot(sys_get_temp_dir()),
+        new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Session\SessionEntity::class), new CurrentConfig()),
+        new Translator(new CurrentConfig()),
+        new \Piwigo\PluginConfig\EventDispatcher(),
+        new \Piwigo\Users\CurrentUser(new CurrentConfig()),
+        new \Piwigo\Url\UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
+    );
+}
+
 test('send returns immediately without touching the DB or network when telemetry is disabled', function (): void {
     $currentLogger = new CurrentLogger();
     $currentLogger->set(new Logger(['severity' => Logger::OFF]));
@@ -106,7 +128,7 @@ test('send returns immediately without touching the DB or network when telemetry
         piwigoInfosSenderTestLang(),
         new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\CurrentConfig()),
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Group\GroupEntity::class),
-        new \Piwigo\Mail\MailService(),
+        piwigoInfosSenderTestMailService(),
         $activityService,
         new \Piwigo\Html\HtmlService(),
         \Piwigo\Db\DbConnection::build(),

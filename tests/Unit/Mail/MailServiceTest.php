@@ -3,19 +3,75 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Event\Mail\BeforeParseMailTemplate;
 use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Event\Mail\RenderLostPasswordMailContent;
+use Piwigo\Lang\Translator;
+use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
+
+/**
+ * Every MailService::__construct() shim collaborator (singleton/
+ * service-locator elimination campaign, Phase 11 sub-phase 11E), resolved
+ * from a real booted container -- Kernel::boot() is idempotent, so calling
+ * it here is a safe no-op for the handful of tests that already booted
+ * their own (possibly custom-rooted, e.g. a fake CurrentPaths root) Kernel
+ * before calling this helper.
+ */
+function mail_service_test_build(
+    ?WebmasterMailProviderInterface $webmasterMailProvider = null,
+    ?MailRecipientRepositoryInterface $mailRecipientRepo = null,
+    ?\Piwigo\Auth\AuthService $authService = null,
+): MailService {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+
+    $lang = Kernel::container()->get(Lang::class);
+    $currentConfig = Kernel::container()->get(CurrentConfig::class);
+    $deploymentPolicy = Kernel::container()->get(DeploymentPolicy::class);
+    $pageState = Kernel::container()->get(PageState::class);
+    $paths = Kernel::container()->get(Paths::class);
+    $sessionService = Kernel::container()->get(SessionService::class);
+    $translator = Kernel::container()->get(Translator::class);
+    $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
+    $currentUser = Kernel::container()->get(CurrentUser::class);
+    $urlService = Kernel::container()->get(UrlServiceInterface::class);
+    if (! $lang instanceof Lang || ! $currentConfig instanceof CurrentConfig || ! $deploymentPolicy instanceof DeploymentPolicy
+        || ! $pageState instanceof PageState || ! $paths instanceof Paths || ! $sessionService instanceof SessionService
+        || ! $translator instanceof Translator || ! $eventDispatcher instanceof EventDispatcher
+        || ! $currentUser instanceof CurrentUser || ! $urlService instanceof UrlServiceInterface
+    ) {
+        throw new \LogicException('Container returned an unexpected type');
+    }
+
+    return new MailService(
+        $lang,
+        $currentConfig,
+        $deploymentPolicy,
+        $pageState,
+        $paths,
+        $sessionService,
+        $translator,
+        $eventDispatcher,
+        $currentUser,
+        $urlService,
+        $webmasterMailProvider,
+        $mailRecipientRepo,
+        $authService,
+    );
+}
 
 // P23 batch 8f-4: the get_webmaster_mail_address() function stub is gone
 // (free function deleted with include/functions.inc.php). MailService now
@@ -26,7 +82,7 @@ use Piwigo\Users\User;
 // calls getMailSenderEmail()) construct the service with this real fake.
 function mail_service_with_fake_webmaster(): MailService
 {
-    return new MailService(new class implements WebmasterMailProviderInterface {
+    return mail_service_test_build(new class implements WebmasterMailProviderInterface {
         #[\Override]
         public function getWebmasterMailAddress(): string
         {
@@ -198,26 +254,26 @@ afterEach(function (): void {
 });
 
 test('formatEmail wraps a name and email into "name <email>"', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->formatEmail('Jane Doe', 'jane@example.test'))->toBe('"Jane Doe" <jane@example.test>');
 });
 
 test('formatEmail returns a bare "<email>" when name is empty', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->formatEmail('', 'jane@example.test'))->toBe('<jane@example.test>');
 });
 
 test('formatEmail strips newlines from both name and email (header injection)', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->formatEmail("Jane\r\nBcc: evil@test", 'jane@example.test'))
         ->toBe('"JaneBcc: evil@test" <jane@example.test>');
 });
 
 test('formatEmail returns the name concatenated as-is when the email already contains angle brackets', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->formatEmail('Jane Doe', 'Real Name <jane@example.test>'))
         ->toBe('"Jane Doe" Real Name <jane@example.test>');
@@ -233,7 +289,7 @@ test('formatEmail returns the name concatenated as-is when the email already con
 // TypeError or a different value. Live-verified (both call sites): mutated,
 // full suite still passed, restored byte-identical.
 test('formatEmail trims surrounding whitespace from both name and email', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->formatEmail('  Jane Doe  ', '  jane@example.test  '))
         ->toBe('"Jane Doe" <jane@example.test>');
@@ -246,7 +302,7 @@ test('getMailSenderEmail falls back to the webmaster address when mail_sender_em
 });
 
 test('unformatEmail parses a "name <email>" string', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->unformatEmail('Jane Doe <jane@example.test>'))->toBe([
         'email' => 'jane@example.test',
@@ -255,7 +311,7 @@ test('unformatEmail parses a "name <email>" string', function (): void {
 });
 
 test('unformatEmail trims surrounding whitespace from both the parsed email and name', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->unformatEmail('  Jane Doe  <  jane@example.test  >'))->toBe([
         'email' => 'jane@example.test',
@@ -264,7 +320,7 @@ test('unformatEmail trims surrounding whitespace from both the parsed email and 
 });
 
 test('unformatEmail trims surrounding whitespace from a bare email string', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->unformatEmail('  jane@example.test  '))->toBe([
         'email' => 'jane@example.test',
@@ -273,7 +329,7 @@ test('unformatEmail trims surrounding whitespace from a bare email string', func
 });
 
 test('unformatEmail treats a bare email string as email with no name', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->unformatEmail('jane@example.test'))->toBe([
         'email' => 'jane@example.test',
@@ -282,7 +338,7 @@ test('unformatEmail treats a bare email string as email with no name', function 
 });
 
 test('unformatEmail accepts an array input with email and name keys', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->unformatEmail(['email' => 'jane@example.test', 'name' => 'Jane']))->toBe([
         'email' => 'jane@example.test',
@@ -291,14 +347,14 @@ test('unformatEmail accepts an array input with email and name keys', function (
 });
 
 test('unformatEmail throws on an array input missing the email key, with the exact real method name in the message', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect(fn (): array => $service->unformatEmail(['name' => 'Jane']))
         ->toThrow(InvalidArgumentException::class, 'Piwigo\Mail\MailService::unformatEmail(): array input must contain a string "email" key');
 });
 
 test('getCleanRecipientsList returns an empty list for empty input', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getCleanRecipientsList(null))->toBe([])
         ->and($service->getCleanRecipientsList(''))->toBe([])
@@ -306,7 +362,7 @@ test('getCleanRecipientsList returns an empty list for empty input', function ()
 });
 
 test('getCleanRecipientsList parses a comma-separated string', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getCleanRecipientsList('a@test.com,Bob <b@test.com>'))->toBe([
         ['email' => 'a@test.com', 'name' => ''],
@@ -315,13 +371,13 @@ test('getCleanRecipientsList parses a comma-separated string', function (): void
 });
 
 test('getCleanRecipientsList returns an empty list for a literal int 0, matching its own null/""/[]/false peers', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getCleanRecipientsList(0))->toBe([]);
 });
 
 test('getCleanRecipientsList deduplicates by email', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getCleanRecipientsList('a@test.com,a@test.com'))->toBe([
         ['email' => 'a@test.com', 'name' => ''],
@@ -336,7 +392,7 @@ test('getCleanRecipientsList keeps every entry after a duplicate in the middle o
     // equivalent, not tested separately: isset() only cares about key
     // existence, never the stored value's truthiness, so true vs false
     // here is write-only and unobservable either way.
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getCleanRecipientsList('a@test.com,a@test.com,b@test.com'))->toBe([
         ['email' => 'a@test.com', 'name' => ''],
@@ -345,7 +401,7 @@ test('getCleanRecipientsList keeps every entry after a duplicate in the middle o
 });
 
 test('getCleanRecipientsList accepts a plain array of emails', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getCleanRecipientsList(['a@test.com', 'b@test.com']))->toBe([
         ['email' => 'a@test.com', 'name' => ''],
@@ -354,7 +410,7 @@ test('getCleanRecipientsList accepts a plain array of emails', function (): void
 });
 
 test('getCleanRecipientsList trims whitespace from a plain array of emails', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getCleanRecipientsList(['  a@test.com  ']))->toBe([
         ['email' => 'a@test.com', 'name' => ''],
@@ -364,7 +420,7 @@ test('getCleanRecipientsList trims whitespace from a plain array of emails', fun
 test('getCleanRecipientsList string-casts a non-string scalar item inside a plain array of emails', function (): void {
     // Without the cast, trim() would receive a raw int under this file's
     // own strict_types=1 and throw a TypeError instead of formatting it.
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getCleanRecipientsList(['a@test.com', 42]))->toBe([
         ['email' => 'a@test.com', 'name' => ''],
@@ -373,7 +429,7 @@ test('getCleanRecipientsList string-casts a non-string scalar item inside a plai
 });
 
 test('getCleanRecipientsList decides "simple array of emails" vs "hashmap" from the FIRST key only, not any other position', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     // array_keys() here is [0, 'email'] -- key 0 (int) routes into the
     // "simple array of emails" branch, which iterates every item
@@ -389,7 +445,7 @@ test('getCleanRecipientsList decides "simple array of emails" vs "hashmap" from 
 });
 
 test('getCleanRecipientsList falls back to an empty email for a non-scalar item inside a plain array', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getCleanRecipientsList(['a@test.com', null]))->toBe([
         ['email' => 'a@test.com', 'name' => ''],
@@ -398,7 +454,7 @@ test('getCleanRecipientsList falls back to an empty email for a non-scalar item 
 });
 
 test('getCleanRecipientsList accepts a single hashmap recipient', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getCleanRecipientsList(['email' => 'a@test.com', 'name' => 'A']))->toBe([
         ['email' => 'a@test.com', 'name' => 'A'],
@@ -406,7 +462,7 @@ test('getCleanRecipientsList accepts a single hashmap recipient', function (): v
 });
 
 test('getCleanRecipientsList falls back to a scalar-cast email for a non-array, non-string item inside an array of hashmaps', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     // The first item being an array routes into the "array of hashmaps"
     // branch; the second item (a bare int) is neither an array nor a
@@ -419,7 +475,7 @@ test('getCleanRecipientsList falls back to a scalar-cast email for a non-array, 
 });
 
 test('getCleanRecipientsList trims a whitespace-padded scalar item inside an array of hashmaps', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getCleanRecipientsList([['email' => 'a@test.com'], '  99  ']))->toBe([
         ['email' => 'a@test.com', 'name' => ''],
@@ -428,7 +484,7 @@ test('getCleanRecipientsList trims a whitespace-padded scalar item inside an arr
 });
 
 test('getCleanRecipientsList falls back to an empty email for a non-scalar item inside an array of hashmaps', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getCleanRecipientsList([['email' => 'a@test.com'], null]))->toBe([
         ['email' => 'a@test.com', 'name' => ''],
@@ -437,7 +493,7 @@ test('getCleanRecipientsList falls back to an empty email for a non-scalar item 
 });
 
 test('getCleanRecipientsList falls back to a single, empty-email recipient for a non-array, non-scalar $data', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     // Not null/''/[]library/false/0 (mail()'s own emptyValue()-guarded
     // callers never reach this with those), and not is_array() -- the only
@@ -452,7 +508,7 @@ test('getCleanRecipientsList falls back to a single, empty-email recipient for a
 test('getCleanRecipientsList string-casts a non-array, non-string scalar $data before exploding it', function (): void {
     // Without the cast, explode() would receive a raw int under this
     // file's own strict_types=1 and throw a TypeError instead.
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getCleanRecipientsList(42))->toBe([
         ['email' => '42', 'name' => ''],
@@ -460,13 +516,13 @@ test('getCleanRecipientsList string-casts a non-array, non-string scalar $data b
 });
 
 test('getStrictEmailList strips names, keeping only the bare email addresses', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getStrictEmailList('Jane <jane@test.com>, bob@test.com'))->toBe('jane@test.com,bob@test.com');
 });
 
 test('getStrictEmailList deduplicates identical addresses after stripping names', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getStrictEmailList('Jane <jane@test.com>, jane@test.com'))->toBe('jane@test.com');
 });
@@ -488,7 +544,7 @@ test('getMailTemplate resolves the real, absolute theme root and the given email
     $fakeRoot = Paths::fromRoot('/tmp/piwigo-mailservice-test-fake-root-' . getmypid() . '/');
     Kernel::boot($fakeRoot);
     CurrentConfig::current()->setDataDirChecked('1');
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $htmlTemplate = $service->getMailTemplate('text/html');
     $plainTemplate = $service->getMailTemplate('text/plain');
@@ -498,20 +554,20 @@ test('getMailTemplate resolves the real, absolute theme root and the given email
 });
 
 test('getStrEmailFormat maps the html flag to a MIME content type', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getStrEmailFormat(true))->toBe('text/html')
         ->and($service->getStrEmailFormat(false))->toBe('text/plain');
 });
 
 test('moveCssToBody returns an empty string unchanged', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->moveCssToBody(''))->toBe('');
 });
 
 test('moveCssToBody inlines a <style> block into the element it targets', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $html = '<html><head><style>p { color: red; }</style></head><body><p>hi</p></body></html>';
     $result = $service->moveCssToBody($html);
@@ -522,7 +578,7 @@ test('moveCssToBody inlines a <style> block into the element it targets', functi
 test('getMailSenderName falls back to gallery_title when mail_sender_name is unset', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setGalleryTitle('My Gallery');
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getMailSenderName())->toBe('My Gallery');
 });
@@ -530,7 +586,7 @@ test('getMailSenderName falls back to gallery_title when mail_sender_name is uns
 test('getMailSenderName uses mail_sender_name when configured', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderName('Custom Sender');
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getMailSenderName())->toBe('Custom Sender');
 });
@@ -542,7 +598,7 @@ test('getMailSenderEmail uses the configured mail_sender_email without falling b
     // No WebmasterMailProviderInterface fake needed here -- a configured,
     // non-empty mail_sender_email short-circuits before webmasterMailAddress()
     // (which would otherwise need a real DB connection) is ever reached.
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->getMailSenderEmail())->toBe('sender@example.test');
 });
@@ -578,7 +634,7 @@ test('getMailConfiguration reads debug_mail-adjacent smtp settings from CurrentC
 
 test('generateResetPasswordMail builds an HTML mail with the reset link and gallery-title-prefixed subject', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $mail = $service->generateResetPasswordMail('jane', 'https://example.test/password.php?key=abc', 'My Gallery', '2 hours');
 
@@ -591,7 +647,7 @@ test('generateResetPasswordMail builds an HTML mail with the reset link and gall
 
 test('generateSetPasswordMail builds an HTML mail with the activation link and a welcome subject', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $mail = $service->generateSetPasswordMail('jane', 'https://example.test/password.php?key=xyz', 'My Gallery', '48 hours');
 
@@ -605,7 +661,7 @@ test('generateSetPasswordMail builds an HTML mail with the activation link and a
 test('generateCodeVerificationMail embeds the raw verification code and the current gallery title', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setGalleryTitle('My Gallery');
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $mail = $service->generateCodeVerificationMail('482913');
 
@@ -616,7 +672,7 @@ test('generateCodeVerificationMail embeds the raw verification code and the curr
 
 test('generateSuccessResetPasswordMail omits the API-key-revocation notice when there are no API keys', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 0);
 
@@ -626,7 +682,7 @@ test('generateSuccessResetPasswordMail omits the API-key-revocation notice when 
 
 test('generateSuccessResetPasswordMail includes the API-key-revocation notice with the real key count when there are some', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 3);
 
@@ -642,7 +698,7 @@ test('generateSuccessResetPasswordMail includes the API-key-revocation notice wi
 
 test('generateResetPasswordMail assembles the exact HTML content, in order, from every concatenated piece', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $mail = $service->generateResetPasswordMail('jane', 'https://example.test/password.php?key=abc', 'My Gallery', '2 hours');
 
@@ -658,7 +714,7 @@ test('generateResetPasswordMail assembles the exact HTML content, in order, from
 
 test('generateResetPasswordMail throws when a render_lost_password_mail_content handler returns something other than a RenderLostPasswordMailContent instance', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    $service = new MailService();
+    $service = mail_service_test_build();
     $handler = static fn (): bool => false;
     EventDispatcher::get()->addEventHandler(RenderLostPasswordMailContent::class, $handler);
 
@@ -672,7 +728,7 @@ test('generateResetPasswordMail throws when a render_lost_password_mail_content 
 
 test('generateResetPasswordMail uses the render_lost_password_mail_content handler\'s own replacement when it returns a real string', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    $service = new MailService();
+    $service = mail_service_test_build();
     $handler = static fn (RenderLostPasswordMailContent $event): RenderLostPasswordMailContent => new RenderLostPasswordMailContent('REPLACED CONTENT');
     EventDispatcher::get()->addTypedHandler(RenderLostPasswordMailContent::class, $handler);
 
@@ -687,7 +743,7 @@ test('generateResetPasswordMail uses the render_lost_password_mail_content handl
 
 test('generateSetPasswordMail assembles the exact HTML content, in order, from every concatenated piece', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $mail = $service->generateSetPasswordMail('jane', 'https://example.test/password.php?key=xyz', 'My Gallery', '48 hours');
 
@@ -703,7 +759,7 @@ test('generateSetPasswordMail assembles the exact HTML content, in order, from e
 
 test('generateSetPasswordMail uses the render_lost_password_mail_content handler\'s own replacement when it returns a real string', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    $service = new MailService();
+    $service = mail_service_test_build();
     $handler = static fn (RenderLostPasswordMailContent $event): RenderLostPasswordMailContent => new RenderLostPasswordMailContent('REPLACED CONTENT');
     EventDispatcher::get()->addTypedHandler(RenderLostPasswordMailContent::class, $handler);
 
@@ -719,7 +775,7 @@ test('generateSetPasswordMail uses the render_lost_password_mail_content handler
 test('generateCodeVerificationMail assembles the exact HTML content, in order, from every concatenated piece', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setGalleryTitle('My Gallery');
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $mail = $service->generateCodeVerificationMail('482913');
 
@@ -733,7 +789,7 @@ test('generateCodeVerificationMail assembles the exact HTML content, in order, f
 
 test('generateSuccessResetPasswordMail assembles the exact HTML content with no API-key notice when there are none', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 0);
 
@@ -748,7 +804,7 @@ test('generateSuccessResetPasswordMail assembles the exact HTML content with no 
 
 test('generateSuccessResetPasswordMail includes the API-key-revocation notice at exactly 1 key, the boundary right above the ">0" guard', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 1);
 
@@ -770,18 +826,18 @@ test('generateSuccessResetPasswordMail includes the API-key-revocation notice at
 // still passed, restored byte-identical.
 test('generateSuccessResetPasswordMail assembles the exact HTML content, in order, including the API-key notice and real profile URL when there are some', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    $service = new MailService();
+    $service = mail_service_test_build();
     // getRootUrl() is environment-dependent (RootPathOverride/cwd), same
     // real value generateSuccessResetPasswordMail() itself uses internally
-    // via the private urlService() helper -- read via Reflection rather
-    // than hardcoded, so this assertion stays exact without being coupled
-    // to where tests happen to run from. Must be read inside the same
-    // setMakeFullUrl()-active window generateSuccessResetPasswordMail()
-    // itself uses: getRootUrl() returns a bare relative path outside it.
-    $urlServiceMethod = new ReflectionMethod($service, 'urlService');
-    $urlService = $urlServiceMethod->invoke($service);
+    // via its own constructor-injected $urlService -- resolved from the
+    // same container-shared instance rather than hardcoded, so this
+    // assertion stays exact without being coupled to where tests happen to
+    // run from. Must be read inside the same setMakeFullUrl()-active
+    // window generateSuccessResetPasswordMail() itself uses: getRootUrl()
+    // returns a bare relative path outside it.
+    $urlService = Kernel::container()->get(UrlServiceInterface::class);
     if (! $urlService instanceof \Piwigo\Core\UrlServiceInterface) {
-        throw new RuntimeException('expected urlService() to return a UrlServiceInterface');
+        throw new RuntimeException('expected UrlServiceInterface::class to resolve to a UrlServiceInterface');
     }
     $urlService->setMakeFullUrl();
     $rootUrl = $urlService->getRootUrl();
@@ -798,7 +854,7 @@ test('generateSuccessResetPasswordMail assembles the exact HTML content, in orde
 });
 
 test('mail returns true immediately for an empty $to with no Cc/Bcc, without building anything', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     expect($service->mail(''))->toBeTrue();
 });
@@ -819,7 +875,7 @@ test('mail actually appends a real, non-falsy auth_key to the generated links', 
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'auth_key' => 'REAL123']);
 
@@ -830,7 +886,7 @@ test('mail builds a To address for every recipient in a comma-separated list', f
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test, jane@example.test', ['subject' => 'x', 'content' => 'y']);
 
@@ -843,7 +899,7 @@ test('mail defaults the From address to the configured mail sender email/name wh
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
     CurrentConfig::current()->setMailSenderName('Test Sender');
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
 
@@ -855,7 +911,7 @@ test('mail uses an explicit args[from] instead of the configured default', funct
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'from' => ['email' => 'other@example.test', 'name' => 'Other']]);
 
@@ -868,7 +924,7 @@ test('mail defaults reply-to to the same address/name it resolved for From', fun
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
     CurrentConfig::current()->setMailSenderName('Test Sender');
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
 
@@ -880,7 +936,7 @@ test('mail uses explicit reply_to_mail_address/reply_to_name instead of falling 
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', [
         'subject' => 'x', 'content' => 'y',
@@ -896,7 +952,7 @@ test('mail defaults the subject to exactly "Piwigo" when absent', function (): v
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['content' => 'y']);
 
@@ -907,7 +963,7 @@ test('mail strips embedded newlines and surrounding whitespace from the subject 
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => "  Hi\r\nBcc: evil@test  ", 'content' => 'y']);
 
@@ -918,7 +974,7 @@ test('mail builds a Cc address when args[Cc] is a real, non-empty value', functi
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'Cc' => 'cc@example.test']);
 
@@ -930,7 +986,7 @@ test('mail adds no Cc address at all when args[Cc] is absent', function (): void
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
 
@@ -968,7 +1024,7 @@ test('mail replaces an unset theme with the configured mail_theme', function ():
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
     CurrentConfig::current()->setMailTheme('dark');
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
 
@@ -980,7 +1036,7 @@ test('mail replaces an invalid theme with the configured mail_theme instead of l
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
     CurrentConfig::current()->setMailTheme('dark');
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'theme' => 'bogus']);
 
@@ -991,7 +1047,7 @@ test('mail preserves an explicit, valid theme ("clear")', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'theme' => 'clear']);
 
@@ -1002,7 +1058,7 @@ test('mail preserves an explicit, valid theme ("dark")', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'theme' => 'dark']);
 
@@ -1013,7 +1069,7 @@ test('mail defaults args[content] to an empty string when the key is entirely ab
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x']);
 
@@ -1025,7 +1081,7 @@ test('mail decomposes a "[Title] Subtitle" subject into mail_title/mail_subtitle
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
     CurrentConfig::current()->setGalleryTitle('My Gallery');
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => '[Foo] Bar baz', 'content' => 'y']);
 
@@ -1037,7 +1093,7 @@ test('mail does not decompose the subject when mail_title was already explicitly
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
     CurrentConfig::current()->setGalleryTitle('My Gallery');
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => '[Foo] Bar baz', 'content' => 'y', 'mail_title' => 'PresetTitle']);
 
@@ -1057,7 +1113,7 @@ test('mail includes the html part only when mail_allow_html is true and email_fo
     // container-shared instance mail()'s own real Lang::current()->langInfo()
     // read will see once mail_service_capture_send() actually sends.
     Lang::current()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
 
@@ -1069,7 +1125,7 @@ test('mail omits the html part when mail_allow_html is true but email_format exp
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
     CurrentConfig::current()->setMailAllowHtml(true);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'email_format' => 'text/plain']);
 
@@ -1081,7 +1137,7 @@ test('mail omits the html part entirely when mail_allow_html is false', function
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
 
@@ -1094,7 +1150,7 @@ test('mail converts a text/plain content into HTML: paragraph-wrapped, escaped, 
     CurrentConfig::current()->setMailAllowHtml(false);
     CurrentConfig::current()->setMailAllowHtml(true);
     Lang::current()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', [
         'subject' => 'x',
@@ -1121,7 +1177,7 @@ test('mail converts a text/html content into plain text (tags stripped) for the 
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => '<strong>Bold</strong> text', 'content_format' => 'text/html']);
 
@@ -1135,7 +1191,7 @@ test('mail assigns every real GALLERY_TITLE/GALLERY_URL/VERSION/PHPWG_URL/CONTAC
     CurrentConfig::current()->setMailAllowHtml(false);
     CurrentConfig::current()->setGalleryTitle('My Real Gallery');
     CurrentConfig::current()->setShowVersion(true);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
     $body = $result['email']->getTextBody();
@@ -1151,7 +1207,7 @@ test('mail omits the version number entirely from the footer when show_version i
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
     CurrentConfig::current()->setShowVersion(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
 
@@ -1165,7 +1221,7 @@ test('mail assigns the real CONTENT_ENCODING charset into the html header\'s met
     CurrentConfig::current()->setMailAllowHtml(false);
     CurrentConfig::current()->setMailAllowHtml(true);
     Lang::current()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
 
@@ -1185,7 +1241,7 @@ test('mail fires the before_parse_mail_template event with the real cache key an
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $capturedCacheKey = null;
     $capturedContentType = null;
@@ -1208,7 +1264,7 @@ test('mail keys its per-request template cache by auth_key too, not reusing one 
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result1 = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'auth_key' => 'AAA']);
     $result2 = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'auth_key' => 'BBB']);
@@ -1243,7 +1299,7 @@ test('mail keeps the html and plain-text cache entries of the SAME call separate
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(true);
     Lang::current()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'auth_key' => 'ZZZ']);
 
@@ -1256,7 +1312,7 @@ test('mail keys its per-request template cache by lang_info[code] too, not reusi
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(true);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     Lang::current()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
     $result1 = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
@@ -1279,7 +1335,7 @@ test('mail keys its per-request template cache by theme too, not reusing one the
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(true);
     Lang::current()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $clearResult = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'theme' => 'clear']);
     $darkResult = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'theme' => 'dark']);
@@ -1303,7 +1359,7 @@ test('mail inlines the global mail CSS into the html part\'s elements, on top of
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(true);
     Lang::current()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
 
@@ -1314,7 +1370,7 @@ test('mail computes GALLERY_URL as a genuine absolute URL (setMakeFullUrl active
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailAllowHtml(false);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
 
@@ -1354,7 +1410,7 @@ test('mail defaults the smtp port to 25 when smtp_host has no explicit ":port" s
     });
 
     try {
-        $service = new MailService();
+        $service = mail_service_test_build();
         $service->mail('bob@example.test', ['subject' => 'x', 'content' => 'y']);
     } finally {
         restore_error_handler();
@@ -1374,7 +1430,7 @@ test('mail actually reaches a real Transport and sends when no before_send_mail 
     CurrentConfig::current()->setSmtpHost('127.0.0.1:' . $port);
 
     try {
-        $service = new MailService();
+        $service = mail_service_test_build();
         $ret = $service->mail('bob@example.test', ['subject' => 'x', 'content' => 'y']);
 
         // A default `true` `before_send_mail` result (no listener attached)
@@ -1412,7 +1468,7 @@ test('mail returns false and logs a Mailer Error when the real Transport rejects
     });
 
     try {
-        $service = new MailService();
+        $service = mail_service_test_build();
         $ret = $service->mail('bob@example.test', ['subject' => 'x', 'content' => 'y']);
 
         expect($ret)->toBeFalse();
@@ -1433,7 +1489,7 @@ test('switchLangTo pushes the current language and translations, switchLangBack 
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     Lang::current()->setLangInfo(['code' => 'en_UK_marker']);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $service->switchLangTo('fr_FR');
     expect(CurrentUser::current()->get()->language)->toBe('fr_FR');
@@ -1459,7 +1515,7 @@ test('switchLangTo resets lang_info/the translation dictionary before reloading,
     // would otherwise carry stale keys forward indefinitely.
     Lang::current()->setLangInfo(['code' => 'xx', 'my_custom_marker' => 'stale']);
     Lang::current()->loadArray(['my_data_marker_key' => 'stale-data']);
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $service->switchLangTo('fr_FR');
 
@@ -1470,7 +1526,7 @@ test('switchLangTo resets lang_info/the translation dictionary before reloading,
 test('switchLangTo fires the loading_lang event while reloading a language for the first time', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $fired = false;
     $handler = function () use (&$fired): void {
@@ -1492,7 +1548,7 @@ test('switchLangTo/switchLangBack nest in real LIFO order across more than one p
     // there's only one element either way -- this needs two nested pushes.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     $service->switchLangTo('fr_FR');
     $service->switchLangTo('de_DE');
@@ -1508,7 +1564,7 @@ test('switchLangTo/switchLangBack nest in real LIFO order across more than one p
 test('switchLangTo reuses its own cache for a language already switched to once, without reloading language files again', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
-    $service = new MailService();
+    $service = mail_service_test_build();
     $service->switchLangTo('fr_FR');
     $service->switchLangBack();
 
@@ -1539,7 +1595,7 @@ test('switchLangTo only ever snapshots the ORIGINAL starting language once per r
     // can't slip through unnoticed.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
-    $service = new MailService();
+    $service = mail_service_test_build();
 
     Lang::current()->setLangInfo(['code' => 'marker-en']);
     $service->switchLangTo('fr_FR');
@@ -1567,7 +1623,7 @@ test('switchLangTo replays every plugin language file already loaded this reques
         Lang::current()->load('plugin.lang', $dir, ['language' => 'fr_FR']);
 
         mail_service_write_po($dir . 'language/de_DE/plugin.po', 'Deutscher Marker');
-        $service = new MailService();
+        $service = mail_service_test_build();
 
         $service->switchLangTo('de_DE');
 
@@ -1578,7 +1634,7 @@ test('switchLangTo replays every plugin language file already loaded this reques
 });
 
 test('buildMailer wraps native://default in the bounded sendmail transport, but leaves any other DSN to Symfony\'s own Transport::fromDsn', function (): void {
-    $service = new MailService();
+    $service = mail_service_test_build();
     $buildMailer = new ReflectionMethod($service, 'buildMailer');
     $transportProperty = new ReflectionProperty(\Symfony\Component\Mailer\Mailer::class, 'transport');
 

@@ -82,11 +82,13 @@ final class FilterResolverTest extends IntegrationTestCase
             \Piwigo\Config\CurrentConfig::current(),
         );
         $caddieRepo = $em->getRepository(\Piwigo\Caddie\CaddieEntity::class);
+        $mailer = \Piwigo\Core\Kernel::container()->get(MailService::class);
+        self::assertInstanceOf(MailService::class, $mailer);
         $userService = new UserService(
             \Piwigo\Core\Lang::current(),
             new \Piwigo\Users\UserRepository($em, new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current()),
             $em->getRepository(\Piwigo\Group\GroupEntity::class),
-            new MailService(),
+            $mailer,
             new ActivityService($em->getRepository(\Piwigo\Activity\ActivityEntity::class)),
             new HtmlService(),
             $this->conn,

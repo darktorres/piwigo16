@@ -45,7 +45,7 @@ function core_update_service_test_user_service(): \Piwigo\Users\UserService
         core_update_service_test_lang(),
         new \Piwigo\Users\UserRepository(EntityManagerFactory::build($conn), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\CurrentConfig()),
         EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-        new \Piwigo\Mail\MailService(),
+        core_update_service_test_mail_service(),
         core_update_service_test_activity_service(),
         new HtmlService(),
         $conn,
@@ -67,11 +67,33 @@ function core_update_service_test_lang(): Lang
     return new Lang(new Translator(new \Piwigo\Config\CurrentConfig()), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
+/**
+ * Same "no Kernel::boot(), type-satisfying instance is enough" reasoning
+ * as core_update_service_test_lang() above -- every MailService::
+ * __construct() shim collaborator (singleton/service-locator elimination
+ * campaign, Phase 11 sub-phase 11E) built bare, DB-free.
+ */
+function core_update_service_test_mail_service(): \Piwigo\Mail\MailService
+{
+    return new \Piwigo\Mail\MailService(
+        core_update_service_test_lang(),
+        new \Piwigo\Config\CurrentConfig(),
+        new \Piwigo\Config\DeploymentPolicy(),
+        new \Piwigo\Core\PageState(),
+        Paths::fromRoot(sys_get_temp_dir()),
+        new \Piwigo\Session\SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Session\SessionEntity::class), new \Piwigo\Config\CurrentConfig()),
+        new Translator(new \Piwigo\Config\CurrentConfig()),
+        new \Piwigo\PluginConfig\EventDispatcher(),
+        new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
+        new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
+    );
+}
+
 function core_update_service(): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), Paths::fromRoot(dirname(__DIR__, 4)), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), new \Piwigo\Mail\MailService(), \Piwigo\Config\CurrentConfig::current());
+    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), Paths::fromRoot(dirname(__DIR__, 4)), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), \Piwigo\Config\CurrentConfig::current());
 }
 
 test('containerVersionCompare orders by semantic version first', function (): void {
@@ -120,7 +142,7 @@ function core_update_service_at(string $root): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), Paths::fromRoot($root), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), new \Piwigo\Mail\MailService(), \Piwigo\Config\CurrentConfig::current());
+    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), Paths::fromRoot($root), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), \Piwigo\Config\CurrentConfig::current());
 }
 
 function core_update_service_step_is(int|string $step, int $target): bool

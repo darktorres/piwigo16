@@ -3,11 +3,20 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Job\Handler\SendNotificationEmailHandler;
 use Piwigo\Job\SendNotificationEmailJob;
+use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionService;
+use Piwigo\Users\CurrentUser;
 
 // P23 batch 8f-4: the get_webmaster_mail_address() function stub is gone
 // (free function deleted with include/functions.inc.php; MailService now
@@ -17,13 +26,44 @@ use Piwigo\PluginConfig\EventDispatcher;
 // `return true` before getMailConfiguration()/the webmaster lookup ever
 // runs (verified against mail()'s own first guard).
 
+/**
+ * Every MailService::__construct() shim collaborator (singleton/
+ * service-locator elimination campaign, Phase 11 sub-phase 11E), resolved
+ * from a real booted container -- Kernel::boot() is idempotent, so calling
+ * it here is a safe no-op when the caller already booted its own Kernel.
+ */
+function send_notification_email_handler_test_mail_service(): MailService
+{
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+
+    $lang = Kernel::container()->get(Lang::class);
+    $currentConfig = Kernel::container()->get(CurrentConfig::class);
+    $deploymentPolicy = Kernel::container()->get(DeploymentPolicy::class);
+    $pageState = Kernel::container()->get(PageState::class);
+    $paths = Kernel::container()->get(Paths::class);
+    $sessionService = Kernel::container()->get(SessionService::class);
+    $translator = Kernel::container()->get(Translator::class);
+    $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
+    $currentUser = Kernel::container()->get(CurrentUser::class);
+    $urlService = Kernel::container()->get(UrlServiceInterface::class);
+    if (! $lang instanceof Lang || ! $currentConfig instanceof CurrentConfig || ! $deploymentPolicy instanceof DeploymentPolicy
+        || ! $pageState instanceof PageState || ! $paths instanceof Paths || ! $sessionService instanceof SessionService
+        || ! $translator instanceof Translator || ! $eventDispatcher instanceof EventDispatcher
+        || ! $currentUser instanceof CurrentUser || ! $urlService instanceof UrlServiceInterface
+    ) {
+        throw new \LogicException('Container returned an unexpected type');
+    }
+
+    return new MailService($lang, $currentConfig, $deploymentPolicy, $pageState, $paths, $sessionService, $translator, $eventDispatcher, $currentUser, $urlService);
+}
+
 test('__invoke delegates to MailService::mail with the job to/args/tpl', function (): void {
     // An empty $to short-circuits MailService::mail() to `return true`
     // before it ever touches a real Transport (see its own emptyValue($to)
     // guard) -- same "don't stub/exercise what would kill the test"
     // reasoning used throughout this suite for a genuinely side-effecting
     // free function this project has no test double for.
-    $handler = new SendNotificationEmailHandler(new MailService());
+    $handler = new SendNotificationEmailHandler(send_notification_email_handler_test_mail_service());
 
     $handler(new SendNotificationEmailJob(to: ''));
 })->throwsNoExceptions();
@@ -81,7 +121,7 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
     EventDispatcher::get()->addTypedHandler(BeforeSendMail::class, $eventHandler);
 
     try {
-        $handler = new SendNotificationEmailHandler(new MailService());
+        $handler = new SendNotificationEmailHandler(send_notification_email_handler_test_mail_service());
 
         $handler(new SendNotificationEmailJob(to: 'someone@example.test', args: ['subject' => 'Test Subject']));
 

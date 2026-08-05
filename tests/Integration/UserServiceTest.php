@@ -92,7 +92,9 @@ namespace Piwigo\Tests\Integration {
             $currentConfig->setAvailablePermissionLevels([0, 1, 2, 4, 8]);
 
             $this->conn = DbConnection::build();
-            $this->service = new UserService(Lang::current(), new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
+            $mailer = \Piwigo\Core\Kernel::container()->get(MailService::class);
+            self::assertInstanceOf(MailService::class, $mailer);
+            $this->service = new UserService(Lang::current(), new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), $mailer, new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
@@ -1074,7 +1076,9 @@ namespace Piwigo\Tests\Integration {
             // DeploymentPolicy is now a real constructor dependency, not a
             // mutable static, so this test can no longer flip it on the
             // shared instance.
-            $service = new UserService(Lang::current(), new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(externalAuthentification: true), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
+            $mailer = \Piwigo\Core\Kernel::container()->get(MailService::class);
+            self::assertInstanceOf(MailService::class, $mailer);
+            $service = new UserService(Lang::current(), new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), $mailer, new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(externalAuthentification: true), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
 
             try {
                 self::assertSame(0, $this->fetchOneInt(

@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Mail;
 
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Event\Lifecycle\LoadingLang;
@@ -16,6 +19,9 @@ use Piwigo\Event\Mail\BeforeParseMailTemplate;
 use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Event\Mail\RenderLostPasswordMailContent;
 use Piwigo\Html\HtmlService;
+use Piwigo\Lang\Translator;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -39,14 +45,12 @@ use Symfony\Component\Mime\Email;
  * (debug_mail, smtp_host, mail_sender_name, ...), always falling back to
  * install-time defaults).
  *
- * Injects only the optional WebmasterMailProviderInterface test seam (P23
+ * Injects the optional WebmasterMailProviderInterface test seam (P23
  * batch 8f-4, see the constructor's own docblock) -- remaining cross-domain
  * calls (l10n(), trigger_notify()/trigger_change()) stay as plain
  * global-function calls to the settled composer-autoloaded procedural
- * helpers, matching every other P17/P18-era service; Url-family calls go
- * through the private urlService() helper below (Legacy Coupling
- * Retirement Phase 4c, see its own docblock). l10n_args()/load_language()
- * calls above were retargeted to Piwigo\Core\Lang::current()->args()/::load() in
+ * helpers, matching every other P17/P18-era service. l10n_args()/load_language()
+ * calls above were retargeted to $this->lang->args()/->load() in
  * P23 batch 8d -- l10n() itself stays a bare call (track-2 relocated,
  * too widely used to retarget, see src/Piwigo/Lang/functions.php).
  *
@@ -56,11 +60,18 @@ use Symfony\Component\Mime\Email;
  * instance state (singleton/service-locator elimination campaign, Phase 6:
  * was private static state until this class itself became the one
  * container-shared instance every real caller receives via constructor
- * injection of `MailerInterface`; a handful of too-many-sites/genuinely
- * static-context callers stay on a bare `new MailService()`, safe because
- * they never rely on this per-request cache/stack persisting across calls
- * -- see the constructor's own docblock), with an instance reset() for
- * test isolation, matching every other converted class in this campaign.
+ * injection of `MailerInterface`), with an instance reset() for test
+ * isolation, matching every other converted class in this campaign. Phase
+ * 11 sub-phase 11E: the constructor now also takes every remaining
+ * transitional-shim collaborator this class used to read internally
+ * (Lang/CurrentConfig/DeploymentPolicy/PageState/Paths/SessionService/
+ * Translator/EventDispatcher/CurrentUser/UrlServiceInterface) as required
+ * params -- the old "stays cheap to call with no args" reasoning no
+ * longer holds (churn is not a deciding factor for this campaign); every
+ * real `new MailService(...)` call site was updated accordingly.
+ * AccessControl stays a lazily-resolved private helper (see its own
+ * docblock) -- a genuine circular dependency, not the same
+ * too-many-call-sites reasoning.
  *
  * Implements `Piwigo\Core\MailerInterface` (P23 batch 8c) so
  * L2aCoreDomain/L2bExtendedDomain classes that may not depend on this
@@ -82,38 +93,63 @@ final class MailService implements MailerInterface
      * P23 batch 8f-4: replaces the 2 deliberately-bare
      * get_webmaster_mail_address() calls (free function deleted with
      * include/functions.inc.php). Optional-with-lazy-default rather than
-     * required: this class's own constructor stays cheap to call with no
-     * args (the 2 remaining bare production `new MailService()` sites plus
-     * every unit test's own direct construction rely on that) and the
-     * dependency is only reached on the sender-fallback/Bcc-webmaster
-     * paths -- those callers get the real Piwigo\Users\UserRepository (a
-     * legal L3->L2a downward dep, constructed lazily so no DB connection
-     * is built for the many code paths that never need it); unit tests
-     * (MailServiceTest/SendNotificationEmailHandlerTest) pass a fake
-     * implementation instead of the old global-function-stub shadowing.
+     * required: the dependency is only reached on the sender-fallback/
+     * Bcc-webmaster paths -- callers that never reach them get the real
+     * Piwigo\Users\UserRepository (a legal L3->L2a downward dep,
+     * constructed lazily so no DB connection is built for the many code
+     * paths that never need it); unit tests (MailServiceTest/
+     * SendNotificationEmailHandlerTest) pass a fake implementation instead
+     * of the old global-function-stub shadowing.
      */
     public function __construct(
+        private readonly Lang $lang,
+        private readonly CurrentConfig $currentConfig,
+        private readonly DeploymentPolicy $deploymentPolicy,
+        private readonly PageState $pageState,
+        private readonly Paths $paths,
+        private readonly SessionService $sessionService,
+        private readonly Translator $translator,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly CurrentUser $currentUser,
+        private readonly UrlServiceInterface $urlService,
         private readonly ?WebmasterMailProviderInterface $webmasterMailProvider = null,
         private readonly ?MailRecipientRepositoryInterface $mailRecipientRepo = null,
         private readonly ?\Piwigo\Auth\AuthService $authService = null,
     ) {}
 
+    /**
+     * Container resolve, not a constructor property -- AccessControl's own
+     * dependency chain (RedirectServiceInterface -> Bootstrap\RedirectService
+     * -> Users\UserService -> Core\MailerInterface, i.e. this class) means a
+     * required constructor param here would be a genuine circular
+     * dependency PHP-DI can't autowire (this class implements
+     * MailerInterface). Same "private helper, not constructor property"
+     * shape already established for $urlService's own former equivalent
+     * (see this class's git history) and for authService()/userService()'s
+     * own real-cycle-avoidance reasoning below.
+     */
+    private function accessControl(): \Piwigo\Auth\AccessControl
+    {
+        $accessControl = \Piwigo\Core\Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
+        if (! $accessControl instanceof \Piwigo\Auth\AccessControl) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Auth\AccessControl::class);
+        }
+
+        return $accessControl;
+    }
+
     private function webmasterMailAddress(): string
     {
         $provider = $this->webmasterMailProvider
-            ?? new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current());
+            ?? new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), $this->eventDispatcher, $this->currentConfig);
 
         return $provider->getWebmasterMailAddress();
     }
 
     /**
      * Optional-with-lazy-default, same reasoning as
-     * $webmasterMailProvider above -- the 2 remaining bare
-     * `new MailService()` production sites (singleton/service-locator
-     * elimination campaign, Phase 6 -- every other real caller now
-     * constructor-injects the container-shared instance) plus every unit
-     * test's own direct construction, most of which never reach
-     * mailAdmins()/mailGroup().
+     * $webmasterMailProvider above -- most callers never reach
+     * mailAdmins()/mailGroup() at all.
      */
     private function recipientRepo(): MailRecipientRepositoryInterface
     {
@@ -137,42 +173,15 @@ final class MailService implements MailerInterface
                 new \Piwigo\Auth\AuthRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())),
                 new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)),
                 new HtmlService(),
-                new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())), \Piwigo\Config\DeploymentPolicy::current()),
+                new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())), $this->deploymentPolicy),
                 new \Piwigo\Auth\CookieService(),
                 \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
-                \Piwigo\Session\SessionService::get(),
-                \Piwigo\PluginConfig\EventDispatcher::get(),
-                \Piwigo\Core\PageState::current(),
-                \Piwigo\Users\CurrentUser::current(),
-                \Piwigo\Config\CurrentConfig::current(),
+                $this->sessionService,
+                $this->eventDispatcher,
+                $this->pageState,
+                $this->currentUser,
+                $this->currentConfig,
             );
-    }
-
-    /**
-     * Container resolve, not a constructor property -- this class's own
-     * constructor stays cheap to call with no args (see its own docblock:
-     * the 2 remaining bare production `new MailService()` sites plus every
-     * unit test's own direct construction rely on that), so
-     * UrlServiceInterface can't be a required constructor param either.
-     * PHP-DI's reflection-based autowiring only ever inspects
-     * class constructors, never ordinary methods, so a private helper
-     * method is safe from re-closing that chain even though an
-     * optional/nullable constructor property of the same type would not
-     * be (PHP-DI may still attempt to autowire an optional typed
-     * constructor param). Resolves the container-shared instance
-     * (singleton/service-locator elimination campaign, Phase 6), not a
-     * throwaway `new UrlService(new HtmlService())` -- see
-     * Image\SrcImage's own docblock for why (RootPathOverride's
-     * cross-instance sharing requirement).
-     */
-    private function urlService(): UrlServiceInterface
-    {
-        $urlService = \Piwigo\Core\Kernel::container()->get(UrlServiceInterface::class);
-        if (! $urlService instanceof UrlServiceInterface) {
-            throw new \LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
-        }
-
-        return $urlService;
     }
 
     /**
@@ -189,18 +198,18 @@ final class MailService implements MailerInterface
     private function userService(): \Piwigo\Users\UserService
     {
         return new \Piwigo\Users\UserService(
-            \Piwigo\Core\Lang::current(),
-            new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current()),
+            $this->lang,
+            new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), $this->eventDispatcher, $this->currentConfig),
             \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class),
-            new self(),
+            new self($this->lang, $this->currentConfig, $this->deploymentPolicy, $this->pageState, $this->paths, $this->sessionService, $this->translator, $this->eventDispatcher, $this->currentUser, $this->urlService),
             new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)),
             new HtmlService(),
             \Piwigo\Db\DbConnection::build(),
-            \Piwigo\Session\SessionService::get(),
-            \Piwigo\PluginConfig\EventDispatcher::get(),
-            \Piwigo\Config\DeploymentPolicy::current(),
-            \Piwigo\Users\CurrentUser::current(),
-            \Piwigo\Config\CurrentConfig::current(),
+            $this->sessionService,
+            $this->eventDispatcher,
+            $this->deploymentPolicy,
+            $this->currentUser,
+            $this->currentConfig,
         );
     }
 
@@ -243,19 +252,19 @@ final class MailService implements MailerInterface
 
     public function getMailSenderName(): string
     {
-        $senderName = \Piwigo\Config\CurrentConfig::current()->mailSenderName();
+        $senderName = $this->currentConfig->mailSenderName();
         if ($senderName !== '') {
             return $senderName;
         }
 
-        $galleryTitle = \Piwigo\Config\CurrentConfig::current()->galleryTitle();
+        $galleryTitle = $this->currentConfig->galleryTitle();
 
         return $galleryTitle;
     }
 
     public function getMailSenderEmail(): string
     {
-        $senderEmail = \Piwigo\Config\CurrentConfig::current()->mailSenderEmail();
+        $senderEmail = $this->currentConfig->mailSenderEmail();
         if ($senderEmail !== '') {
             return $senderEmail;
         }
@@ -268,17 +277,17 @@ final class MailService implements MailerInterface
      */
     public function getMailConfiguration(): array
     {
-        $smtpHost = \Piwigo\Config\CurrentConfig::current()->smtpHost();
+        $smtpHost = $this->currentConfig->smtpHost();
 
         return [
-            'send_bcc_mail_webmaster' => \Piwigo\Config\CurrentConfig::current()->sendBccMailWebmaster(),
-            'mail_allow_html' => \Piwigo\Config\CurrentConfig::current()->mailAllowHtml(),
-            'mail_theme' => \Piwigo\Config\CurrentConfig::current()->mailTheme(),
+            'send_bcc_mail_webmaster' => $this->currentConfig->sendBccMailWebmaster(),
+            'mail_allow_html' => $this->currentConfig->mailAllowHtml(),
+            'mail_theme' => $this->currentConfig->mailTheme(),
             'use_smtp' => $smtpHost !== '',
             'smtp_host' => $smtpHost,
-            'smtp_user' => \Piwigo\Config\CurrentConfig::current()->smtpUser(),
-            'smtp_password' => \Piwigo\Config\CurrentConfig::current()->smtpPassword(),
-            'smtp_secure' => is_string(\Piwigo\Config\CurrentConfig::current()->smtpSecure() ?? null) ? \Piwigo\Config\CurrentConfig::current()->smtpSecure() : null,
+            'smtp_user' => $this->currentConfig->smtpUser(),
+            'smtp_password' => $this->currentConfig->smtpPassword(),
+            'smtp_secure' => is_string($this->currentConfig->smtpSecure() ?? null) ? $this->currentConfig->smtpSecure() : null,
             'email_webmaster' => $this->getMailSenderEmail(),
             'name_webmaster' => $this->getMailSenderName(),
         ];
@@ -424,7 +433,7 @@ final class MailService implements MailerInterface
      */
     public function getMailTemplate(string $emailFormat): Template
     {
-        return new Template(CurrentPaths::get()->root . 'themes', 'default', 'template/mail/' . $emailFormat);
+        return new Template($this->paths->root . 'themes', 'default', 'template/mail/' . $emailFormat);
     }
 
     public function getStrEmailFormat(bool $isHtml): string
@@ -438,54 +447,55 @@ final class MailService implements MailerInterface
      */
     public function switchLangTo(string $language): void
     {
-        $currentUserLanguage = CurrentUser::current()->get()->language;
+        $currentUserLanguage = $this->currentUser->get()
+            ->language;
 
         // Language of the current user is saved (considered OK on first call).
         if (! $this->switchLangInitialised && ! isset($this->switchLangLanguages[$currentUserLanguage])) {
             $this->switchLangInitialised = true;
             $this->switchLangLanguages[$currentUserLanguage] = [
-                'lang_info' => Lang::current()->langInfo(),
-                'lang' => Lang::current()->snapshot(),
+                'lang_info' => $this->lang->langInfo(),
+                'lang' => $this->lang->snapshot(),
                 // \Piwigo\Core\Lang's own $data/$langInfo are just parallel
                 // bookkeeping (has()/langInfo()) -- the real translations
                 // t() actually reads live in the separate Translator
-                // singleton's gettext dictionary, which Lang::current()->snapshot()/
+                // singleton's gettext dictionary, which $this->lang->snapshot()/
                 // restore() never touch. A clone (Translator::__clone()
                 // deep-copies its own $inner) is the only way to capture
                 // and later restore that real state too.
-                'translator' => clone \Piwigo\Lang\Translator::get(),
+                'translator' => clone $this->translator,
             ];
         }
 
         $this->switchLangStack[] = $currentUserLanguage;
-        CurrentUser::current()->updateLanguage($language);
+        $this->currentUser->updateLanguage($language);
 
         if (! isset($this->switchLangLanguages[$language])) {
             // Re-init language arrays.
-            Lang::current()->setLangInfo([]);
-            Lang::current()->restore(null);
+            $this->lang->setLangInfo([]);
+            $this->lang->restore(null);
 
-            Lang::current()->load('common.lang', '', [
+            $this->lang->load('common.lang', '', [
                 'language' => $language,
             ]);
             // No test admin because script is checked admin (user selected no).
             // Translations are in admin file too.
-            Lang::current()->load('admin.lang', '', [
+            $this->lang->load('admin.lang', '', [
                 'language' => $language,
             ]);
 
-            // Reload all plugin files (see Lang::current()->load()'s own docblock).
-            foreach (Lang::current()->languageFiles() as $dirname => $files) {
+            // Reload all plugin files (see $this->lang->load()'s own docblock).
+            foreach ($this->lang->languageFiles() as $dirname => $files) {
                 foreach ($files as $filename => $options) {
                     $options['language'] = $language;
-                    Lang::current()->load($filename, $dirname, $options);
+                    $this->lang->load($filename, $dirname, $options);
                 }
             }
 
-            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoadingLang());
-            Lang::current()->load(
+            $this->eventDispatcher->dispatchNotify(new LoadingLang());
+            $this->lang->load(
                 'lang',
-                CurrentPaths::get()->siteLocal,
+                $this->paths->siteLocal,
                 [
                     'language' => $language,
                     'no_fallback' => true,
@@ -494,15 +504,15 @@ final class MailService implements MailerInterface
             );
 
             $this->switchLangLanguages[$language] = [
-                'lang_info' => Lang::current()->langInfo(),
-                'lang' => Lang::current()->snapshot(),
-                'translator' => clone \Piwigo\Lang\Translator::get(),
+                'lang_info' => $this->lang->langInfo(),
+                'lang' => $this->lang->snapshot(),
+                'translator' => clone $this->translator,
             ];
         } else {
             $entry = $this->switchLangLanguages[$language];
-            Lang::current()->setLangInfo($entry['lang_info']);
-            Lang::current()->restore($entry['lang']);
-            \Piwigo\Lang\Translator::get()->restoreFrom($entry['translator']);
+            $this->lang->setLangInfo($entry['lang_info']);
+            $this->lang->restore($entry['lang']);
+            $this->translator->restoreFrom($entry['translator']);
         }
     }
 
@@ -520,11 +530,11 @@ final class MailService implements MailerInterface
 
         if (isset($this->switchLangLanguages[$language])) {
             $entry = $this->switchLangLanguages[$language];
-            Lang::current()->setLangInfo($entry['lang_info']);
-            Lang::current()->restore($entry['lang']);
-            \Piwigo\Lang\Translator::get()->restoreFrom($entry['translator']);
+            $this->lang->setLangInfo($entry['lang_info']);
+            $this->lang->restore($entry['lang']);
+            $this->translator->restoreFrom($entry['translator']);
         }
-        CurrentUser::current()->updateLanguage($language);
+        $this->currentUser->updateLanguage($language);
     }
 
     /**
@@ -546,10 +556,10 @@ final class MailService implements MailerInterface
             $this->switchLangTo($this->userService()->getDefaultLanguage());
 
             if (is_array($subject)) {
-                $subject = Lang::current()->args($subject);
+                $subject = $this->lang->args($subject);
             }
             if (is_array($content)) {
-                $content = Lang::current()->args($content);
+                $content = $this->lang->args($content);
             }
 
             $this->switchLangBack();
@@ -557,7 +567,8 @@ final class MailService implements MailerInterface
 
         $tplVars = [];
         if ($sendTechnicalDetails) {
-            $username = \Piwigo\Users\CurrentUser::current()->get()->username;
+            $username = $this->currentUser->get()
+                ->username;
             $tplVars['TECHNICAL'] = [
                 'username' => stripslashes($username),
                 'ip' => IpAddress::fromRemoteAddr()->value ?? '',
@@ -565,7 +576,7 @@ final class MailService implements MailerInterface
             ];
         }
 
-        $galleryTitle = \Piwigo\Config\CurrentConfig::current()->galleryTitle();
+        $galleryTitle = $this->currentConfig->galleryTitle();
 
         return $this->mailAdmins(
             [
@@ -607,7 +618,8 @@ final class MailService implements MailerInterface
             ->findAdminsAndWebmasters(
                 $userStatuses,
                 $groupId !== null ? (int) $groupId : null,
-                $excludeCurrentUser ? \Piwigo\Users\CurrentUser::current()->get()->id->value : null,
+                $excludeCurrentUser ? $this->currentUser->get()
+                    ->id->value : null,
             );
 
         if ($admins === []) {
@@ -683,13 +695,13 @@ final class MailService implements MailerInterface
 
                 if ($authkey !== false) {
                     $link = $tpl['assign']['LINK'] ?? null;
-                    $userTpl['assign']['LINK'] = $this->urlService()->addUrlParams(is_string($link) ? $link : '', [
+                    $userTpl['assign']['LINK'] = $this->urlService->addUrlParams(is_string($link) ? $link : '', [
                         'auth' => $authkey['auth_key'],
                     ]);
 
                     $img = $userTpl['assign']['IMG'] ?? null;
                     if (is_array($img) && isset($img['link']) && is_string($img['link'])) {
-                        $img['link'] = $this->urlService()->addUrlParams(
+                        $img['link'] = $this->urlService->addUrlParams(
                             $img['link'],
                             [
                                 'auth' => $authkey['auth_key'],
@@ -750,7 +762,7 @@ final class MailService implements MailerInterface
         }
 
         // Compute root_path in order to have a complete path.
-        $this->urlService()
+        $this->urlService
             ->setMakeFullUrl();
 
         if (! isset($args['from']) || self::emptyValue($args['from'])) {
@@ -810,7 +822,7 @@ final class MailService implements MailerInterface
             }
         }
         if (! isset($args['mail_title'])) {
-            $args['mail_title'] = \Piwigo\Config\CurrentConfig::current()->galleryTitle();
+            $args['mail_title'] = $this->currentConfig->galleryTitle();
         }
         if (! isset($args['mail_subtitle'])) {
             $args['mail_subtitle'] = $args['subject'];
@@ -827,7 +839,7 @@ final class MailService implements MailerInterface
         }
         $contentTypeList[] = 'text/plain';
 
-        $langCode = Lang::current()->langInfo()['code'] ?? null;
+        $langCode = $this->lang->langInfo()['code'] ?? null;
         $langCode = is_string($langCode) ? $langCode : '';
 
         $contents = [];
@@ -853,7 +865,7 @@ final class MailService implements MailerInterface
                 $this->templateCache[$cacheKey] = [
                     'theme' => $template,
                 ];
-                \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new BeforeParseMailTemplate($cacheKey, $contentType));
+                $this->eventDispatcher->dispatchNotify(new BeforeParseMailTemplate($cacheKey, $contentType));
 
                 $template->set_filename('mail_header', 'header.tpl');
                 $template->set_filename('mail_footer', 'footer.tpl');
@@ -863,15 +875,15 @@ final class MailService implements MailerInterface
                     $addUrlParams['auth'] = $args['auth_key'];
                 }
 
-                $galleryHomeUrl = $this->urlService()
+                $galleryHomeUrl = $this->urlService
                     ->getGalleryHomeUrl();
 
                 $template->assign(
                     [
-                        'GALLERY_URL' => $this->urlService()
+                        'GALLERY_URL' => $this->urlService
                             ->addUrlParams($galleryHomeUrl, $addUrlParams),
-                        'GALLERY_TITLE' => \Piwigo\Config\CurrentConfig::current()->galleryTitle(),
-                        'VERSION' => \Piwigo\Config\CurrentConfig::current()->showVersion() ? AppInfo::VERSION : '',
+                        'GALLERY_TITLE' => $this->currentConfig->galleryTitle(),
+                        'VERSION' => $this->currentConfig->showVersion() ? AppInfo::VERSION : '',
                         'PHPWG_URL' => AppInfo::URL,
                         'CONTENT_ENCODING' => \Piwigo\Core\CharsetHelper::getPwgCharset(),
                         'CONTACT_MAIL' => $confMail['email_webmaster'],
@@ -949,7 +961,7 @@ final class MailService implements MailerInterface
         }
 
         // Undo compute-root_path.
-        $this->urlService()
+        $this->urlService
             ->unsetMakeFullUrl();
 
         // Send content. 'text/plain' is always present in $contents
@@ -993,7 +1005,7 @@ final class MailService implements MailerInterface
 
         $ret = true;
         $errorMessage = null;
-        $beforeSendMailEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new BeforeSendMail(true, $to, $args, $email));
+        $beforeSendMailEvent = $this->eventDispatcher->dispatchChange(new BeforeSendMail(true, $to, $args, $email));
 
         if ($beforeSendMailEvent->shouldSend) {
             try {
@@ -1003,10 +1015,10 @@ final class MailService implements MailerInterface
                 $errorMessage = $e->getMessage();
             }
 
-            if (! $ret && (! (bool) ini_get('display_errors') || \Piwigo\Auth\AccessControl::current()->isAdmin())) {
+            if (! $ret && (! (bool) ini_get('display_errors') || $this->accessControl()->isAdmin())) {
                 trigger_error('Mailer Error: ' . $errorMessage, \E_USER_WARNING);
             }
-            if (\Piwigo\Config\CurrentConfig::current()->debugMail()) {
+            if ($this->currentConfig->debugMail()) {
                 $this->sendMailTest($ret, $email, $args, $errorMessage);
             }
         }
@@ -1069,12 +1081,13 @@ final class MailService implements MailerInterface
      */
     public function sendMailTest(bool $success, Email $mail, array $args, ?string $errorMessage = null): void
     {
-        $dataLocation = \Piwigo\Config\CurrentConfig::current()->dataLocation();
+        $dataLocation = $this->currentConfig->dataLocation();
 
-        $dir = CurrentPaths::get()->root . $dataLocation . 'tmp';
+        $dir = $this->paths->root . $dataLocation . 'tmp';
         if (\Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
-            $username = \Piwigo\Users\CurrentUser::current()->get()->username;
-            $langCode = Lang::current()->langInfo()['code'] ?? null;
+            $username = $this->currentUser->get()
+                ->username;
+            $langCode = $this->lang->langInfo()['code'] ?? null;
             $langCode = is_string($langCode) ? $langCode : '';
 
             $filename = $dir . '/mail.' . stripslashes($username) . '.' . $langCode . '-' . date('YmdHis') . ($success ? '' : '.ERROR');
@@ -1099,26 +1112,27 @@ final class MailService implements MailerInterface
      */
     public function generateResetPasswordMail(string $username, string $passwordLink, string $galleryTitle, string $remainingTime): array
     {
-        $this->urlService()
+        $this->urlService
             ->setMakeFullUrl();
 
         $message = '<p style="margin: 20px 0">';
-        $message .= Lang::current()->t('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
-        $message .= '<p style="margin: 20px 0">' . Lang::current()->t('To reset your password, visit the following address:');
-        $message .= ' <a href="' . $passwordLink . '">' . Lang::current()->t('Change my password') . '</a></p>';
+        $message .= $this->lang->t('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
+        $message .= '<p style="margin: 20px 0">' . $this->lang->t('To reset your password, visit the following address:');
+        $message .= ' <a href="' . $passwordLink . '">' . $this->lang->t('Change my password') . '</a></p>';
         $message .= '<p style="text-align: center; font-size: 70%;">' . $passwordLink . '</p>';
         $message .= '<p style="margin: 20px 0;">';
-        $message .= Lang::current()->t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
+        $message .= $this->lang->t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
         $message .= ' ';
-        $message .= Lang::current()->t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
+        $message .= $this->lang->t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
 
-        $this->urlService()
+        $this->urlService
             ->unsetMakeFullUrl();
 
-        $message = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderLostPasswordMailContent($message))->message;
+        $message = $this->eventDispatcher->dispatchChange(new RenderLostPasswordMailContent($message))
+            ->message;
 
         return [
-            'subject' => '[' . $galleryTitle . '] ' . Lang::current()->t('Password Reset'),
+            'subject' => '[' . $galleryTitle . '] ' . $this->lang->t('Password Reset'),
             'content' => $message,
             'content_format' => 'text/html',
         ];
@@ -1131,26 +1145,27 @@ final class MailService implements MailerInterface
      */
     public function generateSetPasswordMail(string $username, string $setPasswordLink, string $galleryTitle, string $remainingTime): array
     {
-        $this->urlService()
+        $this->urlService
             ->setMakeFullUrl();
 
         $message = '<p style="margin: 20px 0">';
-        $message .= Lang::current()->t('A photo library administrator has created the following account for you:') . ' ' . $username . '</p>';
-        $message .= '<p style="margin: 20px 0">' . Lang::current()->t('To set your password, visit the following address:');
-        $message .= ' <a href="' . $setPasswordLink . '">' . Lang::current()->t('Activate') . '</a></p>';
+        $message .= $this->lang->t('A photo library administrator has created the following account for you:') . ' ' . $username . '</p>';
+        $message .= '<p style="margin: 20px 0">' . $this->lang->t('To set your password, visit the following address:');
+        $message .= ' <a href="' . $setPasswordLink . '">' . $this->lang->t('Activate') . '</a></p>';
         $message .= '<p style="text-align: center; font-size: 70%; margin: 20px 0;">' . $setPasswordLink . '</p>';
         $message .= '<p style="margin: 20px 0;">';
-        $message .= Lang::current()->t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
+        $message .= $this->lang->t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
         $message .= ' ';
-        $message .= Lang::current()->t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
+        $message .= $this->lang->t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
 
-        $this->urlService()
+        $this->urlService
             ->unsetMakeFullUrl();
 
-        $message = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderLostPasswordMailContent($message))->message;
+        $message = $this->eventDispatcher->dispatchChange(new RenderLostPasswordMailContent($message))
+            ->message;
 
         return [
-            'subject' => Lang::current()->t('Welcome to %s', $galleryTitle),
+            'subject' => $this->lang->t('Welcome to %s', $galleryTitle),
             'content' => $message,
             'content_format' => 'text/html',
         ];
@@ -1163,20 +1178,20 @@ final class MailService implements MailerInterface
      */
     public function generateCodeVerificationMail(string $code): array
     {
-        $this->urlService()
+        $this->urlService
             ->setMakeFullUrl();
         $message = '<p style="margin: 20px 0">';
-        $message .= Lang::current()->t('Here is your verification code:') . ' <br />';
+        $message .= $this->lang->t('Here is your verification code:') . ' <br />';
         $message .= '<span style="font-size: 16px">' . $code . '</span></p>';
         $message .= '<p style="margin: 20px 0;">';
-        $message .= Lang::current()->t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
-        $this->urlService()
+        $message .= $this->lang->t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
+        $this->urlService
             ->unsetMakeFullUrl();
 
-        $galleryTitle = \Piwigo\Config\CurrentConfig::current()->galleryTitle();
+        $galleryTitle = $this->currentConfig->galleryTitle();
 
         return [
-            'subject' => '[' . $galleryTitle . '] ' . Lang::current()->t('Your verification code'),
+            'subject' => '[' . $galleryTitle . '] ' . $this->lang->t('Your verification code'),
             'content' => $message,
             'content_format' => 'text/html',
         ];
@@ -1189,33 +1204,33 @@ final class MailService implements MailerInterface
      */
     public function generateSuccessResetPasswordMail(string $username, int $nbOfApikeys): array
     {
-        $this->urlService()
+        $this->urlService
             ->setMakeFullUrl();
-        $profileUrl = $this->urlService()
+        $profileUrl = $this->urlService
             ->getRootUrl() . 'profile.php';
 
-        $message = '<p style="margin-top: 20px;">' . Lang::current()->t('Hello %s,', $username) . '</p>';
-        $message .= '<p style="margin-bottom: 20px;">' . Lang::current()->t('Your password was successfully reset') . '.</p>';
+        $message = '<p style="margin-top: 20px;">' . $this->lang->t('Hello %s,', $username) . '</p>';
+        $message .= '<p style="margin-bottom: 20px;">' . $this->lang->t('Your password was successfully reset') . '.</p>';
         $message .= '<p>';
-        $message .= Lang::current()->t('If this wasn\'t you, please change your password immediately or contact your webmaster.');
+        $message .= $this->lang->t('If this wasn\'t you, please change your password immediately or contact your webmaster.');
         $message .= '</p>';
 
         if ($nbOfApikeys > 0) {
             $message .= '<p style="margin: 20px 0;">';
-            $message .= Lang::current()->t(
+            $message .= $this->lang->t(
                 'If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href="%s">in your profile</a>.',
                 $nbOfApikeys,
                 $profileUrl
             );
             $message .= '</p>';
         }
-        $this->urlService()
+        $this->urlService
             ->unsetMakeFullUrl();
 
-        $galleryTitle = \Piwigo\Config\CurrentConfig::current()->galleryTitle();
+        $galleryTitle = $this->currentConfig->galleryTitle();
 
         return [
-            'subject' => '[' . $galleryTitle . '] ' . Lang::current()->t('Your password has been reset'),
+            'subject' => '[' . $galleryTitle . '] ' . $this->lang->t('Your password has been reset'),
             'content' => $message,
             'content_format' => 'text/html',
         ];

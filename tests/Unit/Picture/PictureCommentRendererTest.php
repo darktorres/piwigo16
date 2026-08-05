@@ -96,7 +96,7 @@ afterEach(function (): void {
 
 function makePictureCommentUrlService(): UrlService
 {
-    return new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
+    return \Piwigo\Tests\Support\UrlServiceTestFactory::build();
 }
 
 function makePictureCommentSessionService(): SessionService

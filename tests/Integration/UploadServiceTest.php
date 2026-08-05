@@ -276,7 +276,7 @@ final class UploadServiceTest extends IntegrationTestCase
         if (! $rootPathOverride instanceof \Piwigo\Url\RootPathOverride) {
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Url\RootPathOverride::class);
         }
-        $this->urlService = new UrlService($htmlService, $rootPathOverride);
+        $this->urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlService, $rootPathOverride);
         // See UploadServiceTestThemeConfProvider's own docblock -- harmless
         // for every test but the finfo-fallback one, which only reaches
         // SrcImage's real theme lookup when the stored extension isn't a

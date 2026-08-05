@@ -253,6 +253,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Page/PageHeaderRenderer.php',
         '/src/Piwigo/Core/CurrentThemeConfProvider.php',
         '/src/Piwigo/Mail/MailService.php',
+        '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Auth/AccessControl.php',
         '/src/Piwigo/Core/Lang.php',
         '/src/Piwigo/Config/CurrentConfig.php',
@@ -381,16 +382,17 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // method).
     //
     // (b) Too many real raw `new X(...)` construction sites, no DI
-    // involved, matching the established HtmlService/UrlService/Template
+    // involved, matching the established HtmlService/Template
     // precedent from every prior phase -- Image/
     // SrcImage.php (~20 sites, also its own class docblock), Csrf/
     // CsrfService.php (~50 sites, no constructor at all), Html/HtmlService.php,
-    // Url/UrlService.php, Template/Template.php,
+    // Template/Template.php,
     // Template/CssLoader.php, Template/ScriptLoader.php,
     // Template/FileCombiner.php, Template/PwgTemplateAdapter.php (the
-    // Template-family group). Mail/MailService.php closed this shim in
-    // Phase 11 sub-phase 11E -- real constructor injection now that the
-    // "too many manual construction sites" reasoning no longer holds.
+    // Template-family group). Mail/MailService.php and Url/UrlService.php
+    // both closed this shim in Phase 11 sub-phase 11E -- real constructor
+    // injection now that the "too many manual construction sites"
+    // reasoning no longer holds.
     //
     // (c) Structural exceptions -- Auth/AccessControl.php's one site is
     // inside currentForCaching()'s own designed degraded-fallback object
@@ -433,7 +435,6 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Template/PwgTemplateAdapter.php',
         '/src/Piwigo/Template/ScriptLoader.php',
         '/src/Piwigo/Template/Template.php',
-        '/src/Piwigo/Url/UrlService.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentConfig::current(');
@@ -545,7 +546,6 @@ test('DeploymentPolicy::current() transitional bridge has a shrinking, known all
     $allowedFiles = [
         '/src/Piwigo/Admin/Install/InstallWizard.php',
         '/src/Piwigo/Search/SearchService.php',
-        '/src/Piwigo/Url/UrlService.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'DeploymentPolicy::current(');
@@ -1051,7 +1051,6 @@ test('RequestMountDepth::currentStatic() transitional shim has a shrinking, know
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Auth/CookieService.php',
     ];
 
@@ -1081,7 +1080,6 @@ test('WsContext::isActiveStatic() transitional shim has a shrinking, known allow
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Admin/Upload/UploadService.php',
     ];
 
@@ -1232,7 +1230,6 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Template/CssLoader.php',
         '/src/Piwigo/Template/ScriptLoader.php',
         '/src/Piwigo/Template/Template.php',
-        '/src/Piwigo/Url/UrlService.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'EventDispatcher::get(');
@@ -1258,7 +1255,6 @@ test('SectionContextRegistry::currentStatic() transitional shim has a shrinking,
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Url/UrlService.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'SectionContextRegistry::currentStatic(');
@@ -1394,7 +1390,6 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Html/HtmlService.php',
         '/src/Piwigo/Metadata/MetadataService.php',
         '/src/Piwigo/Permission/PermissionService.php',
-        '/src/Piwigo/Url/UrlService.php',
     ];
 
     $hits = [
@@ -1422,11 +1417,11 @@ test('Lang::current() transitional bridge has a shrinking, known allow-list', fu
     // remaining entry below is a real, current caller as of that same
     // discovery, not yet individually re-verified against the same 3
     // categories every other shim's allow-list documents (too-many-sites/
-    // genuinely-static/structural) -- Html/HtmlService.php, Template/
-    // Template.php, and Url/UrlService.php are expected to close as part
-    // of this same sub-phase's own remaining hub-class passes; shrink this
-    // list further as each one lands, same as every other allow-list in
-    // this file.
+    // genuinely-static/structural) -- Html/HtmlService.php and Template/
+    // Template.php are expected to close as part of this same sub-phase's
+    // own remaining hub-class passes (Url/UrlService.php already closed
+    // it); shrink this list further as each one lands, same as every
+    // other allow-list in this file.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
@@ -1442,7 +1437,6 @@ test('Lang::current() transitional bridge has a shrinking, known allow-list', fu
         '/src/Piwigo/Picture/PictureMetadataRenderer.php',
         '/src/Piwigo/Site/LocalSiteReader.php',
         '/src/Piwigo/Template/Template.php',
-        '/src/Piwigo/Url/UrlService.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'Lang::current(');
@@ -1514,7 +1508,6 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Html/HtmlService.php',
         '/src/Piwigo/Permission/PermissionService.php',
         '/src/Piwigo/Template/Template.php',
-        '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Users/UserService.php',
     ];
 

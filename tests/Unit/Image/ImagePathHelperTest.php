@@ -36,14 +36,14 @@ test('originalToFormat inserts a pwg_format/ segment and swaps the extension', f
 });
 
 test('getElementPath prefixes a local path with the app root', function (): void {
-    $urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
+    $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
 
     expect(ImagePathHelper::getElementPath(['path' => 'galleries/2024/photo.jpg'], $urlService))
         ->toBe('/var/www/piwigo/galleries/2024/photo.jpg');
 });
 
 test('getElementPath leaves a remote (http/https) path untouched', function (): void {
-    $urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
+    $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
 
     expect(ImagePathHelper::getElementPath(['path' => 'https://cdn.example.test/photo.jpg'], $urlService))
         ->toBe('https://cdn.example.test/photo.jpg');

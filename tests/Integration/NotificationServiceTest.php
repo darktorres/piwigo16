@@ -95,7 +95,7 @@ final class NotificationServiceTest extends IntegrationTestCase
             new NotificationRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
             new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig)),
             new HtmlService(),
-            new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
+            \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
             new Translator(\Piwigo\Config\CurrentConfig::current()),
             \Piwigo\Users\CurrentUser::current(),
         );

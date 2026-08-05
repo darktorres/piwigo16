@@ -91,7 +91,7 @@ namespace Piwigo\Tests\Integration {
             self::assertInstanceOf(\Piwigo\Core\WsContext::class, $wsContext);
             $accessControl = Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
             self::assertInstanceOf(\Piwigo\Auth\AccessControl::class, $accessControl);
-            $this->lifecycle = new ExtensionLifecycle(\Piwigo\Core\Lang::current(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig, $wsContext, $accessControl);
+            $this->lifecycle = new ExtensionLifecycle(\Piwigo\Core\Lang::current(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig, $wsContext, $accessControl);
 
             $currentConfig->setEnableExtensionsInstall(true);
             $currentConfig->setPhpExtensionInUrls(false);

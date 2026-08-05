@@ -61,7 +61,7 @@ function piwigoInfosSenderTestMailService(): \Piwigo\Mail\MailService
         new Translator(new CurrentConfig()),
         new \Piwigo\PluginConfig\EventDispatcher(),
         new \Piwigo\Users\CurrentUser(new CurrentConfig()),
-        new \Piwigo\Url\UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
+        \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
     );
 }
 
@@ -178,7 +178,7 @@ test('send returns immediately without touching the DB or network when telemetry
     $installationStats = new \Piwigo\Admin\InstallationStats($rateService, $historyService, $imageService, $categoryService, $tagService, $userService, $groupService);
     // Never actually read either -- same "send() returns before touching
     // anything past the guard" reasoning as $configService above.
-    $urlService = new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService(), new \Piwigo\Url\RootPathOverride());
+    $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
     new PiwigoInfosSender(piwigoInfosSenderTestLang(), $currentLogger, new ImageStdParams(), $configService, $installationStats, $activityService, $userService, $imageService, $urlService, $currentConfig)->send();
 
     expect(true)->toBeTrue();

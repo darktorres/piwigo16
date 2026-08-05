@@ -828,7 +828,7 @@ test('check_load_dep converges over multiple passes for a 3-level async dependen
         // 'a'/'b' and 'b'/'c' are load_mode=2 on both sides) -- needs a
         // booted Kernel, unlike the plain-local-precedent check_load_dep
         // tests elsewhere in this file.
-        KernelContainerOverride::with([], function () use ($loader): void {
+        KernelContainerOverride::with([Paths::class => Paths::fromRoot(sys_get_temp_dir())], function () use ($loader): void {
             // Must run inside this closure -- KernelContainerOverride::with()
             // builds its own fresh container (and therefore its own fresh
             // CurrentConfig instance) before invoking it; setting this
@@ -1128,7 +1128,7 @@ test('check_load_dep needs a second pass to cascade an unconditional downgrade t
     try {
         // 'mid'/'bottom' are both load_mode=2 -- check_load_dep() reaches
         // self::urlService() for that pair, needing a booted Kernel.
-        KernelContainerOverride::with([], function () use ($loader): void {
+        KernelContainerOverride::with([Paths::class => Paths::fromRoot(sys_get_temp_dir())], function () use ($loader): void {
             $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
             $method->invoke(null, scriptLoaderRegistered($loader));
         });
@@ -1166,7 +1166,7 @@ test('check_load_dep needs a further pass unlocked by the async branch\'s own ch
         // Several node pairs here are load_mode=2 on both sides --
         // check_load_dep() reaches self::urlService(), needing a booted
         // Kernel.
-        KernelContainerOverride::with([], function () use ($loader): void {
+        KernelContainerOverride::with([Paths::class => Paths::fromRoot(sys_get_temp_dir())], function () use ($loader): void {
             $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
             $method->invoke(null, scriptLoaderRegistered($loader));
         });
@@ -1237,7 +1237,7 @@ test('cmp_by_mode_and_order sorts a remote script strictly before a local one at
 
     // order===0 on both sides reaches the remote/local xor tiebreak,
     // which calls self::urlService() -- needs a booted Kernel.
-    expect(KernelContainerOverride::with([], fn () => scriptLoaderCmp($remote, $local)))->toBe(-1);
+    expect(KernelContainerOverride::with([Paths::class => Paths::fromRoot(sys_get_temp_dir())], fn () => scriptLoaderCmp($remote, $local)))->toBe(-1);
 });
 
 test('cmp_by_mode_and_order sorts a local script strictly after a remote one at the same mode/order (direct comparator invocation)', function (): void {
@@ -1253,5 +1253,5 @@ test('cmp_by_mode_and_order sorts a local script strictly after a remote one at 
 
     // order===0 on both sides reaches the remote/local xor tiebreak,
     // which calls self::urlService() -- needs a booted Kernel.
-    expect(KernelContainerOverride::with([], fn () => scriptLoaderCmp($local, $remote)))->toBe(1);
+    expect(KernelContainerOverride::with([Paths::class => Paths::fromRoot(sys_get_temp_dir())], fn () => scriptLoaderCmp($local, $remote)))->toBe(1);
 });

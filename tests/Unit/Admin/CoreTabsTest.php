@@ -29,7 +29,7 @@ use Piwigo\Url\UrlService;
  */
 function coreTabsUrlService(): UrlServiceInterface
 {
-    return new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride(), null);
+    return \Piwigo\Tests\Support\UrlServiceTestFactory::build();
 }
 
 /**

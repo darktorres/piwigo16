@@ -283,7 +283,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             Lang::current(),
             \Piwigo\Auth\AccessControl::current(),
             new RedirectService(Lang::current(), $this->userService()),
-            new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
+            \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
             $this->configService,
             StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php'),
             \Piwigo\Core\PageState::current(),

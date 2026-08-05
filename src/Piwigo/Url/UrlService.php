@@ -7,15 +7,21 @@ namespace Piwigo\Url;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Tag\TagService;
+use Piwigo\Users\CurrentUser;
 
 /**
  * URL building/parsing for the gallery's own routes (index/picture/action
@@ -41,14 +47,54 @@ use Piwigo\Tag\TagService;
  * own docblock) needing a concrete L4 Piwigo\Bootstrap\RedirectService,
  * which HtmlService (L3Presentation) may not depend on directly per
  * deptrac.yaml's ruleset.
+ *
+ * Phase 11 sub-phase 11E: the constructor now also takes every remaining
+ * transitional-shim collaborator this class used to read internally
+ * (SectionContextRegistry/RequestMountDepth/CurrentConfig/DeploymentPolicy/
+ * WsContext/CurrentUser/Lang/EventDispatcher) as required params -- the
+ * old "too many manual construction sites" reasoning no longer holds
+ * (churn is not a deciding factor for this campaign); every real
+ * `new UrlService(...)` call site was updated accordingly. AccessControl
+ * stays a lazily-resolved private helper (see its own docblock) -- a
+ * genuine circular dependency, not the same too-many-call-sites reasoning.
  */
 final class UrlService implements UrlServiceInterface
 {
     public function __construct(
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly RootPathOverride $rootPathOverride,
+        private readonly SectionContextRegistry $sectionContextRegistry,
+        private readonly RequestMountDepth $requestMountDepth,
+        private readonly CurrentConfig $currentConfig,
+        private readonly DeploymentPolicy $deploymentPolicy,
+        private readonly WsContext $wsContext,
+        private readonly CurrentUser $currentUser,
+        private readonly Lang $lang,
+        private readonly EventDispatcher $eventDispatcher,
         private ?Connection $conn = null,
     ) {}
+
+    /**
+     * Container resolve, not a constructor property -- AccessControl's own
+     * dependency chain (RedirectServiceInterface -> Bootstrap\RedirectService
+     * -> Users\UserService -> Core\MailerInterface -> Mail\MailService ->
+     * Core\UrlServiceInterface, i.e. this class) means a required
+     * constructor param here would be a genuine circular dependency PHP-DI
+     * can't autowire (this class implements UrlServiceInterface). Same
+     * "private helper, not constructor property" shape already established
+     * for Mail\MailService's own identical accessControl() helper
+     * (singleton/service-locator elimination campaign, Phase 11 sub-phase
+     * 11E).
+     */
+    private function accessControl(): \Piwigo\Auth\AccessControl
+    {
+        $accessControl = \Piwigo\Core\Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
+        if (! $accessControl instanceof \Piwigo\Auth\AccessControl) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Auth\AccessControl::class);
+        }
+
+        return $accessControl;
+    }
 
     /**
      * Returns a prefix for each url link on displayed page and returns an
@@ -63,7 +109,7 @@ final class UrlService implements UrlServiceInterface
         // -- nullable here (unlike GalleryController/PictureController's
         // own guaranteed-non-null read) since this runs for non-gallery
         // pages too, matching the original's own `?? null` fallback.
-        $root_path = $this->rootPathOverride->current() ?? SectionContextRegistry::currentStatic()?->rootPath;
+        $root_path = $this->rootPathOverride->current() ?? $this->sectionContextRegistry->current()?->rootPath;
         if ($root_path === null || $root_path === '') {
             // Legacy Coupling Retirement gap-closure (entry-shell
             // define()/include round): used to read the raw PHPWG_ROOT_PATH
@@ -71,7 +117,7 @@ final class UrlService implements UrlServiceInterface
             // that was fragile (coincidentally correct only for
             // admin/popuphelp.php, not a guaranteed general mechanism) and
             // why this real, request-scoped mount-depth value replaces it.
-            return str_repeat('../', \Piwigo\Core\RequestMountDepth::currentStatic());
+            return str_repeat('../', $this->requestMountDepth->current());
         }
 
         return $root_path;
@@ -118,9 +164,9 @@ final class UrlService implements UrlServiceInterface
 
                     $url_port = null;
 
-                    if (\Piwigo\Config\CurrentConfig::current()->urlPort() === 'none') {
+                    if ($this->currentConfig->urlPort() === 'none') {
                         // do nothing
-                    } elseif (\Piwigo\Config\CurrentConfig::current()->urlPort() === 'auto') {
+                    } elseif ($this->currentConfig->urlPort() === 'auto') {
                         // Default to 80 (matching 16.x-rewrite's own
                         // UrlService) when SERVER_PORT is genuinely absent --
                         // real bug found via mutation-gap test-writing
@@ -134,7 +180,7 @@ final class UrlService implements UrlServiceInterface
                         }
                     } else {
                         // we have a custom port
-                        $url_port = ':' . \Piwigo\Config\CurrentConfig::current()->urlPort();
+                        $url_port = ':' . $this->currentConfig->urlPort();
                     }
 
                     if ($url_port !== null and strrchr($url, ':') !== $url_port) {
@@ -162,7 +208,7 @@ final class UrlService implements UrlServiceInterface
      */
     private function configuredHost(): ?string
     {
-        $gallery_url = \Piwigo\Config\CurrentConfig::current()->galleryUrl() ?? null;
+        $gallery_url = $this->currentConfig->galleryUrl() ?? null;
         if (! is_string($gallery_url) || $gallery_url === '') {
             return null;
         }
@@ -179,7 +225,7 @@ final class UrlService implements UrlServiceInterface
 
     /**
      * [SEC-29] Host-header poisoning guard: when
-     * \Piwigo\Config\DeploymentPolicy::current()->allowedHosts is
+     * $this->deploymentPolicy->allowedHosts is
      * non-empty, an unrecognized candidate host is never embedded into an
      * outbound URL -- falls back to the first configured host instead.
      * Empty allow-list means "not configured", preserving the historical
@@ -187,7 +233,7 @@ final class UrlService implements UrlServiceInterface
      */
     private function trustedHost(string $candidate): string
     {
-        $allowed = \Piwigo\Config\DeploymentPolicy::current()->allowedHosts;
+        $allowed = $this->deploymentPolicy->allowedHosts;
 
         if ($allowed === [] || in_array($candidate, $allowed, true)) {
             return $candidate;
@@ -207,7 +253,7 @@ final class UrlService implements UrlServiceInterface
     public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string
     {
         if ($params !== []) {
-            if (\Piwigo\Core\WsContext::isActiveStatic() and $argSeparator === '&amp;') {
+            if ($this->wsContext->isActive() and $argSeparator === '&amp;') {
                 $argSeparator = '&';
             }
 
@@ -238,10 +284,10 @@ final class UrlService implements UrlServiceInterface
     public function makeIndexUrl(array $params = []): string
     {
         $url = $this->getRootUrl() . 'index';
-        if (\Piwigo\Config\CurrentConfig::current()->phpExtensionInUrls()) {
+        if ($this->currentConfig->phpExtensionInUrls()) {
             $url .= '.php';
         }
-        if (\Piwigo\Config\CurrentConfig::current()->questionMarkInUrls()) {
+        if ($this->currentConfig->questionMarkInUrls()) {
             $url .= '?';
         }
 
@@ -295,7 +341,7 @@ final class UrlService implements UrlServiceInterface
      */
     public function paramsForDuplication(array $redefined, array $removed): array
     {
-        $params = SectionContextRegistry::currentStatic()?->toUrlParams() ?? [];
+        $params = $this->sectionContextRegistry->current()?->toUrlParams() ?? [];
 
         $rootPathOverride = $this->rootPathOverride->current();
         if ($rootPathOverride !== null) {
@@ -337,15 +383,15 @@ final class UrlService implements UrlServiceInterface
     public function makePictureUrl(array $params): string
     {
         $url = $this->getRootUrl() . 'picture';
-        if (\Piwigo\Config\CurrentConfig::current()->phpExtensionInUrls()) {
+        if ($this->currentConfig->phpExtensionInUrls()) {
             $url .= '.php';
         }
-        if (\Piwigo\Config\CurrentConfig::current()->questionMarkInUrls()) {
+        if ($this->currentConfig->questionMarkInUrls()) {
             $url .= '?';
         }
         $url .= '/';
         $image_id = $params['image_id'] ?? null;
-        $picture_url_style = \Piwigo\Config\CurrentConfig::current()->pictureUrlStyle();
+        $picture_url_style = $this->currentConfig->pictureUrlStyle();
         switch ($picture_url_style) {
             case 'id-file':
                 $url .= is_scalar($image_id) ? (string) $image_id : '';
@@ -469,7 +515,7 @@ final class UrlService implements UrlServiceInterface
                     if (! isset($category_info['permalink']) || $category_info['permalink'] === '') {
                         $category_id = $category_info['id'] ?? null;
                         $section_string .= is_scalar($category_id) ? (string) $category_id : '';
-                        if (\Piwigo\Config\CurrentConfig::current()->categoryUrlStyle() === 'id-name') {
+                        if ($this->currentConfig->categoryUrlStyle() === 'id-name') {
                             $category_name = $category_info['name'] ?? null;
                             $section_string .= '-' . \Piwigo\Core\StringHelper::str2url(is_string($category_name) ? $category_name : '');
                         }
@@ -489,7 +535,7 @@ final class UrlService implements UrlServiceInterface
                             if (! isset($category['permalink']) || $category['permalink'] === '') {
                                 $combined_id = $category['id'] ?? null;
                                 $section_string .= is_scalar($combined_id) ? (string) $combined_id : '';
-                                if (\Piwigo\Config\CurrentConfig::current()->categoryUrlStyle() === 'id-name') {
+                                if ($this->currentConfig->categoryUrlStyle() === 'id-name') {
                                     $combined_name = $category['name'] ?? null;
                                     $section_string .= '-' . \Piwigo\Core\StringHelper::str2url(is_string($combined_name) ? $combined_name : '');
                                 }
@@ -508,7 +554,7 @@ final class UrlService implements UrlServiceInterface
                 $section_string .= '/tags';
 
                 $tags_param = $params['tags'] ?? [];
-                $tag_url_style = \Piwigo\Config\CurrentConfig::current()->tagUrlStyle();
+                $tag_url_style = $this->currentConfig->tagUrlStyle();
                 foreach ((is_array($tags_param) ? $tags_param : []) as $tag) {
                     if (! is_array($tag)) {
                         $tag = [];
@@ -598,10 +644,10 @@ final class UrlService implements UrlServiceInterface
 
             $categoryConn = DbConnection::build();
             $categoryService = new CategoryService(
-                \Piwigo\Core\Lang::current(),
-                new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), \Piwigo\Config\CurrentConfig::current()),
-                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), \Piwigo\Config\CurrentConfig::current())),
-                \Piwigo\Config\CurrentConfig::current()
+                $this->lang,
+                new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig),
+                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig)),
+                $this->currentConfig
             );
 
             while (isset($tokens[$nextToken])) {
@@ -666,7 +712,7 @@ final class UrlService implements UrlServiceInterface
                                 $combined_category_ids[] = $cat_id;
                             }
                         } else {
-                            $this->htmlRenderer->pageNotFound($redirectService, Lang::current()->t('Permalink for album not found'));
+                            $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Permalink for album not found'));
                         }
                     }
                 }
@@ -679,7 +725,7 @@ final class UrlService implements UrlServiceInterface
             if ($category !== null) {
                 $result = $categoryService->getCategoryInfo((int) $category);
                 if ($result === null) {
-                    $this->htmlRenderer->pageNotFound($redirectService, Lang::current()->t('Requested album does not exist'));
+                    $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested album does not exist'));
                 }
                 $page['category'] = $result;
             }
@@ -690,7 +736,7 @@ final class UrlService implements UrlServiceInterface
                 foreach ($combined_category_ids as $cat_id) {
                     $result = $categoryService->getCategoryInfo((int) $cat_id);
                     if ($result === null) {
-                        $this->htmlRenderer->pageNotFound($redirectService, Lang::current()->t('Requested album does not exist'));
+                        $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested album does not exist'));
                     }
 
                     $combined_categories[] = $result;
@@ -715,7 +761,7 @@ final class UrlService implements UrlServiceInterface
                     break;
                 }
 
-                if (\Piwigo\Config\CurrentConfig::current()->tagUrlStyle() !== 'tag' and (bool) preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)) {
+                if ($this->currentConfig->tagUrlStyle() !== 'tag' and (bool) preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)) {
                     $requested_tag_ids[] = $matches[1];
                 } else {
                     $requested_tag_url_names[] = $tokens[$i];
@@ -729,10 +775,10 @@ final class UrlService implements UrlServiceInterface
             }
 
             $tagConn = DbConnection::build();
-            $page['tags'] = new TagService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn), \Piwigo\Config\CurrentConfig::current())), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current())
+            $page['tags'] = new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn), $this->currentConfig)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig)
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
-                $this->htmlRenderer->pageNotFound($redirectService, Lang::current()->t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
+                $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
             }
         } elseif (($tokens[$nextToken] ?? null) === 'favorites') {
             $page['section'] = 'favorites';
@@ -927,7 +973,7 @@ final class UrlService implements UrlServiceInterface
     #[\Override]
     public function getGalleryHomeUrl(): string
     {
-        $gallery_url = \Piwigo\Config\CurrentConfig::current()->galleryUrl() ?? null;
+        $gallery_url = $this->currentConfig->galleryUrl() ?? null;
         if (is_string($gallery_url) && $gallery_url !== '') {
             if ($this->urlIsRemote($gallery_url) or $gallery_url[0] === '/') {
                 return $gallery_url;
@@ -981,13 +1027,14 @@ final class UrlService implements UrlServiceInterface
     #[\Override]
     public function getUserFavorites(): array
     {
-        if (\Piwigo\Auth\AccessControl::current()->isAGuest()) {
+        if ($this->accessControl()->isAGuest()) {
             return [];
         }
 
-        $currentUserId = \Piwigo\Users\CurrentUser::current()->get()->id;
+        $currentUserId = $this->currentUser->get()
+            ->id;
 
-        $imageIds = (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn ??= DbConnection::build()), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current()))
+        $imageIds = (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn ??= DbConnection::build()), $this->eventDispatcher, $this->currentConfig))
             ->findFavoriteImageIds($currentUserId);
 
         $favorites = [];

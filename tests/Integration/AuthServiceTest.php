@@ -682,7 +682,7 @@ namespace Piwigo\Tests\Integration {
                 $mailer,
                 new ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new \Piwigo\Config\DeploymentPolicy()),
-                new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
+                \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
                 new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
                 \Piwigo\Config\CurrentConfig::current(),
             );
@@ -709,7 +709,7 @@ namespace Piwigo\Tests\Integration {
                 $mailer,
                 new ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new \Piwigo\Config\DeploymentPolicy()),
-                new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
+                \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
                 new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
                 \Piwigo\Config\CurrentConfig::current(),
             );
@@ -734,7 +734,7 @@ namespace Piwigo\Tests\Integration {
         public function test_generate_password_link_computes_the_reset_link_when_not_the_first_login(): void
         {
             try {
-                $result = $this->service->generatePasswordLink(4, new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), false);
+                $result = $this->service->generatePasswordLink(4, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), false);
 
                 self::assertStringContainsString('password.php?key=', $result['password_link']);
             } finally {
@@ -764,7 +764,7 @@ namespace Piwigo\Tests\Integration {
                 // test_pwg_login_locks_out_the_username_after_max_attempts_even_with_the_correct_password().)
                 self::assertFalse($this->pwgLoginResult(false, 'power_user', 'anything', false));
 
-                $result = $this->service->generatePasswordLink(4, new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), false);
+                $result = $this->service->generatePasswordLink(4, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), false);
 
                 self::assertStringContainsString('password.php?key=', $result['password_link']);
             } finally {

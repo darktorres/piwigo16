@@ -19,7 +19,7 @@ use Piwigo\Url\UrlService;
  */
 function adminUiHelperUrlService(): UrlService
 {
-    return new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
+    return \Piwigo\Tests\Support\UrlServiceTestFactory::build();
 }
 
 test('getAdminClientCacheKeys returns all 5 known table keys plus _hash when nothing specific is requested', function (): void {

@@ -73,7 +73,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         Kernel::boot();
 
         $this->conn = DbConnection::build();
-        $this->urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
+        $this->urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
 
         // Real admin identity without a real login -- see this file's own
         // docblock for why a genuine loginAsAdmin() can't be used here.

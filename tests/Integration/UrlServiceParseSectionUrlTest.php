@@ -197,7 +197,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
 
     private function service(): UrlService
     {
-        return new UrlService(new UrlServiceParseSectionUrlTestHtmlRenderer(), new \Piwigo\Url\RootPathOverride());
+        return \Piwigo\Tests\Support\UrlServiceTestFactory::build(new UrlServiceParseSectionUrlTestHtmlRenderer());
     }
 
     private function redirect(): UrlServiceParseSectionUrlTestRedirectService
@@ -219,7 +219,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
     public function test_parse_section_url_page_not_founds_for_a_nonexistent_category_id(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
-        $service = new UrlService($htmlRenderer, new \Piwigo\Url\RootPathOverride());
+        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlRenderer);
         $i = 0;
 
         try {
@@ -250,7 +250,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
     public function test_parse_section_url_page_not_founds_for_a_nonexistent_combined_category(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
-        $service = new UrlService($htmlRenderer, new \Piwigo\Url\RootPathOverride());
+        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlRenderer);
         $i = 0;
 
         try {
@@ -326,7 +326,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
     public function test_parse_section_url_page_not_founds_for_an_unresolvable_permalink(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
-        $service = new UrlService($htmlRenderer, new \Piwigo\Url\RootPathOverride());
+        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlRenderer);
         $i = 0;
 
         try {
@@ -373,7 +373,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
     public function test_parse_section_url_page_not_founds_when_no_tag_matches(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
-        $service = new UrlService($htmlRenderer, new \Piwigo\Url\RootPathOverride());
+        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlRenderer);
         $i = 0;
 
         try {
@@ -387,7 +387,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
     public function test_parse_section_url_rejects_a_tags_token_with_no_ids_or_names(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
-        $service = new UrlService($htmlRenderer, new \Piwigo\Url\RootPathOverride());
+        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlRenderer);
         $i = 0;
 
         try {

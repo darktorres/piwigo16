@@ -127,7 +127,7 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
         Lang::current(),
         new ExtensionScanner(),
         new PemCatalog(new ZipExtractor(), new \Piwigo\Core\CurrentLogger()),
-        new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
+        \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
         $repo,
     );
 }

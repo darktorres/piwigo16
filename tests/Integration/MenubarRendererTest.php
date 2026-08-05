@@ -88,7 +88,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         EventDispatcher::get()->addTypedHandler(BlockManagerRegisterBlocks::class, (new HtmlService())->registerDefaultMenubarBlocks(...));
 
         $htmlService = new HtmlService();
-        $this->urlService = new UrlService($htmlService, new \Piwigo\Url\RootPathOverride());
+        $this->urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlService);
 
         $this->template = new Template(CurrentPaths::get()->root . 'themes', 'default');
         CurrentTemplate::current()->set($this->template);

@@ -51,17 +51,17 @@ test('set_path overwrites a non-empty path', function (): void {
 test('is_remote is true for an absolute URL', function (): void {
     $combinable = new Combinable('my-id', 'https://cdn.example.com/foo.js');
 
-    expect($combinable->is_remote(new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride())))->toBeTrue();
+    expect($combinable->is_remote(\Piwigo\Tests\Support\UrlServiceTestFactory::build()))->toBeTrue();
 });
 
 test('is_remote is true for a protocol-relative URL', function (): void {
     $combinable = new Combinable('my-id', '//cdn.example.com/foo.js');
 
-    expect($combinable->is_remote(new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride())))->toBeTrue();
+    expect($combinable->is_remote(\Piwigo\Tests\Support\UrlServiceTestFactory::build()))->toBeTrue();
 });
 
 test('is_remote is false for a local path', function (): void {
     $combinable = new Combinable('my-id', 'themes/default/js/foo.js');
 
-    expect($combinable->is_remote(new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride())))->toBeFalse();
+    expect($combinable->is_remote(\Piwigo\Tests\Support\UrlServiceTestFactory::build()))->toBeFalse();
 });

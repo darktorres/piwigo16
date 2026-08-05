@@ -71,7 +71,7 @@ function redirect_service_test_mail_service(): MailService
         new Translator(new \Piwigo\Config\CurrentConfig()),
         new EventDispatcher(),
         new CurrentUser(new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\Url\UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
+        \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
     );
 }
 

@@ -106,7 +106,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         self::assertSame(
             [Lang::current()->t('Your authentication key is no longer valid.') . sprintf(
                 ' <a href="%s">%s</a>',
-                new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride())->getRootUrl() . 'identification.php',
+                \Piwigo\Tests\Support\UrlServiceTestFactory::build()->getRootUrl() . 'identification.php',
                 Lang::current()->t('Login')
             )],
             PageState::current()->errors
@@ -201,7 +201,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
             $response = $e->response();
             self::assertSame(503, $response->getStatusCode());
             self::assertSame('900', $response->getHeaderLine('Retry-After'));
-            $expectedBody = '<a href="' . new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride())->getAbsoluteRootUrl(false) . 'identification.php">'
+            $expectedBody = '<a href="' . \Piwigo\Tests\Support\UrlServiceTestFactory::build()->getAbsoluteRootUrl(false) . 'identification.php">'
                 . Lang::current()->t('The gallery is locked for maintenance. Please, come back later.') . '</a>'
                 . str_repeat(' ', 512);
             self::assertSame($expectedBody, (string) $response->getBody());
@@ -224,7 +224,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         ));
 
         self::assertSame(
-            new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride())->getActionUrl(42, 'e', false),
+            \Piwigo\Tests\Support\UrlServiceTestFactory::build()->getActionUrl(42, 'e', false),
             $result->url
         );
     }

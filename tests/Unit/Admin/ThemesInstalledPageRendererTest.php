@@ -250,7 +250,7 @@ function themesInstalledLifecycle(): ExtensionLifecycle
         throw new \LogicException('Container returned an unexpected type');
     }
 
-    return new ExtensionLifecycle(Lang::current(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new \Piwigo\Activity\ActivityService($activityRepo), themesInstalledLifecycleUserService(), new HtmlService(), new CurrentConfig(), $wsContext, $accessControl);
+    return new ExtensionLifecycle(Lang::current(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new \Piwigo\Activity\ActivityService($activityRepo), themesInstalledLifecycleUserService(), new HtmlService(), new CurrentConfig(), $wsContext, $accessControl);
 }
 
 /**

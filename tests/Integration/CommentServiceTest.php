@@ -211,7 +211,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $mailer = \Piwigo\Core\Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
-            $this->service = new CommentService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current()), $mailer, new HtmlService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
+            $this->service = new CommentService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current()), $mailer, new HtmlService(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
         }
 
         private function accessControl(): \Piwigo\Auth\AccessControl
@@ -872,7 +872,7 @@ namespace Piwigo\Tests\Integration {
                 new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current()),
                 $mailer,
                 new HtmlService(),
-                new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
+                \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
                 new \Piwigo\PluginConfig\EventDispatcher(),
                 \Piwigo\Core\PageState::current(),
                 \Piwigo\Users\CurrentUser::current(),
@@ -897,7 +897,7 @@ namespace Piwigo\Tests\Integration {
                 new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current()),
                 $mailer,
                 $htmlRenderer,
-                new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
+                \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
                 new \Piwigo\PluginConfig\EventDispatcher(),
                 \Piwigo\Core\PageState::current(),
                 \Piwigo\Users\CurrentUser::current(),
@@ -907,7 +907,7 @@ namespace Piwigo\Tests\Integration {
 
         private function absoluteRootUrl(): string
         {
-            return (new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()))->getAbsoluteRootUrl();
+            return (\Piwigo\Tests\Support\UrlServiceTestFactory::build())->getAbsoluteRootUrl();
         }
 
         private function insertedId(mixed $comm): int

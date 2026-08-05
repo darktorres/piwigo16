@@ -703,7 +703,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // needs the ancestor present to correctly nest category 2 under
         // it (LEVEL-based <ul> nesting), it just renders a bare link with
         // no href via its own isset($cat.url) guard.
-        $cats = $this->service->getRelatedCategoriesMenuWithUrls([4], new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()));
+        $cats = $this->service->getRelatedCategoriesMenuWithUrls([4], \Piwigo\Tests\Support\UrlServiceTestFactory::build());
 
         $ids = array_map(static fn (array $c): mixed => $c['id'], $cats);
         self::assertContains(1, $ids);
@@ -722,7 +722,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_related_categories_menu_with_urls_merges_combined_categories_into_the_url(): void
     {
-        $urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
+        $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
         $priorCat = ['id' => 99, 'name' => 'Prior Combined Category', 'permalink' => null];
         $pageCategory = ['id' => 1, 'name' => 'Sample Album', 'permalink' => null];
 
@@ -756,7 +756,7 @@ final class CategoryServiceTest extends IntegrationTestCase
     public function test_delete_categories_delete_orphans_mode_preserves_an_image_still_linked_elsewhere(): void
     {
         $activityLogger = new CategoryServiceFakeActivityLogger();
-        $urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
+        $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
 
         $result = $this->service->createVirtualCategory('Orphan Diff Temp', $activityLogger, \Piwigo\Users\CurrentUser::current());
         $tempIdRaw = $result['id'] ?? null;
@@ -817,7 +817,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         EventDispatcher::get()->addTypedHandler(DeleteSite::class, $handler);
 
         try {
-            $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), EventDispatcher::get());
+            $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), EventDispatcher::get());
 
             self::assertNull($this->repo->findById((int) $categoryId));
             self::assertNull($siteRepo->findGalleriesUrlById($siteId));
@@ -1054,12 +1054,12 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('getCategoryRepresentantProperties(): image 999999 does not exist (stale representative_picture_id?)');
 
-        $this->service->getCategoryRepresentantProperties(999999, new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()));
+        $this->service->getCategoryRepresentantProperties(999999, \Piwigo\Tests\Support\UrlServiceTestFactory::build());
     }
 
     public function test_get_category_representant_properties_returns_a_thumb_url_when_size_is_null(): void
     {
-        $urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
+        $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
 
         $props = $this->service->getCategoryRepresentantProperties(1, $urlService);
 

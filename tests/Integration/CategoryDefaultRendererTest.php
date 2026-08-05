@@ -107,7 +107,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         if (! $rootPathOverride instanceof \Piwigo\Url\RootPathOverride) {
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Url\RootPathOverride::class);
         }
-        $urlService = new UrlService($htmlService, $rootPathOverride);
+        $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlService, $rootPathOverride);
 
         $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), \Piwigo\Config\CurrentConfig::current()), EventDispatcher::get(), ImageStdParams::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
     }
@@ -181,7 +181,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
     public function test_render_returns_the_slideshow_url_for_the_first_ranked_picture(): void
     {
         $this->seedUser(showNbHits: false, showNbComments: false);
-        $urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
+        $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
 
         $slideshowUrl = $this->renderer->render([3, 1, 2], 0, 3, '');
 

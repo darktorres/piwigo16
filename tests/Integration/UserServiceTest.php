@@ -191,7 +191,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_register_user_rejects_an_empty_login(): void
         {
-            $result = $this->service->registerUser('', 'password123', null, new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()));
+            $result = $this->service->registerUser('', 'password123', null, \Piwigo\Tests\Support\UrlServiceTestFactory::build());
 
             self::assertNull($result['userId']);
             self::assertNotSame([], $result['errors']);
@@ -202,7 +202,7 @@ namespace Piwigo\Tests\Integration {
         {
             // 'guest' (fixture) has no email on file, so the SEC-31 notice
             // email is never attempted here.
-            $result = $this->service->registerUser('guest', 'password123', null, new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()));
+            $result = $this->service->registerUser('guest', 'password123', null, \Piwigo\Tests\Support\UrlServiceTestFactory::build());
 
             self::assertNull($result['userId']);
             self::assertTrue($result['duplicateUsername']);
@@ -217,7 +217,7 @@ namespace Piwigo\Tests\Integration {
                 ->executeQuery()
                 ->fetchOne();
 
-            $this->service->registerUser('guest', 'password123', null, new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()));
+            $this->service->registerUser('guest', 'password123', null, \Piwigo\Tests\Support\UrlServiceTestFactory::build());
 
             $countAfter = $this->conn->createQueryBuilder()
                 ->select('COUNT(*)')
@@ -247,7 +247,7 @@ namespace Piwigo\Tests\Integration {
             $defaultGroupId = $groupRepo->insert('p18-regression-' . bin2hex(random_bytes(4)), true);
 
             $login = 'p18-regression-' . bin2hex(random_bytes(4));
-            $result = $this->service->registerUser($login, 'password123', null, new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()));
+            $result = $this->service->registerUser($login, 'password123', null, \Piwigo\Tests\Support\UrlServiceTestFactory::build());
 
             self::assertNotNull($result['userId']);
             $userId = $result['userId'];
@@ -800,7 +800,7 @@ namespace Piwigo\Tests\Integration {
             // reliable way to swallow it.
             set_error_handler(static fn (): bool => true);
             try {
-                $result = $this->service->registerUser($login, 'password123', null, new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), true, false);
+                $result = $this->service->registerUser($login, 'password123', null, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), true, false);
             } finally {
                 restore_error_handler();
             }
@@ -834,7 +834,7 @@ namespace Piwigo\Tests\Integration {
 
             set_error_handler(static fn (): bool => true);
             try {
-                $result = $this->service->registerUser($login, 'password123', null, new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), true, false);
+                $result = $this->service->registerUser($login, 'password123', null, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), true, false);
             } finally {
                 restore_error_handler();
             }
@@ -860,7 +860,7 @@ namespace Piwigo\Tests\Integration {
                 'trailing-space-' . bin2hex(random_bytes(3)) . ' ',
                 'password123',
                 null,
-                new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride())
+                \Piwigo\Tests\Support\UrlServiceTestFactory::build()
             );
 
             self::assertNull($result['userId']);
@@ -873,7 +873,7 @@ namespace Piwigo\Tests\Integration {
                 ' leading-space-' . bin2hex(random_bytes(3)),
                 'password123',
                 null,
-                new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride())
+                \Piwigo\Tests\Support\UrlServiceTestFactory::build()
             );
 
             self::assertNull($result['userId']);
@@ -886,7 +886,7 @@ namespace Piwigo\Tests\Integration {
                 '<b>tag-' . bin2hex(random_bytes(3)) . '</b>',
                 'password123',
                 null,
-                new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride())
+                \Piwigo\Tests\Support\UrlServiceTestFactory::build()
             );
 
             self::assertNull($result['userId']);
@@ -899,7 +899,7 @@ namespace Piwigo\Tests\Integration {
                 'valid-login-' . bin2hex(random_bytes(3)),
                 'password123',
                 'not-an-email',
-                new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride())
+                \Piwigo\Tests\Support\UrlServiceTestFactory::build()
             );
 
             self::assertNull($result['userId']);
@@ -917,7 +917,7 @@ namespace Piwigo\Tests\Integration {
             // test_register_user_sets_duplicate_username_without_revealing_it_in_errors).
             CurrentConfig::current()->setInsensitiveCaseLogon(true);
 
-            $result = $this->service->registerUser('GUEST', 'password123', null, new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()));
+            $result = $this->service->registerUser('GUEST', 'password123', null, \Piwigo\Tests\Support\UrlServiceTestFactory::build());
 
             self::assertNull($result['userId']);
             self::assertTrue($result['duplicateUsername']);

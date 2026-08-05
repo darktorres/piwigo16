@@ -81,7 +81,7 @@ final class PageTailRendererTest extends IntegrationTestCase
                     // only needs *a* TelemetrySenderInterface to construct.
                 }
             },
-            new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
+            \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
             new \Piwigo\PluginConfig\EventDispatcher(),
             \Piwigo\Core\PageState::current(),
             CurrentTemplate::current(),

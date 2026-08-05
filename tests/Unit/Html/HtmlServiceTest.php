@@ -882,7 +882,7 @@ test('getCatDisplayName builds one link per category, in order, when url is an e
     $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
     $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
 
-    $urlService = new UrlService($service, new \Piwigo\Url\RootPathOverride());
+    $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build($service);
     $linkA = $urlService->makeIndexUrl(['category' => $catA]);
     $linkB = $urlService->makeIndexUrl(['category' => $catB]);
 
@@ -969,7 +969,7 @@ test('getCombinedCategoriesContentTitle renders a single category link without a
     // getCombinedCategoriesContentTitle() itself delegates to (via
     // getCatDisplayName()) -- an exact-value assertion without
     // re-implementing makeSectionInUrl()'s own url-building algorithm here.
-    $expectedLink = new UrlService($service, new \Piwigo\Url\RootPathOverride())->makeIndexUrl(['category' => $category]);
+    $expectedLink = \Piwigo\Tests\Support\UrlServiceTestFactory::build($service)->makeIndexUrl(['category' => $category]);
 
     $title = $service->getCombinedCategoriesContentTitle($category, []);
 
@@ -981,7 +981,7 @@ test('getCombinedCategoriesContentTitle appends a remove-tag link referencing th
     $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
     $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
 
-    $urlService = new UrlService($service, new \Piwigo\Url\RootPathOverride());
+    $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build($service);
     $linkA = $urlService->makeIndexUrl(['category' => $catA]);
     $linkB = $urlService->makeIndexUrl(['category' => $catB]);
 
@@ -1051,7 +1051,7 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
             // reads from that same shared instance, so its <a href> links
             // reflect the pushed '/gallery/' override too, not just the
             // icon src built alongside it.
-            $urlService = new UrlService($service, htmlServiceTestRootPathOverride());
+            $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build($service, htmlServiceTestRootPathOverride());
             $linkA = $urlService->makeIndexUrl(['category' => $catA]);
             $linkB = $urlService->makeIndexUrl(['category' => $catB]);
             $removeLinkTemplate = static fn (string $removeUrl): string => '<a id="TagsGroupRemoveTag" href="' . $removeUrl . '" style="border:none;" title="remove this tag from the list">'
@@ -1099,7 +1099,7 @@ test('getCombinedCategoriesContentTitle folds every other category into combined
     $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
     $catC = ['id' => 9, 'name' => 'Travel', 'permalink' => null];
 
-    $urlService = new UrlService($service, new \Piwigo\Url\RootPathOverride());
+    $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build($service);
     // catA's own remove-link: array_shift() takes catB (the lowest-keyed
     // remaining element after unset()), leaving catC to fold into
     // combined_categories.
@@ -1320,7 +1320,7 @@ test('accessDenied renders a 401 page instead of redirecting when a real (non-gu
     // the real one, and getRootUrl() defaulting to '' in this file's own
     // beforeEach can't distinguish a dropped/reordered makeIndexUrl()
     // call either.
-    $expectedIndexUrl = new UrlService($service, new \Piwigo\Url\RootPathOverride())->makeIndexUrl();
+    $expectedIndexUrl = \Piwigo\Tests\Support\UrlServiceTestFactory::build($service)->makeIndexUrl();
     $expectedHtml = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
         . "\n" . '<link rel="shortcut icon" type="image/x-icon" href="themes/default/icon/favicon.ico">'
         . "\n" . '<div style="display: flex; justify-content: center;align-items: center;height: 100vh;margin: 0;color: #3C3C3C;font-family: \'Open Sans\', sans-serif;font-size: 20px;font-style: normal;font-weight: 600;line-height: normal;">'
@@ -1451,7 +1451,7 @@ test('pageForbidden redirects to the given alternate url with a 403 status, a 5 
 test('pageForbidden computes the default alternate url via makeIndexUrl when none is given', function (): void {
     $service = new HtmlService();
     $redirectService = new HtmlServiceTestCapturingRedirectHtmlService();
-    $expectedUrl = new UrlService($service, new \Piwigo\Url\RootPathOverride())->makeIndexUrl();
+    $expectedUrl = \Piwigo\Tests\Support\UrlServiceTestFactory::build($service)->makeIndexUrl();
 
     try {
         $service->pageForbidden($redirectService, 'blocked');

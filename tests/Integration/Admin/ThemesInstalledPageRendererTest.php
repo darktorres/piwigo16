@@ -93,7 +93,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         CurrentConfigService::current()->set($this->configService);
         CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
-        $urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
+        $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
         if (! $currentLogger instanceof CurrentLogger) {
             throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);

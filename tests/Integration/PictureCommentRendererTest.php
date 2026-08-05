@@ -385,7 +385,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     private function urlService(): UrlService
     {
-        return new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
+        return \Piwigo\Tests\Support\UrlServiceTestFactory::build();
     }
 
     private function sessionService(): SessionService

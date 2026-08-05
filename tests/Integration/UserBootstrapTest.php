@@ -146,7 +146,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         // exit() and is deliberately left uncovered here (see this class's
         // own docblock) -- never actually read, so a fresh, never-set()
         // instance is fine.
-        return new UserBootstrap(\Piwigo\Auth\AccessControl::current(), new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
+        return new UserBootstrap(\Piwigo\Auth\AccessControl::current(), new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
     }
 
     public function test_initialize_auto_registers_a_new_local_account_for_an_unknown_apache_remote_user(): void

@@ -193,7 +193,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->searchService,
             $this->userService,
             new RedirectService(Lang::current(), $this->userService),
-            new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
+            \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
             $this->filterState,
             $this->currentLogger,
             $this->sectionContextRegistry,

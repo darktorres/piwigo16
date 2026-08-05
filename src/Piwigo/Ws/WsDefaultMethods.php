@@ -30,10 +30,24 @@ use Piwigo\Ws\Event\WsAddMethods;
 // other Piwigo\Ws\* class.
 final class WsDefaultMethods
 {
+    // Singleton/service-locator elimination campaign, Phase 10: grows one
+    // constructor property per Pwg* class as each one's own sub-batch
+    // converts its methods from static to instance -- register()'s own
+    // registration line for a given class MUST update in the same change
+    // that converts that class (calling a real instance method via the
+    // old ClassName::method() static syntax is a fatal PHP error, not
+    // just a style issue), so this class can never be "finished ahead of"
+    // the classes it wires together. See this phase's own investigation
+    // note in the plan for why the reverse ordering (this class first)
+    // was tried and found broken.
+    public function __construct(
+        private readonly PwgPermissions $pwgPermissions,
+    ) {}
+
     /**
      * event handler that registers standard methods with the web service
      */
-    public static function register(WsAddMethods $event): void
+    public function register(WsAddMethods $event): void
     {
         $service = $event->server;
 
@@ -1873,7 +1887,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.permissions.getList',
-            PwgPermissions::getList(...),
+            $this->pwgPermissions->getList(...),
             [
                 'cat_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
@@ -1897,7 +1911,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.permissions.add',
-            PwgPermissions::add(...),
+            $this->pwgPermissions->add(...),
             [
                 'cat_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -1926,7 +1940,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.permissions.remove',
-            PwgPermissions::remove(...),
+            $this->pwgPermissions->remove(...),
             [
                 'cat_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,

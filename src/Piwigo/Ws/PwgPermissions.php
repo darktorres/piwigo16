@@ -23,15 +23,10 @@ use Piwigo\Permission\PermissionService;
  */
 final class PwgPermissions
 {
-    private static function permissionService(): PermissionService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
-    }
-
-    private static function categoryService(): CategoryService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
+    public function __construct(
+        private readonly PermissionService $permissionService,
+        private readonly CategoryService $categoryService,
+    ) {}
 
     /**
      * API method
@@ -43,7 +38,7 @@ final class PwgPermissions
      *   ints when present.
      * @return PwgError|array{categories: PwgNamedArray}
      */
-    public static function getList(array $params, PwgServer &$service): PwgError|array
+    public function getList(array $params, PwgServer &$service): PwgError|array
     {
         $my_params = array_filter(
             ['cat_id', 'group_id', 'user_id'],
@@ -58,7 +53,7 @@ final class PwgPermissions
         $perms = [];
 
         // direct users
-        foreach (self::permissionService()->getDirectUserAccessRows($cat_ids_filter) as $row) {
+        foreach ($this->permissionService->getDirectUserAccessRows($cat_ids_filter) as $row) {
             if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
                 continue;
             }
@@ -70,7 +65,7 @@ final class PwgPermissions
         }
 
         // indirect users
-        foreach (self::permissionService()->getIndirectUserAccessRows($cat_ids_filter) as $row) {
+        foreach ($this->permissionService->getIndirectUserAccessRows($cat_ids_filter) as $row) {
             if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
                 continue;
             }
@@ -82,7 +77,7 @@ final class PwgPermissions
         }
 
         // groups
-        foreach (self::permissionService()->getGroupAccessRows($cat_ids_filter) as $row) {
+        foreach ($this->permissionService->getGroupAccessRows($cat_ids_filter) as $row) {
             if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
                 continue;
             }
@@ -146,19 +141,19 @@ final class PwgPermissions
      * as a real parameter, so this WS method (which has no `$_POST` of its
      * own) passes `recursive` straight through instead.
      */
-    public static function add(array $params, PwgServer &$service): mixed
+    public function add(array $params, PwgServer &$service): mixed
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
         if (isset($params['group_id']) && $params['group_id'] !== []) {
-            $cat_ids = self::categoryService()->getUppercatIds($params['cat_id']);
+            $cat_ids = $this->categoryService->getUppercatIds($params['cat_id']);
             if ($params['recursive']) {
-                $cat_ids = array_merge($cat_ids, self::categoryService()->getSubcatIds($params['cat_id']));
+                $cat_ids = array_merge($cat_ids, $this->categoryService->getSubcatIds($params['cat_id']));
             }
 
-            $private_cats = self::permissionService()->getPrivateCategoryIdsAmong(array_values($cat_ids));
+            $private_cats = $this->permissionService->getPrivateCategoryIdsAmong(array_values($cat_ids));
 
             $inserts = [];
             foreach ($private_cats as $cat_id) {
@@ -170,11 +165,11 @@ final class PwgPermissions
                 }
             }
 
-            self::categoryService()->massInsertGroupAccess($inserts, ignore: true);
+            $this->categoryService->massInsertGroupAccess($inserts, ignore: true);
         }
 
         if (isset($params['user_id']) && $params['user_id'] !== []) {
-            self::permissionService()
+            $this->permissionService
                 ->addPermissionOnCategory($params['cat_id'], $params['user_id'], $params['recursive']);
         }
 
@@ -194,20 +189,20 @@ final class PwgPermissions
      *   entirely absent, same FORCE_ARRAY coercion when present.
      * @return mixed PwgError, or the result of the pwg.permissions.getList invocation
      */
-    public static function remove(array $params, PwgServer &$service): mixed
+    public function remove(array $params, PwgServer &$service): mixed
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        $cat_ids = self::categoryService()->getSubcatIds($params['cat_id']);
+        $cat_ids = $this->categoryService->getSubcatIds($params['cat_id']);
 
         if (isset($params['group_id']) && $params['group_id'] !== []) {
-            self::categoryService()->denyGroupAccess($params['group_id'], $cat_ids);
+            $this->categoryService->denyGroupAccess($params['group_id'], $cat_ids);
         }
 
         if (isset($params['user_id']) && $params['user_id'] !== []) {
-            self::categoryService()->denyUserAccess($params['user_id'], $cat_ids);
+            $this->categoryService->denyUserAccess($params['user_id'], $cat_ids);
         }
 
         return $service->invoke('pwg.permissions.getList', [

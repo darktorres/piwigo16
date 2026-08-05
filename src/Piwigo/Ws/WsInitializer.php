@@ -51,7 +51,19 @@ final class WsInitializer
         // ws_default_methods.inc.php, include_once'd by WsController before
         // this ran); first-class-callable, same pattern as the 2
         // registrations below it.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(WsAddMethods::class, WsDefaultMethods::register(...));
+        //
+        // Singleton/service-locator elimination campaign, Phase 10:
+        // WsDefaultMethods is a real, container-resolved instance now
+        // (its own register() is no longer static) -- WsInitializer
+        // itself stays static until every Pwg* class it also wires
+        // (PwgCore::historyGet() below) has converted, so this is a
+        // transitional inline container-resolve, not yet a constructor
+        // param.
+        $wsDefaultMethods = \Piwigo\Core\Kernel::container()->get(WsDefaultMethods::class);
+        if (! $wsDefaultMethods instanceof WsDefaultMethods) {
+            throw new \LogicException('Container returned an unexpected type for ' . WsDefaultMethods::class);
+        }
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(WsAddMethods::class, $wsDefaultMethods->register(...));
         \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(WsInvokeAllowed::class, WsHelper::isInvokeAllowed(...));
         // P23 batch 8e-4: relocated from include/ws_functions/pwg.php's own
         // top-level add_event_handler('get_history', 'get_history') call --

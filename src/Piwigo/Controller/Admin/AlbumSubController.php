@@ -67,7 +67,7 @@ final class AlbumSubController implements AdminSubControllerInterface
         $adminAlbumBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=album-' . $cat_id;
         $this->coreTabs->setContext(new CoreTabsContext(adminAlbumBaseUrl: $adminAlbumBaseUrl));
 
-        $categoryRow = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class)
+        $categoryRow = new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), $this->currentConfig)
             ->findById($cat_id);
         if ($categoryRow === null) {
             $this->htmlRenderer

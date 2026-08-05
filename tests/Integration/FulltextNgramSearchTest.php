@@ -79,7 +79,7 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $em = EntityManagerFactory::build($this->conn);
-        $this->categoryRepo = $em->getRepository(CategoryEntity::class);
+        $this->categoryRepo = new CategoryRepository($em, CurrentConfig::current());
         $this->tagRepo = $em->getRepository(TagEntity::class);
     }
 

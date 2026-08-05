@@ -149,8 +149,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         CachePools::categoryTree()->clear();
 
         $em = EntityManagerFactory::build($this->conn);
-        $categoryRepo = $em->getRepository(CategoryEntity::class);
-        self::assertInstanceOf(CategoryRepository::class, $categoryRepo);
+        $categoryRepo = new CategoryRepository($em, $currentConfig);
         $imageRepo = $em->getRepository(ImageEntity::class);
         self::assertInstanceOf(ImageRepository::class, $imageRepo);
 

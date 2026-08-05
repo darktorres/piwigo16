@@ -86,7 +86,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     private function permissionService(): PermissionService
     {
-        return new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class));
+        return new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $this->currentConfig));
     }
 
     /**
@@ -97,7 +97,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     private function categoryService(): CategoryService
     {
-        return new CategoryService($this->lang, \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $this->permissionService(), $this->currentConfig);
+        return new CategoryService($this->lang, new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $this->currentConfig), $this->permissionService(), $this->currentConfig);
     }
 
     /**

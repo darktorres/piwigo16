@@ -127,7 +127,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $em = \Piwigo\Db\EntityManagerFactory::build($this->conn);
-        $categoryRepo = $em->getRepository(CategoryEntity::class);
+        $categoryRepo = new \Piwigo\Category\CategoryRepository($em, CurrentConfig::current());
         $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo);
         $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $this->permissionService, \Piwigo\Config\CurrentConfig::current());
         $this->tagService = new TagService(Lang::current(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), CurrentConfig::current());

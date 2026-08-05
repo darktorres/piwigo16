@@ -104,7 +104,7 @@ final class PhotosAddDirectPageRenderer
         if ((bool) $this->preferencesService->getParam('promote-mobile-apps', true)) {
             $register_date = (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
                 ->findEarliestRegistrationDate();
-            $nb_cats = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class)
+            $nb_cats = new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig)
                 ->countAllCategories();
             $nb_images = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
                 ->countAllImages();
@@ -300,7 +300,7 @@ final class PhotosAddDirectPageRenderer
             $album_id = $photosAddDirectRequest->albumId;
 
             // test if album really exists
-            $uppercats = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class)
+            $uppercats = new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig)
                 ->findCategoryUppercatsById($album_id ?? 0);
             if ($album_id !== null && $uppercats !== null) {
                 $selected_category = [$album_id];
@@ -325,7 +325,7 @@ final class PhotosAddDirectPageRenderer
         $template->assign('selected_category', $selected_category);
 
         // how many existing albums?
-        $nb_albums = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class)
+        $nb_albums = new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig)
             ->countAllCategories();
         $template->assign('NB_ALBUMS', $nb_albums);
 

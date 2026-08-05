@@ -27,8 +27,6 @@ use Piwigo\Cache\PersistentCache;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Caddie\CaddieRepository;
-use Piwigo\Category\CategoryEntity;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\ConfigEntry;
@@ -341,8 +339,6 @@ return [
     TagRepository::class => factory(static fn (EntityManagerInterface $em): TagRepository => $em->getRepository(TagEntity::class)),
 
     ImageRepository::class => factory(static fn (EntityManagerInterface $em): ImageRepository => $em->getRepository(ImageEntity::class)),
-
-    CategoryRepository::class => factory(static fn (EntityManagerInterface $em): CategoryRepository => $em->getRepository(CategoryEntity::class)),
 
     CaddieRepository::class => factory(static fn (EntityManagerInterface $em): CaddieRepository => $em->getRepository(CaddieEntity::class)),
 

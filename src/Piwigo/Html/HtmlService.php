@@ -81,7 +81,7 @@ final class HtmlService implements HtmlRenderingInterface
     private function categoryRepo(): CategoryRepository
     {
         return $this->categoryRepo
-            ?? \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class);
+            ?? new CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), \Piwigo\Config\CurrentConfig::current());
     }
 
     private function urlService(): UrlServiceInterface
@@ -258,7 +258,7 @@ final class HtmlService implements HtmlRenderingInterface
             new \Piwigo\Permission\PermissionService(
                 new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)),
                 \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class),
-                \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class)
+                new CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), \Piwigo\Config\CurrentConfig::current())
             ),
             \Piwigo\Config\CurrentConfig::current()
         )->getCategoryInfo($catId);

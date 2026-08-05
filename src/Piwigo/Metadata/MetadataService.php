@@ -549,7 +549,7 @@ final readonly class MetadataService
         // one-method-only TagService dependency, avoiding touching every
         // existing `new MetadataService(...)` call site for zero benefit.
         $tagConn = DbConnection::build();
-        $tagService = new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Category\CategoryEntity::class)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, \Piwigo\Users\CurrentUser::current(), $this->currentConfig);
+        $tagService = new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn), $this->currentConfig)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, \Piwigo\Users\CurrentUser::current(), $this->currentConfig);
 
         foreach ($this->repo->findImagesByIds($ids) as $row) {
             $data = $this->getSyncMetadata($row->toArray());

@@ -371,7 +371,14 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // this same file's own established CurrentLogger::getStatic()
     // precedent), Image/DerivativeImage.php's url()/get_all()/get_one()
     // static factory entry points (its own constructor already takes
-    // real CurrentConfig DI -- only these static callers can't reach it).
+    // real CurrentConfig DI -- only these static callers can't reach it),
+    // Comment/CommentService.php::getNbAvailableComments() (Phase 11
+    // sub-phase 11B: needs CurrentConfig to build the CategoryRepository
+    // its own PermissionService::getPermissionCriteria() call constructs
+    // inline -- this method is `public static`, no `$this` to inject
+    // through, same "one method on an otherwise-instance class" shape as
+    // CurrentUser::current()'s own allow-list entry for this same
+    // method).
     //
     // (b) Too many real raw `new X(...)` construction sites, no DI
     // involved, matching the established HtmlService/MailService/
@@ -386,23 +393,17 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // (c) Structural exceptions -- Auth/AccessControl.php's one site is
     // inside currentForCaching()'s own designed degraded-fallback object
     // graph (never touches the real container, safe pre-boot read by
-    // design -- see that method's own docblock); Category/
-    // CategoryRepository.php is a Doctrine repository with an ORM-fixed
-    // constructor, matching EventDispatcher's own established "Doctrine
-    // repositories" category from its Phase 4 conversion.
-    // CategoryRepository.php's own 3 sites (findImageIdsForCategories()/
-    // resolveDqlOrderBy()) are a real, newly-found gap: introduced by this
-    // branch's own later pgsql-portability commits (findCategoryRepository's
-    // real portability bugs), landing after Phase 11's own inventory/audit
-    // pass already ran. TEMPORARY -- unlike the rest of this list,
-    // CategoryRepository.php is not a permanent exception: it's in scope
-    // for the same "stop extending EntityRepository" redesign sub-phase
-    // 11B already applied to Users/UserRepository.php (removed from this
-    // allow-list once that landed) -- CategoryRepository.php's own real
-    // getRepository(CategoryEntity::class) call-site count turned out to
-    // be 60+, far more than UserRepository's, so it's its own dedicated
-    // pass within that same sub-phase, not a same-commit bundle. Remove
-    // this entry once that lands.
+    // design -- see that method's own docblock). Phase 11 sub-phase 11B:
+    // Category/CategoryRepository.php removed from this allow-list --
+    // like Users/UserRepository.php before it, no longer a Doctrine
+    // repository with an ORM-fixed constructor, it now takes CurrentConfig
+    // via real constructor injection like everything else in this
+    // campaign (its own 3 sites, findImageIdsForCategories()/
+    // resolveDqlOrderBy(), were a real, newly-found gap this branch's own
+    // later pgsql-portability commits introduced, landing after Phase 11's
+    // own inventory/audit pass already ran -- fixed in the same pass as
+    // UserRepository.php, just its own dedicated commit given its real
+    // ~60-site blast radius).
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
@@ -412,6 +413,7 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Admin/Install/InstallService.php',
         '/src/Piwigo/Admin/Upload/UploadService.php',
         '/src/Piwigo/Auth/AccessControl.php',
+        '/src/Piwigo/Comment/CommentService.php',
         '/src/Piwigo/Config/ConfigLoader.php',
         '/src/Piwigo/Core/DeviceHelper.php',
         '/src/Piwigo/Core/FilesystemHelper.php',
@@ -431,7 +433,6 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Template/ScriptLoader.php',
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
-        '/src/Piwigo/Category/CategoryRepository.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentConfig::current(');

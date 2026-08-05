@@ -85,7 +85,7 @@ final readonly class CommentService
             if (! AccessControl::current()->isAdmin()) {
                 $where[] = new SqlCondition('com.validated = true');
             }
-            $permissionCriteria = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class))
+            $permissionCriteria = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), \Piwigo\Config\CurrentConfig::current()))
                 ->getPermissionCriteria();
             $where[] = $permissionCriteria->forbiddenCategoriesCondition('ic.categoryId');
             $where[] = $permissionCriteria->imageAccessCondition('ic.imageId');

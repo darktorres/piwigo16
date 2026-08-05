@@ -53,7 +53,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class);
+        $this->repo = new CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig);
     }
 
     private function countRows(string $table): int

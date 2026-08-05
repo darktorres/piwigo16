@@ -163,8 +163,8 @@ final class FilterService implements FilterUpdaterInterface
                 // value.
                 $computedCategories = new CategoryService(
                     $this->lang,
-                    \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class),
-                    new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class)),
+                    new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig),
+                    new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig)),
                     $this->currentConfig
                 )->getComputedCategories($user->toUserArray(), $filter_recent_period);
                 $filter['categories'] = $computedCategories['categories'];

@@ -152,7 +152,7 @@ final class ElementSetRanksPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php';
 
-        $category = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class)
+        $category = new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig)
             ->findById($category_id);
         if ($category === null) {
             $htmlRenderer->pageNotFound($this->redirectService, 'Requested album does not exist');

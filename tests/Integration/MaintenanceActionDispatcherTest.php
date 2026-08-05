@@ -137,7 +137,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         return new \Piwigo\Permission\PermissionService(
             new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
+            new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\Config\CurrentConfig::current()),
         );
     }
 
@@ -150,7 +150,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
     {
         return new \Piwigo\Category\CategoryService(
             Lang::current(),
-            \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class),
+            new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), \Piwigo\Config\CurrentConfig::current()),
             $this->maintenanceActionDispatcherTestPermissionService(),
             \Piwigo\Config\CurrentConfig::current(),
         );

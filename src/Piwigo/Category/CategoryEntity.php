@@ -51,7 +51,7 @@ use Doctrine\ORM\Mapping as ORM;
  * today, but fixed proactively rather than leaving the same latent
  * landmine here.
  */
-#[ORM\Entity(repositoryClass: CategoryRepository::class)]
+#[ORM\Entity]
 #[ORM\Table(name: 'categories')]
 final class CategoryEntity
 {

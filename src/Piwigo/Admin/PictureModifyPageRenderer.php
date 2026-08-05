@@ -205,7 +205,7 @@ final class PictureModifyPageRenderer
             if (count($no_longer_thumbnail_for) > 0) {
                 new CategoryService(
                     $this->lang,
-                    \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
+                    new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig),
                     $this->permissionService,
                     $this->currentConfig
                 )->setRandomRepresentant($no_longer_thumbnail_for);

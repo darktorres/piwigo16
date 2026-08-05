@@ -73,11 +73,11 @@ final class FilterResolverTest extends IntegrationTestCase
         );
         $categoryService = new CategoryService(
             \Piwigo\Core\Lang::current(),
-            $em->getRepository(\Piwigo\Category\CategoryEntity::class),
+            new \Piwigo\Category\CategoryRepository($em, CurrentConfig::current()),
             new PermissionService(
                 new PermissionRepository($em),
                 $em->getRepository(\Piwigo\Group\GroupEntity::class),
-                $em->getRepository(\Piwigo\Category\CategoryEntity::class),
+                new \Piwigo\Category\CategoryRepository($em, CurrentConfig::current()),
             ),
             \Piwigo\Config\CurrentConfig::current(),
         );

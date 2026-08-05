@@ -127,11 +127,11 @@ test('send returns immediately without touching the DB or network when telemetry
     $permissionService = new \Piwigo\Permission\PermissionService(
         new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build()),
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Group\GroupEntity::class),
-        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Category\CategoryEntity::class),
+        new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(), new \Piwigo\Config\CurrentConfig()),
     );
     $categoryService = new \Piwigo\Category\CategoryService(
         piwigoInfosSenderTestLang(),
-        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Category\CategoryEntity::class),
+        new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(), new \Piwigo\Config\CurrentConfig()),
         $permissionService,
         new \Piwigo\Config\CurrentConfig(),
     );

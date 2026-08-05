@@ -7,13 +7,14 @@ namespace Piwigo\Category;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
-use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Category\Projection\Category;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
@@ -45,13 +46,50 @@ use Piwigo\Permission\SqlCondition;
  * (findOrphanedColumnValues/deleteRowsWhereColumnIn/deleteInconsistentAccess),
  * or cross-domain joins/reads (typically against `images`, owned by the
  * Image domain with no association declared here), and stay plain DBAL
- * via $this->getEntityManager()->getConnection() -- same "mixed
+ * via $this->em->getConnection() -- same "mixed
  * repository" shape Image/Tag's own conversions established.
  *
- * @extends EntityRepository<CategoryEntity>
+ * Singleton/service-locator elimination campaign, Phase 11 sub-phase 11B:
+ * no longer `extends EntityRepository` -- Doctrine's own `RepositoryFactory`
+ * always constructs an `EntityRepository` subclass via a fixed
+ * `(EntityManagerInterface $em, ClassMetadata $class)` signature, which
+ * permanently blocked this class from ever taking `CurrentConfig` (its own
+ * 3 remaining shim reads, all `CurrentConfig::orderBy()`/`orderByCustom()`)
+ * via real constructor injection -- a real, newly-found gap this branch's
+ * own later pgsql-portability commits introduced (findImageIdsForCategories()'s
+ * own raw-DBAL RAND() fallback, ported from
+ * {@see \Piwigo\Users\UserRepository}'s own identical fix), landing after
+ * this phase's own inventory/audit pass already ran. Now a plain,
+ * container-shared service instead, matching every other converted class
+ * in this campaign, `Users\UserRepository`'s own identical redesign
+ * included. `CategoryEntity`'s own `#[ORM\Entity]` mapping no longer names
+ * this class as its `repositoryClass` (dropped in the same commit), so
+ * `$em->getRepository(CategoryEntity::class)` now returns a generic
+ * `Doctrine\ORM\EntityRepository<CategoryEntity>` instead -- every one of
+ * this class's own 57 `$this->createQueryBuilder('c')` sites now reaches
+ * that generic repository inline instead
+ * (`$this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')`,
+ * not through a private wrapper: confirmed live, same as
+ * {@see \Piwigo\Users\UserRepository}'s own identical finding, that
+ * phpstan-doctrine's own DQL result-type inference only traces a literal
+ * `getRepository(X::class)->createQueryBuilder()` chain, not one hidden
+ * behind a same-file helper method), and its 4 `$this->find($id)` sites
+ * now go through a small private `find()` wrapper (safe to wrap, unlike
+ * `createQueryBuilder()` -- `EntityManagerInterface::find()`'s own return
+ * type isn't DQL-string-shape-dependent).
  */
-final class CategoryRepository extends EntityRepository
+final class CategoryRepository
 {
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly CurrentConfig $currentConfig,
+    ) {}
+
+    private function find(int $id): ?CategoryEntity
+    {
+        return $this->em->find(CategoryEntity::class, $id);
+    }
+
     /**
      * Accepts either query-builder flavor -- {@see SqlCondition}'s own
      * `sql`/`parameters`/`types` shape applies identically via
@@ -95,7 +133,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.permalink')
             ->where('c.id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
@@ -129,7 +167,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findAllIdNamePermalink(): array
     {
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.permalink')
             ->getQuery()
             ->getArrayResult();
@@ -164,7 +202,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findIdNamePermalinkById(int $id): ?array
     {
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.permalink')
             ->where('c.id = :id')
             ->setParameter('id', $id)
@@ -210,7 +248,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('DISTINCT c.id');
 
         $clauses = [];
@@ -255,7 +293,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
 
         $oldRows = $em->createQueryBuilder()
             ->select('op.catId AS id', 'op.permalink AS permalink', '1 AS is_old')
@@ -265,7 +303,7 @@ final class CategoryRepository extends EntityRepository
             ->getQuery()
             ->getArrayResult();
 
-        $categoryRows = $this->createQueryBuilder('c')
+        $categoryRows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id AS id', 'c.permalink AS permalink', '0 AS is_old')
             ->where('c.permalink IN (:permalinks)')
             ->setParameter('permalinks', $permalinks, ArrayParameterType::STRING)
@@ -321,7 +359,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function touchOldPermalinkHit(string $permalink, int $catId): void
     {
-        $this->getEntityManager()
+        $this->em
             ->createQueryBuilder()
             ->update(OldPermalinkEntity::class, 'op')
             ->set('op.lastHit', 'CURRENT_TIMESTAMP()')
@@ -366,7 +404,7 @@ final class CategoryRepository extends EntityRepository
             ? '(c.id = :catId OR c.uppercats LIKE :uppercatsLike)'
             : 'c.id = :catId';
 
-        $qb = $this->getEntityManager()
+        $qb = $this->em
             ->createQueryBuilder()
             ->select('ic.imageId')
             ->from(CategoryEntity::class, 'c')
@@ -432,7 +470,7 @@ final class CategoryRepository extends EntityRepository
             $imagesJoinCondition .= ' AND i.date_available > ' . SqlDialect::getRecentPeriodExpression($filterDays);
         }
 
-        $qb = $this->getEntityManager()
+        $qb = $this->em
             ->getConnection()
             ->createQueryBuilder()
             ->select(
@@ -510,12 +548,12 @@ final class CategoryRepository extends EntityRepository
         // ONLY_FULL_GROUP_BY needs `ic.rank` explicitly in the GROUP BY
         // list too (added below) since it can't infer the functional
         // dependency on `i.id` from the WHERE clause's IN-list cardinality.
-        $dqlOrderBy = self::resolveDqlOrderBy('i', count($catIds) === 1 ? 'ic' : null);
+        $dqlOrderBy = $this->resolveDqlOrderBy('i', count($catIds) === 1 ? 'ic' : null);
         if ($dqlOrderBy !== null) {
             return $this->findImageIdsForCategoriesViaDql($catIds, $mode, $criteria, $dqlOrderBy);
         }
 
-        $qb = $this->getEntityManager()
+        $qb = $this->em
             ->getConnection()
             ->createQueryBuilder()
             ->select('id')
@@ -556,7 +594,7 @@ final class CategoryRepository extends EntityRepository
         $qb->orderBy(str_ireplace(
             'RAND()',
             SqlDialect::randomFunction() . '()',
-            str_replace('ORDER BY ', '', \Piwigo\Config\CurrentConfig::current()->orderBy())
+            str_replace('ORDER BY ', '', $this->currentConfig->orderBy())
         ));
 
         $ids = $qb->executeQuery()
@@ -580,13 +618,13 @@ final class CategoryRepository extends EntityRepository
      *
      * @return list<array{property: string, dir: 'ASC'|'DESC'}>|null
      */
-    private static function resolveDqlOrderBy(string $imageAlias, ?string $imageCategoryAlias): ?array
+    private function resolveDqlOrderBy(string $imageAlias, ?string $imageCategoryAlias): ?array
     {
-        if (\Piwigo\Config\CurrentConfig::current()->orderByCustom() !== null) {
+        if ($this->currentConfig->orderByCustom() !== null) {
             return null;
         }
 
-        return \Piwigo\Image\PhotoSortField::resolveDqlOrderBy(\Piwigo\Config\CurrentConfig::current()->orderBy(), $imageAlias, $imageCategoryAlias);
+        return \Piwigo\Image\PhotoSortField::resolveDqlOrderBy($this->currentConfig->orderBy(), $imageAlias, $imageCategoryAlias);
     }
 
     /**
@@ -600,7 +638,7 @@ final class CategoryRepository extends EntityRepository
         PermissionCriteria $criteria,
         array $dqlOrderBy
     ): array {
-        $qb = $this->getEntityManager()
+        $qb = $this->em
             ->createQueryBuilder()
             ->select('i.id')
             ->from(ImageEntity::class, 'i')
@@ -670,7 +708,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $qb = $this->getEntityManager()
+        $qb = $this->em
             ->createQueryBuilder()
             ->select('c.id', 'c.uppercats', 'COUNT(ic.imageId) AS counter')
             ->from(ImageCategoryEntity::class, 'ic')
@@ -731,7 +769,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.permalink', 'c.idUppercat AS id_uppercat', 'c.uppercats', 'c.globalRank AS global_rank')
             ->where('c.id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
@@ -780,7 +818,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $entities = $this->createQueryBuilder('c')
+        $entities = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->where('c.id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
             ->getQuery()
@@ -798,7 +836,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findCategoryIdsBySite(int $siteId): array
     {
-        return array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->createQueryBuilder('c')
+        return array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id')
             ->where('c.siteId = :siteId')
             ->setParameter('siteId', $siteId)
@@ -816,7 +854,7 @@ final class CategoryRepository extends EntityRepository
      * `ImageEntity` directly here is a legal same-layer dependency per
      * `deptrac.yaml`'s own ruleset), with no association declared on
      * `CategoryEntity` to it -- queried directly via
-     * `$this->getEntityManager()->createQueryBuilder()->from(ImageEntity::class,
+     * `$this->em->createQueryBuilder()->from(ImageEntity::class,
      * ...)`, same "no new association required" shape Item 14's own
      * `GroupAccessEntity`/`UserAccessEntity` joins already established.
      */
@@ -828,7 +866,7 @@ final class CategoryRepository extends EntityRepository
 
         return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->getEntityManager()
+            $this->em
                 ->createQueryBuilder()
                 ->select('i.id')
                 ->from(ImageEntity::class, 'i')
@@ -870,7 +908,7 @@ final class CategoryRepository extends EntityRepository
             $clauses[] = 'c.comment LIKE :pattern';
         }
 
-        $ids = $this->createQueryBuilder('c')
+        $ids = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id')
             ->where(implode(' OR ', $clauses))
             ->setParameter('pattern', $pattern)
@@ -898,7 +936,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->createQueryBuilder()
             ->select('DISTINCT ic.imageId')
             ->from(ImageCategoryEntity::class, 'ic')
@@ -935,7 +973,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->createQueryBuilder()
             ->select('DISTINCT ic.imageId')
             ->from(ImageCategoryEntity::class, 'ic')
@@ -969,7 +1007,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findImageIdsOutsideCategories(array $excludeIds): array
     {
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->createQueryBuilder()
             ->select('ic.imageId')
             ->from(ImageCategoryEntity::class, 'ic')
@@ -994,7 +1032,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function deleteImageCategoryLinksForCategories(array $ids): void
     {
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->createQueryBuilder()
             ->delete(ImageCategoryEntity::class, 'ic')
             ->where('ic.categoryId IN (:ids)')
@@ -1013,7 +1051,7 @@ final class CategoryRepository extends EntityRepository
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->createQueryBuilder()
             ->delete(UserAccessEntity::class, 'ua')
             ->where('ua.catId IN (:ids)')
@@ -1040,7 +1078,7 @@ final class CategoryRepository extends EntityRepository
         // Type reliably, verified against the installed doctrine/orm source).
         $catIds = array_map(CategoryId::from(...), $ids);
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->createQueryBuilder()
             ->delete(GroupAccessEntity::class, 'ga')
             ->where('ga.catId IN (:ids)')
@@ -1067,7 +1105,7 @@ final class CategoryRepository extends EntityRepository
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->createQueryBuilder()
             ->delete(UserAccessEntity::class, 'ua')
             ->where('ua.userId IN (:userIds)')
@@ -1093,7 +1131,7 @@ final class CategoryRepository extends EntityRepository
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->createQueryBuilder()
             ->delete(GroupAccessEntity::class, 'ga')
             ->where('ga.groupId IN (:groupIds)')
@@ -1114,7 +1152,7 @@ final class CategoryRepository extends EntityRepository
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->createQueryBuilder()
             ->delete(CategoryEntity::class, 'c')
             ->where('c.id IN (:ids)')
@@ -1143,7 +1181,7 @@ final class CategoryRepository extends EntityRepository
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->createQueryBuilder()
             ->delete(OldPermalinkEntity::class, 'op')
             ->where('op.catId IN (:ids)')
@@ -1173,7 +1211,7 @@ final class CategoryRepository extends EntityRepository
         $categoriesTable = Tables::categories();
         $imagesTable = Tables::images();
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->em->getConnection()->executeQuery(<<<SQL
             SELECT DISTINCT c.id
             FROM {$categoriesTable} AS c LEFT JOIN {$imagesTable} AS i
                 ON c.representative_picture_id = i.id
@@ -1193,7 +1231,7 @@ final class CategoryRepository extends EntityRepository
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.representativePictureId', ':null')
@@ -1223,7 +1261,7 @@ final class CategoryRepository extends EntityRepository
         $categoriesTable = Tables::categories();
         $imageCategoryTable = Tables::imageCategory();
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->em->getConnection()->executeQuery(<<<SQL
             SELECT DISTINCT id
             FROM {$categoriesTable} INNER JOIN {$imageCategoryTable}
                 ON id = category_id
@@ -1252,7 +1290,7 @@ final class CategoryRepository extends EntityRepository
             [$table, $column] = $target->tableAndColumn();
             $categoriesTable = Tables::categories();
 
-            return array_values(array_unique(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            return array_values(array_unique(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->em->getConnection()->executeQuery(<<<SQL
                 SELECT
                     {$column}
                 FROM {$table}
@@ -1263,7 +1301,7 @@ final class CategoryRepository extends EntityRepository
 
         [$entityClass, $property] = $entityClassAndProperty;
 
-        $values = $this->getEntityManager()
+        $values = $this->em
             ->createQueryBuilder()
             ->select("DISTINCT t.{$property}")
             ->from($entityClass, 't')
@@ -1294,7 +1332,7 @@ final class CategoryRepository extends EntityRepository
         if ($entityClassAndProperty === null) {
             [$table, $column] = $target->tableAndColumn();
 
-            $this->getEntityManager()
+            $this->em
                 ->getConnection()
                 ->executeStatement(<<<SQL
                     DELETE
@@ -1311,7 +1349,7 @@ final class CategoryRepository extends EntityRepository
         }
 
         [$entityClass, $property] = $entityClassAndProperty;
-        $em = $this->getEntityManager();
+        $em = $this->em;
 
         $em->createQueryBuilder()
             ->delete($entityClass, 't')
@@ -1336,7 +1374,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findCategoriesForRankUpdate(): array
     {
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.idUppercat AS id_uppercat', 'c.uppercats', 'c.rank', 'c.globalRank AS global_rank')
             ->orderBy('c.idUppercat')
             ->addOrderBy('c.rank')
@@ -1372,7 +1410,7 @@ final class CategoryRepository extends EntityRepository
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.visible', ':visible')
@@ -1393,7 +1431,7 @@ final class CategoryRepository extends EntityRepository
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.commentable', ':commentable')
@@ -1414,7 +1452,7 @@ final class CategoryRepository extends EntityRepository
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.status', ':status')
@@ -1438,7 +1476,7 @@ final class CategoryRepository extends EntityRepository
         }
 
         $entity->imageOrder = $imageOrder;
-        $this->getEntityManager()
+        $this->em
             ->flush();
     }
 
@@ -1449,7 +1487,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function updateImageOrderForDescendants(string $uppercatsPrefix, ?string $imageOrder): void
     {
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.imageOrder', ':imageOrder')
@@ -1474,7 +1512,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.status')
             ->where('c.id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
@@ -1498,7 +1536,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findAccessUserIds(int $catId): array
     {
-        $entities = $this->getEntityManager()
+        $entities = $this->em
             ->createQueryBuilder()
             ->select('ua')
             ->from(UserAccessEntity::class, 'ua')
@@ -1519,7 +1557,7 @@ final class CategoryRepository extends EntityRepository
         // well-supported path (unlike the IN-clause array case above),
         // still wraps to keep AbstractNumericIdType::convertToDatabaseValue()
         // strict (VO-only).
-        $entities = $this->getEntityManager()
+        $entities = $this->em
             ->createQueryBuilder()
             ->select('ga')
             ->from(GroupAccessEntity::class, 'ga')
@@ -1547,7 +1585,7 @@ final class CategoryRepository extends EntityRepository
     {
         [$entityClass, $fieldProperty] = $target->entityClassAndFieldProperty();
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->createQueryBuilder()
             ->delete($entityClass, 't')
             ->where("t.{$fieldProperty} NOT IN (:keepIds)")
@@ -1573,7 +1611,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        return array_values(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->createQueryBuilder('c')
+        return array_values(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.uppercats')
             ->where('c.id IN (:ids)')
             ->setParameter('ids', array_values($ids), ArrayParameterType::INTEGER)
@@ -1600,7 +1638,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.uppercats')
             ->where('c.id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
@@ -1656,7 +1694,7 @@ final class CategoryRepository extends EntityRepository
 
         $aggregateExpr = $minmax->sqlFunction() . '(' . $field->dqlProperty() . ')';
 
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->createQueryBuilder()
             ->select('ic.categoryId AS category_id', "{$aggregateExpr} AS ref_date")
             ->from(ImageCategoryEntity::class, 'ic')
@@ -1725,7 +1763,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findRandomImageIdInCategory(int $categoryId): ?int
     {
-        $values = $this->getEntityManager()
+        $values = $this->em
             ->createQueryBuilder()
             ->select('ic.imageId')
             ->from(ImageCategoryEntity::class, 'ic')
@@ -1755,7 +1793,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findCategoryDirsById(): array
     {
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.dir')
             ->where('c.dir IS NOT NULL')
             ->getQuery()
@@ -1790,7 +1828,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.uppercats', 'c.siteId AS site_id')
             ->where('c.dir IS NOT NULL')
             ->andWhere('c.id IN (:ids)')
@@ -1825,7 +1863,7 @@ final class CategoryRepository extends EntityRepository
     {
         return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->getEntityManager()
+            $this->em
                 ->createQueryBuilder()
                 ->select('DISTINCT i.storageCategoryId')
                 ->from(ImageEntity::class, 'i')
@@ -1854,7 +1892,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function updateImagePathsForCategory(int $categoryId, string $fulldir): void
     {
-        $this->getEntityManager()
+        $this->em
             ->createQueryBuilder()
             ->update(ImageEntity::class, 'i')
             ->set('i.path', "CONCAT(:fulldir, '/', i.file)")
@@ -1878,7 +1916,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function setRepresentativeImage(int $categoryId, int $imageId): void
     {
-        $this->getEntityManager()
+        $this->em
             ->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.representativePictureId', ':imageId')
@@ -1898,7 +1936,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findCategoriesForMove(array $ids): array
     {
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.idUppercat AS id_uppercat', 'c.status', 'c.uppercats')
             ->where('c.id IN (:ids)')
             ->setParameter('ids', array_values($ids), ArrayParameterType::INTEGER)
@@ -1948,7 +1986,7 @@ final class CategoryRepository extends EntityRepository
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         $em->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.idUppercat', ':newParent')
@@ -1982,7 +2020,7 @@ final class CategoryRepository extends EntityRepository
         // '0', and '' all mean "no parent" / root level).
         $parentIsEmpty = $parentId === null || $parentId === 0 || $parentId === '0' || $parentId === '';
 
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('MAX(c.rank)');
 
         if ($parentIsEmpty) {
@@ -2009,7 +2047,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findParentCategoryForCreate(int|string $parentId): ?array
     {
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.uppercats', 'c.globalRank AS global_rank', 'c.visible', 'c.status')
             ->where('c.id = :parentId')
             ->setParameter('parentId', $parentId)
@@ -2056,7 +2094,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findByCommentable(bool $commentable): array
     {
-        return self::narrowIdNameUppercatsRankRows($this->createQueryBuilder('c')
+        return self::narrowIdNameUppercatsRankRows($this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
             ->where('c.commentable = :value')
             ->setParameter('value', $commentable)
@@ -2069,7 +2107,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findByVisible(bool $visible): array
     {
-        return self::narrowIdNameUppercatsRankRows($this->createQueryBuilder('c')
+        return self::narrowIdNameUppercatsRankRows($this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
             ->where('c.visible = :value')
             ->setParameter('value', $visible)
@@ -2082,7 +2120,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findByStatus(string $status): array
     {
-        return self::narrowIdNameUppercatsRankRows($this->createQueryBuilder('c')
+        return self::narrowIdNameUppercatsRankRows($this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
             ->where('c.status = :value')
             ->setParameter('value', $status)
@@ -2134,7 +2172,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findByRepresentativePresence(bool $hasRepresentative): array
     {
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank');
 
         if ($hasRepresentative) {
@@ -2166,7 +2204,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findPrivateCategoriesGrantedToUser(int $userId, array $groupAuthorizedCatIds = []): array
     {
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
             ->innerJoin(UserAccessEntity::class, 'ua', \Doctrine\ORM\Query\Expr\Join::WITH, 'ua.catId = c.id')
             ->where('c.status = :status')
@@ -2215,7 +2253,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findPrivateCategoriesGrantedToGroup(int $groupId): array
     {
-        return self::narrowIdNameUppercatsRankRows($this->createQueryBuilder('c')
+        return self::narrowIdNameUppercatsRankRows($this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
             ->innerJoin(GroupAccessEntity::class, 'ga', \Doctrine\ORM\Query\Expr\Join::WITH, 'ga.catId = c.id')
             ->where('c.status = :status')
@@ -2244,7 +2282,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findPrivateCategoriesExcluding(array $excludeCatIds): array
     {
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
             ->where('c.status = :status')
             ->setParameter('status', 'private');
@@ -2285,7 +2323,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findIdNameUppercatsRank(PermissionCriteria $criteria): array
     {
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank');
 
         self::applyCondition($qb, SqlCondition::combine(
@@ -2317,7 +2355,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findAllForPermalinksDisplay(): array
     {
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select(
                 'c.id AS id',
                 'c.permalink AS permalink',
@@ -2357,7 +2395,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findIdNameUppercatsRankBySite(int $siteId): array
     {
-        return self::narrowIdNameUppercatsRankRows($this->createQueryBuilder('c')
+        return self::narrowIdNameUppercatsRankRows($this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
             ->where('c.siteId = :siteId')
             ->setParameter('siteId', $siteId)
@@ -2378,7 +2416,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function massUpdateRanks(array $datas): void
     {
-        $em = $this->getEntityManager();
+        $em = $this->em;
         new BatchWriter($em->getConnection())
             ->massUpdate(
                 Tables::categories(),
@@ -2399,7 +2437,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function massUpdateRanksAndGlobalRank(array $datas): void
     {
-        $em = $this->getEntityManager();
+        $em = $this->em;
         new BatchWriter($em->getConnection())
             ->massUpdate(
                 Tables::categories(),
@@ -2420,7 +2458,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function massUpdateRepresentativePictures(array $datas): void
     {
-        $em = $this->getEntityManager();
+        $em = $this->em;
         new BatchWriter($em->getConnection())
             ->massUpdate(
                 Tables::categories(),
@@ -2441,7 +2479,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function massUpdateUppercats(array $datas): void
     {
-        $em = $this->getEntityManager();
+        $em = $this->em;
         new BatchWriter($em->getConnection())
             ->massUpdate(
                 Tables::categories(),
@@ -2468,7 +2506,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function insertCategory(array $insert): int|string
     {
-        $em = $this->getEntityManager();
+        $em = $this->em;
         new BatchWriter($em->getConnection())
             ->singleInsert(Tables::categories(), $insert);
         $em->clear();
@@ -2495,7 +2533,7 @@ final class CategoryRepository extends EntityRepository
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         new BatchWriter($em->getConnection())
             ->massInsert(Tables::categories(), $dbfields, $inserts);
         $em->clear();
@@ -2509,7 +2547,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function updateCategoryAfterInsert(int|string $id, array $data): void
     {
-        $em = $this->getEntityManager();
+        $em = $this->em;
         new BatchWriter($em->getConnection())
             ->singleUpdate(Tables::categories(), $data, [
                 'id' => $id,
@@ -2533,7 +2571,7 @@ final class CategoryRepository extends EntityRepository
             return;
         }
 
-        $em = $this->getEntityManager();
+        $em = $this->em;
         new BatchWriter($em->getConnection())
             ->singleUpdate(Tables::categories(), $data, [
                 'id' => $id,
@@ -2560,7 +2598,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function massInsertGroupAccess(array $inserts, bool $ignore = false): void
     {
-        $em = $this->getEntityManager();
+        $em = $this->em;
         new BatchWriter($em->getConnection())
             ->massInsert(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts, [
                 'ignore' => $ignore,
@@ -2613,7 +2651,7 @@ final class CategoryRepository extends EntityRepository
     {
         $uppercatsLike = $uppercats . ',%';
 
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.representativePictureId')
             ->where('c.uppercats LIKE :uppercatsLike')
             ->andWhere('c.representativePictureId IS NOT NULL')
@@ -2673,7 +2711,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $qb = $this->getEntityManager()
+        $qb = $this->em
             ->createQueryBuilder()
             ->select('ic.categoryId', 'MIN(i.dateCreation) AS from_date', 'MAX(i.dateCreation) AS to_date')
             ->from(ImageCategoryEntity::class, 'ic')
@@ -2717,7 +2755,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function countAllCategories(): int
     {
-        $value = $this->createQueryBuilder('c')
+        $value = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('COUNT(c.id)')
             ->getQuery()
             ->getSingleScalarResult();
@@ -2738,7 +2776,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findIdsByDirNull(bool $dirIsNull): array
     {
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id');
         $qb->where($dirIsNull ? 'c.dir IS NULL' : 'c.dir IS NOT NULL');
 
@@ -2759,7 +2797,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function countByDirNull(bool $dirIsNull): int
     {
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('COUNT(c.id)');
         $qb->where($dirIsNull ? 'c.dir IS NULL' : 'c.dir IS NOT NULL');
 
@@ -2782,7 +2820,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function countByVisible(bool $visible): int
     {
-        $value = $this->createQueryBuilder('c')
+        $value = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('COUNT(c.id)')
             ->where('c.visible = :visible')
             ->setParameter('visible', $visible)
@@ -2806,7 +2844,7 @@ final class CategoryRepository extends EntityRepository
     {
         return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->createQueryBuilder('c')
+            $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
                 ->select('c.id')
                 ->where('c.representativePictureId = :imageId')
                 ->setParameter('imageId', $imageId)
@@ -2832,7 +2870,7 @@ final class CategoryRepository extends EntityRepository
             return;
         }
 
-        $this->getEntityManager()
+        $this->em
             ->createQueryBuilder()
             ->update(CategoryEntity::class, 'c')
             ->set('c.representativePictureId', ':imageId')
@@ -2860,7 +2898,7 @@ final class CategoryRepository extends EntityRepository
     {
         return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->createQueryBuilder('c')
+            $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
                 ->select('c.id')
                 ->innerJoin(GroupAccessEntity::class, 'ga', \Doctrine\ORM\Query\Expr\Join::WITH, 'ga.catId = c.id')
                 ->where('c.status = :status')
@@ -2894,7 +2932,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findCategoriesAuthorizedViaGroupsForUser(int $userId): array
     {
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->createQueryBuilder()
             ->select('c.id AS cat_id', 'c.uppercats', 'c.globalRank AS global_rank')
             ->distinct()
@@ -2938,7 +2976,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findPrivateCategoryIdsGrantedToUser(int $userId, array $excludeCategoryIds): array
     {
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id')
             ->innerJoin(UserAccessEntity::class, 'ua', \Doctrine\ORM\Query\Expr\Join::WITH, 'ua.catId = c.id')
             ->where('c.status = :status')
@@ -2971,7 +3009,7 @@ final class CategoryRepository extends EntityRepository
     {
         return array_values(array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            $this->createQueryBuilder('c')
+            $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
                 ->select('c.permalink')
                 ->where('c.permalink IS NOT NULL')
                 ->getQuery()
@@ -2990,7 +3028,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findChildrenOfParent(?int $parentId): array
     {
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.permalink', 'c.dir', 'c.rank', 'c.status')
             ->orderBy('c.rank', 'ASC');
 
@@ -3037,7 +3075,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findPhotoCountsByCategory(): array
     {
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->createQueryBuilder()
             ->select('ic.categoryId', 'COUNT(ic.imageId) AS counter')
             ->from(ImageCategoryEntity::class, 'ic')
@@ -3073,7 +3111,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findAllCategoryUppercats(): array
     {
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.uppercats')
             ->getQuery()
             ->getArrayResult();
@@ -3106,7 +3144,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findIdsByParent(?int $parentId): array
     {
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id');
 
         if ($parentId === null) {
@@ -3135,7 +3173,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findIdsNamesUppercatsForIds(array $categoryIds): array
     {
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.idUppercat AS id_uppercat')
             ->where('c.id IN (:categoryIds)')
             ->setParameter('categoryIds', $categoryIds, ArrayParameterType::STRING)
@@ -3169,7 +3207,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findAllForAlbumTree(): array
     {
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.rank', 'c.status', 'c.visible', 'c.uppercats', 'c.lastmodified')
             ->getQuery()
             ->getArrayResult();
@@ -3209,7 +3247,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function hasImages(int $categoryId): bool
     {
-        $count = $this->getEntityManager()
+        $count = $this->em
             ->createQueryBuilder()
             ->select('COUNT(ic.imageId)')
             ->from(ImageCategoryEntity::class, 'ic')
@@ -3247,7 +3285,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findPhotoCountAndDateRange(int $categoryId): array
     {
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->createQueryBuilder()
             ->select('i.dateAvailable AS date_available')
             ->from(ImageCategoryEntity::class, 'ic')
@@ -3302,7 +3340,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findDistinctImageIdsInCategories(array $categoryIds): array
     {
-        $rows = $this->getEntityManager()
+        $rows = $this->em
             ->createQueryBuilder()
             ->select('DISTINCT ic.imageId')
             ->from(ImageCategoryEntity::class, 'ic')
@@ -3330,7 +3368,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.dir')
             ->where('c.id IN (:ids)')
             ->setParameter('ids', array_map(static fn (int|string $v): string => (string) $v, $ids), ArrayParameterType::STRING)
@@ -3370,7 +3408,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findActivePermalinksList(?string $orderByColumn): array
     {
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id AS id', 'c.permalink AS permalink', 'c.uppercats AS uppercats', 'c.globalRank AS global_rank')
             ->where('c.permalink IS NOT NULL');
 
@@ -3416,7 +3454,7 @@ final class CategoryRepository extends EntityRepository
             $forbiddenIds = [0];
         }
 
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id')
             ->where('c.id = :catId')
             ->andWhere('c.id NOT IN (:forbiddenIds)')
@@ -3437,7 +3475,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function existsById(int $id): bool
     {
-        $value = $this->createQueryBuilder('c')
+        $value = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('COUNT(c.id)')
             ->where('c.id = :id')
             ->setParameter('id', $id)
@@ -3465,7 +3503,7 @@ final class CategoryRepository extends EntityRepository
 
         return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->createQueryBuilder('c')
+            $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
                 ->select('c.id')
                 ->where('c.id IN (:ids)')
                 ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
@@ -3507,7 +3545,7 @@ final class CategoryRepository extends EntityRepository
         $combined = SqlCondition::combine('AND', ...$conditions);
         $whereDql = $combined->isEmpty() ? '1 = 1' : $combined->sql;
 
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.imageOrder')
             ->where($whereDql);
 
@@ -3565,7 +3603,7 @@ final class CategoryRepository extends EntityRepository
             // substring-search pattern below never matches -- confirmed
             // live, same root cause as {@see \Piwigo\Db\DqlFunction\RegexpFunction}'s
             // own fix). Postgres's own POSIX-regex operator is `~`.
-            $platform = $this->getEntityManager()
+            $platform = $this->em
                 ->getConnection()
                 ->getDatabasePlatform();
             $regexOperator = $platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform ? '~' : $platform->getRegexpExpression();
@@ -3609,7 +3647,7 @@ final class CategoryRepository extends EntityRepository
         ?int $limit,
         bool $limitPlusOne
     ): PaginatedResult {
-        $conn = $this->getEntityManager()
+        $conn = $this->em
             ->getConnection();
 
         $conditions = [$this->categoryScopeCondition($criteria->catId, $criteria->recursive)];
@@ -3708,7 +3746,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findAdminListForWs(CategoryAdminListCriteria $criteria, ?string $searchTerm, int $searchLimit): PaginatedResult
     {
-        $conn = $this->getEntityManager()
+        $conn = $this->em
             ->getConnection();
 
         $combined = SqlCondition::combine('AND', new SqlCondition('1=1'), $this->categoryScopeCondition($criteria->catId, $criteria->recursive));
@@ -3761,7 +3799,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.idUppercat AS id_uppercat', 'COUNT(c.id) AS nb_subcats')
             ->where('c.idUppercat IN (:parentIds)')
             ->groupBy('c.idUppercat')
@@ -3802,7 +3840,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.idUppercat AS id_uppercat', 'c.rank')
             ->where('c.id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
@@ -3839,7 +3877,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findIdsByParentOrderedById(?int $parentId): array
     {
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id')
             ->orderBy('c.id', 'ASC');
 
@@ -3870,7 +3908,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findSiblingIdsExcludingOrderedByRank(?int $parentId, int $excludeId): array
     {
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id')
             ->andWhere('c.id != :excludeId')
             ->orderBy('c.rank', 'ASC')
@@ -3909,7 +3947,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.dir', 'c.uppercats')
             ->where('c.id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
@@ -3946,7 +3984,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findNextId(): int
     {
-        $next = $this->createQueryBuilder('c')
+        $next = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('COALESCE(MAX(c.id) + 1, 1)')
             ->getQuery()
             ->getSingleScalarResult();
@@ -3976,7 +4014,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findSyncCandidatesForSite(int $siteId, ?int $catId, bool $recursive): array
     {
-        $qb = $this->createQueryBuilder('c')
+        $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id AS id', 'c.uppercats AS uppercats', 'c.globalRank AS global_rank', 'c.status AS status', 'c.visible AS visible')
             ->where('c.dir IS NOT NULL')
             ->andWhere('c.siteId = :siteId')
@@ -4029,7 +4067,7 @@ final class CategoryRepository extends EntityRepository
     {
         return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->createQueryBuilder('c')
+            $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
                 ->select('c.id')
                 ->getQuery()
                 ->getSingleColumnResult()
@@ -4048,7 +4086,7 @@ final class CategoryRepository extends EntityRepository
      */
     public function findNextRanksByParent(): array
     {
-        $rows = $this->createQueryBuilder('c')
+        $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.idUppercat AS id_uppercat', 'MAX(c.rank) + 1 AS next_rank')
             ->groupBy('c.idUppercat')
             ->getQuery()

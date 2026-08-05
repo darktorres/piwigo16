@@ -73,11 +73,11 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
         $this->service = new SearchService(
             \Piwigo\Auth\AccessControl::current(),
             $repo,
-            new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), $this->em->getRepository(CategoryEntity::class)),
+            new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository($this->em, \Piwigo\Config\CurrentConfig::current())),
             new CategoryService(
                 \Piwigo\Core\Lang::current(),
-                $this->em->getRepository(CategoryEntity::class),
-                new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), $this->em->getRepository(CategoryEntity::class)),
+                new \Piwigo\Category\CategoryRepository($this->em, \Piwigo\Config\CurrentConfig::current()),
+                new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository($this->em, \Piwigo\Config\CurrentConfig::current())),
                 \Piwigo\Config\CurrentConfig::current(),
             ),
             new MailService(),

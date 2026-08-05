@@ -47,12 +47,12 @@ function makeCalendarService(): CalendarService
     $permissionService = new PermissionService(
         new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
         \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-        \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
+        new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\Config\CurrentConfig::current()),
     );
 
     return new CalendarService(
         $permissionService,
-        new CategoryService(Lang::current(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $permissionService, \Piwigo\Config\CurrentConfig::current()),
+        new CategoryService(Lang::current(), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\Config\CurrentConfig::current()), $permissionService, \Piwigo\Config\CurrentConfig::current()),
     );
 }
 

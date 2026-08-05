@@ -62,7 +62,7 @@ SELECT id
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
 ' . ($condition->isEmpty() ? '' : 'WHERE ' . $condition->sql) . '
-  ORDER BY ' . \Piwigo\Db\SqlDialect::DB_RANDOM_FUNCTION . '()
+  ORDER BY ' . \Piwigo\Db\SqlDialect::randomFunction() . '()
   LIMIT :limit
 ;';
 

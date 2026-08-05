@@ -273,7 +273,20 @@ final class CommentsController implements ControllerInterface
 
         // which status to filter on ?
         if (! $this->accessControl->isAdmin()) {
-            $whereClauses[] = new SqlCondition('validated=1');
+            // pgsql support pass: real bug found live -- comments.validated
+            // is a genuine `boolean` column on Postgres (not the
+            // smallint-with-integer-range convention this codebase uses
+            // elsewhere), so the bare `validated=1` literal that's valid
+            // MySQL tinyint(1) input fails outright against Postgres
+            // ("operator does not exist: boolean = integer"). Bound as a
+            // real BOOLEAN parameter, matching every other real validated
+            // comparison in CommentRepository.php (all `->setParameter(...,
+            // true)`), rather than another raw literal.
+            $whereClauses[] = new SqlCondition('validated = :validated', [
+                'validated' => true,
+            ], [
+                'validated' => ParameterType::BOOLEAN,
+            ]);
         }
 
         $commentsPermissionCriteria = $this->permissionService->getPermissionCriteria();

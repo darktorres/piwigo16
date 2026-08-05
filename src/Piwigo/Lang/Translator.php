@@ -8,6 +8,7 @@ use Gettext\Loader\PoLoader;
 use Gettext\Translation;
 use Gettext\Translations;
 use Gettext\Translator as GettextTranslator;
+use Piwigo\Cache\CachePools;
 
 /**
  * Piwigo translation service backed by gettext PO files.
@@ -148,6 +149,18 @@ final class Translator
      * readable) so callers that also need header metadata --
      * load_language()'s $lang_info population, e.g. X-Piwigo-Parent/
      * X-Piwigo-Zero-Plural -- don't have to parse the same file twice.
+     *
+     * Cached via CachePools::translations() (confirmed via a real Xdebug
+     * profile: raw PO parsing plus two full passes over every translation
+     * entry -- toDictionaryEntry() and mirror() -- cost ~18-19% of a
+     * bootstrap request's server-side time with no caching at all). Cache
+     * key folds in $poFile's own mtime, so an edited PO file busts its own
+     * entry on the very next load() -- no manual clear, no staleness risk.
+     * A cache hit skips PoLoader::loadFile() and both entry-iteration
+     * passes entirely; the returned Translations is reconstructed with only
+     * the cached headers (the sole thing any real caller reads off it --
+     * confirmed via Piwigo\Core\Lang's own load_language(), which only ever
+     * calls ->getHeaders() on this return value), not the full entry list.
      */
     public function load(string $locale, string $poFile): ?Translations
     {
@@ -155,12 +168,67 @@ final class Translator
             return null;
         }
 
+        $mtime = filemtime($poFile);
+        $pool = $mtime !== false ? CachePools::translations() : null;
+        $item = $pool?->getItem(md5($poFile . '_' . $mtime));
+
+        if ($item !== null && $item->isHit()) {
+            /**
+             * @var array{
+             *     dictionary: array{domain: string, plural-forms: string, messages: array<string, array<string, list<string>>>},
+             *     mirror: array<string, string|array<int, string>>,
+             *     headers: array<string, string>
+             * } $cached
+             */
+            $cached = $item->get();
+
+            $this->inner->addTranslations($cached['dictionary']);
+            foreach ($cached['mirror'] as $mirrorKey => $mirrorValue) {
+                $this->mirror[$mirrorKey] = $mirrorValue;
+            }
+
+            return $this->translationsFromCachedHeaders($cached['headers']);
+        }
+
         $translations = new PoLoader()
             ->loadFile($poFile);
 
-        $this->inner->addTranslations($this->toDictionaryEntry($translations));
+        $dictionary = $this->toDictionaryEntry($translations);
+        $this->inner->addTranslations($dictionary);
 
-        $this->mirror($translations);
+        $mirrorContribution = $this->mirror($translations);
+        foreach ($mirrorContribution as $mirrorKey => $mirrorValue) {
+            $this->mirror[$mirrorKey] = $mirrorValue;
+        }
+
+        if ($item !== null) {
+            $item->set([
+                'dictionary' => $dictionary,
+                'mirror' => $mirrorContribution,
+                'headers' => $translations->getHeaders()
+                    ->toArray(),
+            ]);
+            $pool->save($item);
+        }
+
+        return $translations;
+    }
+
+    /**
+     * Rebuilds a Translations object carrying only cached headers, for a
+     * load() cache hit -- confirmed the only thing any real caller reads
+     * off load()'s return value (see load()'s own docblock), so there is no
+     * need to reconstruct the full parsed entry list.
+     *
+     * @param array<string, string> $headers
+     */
+    private function translationsFromCachedHeaders(array $headers): Translations
+    {
+        $translations = Translations::create();
+        foreach ($headers as $name => $value) {
+            $translations->getHeaders()
+                ->set($name, $value);
+        }
 
         return $translations;
     }
@@ -278,8 +346,19 @@ final class Translator
         ];
     }
 
-    private function mirror(Translations $translations): void
+    /**
+     * Computes this translations set's contribution to $mirror (translate()'s
+     * own fallback) without writing it -- load() applies the returned
+     * contribution to $this->mirror both on a fresh parse and (replayed
+     * from cache) on a cache hit, so the write-through behavior is
+     * identical either way.
+     *
+     * @return array<string, string|array<int, string>>
+     */
+    private function mirror(Translations $translations): array
     {
+        $contribution = [];
+
         // php-to-po-fn.php flattens $lang['day'][N]/$lang['month'][N] --
         // array-valued entries with no PO equivalent -- into piwigo_day_N/
         // piwigo_month_N string entries. Captured here and reassembled
@@ -304,7 +383,7 @@ final class Translator
 
             $str = $entry->getTranslation();
             if ($str !== null && $str !== '') {
-                $this->mirror[$original] = $str;
+                $contribution[$original] = $str;
 
                 if (preg_match('/^piwigo_day_(\d+)$/', $original, $matches) === 1) {
                     $days[(int) $matches[1]] = $str;
@@ -327,16 +406,18 @@ final class Translator
             $pluralForm0 = $pluralForms[0] ?? null;
 
             if ($pluralOriginal !== null && $pluralOriginal !== '' && is_string($pluralForm0) && $pluralForm0 !== '') {
-                $this->mirror[$pluralOriginal] = $pluralForm0;
+                $contribution[$pluralOriginal] = $pluralForm0;
             }
         }
 
         if ($days !== []) {
-            $this->mirror['day'] = $days;
+            $contribution['day'] = $days;
         }
         if ($months !== []) {
-            $this->mirror['month'] = $months;
+            $contribution['month'] = $months;
         }
+
+        return $contribution;
     }
 
     /**

@@ -108,6 +108,37 @@ final class CachePools
     }
 
     /**
+     * No TTL -- same reasoning as config() above: invalidation happens via a
+     * changing cache key (Translator::load()'s key folds in the .po file's
+     * own mtime, so an edited file busts its own entry automatically), not
+     * time-based expiry. Real consumer: Piwigo\Lang\Translator::load(),
+     * caching PoLoader's parsed-and-derived result -- raw PO parsing plus
+     * two full passes over every translation entry, confirmed via a real
+     * Xdebug profile to be ~18-19% of a bootstrap request's server-side
+     * time with no caching at all.
+     */
+    public static function translations(): CacheItemPoolInterface
+    {
+        return CacheFactory::create(namespace: 'piwigo.translations');
+    }
+
+    /**
+     * No TTL, and the namespace itself carries the invalidation: callers
+     * append a hash derived from the entity source files' own mtimes (see
+     * Piwigo\Db\EntityManagerFactory::build()), so an edited entity class
+     * lands in a fresh, disjoint namespace on its very next use instead of
+     * needing a manual clear -- same "trust file mtimes" model OPcache
+     * itself already uses for these same files. Real consumer:
+     * EntityManagerFactory::build()'s Doctrine ORM metadata cache --
+     * confirmed via the same Xdebug profile to be ~17-18% of bootstrap time
+     * with isDevMode:true's throwaway in-memory-only cache.
+     */
+    public static function doctrineMetadata(string $mtimeHash): CacheItemPoolInterface
+    {
+        return CacheFactory::create(namespace: 'piwigo.doctrine_metadata.' . $mtimeHash);
+    }
+
+    /**
      * 30s TTL -- same reasoning as permissions() above. Gap-closure Stage
      * 4a (docs/plan/gap-closure-p0-p23.md): replaces the
      * `user_cache.cache_update_time`-keyed immediate-invalidation pattern

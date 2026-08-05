@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Request;
 
+use Piwigo\Ws\PwgServer;
+
 /**
  * Validated request shape for `PwgRestRequestHandler::handleRequest()` --
  * P26/SEC-40 Request DTO. This is the sole real site where the REST WS
@@ -32,7 +34,7 @@ final readonly class WsRawRequest
 
     public static function fromGlobals(): self
     {
-        return self::fromArrays($_POST, $_GET, \Piwigo\Ws\PwgServer::isPost());
+        return self::fromArrays($_POST, $_GET, PwgServer::isPost());
     }
 
     /**

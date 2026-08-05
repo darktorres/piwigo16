@@ -4,26 +4,47 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
+use ArrayIterator;
 use Doctrine\ORM\EntityManagerInterface;
+use DOMAttr;
+use DOMDocument;
+use DOMElement;
+use DOMNode;
+use DOMXPath;
+use Exception;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Env;
+use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\WsContext;
 use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbCredentials;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Location\LocEndAddFormat;
 use Piwigo\Event\Location\LocEndAddUploadedFile;
 use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\ImagePathHelper;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
@@ -84,17 +105,17 @@ final class UploadService
 
     public function __construct(
         private readonly Lang $lang,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Config\ConfigService $configService,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly ConfigService $configService,
         private readonly EntityManagerInterface $entityManager,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Metadata\MetadataService $metadataService,
-        private readonly \Piwigo\Image\ImageService $imageService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Core\WsContext $wsContext,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly ActivityService $activityService,
+        private readonly MetadataService $metadataService,
+        private readonly ImageService $imageService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly WsContext $wsContext,
+        private readonly CurrentUser $currentUser,
     ) {}
 
     /**
@@ -236,7 +257,7 @@ final class UploadService
         }
 
         if (count($errors) === 0) {
-            \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Config\ConfigEntry::class)
+            EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class)
                 ->massUpdateValues($updates);
             $this->entityManager->clear();
             return true;
@@ -275,7 +296,7 @@ final class UploadService
         } else {
             $md5sum = md5_file($source_filepath);
             if ($md5sum === false) {
-                throw new \Exception("upload(): unable to compute md5sum of {$source_filepath}");
+                throw new Exception("upload(): unable to compute md5sum of {$source_filepath}");
             }
         }
 
@@ -301,7 +322,7 @@ final class UploadService
             // prefix folded into the hashed input for the same collision-avoidance
             // reasoning as add()'s own lock, see PwgImages::add()) rather than
             // concatenated literally.
-            $dup_detect_lock_name = 'piwigo_iud_' . sha1(\Piwigo\Db\DbCredentials::current()->prefix . ':' . $md5sum);
+            $dup_detect_lock_name = 'piwigo_iud_' . sha1(DbCredentials::current()->prefix . ':' . $md5sum);
             $dup_detect_lock_acquired = AdvisorySessionLock::acquire(
                 $dup_detect_lock_conn,
                 $dup_detect_lock_name,
@@ -309,7 +330,7 @@ final class UploadService
             );
 
             if (! $dup_detect_lock_acquired) {
-                throw new \Exception(__METHOD__ . '(): could not acquire upload duplicate-detection lock for md5sum ' . $md5sum);
+                throw new Exception(__METHOD__ . '(): could not acquire upload duplicate-detection lock for md5sum ' . $md5sum);
             }
 
             $images_found = $this->imageService->getIdsByMd5sum($md5sum);
@@ -363,7 +384,7 @@ final class UploadService
                 // $file_path already is. Prefixing here, once, right after the
                 // DB read, keeps both branches producing the same absolute
                 // shape for the rest of the method.
-                $file_path = \Piwigo\Core\CurrentPaths::get()->root . $file_path;
+                $file_path = CurrentPaths::get()->root . $file_path;
 
                 // delete all physical files related to the photo (thumbnail, web site, HD)
                 $this->imageService
@@ -382,7 +403,7 @@ final class UploadService
                     ->format('Y-m-d H:i:s');
                 $date_parts = preg_split('/[^\d]/', $dbnow, 4);
                 if ($date_parts === false) {
-                    throw new \Exception(__METHOD__ . '(): preg_split() failed');
+                    throw new Exception(__METHOD__ . '(): preg_split() failed');
                 }
                 [$year, $month, $day] = $date_parts;
 
@@ -397,7 +418,7 @@ final class UploadService
                 // already applies a few lines up ($upload_root).
                 $conf_upload_dir = rtrim($this->currentConfig->uploadDir(), '/');
                 $upload_dir = sprintf(
-                    \Piwigo\Core\CurrentPaths::get()->root . $conf_upload_dir . '/%s/%s/%s',
+                    CurrentPaths::get()->root . $conf_upload_dir . '/%s/%s/%s',
                     $year,
                     $month,
                     $day
@@ -429,11 +450,11 @@ final class UploadService
                 } elseif ($type === IMAGETYPE_WEBP) {
                     $file_path .= 'webp';
                 } elseif ($this->currentConfig->uploadFormAllTypes()) {
-                    $original_extension = strtolower(\Piwigo\Core\StringHelper::getExtension($original_filename));
+                    $original_extension = strtolower(StringHelper::getExtension($original_filename));
 
                     $finfo = finfo_open(FILEINFO_MIME_TYPE);
                     if ($finfo === false) {
-                        throw new \Exception(__METHOD__ . '(): finfo_open() failed');
+                        throw new Exception(__METHOD__ . '(): finfo_open() failed');
                     }
                     $finfo_type = finfo_file($finfo, $source_filepath);
 
@@ -484,7 +505,7 @@ final class UploadService
             // upload garbage-collection guarantee), matching what move_uploaded_file()
             // used to do immediately; the "already local" (rename()) branch still
             // needs an explicit unlink() since nothing else will remove that source.
-            $upload_root = rtrim(\Piwigo\Core\CurrentPaths::get()->root . $this->currentConfig->uploadDir(), '/');
+            $upload_root = rtrim(CurrentPaths::get()->root . $this->currentConfig->uploadDir(), '/');
             $upload_rel_path = StorageRegistry::stripRoot($upload_root, $file_path);
             $upload_stream = fopen($source_filepath, 'rb');
             if ($upload_stream !== false) {
@@ -560,7 +581,7 @@ final class UploadService
                 $file = $original_filename ?? basename($file_path);
                 $insert = [
                     'file' => $file,
-                    'name' => \Piwigo\Core\StringHelper::getNameFromFile($file),
+                    'name' => StringHelper::getNameFromFile($file),
                     'date_available' => $dbnow,
                     // Otherwise relies on the schema's own DEFAULT
                     // CURRENT_TIMESTAMP, which reads the real DB-server clock --
@@ -570,7 +591,7 @@ final class UploadService
                     // exact same instant, matching what the DB default would
                     // have produced for a single INSERT.
                     'lastmodified' => $dbnow,
-                    'path' => preg_replace('#^' . preg_quote(\Piwigo\Core\CurrentPaths::get()->root) . '#', '', $file_path),
+                    'path' => preg_replace('#^' . preg_quote(CurrentPaths::get()->root) . '#', '', $file_path),
                     'filesize' => $file_infos['filesize'],
                     'width' => $file_infos['width'],
                     'height' => $file_infos['height'],
@@ -625,7 +646,7 @@ final class UploadService
         // right here, not just the update branch.
         $image_infos = $this->imageService->getImageRow($image_id);
         if ($image_infos === null) {
-            throw new \Exception(__METHOD__ . '(): image #' . $image_id . ' not found right after being saved');
+            throw new Exception(__METHOD__ . '(): image #' . $image_id . ' not found right after being saved');
         }
         $src_image = new SrcImage($image_infos);
 
@@ -713,15 +734,15 @@ final class UploadService
         // doesn't surface as a PHP-level warning at all -- parse errors
         // are just discarded, matching the "leave untouched" fallback below.
         $previous_use_errors = libxml_use_internal_errors(true);
-        $dom = new \DOMDocument();
+        $dom = new DOMDocument();
         $loaded = $dom->loadXML($xml, LIBXML_NONET);
         libxml_clear_errors();
         libxml_use_internal_errors($previous_use_errors);
-        if (! $loaded || ! $dom->documentElement instanceof \DOMElement) {
+        if (! $loaded || ! $dom->documentElement instanceof DOMElement) {
             return;
         }
 
-        $xpath = new \DOMXPath($dom);
+        $xpath = new DOMXPath($dom);
 
         // DOMXPath::query() only returns false for a malformed XPath
         // *expression* string -- both expressions below are fixed,
@@ -738,8 +759,8 @@ final class UploadService
         // result, so it's always a real DOMNode, and its parentNode is
         // never null for an attached node (even a document-root element's
         // "parent" is the owning DOMDocument, itself a DOMNode).
-        foreach (iterator_to_array($scriptNodes !== false ? $scriptNodes : new \ArrayIterator([])) as $scriptNode) {
-            if ($scriptNode instanceof \DOMNode && $scriptNode->parentNode instanceof \DOMNode) {
+        foreach (iterator_to_array($scriptNodes !== false ? $scriptNodes : new ArrayIterator([])) as $scriptNode) {
+            if ($scriptNode instanceof DOMNode && $scriptNode->parentNode instanceof DOMNode) {
                 $scriptNode->parentNode->removeChild($scriptNode);
             }
         }
@@ -747,8 +768,8 @@ final class UploadService
         $attrNodes = $xpath->query('//@*');
         // Same PHPStan-narrowing shape: a '//@*' XPath query only ever
         // yields DOMAttr nodes by definition.
-        foreach (iterator_to_array($attrNodes !== false ? $attrNodes : new \ArrayIterator([])) as $attrNode) {
-            if ($attrNode instanceof \DOMAttr && stripos($attrNode->nodeName, 'on') === 0) {
+        foreach (iterator_to_array($attrNodes !== false ? $attrNodes : new ArrayIterator([])) as $attrNode) {
+            if ($attrNode instanceof DOMAttr && stripos($attrNode->nodeName, 'on') === 0) {
                 $attrNode->ownerElement?->removeAttributeNode($attrNode);
             }
         }
@@ -784,7 +805,7 @@ final class UploadService
 
         $image_0_path = $images[0]['path'];
         $format_path = dirname($image_0_path) . '/pwg_format/';
-        $format_path .= \Piwigo\Core\StringHelper::getFilenameWoExtension(basename($image_0_path));
+        $format_path .= StringHelper::getFilenameWoExtension(basename($image_0_path));
         $format_path .= '.' . $format_ext;
 
         // Same StorageRegistry-routed migration as addUploadedFile()'s own
@@ -797,7 +818,7 @@ final class UploadService
         // (the document root, public/, on a real request), silently
         // creating a stray "public/upload/..." directory tree instead of
         // the real one -- a real, previously-shipped bug fixed here.
-        $paths = \Piwigo\Core\CurrentPaths::get();
+        $paths = CurrentPaths::get();
         $format_root = $paths->root . $this->currentConfig->uploadDir();
         $format_abs_path = $paths->root . ltrim(str_replace(['\\', '/./'], ['/', '/'], $format_path), '/');
         $format_rel_path = StorageRegistry::stripRoot($format_root, $format_abs_path);
@@ -854,7 +875,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = CurrentLogger::getStatic();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -870,20 +891,20 @@ final class UploadService
             return $event;
         }
 
-        if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), ['pdf'], true)) {
+        if (! in_array(strtolower(StringHelper::getExtension($file_path)), ['pdf'], true)) {
             $event->representativeExt = $representative_ext;
 
             return $event;
         }
 
-        $ext = \Piwigo\Config\CurrentConfig::current()->pdfRepresentativeExt();
-        $jpg_quality = \Piwigo\Config\CurrentConfig::current()->pdfJpgQuality();
+        $ext = CurrentConfig::current()->pdfRepresentativeExt();
+        $jpg_quality = CurrentConfig::current()->pdfJpgQuality();
 
         // move the uploaded file to pwg_representative sub-directory
-        $representative_file_path = \Piwigo\Image\ImagePathHelper::originalToRepresentative($file_path, $ext);
+        $representative_file_path = ImagePathHelper::originalToRepresentative($file_path, $ext);
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        $ext_imagick_dir = \Piwigo\Config\CurrentConfig::current()->extImagickDir();
+        $ext_imagick_dir = CurrentConfig::current()->extImagickDir();
         // [SEC-16] escapeshellarg() on the dir prefix and both real paths
         // below -- same pattern P19 established in PwgImage.php/
         // ImageExtImagick.php; the original never escaped an embedded
@@ -916,7 +937,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = CurrentLogger::getStatic();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -932,7 +953,7 @@ final class UploadService
             return $event;
         }
 
-        if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), ['heic'], true)) {
+        if (! in_array(strtolower(StringHelper::getExtension($file_path)), ['heic'], true)) {
             $event->representativeExt = $representative_ext;
 
             return $event;
@@ -941,12 +962,12 @@ final class UploadService
         $ext = 'jpg';
 
         // move the uploaded file to pwg_representative sub-directory
-        $representative_file_path = \Piwigo\Image\ImagePathHelper::originalToRepresentative($file_path, $ext);
+        $representative_file_path = ImagePathHelper::originalToRepresentative($file_path, $ext);
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
         [$w, $h] = self::getOptimalDimensionsForRepresentative();
 
-        $ext_imagick_dir = \Piwigo\Config\CurrentConfig::current()->extImagickDir();
+        $ext_imagick_dir = CurrentConfig::current()->extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
@@ -972,7 +993,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = CurrentLogger::getStatic();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -988,7 +1009,7 @@ final class UploadService
             return $event;
         }
 
-        if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), ['tif', 'tiff'], true)) {
+        if (! in_array(strtolower(StringHelper::getExtension($file_path)), ['tif', 'tiff'], true)) {
             $event->representativeExt = $representative_ext;
 
             return $event;
@@ -996,15 +1017,15 @@ final class UploadService
 
         // move the uploaded file to pwg_representative sub-directory
         $representative_file_path = dirname($file_path) . '/pwg_representative/';
-        $representative_file_path .= \Piwigo\Core\StringHelper::getFilenameWoExtension(basename($file_path)) . '.';
+        $representative_file_path .= StringHelper::getFilenameWoExtension(basename($file_path)) . '.';
 
-        $conf_tiff_representative_ext = \Piwigo\Config\CurrentConfig::current()->tiffRepresentativeExt();
+        $conf_tiff_representative_ext = CurrentConfig::current()->tiffRepresentativeExt();
         $representative_ext = $conf_tiff_representative_ext;
         $representative_file_path .= $representative_ext;
 
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        $ext_imagick_dir = \Piwigo\Config\CurrentConfig::current()->extImagickDir();
+        $ext_imagick_dir = CurrentConfig::current()->extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
         // (string) is redundant under `.` concatenation -- see uploadFilePdf()'s
@@ -1025,7 +1046,7 @@ final class UploadService
         // mutation-testing gap.
         $dest_dirname_realpath = realpath($dest['dirname']);
         if ($dest_dirname_realpath === false) {
-            throw new \Exception("unable to resolve directory {$dest['dirname']}");
+            throw new Exception("unable to resolve directory {$dest['dirname']}");
         }
         $exec .= ' ' . escapeshellarg($dest_dirname_realpath . '/' . $dest['basename']);
 
@@ -1048,7 +1069,7 @@ final class UploadService
             }
         }
 
-        $event->representativeExt = \Piwigo\Core\StringHelper::getExtension($representative_file_abspath);
+        $event->representativeExt = StringHelper::getExtension($representative_file_abspath);
 
         return $event;
     }
@@ -1057,7 +1078,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = CurrentLogger::getStatic();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1072,14 +1093,14 @@ final class UploadService
             'avi', 'rm', 'm4v', 'ogg', 'ogv', 'webm', 'webmv',
         ];
 
-        if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), $ffmpeg_video_exts, true)) {
+        if (! in_array(strtolower(StringHelper::getExtension($file_path)), $ffmpeg_video_exts, true)) {
             $event->representativeExt = $representative_ext;
 
             return $event;
         }
 
         $representative_file_path = dirname($file_path) . '/pwg_representative/';
-        $representative_file_path .= \Piwigo\Core\StringHelper::getFilenameWoExtension(basename($file_path)) . '.';
+        $representative_file_path .= StringHelper::getFilenameWoExtension(basename($file_path)) . '.';
 
         $representative_ext = 'jpg';
         $representative_file_path .= $representative_ext;
@@ -1101,7 +1122,7 @@ final class UploadService
         $logger->info(__METHOD__ . ', Poster at ' . (string) $second . 's');
 
         // Generate poster, see https://trac.ffmpeg.org/wiki/Seeking
-        $ffmpeg_dir = \Piwigo\Config\CurrentConfig::current()->ffmpegDir();
+        $ffmpeg_dir = CurrentConfig::current()->ffmpegDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above (same
         // dir-prefix pattern applied to the ffmpeg/avconv binaries here).
         $ffmpeg = escapeshellarg($ffmpeg_dir) . 'ffmpeg';
@@ -1146,7 +1167,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = CurrentLogger::getStatic();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1162,7 +1183,7 @@ final class UploadService
             return $event;
         }
 
-        if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), ['psd'], true)) {
+        if (! in_array(strtolower(StringHelper::getExtension($file_path)), ['psd'], true)) {
             $event->representativeExt = $representative_ext;
 
             return $event;
@@ -1170,14 +1191,14 @@ final class UploadService
 
         // move the uploaded file to pwg_representative sub-directory
         $representative_file_path = dirname($file_path) . '/pwg_representative/';
-        $representative_file_path .= \Piwigo\Core\StringHelper::getFilenameWoExtension(basename($file_path)) . '.';
+        $representative_file_path .= StringHelper::getFilenameWoExtension(basename($file_path)) . '.';
 
         $representative_ext = 'png';
         $representative_file_path .= $representative_ext;
 
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        $ext_imagick_dir = \Piwigo\Config\CurrentConfig::current()->extImagickDir();
+        $ext_imagick_dir = CurrentConfig::current()->extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
 
@@ -1192,7 +1213,7 @@ final class UploadService
         // gap.
         $dest_dirname_realpath = realpath($dest['dirname']);
         if ($dest_dirname_realpath === false) {
-            throw new \Exception("unable to resolve directory {$dest['dirname']}");
+            throw new Exception("unable to resolve directory {$dest['dirname']}");
         }
         $exec .= ' ' . escapeshellarg($dest_dirname_realpath . '/' . $dest['basename']);
 
@@ -1216,7 +1237,7 @@ final class UploadService
             }
         }
 
-        $event->representativeExt = \Piwigo\Core\StringHelper::getExtension($representative_file_abspath);
+        $event->representativeExt = StringHelper::getExtension($representative_file_abspath);
 
         return $event;
     }
@@ -1225,7 +1246,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = CurrentLogger::getStatic();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1241,7 +1262,7 @@ final class UploadService
             return $event;
         }
 
-        if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), ['eps'], true)) {
+        if (! in_array(strtolower(StringHelper::getExtension($file_path)), ['eps'], true)) {
             $event->representativeExt = $representative_ext;
 
             return $event;
@@ -1251,12 +1272,12 @@ final class UploadService
         $ext = 'png';
 
         // move the uploaded file to pwg_representative sub-directory
-        $representative_file_path = \Piwigo\Image\ImagePathHelper::originalToRepresentative($file_path, $ext);
+        $representative_file_path = ImagePathHelper::originalToRepresentative($file_path, $ext);
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
         // convert -density 300 image.eps -resize 2048x2048 image.png
 
-        $ext_imagick_dir = \Piwigo\Config\CurrentConfig::current()->extImagickDir();
+        $ext_imagick_dir = CurrentConfig::current()->extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
         // (string) is redundant under `.` concatenation -- see uploadFilePdf()'s
@@ -1327,7 +1348,7 @@ final class UploadService
             }
         }
 
-        \Piwigo\Core\FilesystemHelper::secureDirectory($directory);
+        FilesystemHelper::secureDirectory($directory);
     }
 
     private function needResize(string $image_filepath, int $max_width, int $max_height): bool
@@ -1335,7 +1356,7 @@ final class UploadService
         $logger = $this->currentLogger->get();
 
         $picture_ext = $this->currentConfig->pictureExtensions();
-        if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($image_filepath)), $picture_ext, true)) {
+        if (! in_array(strtolower(StringHelper::getExtension($image_filepath)), $picture_ext, true)) {
             return false;
         }
 
@@ -1407,7 +1428,7 @@ final class UploadService
         if ($filesize_bytes === false) {
             // same rationale as the getimagesize() guard above: every caller
             // stores this straight into the database, no sane fallback shape.
-            throw new \Exception(__METHOD__ . '(): filesize() failed for ' . $path);
+            throw new Exception(__METHOD__ . '(): filesize() failed for ' . $path);
         }
         $filesize = floor($filesize_bytes / 1024);
 
@@ -1512,7 +1533,7 @@ final class UploadService
         // while $relative_dir stays the short, root-relative form for
         // display (replaces the former PHPWG_ROOT_PATH-stripped './' read).
         $relative_dir = $this->currentConfig->uploadDir();
-        $upload_dir = \Piwigo\Core\CurrentPaths::get()->root . $relative_dir;
+        $upload_dir = CurrentPaths::get()->root . $relative_dir;
 
         if (! is_dir($upload_dir)) {
             if (! is_writable(dirname($upload_dir))) {

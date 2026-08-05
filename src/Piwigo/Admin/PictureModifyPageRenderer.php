@@ -5,25 +5,47 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Request\PictureModifyRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\DateHelper;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocEndPictureModify;
 use Piwigo\Event\Picture\PictureModifyBeforeUpdate;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Lang\Translator;
+use Piwigo\Metadata\MetadataService;
+use Piwigo\Permission\ForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Rate\RateService;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/picture_modify.php (the "properties" tab of the "photo"
@@ -44,24 +66,24 @@ final class PictureModifyPageRenderer
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\ProcessCache $processCache,
+        private readonly ProcessCache $processCache,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Metadata\MetadataService $metadataService,
-        private readonly \Piwigo\Rate\RateService $rateService,
+        private readonly ActivityService $activityService,
+        private readonly MetadataService $metadataService,
+        private readonly RateService $rateService,
         private readonly UserService $userService,
         private readonly TagService $tagService,
         private readonly CategoryService $categoryService,
         private readonly PermissionService $permissionService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\Lang\Translator $translator,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly Translator $translator,
     ) {}
 
     public function render(string $adminPhotoBaseUrl): void
@@ -85,12 +107,12 @@ final class PictureModifyPageRenderer
         $template = $this->currentTemplate->get();
 
         $conn = DbConnection::build();
-        $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
+        $imageService = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
         $htmlRenderer = $this->htmlRenderer;
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        $pictureModifyRequest = Request\PictureModifyRequest::fromGlobals($this->inputValidator);
+        $pictureModifyRequest = PictureModifyRequest::fromGlobals($this->inputValidator);
 
         $image_id = $pictureModifyRequest->imageId;
 
@@ -109,7 +131,7 @@ final class PictureModifyPageRenderer
         // +-------------------------------------------------------------------+
 
         if ($pictureModifyRequest->deletePresent) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $imageService->deleteElements([$image_id], $this->urlService, true);
@@ -137,7 +159,7 @@ final class PictureModifyPageRenderer
         // +-------------------------------------------------------------------+
 
         if ($pictureModifyRequest->syncMetadataPresent) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->metadataService
@@ -149,7 +171,7 @@ final class PictureModifyPageRenderer
         /** @var array<string, mixed> $data */
         $data = [];
         if ($pictureModifyRequest->isSubmitted) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $data = [];
@@ -207,7 +229,7 @@ final class PictureModifyPageRenderer
             if (count($no_longer_thumbnail_for) > 0) {
                 new CategoryService(
                     $this->lang,
-                    new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig),
+                    new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig),
                     $this->permissionService,
                     $this->currentConfig,
                     $this->eventDispatcher,
@@ -294,9 +316,9 @@ final class PictureModifyPageRenderer
         $template->assign(
             [
                 'tag_selection' => $tag_selection,
-                'U_DOWNLOAD' => 'action.php?id=' . $image_id . '&amp;part=e&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
-                'U_SYNC' => $admin_url_start . '&amp;sync_metadata=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
-                'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
+                'U_DOWNLOAD' => 'action.php?id=' . $image_id . '&amp;part=e&amp;pwg_token=' . new CsrfService()->getToken(),
+                'U_SYNC' => $admin_url_start . '&amp;sync_metadata=1&amp;pwg_token=' . new CsrfService()->getToken(),
+                'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new CsrfService()->getToken(),
                 'U_HISTORY' => $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $image_id,
                 'U_ACTIVITY' => $this->urlService->getRootUrl() . 'admin.php?page=user_activity&photo=' . $image_id,
 
@@ -315,7 +337,7 @@ final class PictureModifyPageRenderer
 
                 'FILESIZE' => (is_scalar($row['filesize']) ? (string) $row['filesize'] : '') . ' KB',
 
-                'REGISTRATION_DATE' => \Piwigo\Core\DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false),
+                'REGISTRATION_DATE' => DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false),
 
                 'AUTHOR' => htmlspecialchars($author_value),
 
@@ -329,8 +351,8 @@ final class PictureModifyPageRenderer
         );
 
         $added_by = 'N/A';
-        $row_added_by = \Piwigo\Common\ValueObject\UserId::tryFrom($row['added_by']);
-        $added_by_username = $row_added_by === null ? null : (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
+        $row_added_by = UserId::tryFrom($row['added_by']);
+        $added_by_username = $row_added_by === null ? null : (new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
             ->findUsernameById($row_added_by);
         if ($added_by_username !== null) {
             $row['added_by'] = $added_by_username->value;
@@ -341,8 +363,8 @@ final class PictureModifyPageRenderer
 
         $intro_vars = [
             'file' => $this->lang->t('%s', $row_file),
-            'date' => $this->lang->t('Posted the %s', \Piwigo\Core\DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false, ['day', 'month', 'year'])),
-            'age' => $this->lang->t(ucfirst(\Piwigo\Core\DateHelper::timeSince(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : '', 'year'))),
+            'date' => $this->lang->t('Posted the %s', DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false, ['day', 'month', 'year'])),
+            'age' => $this->lang->t(ucfirst(DateHelper::timeSince(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : '', 'year'))),
             'added_by' => $this->lang->t('Added by %s', $row['added_by']),
             'size' => $this->lang->t('%s pixels, %.2f MB', (is_scalar($row['width']) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height']) ? (string) $row['height'] : ''), (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024.0),
             'stats' => $this->lang->t('Visited %d times', $row['hit']),
@@ -357,7 +379,7 @@ final class PictureModifyPageRenderer
             $intro_vars['stats'] .= ', ' . sprintf($this->lang->t('Rated %d times, score : %.2f'), $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
         }
 
-        $formats = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+        $formats = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
             ->findFormatsForImage($image_id);
 
         if ($formats !== []) {
@@ -374,7 +396,7 @@ final class PictureModifyPageRenderer
 
         $row_path = is_string($row['path']) ? $row['path'] : null;
         $picture_ext = $this->currentConfig->pictureExtensions();
-        if (in_array(\Piwigo\Core\StringHelper::getExtension($row_path), $picture_ext, true)) {
+        if (in_array(StringHelper::getExtension($row_path), $picture_ext, true)) {
             $template->assign('U_COI', $this->urlService->getRootUrl() . 'admin.php?page=picture_coi&amp;image_id=' . $image_id);
         }
 
@@ -382,7 +404,7 @@ final class PictureModifyPageRenderer
         $selected_level = $pictureModifyRequest->postLevel ?? $row['level'];
         $template->assign(
             [
-                'level_options' => \Piwigo\Permission\PermissionService::getPrivacyLevelOptions(),
+                'level_options' => PermissionService::getPrivacyLevelOptions(),
                 'level_options_selected' => [$selected_level],
             ]
         );
@@ -444,7 +466,7 @@ final class PictureModifyPageRenderer
                 $authorized_category_ids,
                 explode(
                     ',',
-                    new \Piwigo\Permission\ForbiddenCategoriesCache($this->permissionService, \Piwigo\Cache\CachePools::permissions())
+                    new ForbiddenCategoriesCache($this->permissionService, CachePools::permissions())
                         ->getForUser($this->currentUser->get()->id->value, $this->currentUser->get()->status->value)
                 )
             );
@@ -475,7 +497,7 @@ final class PictureModifyPageRenderer
             'represented_albums' => $represented_albums,
             'STORAGE_ALBUM' => $storage_category_id,
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
-            'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+            'PWG_TOKEN' => new CsrfService()
                 ->getToken(),
         ]);
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use RuntimeException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -25,7 +27,7 @@ final class WsTagsMutationTest extends ContractTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -33,7 +35,7 @@ final class WsTagsMutationTest extends ContractTestCase
         $this->loginAsAdmin();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         if ($this->tagId !== null) {
@@ -437,7 +439,7 @@ final class WsTagsMutationTest extends ContractTestCase
         $mainFile = $pluginDir . '/main.inc.php';
 
         if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
-            throw new \RuntimeException('failed to create plugin dir: ' . $pluginDir);
+            throw new RuntimeException('failed to create plugin dir: ' . $pluginDir);
         }
         file_put_contents($mainFile, <<<PHP
             <?php
@@ -508,7 +510,7 @@ final class WsTagsMutationTest extends ContractTestCase
         $mainFile = $pluginDir . '/main.inc.php';
 
         if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
-            throw new \RuntimeException('failed to create plugin dir: ' . $pluginDir);
+            throw new RuntimeException('failed to create plugin dir: ' . $pluginDir);
         }
         file_put_contents($mainFile, <<<PHP
             <?php

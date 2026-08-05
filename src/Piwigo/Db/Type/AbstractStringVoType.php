@@ -7,6 +7,8 @@ namespace Piwigo\Db\Type;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Type;
+use InvalidArgumentException;
+use Override;
 use Piwigo\Common\ValueObject\StringVo;
 
 /**
@@ -27,7 +29,7 @@ abstract class AbstractStringVoType extends Type
      */
     abstract protected function voClass(): string;
 
-    #[\Override]
+    #[Override]
     public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?StringVo
     {
         if ($value === null) {
@@ -35,7 +37,7 @@ abstract class AbstractStringVoType extends Type
         }
 
         if (! is_string($value)) {
-            throw new \InvalidArgumentException(sprintf('Expected string from the DB driver, got %s', get_debug_type($value)));
+            throw new InvalidArgumentException(sprintf('Expected string from the DB driver, got %s', get_debug_type($value)));
         }
 
         $class = $this->voClass();
@@ -43,7 +45,7 @@ abstract class AbstractStringVoType extends Type
         return $class::from($value);
     }
 
-    #[\Override]
+    #[Override]
     public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform): ?string
     {
         if ($value === null) {
@@ -53,19 +55,19 @@ abstract class AbstractStringVoType extends Type
         if (! $value instanceof StringVo) {
             // Real check, not assert() -- this project runs zend.assertions=-1
             // everywhere, so assert() is a silent no-op here.
-            throw new \InvalidArgumentException(sprintf('Expected %s, got %s', StringVo::class, get_debug_type($value)));
+            throw new InvalidArgumentException(sprintf('Expected %s, got %s', StringVo::class, get_debug_type($value)));
         }
 
         return (string) $value;
     }
 
-    #[\Override]
+    #[Override]
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         return $platform->getStringTypeDeclarationSQL($column);
     }
 
-    #[\Override]
+    #[Override]
     public function getBindingType(): ParameterType
     {
         return ParameterType::STRING;

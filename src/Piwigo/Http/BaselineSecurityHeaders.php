@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Http;
 
+use Override;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -13,7 +14,7 @@ use Psr\Http\Message\ResponseInterface;
  */
 final class BaselineSecurityHeaders implements SecurityHeaderContributor
 {
-    #[\Override]
+    #[Override]
     public function contribute(ResponseInterface $response): ResponseInterface
     {
         return $response

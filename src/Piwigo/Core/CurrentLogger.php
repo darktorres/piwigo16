@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use LogicException;
+
 /**
  * Holds the current request's `Logger` instance -- Legacy Coupling
  * Retirement Track A gap-fill batch G5, replacing the legacy
@@ -29,7 +31,7 @@ final class CurrentLogger
     public function get(): Logger
     {
         if (! $this->instance instanceof Logger) {
-            throw new \LogicException('CurrentLogger not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect() or Piwigo\Controller\ImageDerivativeController::__invoke() first.');
+            throw new LogicException('CurrentLogger not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect() or Piwigo\Controller\ImageDerivativeController::__invoke() first.');
         }
 
         return $this->instance;
@@ -80,7 +82,7 @@ final class CurrentLogger
 
         $instance = Kernel::container()->get(self::class);
         if (! $instance instanceof self) {
-            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+            throw new LogicException('Container returned an unexpected type for ' . self::class);
         }
 
         return $instance->get();

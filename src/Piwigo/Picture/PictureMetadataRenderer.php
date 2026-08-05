@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Picture;
 
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Renders the picture page's EXIF/IPTC metadata panel. Ported from
@@ -26,11 +34,11 @@ final class PictureMetadataRenderer
     /**
      * @param array<string, array{src_image: SrcImage, ...}> $picture
      */
-    public function render(Lang $lang, array $picture, \Piwigo\Core\CurrentLogger $currentLogger, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Session\SessionService $sessionService, \Piwigo\Core\FilterState $filterState): void
+    public function render(Lang $lang, array $picture, CurrentLogger $currentLogger, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CurrentUser $currentUser, SessionService $sessionService, FilterState $filterState): void
     {
         $template = $currentTemplate->get();
 
-        $metadataService = new MetadataService($lang, new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $currentLogger, $eventDispatcher, $currentConfig, $currentUser, $sessionService, $filterState);
+        $metadataService = new MetadataService($lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $currentLogger, $eventDispatcher, $currentConfig, $currentUser, $sessionService, $filterState);
 
         if (($currentConfig->showExif()) and function_exists('exif_read_data')) {
             $showExifFields = $currentConfig->showExifFields();

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Backup;
 
+use InvalidArgumentException;
 use Piwigo\Core\ShutdownHandler;
 use Piwigo\Db\DbCredentials;
+use RuntimeException;
 use Symfony\Component\Process\Process;
 
 /**
@@ -99,7 +101,7 @@ final readonly class BackupService
     public function restore(string $archivePath, string $targetDatabase): void
     {
         if (! is_file($archivePath)) {
-            throw new \InvalidArgumentException("Backup archive not found: {$archivePath}");
+            throw new InvalidArgumentException("Backup archive not found: {$archivePath}");
         }
 
         $workDir = $this->makeTempDir('piwigo-backup-restore-');
@@ -115,7 +117,7 @@ final readonly class BackupService
 
             $dbDump = $workDir . '/db.sql';
             if (! is_file($dbDump)) {
-                throw new \RuntimeException("Invalid backup archive: missing db.sql in {$archivePath}");
+                throw new RuntimeException("Invalid backup archive: missing db.sql in {$archivePath}");
             }
             $this->restoreDatabase(DbCredentials::fromEnv(), $targetDatabase, $dbDump);
 
@@ -135,7 +137,7 @@ final readonly class BackupService
     {
         $manifestPath = $workDir . '/manifest.json';
         if (! is_file($manifestPath)) {
-            throw new \RuntimeException("Invalid backup archive: missing manifest.json in {$archivePath}");
+            throw new RuntimeException("Invalid backup archive: missing manifest.json in {$archivePath}");
         }
 
         $decoded = json_decode((string) file_get_contents($manifestPath), true, flags: JSON_THROW_ON_ERROR);
@@ -145,7 +147,7 @@ final readonly class BackupService
             || ! is_string($decoded['db_prefix'] ?? null)
             || ! is_array($decoded['included'] ?? null)
         ) {
-            throw new \RuntimeException("Invalid backup archive: malformed manifest.json in {$archivePath}");
+            throw new RuntimeException("Invalid backup archive: malformed manifest.json in {$archivePath}");
         }
 
         /** @var list<string> $included */
@@ -191,7 +193,7 @@ final readonly class BackupService
         // still tries to connect to the target database first, surfacing
         // a connection error that has nothing to do with the real cause).
         if (! is_readable($dumpPath)) {
-            throw new \RuntimeException("Unable to open dump file for reading: {$dumpPath}");
+            throw new RuntimeException("Unable to open dump file for reading: {$dumpPath}");
         }
 
         if ($credentials->driver === 'pgsql') {
@@ -212,7 +214,7 @@ final readonly class BackupService
 
         $stream = fopen($dumpPath, 'r');
         if ($stream === false) {
-            throw new \RuntimeException("Unable to open dump file for reading: {$dumpPath}");
+            throw new RuntimeException("Unable to open dump file for reading: {$dumpPath}");
         }
 
         $process = new Process(['mysql', ...$credentials->toMysqlArgs(), $targetDatabase]);
@@ -221,7 +223,7 @@ final readonly class BackupService
         $process->run();
 
         if (! $process->isSuccessful()) {
-            throw new \RuntimeException('mysql restore failed: ' . $process->getErrorOutput());
+            throw new RuntimeException('mysql restore failed: ' . $process->getErrorOutput());
         }
     }
 
@@ -252,7 +254,7 @@ final readonly class BackupService
         $process->run();
 
         if (! $process->isSuccessful()) {
-            throw new \RuntimeException("{$description} failed: " . $process->getErrorOutput());
+            throw new RuntimeException("{$description} failed: " . $process->getErrorOutput());
         }
     }
 

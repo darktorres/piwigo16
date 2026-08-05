@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Http\Middleware;
 
+use Override;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Sentry\ClientInterface;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\Tracing\TransactionContext;
@@ -21,10 +23,10 @@ use function Sentry\startTransaction;
  */
 final class SentryMiddleware implements MiddlewareInterface
 {
-    #[\Override]
+    #[Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        if (! SentrySdk::getCurrentHub()->getClient() instanceof \Sentry\ClientInterface) {
+        if (! SentrySdk::getCurrentHub()->getClient() instanceof ClientInterface) {
             return $handler->handle($request);
         }
 

@@ -8,12 +8,14 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Rate\Projection\Rate;
 use Piwigo\Users\UserEntity;
 use Piwigo\Users\UserInfoEntity;
+use Piwigo\Users\UserStatus;
 
 /**
  * Persistence layer for the rate domain: `rate` itself, plus the
@@ -270,7 +272,7 @@ final class RateRepository extends EntityRepository
             }
 
             $id = $row['id'] ?? null;
-            if ($id instanceof \Piwigo\Common\ValueObject\UserId) {
+            if ($id instanceof UserId) {
                 $result[$id->value] = is_string($row['username'] ?? null) ? $row['username'] : '';
             }
         }
@@ -535,7 +537,7 @@ final class RateRepository extends EntityRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row) || ! ($row['id'] instanceof \Piwigo\Common\ValueObject\UserId)) {
+            if (! is_array($row) || ! ($row['id'] instanceof UserId)) {
                 continue;
             }
 
@@ -545,7 +547,7 @@ final class RateRepository extends EntityRepository
                 // Phase 5 Item 21: `ui.status` (UserInfoEntity::$status) is
                 // now enumType-mapped -- array hydration returns a real
                 // UserStatus instance for it, not a raw string.
-                'status' => ($row['status'] ?? null) instanceof \Piwigo\Users\UserStatus ? $row['status']->value : '',
+                'status' => ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : '',
             ];
         }
 

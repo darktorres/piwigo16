@@ -10,6 +10,8 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
+use InvalidArgumentException;
+use Override;
 use Piwigo\Auth\UserAuthKeyEntity;
 use Piwigo\Category\UserAccessEntity;
 use Piwigo\Common\Dto\PaginatedResult;
@@ -17,16 +19,23 @@ use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Env;
 use Piwigo\Core\ThemeEntity;
+use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\BatchWriter;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Mail\GetWebmasterMailAddress;
 use Piwigo\Group\UserGroupEntity;
+use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\PhotoSortField;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Users\Projection\ActivationKeyRow;
 use Piwigo\Users\Projection\UserInfo;
+use RuntimeException;
 
 /**
  * Persistence layer for the user domain's registration/lookup/preferences
@@ -81,7 +90,7 @@ use Piwigo\Users\Projection\UserInfo;
  * `getResult()` below to `mixed`, cascading into ~25 real
  * offsetAccess/foreach errors across every method using it.
  */
-final class UserRepository implements \Piwigo\Core\WebmasterMailProviderInterface
+final class UserRepository implements WebmasterMailProviderInterface
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
@@ -158,7 +167,7 @@ final class UserRepository implements \Piwigo\Core\WebmasterMailProviderInterfac
      * column indirection this used to resolve via `CurrentConfig::
      * userFields()` is gone (see this class's own docblock).
      */
-    #[\Override]
+    #[Override]
     public function getWebmasterMailAddress(): string
     {
         $webmaster_id = $this->currentConfig->webmasterId();
@@ -421,7 +430,7 @@ final class UserRepository implements \Piwigo\Core\WebmasterMailProviderInterfac
         $em->flush();
 
         if ($entity->id === null) {
-            throw new \RuntimeException('UserEntity::$id not populated after flush()');
+            throw new RuntimeException('UserEntity::$id not populated after flush()');
         }
 
         return $entity->id;
@@ -513,7 +522,7 @@ final class UserRepository implements \Piwigo\Core\WebmasterMailProviderInterfac
             activationKeyExpire: is_string($row['activation_key_expire'] ?? null) ? $row['activation_key_expire'] : null,
             lastVisit: is_string($row['last_visit'] ?? null) ? $row['last_visit'] : null,
             lastVisitFromHistory: (bool) ($row['last_visit_from_history'] ?? false),
-            lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : \Piwigo\Core\Env::now()->format('Y-m-d H:i:s'),
+            lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : Env::now()->format('Y-m-d H:i:s'),
             preferences: is_array($preferencesRaw) ? array_filter($preferencesRaw, is_string(...), ARRAY_FILTER_USE_KEY) : null,
         );
     }
@@ -563,7 +572,7 @@ final class UserRepository implements \Piwigo\Core\WebmasterMailProviderInterfac
 
         return array_map(static function (array $row): UserId {
             if (! $row['userId'] instanceof UserId) {
-                throw new \RuntimeException('Expected UserId from DQL scalar hydration of ui.userId');
+                throw new RuntimeException('Expected UserId from DQL scalar hydration of ui.userId');
             }
 
             return $row['userId'];
@@ -990,7 +999,7 @@ final class UserRepository implements \Piwigo\Core\WebmasterMailProviderInterfac
             ->createQueryBuilder()
             ->select('DISTINCT f.imageId')
             ->from(FavoriteEntity::class, 'f')
-            ->innerJoin(\Piwigo\Image\ImageCategoryEntity::class, 'ic', Join::WITH, 'f.imageId = ic.imageId')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'f.imageId = ic.imageId')
             ->where('f.userId = :userId')
             ->setParameter('userId', $userId);
 
@@ -1246,7 +1255,7 @@ final class UserRepository implements \Piwigo\Core\WebmasterMailProviderInterfac
             return null;
         }
 
-        return \Piwigo\Image\PhotoSortField::resolveDqlOrderBy($orderBySql, 'i');
+        return PhotoSortField::resolveDqlOrderBy($orderBySql, 'i');
     }
 
     /**
@@ -1261,7 +1270,7 @@ final class UserRepository implements \Piwigo\Core\WebmasterMailProviderInterfac
      */
     private static function normalizeOrderBySql(string $orderBySql): string
     {
-        return str_ireplace('RAND()', \Piwigo\Db\SqlDialect::randomFunction() . '()', $orderBySql);
+        return str_ireplace('RAND()', SqlDialect::randomFunction() . '()', $orderBySql);
     }
 
     /**
@@ -1391,7 +1400,7 @@ final class UserRepository implements \Piwigo\Core\WebmasterMailProviderInterfac
         foreach ($updates as $field => $value) {
             $fieldEnum = UserInfoField::fromToken($field);
             if ($fieldEnum === null) {
-                throw new \InvalidArgumentException("Unknown user_infos field: {$field}");
+                throw new InvalidArgumentException("Unknown user_infos field: {$field}");
             }
             assert(is_scalar($value));
             [$property, $isBoolean] = $fieldEnum->dqlPropertyAndIsBoolean();
@@ -2181,7 +2190,7 @@ final class UserRepository implements \Piwigo\Core\WebmasterMailProviderInterfac
      * UserId::tryFrom($row['user_id']) check that would silently treat a
      * UserId object as invalid and throw).
      *
-     * @return list<\Piwigo\Users\Projection\ActivationKeyRow>
+     * @return list<ActivationKeyRow>
      */
     public function findPendingActivationKeyRows(): array
     {
@@ -2198,7 +2207,7 @@ final class UserRepository implements \Piwigo\Core\WebmasterMailProviderInterfac
                 continue;
             }
 
-            $result[] = new \Piwigo\Users\Projection\ActivationKeyRow(
+            $result[] = new ActivationKeyRow(
                 userId: $row['userId'],
                 // Phase 5 Item 21: `status` is now UserStatus
                 // (enumType-mapped) -- array hydration returns a real

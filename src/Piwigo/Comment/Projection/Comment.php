@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Comment\Projection;
 
+use InvalidArgumentException;
 use Piwigo\Common\ValueObject\CommentId;
 
 /**
@@ -69,7 +70,7 @@ final readonly class Comment
         $idValue = $row['id'] ?? null;
         $id = $idValue instanceof CommentId ? $idValue : CommentId::tryFrom($idValue);
         if ($id === null) {
-            throw new \InvalidArgumentException(sprintf('Expected a positive comment id, got %s', get_debug_type($idValue)));
+            throw new InvalidArgumentException(sprintf('Expected a positive comment id, got %s', get_debug_type($idValue)));
         }
 
         // `validated` is a real boolean column -- DQL array hydration

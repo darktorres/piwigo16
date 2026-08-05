@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Group;
 
+use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\GroupId;
 
@@ -36,6 +37,6 @@ final class GroupEntity
         #[ORM\Column(name: 'is_default', type: 'boolean')]
         public bool $isDefault,
         #[ORM\Column(type: 'datetime_immutable')]
-        public \DateTimeImmutable $lastmodified,
+        public DateTimeImmutable $lastmodified,
     ) {}
 }

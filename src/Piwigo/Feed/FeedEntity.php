@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Feed;
 
+use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -23,6 +24,6 @@ final class FeedEntity
         #[ORM\Column(name: 'user_id', type: 'integer')]
         public int $userId,
         #[ORM\Column(name: 'last_check', type: 'datetime_immutable', nullable: true)]
-        public ?\DateTimeImmutable $lastCheck = null,
+        public ?DateTimeImmutable $lastCheck = null,
     ) {}
 }

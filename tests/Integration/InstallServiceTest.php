@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use LogicException;
+use RuntimeException;
+use Piwigo\PluginConfig\EventDispatcher;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Install\InstallService;
 use Piwigo\Config\ConfigLoader;
@@ -41,7 +45,7 @@ final class InstallServiceTest extends IntegrationTestCase
      */
     private array $originalDbEnv = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -76,13 +80,13 @@ final class InstallServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         DbCredentials::current()->seed($this->originalDbEnv);
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         Kernel::reset();
@@ -148,7 +152,7 @@ final class InstallServiceTest extends IntegrationTestCase
         // tests/Unit/Lang/TranslatorTest.php).
         set_error_handler(static fn (): bool => true);
         try {
-            $this->expectException(\RuntimeException::class);
+            $this->expectException(RuntimeException::class);
             $this->expectExceptionMessage('Unable to read SQL file: ' . $missing);
 
             InstallService::executeSqlfile($this->conn, $missing, 'PREFIX_', 'itest_');
@@ -270,9 +274,9 @@ final class InstallServiceTest extends IntegrationTestCase
 
     private function currentConfig(): CurrentConfig
     {
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
 
         return $currentConfig;
@@ -280,15 +284,15 @@ final class InstallServiceTest extends IntegrationTestCase
 
     private function bootKernelAndConfigService(): void
     {
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot();
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
     }
 
     /**

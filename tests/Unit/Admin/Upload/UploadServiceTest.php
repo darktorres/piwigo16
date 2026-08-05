@@ -2,6 +2,19 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\ConfigService;
+use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Metadata\MetadataService;
+use Piwigo\Image\ImageService;
+use Piwigo\Core\WsContext;
+use Piwigo\Users\CurrentUser;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Bootstrap\InfrastructureAccessor;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\SizingParams;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Config\CurrentConfig;
@@ -13,10 +26,8 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\UploadFile;
-use Piwigo\Html\HtmlService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tests\Support\KernelContainerOverride;
-use Piwigo\Url\UrlService;
 
 // Marker-based filesystem safety: this suite writes real files to verify
 // [SEC-21]'s SVG sanitizer, so every path must be scoped to a unique
@@ -46,7 +57,7 @@ function upload_service_test_current_logger(): CurrentLogger
 {
     $currentLogger = Kernel::container()->get(CurrentLogger::class);
     if (! $currentLogger instanceof CurrentLogger) {
-        throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
+        throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
     }
 
     return $currentLogger;
@@ -65,50 +76,50 @@ function upload_service_test_make(): UploadService
 {
     $storageRegistry = Kernel::container()->get(StorageRegistry::class);
     if (! $storageRegistry instanceof StorageRegistry) {
-        throw new \LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
+        throw new LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
     }
 
-    $configService = Kernel::container()->get(\Piwigo\Config\ConfigService::class);
-    if (! $configService instanceof \Piwigo\Config\ConfigService) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\ConfigService::class);
+    $configService = Kernel::container()->get(ConfigService::class);
+    if (! $configService instanceof ConfigService) {
+        throw new LogicException('Container returned an unexpected type for ' . ConfigService::class);
     }
 
-    $entityManager = Kernel::container()->get(\Doctrine\ORM\EntityManagerInterface::class);
-    if (! $entityManager instanceof \Doctrine\ORM\EntityManagerInterface) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Doctrine\ORM\EntityManagerInterface::class);
+    $entityManager = Kernel::container()->get(EntityManagerInterface::class);
+    if (! $entityManager instanceof EntityManagerInterface) {
+        throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
     }
 
-    $activityService = Kernel::container()->get(\Piwigo\Activity\ActivityService::class);
-    if (! $activityService instanceof \Piwigo\Activity\ActivityService) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Activity\ActivityService::class);
+    $activityService = Kernel::container()->get(ActivityService::class);
+    if (! $activityService instanceof ActivityService) {
+        throw new LogicException('Container returned an unexpected type for ' . ActivityService::class);
     }
 
-    $metadataService = Kernel::container()->get(\Piwigo\Metadata\MetadataService::class);
-    if (! $metadataService instanceof \Piwigo\Metadata\MetadataService) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Metadata\MetadataService::class);
+    $metadataService = Kernel::container()->get(MetadataService::class);
+    if (! $metadataService instanceof MetadataService) {
+        throw new LogicException('Container returned an unexpected type for ' . MetadataService::class);
     }
 
-    $imageService = Kernel::container()->get(\Piwigo\Image\ImageService::class);
-    if (! $imageService instanceof \Piwigo\Image\ImageService) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Image\ImageService::class);
+    $imageService = Kernel::container()->get(ImageService::class);
+    if (! $imageService instanceof ImageService) {
+        throw new LogicException('Container returned an unexpected type for ' . ImageService::class);
     }
 
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
     if (! $currentConfig instanceof CurrentConfig) {
-        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
 
-    $wsContext = Kernel::container()->get(\Piwigo\Core\WsContext::class);
-    if (! $wsContext instanceof \Piwigo\Core\WsContext) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\WsContext::class);
+    $wsContext = Kernel::container()->get(WsContext::class);
+    if (! $wsContext instanceof WsContext) {
+        throw new LogicException('Container returned an unexpected type for ' . WsContext::class);
     }
 
-    $currentUser = Kernel::container()->get(\Piwigo\Users\CurrentUser::class);
-    if (! $currentUser instanceof \Piwigo\Users\CurrentUser) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\CurrentUser::class);
+    $currentUser = Kernel::container()->get(CurrentUser::class);
+    if (! $currentUser instanceof CurrentUser) {
+        throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
     }
 
-    return new UploadService(Lang::current(), upload_service_test_current_logger(), $storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser);
+    return new UploadService(Lang::current(), upload_service_test_current_logger(), $storageRegistry, EventDispatcher::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser);
 }
 
 beforeEach(function (): void {
@@ -757,7 +768,7 @@ test('saveUploadFormConfig keeps processing later fields after skipping an unkno
             expect($stored)->toBe('1500');
         } finally {
             $conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
-            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+            InfrastructureAccessor::entityManager()->clear();
         }
     } finally {
         Kernel::reset();
@@ -826,7 +837,7 @@ test('saveUploadFormConfig accepts a value exactly at the min or max boundary', 
 
         $conn = DbConnection::build();
         $conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
-        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+        InfrastructureAccessor::entityManager()->clear();
     } finally {
         Kernel::reset();
     }
@@ -850,7 +861,7 @@ test('saveUploadFormConfig accepts a real int value without a TypeError, not jus
 
         $conn = DbConnection::build();
         $conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
-        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+        InfrastructureAccessor::entityManager()->clear();
     } finally {
         Kernel::reset();
     }
@@ -923,7 +934,7 @@ test('saveUploadFormConfig sets the boolean field true whenever it is present, e
             expect($stored)->toBe('true');
         } finally {
             $conn->executeStatement("UPDATE " . Tables::config() . " SET value = 'false' WHERE param = 'original_resize'");
-            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+            InfrastructureAccessor::entityManager()->clear();
         }
     } finally {
         Kernel::reset();
@@ -953,7 +964,7 @@ test('saveUploadFormConfig persists a valid in-range numeric field', function ()
             expect($stored)->toBe('1500');
         } finally {
             $conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
-            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+            InfrastructureAccessor::entityManager()->clear();
         }
     } finally {
         Kernel::reset();
@@ -963,7 +974,7 @@ test('saveUploadFormConfig persists a valid in-range numeric field', function ()
 test('addUploadedFile throws when md5_file() fails to read the source file', function (): void {
     $service = upload_service_test_make();
     $missingPath = upload_service_test_marker() . '/does-not-exist-at-all.jpg';
-    $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $urlService = UrlServiceTestFactory::build();
 
     // md5_file() on a missing file emits a real PHP warning (confirmed live:
     // "Failed to open stream: No such file or directory") that
@@ -976,7 +987,7 @@ test('addUploadedFile throws when md5_file() fails to read the source file', fun
     set_error_handler(static fn (): bool => true);
     try {
         expect(fn () => $service->addUploadedFile($missingPath, $urlService, original_md5sum: null))
-            ->toThrow(\Exception::class, "upload(): unable to compute md5sum of {$missingPath}");
+            ->toThrow(Exception::class, "upload(): unable to compute md5sum of {$missingPath}");
     } finally {
         restore_error_handler();
     }
@@ -1252,15 +1263,15 @@ test('getOptimalDimensionsForRepresentative computes the exact 1.5x margin from 
     // prove the loop's own array_key_exists()/instanceof/(bool)/(float)
     // cast/1.5 multiplication chain actually runs and computes correctly,
     // rather than just returning the untouched safe default.
-    $stdParams = \Piwigo\Image\ImageStdParams::current();
-    $typeMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'type_map');
-    $disabledMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'disabled_type_map');
+    $stdParams = ImageStdParams::current();
+    $typeMapProp = new ReflectionProperty(ImageStdParams::class, 'type_map');
+    $disabledMapProp = new ReflectionProperty(ImageStdParams::class, 'disabled_type_map');
     $originalTypeMap = $typeMapProp->getValue($stdParams);
     $originalDisabledMap = $disabledMapProp->getValue($stdParams);
 
     try {
         $typeMapProp->setValue($stdParams, [
-            'xlarge' => new \Piwigo\Image\DerivativeParams(new \Piwigo\Image\SizingParams([1234, 5678])),
+            'xlarge' => new DerivativeParams(new SizingParams([1234, 5678])),
         ]);
         $disabledMapProp->setValue($stdParams, []);
 
@@ -1277,16 +1288,16 @@ test('getOptimalDimensionsForRepresentative computes the exact 1.5x margin from 
 test('getOptimalDimensionsForRepresentative also reads a disabled-by-default type, not just an enabled one', function (): void {
     // Distinguishes `$disabled[$type] ?? null` from a dropped left side --
     // the type above only ever exercised the *enabled* map.
-    $stdParams = \Piwigo\Image\ImageStdParams::current();
-    $typeMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'type_map');
-    $disabledMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'disabled_type_map');
+    $stdParams = ImageStdParams::current();
+    $typeMapProp = new ReflectionProperty(ImageStdParams::class, 'type_map');
+    $disabledMapProp = new ReflectionProperty(ImageStdParams::class, 'disabled_type_map');
     $originalTypeMap = $typeMapProp->getValue($stdParams);
     $originalDisabledMap = $disabledMapProp->getValue($stdParams);
 
     try {
         $typeMapProp->setValue($stdParams, []);
         $disabledMapProp->setValue($stdParams, [
-            'xlarge' => new \Piwigo\Image\DerivativeParams(new \Piwigo\Image\SizingParams([222, 444])),
+            'xlarge' => new DerivativeParams(new SizingParams([222, 444])),
         ]);
 
         [$w, $h] = upload_service_optimal_dimensions();
@@ -1300,9 +1311,9 @@ test('getOptimalDimensionsForRepresentative also reads a disabled-by-default typ
 });
 
 test('getOptimalDimensionsForRepresentative falls back to the exact 2000x2000 safe default when no type is defined at all', function (): void {
-    $stdParams = \Piwigo\Image\ImageStdParams::current();
-    $typeMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'type_map');
-    $disabledMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'disabled_type_map');
+    $stdParams = ImageStdParams::current();
+    $typeMapProp = new ReflectionProperty(ImageStdParams::class, 'type_map');
+    $disabledMapProp = new ReflectionProperty(ImageStdParams::class, 'disabled_type_map');
     $originalTypeMap = $typeMapProp->getValue($stdParams);
     $originalDisabledMap = $disabledMapProp->getValue($stdParams);
 

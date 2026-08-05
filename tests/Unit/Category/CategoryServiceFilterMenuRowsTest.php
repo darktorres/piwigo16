@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Category;
 
+use PHPUnit\Framework\TestCase;
 use Piwigo\Category\CategoryService;
 
 /**
@@ -12,7 +13,7 @@ use Piwigo\Category\CategoryService;
  * DB/globals needed -- see tests/Integration/CategoryTreeCacheTest.php for
  * the permission-filtered row-set half of this same batch's change.
  */
-final class CategoryServiceFilterMenuRowsTest extends \PHPUnit\Framework\TestCase
+final class CategoryServiceFilterMenuRowsTest extends TestCase
 {
     private const array ALL_ROWS = [
         1 => ['cat_id' => 1, 'id_uppercat' => null, 'global_rank' => '1', 'rank' => 1, 'date_last' => null, 'nb_images' => 0, 'user_id' => 1, 'nb_categories' => 2, 'count_categories' => 2, 'count_images' => 0, 'max_date_last' => null, 'name' => 'Sample Album', 'permalink' => null, 'id' => 1],

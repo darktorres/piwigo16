@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use Piwigo\Cache\CachePools;
+use RuntimeException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -12,19 +15,19 @@ final class WsHistoryTest extends ContractTestCase
 {
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
         $this->conn = DbConnection::build();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement('DELETE FROM ' . Tables::history());
         $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('history_admin', 'history_guest')");
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
         parent::tearDown();
     }
 
@@ -32,14 +35,14 @@ final class WsHistoryTest extends ContractTestCase
     private function enableHistoryForAdmin(): void
     {
         $this->upsertConfig('history_admin', 'true');
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
     }
 
     /** Enables history logging for guest (unauthenticated) visitors. */
     private function enableHistoryForGuest(): void
     {
         $this->upsertConfig('history_guest', 'true');
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
     }
     public function test_activityGetList_response_matches_schema(): void
     {
@@ -190,7 +193,7 @@ final class WsHistoryTest extends ContractTestCase
         // overrides the 'all' default; it must be stored quoted, same as
         // every other string config value this suite writes directly.
         $this->upsertConfig('activity_display_connections', '"none"');
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         try {
             // wsAdmin() itself performs a real pwg.session.login, which
@@ -204,7 +207,7 @@ final class WsHistoryTest extends ContractTestCase
             self::assertSame([], $result['result_lines']);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'activity_display_connections'");
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 
@@ -218,7 +221,7 @@ final class WsHistoryTest extends ContractTestCase
     public function test_activityGetList_admins_only_keeps_admin_logins_but_excludes_non_admin_logins(): void
     {
         $this->upsertConfig('activity_display_connections', '"admins_only"');
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         try {
             $adminId = $this->conn->fetchOne("SELECT id FROM " . Tables::users() . " WHERE username = 'fixture_admin'");
@@ -264,7 +267,7 @@ final class WsHistoryTest extends ContractTestCase
             self::assertNotContains((string) (int) $regularUserId, $objectIds, 'admins_only must exclude a non-admin login');
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'activity_display_connections'");
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 
@@ -949,7 +952,7 @@ final class WsHistoryTest extends ContractTestCase
         // malformed rules shape.
         foreach (['1', '2'] as $imageId) {
             if (! array_key_exists($imageId, $byImageId)) {
-                throw new \RuntimeException("expected image #{$imageId} in the history search results");
+                throw new RuntimeException("expected image #{$imageId} in the history search results");
             }
             $details = $byImageId[$imageId]['SEARCH_DETAILS'];
             self::assertIsArray($details);
@@ -1019,7 +1022,7 @@ final class WsHistoryTest extends ContractTestCase
             self::assertNotEmpty($beforeResult['lines']);
 
             if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
-                throw new \RuntimeException('failed to create plugin dir: ' . $pluginDir);
+                throw new RuntimeException('failed to create plugin dir: ' . $pluginDir);
             }
             file_put_contents($mainFile, <<<PHP
                 <?php
@@ -1179,7 +1182,7 @@ final class WsHistoryTest extends ContractTestCase
     {
         $this->enableHistoryForAdmin();
         $this->upsertConfig('nb_logs_page', '1');
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         try {
             $this->wsAdmin('pwg.history.log', ['image_id' => 1]);
@@ -1201,7 +1204,7 @@ final class WsHistoryTest extends ContractTestCase
             self::assertContains($line['IMAGEID'], ['1', '2']);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'nb_logs_page'");
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 

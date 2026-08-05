@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Browser;
 
+use Override;
+use mysqli;
+use PgSql\Connection;
+use RuntimeException;
+use CURLFile;
 use PHPUnit\Framework\Attributes\Group;
 use Piwigo\Core\Env;
 use Piwigo\Tests\Browser\Helpers\FixturePhotoGenerator;
@@ -45,7 +50,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
 
     private string $cookieJar = '';
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         $this->setUpConnectionFromEnv();
@@ -56,7 +61,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         $this->cookieJar = $tmp;
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         if ($this->cookieJar !== '' && file_exists($this->cookieJar)) {
@@ -83,23 +88,23 @@ final class RegenerateFixtureTest extends IntegrationTestCase
      * IntegrationTestCase's own established "raw escape hatch" shape for
      * this kind of fixture-authoring code, not app code).
      */
-    private function dbQuery(\mysqli|\PgSql\Connection $db, string $sql): void
+    private function dbQuery(mysqli|Connection $db, string $sql): void
     {
-        if ($db instanceof \mysqli) {
+        if ($db instanceof mysqli) {
             $db->query($sql);
         } else {
             pg_query($db, $sql);
         }
     }
 
-    private function dbEscape(\mysqli|\PgSql\Connection $db, string $value): string
+    private function dbEscape(mysqli|Connection $db, string $value): string
     {
-        return $db instanceof \mysqli ? $db->real_escape_string($value) : pg_escape_string($db, $value);
+        return $db instanceof mysqli ? $db->real_escape_string($value) : pg_escape_string($db, $value);
     }
 
-    private function dbClose(\mysqli|\PgSql\Connection $db): void
+    private function dbClose(mysqli|Connection $db): void
     {
-        if ($db instanceof \mysqli) {
+        if ($db instanceof mysqli) {
             $db->close();
         } else {
             pg_close($db);
@@ -395,7 +400,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         foreach ($configEntries as $param => $value) {
             $jsonValue = json_encode($value);
             if ($jsonValue === false) {
-                throw new \RuntimeException("json_encode failed for config param '{$param}'");
+                throw new RuntimeException("json_encode failed for config param '{$param}'");
             }
 
             $this->dbQuery($db, sprintf(
@@ -548,7 +553,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             'method'   => 'pwg.images.addSimple',
             'category' => (string) $albumId,
             'name'     => $name,
-            'image'    => new \CURLFile($imagePath, 'image/jpeg', basename($imagePath)),
+            'image'    => new CURLFile($imagePath, 'image/jpeg', basename($imagePath)),
         ]);
         curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
         curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);

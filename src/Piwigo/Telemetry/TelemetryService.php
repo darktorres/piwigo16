@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Telemetry;
 
+use DateTimeImmutable;
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
@@ -50,7 +51,7 @@ final readonly class TelemetryService
     {
         return new TelemetryPayload(
             $this->resolveInstallId(),
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
             $this->environmentInfo(),
             $this->databaseInfo(),
             $this->galleryStats(),

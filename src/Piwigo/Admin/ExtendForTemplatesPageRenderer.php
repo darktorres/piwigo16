@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Request\ExtendForTemplatesSubmitRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
 
 /**
  * Ported from admin/extend_for_templates.php (page slug
@@ -30,7 +35,7 @@ use Piwigo\Template\Template;
  */
 final class ExtendForTemplatesPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Config\CurrentConfig $currentConfig): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ConfigService $configService, PageState $pageState, CurrentTemplate $currentTemplate, CategoryService $categoryService, CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
 
@@ -117,10 +122,10 @@ final class ExtendForTemplatesPageRenderer
             [
                 'N/A' => '----------',
             ],
-            FilesystemHelper::getDirs(\Piwigo\Core\CurrentPaths::get()->themes)
+            FilesystemHelper::getDirs(CurrentPaths::get()->themes)
         );
 
-        $extendSubmit = Request\ExtendForTemplatesSubmitRequest::fromGlobals();
+        $extendSubmit = ExtendForTemplatesSubmitRequest::fromGlobals();
         if ($extendSubmit->isSubmitted) {
             $replacements = [];
             $post_reptpl = $extendSubmit->reptpl;

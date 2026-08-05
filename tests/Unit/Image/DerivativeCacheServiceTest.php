@@ -32,7 +32,7 @@ function derivative_cache_test_rrmdir(string $dir): void
 }
 
 beforeEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     $root = sys_get_temp_dir() . '/piwigo-derivative-cache-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
@@ -42,7 +42,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     derivative_cache_test_rrmdir(CurrentPaths::get()->root);
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     Kernel::reset();
 });
 

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Html;
 
+use Override;
+use RuntimeException;
+use LogicException;
 use Piwigo\Core\RedirectServiceInterface;
 
 /**
@@ -15,22 +18,22 @@ final class HtmlServiceTestCapturingRedirectHttpService implements RedirectServi
 {
     public ?string $capturedUrl = null;
 
-    #[\Override]
+    #[Override]
     public function redirectHttp(string $url, int $status = 302): never
     {
         $this->capturedUrl = $url;
-        throw new \RuntimeException('HTML_SERVICE_TEST_REDIRECT_HTTP_MARKER');
+        throw new RuntimeException('HTML_SERVICE_TEST_REDIRECT_HTTP_MARKER');
     }
 
-    #[\Override]
+    #[Override]
     public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
     {
-        throw new \LogicException('not used by accessDenied()');
+        throw new LogicException('not used by accessDenied()');
     }
 
-    #[\Override]
+    #[Override]
     public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
     {
-        throw new \LogicException('not used by accessDenied()');
+        throw new LogicException('not used by accessDenied()');
     }
 }

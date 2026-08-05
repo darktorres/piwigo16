@@ -5,22 +5,28 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
+use Exception;
+use Override;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Request\ImageDerivativeRequest;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Html\HtmlService;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeUrlCodec;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Permission\ImageVisibilityChecker;
-use Piwigo\Url\UrlService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -112,15 +118,15 @@ final class ImageDerivativeController implements ControllerInterface
 
     public function __construct(
         private readonly Paths $paths,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
-        private readonly \Piwigo\Permission\ImageVisibilityChecker $imageVisibilityChecker,
-        private readonly \Piwigo\Core\UrlServiceInterface $urlService,
+        private readonly CurrentLogger $currentLogger,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly ImageStdParams $imageStdParams,
+        private readonly ImageVisibilityChecker $imageVisibilityChecker,
+        private readonly UrlServiceInterface $urlService,
         private readonly CurrentConfig $currentConfig,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         // Config/ImageStdParams/CurrentLogger are already populated by
@@ -139,7 +145,7 @@ final class ImageDerivativeController implements ControllerInterface
         }
 
         $conn = DbConnection::build();
-        $imageRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class);
+        $imageRepo = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class);
 
         // parseRequest() fills these by mutating $this's own properties;
         // returning its result directly (rather than re-reading
@@ -206,7 +212,7 @@ final class ImageDerivativeController implements ControllerInterface
                 // confirmed live, a real anonymous request for a private
                 // album's derivative was served instead of denied.
                 throw $e;
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $logger->error($e->getMessage(), 'i.php');
             }
         } else {
@@ -227,7 +233,7 @@ final class ImageDerivativeController implements ControllerInterface
         // points below ends up building (was a bare header() call,
         // unconditionally queued regardless of which branch ran next).
         $noStoreCacheControl = false;
-        if (Request\ImageDerivativeRequest::fromGlobals()->hasCacheBust) {
+        if (ImageDerivativeRequest::fromGlobals()->hasCacheBust) {
             $expires = $now + 100;
             $noStoreCacheControl = true;
         } elseif ($now > (max($src_mtime, $params->last_mod_time) + 24 * 3600)) {// somehow arbitrary - if derivative params or src didn't change for the last 24 hours, we send an expire header for several days
@@ -869,7 +875,7 @@ final class ImageDerivativeController implements ControllerInterface
     {
         $derivative_path = $this->derivativePath;
 
-        if (Request\ImageDerivativeRequest::fromGlobals()->isAjaxLoad) {
+        if (ImageDerivativeRequest::fromGlobals()->isAjaxLoad) {
             $urlService = $this->urlService;
 
             return ResponseFactory::json([

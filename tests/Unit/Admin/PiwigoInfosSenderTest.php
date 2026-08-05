@@ -2,6 +2,45 @@
 
 declare(strict_types=1);
 
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Mail\MailService;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\PageState;
+use Piwigo\Session\SessionService;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Session\SessionEntity;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Config\ConfigService;
+use Piwigo\Config\ConfigEntry;
+use Piwigo\Rate\RateService;
+use Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess;
+use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
+use Piwigo\Rate\RateEntity;
+use Piwigo\Auth\CookieService;
+use Piwigo\History\HistoryService;
+use Piwigo\History\HistoryEntity;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Users\UserService;
+use Piwigo\Users\UserRepository;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Db\DbConnection;
+use Piwigo\Core\ProcessCache;
+use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Core\FilterState;
+use Piwigo\Category\CategoryService;
+use Piwigo\Tag\TagService;
+use Piwigo\Tag\TagEntity;
+use Piwigo\Group\GroupService;
+use Piwigo\Audit\AuditService;
+use Piwigo\Audit\AuditLogEntity;
+use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\PiwigoInfosSender;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
@@ -39,7 +78,7 @@ afterEach(function (): void {
 // reasoning as every other collaborator in this file.
 function piwigoInfosSenderTestLang(): Lang
 {
-    return new Lang(new Translator(new CurrentConfig()), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 /**
@@ -48,19 +87,19 @@ function piwigoInfosSenderTestLang(): Lang
  * shim collaborator (singleton/service-locator elimination campaign,
  * Phase 11 sub-phase 11E) built bare, DB-free.
  */
-function piwigoInfosSenderTestMailService(): \Piwigo\Mail\MailService
+function piwigoInfosSenderTestMailService(): MailService
 {
-    return new \Piwigo\Mail\MailService(
+    return new MailService(
         piwigoInfosSenderTestLang(),
         new CurrentConfig(),
-        new \Piwigo\Config\DeploymentPolicy(),
-        new \Piwigo\Core\PageState(),
+        new DeploymentPolicy(),
+        new PageState(),
         Paths::fromRoot(sys_get_temp_dir()),
-        new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Session\SessionEntity::class), new CurrentConfig()),
+        new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), new CurrentConfig()),
         new Translator(new CurrentConfig()),
-        new \Piwigo\PluginConfig\EventDispatcher(),
-        new \Piwigo\Users\CurrentUser(new CurrentConfig()),
-        \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
+        new EventDispatcher(),
+        new CurrentUser(new CurrentConfig()),
+        UrlServiceTestFactory::build(),
     );
 }
 
@@ -83,110 +122,110 @@ test('send returns immediately without touching the DB or network when telemetry
     // per this file's own docblock -- so a throwaway instance (no
     // Kernel::boot() needed; EntityManagerFactory::build() only
     // constructs objects, it never opens a real connection) is enough.
-    $configService = new \Piwigo\Config\ConfigService(
-        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Config\ConfigEntry::class),
-        new \Piwigo\PluginConfig\EventDispatcher(),
-        new \Piwigo\Config\CurrentConfig(),
+    $configService = new ConfigService(
+        EntityManagerFactory::build()->getRepository(ConfigEntry::class),
+        new EventDispatcher(),
+        new CurrentConfig(),
     );
     // Never actually read either -- same "send() returns before touching
     // anything past the guard" reasoning as $configService above.
-    $rateService = new \Piwigo\Rate\RateService(
+    $rateService = new RateService(
         new AccessControl(
-            new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess(),
-            new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled(),
-            new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
-            new \Piwigo\Config\CurrentConfig(),
+            new AccessControlTestFakeHtmlRendererDeniesAccess(),
+            new AccessControlTestFakeRedirectServiceNeverCalled(),
+            new CurrentUser(new CurrentConfig()),
+            new CurrentConfig(),
         ),
-        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Rate\RateEntity::class),
-        new \Piwigo\Auth\CookieService(),
-        new \Piwigo\PluginConfig\EventDispatcher(),
-        new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\Config\CurrentConfig(),
+        EntityManagerFactory::build()->getRepository(RateEntity::class),
+        new CookieService(),
+        new EventDispatcher(),
+        new CurrentUser(new CurrentConfig()),
+        new CurrentConfig(),
     );
-    $historyService = new \Piwigo\History\HistoryService(
+    $historyService = new HistoryService(
         new AccessControl(
-            new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess(),
-            new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled(),
-            new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
-            new \Piwigo\Config\CurrentConfig(),
+            new AccessControlTestFakeHtmlRendererDeniesAccess(),
+            new AccessControlTestFakeRedirectServiceNeverCalled(),
+            new CurrentUser(new CurrentConfig()),
+            new CurrentConfig(),
         ),
-        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\History\HistoryEntity::class),
+        EntityManagerFactory::build()->getRepository(HistoryEntity::class),
         $configService,
         $currentLogger,
-        new \Piwigo\PluginConfig\EventDispatcher(),
-        new \Piwigo\Core\PageState(),
-        new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\Config\CurrentConfig(),
+        new EventDispatcher(),
+        new PageState(),
+        new CurrentUser(new CurrentConfig()),
+        new CurrentConfig(),
     );
-    $activityService = new \Piwigo\Activity\ActivityService(
-        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Activity\ActivityEntity::class),
+    $activityService = new ActivityService(
+        EntityManagerFactory::build()->getRepository(ActivityEntity::class),
     );
     // Never actually read either -- same "send() returns before touching
     // anything past the guard" reasoning as $configService above.
-    $userService = new \Piwigo\Users\UserService(
+    $userService = new UserService(
         piwigoInfosSenderTestLang(),
-        new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\CurrentConfig()),
-        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Group\GroupEntity::class),
+        new UserRepository(EntityManagerFactory::build(), new EventDispatcher(), new CurrentConfig()),
+        EntityManagerFactory::build()->getRepository(GroupEntity::class),
         piwigoInfosSenderTestMailService(),
         $activityService,
-        \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
-        \Piwigo\Db\DbConnection::build(),
-        new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Session\SessionEntity::class), new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\PluginConfig\EventDispatcher(),
-        new \Piwigo\Config\DeploymentPolicy(),
-        new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\Config\CurrentConfig(),
-        new \Piwigo\Core\InstallationFlag(),
-        new \Piwigo\Core\ProcessCache(),
+        HtmlServiceTestFactory::build(),
+        DbConnection::build(),
+        new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), new CurrentConfig()),
+        new EventDispatcher(),
+        new DeploymentPolicy(),
+        new CurrentUser(new CurrentConfig()),
+        new CurrentConfig(),
+        new InstallationFlag(),
+        new ProcessCache(),
     );
-    $imageService = new \Piwigo\Image\ImageService(
+    $imageService = new ImageService(
         piwigoInfosSenderTestLang(),
-        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Image\ImageEntity::class),
+        EntityManagerFactory::build()->getRepository(ImageEntity::class),
         $activityService,
-        new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Session\SessionEntity::class), new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\PluginConfig\EventDispatcher(),
-        new \Piwigo\Config\CurrentConfig(),
-        new \Piwigo\Lang\Translator(new \Piwigo\Config\CurrentConfig()),
+        new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), new CurrentConfig()),
+        new EventDispatcher(),
+        new CurrentConfig(),
+        new Translator(new CurrentConfig()),
     );
-    $permissionService = new \Piwigo\Permission\PermissionService(
-        new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build()),
-        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Group\GroupEntity::class),
-        new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(), new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\Core\FilterState(),
+    $permissionService = new PermissionService(
+        new PermissionRepository(EntityManagerFactory::build()),
+        EntityManagerFactory::build()->getRepository(GroupEntity::class),
+        new CategoryRepository(EntityManagerFactory::build(), new CurrentConfig()),
+        new CurrentUser(new CurrentConfig()),
+        new FilterState(),
     );
-    $categoryService = new \Piwigo\Category\CategoryService(
+    $categoryService = new CategoryService(
         piwigoInfosSenderTestLang(),
-        new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(), new \Piwigo\Config\CurrentConfig()),
+        new CategoryRepository(EntityManagerFactory::build(), new CurrentConfig()),
         $permissionService,
-        new \Piwigo\Config\CurrentConfig(),
-        new \Piwigo\PluginConfig\EventDispatcher(),
-        new \Piwigo\Lang\Translator(new \Piwigo\Config\CurrentConfig()),
+        new CurrentConfig(),
+        new EventDispatcher(),
+        new Translator(new CurrentConfig()),
     );
-    $tagService = new \Piwigo\Tag\TagService(
+    $tagService = new TagService(
         piwigoInfosSenderTestLang(),
-        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Tag\TagEntity::class),
+        EntityManagerFactory::build()->getRepository(TagEntity::class),
         $permissionService,
         $activityService,
-        new \Piwigo\PluginConfig\EventDispatcher(),
-        new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\Config\CurrentConfig(),
-        new \Piwigo\Core\CurrentLogger(),
-        new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Session\SessionEntity::class), new \Piwigo\Config\CurrentConfig()),
+        new EventDispatcher(),
+        new CurrentUser(new CurrentConfig()),
+        new CurrentConfig(),
+        new CurrentLogger(),
+        new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), new CurrentConfig()),
     );
-    $groupService = new \Piwigo\Group\GroupService(
-        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Group\GroupEntity::class),
+    $groupService = new GroupService(
+        EntityManagerFactory::build()->getRepository(GroupEntity::class),
         $activityService,
-        new \Piwigo\Audit\AuditService(\Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Audit\AuditLogEntity::class)),
+        new AuditService(EntityManagerFactory::build()->getRepository(AuditLogEntity::class)),
         $configService,
-        new \Piwigo\PluginConfig\EventDispatcher(),
-        new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\Config\CurrentConfig(),
+        new EventDispatcher(),
+        new CurrentUser(new CurrentConfig()),
+        new CurrentConfig(),
     );
-    $installationStats = new \Piwigo\Admin\InstallationStats($rateService, $historyService, $imageService, $categoryService, $tagService, $userService, $groupService);
+    $installationStats = new InstallationStats($rateService, $historyService, $imageService, $categoryService, $tagService, $userService, $groupService);
     // Never actually read either -- same "send() returns before touching
     // anything past the guard" reasoning as $configService above.
-    $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $urlService = UrlServiceTestFactory::build();
     new PiwigoInfosSender(piwigoInfosSenderTestLang(), $currentLogger, new ImageStdParams(), $configService, $installationStats, $activityService, $userService, $imageService, $urlService, $currentConfig)->send();
 
     expect(true)->toBeTrue();

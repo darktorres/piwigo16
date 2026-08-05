@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Lang\LangService;
@@ -24,7 +26,7 @@ use Piwigo\Lang\Translator;
  */
 function langServiceTestNewLang(Paths $paths): Lang
 {
-    return new Lang(Translator::get(), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), $paths, new \Piwigo\Core\InstallationFlag());
+    return new Lang(Translator::get(), HtmlServiceTestFactory::build(), $paths, new InstallationFlag());
 }
 
 beforeEach(function (): void {

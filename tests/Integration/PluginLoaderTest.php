@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Piwigo\Activity\ActivityService;
+use Override;
+use LogicException;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Auth\AccessControl;
@@ -51,9 +55,9 @@ final class PluginLoaderTest extends IntegrationTestCase
 
     private LoadedPlugins $loadedPlugins;
 
-    private \Piwigo\Activity\ActivityService $activityService;
+    private ActivityService $activityService;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -65,9 +69,9 @@ final class PluginLoaderTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -78,20 +82,20 @@ final class PluginLoaderTest extends IntegrationTestCase
         // for its own throwaway root via KernelContainerOverride::with().
         $loadedPlugins = Kernel::container()->get(LoadedPlugins::class);
         if (! $loadedPlugins instanceof LoadedPlugins) {
-            throw new \LogicException('Container returned an unexpected type for ' . LoadedPlugins::class);
+            throw new LogicException('Container returned an unexpected type for ' . LoadedPlugins::class);
         }
 
         $this->loadedPlugins = $loadedPlugins;
 
-        $activityService = Kernel::container()->get(\Piwigo\Activity\ActivityService::class);
-        if (! $activityService instanceof \Piwigo\Activity\ActivityService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Activity\ActivityService::class);
+        $activityService = Kernel::container()->get(ActivityService::class);
+        if (! $activityService instanceof ActivityService) {
+            throw new LogicException('Container returned an unexpected type for ' . ActivityService::class);
         }
 
         $this->activityService = $activityService;
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         DbConnection::build()->executeStatement('DELETE FROM ' . Tables::plugins());
@@ -106,7 +110,7 @@ final class PluginLoaderTest extends IntegrationTestCase
     {
         $wsContext = Kernel::container()->get(WsContext::class);
         if (! $wsContext instanceof WsContext) {
-            throw new \LogicException('Container returned an unexpected type for ' . WsContext::class);
+            throw new LogicException('Container returned an unexpected type for ' . WsContext::class);
         }
 
         return $wsContext;
@@ -116,7 +120,7 @@ final class PluginLoaderTest extends IntegrationTestCase
     {
         $accessControl = Kernel::container()->get(AccessControl::class);
         if (! $accessControl instanceof AccessControl) {
-            throw new \LogicException('Container returned an unexpected type for ' . AccessControl::class);
+            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
 
         return $accessControl;
@@ -168,7 +172,7 @@ final class PluginLoaderTest extends IntegrationTestCase
     {
         CurrentConfig::current()->setEnablePlugins(false);
 
-        PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current());
+        PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current());
 
         expect($this->loadedPlugins->get())->toBe([]);
     }
@@ -184,7 +188,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current());
+            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current());
 
             expect($this->loadedPlugins->get())->toBe([]);
         });
@@ -207,7 +211,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($marker): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current());
+            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current());
 
             expect($this->loadedPlugins->get())->toHaveKey('loadable-plugin');
             expect($this->loadedPlugins->get()['loadable-plugin']['version'])->toBe('1.0');
@@ -228,7 +232,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current());
+            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current());
 
             expect($this->loadedPlugins->get())->toBe([]);
         });
@@ -259,7 +263,7 @@ PHP);
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($id): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current());
+            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current());
 
             expect(PageState::current()->errors)->toBe(['updated from 1.0 to 2.0']);
             expect($this->loadedPlugins->get()[$id]['version'])->toBe('2.0');
@@ -315,11 +319,11 @@ PHP);
             [$id]
         );
 
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage("PluginLoader::autoupdatePlugin(): {$classname} does not extend PluginMaintain");
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current());
+            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current());
         });
     }
 
@@ -344,7 +348,7 @@ PHP);
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($id): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current());
+            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current());
 
             $storedVersion = DbConnection::build()->fetchOne(
                 'SELECT version FROM ' . Tables::plugins() . ' WHERE id = ?',

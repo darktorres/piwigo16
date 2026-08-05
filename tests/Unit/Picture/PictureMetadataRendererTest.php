@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Core\Lang;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Session\SessionService;
+use Piwigo\Core\FilterState;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
@@ -9,7 +15,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\Template;
 
 /**
  * Same "point CurrentPaths at a fresh temp root" Template setup as
@@ -42,7 +47,7 @@ function picture_metadata_test_current_config(): CurrentConfig
 {
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
     if (! $currentConfig instanceof CurrentConfig) {
-        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
 
     return $currentConfig;
@@ -54,14 +59,14 @@ beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot($root));
     picture_metadata_test_current_config()->setDataLocation('data/');
     picture_metadata_test_current_config()->setDataDirChecked('1');
-    CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
+    CurrentTemplate::current()->set(TemplateTestFactory::build());
 });
 
 afterEach(function (): void {
     picture_metadata_test_rrmdir(CurrentPaths::get()->root);
     CurrentTemplate::current()->reset();
     Kernel::reset();
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
 });
 
 test('render appends nothing when both show_exif and show_iptc are disabled', function (): void {
@@ -69,7 +74,7 @@ test('render appends nothing when both show_exif and show_iptc are disabled', fu
     picture_metadata_test_current_config()->setShowIptc(false);
     $renderer = new PictureMetadataRenderer();
 
-    $renderer->render(\Piwigo\Core\Lang::current(), [], new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Session\SessionService::get(), new \Piwigo\Core\FilterState());
+    $renderer->render(Lang::current(), [], new CurrentLogger(), new EventDispatcher(), CurrentTemplate::current(), CurrentConfig::current(), CurrentUser::current(), SessionService::get(), new FilterState());
 
     expect(CurrentTemplate::current()->get()->get_template_vars('metadata'))->toBeNull();
 });

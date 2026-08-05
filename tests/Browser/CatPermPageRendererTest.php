@@ -51,7 +51,7 @@ it('shows the public status and all 3 granted groups for category 1', function (
     expect($groupsSelected)->not->toBeNull();
     $decodedGroups = json_decode((string) $groupsSelected, true);
     if (! is_array($decodedGroups)) {
-        throw new \RuntimeException('expected an array from data-value JSON, got: ' . var_export($decodedGroups, true));
+        throw new RuntimeException('expected an array from data-value JSON, got: ' . var_export($decodedGroups, true));
     }
     sort($decodedGroups);
     expect($decodedGroups)->toBe([1, 2, 3]);

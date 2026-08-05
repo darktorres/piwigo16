@@ -4,15 +4,26 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Request\SearchQueryRequest;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Location\LocBeginSearch;
 use Piwigo\Http\ControllerInterface;
+use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchService;
+use Piwigo\Tag\TagService;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -30,20 +41,20 @@ final class SearchController implements ControllerInterface
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Search\SearchService $searchService,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly CurrentUser $currentUser,
+        private readonly SearchService $searchService,
         private readonly PermissionService $permissionService,
-        private readonly \Piwigo\Users\PreferencesService $preferencesService,
-        private readonly \Piwigo\Category\CategoryService $categoryService,
-        private readonly \Piwigo\Tag\TagService $tagService,
-        private readonly \Piwigo\Image\ImageService $imageService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly PreferencesService $preferencesService,
+        private readonly CategoryService $categoryService,
+        private readonly TagService $tagService,
+        private readonly ImageService $imageService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $searchService = $this->searchService;
@@ -107,7 +118,7 @@ final class SearchController implements ControllerInterface
             $fields = is_array($raw_fields) ? $raw_fields : $default_fields;
         }
 
-        $searchQuery = Request\SearchQueryRequest::fromGlobals($this->inputValidator);
+        $searchQuery = SearchQueryRequest::fromGlobals($this->inputValidator);
 
         $words = [];
         $q = $searchQuery->q;

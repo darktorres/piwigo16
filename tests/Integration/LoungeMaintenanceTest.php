@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
@@ -27,7 +30,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
 
     private string $originalDateAvailable;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -50,7 +53,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         unset($_REQUEST['method']);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement('DELETE FROM ' . Tables::lounge());
@@ -71,9 +74,9 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         // this suite's own userService()/accessControl() private-helper
         // convention (singleton/service-locator elimination campaign,
         // Phase 9).
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
 
         return $currentConfig;

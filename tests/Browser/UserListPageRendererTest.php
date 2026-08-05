@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -169,7 +170,7 @@ function userListPageRendererDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function userListPageRendererDbConnect(): \mysqli|\PgSql\Connection
+function userListPageRendererDbConnect(): mysqli|Connection
 {
     return H::connect();
 }

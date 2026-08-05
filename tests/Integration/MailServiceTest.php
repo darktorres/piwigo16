@@ -4,6 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Config\ConfigRepository;
+use Piwigo\Users\UserRepository;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\ProcessCache;
+use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
+use Piwigo\Lang\Translator;
+use Piwigo\Core\UrlServiceInterface;
+use LogicException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
@@ -28,7 +40,6 @@ use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
-use Piwigo\Users\UserInfoEntity;
 use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
 
@@ -93,7 +104,7 @@ final class MailServiceTest extends IntegrationTestCase
 
     private MailService $mailer;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -111,8 +122,8 @@ final class MailServiceTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $repo = EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class);
-        self::assertInstanceOf(\Piwigo\Config\ConfigRepository::class, $repo);
-        $configService = new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current());
+        self::assertInstanceOf(ConfigRepository::class, $repo);
+        $configService = new ConfigService($repo, new EventDispatcher(), CurrentConfig::current());
         CurrentConfigService::current()->set($configService);
         $configService->loadConfFromDb();
 
@@ -121,7 +132,7 @@ final class MailServiceTest extends IntegrationTestCase
         $this->mailer = $mailer;
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement('UPDATE ' . Tables::users() . ' SET mail_address = NULL WHERE id = 3');
@@ -146,19 +157,19 @@ final class MailServiceTest extends IntegrationTestCase
 
         return new UserService(
             Lang::current(),
-            new \Piwigo\Users\UserRepository(EntityManagerFactory::build($this->conn), \Piwigo\PluginConfig\EventDispatcher::get(), CurrentConfig::current()),
+            new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcher::get(), CurrentConfig::current()),
             EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
             $mailer,
             new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
-            \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
+            HtmlServiceTestFactory::build(),
             $this->conn,
-            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
-            new \Piwigo\PluginConfig\EventDispatcher(),
-            new \Piwigo\Config\DeploymentPolicy(),
-            \Piwigo\Users\CurrentUser::current(),
-            \Piwigo\Config\CurrentConfig::current(),
-            new \Piwigo\Core\InstallationFlag(),
-            new \Piwigo\Core\ProcessCache(),
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()),
+            new EventDispatcher(),
+            new DeploymentPolicy(),
+            CurrentUser::current(),
+            CurrentConfig::current(),
+            new InstallationFlag(),
+            new ProcessCache(),
         );
     }
 
@@ -171,20 +182,20 @@ final class MailServiceTest extends IntegrationTestCase
     {
         $lang = Kernel::container()->get(Lang::class);
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
-        $deploymentPolicy = Kernel::container()->get(\Piwigo\Config\DeploymentPolicy::class);
-        $pageState = Kernel::container()->get(\Piwigo\Core\PageState::class);
-        $paths = Kernel::container()->get(\Piwigo\Core\Paths::class);
+        $deploymentPolicy = Kernel::container()->get(DeploymentPolicy::class);
+        $pageState = Kernel::container()->get(PageState::class);
+        $paths = Kernel::container()->get(Paths::class);
         $sessionService = Kernel::container()->get(SessionService::class);
-        $translator = Kernel::container()->get(\Piwigo\Lang\Translator::class);
+        $translator = Kernel::container()->get(Translator::class);
         $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
         $currentUser = Kernel::container()->get(CurrentUser::class);
-        $urlService = Kernel::container()->get(\Piwigo\Core\UrlServiceInterface::class);
-        if (! $lang instanceof Lang || ! $currentConfig instanceof CurrentConfig || ! $deploymentPolicy instanceof \Piwigo\Config\DeploymentPolicy
-            || ! $pageState instanceof \Piwigo\Core\PageState || ! $paths instanceof \Piwigo\Core\Paths || ! $sessionService instanceof SessionService
-            || ! $translator instanceof \Piwigo\Lang\Translator || ! $eventDispatcher instanceof EventDispatcher
-            || ! $currentUser instanceof CurrentUser || ! $urlService instanceof \Piwigo\Core\UrlServiceInterface
+        $urlService = Kernel::container()->get(UrlServiceInterface::class);
+        if (! $lang instanceof Lang || ! $currentConfig instanceof CurrentConfig || ! $deploymentPolicy instanceof DeploymentPolicy
+            || ! $pageState instanceof PageState || ! $paths instanceof Paths || ! $sessionService instanceof SessionService
+            || ! $translator instanceof Translator || ! $eventDispatcher instanceof EventDispatcher
+            || ! $currentUser instanceof CurrentUser || ! $urlService instanceof UrlServiceInterface
         ) {
-            throw new \LogicException('Container returned an unexpected type');
+            throw new LogicException('Container returned an unexpected type');
         }
 
         return new MailService($lang, $currentConfig, $deploymentPolicy, $pageState, $paths, $sessionService, $translator, $eventDispatcher, $currentUser, $urlService, mailRecipientRepo: $repo);
@@ -521,23 +532,23 @@ final class MailServiceTest extends IntegrationTestCase
         // is final, so the substitute wraps a real instance (composition)
         // and delegates every method it doesn't need to override to it,
         // rather than extending the final class directly.
-        $realRepo = new MailRecipientRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
+        $realRepo = new MailRecipientRepository(EntityManagerFactory::build($this->conn));
         $repo = new class ($realRepo) implements MailRecipientRepositoryInterface {
             public function __construct(private readonly MailRecipientRepositoryInterface $real) {}
 
-            #[\Override]
+            #[Override]
             public function findAdminsAndWebmasters(array $userStatuses, ?int $groupId, ?int $excludeUserId): array
             {
                 return $this->real->findAdminsAndWebmasters($userStatuses, $groupId, $excludeUserId);
             }
 
-            #[\Override]
+            #[Override]
             public function findDistinctLanguagesInGroup(int $groupId, ?string $languageFilter): array
             {
                 return [''];
             }
 
-            #[\Override]
+            #[Override]
             public function findByGroupAndLanguage(int $groupId, string $language): array
             {
                 return $this->real->findByGroupAndLanguage($groupId, $language);
@@ -565,23 +576,23 @@ final class MailServiceTest extends IntegrationTestCase
         // findByGroupAndLanguage() to come back empty is the only
         // deterministic way to exercise it, same reasoning/seam as the
         // empty-string-language test above.
-        $realRepo = new MailRecipientRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
+        $realRepo = new MailRecipientRepository(EntityManagerFactory::build($this->conn));
         $repo = new class ($realRepo) implements MailRecipientRepositoryInterface {
             public function __construct(private readonly MailRecipientRepositoryInterface $real) {}
 
-            #[\Override]
+            #[Override]
             public function findAdminsAndWebmasters(array $userStatuses, ?int $groupId, ?int $excludeUserId): array
             {
                 return $this->real->findAdminsAndWebmasters($userStatuses, $groupId, $excludeUserId);
             }
 
-            #[\Override]
+            #[Override]
             public function findDistinctLanguagesInGroup(int $groupId, ?string $languageFilter): array
             {
                 return ['en_UK'];
             }
 
-            #[\Override]
+            #[Override]
             public function findByGroupAndLanguage(int $groupId, string $language): array
             {
                 return [];

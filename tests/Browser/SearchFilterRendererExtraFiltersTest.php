@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\ExpectationFailedException;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
@@ -49,7 +50,7 @@ function extraFiltersSettledContent(Webpage|PendingAwaitablePage|AwaitableWebpag
     for ($attempt = 1; $attempt <= 5; ++$attempt) {
         try {
             return H::rawWebpage($page)->content();
-        } catch (\PHPUnit\Framework\ExpectationFailedException $e) {
+        } catch (ExpectationFailedException $e) {
             if (! str_contains($e->getMessage(), 'page is navigating and changing the content') || $attempt === 5) {
                 throw $e;
             }
@@ -57,7 +58,7 @@ function extraFiltersSettledContent(Webpage|PendingAwaitablePage|AwaitableWebpag
         }
     }
 
-    throw new \RuntimeException('unreachable');
+    throw new RuntimeException('unreachable');
 }
 
 /**

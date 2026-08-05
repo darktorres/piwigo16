@@ -12,6 +12,7 @@ use Doctrine\ORM\Query\AST\Functions\FunctionNode;
 use Doctrine\ORM\Query\Parser;
 use Doctrine\ORM\Query\SqlWalker;
 use Doctrine\ORM\Query\TokenType;
+use Override;
 
 /**
  * Custom DQL function: "RAND" "(" ")" -- a random value per row, meant for
@@ -33,7 +34,7 @@ use Doctrine\ORM\Query\TokenType;
  */
 final class RandFunction extends FunctionNode
 {
-    #[\Override]
+    #[Override]
     public function getSql(SqlWalker $sqlWalker): string
     {
         $platform = $sqlWalker->getConnection()
@@ -50,7 +51,7 @@ final class RandFunction extends FunctionNode
         throw NotSupported::new(self::class . '::getSql() for ' . $platform::class);
     }
 
-    #[\Override]
+    #[Override]
     public function parse(Parser $parser): void
     {
         $parser->match(TokenType::T_IDENTIFIER);

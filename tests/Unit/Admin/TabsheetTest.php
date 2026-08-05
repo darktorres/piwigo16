@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
@@ -10,7 +11,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\Template;
 
 function tabsheetTestRrmdir(string $dir): void
 {
@@ -44,18 +44,18 @@ beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot($root));
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
     if (! $currentConfig instanceof CurrentConfig) {
-        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
     $currentConfig->setDataLocation('data/');
     $currentConfig->setDataDirChecked('1');
-    CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build($root));
+    CurrentTemplate::current()->set(TemplateTestFactory::build($root));
 });
 
 afterEach(function (): void {
     tabsheetTestRrmdir(CurrentPaths::get()->root);
     CurrentTemplate::current()->reset();
     Kernel::reset();
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
 });
 
 test('the constructor defaults name/titlename and starts with no tabs and nothing selected', function (): void {
@@ -241,7 +241,7 @@ test('select throws when a tabsheet_before_select handler returns something othe
         $tabsheet->add('general', 'General', '/general');
 
         expect(static fn () => $tabsheet->select('general', EventDispatcher::get()))
-            ->toThrow(\Error::class, 'must return an instance of');
+            ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcher::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
     }

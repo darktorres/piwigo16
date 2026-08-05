@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
@@ -33,7 +37,7 @@ final class SearchRepositoryTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -45,16 +49,16 @@ final class SearchRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new SearchRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
+        $this->repo = new SearchRepository(EntityManagerFactory::build($this->conn));
     }
 
     public function test_find_saved_search_by_uuid_returns_null_for_no_match(): void

@@ -11,11 +11,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Exception;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\Event\GetDerivativeUrl;
+use Piwigo\PluginConfig\EventDispatcher;
+use RuntimeException;
 
 /**
  * Holds information (path, url, dimensions) about a derivative image.
@@ -36,11 +39,11 @@ final class DerivativeImage
     private static function urlService(): UrlServiceInterface
     {
         if (! Kernel::isBooted()) {
-            throw new \RuntimeException('DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
+            throw new RuntimeException('DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
         }
         $urlService = Kernel::container()->get(UrlServiceInterface::class);
         if (! $urlService instanceof UrlServiceInterface) {
-            throw new \RuntimeException('DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
+            throw new RuntimeException('DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
         }
 
         return $urlService;
@@ -59,24 +62,24 @@ final class DerivativeImage
     private static function imageStdParams(): ImageStdParams
     {
         if (! Kernel::isBooted()) {
-            throw new \RuntimeException('DerivativeImage: no ImageStdParams set (RequestBootstrap not run yet?)');
+            throw new RuntimeException('DerivativeImage: no ImageStdParams set (RequestBootstrap not run yet?)');
         }
         $imageStdParams = Kernel::container()->get(ImageStdParams::class);
         if (! $imageStdParams instanceof ImageStdParams) {
-            throw new \RuntimeException('DerivativeImage: no ImageStdParams set (RequestBootstrap not run yet?)');
+            throw new RuntimeException('DerivativeImage: no ImageStdParams set (RequestBootstrap not run yet?)');
         }
 
         return $imageStdParams;
     }
 
-    private static function eventDispatcher(): \Piwigo\PluginConfig\EventDispatcher
+    private static function eventDispatcher(): EventDispatcher
     {
         if (! Kernel::isBooted()) {
-            throw new \RuntimeException('DerivativeImage: no EventDispatcher set (RequestBootstrap not run yet?)');
+            throw new RuntimeException('DerivativeImage: no EventDispatcher set (RequestBootstrap not run yet?)');
         }
-        $eventDispatcher = Kernel::container()->get(\Piwigo\PluginConfig\EventDispatcher::class);
-        if (! $eventDispatcher instanceof \Piwigo\PluginConfig\EventDispatcher) {
-            throw new \RuntimeException('DerivativeImage: no EventDispatcher set (RequestBootstrap not run yet?)');
+        $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
+        if (! $eventDispatcher instanceof EventDispatcher) {
+            throw new RuntimeException('DerivativeImage: no EventDispatcher set (RequestBootstrap not run yet?)');
         }
 
         return $eventDispatcher;
@@ -92,11 +95,11 @@ final class DerivativeImage
     private static function currentConfig(): CurrentConfig
     {
         if (! Kernel::isBooted()) {
-            throw new \RuntimeException('DerivativeImage: no CurrentConfig set (RequestBootstrap not run yet?)');
+            throw new RuntimeException('DerivativeImage: no CurrentConfig set (RequestBootstrap not run yet?)');
         }
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
-            throw new \RuntimeException('DerivativeImage: no CurrentConfig set (RequestBootstrap not run yet?)');
+            throw new RuntimeException('DerivativeImage: no CurrentConfig set (RequestBootstrap not run yet?)');
         }
 
         return $currentConfig;
@@ -288,7 +291,7 @@ final class DerivativeImage
         }
         $dot = strrpos($loc, '.');
         if ($dot === false) {
-            throw new \Exception("DerivativeImage::build(): path '{$loc}' has no extension");
+            throw new Exception("DerivativeImage::build(): path '{$loc}' has no extension");
         }
         $loc = substr_replace($loc, '-' . implode('_', $tokens), $dot, 0);
 

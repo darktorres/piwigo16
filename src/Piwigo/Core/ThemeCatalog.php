@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\GetPwgThemes;
+use Piwigo\PluginConfig\EventDispatcher;
 
 /**
  * P23 batch 8d: installed-theme listing relocated from
@@ -26,18 +30,18 @@ final class ThemeCatalog
      *
      * @return array<int|string, string>
      */
-    public static function getPwgThemes(\Piwigo\PluginConfig\EventDispatcher $eventDispatcher, bool $showMobile = false): array
+    public static function getPwgThemes(EventDispatcher $eventDispatcher, bool $showMobile = false): array
     {
 
         $themes = [];
 
-        $conn = \Piwigo\Db\DbConnection::build();
-        $rows = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class)->findAllIdsAndNames();
+        $conn = DbConnection::build();
+        $rows = EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class)->findAllIdsAndNames();
         foreach ($rows as $row) {
             $id = $row['id'];
             $name = $row['name'];
 
-            $mobile_theme = \Piwigo\Config\CurrentConfig::current()->mobilTheme();
+            $mobile_theme = CurrentConfig::current()->mobilTheme();
             if ($id === $mobile_theme) {
                 if (! $showMobile) {
                     continue;
@@ -76,7 +80,7 @@ final class ThemeCatalog
         // correctly pre-fix only because public/themes is itself a symlink
         // back to the real themes/, not because the CWD-relative read was
         // actually safe).
-        $themes_dir = CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->themesDir();
+        $themes_dir = CurrentPaths::get()->root . CurrentConfig::current()->themesDir();
 
         return file_exists($themes_dir . '/' . $themeId . '/themeconf.inc.php');
     }

@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Notification;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 use Piwigo\Notification\Projection\UserMailNotification;
 use Piwigo\Users\UserEntity;
@@ -109,7 +112,7 @@ final class NotificationByMailRepository extends EntityRepository
 
             $userId = $row['user_id'] ?? null;
             $notifications[] = UserMailNotification::fromRow([
-                'user_id' => $userId instanceof \Piwigo\Common\ValueObject\UserId ? $userId->value : $userId,
+                'user_id' => $userId instanceof UserId ? $userId->value : $userId,
                 'check_key' => $row['check_key'] ?? null,
                 'username' => $row['username'] ?? null,
                 'mail_address' => $row['mail_address'] ?? null,
@@ -189,7 +192,7 @@ final class NotificationByMailRepository extends EntityRepository
 
             $userId = $row['user_id'] ?? null;
             $result[] = [
-                'user_id' => $userId instanceof \Piwigo\Common\ValueObject\UserId ? $userId->value : $userId,
+                'user_id' => $userId instanceof UserId ? $userId->value : $userId,
                 'username' => $row['username'] ?? null,
                 'mail_address' => $row['mail_address'] ?? null,
             ];
@@ -230,7 +233,7 @@ final class NotificationByMailRepository extends EntityRepository
         $em->createQueryBuilder()
             ->delete(UserMailNotificationEntity::class, 'n')
             ->where('n.checkKey IN (:checkKeys)')
-            ->setParameter('checkKeys', $checkKeyList, \Doctrine\DBAL\ArrayParameterType::STRING)
+            ->setParameter('checkKeys', $checkKeyList, ArrayParameterType::STRING)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -249,7 +252,7 @@ final class NotificationByMailRepository extends EntityRepository
             return;
         }
 
-        new \Piwigo\Db\BatchWriter($this->getEntityManager()->getConnection())
+        new BatchWriter($this->getEntityManager()->getConnection())
             ->massInsert(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
     }
 }

@@ -4,16 +4,26 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Request\CatListRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\Location\LocBeginCatList;
 use Piwigo\Event\Location\LocEndCatList;
 use Piwigo\Event\Template\RenderCategoryName;
+use Piwigo\Html\HtmlService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/cat_list.php (page slug "cat_list").
@@ -42,16 +52,16 @@ final class CatListPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly CategoryAdminService $categoryAdminService,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Category\CategoryService $categoryService,
-        private readonly \Piwigo\Html\HtmlService $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly ActivityService $activityService,
+        private readonly CategoryService $categoryService,
+        private readonly HtmlService $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
     ) {}
 
     public function render(): void
@@ -62,10 +72,10 @@ final class CatListPageRenderer
 
         $this->eventDispatcher->dispatchNotify(new LocBeginCatList());
 
-        $catListRequest = Request\CatListRequest::fromGlobals($this->inputValidator);
+        $catListRequest = CatListRequest::fromGlobals($this->inputValidator);
 
         if ($catListRequest->isCsrfCheckRequired) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
@@ -185,7 +195,7 @@ final class CatListPageRenderer
             'ADMIN_PAGE_TITLE' => $this->lang->t('Album list management'),
             'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
             'F_ACTION' => $form_action,
-            'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+            'PWG_TOKEN' => new CsrfService()
                 ->getToken(),
             'sort_orders' => $sort_orders,
             'sort_order_checked' => array_shift($sort_orders_checked),
@@ -280,7 +290,7 @@ final class CatListPageRenderer
 
             if (in_array($category['dir'], [null, '', '0'], true)) {
                 $tpl_cat['U_DELETE'] = $self_url . '&amp;delete=' . $cat_id;
-                $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken();
+                $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . new CsrfService()->getToken();
             } else {
                 if ($this->currentConfig->enableSynchronization()) {
                     $tpl_cat['U_SYNC'] = $base_url . 'site_update&amp;site=1&amp;cat_id=' . $cat_id;

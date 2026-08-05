@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query;
+use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Auth\Projection\AuthKeyDetails;
 use Piwigo\Auth\Projection\AuthUser;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Users\UserEntity;
 use Piwigo\Users\UserInfoEntity;
 
 /**
@@ -59,11 +63,11 @@ final readonly class AuthRepository
     {
         $row = $this->em->createQueryBuilder()
             ->select('u.username AS username', 'u.password AS password')
-            ->from(\Piwigo\Users\UserEntity::class, 'u')
+            ->from(UserEntity::class, 'u')
             ->where('u.id = :id')
             ->setParameter('id', $userId)
             ->getQuery()
-            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
         if (! is_array($row)) {
             return null;
@@ -106,18 +110,18 @@ final readonly class AuthRepository
                 'u.password AS password',
                 'i.status AS status',
             )
-            ->from(\Piwigo\Users\UserEntity::class, 'u')
-            ->leftJoin(UserInfoEntity::class, 'i', \Doctrine\ORM\Query\Expr\Join::WITH, 'u.id = i.userId')
+            ->from(UserEntity::class, 'u')
+            ->leftJoin(UserInfoEntity::class, 'i', Join::WITH, 'u.id = i.userId')
             ->setParameter('value', $usernameOrEmail);
 
         $row = (clone $qb)->where('u.username = :value')
             ->getQuery()
-            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
         if (! is_array($row)) {
             $row = $qb->where('u.mailAddress = :value')
                 ->getQuery()
-                ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+                ->getOneOrNullResult(Query::HYDRATE_ARRAY);
         }
 
         return is_array($row) ? AuthUser::fromRow($row) : null;
@@ -153,17 +157,17 @@ final readonly class AuthRepository
                 'u.mailAddress AS email',
             )
             ->from(UserAuthKeyEntity::class, 'uak')
-            ->innerJoin(UserInfoEntity::class, 'ui', \Doctrine\ORM\Query\Expr\Join::WITH, 'uak.userId = ui.userId')
-            ->innerJoin(\Piwigo\Users\UserEntity::class, 'u', \Doctrine\ORM\Query\Expr\Join::WITH, 'u.id = ui.userId')
+            ->innerJoin(UserInfoEntity::class, 'ui', Join::WITH, 'uak.userId = ui.userId')
+            ->innerJoin(UserEntity::class, 'u', Join::WITH, 'u.id = ui.userId')
             ->where('uak.authKey = :authKey')
             ->setParameter('authKey', $authKey)
             ->getQuery()
-            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
         return is_array($row) ? AuthKeyDetails::fromRow($row) : null;
     }
 
-    public function touchAuthKeyLastUsed(int|string $userId, string $authKey, \DateTimeInterface $lastUsedOn): void
+    public function touchAuthKeyLastUsed(int|string $userId, string $authKey, DateTimeInterface $lastUsedOn): void
     {
         $this->em->createQueryBuilder()
             ->update(UserAuthKeyEntity::class, 'uak')
@@ -231,7 +235,7 @@ final readonly class AuthRepository
         return (string) $entity->authKeyId;
     }
 
-    public function deactivateAuthKeys(int $userId, \DateTimeInterface $now): void
+    public function deactivateAuthKeys(int $userId, DateTimeInterface $now): void
     {
         $nowStr = $now->format(self::DATETIME_FORMAT);
 
@@ -262,7 +266,7 @@ final readonly class AuthRepository
         $this->em->flush();
     }
 
-    public function setActivationKey(UserId $userId, string $hash, \DateTimeInterface $expire): void
+    public function setActivationKey(UserId $userId, string $hash, DateTimeInterface $expire): void
     {
         $entity = $this->em->find(UserInfoEntity::class, $userId);
         if ($entity === null) {

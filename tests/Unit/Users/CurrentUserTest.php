@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
@@ -15,11 +16,11 @@ use Piwigo\Users\UserStatus;
 // directly; no reset() needed.
 
 beforeEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
 });
 
 afterEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     Kernel::reset();
 });
 
@@ -51,7 +52,7 @@ test('attachGlobals seeds a guest user', function (): void {
 
 test('attachGlobals is idempotent -- does not clobber a real set() user', function (): void {
     $real = new User(
-        id: \Piwigo\Common\ValueObject\UserId::from(42),
+        id: UserId::from(42),
         username: 'alice',
         email: '',
         language: 'fr_FR',

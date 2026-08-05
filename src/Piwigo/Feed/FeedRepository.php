@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Feed;
 
+use DateTimeImmutable;
 use Doctrine\ORM\EntityRepository;
 
 /**
@@ -29,7 +30,7 @@ final class FeedRepository extends EntityRepository
      * Returns the owning user id and last-check timestamp for a feed
      * identifier, or null if the identifier doesn't exist.
      *
-     * @return array{userId: int, lastCheck: ?\DateTimeImmutable}|null
+     * @return array{userId: int, lastCheck: ?DateTimeImmutable}|null
      */
     public function findById(string $id): ?array
     {
@@ -46,7 +47,7 @@ final class FeedRepository extends EntityRepository
      * cross-provider safe, not SQL's NOW()/SUBDATE() (same reasoning as
      * SessionRepository::gc()).
      */
-    public function updateLastCheck(string $id, \DateTimeImmutable $lastCheck): void
+    public function updateLastCheck(string $id, DateTimeImmutable $lastCheck): void
     {
         $entity = $this->find($id);
         if ($entity === null) {

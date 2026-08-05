@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use Piwigo\Cache\CachePools;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -34,14 +36,14 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
     /** @var list<int> */
     private array $userIdsToDelete = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
         $this->conn = DbConnection::build();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         foreach ($this->imageIdsToDelete as $imageId) {
@@ -54,7 +56,7 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
             $this->callWs('pwg.users.delete', ['user_id' => $this->userIdsToDelete, 'pwg_token' => $token]);
         }
         $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = 'true' WHERE param = 'activate_comments'");
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
         parent::tearDown();
     }
 
@@ -147,7 +149,7 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
     public function test_addComment_when_comments_are_disabled_returns_error(): void
     {
         $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = 'false' WHERE param = 'activate_comments'");
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         $response = $this->ws('pwg.images.addComment', [
             'image_id' => 1,

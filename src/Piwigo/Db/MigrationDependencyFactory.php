@@ -8,6 +8,7 @@ use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
 use Doctrine\Migrations\Configuration\Migration\ConfigurationArray;
 use Doctrine\Migrations\DependencyFactory;
 use Doctrine\ORM\EntityManagerInterface;
+use RuntimeException;
 
 /**
  * Factory for a Doctrine Migrations DependencyFactory -- extracted from
@@ -41,14 +42,14 @@ final class MigrationDependencyFactory
     {
         $raw = require dirname(__DIR__, 3) . '/config/migrations.php';
         if (! is_array($raw)) {
-            throw new \RuntimeException('config/migrations.php must return an array.');
+            throw new RuntimeException('config/migrations.php must return an array.');
         }
 
         /** @var array<string, mixed> $migrationsConfig */
         $migrationsConfig = [];
         foreach ($raw as $key => $value) {
             if (! is_string($key)) {
-                throw new \RuntimeException('config/migrations.php keys must be strings.');
+                throw new RuntimeException('config/migrations.php keys must be strings.');
             }
             $migrationsConfig[$key] = $value;
         }

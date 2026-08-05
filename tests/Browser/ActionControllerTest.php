@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -181,7 +182,7 @@ it('sends a Content-Disposition attachment header when download is requested', f
     }
 });
 
-function actionDbConnect(): \mysqli|\PgSql\Connection
+function actionDbConnect(): mysqli|Connection
 {
     return H::connect();
 }
@@ -195,7 +196,7 @@ function actionDbConnect(): \mysqli|\PgSql\Connection
 function actionSetEnabledHigh(int $userId, bool $enabled): void
 {
     $db = actionDbConnect();
-    $sqlValue = $db instanceof \mysqli ? ($enabled ? '1' : '0') : ($enabled ? 'true' : 'false');
+    $sqlValue = $db instanceof mysqli ? ($enabled ? '1' : '0') : ($enabled ? 'true' : 'false');
     H::dbQuery($db, sprintf('UPDATE %suser_infos SET enabled_high = %s WHERE user_id = %d', actionDbPrefix(), $sqlValue, $userId));
     H::dbClose($db);
 }

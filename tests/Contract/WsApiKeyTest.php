@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+
 final class WsApiKeyTest extends ContractTestCase
 {
     private ?string $pkid = null;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -23,7 +25,7 @@ final class WsApiKeyTest extends ContractTestCase
         // guest guard, and "not connected via pwg ui" actually succeeded).
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         if ($this->pkid !== null) {

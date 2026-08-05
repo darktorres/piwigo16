@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Section;
 
+use LogicException;
+use Piwigo\Core\Kernel;
+
 /**
  * Per-request holder for the current SectionContext.
  *
@@ -49,13 +52,13 @@ final class SectionContextRegistry
      */
     public static function currentStatic(): ?SectionContext
     {
-        if (! \Piwigo\Core\Kernel::isBooted()) {
+        if (! Kernel::isBooted()) {
             return null;
         }
 
-        $instance = \Piwigo\Core\Kernel::container()->get(self::class);
+        $instance = Kernel::container()->get(self::class);
         if (! $instance instanceof self) {
-            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+            throw new LogicException('Container returned an unexpected type for ' . self::class);
         }
 
         return $instance->current();

@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Group;
 
+use InvalidArgumentException;
 use Piwigo\Audit\AuditService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Event\User\DeleteGroup;
+use Piwigo\Group\Projection\Group;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Group domain business logic: creation/rename/deletion, membership
@@ -39,13 +44,13 @@ final readonly class GroupService
         private ActivityLoggerInterface $activityLogger,
         private AuditService $auditService,
         private ConfigService $configService,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private EventDispatcher $eventDispatcher,
+        private CurrentUser $currentUser,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**
-     * @return list<\Piwigo\Group\Projection\Group>
+     * @return list<Group>
      */
     public function getAllBasic(): array
     {
@@ -123,11 +128,11 @@ final readonly class GroupService
     public function create(string $name, bool $isDefault): GroupId
     {
         if ($this->repo->nameExists($name)) {
-            throw new \InvalidArgumentException('This name is already used by another group.');
+            throw new InvalidArgumentException('This name is already used by another group.');
         }
 
         if (str_replace(' ', '', $name) === '') {
-            throw new \InvalidArgumentException('Name field must not be empty');
+            throw new InvalidArgumentException('Name field must not be empty');
         }
 
         $id = $this->repo->insert($name, $isDefault);
@@ -146,11 +151,11 @@ final readonly class GroupService
     public function duplicate(GroupId $groupId, string $copyName): GroupId
     {
         if ($this->repo->nameExists($copyName)) {
-            throw new \InvalidArgumentException('This name is already used by another group.');
+            throw new InvalidArgumentException('This name is already used by another group.');
         }
 
         if (! $this->repo->exists($groupId)) {
-            throw new \InvalidArgumentException('This group does not exist.');
+            throw new InvalidArgumentException('This group does not exist.');
         }
 
         $newId = $this->repo->insert($copyName, $this->repo->isDefault($groupId));
@@ -183,18 +188,18 @@ final readonly class GroupService
     public function update(GroupId $groupId, array $updates): void
     {
         if (isset($updates['name']) && str_replace(' ', '', $updates['name']) === '') {
-            throw new \InvalidArgumentException('Name field must not be empty');
+            throw new InvalidArgumentException('Name field must not be empty');
         }
 
         if (! $this->repo->exists($groupId)) {
-            throw new \InvalidArgumentException('This group does not exist.');
+            throw new InvalidArgumentException('This group does not exist.');
         }
 
         // Matches the original ws_groups_setInfo()'s own `! empty(...)`
         // guard exactly: a "0" name is treated as absent too, not just "".
         $hasName = isset($updates['name']) && $updates['name'] !== '' && $updates['name'] !== '0';
         if ($hasName && $this->repo->nameExists($updates['name'], $groupId)) {
-            throw new \InvalidArgumentException('This name is already used by another group.');
+            throw new InvalidArgumentException('This name is already used by another group.');
         }
 
         $this->repo->update($groupId, $updates);

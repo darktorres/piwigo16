@@ -8,7 +8,6 @@ use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Session\SessionEntity;
-use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 
 // Doctrine ORM EntityManagers/repositories are lazy -- they don't actually
@@ -27,11 +26,11 @@ use Piwigo\Session\SessionService;
 // object.
 function makeSessionService(?CurrentConfig $currentConfig = null): SessionService
 {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     ConfigLoader::applyDefaults();
     putenv('PIWIGO_DB_HOST=unit-test-should-never-connect.invalid');
 
-    return new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), $currentConfig ?? new \Piwigo\Config\CurrentConfig());
+    return new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), $currentConfig ?? new CurrentConfig());
 }
 
 // tests/bootstrap.php loads real PIWIGO_DB_* vars for the whole Pest

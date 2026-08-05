@@ -11,10 +11,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
+use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Permission\SqlCondition;
-use Piwigo\Template\Template;
 
 /**
  * Base class for monthly and weekly calendar styles
@@ -139,8 +141,8 @@ abstract class CalendarBase
         protected readonly Lang $lang,
         protected readonly CalendarRepository $calendarRepository,
         protected readonly UrlServiceInterface $urlService,
-        protected readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        protected readonly \Piwigo\Image\ImageStdParams $imageStdParams,
+        protected readonly CurrentConfig $currentConfig,
+        protected readonly ImageStdParams $imageStdParams,
     ) {}
 
     /**
@@ -148,7 +150,7 @@ abstract class CalendarBase
      *
      * @return bool false indicates that thumbnails where not included
      */
-    abstract public function generate_category_content(\Piwigo\Core\TemplateInterface $template);
+    abstract public function generate_category_content(TemplateInterface $template);
 
     /**
      * Returns a sql WHERE subquery for the date field.
@@ -336,7 +338,7 @@ abstract class CalendarBase
      *   display value -- CalendarMonthly's own day-number labels are ints,
      *   not strings.
      */
-    protected function build_nav_bar($level, ?array $labels, \Piwigo\Core\TemplateInterface $template): void
+    protected function build_nav_bar($level, ?array $labels, TemplateInterface $template): void
     {
         $levelDql = $this->calendar_levels[$level]['dql'];
         $scope = $this->scope;
@@ -394,7 +396,7 @@ abstract class CalendarBase
      * Assigns the next/previous link to the template with regards to
      * the currently choosen date.
      */
-    protected function build_next_prev(\Piwigo\Core\TemplateInterface $template): void
+    protected function build_next_prev(TemplateInterface $template): void
     {
         $prev = $next = null;
         if ($this->chronology_date === []) {

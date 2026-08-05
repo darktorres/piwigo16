@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Lang;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Core\PageState;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\UserService;
+use Piwigo\Db\Tables;
 use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
@@ -22,19 +28,19 @@ function c13yInternalTestCheckIntegrity(): CheckIntegrity
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
     expect($repo)->toBeInstanceOf(IntegrityIgnoredAnomalyRepository::class);
 
-    return new CheckIntegrity(\Piwigo\Core\Lang::current(), $repo, new Translator(CurrentConfig::current()), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current());
+    return new CheckIntegrity(Lang::current(), $repo, new Translator(CurrentConfig::current()), EventDispatcher::get(), PageState::current(), CurrentTemplate::current());
 }
 
 function c13yInternalTestSessionService(): SessionService
 {
-    return new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current());
+    return new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current());
 }
 
-function c13yInternalTestUserService(): \Piwigo\Users\UserService
+function c13yInternalTestUserService(): UserService
 {
-    $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
-    if (! $userService instanceof \Piwigo\Users\UserService) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+    $userService = Kernel::container()->get(UserService::class);
+    if (! $userService instanceof UserService) {
+        throw new LogicException('Container returned an unexpected type for ' . UserService::class);
     }
 
     return $userService;
@@ -77,7 +83,7 @@ afterEach(function (): void {
 test('c13y_version adds no anomaly when the running PHP/MySQL already satisfy the app\'s own minimum versions', function (): void {
     $c13y = c13yInternalTestCheckIntegrity();
 
-    new C13yInternal(\Piwigo\Core\Lang::current(), c13yInternalTestSessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_version(new ListCheckIntegrity($c13y));
+    new C13yInternal(Lang::current(), c13yInternalTestSessionService(), EventDispatcher::get(), PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_version(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)->toBe([]);
 });
@@ -86,7 +92,7 @@ test('c13y_exif adds no anomaly when exif_read_data() is available', function ()
     expect(function_exists('exif_read_data'))->toBeTrue();
 
     $c13y = c13yInternalTestCheckIntegrity();
-    new C13yInternal(\Piwigo\Core\Lang::current(), c13yInternalTestSessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_exif(new ListCheckIntegrity($c13y));
+    new C13yInternal(Lang::current(), c13yInternalTestSessionService(), EventDispatcher::get(), PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_exif(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)->toBe([]);
 });
@@ -124,7 +130,7 @@ test('c13y_user flags a configured webmaster_id that has no matching user row, a
     CurrentConfig::current()->setWebmasterId(999999);
 
     $c13y = c13yInternalTestCheckIntegrity();
-    new C13yInternal(\Piwigo\Core\Lang::current(), c13yInternalTestSessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_user(new ListCheckIntegrity($c13y));
+    new C13yInternal(Lang::current(), c13yInternalTestSessionService(), EventDispatcher::get(), PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_user(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)->toHaveCount(1);
     $anomaly = $c13y->retrieve_list[0];
@@ -134,18 +140,18 @@ test('c13y_user flags a configured webmaster_id that has no matching user row, a
     $conn = DbConnection::build();
 
     try {
-        $result = new C13yInternal(\Piwigo\Core\Lang::current(), c13yInternalTestSessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(999999, 'creation');
+        $result = new C13yInternal(Lang::current(), c13yInternalTestSessionService(), EventDispatcher::get(), PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(999999, 'creation');
         expect($result)->toBeTrue();
 
-        $row = $conn->fetchAssociative('SELECT username FROM ' . \Piwigo\Db\Tables::users() . ' WHERE id = 999999');
+        $row = $conn->fetchAssociative('SELECT username FROM ' . Tables::users() . ' WHERE id = 999999');
         expect($row)->not->toBeFalse();
         expect(is_array($row) ? $row['username'] : null)->toStartWith('webmaster');
 
-        $infosRow = $conn->fetchAssociative('SELECT status FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 999999');
+        $infosRow = $conn->fetchAssociative('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 999999');
         expect($infosRow)->not->toBeFalse();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 999999');
-        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::users() . ' WHERE id = 999999');
+        $conn->executeStatement('DELETE FROM ' . Tables::userInfos() . ' WHERE user_id = 999999');
+        $conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = 999999');
     }
 });
 
@@ -155,14 +161,14 @@ test('c13y_user flags a real user whose status does not match the expected one, 
     CurrentConfig::current()->setWebmasterId(1);
 
     $conn = DbConnection::build();
-    $originalStatus = $conn->fetchOne('SELECT status FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 1');
+    $originalStatus = $conn->fetchOne('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
     expect($originalStatus)->not->toBeFalse();
 
     try {
-        $conn->executeStatement("UPDATE " . \Piwigo\Db\Tables::userInfos() . " SET status = 'normal' WHERE user_id = 1");
+        $conn->executeStatement("UPDATE " . Tables::userInfos() . " SET status = 'normal' WHERE user_id = 1");
 
         $c13y = c13yInternalTestCheckIntegrity();
-        new C13yInternal(\Piwigo\Core\Lang::current(), c13yInternalTestSessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_user(new ListCheckIntegrity($c13y));
+        new C13yInternal(Lang::current(), c13yInternalTestSessionService(), EventDispatcher::get(), PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_user(new ListCheckIntegrity($c13y));
 
         $webmasterAnomaly = null;
         foreach ($c13y->retrieve_list as $anomaly) {
@@ -175,26 +181,26 @@ test('c13y_user flags a real user whose status does not match the expected one, 
         }
         expect($webmasterAnomaly['correction_fct_args'])->toBe(['id' => 1, 'action' => 'status']);
 
-        $result = new C13yInternal(\Piwigo\Core\Lang::current(), c13yInternalTestSessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(1, 'status');
+        $result = new C13yInternal(Lang::current(), c13yInternalTestSessionService(), EventDispatcher::get(), PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(1, 'status');
         expect($result)->toBeTrue();
 
-        $fixedStatus = $conn->fetchOne('SELECT status FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 1');
+        $fixedStatus = $conn->fetchOne('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
         expect($fixedStatus)->toBe('webmaster');
     } finally {
         $conn->executeStatement(sprintf(
             "UPDATE %s SET status = %s WHERE user_id = 1",
-            \Piwigo\Db\Tables::userInfos(),
+            Tables::userInfos(),
             $conn->quote(is_string($originalStatus) ? $originalStatus : 'webmaster')
         ));
     }
 });
 
 test('c13y_correction_user does nothing for id 0', function (): void {
-    expect(new C13yInternal(\Piwigo\Core\Lang::current(), c13yInternalTestSessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(0, 'creation'))->toBeFalse();
+    expect(new C13yInternal(Lang::current(), c13yInternalTestSessionService(), EventDispatcher::get(), PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(0, 'creation'))->toBeFalse();
 });
 
 test('c13y_correction_user does nothing for an unrecognized action', function (): void {
-    expect(new C13yInternal(\Piwigo\Core\Lang::current(), c13yInternalTestSessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(1, 'not-a-real-action'))->toBeFalse();
+    expect(new C13yInternal(Lang::current(), c13yInternalTestSessionService(), EventDispatcher::get(), PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(1, 'not-a-real-action'))->toBeFalse();
 });
 
 test('c13y_user flags a configured default_user_id distinct from guest_id that has no matching user row', function (): void {
@@ -209,7 +215,7 @@ test('c13y_user flags a configured default_user_id distinct from guest_id that h
     CurrentConfig::current()->setWebmasterId(1);
 
     $c13y = c13yInternalTestCheckIntegrity();
-    new C13yInternal(\Piwigo\Core\Lang::current(), c13yInternalTestSessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_user(new ListCheckIntegrity($c13y));
+    new C13yInternal(Lang::current(), c13yInternalTestSessionService(), EventDispatcher::get(), PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_user(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)->toHaveCount(1);
     $anomaly = $c13y->retrieve_list[0];
@@ -231,18 +237,18 @@ test('c13y_correction_user creates the guest_id slot for a "creation" action, re
 
     $conn = DbConnection::build();
     try {
-        $result = new C13yInternal(\Piwigo\Core\Lang::current(), c13yInternalTestSessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(999997, 'creation');
+        $result = new C13yInternal(Lang::current(), c13yInternalTestSessionService(), EventDispatcher::get(), PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(999997, 'creation');
         expect($result)->toBeTrue();
 
-        $row = $conn->fetchAssociative('SELECT username, password FROM ' . \Piwigo\Db\Tables::users() . ' WHERE id = 999997');
+        $row = $conn->fetchAssociative('SELECT username, password FROM ' . Tables::users() . ' WHERE id = 999997');
         expect($row)->not->toBeFalse();
         expect(is_array($row) ? $row['username'] : null)->toStartWith('guest');
         // Unlike the webmaster branch (tested above), the guest_id branch
         // never sets $password -- it stays the loop's initial null.
         expect(is_array($row) ? $row['password'] : 'unexpected-fetch-failure')->toBeNull();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 999997');
-        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::users() . ' WHERE id = 999997');
+        $conn->executeStatement('DELETE FROM ' . Tables::userInfos() . ' WHERE user_id = 999997');
+        $conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = 999997');
     }
 });
 
@@ -253,15 +259,15 @@ test('c13y_correction_user creates the default_user_id slot for a "creation" act
 
     $conn = DbConnection::build();
     try {
-        $result = new C13yInternal(\Piwigo\Core\Lang::current(), c13yInternalTestSessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(999996, 'creation');
+        $result = new C13yInternal(Lang::current(), c13yInternalTestSessionService(), EventDispatcher::get(), PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(999996, 'creation');
         expect($result)->toBeTrue();
 
-        $row = $conn->fetchAssociative('SELECT username FROM ' . \Piwigo\Db\Tables::users() . ' WHERE id = 999996');
+        $row = $conn->fetchAssociative('SELECT username FROM ' . Tables::users() . ' WHERE id = 999996');
         expect($row)->not->toBeFalse();
         expect(is_array($row) ? $row['username'] : null)->toStartWith('guest');
     } finally {
-        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 999996');
-        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::users() . ' WHERE id = 999996');
+        $conn->executeStatement('DELETE FROM ' . Tables::userInfos() . ' WHERE user_id = 999996');
+        $conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = 999996');
     }
 });
 
@@ -275,19 +281,19 @@ test('c13y_correction_user sets a real user\'s status to "guest" when its id mat
     CurrentConfig::current()->setWebmasterId(1);
 
     $conn = DbConnection::build();
-    $originalStatus = $conn->fetchOne('SELECT status FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 3');
+    $originalStatus = $conn->fetchOne('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 3');
     expect($originalStatus)->not->toBeFalse();
 
     try {
-        $result = new C13yInternal(\Piwigo\Core\Lang::current(), c13yInternalTestSessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(3, 'status');
+        $result = new C13yInternal(Lang::current(), c13yInternalTestSessionService(), EventDispatcher::get(), PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(3, 'status');
         expect($result)->toBeTrue();
 
-        $fixedStatus = $conn->fetchOne('SELECT status FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 3');
+        $fixedStatus = $conn->fetchOne('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 3');
         expect($fixedStatus)->toBe('guest');
     } finally {
         $conn->executeStatement(sprintf(
             "UPDATE %s SET status = %s WHERE user_id = 3",
-            \Piwigo\Db\Tables::userInfos(),
+            Tables::userInfos(),
             $conn->quote(is_string($originalStatus) ? $originalStatus : 'normal')
         ));
     }
@@ -299,19 +305,19 @@ test('c13y_correction_user sets a real user\'s status to "guest" when its id mat
     CurrentConfig::current()->setWebmasterId(1);
 
     $conn = DbConnection::build();
-    $originalStatus = $conn->fetchOne('SELECT status FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 4');
+    $originalStatus = $conn->fetchOne('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 4');
     expect($originalStatus)->not->toBeFalse();
 
     try {
-        $result = new C13yInternal(\Piwigo\Core\Lang::current(), c13yInternalTestSessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(4, 'status');
+        $result = new C13yInternal(Lang::current(), c13yInternalTestSessionService(), EventDispatcher::get(), PageState::current(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(4, 'status');
         expect($result)->toBeTrue();
 
-        $fixedStatus = $conn->fetchOne('SELECT status FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 4');
+        $fixedStatus = $conn->fetchOne('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 4');
         expect($fixedStatus)->toBe('guest');
     } finally {
         $conn->executeStatement(sprintf(
             "UPDATE %s SET status = %s WHERE user_id = 4",
-            \Piwigo\Db\Tables::userInfos(),
+            Tables::userInfos(),
             $conn->quote(is_string($originalStatus) ? $originalStatus : 'normal')
         ));
     }

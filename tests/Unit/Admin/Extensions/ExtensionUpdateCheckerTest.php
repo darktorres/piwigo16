@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateEntity;
 use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
@@ -11,15 +14,12 @@ use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Html\HtmlService;
-use Piwigo\Url\UrlService;
 
 // ExtensionScanner/PemCatalog are both `final` with no interface, and
 // PemCatalog::getServerExtensions()/getVersionsToCheck() talk to the real
@@ -91,7 +91,7 @@ function fixturePlugin(string $root, string $id, string $version, string $eid, s
 function requireFixtureRoot(?string $fixtureRoot): string
 {
     if (! is_string($fixtureRoot)) {
-        throw new \RuntimeException('fixtureRoot not initialized -- beforeEach() must run first');
+        throw new RuntimeException('fixtureRoot not initialized -- beforeEach() must run first');
     }
 
     return $fixtureRoot;
@@ -126,8 +126,8 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
     return new ExtensionUpdateChecker(
         Lang::current(),
         new ExtensionScanner(),
-        new PemCatalog(new ZipExtractor(), new \Piwigo\Core\CurrentLogger(), new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig())),
-        \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
+        new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig())),
+        UrlServiceTestFactory::build(),
         $repo,
     );
 }
@@ -135,7 +135,7 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
 $fixtureRoot = null;
 
 beforeEach(function () use (&$fixtureRoot): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     ConfigLoader::applyDefaults();
 
     $fixtureRoot = sys_get_temp_dir() . '/piwigo-extension-update-checker-test-' . bin2hex(random_bytes(4)) . '/';
@@ -159,7 +159,7 @@ beforeEach(function () use (&$fixtureRoot): void {
 });
 
 afterEach(function () use (&$fixtureRoot): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     Kernel::reset();
     unset($_SESSION['extensions_need_update']);
     if (is_string($fixtureRoot) && is_dir($fixtureRoot)) {

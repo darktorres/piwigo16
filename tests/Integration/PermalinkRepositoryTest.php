@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -16,7 +20,7 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
 
     private PermalinkRepository $repo;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,15 +32,15 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->repo = new PermalinkRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()));
+        $this->repo = new PermalinkRepository(EntityManagerFactory::build(DbConnection::build()));
     }
 
     public function test_set_then_find_category_id_by_permalink_round_trips(): void

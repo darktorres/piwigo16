@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Audit;
 
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Core\Env;
 
 /**
  * Audit domain business logic [SEC-57]: records an admin action, permission
@@ -57,7 +58,7 @@ final readonly class AuditService
         // this respects the frozen test-mode clock the same way every
         // other P17/P18 service's own Env::now() call sites already do --
         // real behavior outside test mode is unaffected.
-        $createdAt = \Piwigo\Core\Env::now()
+        $createdAt = Env::now()
             ->format('Y-m-d H:i:s');
 
         $prevHash = $this->repo->findLatestRowHash();

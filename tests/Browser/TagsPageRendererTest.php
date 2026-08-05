@@ -60,10 +60,10 @@ function tagsPageBackdateTag(int $tagId): void
     // found live in tools/reimport-fixture.sh's own categories.lastmodified
     // normalization. session_replication_role = replica (used the same
     // way there) suppresses the trigger for this one statement.
-    $dateExpr = $db instanceof \mysqli
+    $dateExpr = $db instanceof mysqli
         ? 'DATE_SUB(NOW(), INTERVAL 2 DAY)'
         : "NOW() - INTERVAL '2 days'";
-    if ($db instanceof \mysqli) {
+    if ($db instanceof mysqli) {
         H::dbQuery($db, sprintf('UPDATE %stags SET lastmodified = %s WHERE id = %d', tagsPageDbPrefix(), $dateExpr, $tagId));
     } else {
         H::dbQuery($db, 'BEGIN');

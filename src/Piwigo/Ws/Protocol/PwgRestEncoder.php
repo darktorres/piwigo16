@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Protocol;
 
+use Override;
+use Piwigo\Core\CharsetHelper;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
@@ -35,7 +37,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
         return $this->_writer;
     }
 
-    #[\Override]
+    #[Override]
     public function encodeResponse($response): string
     {
         if ($response instanceof PwgError) {
@@ -50,7 +52,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
         $this->encode($response);
         $ret = $this->writer()
             ->getOutput();
-        $ret = '<?xml version="1.0" encoding="' . \Piwigo\Core\CharsetHelper::getPwgCharset() . '" ?>
+        $ret = '<?xml version="1.0" encoding="' . CharsetHelper::getPwgCharset() . '" ?>
 <rsp stat="ok">
 ' . $ret . '
 </rsp>';
@@ -58,7 +60,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
         return $ret;
     }
 
-    #[\Override]
+    #[Override]
     public function getContentType(): string
     {
         return 'text/xml';

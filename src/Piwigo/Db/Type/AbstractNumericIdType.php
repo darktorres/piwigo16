@@ -7,6 +7,8 @@ namespace Piwigo\Db\Type;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Type;
+use InvalidArgumentException;
+use Override;
 use Piwigo\Common\ValueObject\NumericId;
 
 /**
@@ -31,7 +33,7 @@ abstract class AbstractNumericIdType extends Type
      */
     abstract protected function voClass(): string;
 
-    #[\Override]
+    #[Override]
     public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?NumericId
     {
         if ($value === null) {
@@ -39,7 +41,7 @@ abstract class AbstractNumericIdType extends Type
         }
 
         if (! is_int($value) && ! is_string($value)) {
-            throw new \InvalidArgumentException(sprintf('Expected int or string from the DB driver, got %s', get_debug_type($value)));
+            throw new InvalidArgumentException(sprintf('Expected int or string from the DB driver, got %s', get_debug_type($value)));
         }
 
         $class = $this->voClass();
@@ -47,7 +49,7 @@ abstract class AbstractNumericIdType extends Type
         return $class::from((int) $value);
     }
 
-    #[\Override]
+    #[Override]
     public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform): ?int
     {
         if ($value === null) {
@@ -57,7 +59,7 @@ abstract class AbstractNumericIdType extends Type
         if (! $value instanceof NumericId) {
             // Real check, not assert() -- this project runs zend.assertions=-1
             // everywhere, so assert() is a silent no-op here.
-            throw new \InvalidArgumentException(sprintf('Expected %s, got %s', NumericId::class, get_debug_type($value)));
+            throw new InvalidArgumentException(sprintf('Expected %s, got %s', NumericId::class, get_debug_type($value)));
         }
 
         // NumericId is an interface -- PHP interfaces can't declare
@@ -70,13 +72,13 @@ abstract class AbstractNumericIdType extends Type
         return (int) (string) $value;
     }
 
-    #[\Override]
+    #[Override]
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         return $platform->getIntegerTypeDeclarationSQL($column);
     }
 
-    #[\Override]
+    #[Override]
     public function getBindingType(): ParameterType
     {
         return ParameterType::INTEGER;

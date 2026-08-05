@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Request\RatingUserFilterRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Rate\RateEntity;
+use Piwigo\Template\CurrentTemplate;
 
 /**
  * Ported from admin/rating_user.php (page slug "rating_user") -- the admin
@@ -19,7 +25,7 @@ use Piwigo\Image\ImageStdParams;
  */
 final class RatingUserPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher): void
     {
         $template = $currentTemplate->get();
 
@@ -28,12 +34,12 @@ final class RatingUserPageRenderer
         $tabsheet->select('rating_user', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
-        $ratingFilter = Request\RatingUserFilterRequest::fromGlobals($currentConfig->topNumber());
+        $ratingFilter = RatingUserFilterRequest::fromGlobals($currentConfig->topNumber());
         $filter_min_rates = $ratingFilter->minRates;
         $consensus_top_number = $ratingFilter->consensusTopNumber;
 
         // build users
-        $rate_repository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Rate\RateEntity::class);
+        $rate_repository = EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class);
 
         $users_by_id = [];
         foreach ($rate_repository->findUsersWithStatusByIdUsername() as $u) {

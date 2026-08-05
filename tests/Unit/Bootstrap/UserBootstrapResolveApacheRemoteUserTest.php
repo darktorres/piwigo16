@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Bootstrap;
 
+use PHPUnit\Framework\TestCase;
 use Piwigo\Bootstrap\UserBootstrap;
 
 /**
@@ -12,7 +13,7 @@ use Piwigo\Bootstrap\UserBootstrap;
  * include/user.inc.php during its P23 batch 5 port. Pure function, no
  * DB/globals needed.
  */
-final class UserBootstrapResolveApacheRemoteUserTest extends \PHPUnit\Framework\TestCase
+final class UserBootstrapResolveApacheRemoteUserTest extends TestCase
 {
     public function test_prefers_remote_user_when_both_are_present(): void
     {

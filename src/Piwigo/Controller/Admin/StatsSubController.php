@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\StatsPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\History\HistoryService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -30,14 +36,14 @@ final class StatsSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly CoreTabs $coreTabs,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\History\HistoryService $historyService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly HistoryService $historyService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly EventDispatcher $eventDispatcher,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new StatsPageRenderer()

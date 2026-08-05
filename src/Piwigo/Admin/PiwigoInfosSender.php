@@ -4,19 +4,29 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Override;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Bootstrap\RequestBootstrap;
+use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ArrayHelper;
 use Piwigo\Core\ContainerDetector;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
+use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UniqueExecLock;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Http\HttpClientService;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\UserService;
 
@@ -45,22 +55,22 @@ use Piwigo\Users\UserService;
  * fetchRemote() onto Piwigo\Http\HttpClientService::fetch(), in the
  * following file-3 sub-batches (System info, Network/HTTP).
  */
-final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
+final class PiwigoInfosSender implements TelemetrySenderInterface
 {
     public function __construct(
         private readonly Lang $lang,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly CurrentLogger $currentLogger,
         private readonly ImageStdParams $imageStdParams,
-        private readonly \Piwigo\Config\ConfigService $configService,
+        private readonly ConfigService $configService,
         private readonly InstallationStats $installationStats,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly ActivityService $activityService,
         private readonly UserService $userService,
-        private readonly \Piwigo\Image\ImageService $imageService,
-        private readonly \Piwigo\Core\UrlServiceInterface $urlService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly ImageService $imageService,
+        private readonly UrlServiceInterface $urlService,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function send(): void
     {
         $logger = $this->currentLogger->get();
@@ -182,7 +192,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
 
         // $conf['pem_plugins_category'] = 12;
         // $conf['pem_themes_category'] = 10;
-        $pemUrl = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
+        $pemUrl = RequestBootstrap::pemUrl();
         $url = $pemUrl . '/api/get_extension_list.php';
         // unserialize() is typed mixed by PHP's own stub; the PEM API's
         // contract is an array of {eid: {...}} extension records, but a
@@ -229,7 +239,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         $urlService = $this->urlService;
         $fsPlugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService, $this->lang);
-        $dbPluginsById = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn))
+        $dbPluginsById = new ExtensionRepository(EntityManagerFactory::build($conn))
             ->findAll(ExtensionType::Plugin);
         $piwigoInfos['general_stats']['nb_private_plugins'] = 0;
         $piwigoInfos['plugins'] = [];
@@ -282,7 +292,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
 
         $fsThemes = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $urlService, $this->lang);
-        $dbThemesById = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn))
+        $dbThemesById = new ExtensionRepository(EntityManagerFactory::build($conn))
             ->findAll(ExtensionType::Theme);
         $piwigoInfos['general_stats']['nb_private_themes'] = 0;
         $piwigoInfos['themes'] = [];

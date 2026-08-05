@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Config\CurrentConfig;
+
 /**
  * Pure pagination math -- no template/DB dependency, ported verbatim
  * from create_navigation_bar() (include/functions.inc.php).
@@ -22,7 +24,7 @@ namespace Piwigo\Core;
 final class PaginationService
 {
     public function __construct(
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**

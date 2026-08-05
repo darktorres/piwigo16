@@ -64,7 +64,7 @@ function pluginMaintainBuild(): PluginMaintain
     $wsContext = Kernel::container()->get(WsContext::class);
     $accessControl = Kernel::container()->get(AccessControl::class);
     if (! $wsContext instanceof WsContext || ! $accessControl instanceof AccessControl) {
-        throw new \LogicException('Container returned an unexpected type');
+        throw new LogicException('Container returned an unexpected type');
     }
 
     return new PluginMaintain('some-plugin', $wsContext, $accessControl);

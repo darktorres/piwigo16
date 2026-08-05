@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Section;
 
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Section\Request\SectionUrlRequest;
 
 /**
  * URL token parser: "category/12-name/start-24" -> a structured
@@ -34,7 +37,7 @@ final readonly class SectionInitializer
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
         private RequestMountDepth $requestMountDepth,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     public function parse(): SectionUrlParse
@@ -65,7 +68,7 @@ final readonly class SectionInitializer
             // picture.php?1. Cast back to the string this variable was
             // always meant to hold (see Request\SectionUrlRequest's own
             // docblock).
-            $rewritten = Request\SectionUrlRequest::fromGlobals()->firstGetKey;
+            $rewritten = SectionUrlRequest::fromGlobals()->firstGetKey;
 
             // the $_GET keys are not protected in include/common.inc.php, only the values
             $rewritten = $this->repo->escapeToken($rewritten);
@@ -91,7 +94,7 @@ final readonly class SectionInitializer
         // |                             picture page                              |
         // +-----------------------------------------------------------------------+
         // the first token must be the identifier for the picture
-        if (\Piwigo\Core\PageFilterHelper::scriptBasename() === 'picture') {
+        if (PageFilterHelper::scriptBasename() === 'picture') {
             $token = $tokens[$next_token];
             $next_token++;
             if (is_numeric($token)) {

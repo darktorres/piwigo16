@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use LogicException;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\TemplateTestFactory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Config\ConfigLoader;
@@ -15,7 +19,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\Template;
 
 /**
  * fsQuickCheck()/imagesIntegrity() had zero dedicated test file. Both need
@@ -58,7 +61,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
      */
     private FilesystemIntegrityChecker $checker;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -70,19 +73,19 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot();
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
 
         $checker = Kernel::container()->get(FilesystemIntegrityChecker::class);
         if (! $checker instanceof FilesystemIntegrityChecker) {
-            throw new \LogicException('Container returned an unexpected type for ' . FilesystemIntegrityChecker::class);
+            throw new LogicException('Container returned an unexpected type for ' . FilesystemIntegrityChecker::class);
         }
         $this->checker = $checker;
 
@@ -93,10 +96,10 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         // that reads it back with raw SQL.
         $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'fs_quick_check_last_check'");
 
-        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'fs_quick_check_last_check'");
@@ -142,7 +145,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
     {
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->setFsQuickCheckPeriod(0);
 

@@ -8,7 +8,6 @@ declare(strict_types=1);
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-
 // P23 sub-batch 8f-6: thin bootstrap shell (matching admin.php's
 // established shape). All former top-level orchestration lives in
 // Piwigo\Admin\Install\InstallWizard; this file keeps only what's
@@ -20,12 +19,16 @@ declare(strict_types=1);
 // in PHP 8.0, so on this codebase's PHP 8.4 floor the function_exists()
 // guard made the whole block provably dead — same rationale as 8f-5's
 // removal of common.inc.php's twin sanitize_mysql_kv().
-
 use Piwigo\Admin\Install\InstallWizard;
 use Piwigo\Bootstrap\InstallBootstrap;
+use Piwigo\Bootstrap\RequestBootstrap;
+use Piwigo\Bootstrap\SessionBootstrap;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Env;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbCredentials;
+use Piwigo\Http\ResponseEmitter;
+use Piwigo\Http\ResponseReadyException;
 
 // vendor/autoload.php must be required directly here -- Paths::fromRoot()
 // below is a Piwigo\ class, so the autoloader must already be active
@@ -65,22 +68,22 @@ $dbCredentials->seed([
 // became Piwigo\Bootstrap\SessionBootstrap::register() (same internal
 // PHPWG_INSTALLED guard, so it stays the no-op it always was at this point
 // of a fresh install).
-\Piwigo\Bootstrap\SessionBootstrap::register();
+SessionBootstrap::register();
 
 // ---------------------------------------------------------------- orchestration
 $wizard = new InstallWizard(
-    \Piwigo\Bootstrap\RequestBootstrap::lang(),
+    RequestBootstrap::lang(),
     $prefixeTable,
     $paths,
     $dbCredentials,
-    \Piwigo\Config\CurrentConfigService::current(),
-    \Piwigo\Bootstrap\RequestBootstrap::currentConfig(),
-    \Piwigo\Bootstrap\RequestBootstrap::inputValidator(),
-    \Piwigo\Bootstrap\RequestBootstrap::adminContext(),
-    \Piwigo\Bootstrap\RequestBootstrap::eventDispatcher(),
-    \Piwigo\Bootstrap\RequestBootstrap::pageState(),
-    \Piwigo\Bootstrap\RequestBootstrap::errorCollector(),
-    \Piwigo\Bootstrap\RequestBootstrap::processCache(),
+    CurrentConfigService::current(),
+    RequestBootstrap::currentConfig(),
+    RequestBootstrap::inputValidator(),
+    RequestBootstrap::adminContext(),
+    RequestBootstrap::eventDispatcher(),
+    RequestBootstrap::pageState(),
+    RequestBootstrap::errorCollector(),
+    RequestBootstrap::processCache(),
 );
 
 // Found live while verifying Part II's public/ relocation, unrelated to the
@@ -116,7 +119,7 @@ try {
     }
 
     $wizard->render();
-} catch (\Piwigo\Http\ResponseReadyException $e) {
-    new \Piwigo\Http\ResponseEmitter()
+} catch (ResponseReadyException $e) {
+    new ResponseEmitter()
         ->emit($e->response());
 }

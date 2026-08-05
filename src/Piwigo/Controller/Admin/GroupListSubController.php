@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\GroupListPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -23,7 +24,7 @@ final class GroupListSubController implements AdminSubControllerInterface
         private readonly GroupListPageRenderer $groupListPageRenderer,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $this->groupListPageRenderer

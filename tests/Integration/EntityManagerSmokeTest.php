@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use LogicException;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigEntry;
@@ -23,7 +25,7 @@ final class EntityManagerSmokeTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -36,9 +38,9 @@ final class EntityManagerSmokeTest extends IntegrationTestCase
         }
 
         if (Kernel::isBooted()) {
-            $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-            if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+            $currentConfig = Kernel::container()->get(CurrentConfig::class);
+            if (! $currentConfig instanceof CurrentConfig) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
             }
             $currentConfig->reset();
         }
@@ -47,7 +49,7 @@ final class EntityManagerSmokeTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         Kernel::reset();

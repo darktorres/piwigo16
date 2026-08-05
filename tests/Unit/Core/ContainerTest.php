@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use DI\Definition\Exception\InvalidDefinition;
 use Piwigo\Core\Container;
 use Piwigo\Core\Paths;
 use Psr\Container\ContainerInterface;
@@ -47,7 +48,7 @@ test('build without a $paths argument does not register a Paths definition at al
     // via a sed-applied mutation rerun.
     $container = Container::build();
 
-    expect(fn () => $container->get(Paths::class))->toThrow(\DI\Definition\Exception\InvalidDefinition::class);
+    expect(fn () => $container->get(Paths::class))->toThrow(InvalidDefinition::class);
 });
 
 test('build with a $paths argument registers it so Paths::class resolves to that same instance', function (): void {

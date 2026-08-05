@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
+use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Logger;
+use Piwigo\Core\VersionHelper;
 use Piwigo\Http\HttpClientService;
+use Piwigo\Users\CurrentUser;
 
 /**
  * PEM (piwigo extension market) remote-server communication: shared by the
@@ -36,8 +41,8 @@ final readonly class PemCatalog
 {
     public function __construct(
         private ZipExtractor $zipExtractor,
-        private \Piwigo\Core\CurrentLogger $currentLogger,
-        private \Piwigo\Users\CurrentUser $currentUser,
+        private CurrentLogger $currentLogger,
+        private CurrentUser $currentUser,
     ) {}
 
     /**
@@ -50,7 +55,7 @@ final readonly class PemCatalog
     public function getVersionsToCheck(ExtensionType $type, bool $betaTest = false, string $version = AppInfo::VERSION): array
     {
 
-        $pemBaseUrl = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
+        $pemBaseUrl = RequestBootstrap::pemUrl();
         $versionsToCheck = [];
         $url = $pemBaseUrl . '/api/get_version_list.php';
         $getData = [
@@ -68,7 +73,7 @@ final readonly class PemCatalog
                 $pemVersion = $pemVersions[$i] ?? null;
                 if (is_array($pemVersion)) {
                     $pemVersionName = $pemVersion['name'] ?? null;
-                    if (is_string($pemVersionName) and \Piwigo\Core\VersionHelper::getBranchFromVersion($pemVersionName) === \Piwigo\Core\VersionHelper::getBranchFromVersion($version)) {
+                    if (is_string($pemVersionName) and VersionHelper::getBranchFromVersion($pemVersionName) === VersionHelper::getBranchFromVersion($version)) {
                         $pemVersionId = $pemVersion['id'] ?? null;
                         if (is_scalar($pemVersionId)) {
                             $versionsToCheck[] = (string) $pemVersionId;
@@ -125,7 +130,7 @@ final readonly class PemCatalog
             return null;
         }
 
-        $pemBaseUrl = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
+        $pemBaseUrl = RequestBootstrap::pemUrl();
         $url = $pemBaseUrl . '/api/get_revision_list-next.php';
         $userLanguage = $this->currentUser->get()
             ->language;
@@ -219,7 +224,7 @@ final readonly class PemCatalog
             }
         }
 
-        $pemBaseUrl = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
+        $pemBaseUrl = RequestBootstrap::pemUrl();
         $url = $pemBaseUrl . '/api/get_revision_list.php';
         $getData = [
             'category_id' => $type->pemCategoryId(),
@@ -291,7 +296,7 @@ final readonly class PemCatalog
             ];
         }
 
-        $pemBaseUrl = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
+        $pemBaseUrl = RequestBootstrap::pemUrl();
         $url = $pemBaseUrl . '/download.php';
         $getData = [
             'rid' => $revision,
@@ -424,7 +429,7 @@ final readonly class PemCatalog
      */
     public function getLocallyMergedExtensions(): array
     {
-        $file = \Piwigo\Core\CurrentPaths::get()->root . 'install/obsolete_extensions.list';
+        $file = CurrentPaths::get()->root . 'install/obsolete_extensions.list';
         $mergedExtensions = [];
 
         if (file_exists($file)) {

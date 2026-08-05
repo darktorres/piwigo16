@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Permalink\Projection;
 
+use Piwigo\Permalink\OldPermalinkEntity;
+
 /**
  * Typed row shape for `piwigo_old_permalinks` (P17-23 Stage 1b, Permalink
  * domain -- `docs/PLAN.md`'s own "7 Entity types, 73 projection
@@ -31,7 +33,7 @@ final readonly class OldPermalink
      * properties are already typed, so no defensive casting is needed
      * the way `fromRow()`'s own untyped raw-array input required.
      */
-    public static function fromEntity(\Piwigo\Permalink\OldPermalinkEntity $entity): self
+    public static function fromEntity(OldPermalinkEntity $entity): self
     {
         return new self(
             catId: $entity->catId,

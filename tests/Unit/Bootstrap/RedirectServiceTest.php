@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Users\UserRepository;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Bootstrap\RedirectService;
@@ -19,7 +25,6 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Users\UserInfoEntity;
 use Piwigo\Users\UserService;
 
 // Workstream C3: redirectHttp() throws ResponseReadyException instead of
@@ -50,7 +55,7 @@ use Piwigo\Users\UserService;
  */
 function redirect_service_test_lang(): Lang
 {
-    return new Lang(new Translator(new \Piwigo\Config\CurrentConfig()), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 /**
@@ -62,15 +67,15 @@ function redirect_service_test_mail_service(): MailService
 {
     return new MailService(
         redirect_service_test_lang(),
-        new \Piwigo\Config\CurrentConfig(),
+        new CurrentConfig(),
         new DeploymentPolicy(),
-        new \Piwigo\Core\PageState(),
+        new PageState(),
         Paths::fromRoot(sys_get_temp_dir()),
-        new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), new \Piwigo\Config\CurrentConfig()),
-        new Translator(new \Piwigo\Config\CurrentConfig()),
+        new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), new CurrentConfig()),
+        new Translator(new CurrentConfig()),
         new EventDispatcher(),
-        new CurrentUser(new \Piwigo\Config\CurrentConfig()),
-        \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
+        new CurrentUser(new CurrentConfig()),
+        UrlServiceTestFactory::build(),
     );
 }
 
@@ -80,19 +85,19 @@ function redirect_service_test_user_service(): UserService
 
     return new UserService(
         redirect_service_test_lang(),
-        new \Piwigo\Users\UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new \Piwigo\Config\CurrentConfig()),
+        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
         redirect_service_test_mail_service(),
         new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
-        \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
+        HtmlServiceTestFactory::build(),
         $conn,
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class),new \Piwigo\Config\CurrentConfig()),
+        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class),new CurrentConfig()),
         new EventDispatcher(),
         new DeploymentPolicy(),
-        new CurrentUser(new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\Config\CurrentConfig(),
-        new \Piwigo\Core\InstallationFlag(),
-        new \Piwigo\Core\ProcessCache(),
+        new CurrentUser(new CurrentConfig()),
+        new CurrentConfig(),
+        new InstallationFlag(),
+        new ProcessCache(),
     );
 }
 

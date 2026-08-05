@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
@@ -12,8 +13,15 @@ use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Admin\UpdatesPwgPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Request\UpdatesTabRequest;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -66,17 +74,17 @@ final class UpdatesSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly CoreTabs $coreTabs,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly ExtensionUpdateChecker $extensionUpdateChecker,
         private readonly UpdatesPwgPageRenderer $updatesPwgPageRenderer,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly EventDispatcher $eventDispatcher,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         if (! $this->currentConfig->enableExtensionsInstall() and ! $this->currentConfig->enableCoreUpdate()) {
@@ -90,7 +98,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
         // docblock).
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page=updates'));
 
-        $tab = Request\UpdatesTabRequest::fromGlobals($this->inputValidator)->tab;
+        $tab = UpdatesTabRequest::fromGlobals($this->inputValidator)->tab;
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('updates');

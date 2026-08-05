@@ -2,17 +2,19 @@
 
 declare(strict_types=1);
 
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Rate\RateEntity;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
-use Piwigo\Html\HtmlService;
 use Piwigo\Picture\PictureRateRenderer;
-use Piwigo\Rate\RateRepository;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\Template;
-use Piwigo\Url\UrlService;
 
 /**
  * Same "point CurrentPaths at a fresh temp root" Template setup as
@@ -44,21 +46,21 @@ beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::current()->setDataLocation('data/');
     CurrentConfig::current()->setDataDirChecked('1');
-    CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
+    CurrentTemplate::current()->set(TemplateTestFactory::build());
 });
 
 afterEach(function (): void {
     picture_rate_test_rrmdir(CurrentPaths::get()->root);
     CurrentTemplate::current()->reset();
     Kernel::reset();
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
 });
 
 test('render does nothing when rating is disabled', function (): void {
     CurrentConfig::current()->setRateEnabled(false);
-    $renderer = new PictureRateRenderer(\Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Rate\RateEntity::class), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current());
+    $renderer = new PictureRateRenderer(AccessControl::current(), EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current());
 
-    $renderer->render(42, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), [], '/picture.php');
+    $renderer->render(42, UrlServiceTestFactory::build(), [], '/picture.php');
 
     expect(CurrentTemplate::current()->get()->get_template_vars('rate_summary'))->toBeNull()
         ->and(CurrentTemplate::current()->get()->get_template_vars('rating'))->toBeNull();

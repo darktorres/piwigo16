@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Users\Projection;
 
+use InvalidArgumentException;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\ArrayHelper;
 use Piwigo\Users\UserInfoEntity;
@@ -73,7 +74,7 @@ final readonly class UserInfo
 
         $userId = UserId::tryFrom($row['user_id'] ?? null);
         if ($userId === null) {
-            throw new \InvalidArgumentException('UserInfo::fromRow(): missing or invalid user_id');
+            throw new InvalidArgumentException('UserInfo::fromRow(): missing or invalid user_id');
         }
 
         return new self(

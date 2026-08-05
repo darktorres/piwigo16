@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Migrations\UpgradePathProbe;
 
+use Override;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 use Piwigo\Db\DbCredentials;
@@ -26,19 +27,19 @@ use Piwigo\Db\DbCredentials;
  */
 final class Version00000000000001 extends AbstractMigration
 {
-    #[\Override]
+    #[Override]
     public function getDescription(): string
     {
         return 'Upgrade-path probe: creates the scratch probe table';
     }
 
-    #[\Override]
+    #[Override]
     public function up(Schema $schema): void
     {
         $this->addSql('CREATE TABLE ' . self::probeTable() . ' (id INTEGER NOT NULL)');
     }
 
-    #[\Override]
+    #[Override]
     public function down(Schema $schema): void
     {
         $this->addSql('DROP TABLE ' . self::probeTable());

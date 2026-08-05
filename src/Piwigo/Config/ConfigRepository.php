@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Config;
 
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
@@ -208,7 +209,7 @@ final class ConfigRepository extends EntityRepository
             ->where('c.param = :param')
             ->setParameter('param', $param)
             ->getQuery()
-            ->getOneOrNullResult(\Doctrine\ORM\AbstractQuery::HYDRATE_SINGLE_SCALAR);
+            ->getOneOrNullResult(AbstractQuery::HYDRATE_SINGLE_SCALAR);
 
         if (! is_string($value)) {
             return false;

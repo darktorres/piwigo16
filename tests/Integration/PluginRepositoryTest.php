@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\PluginConfig\PluginEntity;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
@@ -19,7 +24,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -31,16 +36,16 @@ final class PluginRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\PluginConfig\PluginEntity::class);
+        $this->repo = EntityManagerFactory::build($this->conn)->getRepository(PluginEntity::class);
 
         // the fixture ships an empty plugins table -- seed it directly so
         // getDbPlugins()'s filters have something real to select against;
@@ -62,7 +67,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
         );
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement('DELETE FROM ' . Tables::plugins());

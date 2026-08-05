@@ -12,25 +12,44 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
+use Piwigo\Admin\Request\AdminShellRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\AdminDispatcher;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Caddie\CaddieEntity;
+use Piwigo\Comment\CommentService;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Admin\AdminSubControllerInterface;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\VersionHelper;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Event\Location\LocBeginAdmin;
 use Piwigo\Event\Location\LocBeginAdminPage;
 use Piwigo\Event\Location\LocEndAdmin;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\RequestFactory;
+use Piwigo\Http\ResponseEmitter;
+use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageService;
+use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 
 /**
  * The admin.php page-shell orchestration (P23 batch 10): access check,
@@ -55,22 +74,22 @@ final class AdminShell
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
-        private readonly \Piwigo\Core\Paths $paths,
+        private readonly Paths $paths,
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Comment\CommentService $commentService,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly DeploymentPolicy $deploymentPolicy,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly CommentService $commentService,
         private readonly ImageService $imageService,
-        private readonly \Piwigo\Users\PreferencesService $preferencesService,
-        private readonly \Piwigo\Users\UserService $userService,
-        private readonly \Piwigo\Html\HtmlService $htmlService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly PreferencesService $preferencesService,
+        private readonly UserService $userService,
+        private readonly HtmlService $htmlService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
     ) {}
 
     /**
@@ -88,8 +107,8 @@ final class AdminShell
     {
         try {
             $this->runDispatch();
-        } catch (\Piwigo\Http\ResponseReadyException $e) {
-            new \Piwigo\Http\ResponseEmitter()
+        } catch (ResponseReadyException $e) {
+            new ResponseEmitter()
                 ->emit($e->response());
         }
     }
@@ -109,7 +128,7 @@ final class AdminShell
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        $adminShellRequest = Request\AdminShellRequest::fromGlobals($this->inputValidator);
+        $adminShellRequest = AdminShellRequest::fromGlobals($this->inputValidator);
 
         // +-------------------------------------------------------------------+
         // | Filesystem checks                                                 |
@@ -242,7 +261,7 @@ final class AdminShell
         // check (admin/ holds no page files anymore, so it only matched the
         // anti-listing stub and popuphelp.php, neither a real admin page).
         // Anything else falls back to 'intro'.
-        /** @var array<string, class-string<\Piwigo\Controller\Admin\AdminSubControllerInterface>> $admin_pages */
+        /** @var array<string, class-string<AdminSubControllerInterface>> $admin_pages */
         $admin_pages = require $this->paths->root . 'config/admin_pages.php';
 
         if (isset($_GET['page'])
@@ -333,7 +352,7 @@ final class AdminShell
         // any photo in the caddie?
         $user_id = $this->currentUser->get()
             ->id->value;
-        $nb_photos_in_caddie = count(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Caddie\CaddieEntity::class)->findElementIdsForUser($user_id));
+        $nb_photos_in_caddie = count(EntityManagerFactory::build($conn)->getRepository(CaddieEntity::class)->findElementIdsForUser($user_id));
 
         if ($nb_photos_in_caddie > 0) {
             $template->assign(
@@ -412,7 +431,7 @@ final class AdminShell
 
         $show_whats_new = false;
 
-        $whats_new_major_version = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION);
+        $whats_new_major_version = VersionHelper::getBranchFromVersion(AppInfo::VERSION);
 
         if ((bool) $this->preferencesService->getParam('show_whats_new_' . $whats_new_major_version, true) and $this->configService->pwgIsDbconfWriteable()) {
             // >=, not > -- confirmed live (VR suite regression, 2026-08-04)
@@ -505,7 +524,7 @@ final class AdminShell
         // Add the Piwigo Official menu
         $template->assign('pwgmenu', AdminUiHelper::pwgUrl());
 
-        new \Piwigo\Page\PageHeaderRenderer()
+        new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
 
         $this->eventDispatcher->dispatchNotify(new LocEndAdmin());

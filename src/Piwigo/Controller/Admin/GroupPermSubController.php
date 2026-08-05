@@ -4,11 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\GroupPermPageRenderer;
+use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Category\CategoryService;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Group\GroupService;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -24,17 +33,17 @@ final class GroupPermSubController implements AdminSubControllerInterface
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Audit\AuditService $auditService,
-        private readonly \Piwigo\Category\CategoryService $categoryService,
-        private readonly \Piwigo\Group\GroupService $groupService,
-        private readonly \Piwigo\Permission\PermissionService $permissionService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly AuditService $auditService,
+        private readonly CategoryService $categoryService,
+        private readonly GroupService $groupService,
+        private readonly PermissionService $permissionService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly InputValidator $inputValidator,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new GroupPermPageRenderer($this->lang, $this->accessControl, $this->redirectService, $this->urlService, $this->currentUser, $this->currentTemplate, $this->auditService, $this->categoryService, $this->groupService, $this->permissionService, $this->htmlRenderer, $this->inputValidator)

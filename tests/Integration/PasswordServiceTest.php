@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
@@ -47,7 +51,7 @@ final class PasswordServiceTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -59,9 +63,9 @@ final class PasswordServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -70,7 +74,7 @@ final class PasswordServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         // A fresh, all-defaults DeploymentPolicy (externalAuthentification
         // false) -- no test in this file needs a non-default policy.
-        $this->service = new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new DeploymentPolicy());
+        $this->service = new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy());
     }
 
     public function test_hash_produces_a_bcrypt_hash(): void

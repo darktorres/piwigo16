@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use Piwigo\Cache\CachePools;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -18,7 +20,7 @@ final class WsImagesTest extends ContractTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -132,7 +134,7 @@ final class WsImagesTest extends ContractTestCase
         // ext-apcu here), files under _data/cache/ visible to both this
         // process and the Apache worker serving the WS call below, so a
         // stale cached row would otherwise survive the write.
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         try {
             $response = $this->wsAdmin('pwg.images.exist', [
@@ -147,7 +149,7 @@ final class WsImagesTest extends ContractTestCase
             $this->conn->executeStatement(
                 "DELETE FROM " . Tables::config() . " WHERE param = 'uniqueness_mode'"
             );
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 
@@ -190,7 +192,7 @@ final class WsImagesTest extends ContractTestCase
         $encodedRelDir = json_encode($relDir);
         self::assertIsString($encodedRelDir);
         $this->upsertConfig('upload_dir', $encodedRelDir);
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
         chmod($absDir, 0o555);
 
         try {
@@ -205,7 +207,7 @@ final class WsImagesTest extends ContractTestCase
         } finally {
             chmod($absDir, 0o755);
             $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'upload_dir'");
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
             rmdir($absDir);
         }
     }

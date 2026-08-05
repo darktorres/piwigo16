@@ -4,16 +4,26 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Request\GroupPermSubmitRequest;
 use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupService;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/group_perm.php (page slug "group_perm"). Already used
@@ -27,14 +37,14 @@ final class GroupPermPageRenderer
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly AuditService $auditService,
-        private readonly \Piwigo\Category\CategoryService $categoryService,
+        private readonly CategoryService $categoryService,
         private readonly GroupService $groupService,
-        private readonly \Piwigo\Permission\PermissionService $permissionService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly PermissionService $permissionService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly InputValidator $inputValidator,
     ) {}
 
     public function render(): void
@@ -46,10 +56,10 @@ final class GroupPermPageRenderer
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        $groupPermSubmit = Request\GroupPermSubmitRequest::fromGlobals($this->inputValidator);
+        $groupPermSubmit = GroupPermSubmitRequest::fromGlobals($this->inputValidator);
 
         if ($groupPermSubmit->isSubmitted) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
@@ -117,7 +127,7 @@ final class GroupPermPageRenderer
             [
                 'TITLE' => $this->lang->t(
                     'Manage permissions for group "%s"',
-                    \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class)
+                    EntityManagerFactory::build($conn)->getRepository(GroupEntity::class)
                         ->findName($groupId) ?? false
                 ),
                 'L_CAT_OPTIONS_TRUE' => $this->lang->t('Authorized'),
@@ -136,7 +146,7 @@ final class GroupPermPageRenderer
 
         $categoryService->displaySelectPrivateExcluding($authorized_ids, 'category_option_false', $this->htmlRenderer, $template);
 
-        $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
+        $template->assign('PWG_TOKEN', new CsrfService()->getToken());
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'group_perm');

@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -12,12 +17,8 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UniqueExecLock;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\ScriptLoader;
-use Piwigo\Template\Template;
-use Piwigo\Url\UrlService;
 use Piwigo\Users\UserService;
 
 /**
@@ -50,7 +51,7 @@ final class RedirectServiceTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -66,7 +67,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
         // Kernel is already booted by parent::setUp() with this exact same
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
 
         // footer.tpl's {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
@@ -81,7 +82,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         Lang::current()->reset();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         UniqueExecLock::ends('check_for_updates');
@@ -96,9 +97,9 @@ final class RedirectServiceTest extends IntegrationTestCase
     {
         // Same "resolve the real container-shared instance" reasoning as
         // userService() just below.
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
 
         return $currentConfig;
@@ -117,9 +118,9 @@ final class RedirectServiceTest extends IntegrationTestCase
         // Bootstrap resolver a real caller uses, e.g.
         // RequestBootstrap::userService(), already covered by that class's
         // own tests).
-        $userService = \Piwigo\Core\Kernel::container()->get(UserService::class);
+        $userService = Kernel::container()->get(UserService::class);
         if (! $userService instanceof UserService) {
-            throw new \LogicException('Container returned an unexpected type for ' . UserService::class);
+            throw new LogicException('Container returned an unexpected type for ' . UserService::class);
         }
 
         return $userService;
@@ -170,7 +171,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // "Undefined array key" warning under this suite's own
         // failOnWarning=true).
         Lang::current()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
-        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
 
         $execId = UniqueExecLock::begins('check_for_updates');
         self::assertTrue($execId);
@@ -191,7 +192,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // own comment -- Lang::setLangInfo() must run before Template's
         // own construction snapshots it.
         Lang::current()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
-        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
         // Would take the redirectHttp() branch (a bare 302, no rendered
         // body) if $refresh_time were ignored -- forcing the http method
         // here proves it's genuinely $refresh_time, not

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Bootstrap\RequestBootstrap;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // +-----------------------------------------------------------------------+
@@ -37,7 +39,7 @@ use Piwigo\Http\ResponseEmitter;
 use Piwigo\Routing\Router;
 
 $paths = Paths::fromRoot(dirname(__DIR__, 2));
-\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths, mountDepth: 1, isAdmin: true);
+RequestBootstrap::bootEntryPoint($paths, mountDepth: 1, isAdmin: true);
 
 $request = RequestFactory::fromGlobals()->withAttribute(Router::MOUNT_DEPTH_ATTRIBUTE, 1);
 $response = RequestPipeline::handle($request);

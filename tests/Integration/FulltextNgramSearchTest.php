@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
 use Doctrine\DBAL\Connection;
-use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
@@ -49,7 +49,7 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();

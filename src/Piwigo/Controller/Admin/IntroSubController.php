@@ -6,21 +6,44 @@ namespace Piwigo\Controller\Admin;
 
 use DateInterval;
 use DateTime;
+use Override;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
 use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Request\IntroActionRequest;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
+use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Core\TimingHelper;
+use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocEndIntro;
 use Piwigo\Http\HttpClientService;
+use Piwigo\Image\ImageService;
+use Piwigo\Lang\Translator;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -68,27 +91,27 @@ final class IntroSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly Lang $lang,
-        private readonly \Piwigo\Core\UrlServiceInterface $urlService,
+        private readonly UrlServiceInterface $urlService,
         private readonly LoadedPlugins $loadedPlugins,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly CurrentLogger $currentLogger,
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\Lang\Translator $translator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly Translator $translator,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly InstallationStats $installationStats,
-        private readonly \Piwigo\Comment\CommentService $commentService,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Users\PreferencesService $preferencesService,
-        private readonly \Piwigo\Image\ImageService $imageService,
-        private readonly \Piwigo\Category\CategoryService $categoryService,
-        private readonly \Piwigo\Users\UserService $userService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CommentService $commentService,
+        private readonly ActivityService $activityService,
+        private readonly PreferencesService $preferencesService,
+        private readonly ImageService $imageService,
+        private readonly CategoryService $categoryService,
+        private readonly UserService $userService,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
@@ -114,7 +137,7 @@ final class IntroSubController implements AdminSubControllerInterface
         // | tabs                                                                  |
         // +-----------------------------------------------------------------------+
 
-        if (Request\IntroActionRequest::fromGlobals()->isHideNewsletterSubscription) {
+        if (IntroActionRequest::fromGlobals()->isHideNewsletterSubscription) {
             $this->preferencesService
                 ->updateParam('show_newsletter_subscription', 'false');
             exit();
@@ -180,7 +203,7 @@ final class IntroSubController implements AdminSubControllerInterface
         ]);
 
         if ($this->currentConfig->showNewsletterSubscription() and (bool) $this->preferencesService->getParam('show_newsletter_subscription', true)) {
-            $register_date = (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
+            $register_date = (new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
                 ->findEarliestRegistrationDate();
             $nb_cats = $this->categoryService->countAllCategories();
             $nb_images = $this->imageService->getTotalImageCount();
@@ -226,7 +249,7 @@ final class IntroSubController implements AdminSubControllerInterface
                 'NB_VIEWS' => AdminUiHelper::numberFormatHumanReadable($nb_views),
                 'NB_PLUGINS' => count($this->loadedPlugins->get()),
                 'STORAGE_USED' => str_replace(' ', '&nbsp;', $this->lang->t('%sGB', number_format($du_gb, $du_decimals))),
-                'U_QUICK_SYNC' => $this->urlService->getRootUrl() . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
+                'U_QUICK_SYNC' => $this->urlService->getRootUrl() . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new CsrfService()->getToken(),
                 'CHECK_FOR_UPDATES' => $this->currentConfig->dashboardCheckForUpdates(),
             ]
         );
@@ -264,7 +287,7 @@ final class IntroSubController implements AdminSubControllerInterface
                     '%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>',
                     $this->lang->t('Latest Piwigo news'),
                     $news_url,
-                    \Piwigo\Core\DateHelper::timeSince($news_posted_on, 'year') . ' (' . $news_posted . ')',
+                    DateHelper::timeSince($news_posted_on, 'year') . ' (' . $news_posted . ')',
                     $news_subject
                 ));
             }
@@ -306,7 +329,7 @@ final class IntroSubController implements AdminSubControllerInterface
         $session_cache_calculated_on = is_numeric($session_cache_calculated_on) ? (int) $session_cache_calculated_on : null;
 
         if ($session_cache_calculated_on === null or $session_cache_calculated_on < Env::now()->getTimestamp() - 300) {
-            $start_time = \Piwigo\Core\TimingHelper::getMoment();
+            $start_time = TimingHelper::getMoment();
 
             $activity_actions = $this->activityService->getDailyActionCountsSince($date_string);
 
@@ -334,10 +357,10 @@ final class IntroSubController implements AdminSubControllerInterface
                 $current_number = $activity_last_weeks[$week][$day_nb]['number'] ?? 0;
                 $activity_last_weeks[$week][$day_nb]['number'] = $current_number + $activity_counter;
 
-                $activity_last_weeks[$week][$day_nb]['date'] = \Piwigo\Core\DateHelper::formatDate($day_date->getTimestamp());
+                $activity_last_weeks[$week][$day_nb]['date'] = DateHelper::formatDate($day_date->getTimestamp());
             }
 
-            $logger->debug('[admin/intro::' . __LINE__ . '] recent activity calculated in ' . \Piwigo\Core\TimingHelper::getElapsedTime($start_time, \Piwigo\Core\TimingHelper::getMoment()));
+            $logger->debug('[admin/intro::' . __LINE__ . '] recent activity calculated in ' . TimingHelper::getElapsedTime($start_time, TimingHelper::getMoment()));
 
             $_SESSION['cache_activity_last_weeks'] = [
                 'calculated_on' => Env::now()
@@ -553,7 +576,7 @@ final class IntroSubController implements AdminSubControllerInterface
         $template->assign_var_from_handle('ADMIN_CONTENT', 'intro');
 
         // Check integrity
-        $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
+        $integrityRepo = EntityManagerFactory::build($conn)->getRepository(IntegrityIgnoredAnomalyEntity::class);
         $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         // add internal checks
         new C13yInternal($this->lang, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->userService, $this->currentConfig)
@@ -581,14 +604,14 @@ final class IntroSubController implements AdminSubControllerInterface
      * view-shaping stays inline" precedent this class's own docblock
      * already establishes for its other dashboard queries.
      */
-    private static function getLatestNews(Lang $lang, \Piwigo\Config\CurrentConfig $currentConfig): mixed
+    private static function getLatestNews(Lang $lang, CurrentConfig $currentConfig): mixed
     {
         $news = null;
 
         $data_location = $currentConfig->dataLocation();
         $lang_code = $lang->langInfo()['code'] ?? null;
         $lang_code = is_string($lang_code) ? $lang_code : '';
-        $cache_path = \Piwigo\Core\CurrentPaths::get()->root . $data_location . 'cache/piwigo_latest_news-' . $lang_code . '.cache.php';
+        $cache_path = CurrentPaths::get()->root . $data_location . 'cache/piwigo_latest_news-' . $lang_code . '.cache.php';
         if (! is_file($cache_path) or filemtime($cache_path) < strtotime('24 hours ago')) {
             $url = AppInfo::URL . '/ws.php?method=porg.news.getLatest&format=json';
 
@@ -607,12 +630,12 @@ final class IntroSubController implements AdminSubControllerInterface
                         'id' => $topic['topic_id'] ?? null,
                         'subject' => $topic['subject'] ?? null,
                         'posted_on' => $posted_on,
-                        'posted' => \Piwigo\Core\DateHelper::formatDate($posted_on_for_format),
+                        'posted' => DateHelper::formatDate($posted_on_for_format),
                         'url' => $topic['url'] ?? null,
                     ];
                 }
 
-                if (\Piwigo\Core\FilesystemHelper::mkgetdir(dirname($cache_path))) {
+                if (FilesystemHelper::mkgetdir(dirname($cache_path))) {
                     file_put_contents($cache_path, serialize($news));
                 }
             } else {

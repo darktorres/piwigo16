@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Users\UserInfoEntity;
+use RuntimeException;
 
 /**
  * Persistence layer for the plugins/themes/languages tables. Row shape
@@ -211,8 +213,8 @@ final readonly class ExtensionRepository
             ->getResult();
 
         return array_map(static function (array $row): string {
-            if (! $row['userId'] instanceof \Piwigo\Common\ValueObject\UserId) {
-                throw new \RuntimeException('Expected UserId from DQL scalar hydration of ui.userId');
+            if (! $row['userId'] instanceof UserId) {
+                throw new RuntimeException('Expected UserId from DQL scalar hydration of ui.userId');
             }
 
             return (string) $row['userId']->value;

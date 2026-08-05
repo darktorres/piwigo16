@@ -12,7 +12,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
-use Piwigo\Template\Template;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 
 final class Tabsheet
 {
@@ -89,7 +90,7 @@ final class Tabsheet
     /*
        select a tab to be active
     */
-    public function select(string $name, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function select(string $name, EventDispatcher $eventDispatcher): void
     {
         $event = $eventDispatcher->dispatchChange(new TabsheetBeforeSelect($this->sheets, $this->uniqid));
         // 'tabsheet_before_select' handlers are documented to filter/append to
@@ -154,7 +155,7 @@ final class Tabsheet
      * Fill $this->$name {default value = TABSHEET} with HTML code for tabsheet
      * Fill $this->titlename {default value = TABSHEET_TITLE} with formated caption of the selected tab
      */
-    public function assign(\Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function assign(CurrentTemplate $currentTemplate): void
     {
         $template = $currentTemplate->get();
 

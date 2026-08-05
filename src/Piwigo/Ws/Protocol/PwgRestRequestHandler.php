@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Protocol;
 
+use Override;
 use Piwigo\Core\WsError;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgRequestHandler;
@@ -19,7 +20,7 @@ use Piwigo\Ws\Request\WsRawRequest;
 
 final class PwgRestRequestHandler extends PwgRequestHandler
 {
-    #[\Override]
+    #[Override]
     public function handleRequest(PwgServer &$service): void
     {
         $wsRequest = WsRawRequest::fromGlobals();

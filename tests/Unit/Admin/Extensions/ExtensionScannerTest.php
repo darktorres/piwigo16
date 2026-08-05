@@ -2,17 +2,15 @@
 
 declare(strict_types=1);
 
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Html\HtmlService;
-use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 
@@ -30,13 +28,13 @@ use Piwigo\Users\User;
 // seeded against this repo's own real root (not a disposable temp dir) so
 // the real language/ tree is genuinely reachable.
 beforeEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     ConfigLoader::applyDefaults();
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 4)));
 });
 
 afterEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     // Lang::current() (unlike CurrentUser::current()) has no memoized
     // pre-boot fallback -- see its own docblock -- so it must resolve
     // (and get reset) while the container is still up, before
@@ -47,7 +45,7 @@ afterEach(function (): void {
 });
 
 test('scan finds the real bundled en_UK language via its common.po header', function (): void {
-    $found = new ExtensionScanner()->scan(ExtensionType::Language, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current(), 'utf-8');
+    $found = new ExtensionScanner()->scan(ExtensionType::Language, UrlServiceTestFactory::build(), Lang::current(), 'utf-8');
 
     expect($found)->toHaveKey('en_UK')
         ->and($found['en_UK']['name'])->toBe('English (Great Britain)')
@@ -56,7 +54,7 @@ test('scan finds the real bundled en_UK language via its common.po header', func
 });
 
 test('scan skips a language directory with no common.po', function (): void {
-    $found = new ExtensionScanner()->scan(ExtensionType::Language, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current(), 'utf-8');
+    $found = new ExtensionScanner()->scan(ExtensionType::Language, UrlServiceTestFactory::build(), Lang::current(), 'utf-8');
 
     // index.php sits alongside the real locale directories under language/
     // but isn't itself an extension -- also fails the [a-zA-Z0-9-_]+ id
@@ -169,7 +167,7 @@ test('scan returns an empty array when the scan directory itself does not exist'
 
         set_error_handler(static fn (): bool => true, E_WARNING);
         try {
-            $found = new ExtensionScanner()->scan(ExtensionType::Language, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current(), 'utf-8');
+            $found = new ExtensionScanner()->scan(ExtensionType::Language, UrlServiceTestFactory::build(), Lang::current(), 'utf-8');
         } finally {
             restore_error_handler();
         }
@@ -185,7 +183,7 @@ test('scan skips a plugin directory with no main.inc.php', function (): void {
     try {
         mkdir($root . 'plugins/no_main_plugin', 0o777, true);
 
-        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current());
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), Lang::current());
 
         expect($found)->not->toHaveKey('no_main_plugin');
     } finally {
@@ -215,7 +213,7 @@ test('scan trims trailing whitespace from every regex-captured plugin header val
             . "Author URI: https://example.com/padded-author\t\n"
             . "*/\n");
 
-        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current());
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), Lang::current());
 
         expect($found)->toHaveKey('padded_header_plugin');
         $plugin = $found['padded_header_plugin'];
@@ -245,7 +243,7 @@ test('scan skips a directory entry with an invalid id but keeps scanning the res
         mkdir($root . 'plugins/zzz_valid_plugin', 0o777, true);
         file_put_contents($root . 'plugins/zzz_valid_plugin/main.inc.php', "<?php\n/*\nPlugin Name: Valid\n*/\n");
 
-        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current());
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), Lang::current());
 
         expect($found)->not->toHaveKey('a.invalid.name')
             ->and($found)->toHaveKey('zzz_valid_plugin');
@@ -264,7 +262,7 @@ test('scan defaults name/version/uri/description/author for a plugin whose main.
         mkdir($root . 'plugins/headerless_plugin', 0o777, true);
         file_put_contents($root . 'plugins/headerless_plugin/main.inc.php', "<?php\n// no header block at all\n");
 
-        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current());
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), Lang::current());
 
         expect($found)->toHaveKey('headerless_plugin');
         $plugin = $found['headerless_plugin'];
@@ -307,7 +305,7 @@ test('scan skips a plugin whose main.inc.php cannot be read', function (): void 
 
         set_error_handler(static fn (): bool => true, E_WARNING);
         try {
-            $found = new ExtensionScanner()->scan(ExtensionType::Plugin, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current());
+            $found = new ExtensionScanner()->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), Lang::current());
         } finally {
             restore_error_handler();
             chmod($mainFile, 0o644);
@@ -325,7 +323,7 @@ test('scan reports hasSettings=true for a webmaster-gated plugin when the curren
         extensionScannerFixturePlugin($root, 'webmaster_gated_plugin');
         CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'status' => 'webmaster']));
 
-        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current());
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), Lang::current());
 
         expect($found)->toHaveKey('webmaster_gated_plugin')
             ->and($found['webmaster_gated_plugin']['hasSettings'])->toBeTrue()
@@ -347,7 +345,7 @@ test('scan reports hasSettings=false for a webmaster-gated plugin when the curre
         extensionScannerFixturePlugin($root, 'webmaster_gated_plugin_normal_user');
         CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'normal']));
 
-        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current());
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), Lang::current());
 
         // Real security-relevant behaviour, not just a line-coverage
         // formality: a non-webmaster user must never see hasSettings=true
@@ -375,7 +373,7 @@ test('scan trims trailing whitespace from every regex-captured theme header valu
             . "*/\n");
         file_put_contents($dir . '/screenshot.png', 'fixture');
 
-        $found = new ExtensionScanner()->scan(ExtensionType::Theme, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current());
+        $found = new ExtensionScanner()->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), Lang::current());
 
         expect($found)->toHaveKey('padded_header_theme');
         $theme = $found['padded_header_theme'];
@@ -402,7 +400,7 @@ test('scan escapes special HTML characters in every string field it returns', fu
             . "Plugin Name: <script>alert(1)</script> & \"Quoted\"\n"
             . "*/\n");
 
-        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current());
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), Lang::current());
 
         expect($found)->toHaveKey('xss_plugin')
             ->and($found['xss_plugin']['name'])->toBe('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;Quoted&quot;');
@@ -418,7 +416,7 @@ test('scan defaults id/name/version/uri/description/author for a theme whose the
         file_put_contents($root . 'themes/headerless_theme/themeconf.inc.php', "<?php\n// no header block at all\n");
         file_put_contents($root . 'themes/headerless_theme/screenshot.png', 'fixture');
 
-        $found = new ExtensionScanner()->scan(ExtensionType::Theme, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current());
+        $found = new ExtensionScanner()->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), Lang::current());
 
         expect($found)->toHaveKey('headerless_theme');
         $theme = $found['headerless_theme'];
@@ -453,7 +451,7 @@ test('scan skips a theme whose themeconf.inc.php cannot be read', function (): v
 
         set_error_handler(static fn (): bool => true, E_WARNING);
         try {
-            $found = new ExtensionScanner()->scan(ExtensionType::Theme, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current());
+            $found = new ExtensionScanner()->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), Lang::current());
         } finally {
             restore_error_handler();
             chmod($themeConfFile, 0o644);
@@ -470,7 +468,7 @@ test('scan extracts every optional theme header field from a fully-populated the
     try {
         extensionScannerFixtureTheme($root, 'full_fixture_theme');
 
-        $found = new ExtensionScanner()->scan(ExtensionType::Theme, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current());
+        $found = new ExtensionScanner()->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), Lang::current());
 
         expect($found)->toHaveKey('full_fixture_theme');
         $theme = $found['full_fixture_theme'];
@@ -538,7 +536,7 @@ test('scan skips a language whose common.po cannot be read', function (): void {
 
         set_error_handler(static fn (): bool => true, E_WARNING);
         try {
-            $found = new ExtensionScanner()->scan(ExtensionType::Language, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current(), 'utf-8');
+            $found = new ExtensionScanner()->scan(ExtensionType::Language, UrlServiceTestFactory::build(), Lang::current(), 'utf-8');
         } finally {
             restore_error_handler();
             chmod($poFile, 0o644);
@@ -570,7 +568,7 @@ test('scan does not append an empty, whitespace-only X-Piwigo-Country to the lan
 
             PO);
 
-        $found = new ExtensionScanner()->scan(ExtensionType::Language, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Lang::current(), 'utf-8');
+        $found = new ExtensionScanner()->scan(ExtensionType::Language, UrlServiceTestFactory::build(), Lang::current(), 'utf-8');
 
         expect($found)->toHaveKey('blank_country_lang')
             ->and($found['blank_country_lang']['name'])->toBe('Blank Country Language');

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Common\ValueObject;
 
+use InvalidArgumentException;
+use Stringable;
+
 /**
  * Shared contract for shape-validated string value objects.
  *
@@ -17,10 +20,10 @@ namespace Piwigo\Common\ValueObject;
  * Each implementation validates its own shape at construction; downstream
  * code never re-validates.
  */
-interface StringVo extends \Stringable
+interface StringVo extends Stringable
 {
     /**
-     * @throws \InvalidArgumentException when $value does not match the VO's shape
+     * @throws InvalidArgumentException when $value does not match the VO's shape
      */
     public static function from(string $value): static;
 

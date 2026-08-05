@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Command;
 
+use Override;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Core\Env;
@@ -32,7 +33,7 @@ final class MaintenancePurgeFailedLoginsCommand extends Command
         parent::__construct();
     }
 
-    #[\Override]
+    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $before = (clone Env::now())->modify('-' . self::RETENTION_DAYS . ' days')->format('Y-m-d H:i:s');

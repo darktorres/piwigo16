@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+
 /**
  * Restores the P2 verification step that was planned ("IntegrationTestCase-based
  * smoke passes against piwigo_test") but never actually landed as a concrete test —
@@ -15,7 +17,7 @@ final class DatabaseConnectionTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();

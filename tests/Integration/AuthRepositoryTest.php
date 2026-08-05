@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Common\ValueObject\UserId;
+use DateTimeImmutable;
+use Piwigo\History\HistoryRepository;
+use Piwigo\History\HistoryEntity;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Config\CurrentConfig;
@@ -19,7 +27,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -31,21 +39,21 @@ final class AuthRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
+        $this->repo = new AuthRepository(EntityManagerFactory::build($this->conn));
     }
 
     public function test_find_username_and_password_returns_a_fixture_user(): void
     {
-        $found = $this->repo->findUsernameAndPassword(\Piwigo\Common\ValueObject\UserId::from(1));
+        $found = $this->repo->findUsernameAndPassword(UserId::from(1));
 
         self::assertNotNull($found);
         self::assertSame('fixture_admin', $found['username']);
@@ -54,12 +62,12 @@ final class AuthRepositoryTest extends IntegrationTestCase
 
     public function test_find_username_and_password_returns_null_for_a_missing_user(): void
     {
-        self::assertNull($this->repo->findUsernameAndPassword(\Piwigo\Common\ValueObject\UserId::from(999999)));
+        self::assertNull($this->repo->findUsernameAndPassword(UserId::from(999999)));
     }
 
     public function test_update_language_persists_the_new_value(): void
     {
-        $this->repo->updateLanguage(\Piwigo\Common\ValueObject\UserId::from(1), 'fr_FR');
+        $this->repo->updateLanguage(UserId::from(1), 'fr_FR');
 
         $value = $this->conn->createQueryBuilder()
             ->select('language')
@@ -80,24 +88,24 @@ final class AuthRepositoryTest extends IntegrationTestCase
     {
         // 999999 has no user_infos row -- em->find() returns null, so this
         // must return without writing/throwing.
-        $this->repo->updateLanguage(\Piwigo\Common\ValueObject\UserId::from(999999), 'fr_FR');
+        $this->repo->updateLanguage(UserId::from(999999), 'fr_FR');
 
         self::expectNotToPerformAssertions();
     }
 
     public function test_clear_activation_key_is_a_no_op_for_a_nonexistent_user(): void
     {
-        $this->repo->clearActivationKey(\Piwigo\Common\ValueObject\UserId::from(999999));
+        $this->repo->clearActivationKey(UserId::from(999999));
 
         self::expectNotToPerformAssertions();
     }
 
     public function test_clear_activation_key_nulls_both_columns_for_a_real_user(): void
     {
-        $now = new \DateTimeImmutable('2026-08-01 00:00:00');
-        $this->repo->setActivationKey(\Piwigo\Common\ValueObject\UserId::from(4), 'a-hash', $now);
+        $now = new DateTimeImmutable('2026-08-01 00:00:00');
+        $this->repo->setActivationKey(UserId::from(4), 'a-hash', $now);
 
-        $this->repo->clearActivationKey(\Piwigo\Common\ValueObject\UserId::from(4));
+        $this->repo->clearActivationKey(UserId::from(4));
 
         $row = $this->conn->createQueryBuilder()
             ->select('activation_key', 'activation_key_expire')
@@ -114,16 +122,16 @@ final class AuthRepositoryTest extends IntegrationTestCase
 
     public function test_set_activation_key_is_a_no_op_for_a_nonexistent_user(): void
     {
-        $this->repo->setActivationKey(\Piwigo\Common\ValueObject\UserId::from(999999), 'a-hash', new \DateTimeImmutable('2026-08-01 00:00:00'));
+        $this->repo->setActivationKey(UserId::from(999999), 'a-hash', new DateTimeImmutable('2026-08-01 00:00:00'));
 
         self::expectNotToPerformAssertions();
     }
 
     public function test_set_activation_key_persists_the_hash_and_formatted_expiry_for_a_real_user(): void
     {
-        $expire = new \DateTimeImmutable('2026-08-15 12:30:00');
+        $expire = new DateTimeImmutable('2026-08-15 12:30:00');
 
-        $this->repo->setActivationKey(\Piwigo\Common\ValueObject\UserId::from(4), 'freshly-hashed-value', $expire);
+        $this->repo->setActivationKey(UserId::from(4), 'freshly-hashed-value', $expire);
 
         try {
             $row = $this->conn->createQueryBuilder()
@@ -138,7 +146,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
             self::assertSame('freshly-hashed-value', $row['activation_key']);
             self::assertSame('2026-08-15 12:30:00', $row['activation_key_expire']);
         } finally {
-            $this->repo->clearActivationKey(\Piwigo\Common\ValueObject\UserId::from(4));
+            $this->repo->clearActivationKey(UserId::from(4));
         }
     }
 
@@ -167,9 +175,9 @@ final class AuthRepositoryTest extends IntegrationTestCase
         }
     }
 
-    private function historyLookup(): \Piwigo\History\HistoryRepository
+    private function historyLookup(): HistoryRepository
     {
-        return \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\History\HistoryEntity::class);
+        return EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class);
     }
 
     public function test_save_last_visit_from_history_persists_a_non_null_value(): void

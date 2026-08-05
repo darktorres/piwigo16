@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
+use Piwigo\Common\ValueObject\Email;
+use InvalidArgumentException;
+use Piwigo\Permission\PermissionCriteria;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
@@ -20,7 +30,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -32,43 +42,43 @@ final class UserRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\PluginConfig\EventDispatcher::get(), $currentConfig);
+        $this->repo = new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcher::get(), $currentConfig);
     }
 
     public function test_find_id_by_username_returns_a_fixture_user(): void
     {
-        self::assertEquals(\Piwigo\Common\ValueObject\UserId::from(1), $this->repo->findIdByUsername(\Piwigo\Common\ValueObject\Username::from('fixture_admin')));
-        self::assertNull($this->repo->findIdByUsername(\Piwigo\Common\ValueObject\Username::from('does-not-exist')));
+        self::assertEquals(UserId::from(1), $this->repo->findIdByUsername(Username::from('fixture_admin')));
+        self::assertNull($this->repo->findIdByUsername(Username::from('does-not-exist')));
     }
 
     public function test_find_username_by_id_returns_a_fixture_user(): void
     {
-        self::assertEquals(\Piwigo\Common\ValueObject\Username::from('fixture_admin'), $this->repo->findUsernameById(\Piwigo\Common\ValueObject\UserId::from(1)));
+        self::assertEquals(Username::from('fixture_admin'), $this->repo->findUsernameById(UserId::from(1)));
     }
 
     public function test_find_username_by_id_returns_null_for_a_nonexistent_user(): void
     {
-        self::assertNull($this->repo->findUsernameById(\Piwigo\Common\ValueObject\UserId::from(999999)));
+        self::assertNull($this->repo->findUsernameById(UserId::from(999999)));
     }
 
     public function test_find_id_by_email_returns_a_fixture_user(): void
     {
-        self::assertEquals(\Piwigo\Common\ValueObject\UserId::from(1), $this->repo->findIdByEmail(\Piwigo\Common\ValueObject\Email::from('fixture_admin@example.test')));
-        self::assertNull($this->repo->findIdByEmail(\Piwigo\Common\ValueObject\Email::from('nobody@example.test')));
+        self::assertEquals(UserId::from(1), $this->repo->findIdByEmail(Email::from('fixture_admin@example.test')));
+        self::assertNull($this->repo->findIdByEmail(Email::from('nobody@example.test')));
     }
 
     public function test_find_id_by_email_is_case_insensitive(): void
     {
-        self::assertEquals(\Piwigo\Common\ValueObject\UserId::from(1), $this->repo->findIdByEmail(\Piwigo\Common\ValueObject\Email::from('FIXTURE_ADMIN@EXAMPLE.TEST')));
+        self::assertEquals(UserId::from(1), $this->repo->findIdByEmail(Email::from('FIXTURE_ADMIN@EXAMPLE.TEST')));
     }
 
     public function test_find_by_username_case_insensitive_matches_regardless_of_case(): void
@@ -88,20 +98,20 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_username_exists_case_insensitive(): void
     {
-        self::assertTrue($this->repo->usernameExistsCaseInsensitive(\Piwigo\Common\ValueObject\Username::from('FIXTURE_ADMIN')));
-        self::assertFalse($this->repo->usernameExistsCaseInsensitive(\Piwigo\Common\ValueObject\Username::from('nope')));
+        self::assertTrue($this->repo->usernameExistsCaseInsensitive(Username::from('FIXTURE_ADMIN')));
+        self::assertFalse($this->repo->usernameExistsCaseInsensitive(Username::from('nope')));
     }
 
     public function test_email_exists(): void
     {
-        self::assertTrue($this->repo->emailExists(\Piwigo\Common\ValueObject\Email::from('fixture_admin@example.test'), null));
-        self::assertFalse($this->repo->emailExists(\Piwigo\Common\ValueObject\Email::from('nobody@example.test'), null));
+        self::assertTrue($this->repo->emailExists(Email::from('fixture_admin@example.test'), null));
+        self::assertFalse($this->repo->emailExists(Email::from('nobody@example.test'), null));
     }
 
     public function test_email_exists_excludes_the_given_user_id(): void
     {
-        self::assertFalse($this->repo->emailExists(\Piwigo\Common\ValueObject\Email::from('fixture_admin@example.test'), \Piwigo\Common\ValueObject\UserId::from(1)));
-        self::assertTrue($this->repo->emailExists(\Piwigo\Common\ValueObject\Email::from('fixture_admin@example.test'), \Piwigo\Common\ValueObject\UserId::from(2)));
+        self::assertFalse($this->repo->emailExists(Email::from('fixture_admin@example.test'), UserId::from(1)));
+        self::assertTrue($this->repo->emailExists(Email::from('fixture_admin@example.test'), UserId::from(2)));
     }
 
     public function test_find_all_usernames_includes_fixture_users(): void
@@ -118,7 +128,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
         $id = $this->repo->insertUser($username, 'irrelevant-hash', null);
 
-        self::assertEquals($id, $this->repo->findIdByUsername(\Piwigo\Common\ValueObject\Username::from($username)));
+        self::assertEquals($id, $this->repo->findIdByUsername(Username::from($username)));
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
     }
@@ -204,7 +214,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_save_preferences_persists_the_json_encoded_value(): void
     {
-        $this->repo->savePreferences(\Piwigo\Common\ValueObject\UserId::from(1), ['theme' => 'dark']);
+        $this->repo->savePreferences(UserId::from(1), ['theme' => 'dark']);
 
         $value = $this->conn->createQueryBuilder()
             ->select('preferences')
@@ -223,7 +233,7 @@ final class UserRepositoryTest extends IntegrationTestCase
     {
         // No user_infos row exists for this id -- find() returns null and
         // the method returns early rather than persisting a fresh entity.
-        $this->repo->savePreferences(\Piwigo\Common\ValueObject\UserId::from(999999), ['theme' => 'dark']);
+        $this->repo->savePreferences(UserId::from(999999), ['theme' => 'dark']);
 
         $count = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
@@ -265,7 +275,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         // images above.
         $this->conn->executeStatement('INSERT INTO ' . Tables::favorites() . ' (user_id, image_id) VALUES (1, 2)');
 
-        $this->repo->deleteFavoritesForImages(\Piwigo\Common\ValueObject\UserId::from(1), []);
+        $this->repo->deleteFavoritesForImages(UserId::from(1), []);
 
         $count = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
@@ -330,7 +340,7 @@ final class UserRepositoryTest extends IntegrationTestCase
             ->executeQuery()
             ->fetchOne();
 
-        $this->repo->updateInfosForUsers([\Piwigo\Common\ValueObject\UserId::from(1)], []);
+        $this->repo->updateInfosForUsers([UserId::from(1)], []);
 
         $after = $this->conn->createQueryBuilder()
             ->select('nb_image_page')
@@ -378,10 +388,10 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_update_infos_for_users_rejects_an_unknown_field(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Unknown user_infos field: not_a_real_field');
 
-        $this->repo->updateInfosForUsers([\Piwigo\Common\ValueObject\UserId::from(1)], ['not_a_real_field' => 'x']);
+        $this->repo->updateInfosForUsers([UserId::from(1)], ['not_a_real_field' => 'x']);
     }
 
     public function test_find_theme_usage_counts_includes_a_freshly_inserted_user(): void
@@ -520,22 +530,22 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_is_favorite_reflects_real_favorites_rows(): void
     {
-        self::assertTrue($this->repo->isFavorite(\Piwigo\Common\ValueObject\UserId::from(1), 1));
-        self::assertFalse($this->repo->isFavorite(\Piwigo\Common\ValueObject\UserId::from(1), 2));
-        self::assertFalse($this->repo->isFavorite(\Piwigo\Common\ValueObject\UserId::from(3), 1));
+        self::assertTrue($this->repo->isFavorite(UserId::from(1), 1));
+        self::assertFalse($this->repo->isFavorite(UserId::from(1), 2));
+        self::assertFalse($this->repo->isFavorite(UserId::from(3), 1));
     }
 
     public function test_add_favorite_inserts_a_row_that_is_favorite_then_reports(): void
     {
         // User 3 / image 2: a combination distinct from the fixture's own
         // user-1 favorites, so this doesn't collide with other tests.
-        self::assertFalse($this->repo->isFavorite(\Piwigo\Common\ValueObject\UserId::from(3), 2));
+        self::assertFalse($this->repo->isFavorite(UserId::from(3), 2));
 
-        $this->repo->addFavorite(\Piwigo\Common\ValueObject\UserId::from(3), 2);
+        $this->repo->addFavorite(UserId::from(3), 2);
 
-        self::assertTrue($this->repo->isFavorite(\Piwigo\Common\ValueObject\UserId::from(3), 2));
+        self::assertTrue($this->repo->isFavorite(UserId::from(3), 2));
 
-        $this->repo->addFavorite(\Piwigo\Common\ValueObject\UserId::from(3), 2, ignoreDuplicate: true);
+        $this->repo->addFavorite(UserId::from(3), 2, ignoreDuplicate: true);
 
         $count = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
@@ -694,26 +704,26 @@ final class UserRepositoryTest extends IntegrationTestCase
     public function test_count_user_infos_rows_is_one_for_a_real_user(): void
     {
         // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
-        self::assertSame(1, $this->repo->countUserInfosRows(\Piwigo\Common\ValueObject\UserId::from(1)));
+        self::assertSame(1, $this->repo->countUserInfosRows(UserId::from(1)));
     }
 
     public function test_count_user_infos_rows_is_zero_for_a_nonexistent_user(): void
     {
-        self::assertSame(0, $this->repo->countUserInfosRows(\Piwigo\Common\ValueObject\UserId::from(999999)));
+        self::assertSame(0, $this->repo->countUserInfosRows(UserId::from(999999)));
     }
 
     public function test_find_favorite_image_ids_returns_the_real_ids(): void
     {
         // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
         // Fixture: user 1 has favorites [1, 3, 5].
-        $ids = $this->repo->findFavoriteImageIds(\Piwigo\Common\ValueObject\UserId::from(1));
+        $ids = $this->repo->findFavoriteImageIds(UserId::from(1));
         sort($ids);
         self::assertSame([1, 3, 5], $ids);
     }
 
     public function test_find_favorite_image_ids_returns_empty_for_a_user_with_no_favorites(): void
     {
-        self::assertSame([], $this->repo->findFavoriteImageIds(\Piwigo\Common\ValueObject\UserId::from(2)));
+        self::assertSame([], $this->repo->findFavoriteImageIds(UserId::from(2)));
     }
 
     public function test_delete_all_favorites_removes_every_row_for_the_user(): void
@@ -722,9 +732,9 @@ final class UserRepositoryTest extends IntegrationTestCase
         $this->conn->beginTransaction();
 
         try {
-            $this->repo->deleteAllFavorites(\Piwigo\Common\ValueObject\UserId::from(1));
+            $this->repo->deleteAllFavorites(UserId::from(1));
 
-            self::assertSame([], $this->repo->findFavoriteImageIds(\Piwigo\Common\ValueObject\UserId::from(1)));
+            self::assertSame([], $this->repo->findFavoriteImageIds(UserId::from(1)));
         } finally {
             $this->conn->rollBack();
         }
@@ -735,7 +745,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         // Item 16J: had zero existing coverage. Fixture: user 1 has
         // favorites [1, 3, 5].
         $ids = $this->repo->findVisibleFavoriteImageIds(
-            \Piwigo\Common\ValueObject\UserId::from(1),
+            UserId::from(1),
             self::noPermissionRestriction(),
             'ORDER BY id ASC'
         );
@@ -746,7 +756,7 @@ final class UserRepositoryTest extends IntegrationTestCase
     public function test_find_visible_favorite_image_ids_orders_by_the_given_fragment(): void
     {
         $ids = $this->repo->findVisibleFavoriteImageIds(
-            \Piwigo\Common\ValueObject\UserId::from(1),
+            UserId::from(1),
             self::noPermissionRestriction(),
             'ORDER BY id DESC'
         );
@@ -757,7 +767,7 @@ final class UserRepositoryTest extends IntegrationTestCase
     public function test_find_visible_favorite_image_ids_falls_back_to_raw_dbal_for_unparseable_order_by(): void
     {
         $ids = $this->repo->findVisibleFavoriteImageIds(
-            \Piwigo\Common\ValueObject\UserId::from(1),
+            UserId::from(1),
             self::noPermissionRestriction(),
             'ORDER BY RAND()'
         );
@@ -771,16 +781,16 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame(
             [],
             $this->repo->findVisibleFavoriteImageIds(
-                \Piwigo\Common\ValueObject\UserId::from(2),
+                UserId::from(2),
                 self::noPermissionRestriction(),
                 'ORDER BY id ASC'
             )
         );
     }
 
-    private static function noPermissionRestriction(): \Piwigo\Permission\PermissionCriteria
+    private static function noPermissionRestriction(): PermissionCriteria
     {
-        return new \Piwigo\Permission\PermissionCriteria(null, null, null, null, null, null);
+        return new PermissionCriteria(null, null, null, null, null, null);
     }
 
     /**
@@ -798,7 +808,7 @@ final class UserRepositoryTest extends IntegrationTestCase
             'INSERT INTO ' . Tables::users() . " (username, password, mail_address) VALUES ('delete_user_test', NULL, NULL)"
         );
         $newUserId = (int) $this->conn->lastInsertId();
-        $userId = \Piwigo\Common\ValueObject\UserId::from($newUserId);
+        $userId = UserId::from($newUserId);
 
         $this->conn->executeStatement(
             'INSERT INTO ' . Tables::userInfos() . ' (user_id, status, language, theme) VALUES (?, ?, ?, ?)',

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Permalink;
 
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\ProcessCache;
 
 /**
@@ -27,7 +28,7 @@ final readonly class PermalinkService
         private Lang $lang,
         private PermalinkRepository $repo,
         private ProcessCache $processCache,
-        private \Piwigo\Core\PageState $pageState,
+        private PageState $pageState,
     ) {}
 
     /**

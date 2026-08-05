@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
 use Piwigo\Backup\BackupService;
 use Piwigo\Command\BackupCreateCommand;
 use Symfony\Component\Console\Command\Command;
@@ -25,7 +26,7 @@ final class BackupCreateCommandTest extends IntegrationTestCase
 
     private string $archivePath = '';
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -38,7 +39,7 @@ final class BackupCreateCommandTest extends IntegrationTestCase
         }
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         if ($this->archivePath !== '' && is_file($this->archivePath)) {

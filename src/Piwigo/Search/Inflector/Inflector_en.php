@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Search\Inflector;
 
+use Override;
+
 final class Inflector_en implements InflectorInterface
 {
     /**
@@ -123,7 +125,7 @@ final class Inflector_en implements InflectorInterface
     /**
      * @return array<int, string>
      */
-    #[\Override]
+    #[Override]
     public function get_variants(string $word): array
     {
         $res = [];

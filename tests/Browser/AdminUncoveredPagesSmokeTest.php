@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -439,7 +440,7 @@ function pluginSubDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function pluginSubDb(): \mysqli|\PgSql\Connection
+function pluginSubDb(): mysqli|Connection
 {
     return H::connect();
 }

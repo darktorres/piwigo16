@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use LogicException;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
@@ -38,7 +40,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
 {
     private string $tempRoot;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -53,7 +55,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
         mkdir($this->tempRoot . 'local/config', 0777, true);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         // Resolved (and reset) before Kernel::reset() destroys the
@@ -75,7 +77,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
     {
         $errorCollector = Kernel::container()->get(ErrorCollector::class);
         if (! $errorCollector instanceof ErrorCollector) {
-            throw new \LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
+            throw new LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
         }
 
         return $errorCollector;
@@ -209,7 +211,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
     {
         Kernel::reset();
 
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage('Kernel not booted');
 
         InstallBootstrap::activateConfigService();
@@ -217,7 +219,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
 
     public function test_activateConfigService_throws_when_the_container_returns_an_unexpected_type(): void
     {
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage('Container returned an unexpected type for ' . ConfigService::class);
 
         KernelContainerOverride::withWrongTypeFor(

@@ -78,11 +78,11 @@ it('logs a valid, known metric and returns an empty 204 response', function (): 
 
     $entry = vitalsFindLogEntry($uniqueId);
     if ($entry === null) {
-        throw new \RuntimeException('expected a logged web_vitals.metric entry for ' . $uniqueId);
+        throw new RuntimeException('expected a logged web_vitals.metric entry for ' . $uniqueId);
     }
     $context = $entry['context'] ?? null;
     if (! is_array($context)) {
-        throw new \RuntimeException('expected a "context" array in the log entry: ' . var_export($entry, true));
+        throw new RuntimeException('expected a "context" array in the log entry: ' . var_export($entry, true));
     }
     expect($entry['message'])->toBe('web_vitals.metric')
         ->and($entry['level_name'])->toBe('INFO')

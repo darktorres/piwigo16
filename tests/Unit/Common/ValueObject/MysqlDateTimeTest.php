@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
+use InvalidArgumentException;
+use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Common\ValueObject\MysqlDateTime;
@@ -35,7 +37,7 @@ final class MysqlDateTimeTest extends TestCase
     #[DataProvider('invalidStrings')]
     public function testFromRejects(string $input): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         MysqlDateTime::from($input);
     }
 
@@ -64,7 +66,7 @@ final class MysqlDateTimeTest extends TestCase
 
     public function testFromDateTimeRoundTrips(): void
     {
-        $dt  = new \DateTimeImmutable('2026-05-18 12:34:56');
+        $dt  = new DateTimeImmutable('2026-05-18 12:34:56');
         $vo  = MysqlDateTime::fromDateTime($dt);
         $out = $vo->toDateTimeImmutable();
         self::assertSame($dt->format('Y-m-d H:i:s'), $out->format('Y-m-d H:i:s'));

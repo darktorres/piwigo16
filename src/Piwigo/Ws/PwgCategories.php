@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
@@ -21,6 +22,7 @@ use Piwigo\Category\CategoryListCriteria;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryTreeCache;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\PageState;
@@ -35,6 +37,7 @@ use Piwigo\Image\CategoryImagesCriteria;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Permission\ForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -62,7 +65,7 @@ final class PwgCategories
         private readonly CurrentConfig $currentConfig,
         private readonly CurrentUser $currentUser,
         private readonly AccessControl $accessControl,
-        private readonly \Doctrine\ORM\EntityManagerInterface $entityManager,
+        private readonly EntityManagerInterface $entityManager,
         private readonly SessionService $sessionService,
         private readonly PageState $pageState,
         private readonly ImageStdParams $imageStdParams,
@@ -421,7 +424,7 @@ final class PwgCategories
             // CategoryTreeCache already computes/caches for this same
             // user id, so feeding it back into that same cache pool here
             // cannot desync it.
-            $guest_userdata = $this->userService->getUserData(\Piwigo\Common\ValueObject\UserId::from($repr_user_id));
+            $guest_userdata = $this->userService->getUserData(UserId::from($repr_user_id));
             $guest_forbidden_categories = $guest_userdata['forbidden_categories'] ?? '0';
             $guest_forbidden_categories = is_string($guest_forbidden_categories) ? $guest_forbidden_categories : '0';
             $forbiddenCategoryIds = self::csvToIntList($guest_forbidden_categories);
@@ -433,7 +436,7 @@ final class PwgCategories
             // categories that are either locked or private and not permitted
             //
             // calculate_permissions does not consider empty categories as forbidden
-            $forbidden_categories = new \Piwigo\Permission\ForbiddenCategoriesCache($this->permissionService, \Piwigo\Cache\CachePools::permissions())
+            $forbidden_categories = new ForbiddenCategoriesCache($this->permissionService, CachePools::permissions())
                 ->getForUser($user_id, $currentUser->status->value);
             $forbiddenCategoryIds = self::csvToIntList($forbidden_categories);
             // Deliberately NOT CategoryTreeCache: that pool is keyed only

@@ -5,32 +5,62 @@ declare(strict_types=1);
 namespace Piwigo\Bootstrap;
 
 use Doctrine\DBAL\Connection;
+use Exception;
+use LogicException;
+use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
+use Piwigo\Admin\LoadedPlugins;
+use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\ApiKeyRepository;
+use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\CurrentConfigService;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AdminContext;
+use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\CoverageCollector;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\CurrentThemeConfProvider;
+use Piwigo\Core\DeviceHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\FilterState;
+use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
+use Piwigo\Core\MailerInterface;
+use Piwigo\Core\PageFilterHelper;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Core\ServerTiming;
 use Piwigo\Core\StringHelper;
+use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\VersionHelper;
+use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbCredentials;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\Init;
 use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Event\Picture\GetElementUrl;
@@ -46,16 +76,29 @@ use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Event\User\TryLogUser;
 use Piwigo\Event\User\UserCommentCheck;
 use Piwigo\Filter\FilterService;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\ResponseEmitter;
+use Piwigo\Http\ResponseFactory;
+use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\Event\GetSrcImageUrl;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\LoungeMaintenance;
+use Piwigo\Lang\Translator;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Page\NoPhotoYetRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Site\SiteEntity;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
-use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 
 /**
  * The per-request bootstrap. Used to be the orchestration body of
@@ -183,9 +226,9 @@ final class RequestBootstrap
             self::installationFlag()->mark();
             self::connect();
             self::finalize();
-        } catch (\Piwigo\Http\ResponseReadyException $e) {
+        } catch (ResponseReadyException $e) {
             self::serverTiming()->stop('boot');
-            new \Piwigo\Http\ResponseEmitter()
+            new ResponseEmitter()
                 ->emit($e->response());
             exit;
         }
@@ -221,9 +264,9 @@ final class RequestBootstrap
         self::serverTiming()->start('boot', $bootStart);
         $currentConfigService = self::currentConfigService();
         if (! $currentConfigService->isSet()) {
-            $configService = Kernel::container()->get(\Piwigo\Config\ConfigService::class);
-            if (! $configService instanceof \Piwigo\Config\ConfigService) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\ConfigService::class);
+            $configService = Kernel::container()->get(ConfigService::class);
+            if (! $configService instanceof ConfigService) {
+                throw new LogicException('Container returned an unexpected type for ' . ConfigService::class);
             }
             $currentConfigService->set($configService);
             $configService->loadConfFromDb();
@@ -338,7 +381,7 @@ final class RequestBootstrap
             // Workstream C3, catch point 1: throws instead of the former
             // raw header()+exit() -- see the 503 maintenance-page site
             // below for the same conversion and why.
-            throw new \Piwigo\Http\ResponseReadyException(\Piwigo\Http\ResponseFactory::redirect('install.php'));
+            throw new ResponseReadyException(ResponseFactory::redirect('install.php'));
         }
     }
 
@@ -393,10 +436,10 @@ final class RequestBootstrap
         // repository, matching the established pattern from the Search/
         // Section/Category domain migrations.
         $conn = DbConnection::build();
-        $db_password = \Piwigo\Db\DbCredentials::current()->password;
+        $db_password = DbCredentials::current()->password;
         try {
             $conn->getNativeConnection();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             self::htmlService()
                 ->fatalError(self::lang()->t($e->getMessage()));
         }
@@ -409,9 +452,9 @@ final class RequestBootstrap
         // reachable via CurrentConfigService::get() for the rest of this
         // request (finalize() below, and every Tier 2 static-utility
         // caller) -- see its own docblock.
-        $configService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\ConfigService::class);
-        if (! $configService instanceof \Piwigo\Config\ConfigService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\ConfigService::class);
+        $configService = Kernel::container()->get(ConfigService::class);
+        if (! $configService instanceof ConfigService) {
+            throw new LogicException('Container returned an unexpected type for ' . ConfigService::class);
         }
         self::currentConfigService()->set($configService);
         $configService->loadConfFromDb();
@@ -433,7 +476,7 @@ final class RequestBootstrap
         self::imageStdParams();
 
         session_start();
-        PluginLoader::loadPlugins(self::loadedPlugins(), \Piwigo\PluginConfig\EventDispatcher::get(), self::activityService($conn), self::currentConfig(), self::wsContext(), self::accessControl(), self::pageState());
+        PluginLoader::loadPlugins(self::loadedPlugins(), EventDispatcher::get(), self::activityService($conn), self::currentConfig(), self::wsContext(), self::accessControl(), self::pageState());
 
         if (self::currentConfig()->piwigoInstalledVersion() === null) {
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
@@ -467,8 +510,8 @@ final class RequestBootstrap
             self::currentConfig()->setOrderByInsideCategory($orderByInsideCategoryCustom);
         }
 
-        if (\Piwigo\Image\LoungeMaintenance::needsEmptying()) {
-            new ImageService(self::lang(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService($conn), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::currentConfig(), self::translator())
+        if (LoungeMaintenance::needsEmptying()) {
+            new ImageService(self::lang(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::activityService($conn), self::sessionService(), EventDispatcher::get(), self::currentConfig(), self::translator())
                 ->emptyLounge();
         }
 
@@ -502,21 +545,21 @@ final class RequestBootstrap
         // runs during RequestPipeline::handle() -- after bootEntryPoint()
         // (connect()+finalize()) has fully returned, so it was never
         // actually affected by this ordering bug).
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(TryLogUser::class, new AuthService(
-            new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
+        EventDispatcher::get()->addTypedHandler(TryLogUser::class, new AuthService(
+            new AuthRepository(EntityManagerFactory::build($conn)),
             self::activityService($conn),
             self::htmlService(),
-            new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), self::deploymentPolicy()),
+            new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), self::deploymentPolicy()),
             new CookieService(),
-            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
+            EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class),
             self::sessionService(),
-            \Piwigo\PluginConfig\EventDispatcher::get(),
+            EventDispatcher::get(),
             self::pageState(),
             self::currentUser(),
             self::currentConfig(),
         )->pwgLogin(...));
         new UserBootstrap(
-            \Piwigo\Auth\AccessControl::current(),
+            AccessControl::current(),
             new RedirectService(self::lang(), self::userService()),
             self::urlService(),
             self::apiKeyRequestFlag(),
@@ -561,14 +604,14 @@ final class RequestBootstrap
         // language files
         self::lang()->setDefaultLanguageProvider(new UserService(
             self::lang(),
-            new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()),
-            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
+            new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()),
+            EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
             self::mailService(),
             self::activityService($conn),
             self::htmlService(),
             $conn,
             self::sessionService(),
-            \Piwigo\PluginConfig\EventDispatcher::get(),
+            EventDispatcher::get(),
             self::deploymentPolicy(),
             self::currentUser(),
             self::currentConfig(),
@@ -576,12 +619,12 @@ final class RequestBootstrap
             self::processCache(),
         ));
         self::lang()->load('common.lang');
-        if (\Piwigo\Auth\AccessControl::current()->isAdmin() || self::adminContext()->isActive()) {
+        if (AccessControl::current()->isAdmin() || self::adminContext()->isActive()) {
             self::lang()->load('admin.lang');
             // Add language for temporary strings for new popup, from piwigo 15
-            self::lang()->load('whats_new_' . \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
+            self::lang()->load('whats_new_' . VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
         }
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoadingLang());
+        EventDispatcher::get()->dispatchNotify(new LoadingLang());
         self::lang()->load('lang', CurrentPaths::get()->siteLocal, [
             'no_fallback' => true,
             'local' => true,
@@ -589,7 +632,7 @@ final class RequestBootstrap
 
         // only now we can set the localized username of the guest user (and not in
         // UserBootstrap::initialize())
-        if (\Piwigo\Auth\AccessControl::current()->isAGuest()) {
+        if (AccessControl::current()->isAGuest()) {
             // Second CurrentUser sync point (the first is inside
             // UserBootstrap::initialize()) -- isAGuest() itself already
             // reads CurrentUser (synced there with the pre-localization
@@ -615,8 +658,8 @@ final class RequestBootstrap
         if ($notify_api_key_expiration !== null) {
             $notify_username = self::currentUser()->get()->username;
             $notify_email = self::currentUser()->get()->email;
-            $apiKeyRepo = new \Piwigo\Auth\ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
-            $is_mail_send = new \Piwigo\Auth\ApiKeyService(self::lang(), self::mailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), self::deploymentPolicy()), self::urlService(), self::sessionService(), self::currentConfig())
+            $apiKeyRepo = new ApiKeyRepository(EntityManagerFactory::build($conn));
+            $is_mail_send = new ApiKeyService(self::lang(), self::mailService(), $apiKeyRepo, new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), self::deploymentPolicy()), self::urlService(), self::sessionService(), self::currentConfig())
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
 
             if ($is_mail_send) {
@@ -637,13 +680,13 @@ final class RequestBootstrap
             // untyped array<string, mixed>), so its return is inferred as
             // mixed; narrow to the same CurrentConfig::adminTheme() fallback
             // already passed as the default value.
-            $admin_theme = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
+            $admin_theme = new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
                 ->getParam('admin_theme', self::currentConfig()->adminTheme());
             $admin_theme = is_string($admin_theme) ? $admin_theme : self::currentConfig()->adminTheme();
             $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = self::currentUser()->get()->theme;
-            if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws' and \Piwigo\Core\DeviceHelper::mobileTheme()) {
+            if (PageFilterHelper::scriptBasename() !== 'ws' and DeviceHelper::mobileTheme()) {
                 $theme = self::currentConfig()->mobilTheme();
             }
             $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get()->root . 'themes', $theme);
@@ -665,9 +708,9 @@ final class RequestBootstrap
         // (singleton/service-locator elimination campaign, Phase 6) is a
         // separate container-shared wrapper from CurrentTemplate above,
         // not a delegate to it -- see that wrapper's own docblock.
-        $currentThemeConfProvider = Kernel::container()->get(\Piwigo\Core\CurrentThemeConfProvider::class);
-        if (! $currentThemeConfProvider instanceof \Piwigo\Core\CurrentThemeConfProvider) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentThemeConfProvider::class);
+        $currentThemeConfProvider = Kernel::container()->get(CurrentThemeConfProvider::class);
+        if (! $currentThemeConfProvider instanceof CurrentThemeConfProvider) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentThemeConfProvider::class);
         }
         $currentThemeConfProvider->set($template);
 
@@ -677,7 +720,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(self::lang(), \Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService()), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService(), self::currentConfig(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::htmlService(), self::installationFlag())
+            new NoPhotoYetRenderer(self::lang(), AccessControl::current(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService()), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService(), self::currentConfig(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::htmlService(), self::installationFlag())
                 ->render();
         }
 
@@ -689,7 +732,7 @@ final class RequestBootstrap
         if (self::currentConfig()->galleryLocked()) {
             $pageState->addHeaderMessage(self::lang()->t('The gallery is locked for maintenance. Please, come back later.'));
 
-            if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'identification' and ! \Piwigo\Auth\AccessControl::current()->isAdmin()) {
+            if (PageFilterHelper::scriptBasename() !== 'identification' and ! AccessControl::current()->isAdmin()) {
                 // Workstream C3, catch point 1: throws instead of the
                 // former raw header()+echo+exit() -- caught in
                 // include/common.inc.php, the one seam both dispatch
@@ -697,9 +740,9 @@ final class RequestBootstrap
                 // files and admin.php/admin/popuphelp.php) include.
                 $body = '<a href="' . self::urlService()->getAbsoluteRootUrl(false) . 'identification.php">' . self::lang()->t('The gallery is locked for maintenance. Please, come back later.') . '</a>';
                 $body .= str_repeat(' ', 512); // IE6 doesn't error output if below a size
-                throw new \Piwigo\Http\ResponseReadyException(\Piwigo\Http\ResponseFactory::raw($body, [
+                throw new ResponseReadyException(ResponseFactory::raw($body, [
                     'Retry-After' => '900',
-                    'Content-Type' => 'text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset(),
+                    'Content-Type' => 'text/html; charset=' . CharsetHelper::getPwgCharset(),
                 ], 503));
             }
         }
@@ -709,7 +752,7 @@ final class RequestBootstrap
             $pageState->headerMessages = [];
         }
 
-        if (self::currentConfig()->filterPages() !== [] and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
+        if (self::currentConfig()->filterPages() !== [] and (bool) PageFilterHelper::getFilterPageValue('used')) {
             // Formerly a conditional `include PHPWG_ROOT_PATH .
             // 'include/filter.inc.php';` (deleted, P23 sub-batch 8f-5).
             new FilterService(self::filterState(), self::sessionService(), self::translator(), self::lang(), self::currentConfig(), self::eventDispatcher(), $conn)
@@ -721,13 +764,13 @@ final class RequestBootstrap
         $pageState->headerNotes = array_merge($pageState->headerNotes, self::currentConfig()->headerNotes());
 
         // default event handlers
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(RenderCategoryLiteralDescription::class, self::htmlService()->renderCategoryLiteralDescription(...));
+        EventDispatcher::get()->addTypedHandler(RenderCategoryLiteralDescription::class, self::htmlService()->renderCategoryLiteralDescription(...));
         if (! self::currentConfig()->allowHtmlDescriptions()) {
             // pwgNl2br() is a generic string transform reused by
             // RenderElementDescription's own default handler too -- a thin
             // adapter closure per event, leaving pwgNl2br() itself untouched,
             // since one method can't be typed for two different event classes.
-            \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+            EventDispatcher::get()->addTypedHandler(
                 RenderCategoryDescription::class,
                 static function (RenderCategoryDescription $e): RenderCategoryDescription {
                     $result = self::htmlService()
@@ -738,11 +781,11 @@ final class RequestBootstrap
                 },
             );
         }
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(RenderCommentContent::class, self::htmlService()->renderCommentContent(...));
+        EventDispatcher::get()->addTypedHandler(RenderCommentContent::class, self::htmlService()->renderCommentContent(...));
         // 'strip_tags' is PHP's own native function -- can't be retyped, so
         // this is a thin adapter closure instead, same reasoning as
         // pwgNl2br() above.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+        EventDispatcher::get()->addTypedHandler(
             RenderCommentAuthor::class,
             static function (RenderCommentAuthor $e): RenderCommentAuthor {
                 $e->commentAuthor = strip_tags($e->commentAuthor);
@@ -762,7 +805,7 @@ final class RequestBootstrap
         // StringHelper::str2url() is called directly from 6+ unrelated
         // production sites -- a thin adapter closure keeps its own signature
         // untouched, same reasoning as pwgNl2br()/strip_tags() above.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+        EventDispatcher::get()->addTypedHandler(
             RenderTagUrl::class,
             static function (RenderTagUrl $e): RenderTagUrl {
                 $e->tagName = StringHelper::str2url($e->tagName);
@@ -770,7 +813,7 @@ final class RequestBootstrap
                 return $e;
             },
         );
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(BlockManagerRegisterBlocks::class, self::htmlService()->registerDefaultMenubarBlocks(...));
+        EventDispatcher::get()->addTypedHandler(BlockManagerRegisterBlocks::class, self::htmlService()->registerDefaultMenubarBlocks(...));
         // Relocated from include/functions_comment.inc.php (deleted, P23 batch 8c)
         // -- that file's own top-level add_event_handler() call only ever ran via
         // its include_once at each real caller, all of which now construct
@@ -779,7 +822,7 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentUser(), self::currentConfig(), self::accessControl())->checkForSpam(...));
+        EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentUser(), self::currentConfig(), self::accessControl())->checkForSpam(...));
         // Item 16E: real listener for a previously-unregistered event --
         // Category\CategoryService::deleteSite() dispatches this instead
         // of reaching into Site\SiteRepository directly (a real deptrac
@@ -787,10 +830,10 @@ final class RequestBootstrap
         // A thin adapter closure -- SiteRepository::delete()'s own
         // (int $id): void signature doesn't match addTypedHandler()'s
         // own callable(T): (T|void) contract.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+        EventDispatcher::get()->addTypedHandler(
             DeleteSite::class,
             static function (DeleteSite $e) use ($conn): void {
-                \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class)->delete($e->siteId);
+                EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)->delete($e->siteId);
             },
         );
         // try_log_user's own handler is registered in connect() instead,
@@ -814,19 +857,19 @@ final class RequestBootstrap
         // signature check; addEventHandler()'s untyped string|array|object
         // parameter keeps this exactly as harmless (lazy, never eagerly
         // validated) as it was before this typed conversion.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(UploadImageResize::class, 'pwg_image_resize');
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(UploadThumbnailResize::class, 'pwg_image_resize');
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFilePdf(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileHeic(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileTiff(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileVideo(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFilePsd(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileEps(...));
+        EventDispatcher::get()->addEventHandler(UploadImageResize::class, 'pwg_image_resize');
+        EventDispatcher::get()->addEventHandler(UploadThumbnailResize::class, 'pwg_image_resize');
+        EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFilePdf(...));
+        EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileHeic(...));
+        EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileTiff(...));
+        EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileVideo(...));
+        EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFilePsd(...));
+        EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileEps(...));
         if (self::currentConfig()->originalUrlProtection() !== '') {
-            \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(GetElementUrl::class, self::htmlService()->getElementUrlProtectionHandler(...));
-            \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(GetSrcImageUrl::class, self::htmlService()->getSrcImageUrlProtectionHandler(...));
+            EventDispatcher::get()->addTypedHandler(GetElementUrl::class, self::htmlService()->getElementUrlProtectionHandler(...));
+            EventDispatcher::get()->addTypedHandler(GetSrcImageUrl::class, self::htmlService()->getSrcImageUrlProtectionHandler(...));
         }
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new Init());
+        EventDispatcher::get()->dispatchNotify(new Init());
 
         // Formerly the tail of Piwigo\Bootstrap\CommonBootstrap::run(),
         // called after this whole bootstrap already completed -- moved
@@ -855,7 +898,7 @@ final class RequestBootstrap
      */
     private static function activityService(Connection $conn): ActivityService
     {
-        return new ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class));
+        return new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class));
     }
 
     /**
@@ -865,11 +908,11 @@ final class RequestBootstrap
      * class's own docblock (singleton/service-locator elimination campaign,
      * Phase 1).
      */
-    private static function apiKeyRequestFlag(): \Piwigo\Core\ApiKeyRequestFlag
+    private static function apiKeyRequestFlag(): ApiKeyRequestFlag
     {
-        $flag = Kernel::container()->get(\Piwigo\Core\ApiKeyRequestFlag::class);
-        if (! $flag instanceof \Piwigo\Core\ApiKeyRequestFlag) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ApiKeyRequestFlag::class);
+        $flag = Kernel::container()->get(ApiKeyRequestFlag::class);
+        if (! $flag instanceof ApiKeyRequestFlag) {
+            throw new LogicException('Container returned an unexpected type for ' . ApiKeyRequestFlag::class);
         }
 
         return $flag;
@@ -881,11 +924,11 @@ final class RequestBootstrap
      * consumer holding the same shared instance -- see that class's own
      * docblock (singleton/service-locator elimination campaign, Phase 1).
      */
-    private static function installationFlag(): \Piwigo\Core\InstallationFlag
+    private static function installationFlag(): InstallationFlag
     {
-        $flag = Kernel::container()->get(\Piwigo\Core\InstallationFlag::class);
-        if (! $flag instanceof \Piwigo\Core\InstallationFlag) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\InstallationFlag::class);
+        $flag = Kernel::container()->get(InstallationFlag::class);
+        if (! $flag instanceof InstallationFlag) {
+            throw new LogicException('Container returned an unexpected type for ' . InstallationFlag::class);
         }
 
         return $flag;
@@ -899,11 +942,11 @@ final class RequestBootstrap
      * explicit parameter rather than resolved from inside `PluginLoader`
      * (singleton/service-locator elimination campaign, Phase 1).
      */
-    private static function loadedPlugins(): \Piwigo\Admin\LoadedPlugins
+    private static function loadedPlugins(): LoadedPlugins
     {
-        $loadedPlugins = Kernel::container()->get(\Piwigo\Admin\LoadedPlugins::class);
-        if (! $loadedPlugins instanceof \Piwigo\Admin\LoadedPlugins) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Admin\LoadedPlugins::class);
+        $loadedPlugins = Kernel::container()->get(LoadedPlugins::class);
+        if (! $loadedPlugins instanceof LoadedPlugins) {
+            throw new LogicException('Container returned an unexpected type for ' . LoadedPlugins::class);
         }
 
         return $loadedPlugins;
@@ -918,11 +961,11 @@ final class RequestBootstrap
      * `new MetadataService(...)` construction, matching this class's own
      * established accessor-widening precedent.
      */
-    public static function filterState(): \Piwigo\Core\FilterState
+    public static function filterState(): FilterState
     {
-        $filterState = Kernel::container()->get(\Piwigo\Core\FilterState::class);
-        if (! $filterState instanceof \Piwigo\Core\FilterState) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        $filterState = Kernel::container()->get(FilterState::class);
+        if (! $filterState instanceof FilterState) {
+            throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
 
         return $filterState;
@@ -933,11 +976,11 @@ final class RequestBootstrap
      * `new FilterService(...)` construction (singleton/service-locator
      * elimination campaign, Phase 4).
      */
-    private static function translator(): \Piwigo\Lang\Translator
+    private static function translator(): Translator
     {
-        $translator = Kernel::container()->get(\Piwigo\Lang\Translator::class);
-        if (! $translator instanceof \Piwigo\Lang\Translator) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Lang\Translator::class);
+        $translator = Kernel::container()->get(Translator::class);
+        if (! $translator instanceof Translator) {
+            throw new LogicException('Container returned an unexpected type for ' . Translator::class);
         }
 
         return $translator;
@@ -953,7 +996,7 @@ final class RequestBootstrap
     {
         $lang = Kernel::container()->get(Lang::class);
         if (! $lang instanceof Lang) {
-            throw new \LogicException('Container returned an unexpected type for ' . Lang::class);
+            throw new LogicException('Container returned an unexpected type for ' . Lang::class);
         }
 
         return $lang;
@@ -965,11 +1008,11 @@ final class RequestBootstrap
      * shared instance (singleton/service-locator elimination campaign,
      * Phase 2).
      */
-    private static function currentLogger(): \Piwigo\Core\CurrentLogger
+    private static function currentLogger(): CurrentLogger
     {
-        $currentLogger = Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
-        if (! $currentLogger instanceof \Piwigo\Core\CurrentLogger) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentLogger::class);
+        $currentLogger = Kernel::container()->get(CurrentLogger::class);
+        if (! $currentLogger instanceof CurrentLogger) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
 
         return $currentLogger;
@@ -983,11 +1026,11 @@ final class RequestBootstrap
      * this method's own "called every request, very early" semantics
      * (singleton/service-locator elimination campaign, Phase 4).
      */
-    private static function imageStdParams(): \Piwigo\Image\ImageStdParams
+    private static function imageStdParams(): ImageStdParams
     {
-        $imageStdParams = Kernel::container()->get(\Piwigo\Image\ImageStdParams::class);
-        if (! $imageStdParams instanceof \Piwigo\Image\ImageStdParams) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Image\ImageStdParams::class);
+        $imageStdParams = Kernel::container()->get(ImageStdParams::class);
+        if (! $imageStdParams instanceof ImageStdParams) {
+            throw new LogicException('Container returned an unexpected type for ' . ImageStdParams::class);
         }
 
         return $imageStdParams;
@@ -1004,11 +1047,11 @@ final class RequestBootstrap
      * deploymentPolicy() above (singleton/service-locator elimination
      * campaign, Phase 4).
      */
-    public static function pageState(): \Piwigo\Core\PageState
+    public static function pageState(): PageState
     {
-        $pageState = Kernel::container()->get(\Piwigo\Core\PageState::class);
-        if (! $pageState instanceof \Piwigo\Core\PageState) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\PageState::class);
+        $pageState = Kernel::container()->get(PageState::class);
+        if (! $pageState instanceof PageState) {
+            throw new LogicException('Container returned an unexpected type for ' . PageState::class);
         }
 
         return $pageState;
@@ -1028,7 +1071,7 @@ final class RequestBootstrap
     {
         $errorCollector = Kernel::container()->get(ErrorCollector::class);
         if (! $errorCollector instanceof ErrorCollector) {
-            throw new \LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
+            throw new LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
         }
 
         return $errorCollector;
@@ -1040,11 +1083,11 @@ final class RequestBootstrap
      * Template's own new required collaborators (singleton/service-locator
      * elimination campaign, Phase 11 sub-phase 11E).
      */
-    public static function processCache(): \Piwigo\Core\ProcessCache
+    public static function processCache(): ProcessCache
     {
-        $processCache = Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
-        if (! $processCache instanceof \Piwigo\Core\ProcessCache) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ProcessCache::class);
+        $processCache = Kernel::container()->get(ProcessCache::class);
+        if (! $processCache instanceof ProcessCache) {
+            throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
         }
 
         return $processCache;
@@ -1064,7 +1107,7 @@ final class RequestBootstrap
     {
         $currentUser = Kernel::container()->get(CurrentUser::class);
         if (! $currentUser instanceof CurrentUser) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentUser::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
         }
 
         return $currentUser;
@@ -1080,21 +1123,21 @@ final class RequestBootstrap
      * currentUser()/pageState() above (singleton/service-locator
      * elimination campaign, Phase 5).
      */
-    public static function currentTemplate(): \Piwigo\Template\CurrentTemplate
+    public static function currentTemplate(): CurrentTemplate
     {
-        $currentTemplate = Kernel::container()->get(\Piwigo\Template\CurrentTemplate::class);
-        if (! $currentTemplate instanceof \Piwigo\Template\CurrentTemplate) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Template\CurrentTemplate::class);
+        $currentTemplate = Kernel::container()->get(CurrentTemplate::class);
+        if (! $currentTemplate instanceof CurrentTemplate) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentTemplate::class);
         }
 
         return $currentTemplate;
     }
 
-    public static function currentConfig(): \Piwigo\Config\CurrentConfig
+    public static function currentConfig(): CurrentConfig
     {
-        $currentConfig = Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
 
         return $currentConfig;
@@ -1106,11 +1149,11 @@ final class RequestBootstrap
      * construction needs a way to reach a container-shared InputValidator
      * without going through the (now-closed) createStatic() shim.
      */
-    public static function inputValidator(): \Piwigo\Validation\InputValidator
+    public static function inputValidator(): InputValidator
     {
-        $inputValidator = Kernel::container()->get(\Piwigo\Validation\InputValidator::class);
-        if (! $inputValidator instanceof \Piwigo\Validation\InputValidator) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Validation\InputValidator::class);
+        $inputValidator = Kernel::container()->get(InputValidator::class);
+        if (! $inputValidator instanceof InputValidator) {
+            throw new LogicException('Container returned an unexpected type for ' . InputValidator::class);
         }
 
         return $inputValidator;
@@ -1125,11 +1168,11 @@ final class RequestBootstrap
      * Bootstrap/ only) -- singleton/service-locator elimination campaign,
      * Phase 5.
      */
-    public static function currentConfigService(): \Piwigo\Config\CurrentConfigService
+    public static function currentConfigService(): CurrentConfigService
     {
-        $currentConfigService = Kernel::container()->get(\Piwigo\Config\CurrentConfigService::class);
-        if (! $currentConfigService instanceof \Piwigo\Config\CurrentConfigService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfigService::class);
+        $currentConfigService = Kernel::container()->get(CurrentConfigService::class);
+        if (! $currentConfigService instanceof CurrentConfigService) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfigService::class);
         }
 
         return $currentConfigService;
@@ -1144,11 +1187,11 @@ final class RequestBootstrap
      * Resolving the interface (not the concrete UrlService) matches every
      * other real UrlServiceInterface consumer in the codebase.
      */
-    public static function urlService(): \Piwigo\Core\UrlServiceInterface
+    public static function urlService(): UrlServiceInterface
     {
-        $urlService = Kernel::container()->get(\Piwigo\Core\UrlServiceInterface::class);
-        if (! $urlService instanceof \Piwigo\Core\UrlServiceInterface) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\UrlServiceInterface::class);
+        $urlService = Kernel::container()->get(UrlServiceInterface::class);
+        if (! $urlService instanceof UrlServiceInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
         }
 
         return $urlService;
@@ -1163,11 +1206,11 @@ final class RequestBootstrap
      * request, not a fresh `new MailService()` per site (see MailService's
      * own class docblock).
      */
-    private static function mailService(): \Piwigo\Core\MailerInterface
+    private static function mailService(): MailerInterface
     {
-        $mailer = Kernel::container()->get(\Piwigo\Core\MailerInterface::class);
-        if (! $mailer instanceof \Piwigo\Core\MailerInterface) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\MailerInterface::class);
+        $mailer = Kernel::container()->get(MailerInterface::class);
+        if (! $mailer instanceof MailerInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . MailerInterface::class);
         }
 
         return $mailer;
@@ -1183,7 +1226,7 @@ final class RequestBootstrap
     {
         $serverTiming = Kernel::container()->get(ServerTiming::class);
         if (! $serverTiming instanceof ServerTiming) {
-            throw new \LogicException('Container returned an unexpected type for ' . ServerTiming::class);
+            throw new LogicException('Container returned an unexpected type for ' . ServerTiming::class);
         }
 
         return $serverTiming;
@@ -1193,11 +1236,11 @@ final class RequestBootstrap
      * Resolves the container-shared, immutable instance -- singleton/
      * service-locator elimination campaign, Phase 3.
      */
-    private static function wsContext(): \Piwigo\Core\WsContext
+    private static function wsContext(): WsContext
     {
-        $wsContext = Kernel::container()->get(\Piwigo\Core\WsContext::class);
-        if (! $wsContext instanceof \Piwigo\Core\WsContext) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\WsContext::class);
+        $wsContext = Kernel::container()->get(WsContext::class);
+        if (! $wsContext instanceof WsContext) {
+            throw new LogicException('Container returned an unexpected type for ' . WsContext::class);
         }
 
         return $wsContext;
@@ -1211,7 +1254,7 @@ final class RequestBootstrap
     {
         $accessControl = Kernel::container()->get(AccessControl::class);
         if (! $accessControl instanceof AccessControl) {
-            throw new \LogicException('Container returned an unexpected type for ' . AccessControl::class);
+            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
 
         return $accessControl;
@@ -1224,11 +1267,11 @@ final class RequestBootstrap
      * `new InstallWizard(...)` manual construction needs this to satisfy
      * Template's own new required collaborators (Phase 11 sub-phase 11E).
      */
-    public static function adminContext(): \Piwigo\Core\AdminContext
+    public static function adminContext(): AdminContext
     {
-        $adminContext = Kernel::container()->get(\Piwigo\Core\AdminContext::class);
-        if (! $adminContext instanceof \Piwigo\Core\AdminContext) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\AdminContext::class);
+        $adminContext = Kernel::container()->get(AdminContext::class);
+        if (! $adminContext instanceof AdminContext) {
+            throw new LogicException('Container returned an unexpected type for ' . AdminContext::class);
         }
 
         return $adminContext;
@@ -1249,11 +1292,11 @@ final class RequestBootstrap
      * run-once guard, which only actually guards anything if admin.php and
      * IntroSubController share the same instance.
      */
-    public static function filesystemIntegrityChecker(): \Piwigo\Admin\Maintenance\FilesystemIntegrityChecker
+    public static function filesystemIntegrityChecker(): FilesystemIntegrityChecker
     {
-        $filesystemIntegrityChecker = Kernel::container()->get(\Piwigo\Admin\Maintenance\FilesystemIntegrityChecker::class);
-        if (! $filesystemIntegrityChecker instanceof \Piwigo\Admin\Maintenance\FilesystemIntegrityChecker) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Admin\Maintenance\FilesystemIntegrityChecker::class);
+        $filesystemIntegrityChecker = Kernel::container()->get(FilesystemIntegrityChecker::class);
+        if (! $filesystemIntegrityChecker instanceof FilesystemIntegrityChecker) {
+            throw new LogicException('Container returned an unexpected type for ' . FilesystemIntegrityChecker::class);
         }
 
         return $filesystemIntegrityChecker;
@@ -1276,7 +1319,7 @@ final class RequestBootstrap
     {
         $coreTabs = Kernel::container()->get(CoreTabs::class);
         if (! $coreTabs instanceof CoreTabs) {
-            throw new \LogicException('Container returned an unexpected type for ' . CoreTabs::class);
+            throw new LogicException('Container returned an unexpected type for ' . CoreTabs::class);
         }
 
         return $coreTabs;
@@ -1296,7 +1339,7 @@ final class RequestBootstrap
     {
         $sessionService = Kernel::container()->get(SessionService::class);
         if (! $sessionService instanceof SessionService) {
-            throw new \LogicException('Container returned an unexpected type for ' . SessionService::class);
+            throw new LogicException('Container returned an unexpected type for ' . SessionService::class);
         }
 
         return $sessionService;
@@ -1312,11 +1355,11 @@ final class RequestBootstrap
      * coreTabs()/filesystemIntegrityChecker()/sessionService() above
      * (singleton/service-locator elimination campaign, Phase 4).
      */
-    public static function eventDispatcher(): \Piwigo\PluginConfig\EventDispatcher
+    public static function eventDispatcher(): EventDispatcher
     {
-        $eventDispatcher = Kernel::container()->get(\Piwigo\PluginConfig\EventDispatcher::class);
-        if (! $eventDispatcher instanceof \Piwigo\PluginConfig\EventDispatcher) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\PluginConfig\EventDispatcher::class);
+        $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
+        if (! $eventDispatcher instanceof EventDispatcher) {
+            throw new LogicException('Container returned an unexpected type for ' . EventDispatcher::class);
         }
 
         return $eventDispatcher;
@@ -1332,11 +1375,11 @@ final class RequestBootstrap
      * coreTabs()/filesystemIntegrityChecker()/sessionService()/eventDispatcher()
      * above (singleton/service-locator elimination campaign, Phase 4).
      */
-    public static function deploymentPolicy(): \Piwigo\Config\DeploymentPolicy
+    public static function deploymentPolicy(): DeploymentPolicy
     {
-        $deploymentPolicy = Kernel::container()->get(\Piwigo\Config\DeploymentPolicy::class);
-        if (! $deploymentPolicy instanceof \Piwigo\Config\DeploymentPolicy) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\DeploymentPolicy::class);
+        $deploymentPolicy = Kernel::container()->get(DeploymentPolicy::class);
+        if (! $deploymentPolicy instanceof DeploymentPolicy) {
+            throw new LogicException('Container returned an unexpected type for ' . DeploymentPolicy::class);
         }
 
         return $deploymentPolicy;
@@ -1352,11 +1395,11 @@ final class RequestBootstrap
      * coreTabs()/sessionService()/eventDispatcher()/deploymentPolicy() above
      * (singleton/service-locator elimination campaign, Phase 6).
      */
-    public static function commentService(): \Piwigo\Comment\CommentService
+    public static function commentService(): CommentService
     {
-        $commentService = Kernel::container()->get(\Piwigo\Comment\CommentService::class);
-        if (! $commentService instanceof \Piwigo\Comment\CommentService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Comment\CommentService::class);
+        $commentService = Kernel::container()->get(CommentService::class);
+        if (! $commentService instanceof CommentService) {
+            throw new LogicException('Container returned an unexpected type for ' . CommentService::class);
         }
 
         return $commentService;
@@ -1372,11 +1415,11 @@ final class RequestBootstrap
      * sessionService()/eventDispatcher()/deploymentPolicy()/commentService()
      * above (singleton/service-locator elimination campaign, Phase 6).
      */
-    public static function imageService(): \Piwigo\Image\ImageService
+    public static function imageService(): ImageService
     {
-        $imageService = Kernel::container()->get(\Piwigo\Image\ImageService::class);
-        if (! $imageService instanceof \Piwigo\Image\ImageService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Image\ImageService::class);
+        $imageService = Kernel::container()->get(ImageService::class);
+        if (! $imageService instanceof ImageService) {
+            throw new LogicException('Container returned an unexpected type for ' . ImageService::class);
         }
 
         return $imageService;
@@ -1385,11 +1428,11 @@ final class RequestBootstrap
     /**
      * Same reasoning as commentService()/imageService() above.
      */
-    public static function preferencesService(): \Piwigo\Users\PreferencesService
+    public static function preferencesService(): PreferencesService
     {
-        $preferencesService = Kernel::container()->get(\Piwigo\Users\PreferencesService::class);
-        if (! $preferencesService instanceof \Piwigo\Users\PreferencesService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\PreferencesService::class);
+        $preferencesService = Kernel::container()->get(PreferencesService::class);
+        if (! $preferencesService instanceof PreferencesService) {
+            throw new LogicException('Container returned an unexpected type for ' . PreferencesService::class);
         }
 
         return $preferencesService;
@@ -1398,11 +1441,11 @@ final class RequestBootstrap
     /**
      * Same reasoning as commentService()/imageService() above.
      */
-    public static function userService(): \Piwigo\Users\UserService
+    public static function userService(): UserService
     {
-        $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
-        if (! $userService instanceof \Piwigo\Users\UserService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        $userService = Kernel::container()->get(UserService::class);
+        if (! $userService instanceof UserService) {
+            throw new LogicException('Container returned an unexpected type for ' . UserService::class);
         }
 
         return $userService;
@@ -1411,11 +1454,11 @@ final class RequestBootstrap
     /**
      * Same reasoning as commentService()/imageService() above.
      */
-    public static function htmlService(): \Piwigo\Html\HtmlService
+    public static function htmlService(): HtmlService
     {
-        $htmlService = Kernel::container()->get(\Piwigo\Html\HtmlService::class);
-        if (! $htmlService instanceof \Piwigo\Html\HtmlService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Html\HtmlService::class);
+        $htmlService = Kernel::container()->get(HtmlService::class);
+        if (! $htmlService instanceof HtmlService) {
+            throw new LogicException('Container returned an unexpected type for ' . HtmlService::class);
         }
 
         return $htmlService;

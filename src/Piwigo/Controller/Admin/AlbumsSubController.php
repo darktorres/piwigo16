@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\AlbumsPageRenderer;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\CoreTabs;
+use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -26,17 +34,17 @@ final class AlbumsSubController implements AdminSubControllerInterface
         private readonly Lang $lang,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly CategoryAdminService $categoryAdminService,
-        private readonly \Piwigo\Category\CategoryService $categoryService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly CategoryService $categoryService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new AlbumsPageRenderer()

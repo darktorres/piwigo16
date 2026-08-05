@@ -6,9 +6,11 @@ namespace Piwigo\Search;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
+use Piwigo\Category\CategoryEntity;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\SqlCondition;
@@ -346,7 +348,7 @@ final class SearchRepository
     {
         $qb = $this->em->createQueryBuilder()
             ->select('c.id', 'c.uppercats')
-            ->from(\Piwigo\Category\CategoryEntity::class, 'c');
+            ->from(CategoryEntity::class, 'c');
         self::applyCondition($qb, $condition);
 
         $rows = $qb->getQuery()
@@ -468,7 +470,7 @@ final class SearchRepository
      * implode(' AND ', ...), same convention Permission\
      * PermissionRepository::expressionBuilder() established for Item 2.
      */
-    public function expressionBuilder(): \Doctrine\DBAL\Query\Expression\ExpressionBuilder
+    public function expressionBuilder(): ExpressionBuilder
     {
         return $this->em->getConnection()
             ->createExpressionBuilder();

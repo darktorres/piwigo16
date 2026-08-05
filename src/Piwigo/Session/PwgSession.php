@@ -4,29 +4,34 @@ declare(strict_types=1);
 
 namespace Piwigo\Session;
 
+use Override;
+use Piwigo\Core\CurrentLogger;
+use SessionHandlerInterface;
+use Throwable;
+
 // see https://php.watch/versions/8.4/session_set_save_handler-alt-signature-deprecated
-final class PwgSession implements \SessionHandlerInterface
+final class PwgSession implements SessionHandlerInterface
 {
     public function __construct(
         private readonly SessionService $service,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly CurrentLogger $currentLogger,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function open(string $path, string $name): bool
     {
         return $this->service
             ->sessionOpen();
     }
 
-    #[\Override]
+    #[Override]
     public function close(): bool
     {
         return $this->service
             ->sessionClose();
     }
 
-    #[\Override]
+    #[Override]
     public function read(string $id): string
     {
         return $this->service
@@ -50,13 +55,13 @@ final class PwgSession implements \SessionHandlerInterface
      * on their next request); a fatal error escaping the engine's own
      * shutdown sequence isn't.
      */
-    #[\Override]
+    #[Override]
     public function write(string $id, string $data): bool
     {
         try {
             return $this->service
                 ->sessionWrite($id, $data);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->currentLogger->get()
                 ->warn('PwgSession::write() failed: ' . $e->getMessage());
 
@@ -64,14 +69,14 @@ final class PwgSession implements \SessionHandlerInterface
         }
     }
 
-    #[\Override]
+    #[Override]
     public function destroy(string $id): bool
     {
         return $this->service
             ->sessionDestroy($id);
     }
 
-    #[\Override]
+    #[Override]
     public function gc(int $max_lifetime): int
     {
         return $this->service

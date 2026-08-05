@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
@@ -25,7 +26,7 @@ final class DbInfoTest extends IntegrationTestCase
 
     private DbInfo $dbInfo;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();

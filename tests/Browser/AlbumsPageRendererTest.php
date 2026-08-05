@@ -34,7 +34,7 @@ function albumsPageChildrenOrderedByRank(int $parentId): array
     $whereClause = $parentId === 0 ? 'id_uppercat IS NULL' : sprintf('id_uppercat = %d', $parentId);
     // `rank` is a reserved word on both platforms (MySQL 8.0.2+'s window
     // functions, Postgres always) -- backtick/double-quote per platform.
-    $rankIdentifier = $db instanceof \mysqli ? '`rank`' : '"rank"';
+    $rankIdentifier = $db instanceof mysqli ? '`rank`' : '"rank"';
     $rows = H::dbFetchAll($db, sprintf(
         'SELECT id, name FROM %scategories WHERE %s ORDER BY %s ASC',
         $prefix,

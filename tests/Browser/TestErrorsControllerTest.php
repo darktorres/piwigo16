@@ -38,7 +38,7 @@ it('drains the ErrorCollector buffer as JSON when test mode is active', function
 
     $decoded = json_decode($body, true, flags: JSON_THROW_ON_ERROR);
     if (! is_array($decoded)) {
-        throw new \RuntimeException('expected a JSON object/array, got: ' . var_export($decoded, true));
+        throw new RuntimeException('expected a JSON object/array, got: ' . var_export($decoded, true));
     }
     expect($decoded)->toHaveKey('errors');
     $errors = $decoded['errors'];

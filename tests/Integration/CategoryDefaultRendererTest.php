@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use LogicException;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Url\RootPathOverride;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Core\ProcessCache;
+use Piwigo\Core\Lang;
+use Piwigo\Db\Tables;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Error;
 use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Comment\CommentEntity;
@@ -23,7 +33,6 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
-use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 
@@ -47,7 +56,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -59,9 +68,9 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -83,7 +92,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // loadConfFromDb() below is unrelated to ImageStdParams -- it's
         // this test's own way of seeding every other real config-backed
         // display flag CategoryDefaultRenderer/thumbnails.tpl reads.
-        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current());
+        $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
         $configService->loadConfFromDb();
         ImageStdParams::current()->load_from_db();
 
@@ -94,7 +103,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $commentRepo = $em->getRepository(CommentEntity::class);
         self::assertInstanceOf(CommentRepository::class, $commentRepo);
 
-        $htmlService = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
+        $htmlService = HtmlServiceTestFactory::build();
         // thumbnails.tpl's own {assign var=derivative
         // value=$pwg->derivative(...)} constructs a real DerivativeImage per
         // thumbnail, whose get_url() now resolves UrlServiceInterface live
@@ -102,33 +111,33 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // campaign, Phase 6) -- $urlService below must share the same
         // container-shared RootPathOverride for setMakeFullUrl()-style
         // state to be visible across both, see that class's own docblock.
-        $rootPathOverride = Kernel::container()->get(\Piwigo\Url\RootPathOverride::class);
-        if (! $rootPathOverride instanceof \Piwigo\Url\RootPathOverride) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Url\RootPathOverride::class);
+        $rootPathOverride = Kernel::container()->get(RootPathOverride::class);
+        if (! $rootPathOverride instanceof RootPathOverride) {
+            throw new LogicException('Container returned an unexpected type for ' . RootPathOverride::class);
         }
-        $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlService, $rootPathOverride);
+        $urlService = UrlServiceTestFactory::build($htmlService, $rootPathOverride);
 
-        $processCache = Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
-        if (! $processCache instanceof \Piwigo\Core\ProcessCache) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ProcessCache::class);
+        $processCache = Kernel::container()->get(ProcessCache::class);
+        if (! $processCache instanceof ProcessCache) {
+            throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
         }
 
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), \Piwigo\Config\CurrentConfig::current()), EventDispatcher::get(), ImageStdParams::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current(), \Piwigo\Core\Lang::current(), $processCache);
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcher::get(), ImageStdParams::current(), CurrentUser::current(), CurrentConfig::current(), Lang::current(), $processCache);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         // Restore the fixture's real hit=0 for id=3 in case a test mutated
         // it via setImageHit() below.
-        $this->conn->executeStatement('UPDATE ' . \Piwigo\Db\Tables::images() . ' SET hit = 0 WHERE id = 3');
+        $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET hit = 0 WHERE id = 3');
         parent::tearDown();
     }
 
     private function setImageHit(int $imageId, int $hit): void
     {
         $this->conn->executeStatement(
-            'UPDATE ' . \Piwigo\Db\Tables::images() . ' SET hit = :hit WHERE id = :id',
+            'UPDATE ' . Tables::images() . ' SET hit = :hit WHERE id = :id',
             ['hit' => $hit, 'id' => $imageId]
         );
     }
@@ -138,7 +147,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // root/theme='default' points Smarty's template_dir at the real
         // themes/default/template/ directory thumbnails.tpl lives in, same
         // real-root shape every real Template() construction site uses.
-        $this->template = \Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default');
+        $this->template = TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default');
 
         return $this->template;
     }
@@ -185,7 +194,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
     public function test_render_returns_the_slideshow_url_for_the_first_ranked_picture(): void
     {
         $this->seedUser(showNbHits: false, showNbComments: false);
-        $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $urlService = UrlServiceTestFactory::build();
 
         $slideshowUrl = $this->renderer->render([3, 1, 2], 0, 3, '');
 
@@ -275,7 +284,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // static one.
         EventDispatcher::get()->addEventHandler(LocIndexThumbnailsSelection::class, static fn (): int => 42);
 
-        $this->expectException(\Error::class);
+        $this->expectException(Error::class);
         $this->expectExceptionMessage('must return an instance of');
 
         try {

@@ -4,16 +4,26 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Request\ThemesNewInstallRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Template\Template;
+use Piwigo\Csrf\CsrfService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PreferencesService;
 
 /**
  * Ported from admin/themes_new.php (the "new" tab of the "themes" page slug,
@@ -32,14 +42,14 @@ final class ThemesNewPageRenderer
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Users\PreferencesService $preferencesService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly CurrentLogger $currentLogger,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly ActivityService $activityService,
+        private readonly PreferencesService $preferencesService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly CurrentUser $currentUser,
     ) {}
 
     /**
@@ -69,7 +79,7 @@ final class ThemesNewPageRenderer
         // |                           setup check                                 |
         // +-----------------------------------------------------------------------+
 
-        $themes_dir = \Piwigo\Core\CurrentPaths::get()->themes;
+        $themes_dir = CurrentPaths::get()->themes;
         if (! is_writable($themes_dir)) {
             $this->pageState->addError($this->lang->t('Add write access to the "%s" directory', 'themes'));
         }
@@ -78,13 +88,13 @@ final class ThemesNewPageRenderer
         // |                       perform installation                            |
         // +-----------------------------------------------------------------------+
 
-        $themesNewInstall = Request\ThemesNewInstallRequest::fromGlobals();
+        $themesNewInstall = ThemesNewInstallRequest::fromGlobals();
 
         if ($themesNewInstall->revision !== null and $themesNewInstall->extension !== null) {
             if (! $this->accessControl->isWebmaster()) {
                 $this->pageState->addError($this->lang->t('Webmaster status is required.'));
             } else {
-                new \Piwigo\Csrf\CsrfService()
+                new CsrfService()
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
                 $extraction = $pem_catalog->extractArchive(ExtensionType::Theme, 'install', $themesNewInstall->revision, $themesNewInstall->extension);
@@ -167,7 +177,7 @@ final class ThemesNewPageRenderer
                 $url_auto_install = htmlentities($base_url)
                   . '&amp;revision=' . $revision_id
                   . '&amp;extension=' . $extension_id
-                  . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken()
+                  . '&amp;pwg_token=' . new CsrfService()->getToken()
                 ;
 
                 $template->append(

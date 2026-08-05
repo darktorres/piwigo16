@@ -11,12 +11,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Exception;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\CurrentThemeConfProvider;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Picture\GetMimetypeLocation;
 use Piwigo\Image\Event\GetSrcImageUrl;
+use Piwigo\PluginConfig\EventDispatcher;
+use RuntimeException;
 
 /**
  * A source image is used to get a derivative image. It is either
@@ -49,22 +55,22 @@ final class SrcImage
         if ($htmlRenderer instanceof HtmlRenderingInterface) {
             $htmlRenderer->fatalError($msg);
         }
-        throw new \RuntimeException($msg);
+        throw new RuntimeException($msg);
     }
 
     private static function themeConf(string $key): string
     {
-        return \Piwigo\Core\CurrentThemeConfProvider::current()->get()->themeConf($key);
+        return CurrentThemeConfProvider::current()->get()->themeConf($key);
     }
 
     private static function urlService(): UrlServiceInterface
     {
         if (! Kernel::isBooted()) {
-            throw new \RuntimeException('SrcImage: no URL service set (RequestBootstrap not run yet?)');
+            throw new RuntimeException('SrcImage: no URL service set (RequestBootstrap not run yet?)');
         }
         $urlService = Kernel::container()->get(UrlServiceInterface::class);
         if (! $urlService instanceof UrlServiceInterface) {
-            throw new \RuntimeException('SrcImage: no URL service set (RequestBootstrap not run yet?)');
+            throw new RuntimeException('SrcImage: no URL service set (RequestBootstrap not run yet?)');
         }
 
         return $urlService;
@@ -80,14 +86,14 @@ final class SrcImage
      * transitional bridge (that shim is Phase-10-locked to the Ws/Pwg*.php
      * dispatch layer -- see its own arch-test allow-list).
      */
-    private static function currentConfig(): \Piwigo\Config\CurrentConfig
+    private static function currentConfig(): CurrentConfig
     {
         if (! Kernel::isBooted()) {
-            throw new \RuntimeException('SrcImage: no CurrentConfig set (RequestBootstrap not run yet?)');
+            throw new RuntimeException('SrcImage: no CurrentConfig set (RequestBootstrap not run yet?)');
         }
-        $currentConfig = Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \RuntimeException('SrcImage: no CurrentConfig set (RequestBootstrap not run yet?)');
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new RuntimeException('SrcImage: no CurrentConfig set (RequestBootstrap not run yet?)');
         }
 
         return $currentConfig;
@@ -99,14 +105,14 @@ final class SrcImage
      * resolves fresh from the container on every call (singleton/
      * service-locator elimination campaign, Phase 11 sub-phase 11F).
      */
-    private static function eventDispatcher(): \Piwigo\PluginConfig\EventDispatcher
+    private static function eventDispatcher(): EventDispatcher
     {
         if (! Kernel::isBooted()) {
-            throw new \RuntimeException('SrcImage: no EventDispatcher set (RequestBootstrap not run yet?)');
+            throw new RuntimeException('SrcImage: no EventDispatcher set (RequestBootstrap not run yet?)');
         }
-        $eventDispatcher = Kernel::container()->get(\Piwigo\PluginConfig\EventDispatcher::class);
-        if (! $eventDispatcher instanceof \Piwigo\PluginConfig\EventDispatcher) {
-            throw new \RuntimeException('SrcImage: no EventDispatcher set (RequestBootstrap not run yet?)');
+        $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
+        if (! $eventDispatcher instanceof EventDispatcher) {
+            throw new RuntimeException('SrcImage: no EventDispatcher set (RequestBootstrap not run yet?)');
         }
 
         return $eventDispatcher;
@@ -165,8 +171,8 @@ final class SrcImage
         $this->id = is_numeric($infos['id']) ? (int) $infos['id'] : 0;
         $path = is_string($infos['path']) ? $infos['path'] : '';
         $file = is_string($infos['file']) ? $infos['file'] : null;
-        $ext = strtolower(\Piwigo\Core\StringHelper::getExtension($path));
-        $infos['file_ext'] = @strtolower(\Piwigo\Core\StringHelper::getExtension($file));
+        $ext = strtolower(StringHelper::getExtension($path));
+        $infos['file_ext'] = @strtolower(StringHelper::getExtension($file));
         $infos['path_ext'] = $ext;
         // representative_ext is a nullable DB column; empty()'s silent
         // handling of a missing/non-string key is preserved via `?? null`.
@@ -178,7 +184,7 @@ final class SrcImage
             $this->rel_path = $path;
             $this->flags |= self::IS_ORIGINAL;
         } elseif ($representative_ext !== '') {
-            $this->rel_path = \Piwigo\Image\ImagePathHelper::originalToRepresentative($path, $representative_ext);
+            $this->rel_path = ImagePathHelper::originalToRepresentative($path, $representative_ext);
         } else {
             $default_mimetype_location = self::themeConf('mime_icon_dir') . $ext . '.png';
             $this->rel_path = self::eventDispatcher()->dispatchChange(new GetMimetypeLocation($default_mimetype_location, $ext))->location;
@@ -194,7 +200,7 @@ final class SrcImage
                 $fallback_abs_path = CurrentPaths::get()->root . $this->rel_path;
                 $size = file_exists($fallback_abs_path) ? getimagesize($fallback_abs_path) : false;
                 if ($size === false) {
-                    throw new \Exception('SrcImage: unable to read size of fallback icon ' . $this->rel_path);
+                    throw new Exception('SrcImage: unable to read size of fallback icon ' . $this->rel_path);
                 }
             }
             $this->size = [$size[0], $size[1]];

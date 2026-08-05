@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
@@ -59,7 +60,7 @@ function nbmDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function nbmDbConnect(): \mysqli|\PgSql\Connection
+function nbmDbConnect(): mysqli|Connection
 {
     return H::connect();
 }
@@ -99,7 +100,7 @@ function nbmSetUserMailNotificationRow(int $userId, ?array $row): void
         // Same boolean-column-vs-integer-literal bug as elsewhere in this
         // file's own reads -- a bare 0/1 literal is valid MySQL
         // tinyint(1) input but Postgres rejects it outright.
-        $sqlEnabled = $db instanceof \mysqli ? (string) $row['enabled'] : ($row['enabled'] !== 0 ? 'true' : 'false');
+        $sqlEnabled = $db instanceof mysqli ? (string) $row['enabled'] : ($row['enabled'] !== 0 ? 'true' : 'false');
         H::dbQuery($db, sprintf(
             "INSERT INTO %suser_mail_notification (user_id, check_key, enabled, last_send) VALUES (%d, '%s', %s, %s)",
             nbmDbPrefix(),

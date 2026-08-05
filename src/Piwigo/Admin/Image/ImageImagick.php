@@ -11,10 +11,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
+use Imagick;
+use ImagickKernel;
+use ImagickPixel;
+use LogicException;
+use Override;
+
 final class ImageImagick implements ImageInterface
 {
     /**
-     * @var \Imagick
+     * @var Imagick
      */
     public $image;
 
@@ -38,28 +44,28 @@ final class ImageImagick implements ImageInterface
         string $source_filepath
     ) {
         // A bug cause that Imagick class can not be extended
-        $this->image = new \Imagick($source_filepath);
+        $this->image = new Imagick($source_filepath);
     }
 
-    #[\Override]
+    #[Override]
     public function get_width(): int
     {
         return $this->image->getImageWidth();
     }
 
-    #[\Override]
+    #[Override]
     public function get_height(): int
     {
         return $this->image->getImageHeight();
     }
 
-    #[\Override]
+    #[Override]
     public function set_compression_quality(int $quality): bool
     {
         return $this->image->setImageCompressionQuality($quality);
     }
 
-    #[\Override]
+    #[Override]
     public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
     {
         // Imagick::cropImage() requires int arguments — see ImageGd's
@@ -67,24 +73,24 @@ final class ImageImagick implements ImageInterface
         return $this->image->cropImage((int) $width, (int) $height, (int) $x, (int) $y);
     }
 
-    #[\Override]
+    #[Override]
     public function strip(): bool
     {
         return $this->image->stripImage();
     }
 
-    #[\Override]
+    #[Override]
     public function rotate(int|float $rotation): bool
     {
-        $this->image->rotateImage(new \ImagickPixel(), -$rotation);
-        $this->image->setImageOrientation(\Imagick::ORIENTATION_TOPLEFT);
+        $this->image->rotateImage(new ImagickPixel(), -$rotation);
+        $this->image->setImageOrientation(Imagick::ORIENTATION_TOPLEFT);
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function resize(int|float $width, int|float $height): bool
     {
-        $this->image->setInterlaceScheme(\Imagick::INTERLACE_LINE);
+        $this->image->setInterlaceScheme(Imagick::INTERLACE_LINE);
 
         // Pre-halving pass: for a source more than 3x the target width
         // (with even dimensions, so halving lands on whole pixels), a
@@ -101,10 +107,10 @@ final class ImageImagick implements ImageInterface
 
         // Imagick::resizeImage() requires int columns/rows — see
         // ImageGd's crop() for why real callers pass floats here.
-        return $this->image->resizeImage((int) $width, (int) $height, \Imagick::FILTER_LANCZOS, 0.9);
+        return $this->image->resizeImage((int) $width, (int) $height, Imagick::FILTER_LANCZOS, 0.9);
     }
 
-    #[\Override]
+    #[Override]
     public function sharpen(int|float $amount): bool
     {
         // Real bug, found live by a new unit test that actually asserted on
@@ -116,10 +122,10 @@ final class ImageImagick implements ImageInterface
         // derivative with a configured sharpen level fatally errored
         // instead of degrading -- confirmed uncaught up the stack.
         $m = PwgImage::get_sharpen_matrix($amount);
-        return $this->image->convolveImage(\ImagickKernel::fromMatrix($m));
+        return $this->image->convolveImage(ImagickKernel::fromMatrix($m));
     }
 
-    #[\Override]
+    #[Override]
     public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
     {
         // compose() reaches into the overlay's own backend object to get
@@ -129,7 +135,7 @@ final class ImageImagick implements ImageInterface
         // single \Piwigo\Config\CurrentConfig::graphicsLibrary() setting).
         $overlay_backend = $overlay->image;
         if (! $overlay_backend instanceof self) {
-            throw new \LogicException('PwgImage::compose(): overlay must use the same image backend');
+            throw new LogicException('PwgImage::compose(): overlay must use the same image backend');
         }
         $ioverlay = $overlay_backend->image;
         /*if ($ioverlay->getImageAlphaChannel() !== Imagick::ALPHACHANNEL_OPAQUE)
@@ -139,16 +145,16 @@ final class ImageImagick implements ImageInterface
         }*/
 
         if (! $overlay_backend->dirtyTrickXrepeatApplied && $opacity < 100) {// NOTE: Using setImageOpacity will destroy current alpha channels!
-            $ioverlay->evaluateImage(\Imagick::EVALUATE_MULTIPLY, (float) $opacity / 100.0, \Imagick::CHANNEL_ALPHA);
+            $ioverlay->evaluateImage(Imagick::EVALUATE_MULTIPLY, (float) $opacity / 100.0, Imagick::CHANNEL_ALPHA);
             $overlay_backend->dirtyTrickXrepeatApplied = true;
         }
 
         // Imagick::compositeImage() requires int x/y — see ImageGd's
         // crop() for why real callers pass floats here.
-        return $this->image->compositeImage($ioverlay, \Imagick::COMPOSITE_DISSOLVE, (int) $x, (int) $y);
+        return $this->image->compositeImage($ioverlay, Imagick::COMPOSITE_DISSOLVE, (int) $x, (int) $y);
     }
 
-    #[\Override]
+    #[Override]
     public function write(string $destination_filepath): bool
     {
         // use 4:2:2 chroma subsampling (reduce file size by 20-30% with "almost" no human perception)

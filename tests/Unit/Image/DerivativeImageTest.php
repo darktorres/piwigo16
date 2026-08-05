@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Image;
 
+use Piwigo\PluginConfig\EventDispatcher;
+use Error;
+use Exception;
+use Piwigo\Image\WatermarkParams;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
@@ -110,11 +114,11 @@ function derivativeImageTestRestoreStdParams(array $snapshot): void
 }
 
 beforeEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
 });
 
 afterEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     Kernel::reset();
 });
 
@@ -142,7 +146,7 @@ test('url() throws a RuntimeException when RequestBootstrap has not set a Curren
     Kernel::reset();
 
     expect(fn () => DerivativeImage::url(new DerivativeParams(SizingParams::classic(50, 50)), $src))
-        ->toThrow(\RuntimeException::class, 'DerivativeImage: no CurrentConfig set (RequestBootstrap not run yet?)');
+        ->toThrow(RuntimeException::class, 'DerivativeImage: no CurrentConfig set (RequestBootstrap not run yet?)');
 });
 
 test('get_url() throws a RuntimeException when RequestBootstrap has not set a URL service yet', function (): void {
@@ -164,7 +168,7 @@ test('get_url() throws a RuntimeException when RequestBootstrap has not set a UR
     Kernel::reset();
 
     expect(fn () => $derivative->get_url())
-        ->toThrow(\RuntimeException::class, 'DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
+        ->toThrow(RuntimeException::class, 'DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
 });
 
 /**
@@ -208,7 +212,7 @@ test('url() throws when a get_derivative_url handler returns something other tha
     // own get()-shim call never sees once the container exists.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-url-filter-only'));
     $handler = static fn (): int => 42;
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(GetDerivativeUrl::class, $handler);
+    EventDispatcher::get()->addEventHandler(GetDerivativeUrl::class, $handler);
 
     try {
         $src = new SrcImage([
@@ -218,9 +222,9 @@ test('url() throws when a get_derivative_url handler returns something other tha
         ]);
 
         expect(fn () => DerivativeImage::url(new DerivativeParams(SizingParams::classic(80, 60)), $src))
-            ->toThrow(\Error::class, 'must return an instance of');
+            ->toThrow(Error::class, 'must return an instance of');
     } finally {
-        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(GetDerivativeUrl::class, $handler);
+        EventDispatcher::get()->removeEventHandler(GetDerivativeUrl::class, $handler);
     }
 });
 
@@ -333,7 +337,7 @@ test('build() throws when the source path has no extension', function (): void {
     $src->rel_path = 'upload/2026/07/photoNoExtension';
 
     expect(fn () => new DerivativeImage(new DerivativeParams(SizingParams::classic(50, 50)), $src,CurrentConfig::current()))
-        ->toThrow(\Exception::class, "DerivativeImage::build(): path 'upload/2026/07/photoNoExtension' has no extension");
+        ->toThrow(Exception::class, "DerivativeImage::build(): path 'upload/2026/07/photoNoExtension' has no extension");
 });
 
 test('build() strips a leading "./" from the source location and appends the custom-type url tokens', function (): void {
@@ -408,7 +412,7 @@ test('build() searches the whole defined-type list without an out-of-bounds read
         $mysteryParams = new DerivativeParams(SizingParams::classic(200, 200));
         $mysteryParams->type = 'mystery';
 
-        $watermark = new \Piwigo\Image\WatermarkParams();
+        $watermark = new WatermarkParams();
         $watermark->file = 'watermark.png';
         $watermark->min_size = [5, 5];
         ImageStdParams::current()->set_watermark($watermark);
@@ -586,7 +590,7 @@ test('build() substitutes a smaller already-defined identity-matching type when 
             'medium' => $mediumParams,
         ]);
 
-        $watermark = new \Piwigo\Image\WatermarkParams();
+        $watermark = new WatermarkParams();
         $watermark->file = 'watermark.png';
         $watermark->min_size = [30, 30];
         ImageStdParams::current()->set_watermark($watermark);
@@ -675,7 +679,7 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
             'medium' => $mediumParams,
         ]);
 
-        $watermark = new \Piwigo\Image\WatermarkParams();
+        $watermark = new WatermarkParams();
         $watermark->file = 'watermark.png';
         $watermark->min_size = [5, 5];
         ImageStdParams::current()->set_watermark($watermark);
@@ -778,7 +782,7 @@ test('get_url() throws when a get_derivative_url handler returns something other
     // url() test's own comment above for why.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-filter-only'));
     $handler = static fn (): int => 42;
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(GetDerivativeUrl::class, $handler);
+    EventDispatcher::get()->addEventHandler(GetDerivativeUrl::class, $handler);
 
     try {
         $src = new SrcImage([
@@ -789,9 +793,9 @@ test('get_url() throws when a get_derivative_url handler returns something other
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src,CurrentConfig::current());
 
-        expect(fn () => $derivative->get_url())->toThrow(\Error::class, 'must return an instance of');
+        expect(fn () => $derivative->get_url())->toThrow(Error::class, 'must return an instance of');
     } finally {
-        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(GetDerivativeUrl::class, $handler);
+        EventDispatcher::get()->removeEventHandler(GetDerivativeUrl::class, $handler);
     }
 });
 

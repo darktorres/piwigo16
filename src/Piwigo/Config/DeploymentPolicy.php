@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
+use LogicException;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Psr\Container\ContainerExceptionInterface;
 
 /**
  * The handful of settings a sysadmin with filesystem access should have
@@ -72,18 +75,18 @@ final class DeploymentPolicy
      */
     public static function current(): self
     {
-        if (! \Piwigo\Core\Kernel::isBooted()) {
+        if (! Kernel::isBooted()) {
             return new self();
         }
 
         try {
-            $policy = \Piwigo\Core\Kernel::container()->get(self::class);
-        } catch (\Psr\Container\ContainerExceptionInterface) {
+            $policy = Kernel::container()->get(self::class);
+        } catch (ContainerExceptionInterface) {
             return new self();
         }
 
         if (! $policy instanceof self) {
-            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+            throw new LogicException('Container returned an unexpected type for ' . self::class);
         }
 
         return $policy;
@@ -98,7 +101,7 @@ final class DeploymentPolicy
 
         $policy = include $file;
         if (! $policy instanceof self) {
-            throw new \LogicException(
+            throw new LogicException(
                 $file . ' must `return new ' . self::class . '(...)`, got ' . get_debug_type($policy) . '.'
             );
         }

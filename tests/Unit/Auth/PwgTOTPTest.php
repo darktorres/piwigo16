@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Auth;
 
+use LogicException;
+use InvalidArgumentException;
 use Piwigo\Auth\PwgTOTP;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Users\CurrentUser;
@@ -57,7 +59,7 @@ function invokeGenerateCodeFromTimestamp(string $secret, float $counter): string
     $method = new ReflectionMethod(PwgTOTP::class, 'generateCodeFromTimestamp');
     $result = $method->invoke(null, $secret, $counter);
     if (! is_string($result)) {
-        throw new \LogicException('generateCodeFromTimestamp() did not return a string');
+        throw new LogicException('generateCodeFromTimestamp() did not return a string');
     }
     return $result;
 }
@@ -111,14 +113,14 @@ test('generateSecret honours an explicit byte length', function (): void {
 
 test('generateSecret rejects a length below 1', function (): void {
     expect(fn (): string => PwgTOTP::generateSecret(0))
-        ->toThrow(\InvalidArgumentException::class, 'generateSecret(): $length must be at least 1');
+        ->toThrow(InvalidArgumentException::class, 'generateSecret(): $length must be at least 1');
 });
 
 test('generateSecret accepts the boundary length of exactly 1', function (): void {
     // The error message says "must be at least 1" -- 1 itself must be
     // accepted, not rejected (distinguishes `$length < 1` from a mutated
     // `<= 1` or `< 2`, both of which would incorrectly throw for 1).
-    expect(fn (): string => PwgTOTP::generateSecret(1))->not->toThrow(\InvalidArgumentException::class);
+    expect(fn (): string => PwgTOTP::generateSecret(1))->not->toThrow(InvalidArgumentException::class);
 });
 
 test('generateSecret never pads, even for a byte length whose bits do not land on a 40-bit boundary', function (): void {

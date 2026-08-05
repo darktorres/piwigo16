@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\StringHelper;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -191,7 +192,7 @@ it('saves a manual rank_of_image POST as the real image_category rank order', fu
 
     // `rank` is a reserved word on both platforms (MySQL 8.0.2+'s window
     // functions, Postgres always) -- backtick/double-quote per platform.
-    $rankIdentifier = $db instanceof \mysqli ? '`rank`' : '"rank"';
+    $rankIdentifier = $db instanceof mysqli ? '`rank`' : '"rank"';
     $fetchedRows = H::dbFetchAll($db, sprintf('SELECT image_id, %1$s FROM %2$simage_category WHERE category_id = %3$d ORDER BY %1$s', $rankIdentifier, $prefix, $albumId));
     $rows = [];
     foreach ($fetchedRows as $row) {
@@ -314,7 +315,7 @@ it('falls back to the filename-derived name when a photo has no explicit name', 
     // getFilenameWoExtension($f)) verbatim -- the exact same two calls this
     // renderer makes inline -- so this mirrors production, not re-derives
     // its own separate expectation logic.
-    $expectedName = \Piwigo\Core\StringHelper::getNameFromFile((string) $row['file']);
+    $expectedName = StringHelper::getNameFromFile((string) $row['file']);
 
     $page = H::navigateOk($page, '/admin.php?page=album-' . $albumId . '-sort_order');
     $page->assertNoJavaScriptErrors();

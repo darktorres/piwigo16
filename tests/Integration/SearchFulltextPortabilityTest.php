@@ -4,6 +4,24 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Users\UserService;
+use Piwigo\Core\Lang;
+use Piwigo\Users\UserRepository;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\ProcessCache;
+use Piwigo\Core\FilterState;
+use LogicException;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Lang\Translator;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Db\Tables;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Bootstrap\RedirectService;
@@ -13,9 +31,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryStatus;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -57,7 +73,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
      */
     private array $insertedCategoryIds = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -69,43 +85,43 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
 
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
-        $userService = new \Piwigo\Users\UserService(\Piwigo\Core\Lang::current(), new \Piwigo\Users\UserRepository($this->em, EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current()), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), $mailer, new \Piwigo\Activity\ActivityService($this->em->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), \Piwigo\Config\CurrentConfig::current()), EventDispatcher::get(), new \Piwigo\Config\DeploymentPolicy(), CurrentUser::current(), \Piwigo\Config\CurrentConfig::current(), new \Piwigo\Core\InstallationFlag(), new \Piwigo\Core\ProcessCache());
+        $userService = new UserService(Lang::current(), new UserRepository($this->em, EventDispatcher::get(), CurrentConfig::current()), $this->em->getRepository(GroupEntity::class), $mailer, new ActivityService($this->em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcher::get(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache());
 
-        $filterState = Kernel::container()->get(\Piwigo\Core\FilterState::class);
-        if (! $filterState instanceof \Piwigo\Core\FilterState) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        $filterState = Kernel::container()->get(FilterState::class);
+        if (! $filterState instanceof FilterState) {
+            throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
 
         $this->service = new SearchService(
-            \Piwigo\Auth\AccessControl::current(),
+            AccessControl::current(),
             $repo,
-            new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository($this->em, \Piwigo\Config\CurrentConfig::current()), CurrentUser::current(), $filterState),
+            new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfig::current()), CurrentUser::current(), $filterState),
             new CategoryService(
-                \Piwigo\Core\Lang::current(),
-                new \Piwigo\Category\CategoryRepository($this->em, \Piwigo\Config\CurrentConfig::current()),
-                new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository($this->em, \Piwigo\Config\CurrentConfig::current()), CurrentUser::current(), $filterState),
-                \Piwigo\Config\CurrentConfig::current(),
-                new \Piwigo\PluginConfig\EventDispatcher(),
-                \Piwigo\Lang\Translator::get(),
+                Lang::current(),
+                new CategoryRepository($this->em, CurrentConfig::current()),
+                new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfig::current()), CurrentUser::current(), $filterState),
+                CurrentConfig::current(),
+                new EventDispatcher(),
+                Translator::get(),
             ),
             $mailer,
-            \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
-            new RedirectService(\Piwigo\Core\Lang::current(), $userService),
-            new SessionService($this->em->getRepository(SessionEntity::class), \Piwigo\Config\CurrentConfig::current()),
+            HtmlServiceTestFactory::build(),
+            new RedirectService(Lang::current(), $userService),
+            new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()),
             EventDispatcher::get(),
             CurrentUser::current(),
-            \Piwigo\Core\Lang::current(),
-            \Piwigo\Config\CurrentConfig::current(),
-            new \Piwigo\Core\CurrentLogger(),
-            new \Piwigo\Config\DeploymentPolicy(),
+            Lang::current(),
+            CurrentConfig::current(),
+            new CurrentLogger(),
+            new DeploymentPolicy(),
         );
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         foreach ($this->insertedCategoryIds as $id) {
-            $this->conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::categories() . ' WHERE id = ?', [$id]);
+            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ?', [$id]);
         }
 
         parent::tearDown();
@@ -148,7 +164,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
         self::assertNotSame([], $clauses);
 
         $rows = $this->conn->fetchAllAssociative(
-            'SELECT id FROM ' . \Piwigo\Db\Tables::categories() . ' WHERE id IN (' . implode(',', $this->insertedCategoryIds) . ') AND (' . implode(' OR ', $clauses) . ')',
+            'SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $this->insertedCategoryIds) . ') AND (' . implode(' OR ', $clauses) . ')',
             $values
         );
 

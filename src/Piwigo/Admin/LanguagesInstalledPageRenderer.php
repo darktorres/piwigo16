@@ -4,21 +4,32 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\PluginMigrationEntity;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Request\LanguagesInstalledActionRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
-use Piwigo\Template\Template;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/languages_installed.php (the "installed" tab of the
@@ -47,16 +58,16 @@ final class LanguagesInstalledPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly CurrentLogger $currentLogger,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly ActivityService $activityService,
         private readonly UserService $userService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
         private readonly WsContext $wsContext,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly CurrentUser $currentUser,
     ) {}
 
     /**
@@ -83,20 +94,20 @@ final class LanguagesInstalledPageRenderer
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug;
 
         $conn = DbConnection::build();
-        $extension_repository = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
+        $extension_repository = new ExtensionRepository(EntityManagerFactory::build($conn));
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser);
         $extension_scanner = new ExtensionScanner();
-        $plugin_migration_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
+        $plugin_migration_repo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
         $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl);
 
         $fs_languages = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang);
         $db_languages = $extension_repository->findAll(ExtensionType::Language);
 
         // --------------------------------------------------perform requested actions
-        $languagesAction = Request\LanguagesInstalledActionRequest::fromGlobals('/^(' . join('|', array_keys($fs_languages)) . ')$/', $this->inputValidator);
+        $languagesAction = LanguagesInstalledActionRequest::fromGlobals('/^(' . join('|', array_keys($fs_languages)) . ')$/', $this->inputValidator);
 
         if ($languagesAction->action !== null and $languagesAction->languageId !== null and $this->accessControl->isWebmaster()) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $fs_language_entry = $fs_languages[$languagesAction->languageId] ?? null;
@@ -118,7 +129,7 @@ final class LanguagesInstalledPageRenderer
         foreach ($fs_languages as $language_id => $language) {
             $language['u_action'] = $this->urlService->addUrlParams($base_url, [
                 'language' => $language_id,
-                'pwg_token' => new \Piwigo\Csrf\CsrfService()
+                'pwg_token' => new CsrfService()
                     ->getToken(),
             ]);
 

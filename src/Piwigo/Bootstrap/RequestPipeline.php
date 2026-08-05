@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use LogicException;
+use Override;
 use Piwigo\Core\Kernel;
 use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
 use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
@@ -58,7 +60,7 @@ final class RequestPipeline
         $container = Kernel::container();
 
         $notFound = new class() implements RequestHandlerInterface {
-            #[\Override]
+            #[Override]
             public function handle(ServerRequestInterface $request): ResponseInterface
             {
                 return ResponseFactory::text('Not Found', 404);
@@ -81,7 +83,7 @@ final class RequestPipeline
     {
         $service = $container->get($id);
         if (! $service instanceof MiddlewareInterface) {
-            throw new \LogicException("Container returned an unexpected type for '{$id}'.");
+            throw new LogicException("Container returned an unexpected type for '{$id}'.");
         }
 
         return $service;

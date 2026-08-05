@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Common\ValueObject;
 
+use InvalidArgumentException;
+use Override;
+
 /**
  * Piwigo username. Capped at the `users.username` column width (VARCHAR 100,
  * utf8mb4_bin), with control characters and edge whitespace rejected so the
@@ -22,30 +25,30 @@ final readonly class Username implements StringVo
     ) {}
 
     /**
-     * @throws \InvalidArgumentException when $value is empty, too long, padded, or contains control characters
+     * @throws InvalidArgumentException when $value is empty, too long, padded, or contains control characters
      */
-    #[\Override]
+    #[Override]
     public static function from(string $value): self
     {
         if ($value === '') {
-            throw new \InvalidArgumentException('Username must not be empty');
+            throw new InvalidArgumentException('Username must not be empty');
         }
         if (strlen($value) > self::MAX_LENGTH) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Username exceeds ' . self::MAX_LENGTH . " chars: '{$value}'",
             );
         }
         if ($value !== trim($value)) {
-            throw new \InvalidArgumentException("Username must not have leading or trailing whitespace: '{$value}'");
+            throw new InvalidArgumentException("Username must not have leading or trailing whitespace: '{$value}'");
         }
         // Reject any C0 / DEL control char anywhere in the string.
         if (preg_match('/[\x00-\x1F\x7F]/', $value) === 1) {
-            throw new \InvalidArgumentException("Username must not contain control characters: '{$value}'");
+            throw new InvalidArgumentException("Username must not contain control characters: '{$value}'");
         }
         return new self($value);
     }
 
-    #[\Override]
+    #[Override]
     public static function tryFrom(mixed $value): ?self
     {
         if (! is_string($value)) {
@@ -53,18 +56,18 @@ final readonly class Username implements StringVo
         }
         try {
             return self::from($value);
-        } catch (\InvalidArgumentException) {
+        } catch (InvalidArgumentException) {
             return null;
         }
     }
 
-    #[\Override]
+    #[Override]
     public function equals(StringVo $other): bool
     {
         return $other instanceof self && $other->value === $this->value;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return $this->value;

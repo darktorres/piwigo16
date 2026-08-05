@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
+use RuntimeException;
 
 /**
  * Ported from admin/include/add_core_tabs.inc.php (P23 batch 8b-6). Its
@@ -51,7 +53,7 @@ final class CoreTabs
     public function __construct(
         private readonly Lang $lang,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -70,7 +72,7 @@ final class CoreTabs
     private function context(): CoreTabsContext
     {
         if (! $this->context instanceof CoreTabsContext) {
-            throw new \RuntimeException('CoreTabs: no context set (writer file forgot CoreTabs::setContext()?)');
+            throw new RuntimeException('CoreTabs: no context set (writer file forgot CoreTabs::setContext()?)');
         }
 
         return $this->context;
@@ -87,7 +89,7 @@ final class CoreTabs
     private static function contextField(?string $value, string $fieldName): string
     {
         if ($value === null) {
-            throw new \RuntimeException("CoreTabs: CoreTabsContext::\${$fieldName} was not set for this tab");
+            throw new RuntimeException("CoreTabs: CoreTabsContext::\${$fieldName} was not set for this tab");
         }
 
         return $value;

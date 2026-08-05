@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Psr\Cache\CacheItemPoolInterface;
 use Piwigo\Cache\CachePools;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 
@@ -9,7 +10,7 @@ use Symfony\Component\Cache\Adapter\AbstractAdapter;
  * @return int the pool's real, resolved defaultLifetime (private on
  *             AbstractAdapter -- no public getter, so read via Reflection)
  */
-function cachePoolsTestDefaultLifetime(\Psr\Cache\CacheItemPoolInterface $pool): int
+function cachePoolsTestDefaultLifetime(CacheItemPoolInterface $pool): int
 {
     $lifetime = new ReflectionClass(AbstractAdapter::class)->getProperty('defaultLifetime')->getValue($pool);
     if (! is_int($lifetime)) {

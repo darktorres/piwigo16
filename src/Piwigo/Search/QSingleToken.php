@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
+use Override;
+use Stringable;
+
 /**
  * Represents a single word or quoted phrase to be searched.
  *
@@ -23,7 +26,7 @@ namespace Piwigo\Search;
  * QNumericRangeScope, all in this same namespace) references them as
  * QSingleToken::QST_*.
  */
-final class QSingleToken implements \Stringable
+final class QSingleToken implements Stringable
 {
     public const int QST_QUOTED = 0x01;
 
@@ -66,7 +69,7 @@ final class QSingleToken implements \Stringable
         public ?QSearchScope $scope
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         $s = '';

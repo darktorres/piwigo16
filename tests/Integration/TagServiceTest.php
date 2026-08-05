@@ -4,8 +4,23 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
+    use Override;
+    use Piwigo\Core\Kernel;
+    use LogicException;
+    use Piwigo\Core\CurrentLogger;
+    use Piwigo\Core\FilterState;
+    use Piwigo\Core\Lang;
+    use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Tag\TagEntity;
+    use Piwigo\Group\GroupEntity;
+    use Piwigo\Activity\ActivityEntity;
+    use Piwigo\Session\SessionService;
+    use Piwigo\Session\SessionEntity;
+    use Piwigo\Tests\Support\HtmlServiceTestFactory;
+    use Piwigo\Common\ValueObject\UserId;
+    use Piwigo\Tag\Projection\TagBrief;
+    use Error;
     use Doctrine\DBAL\Connection;
-    use Piwigo\Activity\ActivityRepository;
     use Piwigo\Activity\ActivityService;
     use Piwigo\Cache\CachePools;
     use Piwigo\Category\CategoryRepository;
@@ -17,12 +32,9 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Event\Tag\GetTagAltNames;
     use Piwigo\Event\Tag\GetTagNameLikeWhere;
     use Piwigo\Event\Tag\RenderTagUrl;
-    use Piwigo\Group\GroupRepository;
-    use Piwigo\Html\HtmlService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\PluginConfig\EventDispatcher;
-    use Piwigo\Tag\TagRepository;
     use Piwigo\Tag\TagService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Users\User;
@@ -36,7 +48,7 @@ namespace Piwigo\Tests\Integration {
 
         private Connection $conn;
 
-        #[\Override]
+        #[Override]
         protected function setUp(): void
         {
             parent::setUp();
@@ -48,9 +60,9 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
-            $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-            if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+            $currentConfig = Kernel::container()->get(CurrentConfig::class);
+            if (! $currentConfig instanceof CurrentConfig) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
             }
             $currentConfig->reset();
             ConfigLoader::applyDefaults();
@@ -58,21 +70,21 @@ namespace Piwigo\Tests\Integration {
 
             $currentConfig->setTagsLevels(5);
 
-            $currentLogger = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
-            if (! $currentLogger instanceof \Piwigo\Core\CurrentLogger) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentLogger::class);
+            $currentLogger = Kernel::container()->get(CurrentLogger::class);
+            if (! $currentLogger instanceof CurrentLogger) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
             }
 
-            $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
-            if (! $filterState instanceof \Piwigo\Core\FilterState) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+            $filterState = Kernel::container()->get(FilterState::class);
+            if (! $filterState instanceof FilterState) {
+                throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
             }
 
             $this->conn = DbConnection::build();
-            $this->service = new TagService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig), \Piwigo\Users\CurrentUser::current(), $filterState), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), EventDispatcher::get(), \Piwigo\Users\CurrentUser::current(), CurrentConfig::current(), $currentLogger, new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Session\SessionEntity::class), CurrentConfig::current()));
+            $this->service = new TagService(Lang::current(), EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), EventDispatcher::get(), CurrentUser::current(), CurrentConfig::current(), $currentLogger, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfig::current()));
         }
 
-        #[\Override]
+        #[Override]
         protected function tearDown(): void
         {
             CachePools::tagCloud()->clear();
@@ -82,14 +94,14 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_all_tags_returns_every_fixture_tag_alphabetically(): void
         {
-            $names = array_column($this->service->getAllTags(\Piwigo\Tests\Support\HtmlServiceTestFactory::build()), 'name');
+            $names = array_column($this->service->getAllTags(HtmlServiceTestFactory::build()), 'name');
 
             self::assertSame(['family', 'nature', 'travel'], $names);
         }
 
         public function test_get_all_tags_sets_name_raw(): void
         {
-            $tags = $this->service->getAllTags(\Piwigo\Tests\Support\HtmlServiceTestFactory::build());
+            $tags = $this->service->getAllTags(HtmlServiceTestFactory::build());
 
             self::assertSame($tags[0]['name'], $tags[0]['name_raw']);
         }
@@ -167,7 +179,7 @@ namespace Piwigo\Tests\Integration {
         public function test_get_available_tags_with_no_filter_caches_the_result_via_cache_pools_tag_cloud(): void
         {
             CurrentUser::current()->set(new User(
-                id: \Piwigo\Common\ValueObject\UserId::from(2),
+                id: UserId::from(2),
                 username: 'fixture_guest',
                 email: '',
                 language: '',
@@ -306,7 +318,7 @@ namespace Piwigo\Tests\Integration {
 
             try {
                 $orphans = $this->service->getOrphanTags();
-                $orphanIds = array_map(static fn (\Piwigo\Tag\Projection\TagBrief $tag): int => $tag->id->value, $orphans);
+                $orphanIds = array_map(static fn (TagBrief $tag): int => $tag->id->value, $orphans);
 
                 self::assertContains($id, $orphanIds);
             } finally {
@@ -362,7 +374,7 @@ namespace Piwigo\Tests\Integration {
         public function test_get_available_tags_skips_a_tag_absent_from_the_counters_once_past_the_1000_id_threshold(): void
         {
             CurrentUser::current()->set(new User(
-                id: \Piwigo\Common\ValueObject\UserId::from(2),
+                id: UserId::from(2),
                 username: 'fixture_guest',
                 email: '',
                 language: '',
@@ -444,7 +456,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_common_tags_returns_empty_for_no_items(): void
         {
-            self::assertSame([], $this->service->getCommonTags([], 10, \Piwigo\Tests\Support\HtmlServiceTestFactory::build()));
+            self::assertSame([], $this->service->getCommonTags([], 10, HtmlServiceTestFactory::build()));
         }
 
         // --- addTags() ---------------------------------------------------------
@@ -498,7 +510,7 @@ namespace Piwigo\Tests\Integration {
             $name = 'weird url name ' . uniqid();
             EventDispatcher::get()->addEventHandler(RenderTagUrl::class, static fn (): int => 42);
 
-            $this->expectException(\Error::class);
+            $this->expectException(Error::class);
             $this->expectExceptionMessage('must return an instance of');
 
             try {
@@ -595,7 +607,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_get_tag_list_for_image_returns_the_images_tags_sorted_alphabetically(): void
         {
-            $result = $this->service->getTagListForImage(1, \Piwigo\Tests\Support\HtmlServiceTestFactory::build());
+            $result = $this->service->getTagListForImage(1, HtmlServiceTestFactory::build());
 
             self::assertSame(
                 ['~~3~~' => 'family', '~~1~~' => 'nature', '~~2~~' => 'travel'],
@@ -605,14 +617,14 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_tag_list_for_image_returns_empty_for_an_image_with_no_tags(): void
         {
-            self::assertSame([], $this->service->getTagListForImage(999_999, \Piwigo\Tests\Support\HtmlServiceTestFactory::build()));
+            self::assertSame([], $this->service->getTagListForImage(999_999, HtmlServiceTestFactory::build()));
         }
 
         // --- getTagListByIds() -----------------------------------------------------
 
         public function test_get_tag_list_by_ids_returns_the_matching_tags_sorted_alphabetically(): void
         {
-            $result = $this->service->getTagListByIds([1, 2], \Piwigo\Tests\Support\HtmlServiceTestFactory::build());
+            $result = $this->service->getTagListByIds([1, 2], HtmlServiceTestFactory::build());
 
             self::assertSame(
                 ['~~1~~' => 'nature', '~~2~~' => 'travel'],
@@ -635,7 +647,7 @@ namespace Piwigo\Tests\Integration {
             );
 
             try {
-                $result = $this->service->getTagListByIds([1], \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), false);
+                $result = $this->service->getTagListByIds([1], HtmlServiceTestFactory::build(), false);
 
                 $names = array_column($result, 'name');
                 sort($names);

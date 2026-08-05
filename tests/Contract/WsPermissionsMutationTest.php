@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+
 /**
  * Ws\PwgPermissions::getList()'s 3 "malformed row" guards (direct-users,
  * indirect-users, and groups loops -- each `! isset($row['cat_id']) ||
@@ -23,14 +25,14 @@ final class WsPermissionsMutationTest extends ContractTestCase
     /** @var list<int> */
     private array $groupIdsToDelete = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
         $this->loginAsAdmin();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         if ($this->privateCatId !== null) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Common\ValueObject\Contract;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Common\ValueObject\NumericId;
@@ -57,14 +58,14 @@ abstract class NumericIdContract extends TestCase
     public function testFromRejectsZero(): void
     {
         $class = static::voClass();
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $class::from(0);
     }
 
     public function testFromRejectsNegative(): void
     {
         $class = static::voClass();
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $class::from(-7);
     }
 

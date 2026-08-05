@@ -4,23 +4,34 @@ declare(strict_types=1);
 
 namespace Piwigo\Comment;
 
+use LogicException;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\User\UserCommentCheck;
 use Piwigo\Event\User\UserCommentDeletion;
 use Piwigo\Event\User\UserCommentValidation;
-use Piwigo\Group\GroupRepository;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Comment domain business logic: spam/flood checks, insert/update/delete/
@@ -52,10 +63,10 @@ final readonly class CommentService
         private MailerInterface $mailer,
         private HtmlRenderingInterface $htmlRenderer,
         private UrlServiceInterface $urlService,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private \Piwigo\Core\PageState $pageState,
-        private \Piwigo\Users\CurrentUser $currentUser,
-        private \Piwigo\Config\CurrentConfig $currentConfig,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentConfig $currentConfig,
         private AccessControl $accessControl,
     ) {}
 
@@ -70,18 +81,18 @@ final readonly class CommentService
      * `Kernel::boot()` hasn't run, matching `FilterState`'s own former
      * `isInitializedStatic()` shim's identical pre-boot fallback.
      */
-    private static function filterState(): \Piwigo\Core\FilterState
+    private static function filterState(): FilterState
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
-            if (! $filterState instanceof \Piwigo\Core\FilterState) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        if (Kernel::isBooted()) {
+            $filterState = Kernel::container()->get(FilterState::class);
+            if (! $filterState instanceof FilterState) {
+                throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
             }
 
             return $filterState;
         }
 
-        return new \Piwigo\Core\FilterState();
+        return new FilterState();
     }
 
     /**
@@ -96,7 +107,7 @@ final readonly class CommentService
      */
     public static function getNbAvailableComments(): int
     {
-        $currentUser = \Piwigo\Users\CurrentUser::current()->get();
+        $currentUser = CurrentUser::current()->get();
 
         if (! isset($currentUser->rawAttributes['nb_available_comments'])) {
             // Item 16I: countAvailableWithConditions() converted to real
@@ -109,14 +120,14 @@ final readonly class CommentService
             if (! AccessControl::current()->isAdmin()) {
                 $where[] = new SqlCondition('com.validated = true');
             }
-            $permissionCriteria = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Users\CurrentUser::current(), self::filterState())
+            $permissionCriteria = new PermissionService(new PermissionRepository(EntityManagerFactory::build(DbConnection::build())), EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build(DbConnection::build()), CurrentConfig::current()), CurrentUser::current(), self::filterState())
                 ->getPermissionCriteria();
             $where[] = $permissionCriteria->forbiddenCategoriesCondition('ic.categoryId');
             $where[] = $permissionCriteria->imageAccessCondition('ic.imageId');
 
-            $nbAvailableComments = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class)->countAvailableWithConditions($where);
+            $nbAvailableComments = EntityManagerFactory::build(DbConnection::build())->getRepository(CommentEntity::class)->countAvailableWithConditions($where);
             $currentUser = $currentUser->withRawAttribute('nb_available_comments', $nbAvailableComments);
-            \Piwigo\Users\CurrentUser::current()->set($currentUser);
+            CurrentUser::current()->set($currentUser);
         }
         $nb_available_comments = $currentUser->rawAttributes['nb_available_comments'];
         return is_numeric($nb_available_comments) ? (int) $nb_available_comments : 0;
@@ -187,7 +198,7 @@ final readonly class CommentService
     }
 
     /**
-     * @return list<\Piwigo\Comment\Projection\CommentSummary>
+     * @return list<CommentSummary>
      */
     public function getSummariesForImage(int $imageId, bool $onlyValidated, int $limit, int $offset): array
     {
@@ -315,7 +326,7 @@ final readonly class CommentService
                 }
 
                 $comm['website_url'] = $websiteUrl;
-                if (! \Piwigo\Validation\InputValidator::checkUrlFormat($websiteUrl)) {
+                if (! InputValidator::checkUrlFormat($websiteUrl)) {
                     $infos[] = $this->lang->t('Your website URL is invalid');
                     $commentAction = 'reject';
                 }
@@ -334,7 +345,7 @@ final readonly class CommentService
             }
         } else {
             $email = is_string($comm['email'] ?? null) ? $comm['email'] : null;
-            if (! \Piwigo\Validation\InputValidator::checkEmailFormat($email)) {
+            if (! InputValidator::checkEmailFormat($email)) {
                 $infos[] = $this->lang->t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
                 $commentAction = 'reject';
             }
@@ -518,7 +529,7 @@ final readonly class CommentService
             }
 
             $comment['website_url'] = $websiteUrl;
-            if (! \Piwigo\Validation\InputValidator::checkUrlFormat($websiteUrl)) {
+            if (! InputValidator::checkUrlFormat($websiteUrl)) {
                 $this->pageState->addError($this->lang->t('Your website URL is invalid'));
                 $commentAction = 'reject';
             }

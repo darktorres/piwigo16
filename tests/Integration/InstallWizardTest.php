@@ -4,12 +4,26 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use LogicException;
+use Piwigo\Core\Lang;
+use Piwigo\Config\CurrentConfigService;
+use Piwigo\Validation\InputValidator;
+use Piwigo\Core\AdminContext;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Core\PageState;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\ProcessCache;
+use ReflectionProperty;
+use mysqli_result;
+use Piwigo\Template\Template;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Core\AppInfo;
 use Piwigo\Admin\Install\InstallWizard;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Env;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
@@ -164,7 +178,7 @@ final class InstallWizardTest extends IntegrationTestCase
      */
     private array $createdDatabases = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -219,7 +233,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $this->paths = Paths::fromRoot($this->tempRoot);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $_GET = $this->originalGet;
@@ -234,9 +248,9 @@ final class InstallWizardTest extends IntegrationTestCase
             }
         }
         if (Kernel::isBooted()) {
-            $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-            if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+            $currentConfig = Kernel::container()->get(CurrentConfig::class);
+            if (! $currentConfig instanceof CurrentConfig) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
             }
             $currentConfig->reset();
         }
@@ -325,7 +339,7 @@ final class InstallWizardTest extends IntegrationTestCase
             'PIWIGO_DB_PREFIX' => $prefix,
         ]);
 
-        $wizard = new InstallWizard(\Piwigo\Core\Lang::current(), $prefix, $this->paths, $dbCredentials, \Piwigo\Config\CurrentConfigService::current(), CurrentConfig::current(), new \Piwigo\Validation\InputValidator(), new \Piwigo\Core\AdminContext(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Core\PageState(), new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy()), new \Piwigo\Core\ProcessCache());
+        $wizard = new InstallWizard(Lang::current(), $prefix, $this->paths, $dbCredentials, CurrentConfigService::current(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy()), new ProcessCache());
         $wizard->boot();
 
         return $wizard;
@@ -333,7 +347,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
     private function reflectPrivate(object $object, string $property): mixed
     {
-        return new \ReflectionProperty($object, $property)->getValue($object);
+        return new ReflectionProperty($object, $property)->getValue($object);
     }
 
     /** Joins InstallWizard::$errors (a list<string>, reflected) into one message for a failed assertion. */
@@ -380,7 +394,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $db = $this->newMysqli($dbName);
         self::assertSame(0, $db->connect_errno, $db->connect_error ?? '');
         $result = $db->query($sql);
-        self::assertInstanceOf(\mysqli_result::class, $result);
+        self::assertInstanceOf(mysqli_result::class, $result);
         $row = $result->fetch_assoc();
         $db->close();
 
@@ -411,7 +425,7 @@ final class InstallWizardTest extends IntegrationTestCase
         // the CurrentPaths::get() shim. KernelContainerOverride::with()
         // rebinds Paths::class for just this test's own scope instead.
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            $wizard = new InstallWizard(\Piwigo\Core\Lang::current(), 'itest_', $this->paths, DbCredentials::current(), \Piwigo\Config\CurrentConfigService::current(), CurrentConfig::current(), new \Piwigo\Validation\InputValidator(), new \Piwigo\Core\AdminContext(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Core\PageState(), new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy()), new \Piwigo\Core\ProcessCache());
+            $wizard = new InstallWizard(Lang::current(), 'itest_', $this->paths, DbCredentials::current(), CurrentConfigService::current(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy()), new ProcessCache());
 
             self::assertSame('_data/', $this->reflectPrivate($wizard, 'confDataLocation'));
         });
@@ -421,11 +435,11 @@ final class InstallWizardTest extends IntegrationTestCase
     {
         file_put_contents($this->paths->local . 'config/config.inc.php', "<?php\n\$conf['data_location'] = 12345;\n");
 
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage("Invalid \$conf['data_location'] configuration: expected a string.");
 
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            new InstallWizard(\Piwigo\Core\Lang::current(), 'itest_', $this->paths, DbCredentials::current(), \Piwigo\Config\CurrentConfigService::current(), CurrentConfig::current(), new \Piwigo\Validation\InputValidator(), new \Piwigo\Core\AdminContext(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Core\PageState(), new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy()), new \Piwigo\Core\ProcessCache());
+            new InstallWizard(Lang::current(), 'itest_', $this->paths, DbCredentials::current(), CurrentConfigService::current(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy()), new ProcessCache());
         });
     }
 
@@ -557,7 +571,7 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertIsString($output);
 
         $template = $this->reflectPrivate($wizard, 'template');
-        self::assertInstanceOf(\Piwigo\Template\Template::class, $template);
+        self::assertInstanceOf(Template::class, $template);
         self::assertSame($this->reflectPrivate($wizard, 'errors'), $template->get_template_vars('errors'));
 
         self::assertStringContainsString('please enter the webmaster username', $output);
@@ -588,7 +602,7 @@ final class InstallWizardTest extends IntegrationTestCase
         ]);
         // conn defaults to null until analyzeForm() runs -- never called here.
 
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage('performInstall() called before a successful analyzeForm() connection.');
 
         $wizard->performInstall();
@@ -624,7 +638,7 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertSame('webmaster@example.test', $webmaster['mail_address']);
         self::assertIsString($webmaster['password']);
         self::assertTrue(
-            new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), new \Piwigo\Config\DeploymentPolicy())->verify('Sup3r-Secret-99!', $webmaster['password']),
+            new PasswordService(new PasswordRepository(EntityManagerFactory::build(DbConnection::build())), new DeploymentPolicy())->verify('Sup3r-Secret-99!', $webmaster['password']),
             'the stored hash must verify against the exact submitted password'
         );
 
@@ -832,7 +846,7 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertFileDoesNotExist($this->paths->siteLocal . 'config/database.inc.php');
 
         $template = $this->reflectPrivate($wizard, 'template');
-        self::assertInstanceOf(\Piwigo\Template\Template::class, $template);
+        self::assertInstanceOf(Template::class, $template);
         self::assertTrue($template->get_template_vars('config_creation_failed'));
 
         $configUrl = $template->get_template_vars('config_url');
@@ -921,7 +935,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $wizard = $this->submit([], ['language' => 'totally-bogus-language-xyz']);
 
-        self::assertSame(\Piwigo\Core\AppInfo::DEFAULT_LANGUAGE, $this->reflectPrivate($wizard, 'language'));
+        self::assertSame(AppInfo::DEFAULT_LANGUAGE, $this->reflectPrivate($wizard, 'language'));
     }
 
     public function test_boot_picks_the_browser_language_when_none_was_requested_and_it_is_bundled(): void
@@ -1266,7 +1280,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->setSmtpHost('127.0.0.1:1');
         $currentConfig->setDebugMail(true);
@@ -1383,9 +1397,9 @@ final class InstallWizardTest extends IntegrationTestCase
         // performInstall() does) without ever building a connection, the
         // exact "reached step 2 before a successful connection" state this
         // guard exists for.
-        new \ReflectionProperty($wizard, 'step')->setValue($wizard, 2);
+        new ReflectionProperty($wizard, 'step')->setValue($wizard, 2);
 
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage('render() reached step 2 before a successful analyzeForm() connection.');
 
         $wizard->render();

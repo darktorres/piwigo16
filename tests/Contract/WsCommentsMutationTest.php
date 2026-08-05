@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+
 final class WsCommentsMutationTest extends ContractTestCase
 {
     /** Image id that has comments in the fixture. */
     private const int FIXTURE_IMAGE_ID = 1;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();

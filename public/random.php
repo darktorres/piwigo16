@@ -8,15 +8,27 @@ declare(strict_types=1);
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-
 // +-----------------------------------------------------------------------+
 // |                          define and include                           |
 // +-----------------------------------------------------------------------+
-
+use Doctrine\DBAL\ParameterType;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Bootstrap\RedirectService;
+use Piwigo\Bootstrap\RequestBootstrap;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Paths;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Http\ResponseEmitter;
+use Piwigo\Http\ResponseReadyException;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\CurrentUser;
 
 // vendor/autoload.php must be required directly here -- Paths::fromRoot()
@@ -26,12 +38,12 @@ use Piwigo\Users\CurrentUser;
 require __DIR__ . '/../vendor/autoload.php';
 
 $paths = Paths::fromRoot(dirname(__DIR__));
-\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
+RequestBootstrap::bootEntryPoint($paths);
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-\Piwigo\Auth\AccessControl::current()->checkStatus(AccessLevel::Guest);
+AccessControl::current()->checkStatus(AccessLevel::Guest);
 
 // +-----------------------------------------------------------------------+
 // |                     generate random element list                      |
@@ -46,10 +58,10 @@ $top_number = CurrentConfig::current()->topNumber();
 $rawNbImagePage = CurrentUser::current()->get()->rawAttributes['nb_image_page'] ?? null;
 $nb_image_page = is_numeric($rawNbImagePage) ? (int) $rawNbImagePage : 15;
 
-$conn = \Piwigo\Db\DbConnection::build();
+$conn = DbConnection::build();
 
-$permissionCriteria = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), CurrentConfig::current()), CurrentUser::current(), \Piwigo\Bootstrap\RequestBootstrap::filterState())->getPermissionCriteria();
-$condition = \Piwigo\Permission\SqlCondition::combine(
+$permissionCriteria = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()), CurrentUser::current(), RequestBootstrap::filterState())->getPermissionCriteria();
+$condition = SqlCondition::combine(
     'AND',
     $permissionCriteria->forbiddenCategoriesCondition('category_id'),
     $permissionCriteria->visibleCategoriesCondition('category_id'),
@@ -62,7 +74,7 @@ SELECT id
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
 ' . ($condition->isEmpty() ? '' : 'WHERE ' . $condition->sql) . '
-  ORDER BY ' . \Piwigo\Db\SqlDialect::randomFunction() . '()
+  ORDER BY ' . SqlDialect::randomFunction() . '()
   LIMIT :limit
 ;';
 
@@ -72,7 +84,7 @@ $params = [
 ];
 $types = [
     ...$condition->types,
-    'limit' => \Doctrine\DBAL\ParameterType::INTEGER,
+    'limit' => ParameterType::INTEGER,
 ];
 
 // +-----------------------------------------------------------------------+
@@ -89,14 +101,14 @@ $types = [
 // config/routes.php. A 4th, file-local catch point, same shape as
 // AdminShell::run()'s own dispatch-context catch point.
 try {
-    new \Piwigo\Bootstrap\RedirectService(\Piwigo\Bootstrap\RequestBootstrap::lang(), \Piwigo\Bootstrap\RequestBootstrap::userService())
-        ->redirect(\Piwigo\Bootstrap\RequestBootstrap::urlService()->makeIndexUrl([
+    new RedirectService(RequestBootstrap::lang(), RequestBootstrap::userService())
+        ->redirect(RequestBootstrap::urlService()->makeIndexUrl([
             'list' => array_map(
                 static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
                 $conn->fetchFirstColumn($query, $params, $types)
             ),
         ]));
-} catch (\Piwigo\Http\ResponseReadyException $e) {
-    new \Piwigo\Http\ResponseEmitter()
+} catch (ResponseReadyException $e) {
+    new ResponseEmitter()
         ->emit($e->response());
 }

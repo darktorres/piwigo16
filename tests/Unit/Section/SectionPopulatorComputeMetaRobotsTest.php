@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Section;
 
+use PHPUnit\Framework\TestCase;
 use Piwigo\Section\SectionPopulator;
 
 /**
@@ -24,7 +25,7 @@ use Piwigo\Section\SectionPopulator;
  * with the mutation hand-applied to source, every test below (including
  * the two added specifically to exercise the fallback) still passes.
  */
-final class SectionPopulatorComputeMetaRobotsTest extends \PHPUnit\Framework\TestCase
+final class SectionPopulatorComputeMetaRobotsTest extends TestCase
 {
     public function test_missing_section_key_is_unrestricted(): void
     {

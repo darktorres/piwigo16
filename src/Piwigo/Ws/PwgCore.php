@@ -13,27 +13,38 @@ namespace Piwigo\Ws;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Activity\ActivityListCriteria;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
+use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
+use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CharsetHelper;
+use Piwigo\Core\DateHelper;
+use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Ws\GetHistory;
 use Piwigo\Group\GroupService;
+use Piwigo\History\HistoryEntity;
+use Piwigo\History\HistoryImageType;
 use Piwigo\History\HistoryService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeUrlCodec;
@@ -48,7 +59,10 @@ use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
+use Piwigo\Ws\Request\HistorySearchPageRequest;
 
 /**
  * P23 batch 8e-4: relocated from include/ws_functions/pwg.php.
@@ -90,7 +104,7 @@ final class PwgCore
         private readonly ImageRepository $imageRepository,
         private readonly Paths $paths,
         private readonly Lang $lang,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly InputValidator $inputValidator,
         private readonly Translator $translator,
         private readonly ConfigService $configService,
         private readonly ImageStdParams $imageStdParams,
@@ -371,7 +385,7 @@ final class PwgCore
         $user_id = $this->currentUser->get()
             ->id->value;
 
-        return $this->entityManager->getRepository(\Piwigo\Caddie\CaddieEntity::class)
+        return $this->entityManager->getRepository(CaddieEntity::class)
             ->addElements($user_id, $params['image_id']);
     }
 
@@ -468,14 +482,14 @@ final class PwgCore
         $res['status'] = $currentUser->status->value;
         $res['theme'] = $currentUser->theme;
         $res['language'] = $currentUser->language;
-        $res['pwg_token'] = new \Piwigo\Csrf\CsrfService()->getToken();
-        $res['charset'] = \Piwigo\Core\CharsetHelper::getPwgCharset();
+        $res['pwg_token'] = new CsrfService()->getToken();
+        $res['charset'] = CharsetHelper::getPwgCharset();
 
         // Env::now() rather than SQL's NOW() -- the real DB-server clock,
         // invisible to Env::now()'s own PIWIGO_TEST_NOW freeze, same
         // reasoning as every other NOW()-reading call site this migration
         // already retargeted.
-        $res['current_datetime'] = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
+        $res['current_datetime'] = Env::now()->format('Y-m-d H:i:s');
         $res['version'] = AppInfo::VERSION;
         $res['save_visits'] = $this->historyService->isLoggingAllowed();
         $res['connected_with'] = $_SESSION['connected_with'] ?? null;
@@ -532,7 +546,7 @@ final class PwgCore
     {
         foreach (['date_min', 'date_max'] as $datefield) {
             $datefield_value = $param[$datefield] ?? null;
-            if (! in_array($datefield_value, [null, ''], true) and ! \Piwigo\Core\DateHelper::isValidMysqlDatetime($datefield_value)) {
+            if (! in_array($datefield_value, [null, ''], true) and ! DateHelper::isValidMysqlDatetime($datefield_value)) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid ' . $datefield);
             }
         }
@@ -586,11 +600,11 @@ final class PwgCore
         $connections_mode = $this->currentConfig->activityDisplayConnections();
         $admin_ids = [];
         if ($connections_mode === 'admins_only') {
-            $admin_id_objects = (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->findAdminIds();
-            $admin_ids = array_map(static fn (\Piwigo\Common\ValueObject\UserId $id): int => $id->value, $admin_id_objects);
+            $admin_id_objects = (new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->findAdminIds();
+            $admin_ids = array_map(static fn (UserId $id): int => $id->value, $admin_id_objects);
         }
 
-        $criteria = new \Piwigo\Activity\ActivityListCriteria(
+        $criteria = new ActivityListCriteria(
             performedBy: $param['uid'] ?? null,
             action: is_string($param['action'] ?? null) ? $param['action'] : null,
             object: is_string($param['object'] ?? null) ? $param['object'] : null,
@@ -629,7 +643,7 @@ final class PwgCore
                     $row_object = is_scalar($row['object']) ? (string) $row['object'] : '';
                     $row_action = is_scalar($row['action']) ? (string) $row['action'] : '';
                     $row_object_id = is_scalar($row['object_id']) ? (string) $row['object_id'] : null;
-                    $row_ip_address = $row['ip_address'] instanceof \Piwigo\Common\ValueObject\IpAddress ? $row['ip_address']->value : null;
+                    $row_ip_address = $row['ip_address'] instanceof IpAddress ? $row['ip_address']->value : null;
                     $row_performed_by = is_scalar($row['performed_by']) ? (string) $row['performed_by'] : null;
                     $row_details = is_array($row['details'] ?? null) ? $row['details'] : [];
                     $row_occured_on = is_scalar($row['occured_on']) ? (string) $row['occured_on'] : '';
@@ -677,7 +691,7 @@ final class PwgCore
                             'object_id' => [$row_object_id],
                             'action' => $row_action,
                             'ip_address' => $row_ip_address,
-                            'date' => \Piwigo\Core\DateHelper::formatDate($date),
+                            'date' => DateHelper::formatDate($date),
                             'hour' => $hour,
                             'user_id' => $row_performed_by,
                             'detailsType' => $detailsType,
@@ -764,8 +778,8 @@ final class PwgCore
     {
         $section = null;
         if (! in_array($params['section'], [null, ''], true)) {
-            $historyRepository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())
-                ->getRepository(\Piwigo\History\HistoryEntity::class);
+            $historyRepository = EntityManagerFactory::build(DbConnection::build())
+                ->getRepository(HistoryEntity::class);
             if (in_array($params['section'], $historyRepository->getSectionEnumOptions(), true)) {
                 $section = $params['section'];
             }
@@ -840,11 +854,11 @@ final class PwgCore
 
         /** @var array<string, mixed> $page */
         $page = [];
-        $page['start'] = Request\HistorySearchPageRequest::fromGlobals()->start;
+        $page['start'] = HistorySearchPageRequest::fromGlobals()->start;
 
         $types = array_merge(['none'], array_map(
-            static fn (\Piwigo\History\HistoryImageType $type): string => $type->value,
-            \Piwigo\History\HistoryImageType::cases()
+            static fn (HistoryImageType $type): string => $type->value,
+            HistoryImageType::cases()
         ));
 
         $display_thumbnails = [
@@ -934,7 +948,7 @@ final class PwgCore
         // store seach in database
         // register search rules in database, then they will be available on
         // thumbnails page and picture page.
-        $searchRepository = new SearchRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
+        $searchRepository = new SearchRepository(EntityManagerFactory::build($conn));
         $search_id = $searchRepository->insertSavedSearch($search);
 
         // Remove redirect for ajax //
@@ -1311,7 +1325,7 @@ final class PwgCore
             array_push(
                 $result,
                 [
-                    'DATE' => \Piwigo\Core\DateHelper::formatDate($line_date ?? ''),
+                    'DATE' => DateHelper::formatDate($line_date ?? ''),
                     'TIME' => $line_time,
                     'USER' => $user_string,
                     'USERNAME' => $user_name,

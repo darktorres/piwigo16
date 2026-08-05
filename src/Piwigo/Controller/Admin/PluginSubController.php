@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\LoadedPlugins;
+use Piwigo\Admin\PluginLoader;
 use Piwigo\Controller\Admin\Request\PluginSectionRequest;
+use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -32,11 +36,11 @@ final class PluginSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly LoadedPlugins $loadedPlugins,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly InputValidator $inputValidator,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $pluginSection = PluginSectionRequest::fromGlobals($this->inputValidator);
@@ -46,7 +50,7 @@ final class PluginSubController implements AdminSubControllerInterface
                 ->fatalError('Invalid URL - plugin ' . $pluginSection->pluginId . ' not active');
         }
 
-        $filename = \Piwigo\Admin\PluginLoader::pluginsPath() . implode('/', $pluginSection->sections);
+        $filename = PluginLoader::pluginsPath() . implode('/', $pluginSection->sections);
         if (is_file($filename)) {
             include_once $filename;
         } else {

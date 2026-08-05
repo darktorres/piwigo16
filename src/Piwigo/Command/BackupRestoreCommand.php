@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Command;
 
+use Override;
 use Piwigo\Backup\BackupService;
 use Piwigo\Db\DbCredentials;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -12,6 +13,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Throwable;
 
 /**
  * Destructive by design: drops/recreates the target database and overwrites
@@ -35,7 +37,7 @@ final class BackupRestoreCommand extends Command
         parent::__construct();
     }
 
-    #[\Override]
+    #[Override]
     protected function configure(): void
     {
         $this
@@ -44,7 +46,7 @@ final class BackupRestoreCommand extends Command
             ->addOption('database', null, InputOption::VALUE_REQUIRED, 'Target database name (defaults to PIWIGO_DB_BASE)');
     }
 
-    #[\Override]
+    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $file = $input->getArgument('file');
@@ -70,7 +72,7 @@ final class BackupRestoreCommand extends Command
 
         try {
             $this->backupService->restore($file, $targetDatabase);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $output->writeln("<error>Restore failed: {$e->getMessage()}</error>");
 
             return Command::FAILURE;

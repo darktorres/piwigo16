@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\RatingPageRenderer;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -26,14 +32,14 @@ final class RatingSubController implements AdminSubControllerInterface
         private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Category\CategoryService $categoryService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly CategoryService $categoryService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly EventDispatcher $eventDispatcher,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new RatingPageRenderer()

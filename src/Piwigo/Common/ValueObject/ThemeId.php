@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Common\ValueObject;
 
+use InvalidArgumentException;
+use Override;
+
 /**
  * Theme identifier — directory-name slug, also the manifest `id` field.
  *
@@ -20,18 +23,18 @@ final readonly class ThemeId implements StringVo
     ) {}
 
     /**
-     * @throws \InvalidArgumentException when $value does not match `[a-zA-Z0-9_-]{1,64}`
+     * @throws InvalidArgumentException when $value does not match `[a-zA-Z0-9_-]{1,64}`
      */
-    #[\Override]
+    #[Override]
     public static function from(string $value): self
     {
         if (preg_match(self::PATTERN, $value) !== 1) {
-            throw new \InvalidArgumentException("ThemeId must be 1-64 chars of [a-zA-Z0-9_-], got '{$value}'");
+            throw new InvalidArgumentException("ThemeId must be 1-64 chars of [a-zA-Z0-9_-], got '{$value}'");
         }
         return new self($value);
     }
 
-    #[\Override]
+    #[Override]
     public static function tryFrom(mixed $value): ?self
     {
         if (! is_string($value)) {
@@ -39,18 +42,18 @@ final readonly class ThemeId implements StringVo
         }
         try {
             return self::from($value);
-        } catch (\InvalidArgumentException) {
+        } catch (InvalidArgumentException) {
             return null;
         }
     }
 
-    #[\Override]
+    #[Override]
     public function equals(StringVo $other): bool
     {
         return $other instanceof self && $other->value === $this->value;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return $this->value;

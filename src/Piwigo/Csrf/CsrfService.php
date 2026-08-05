@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Csrf;
 
+use Exception;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Csrf\Request\CsrfTokenRequest;
+
 /**
  * CSRF token issuance and verification. Tokens are an HMAC of the current
  * session id keyed by the secret-key config, so they're stable for the
@@ -61,10 +67,10 @@ final class CsrfService
     {
         $session_id = session_id();
         if ($session_id === false) {
-            throw new \Exception('CsrfService::getToken(): no active session');
+            throw new Exception('CsrfService::getToken(): no active session');
         }
 
-        $secret_key = \Piwigo\Config\CurrentConfig::current()->secretKey();
+        $secret_key = CurrentConfig::current()->secretKey();
 
         return hash_hmac('sha256', $session_id, $secret_key);
     }
@@ -82,7 +88,7 @@ final class CsrfService
      */
     public function check(): ?bool
     {
-        $submitted = Request\CsrfTokenRequest::fromGlobals()->submittedToken;
+        $submitted = CsrfTokenRequest::fromGlobals()->submittedToken;
         if ($submitted === null) {
             return null;
         }
@@ -97,7 +103,7 @@ final class CsrfService
      * that doesn't match -> access denied. Both renderer methods are
      * `never`-returning, so this only returns when the token is valid.
      */
-    public function checkOrFail(\Piwigo\Core\HtmlRenderingInterface $renderer, \Piwigo\Core\RedirectServiceInterface $redirectService): void
+    public function checkOrFail(HtmlRenderingInterface $renderer, RedirectServiceInterface $redirectService): void
     {
         $result = $this->check();
         if ($result === null) {

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
@@ -58,7 +59,7 @@ function pictureModifyDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function pictureModifyDbConnect(): \mysqli|\PgSql\Connection
+function pictureModifyDbConnect(): mysqli|Connection
 {
     return H::connect();
 }

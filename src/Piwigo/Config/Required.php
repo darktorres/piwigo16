@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
+use Attribute;
+
 /**
  * Marks a CurrentConfig property that must resolve to a non-empty value --
  * discovered via reflection (ConfigLoader::validateRequired()), replacing
@@ -11,5 +13,5 @@ namespace Piwigo\Config;
  * accessor removal, design #4: the flag lives on the property it
  * describes instead of a parallel array that could drift out of sync.
  */
-#[\Attribute(\Attribute::TARGET_PROPERTY)]
+#[Attribute(Attribute::TARGET_PROPERTY)]
 final class Required {}

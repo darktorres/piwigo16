@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+use Piwigo\Db\DbConnection;
+use Doctrine\ORM\ORMSetup;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Events;
+use Piwigo\Db\TablePrefixListener;
+use Piwigo\Db\DbCredentials;
+use Piwigo\Config\ConfigEntry;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -30,7 +38,7 @@ use Sentry\SentrySdk;
  */
 beforeEach(function (): void {
     Kernel::reset();
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     CurrentUser::current()->reset();
     // Legacy Coupling Retirement Phase 8, 8d: bootConfigOnly() now reuses
     // an already-set CurrentConfigService instead of always resolving+
@@ -53,7 +61,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     CurrentUser::current()->reset();
     CurrentConfigService::current()->reset();
     // Lang::current() has no memoized pre-boot fallback (see beforeEach's
@@ -84,7 +92,7 @@ test('bootConfigOnly records a boot timing', function (): void {
 
     $timing = Kernel::container()->get(ServerTiming::class);
     if (! $timing instanceof ServerTiming) {
-        throw new \LogicException('Container returned an unexpected type for ' . ServerTiming::class);
+        throw new LogicException('Container returned an unexpected type for ' . ServerTiming::class);
     }
 
     expect($timing->all())->toHaveKey('boot');
@@ -167,7 +175,7 @@ test('bootConfigOnly attaches Lang globals from whatever the Translator has load
     Kernel::boot($paths);
     $translator = Kernel::container()->get(Translator::class);
     if (! $translator instanceof Translator) {
-        throw new \LogicException('Container returned an unexpected type for ' . Translator::class);
+        throw new LogicException('Container returned an unexpected type for ' . Translator::class);
     }
     $translator->loadArray(['bootconfigonly_probe' => 'probe-value']);
 
@@ -187,12 +195,12 @@ test('bootConfigOnly reuses an already-set CurrentConfigService instead of resol
     $paths = Paths::fromRoot(sys_get_temp_dir());
     Kernel::boot($paths);
 
-    $conn = \Piwigo\Db\DbConnection::build();
-    $ormConfig = \Doctrine\ORM\ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 3) . '/src/Piwigo'], isDevMode: true);
+    $conn = DbConnection::build();
+    $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 3) . '/src/Piwigo'], isDevMode: true);
     $ormConfig->enableNativeLazyObjects(true);
-    $em = new \Doctrine\ORM\EntityManager($conn, $ormConfig);
-    $em->getEventManager()->addEventListener(\Doctrine\ORM\Events::loadClassMetadata, new \Piwigo\Db\TablePrefixListener(\Piwigo\Db\DbCredentials::current()));
-    $preSetService = new \Piwigo\Config\ConfigService($em->getRepository(\Piwigo\Config\ConfigEntry::class), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current());
+    $em = new EntityManager($conn, $ormConfig);
+    $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentials::current()));
+    $preSetService = new ConfigService($em->getRepository(ConfigEntry::class), new EventDispatcher(), CurrentConfig::current());
     CurrentConfigService::current()->set($preSetService);
 
     RequestBootstrap::bootConfigOnly($paths);

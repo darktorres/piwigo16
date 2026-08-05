@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Common\ValueObject;
 
+use InvalidArgumentException;
+use Override;
+
 /**
  * Positive integer identifier of a row in the `images` table.
  *
@@ -22,13 +25,13 @@ final readonly class ImageId implements NumericId
     ) {}
 
     /**
-     * @throws \InvalidArgumentException when $value is not positive
+     * @throws InvalidArgumentException when $value is not positive
      */
-    #[\Override]
+    #[Override]
     public static function from(int $value): self
     {
         if ($value <= 0) {
-            throw new \InvalidArgumentException("ImageId must be a positive integer, got {$value}");
+            throw new InvalidArgumentException("ImageId must be a positive integer, got {$value}");
         }
         return new self($value);
     }
@@ -36,7 +39,7 @@ final readonly class ImageId implements NumericId
     /**
      * Returns null when $value cannot be coerced to a positive integer (no overflow, no decimals, no 'e' notation).
      */
-    #[\Override]
+    #[Override]
     public static function tryFrom(mixed $value): ?self
     {
         if (is_int($value)) {
@@ -49,13 +52,13 @@ final readonly class ImageId implements NumericId
         return null;
     }
 
-    #[\Override]
+    #[Override]
     public function equals(NumericId $other): bool
     {
         return $other instanceof self && $other->value === $this->value;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return (string) $this->value;

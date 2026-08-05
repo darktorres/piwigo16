@@ -9,16 +9,31 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Request\ProfileFormSubmitRequest;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\DateHelper;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\ThemeCatalog;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Db\SqlDialectExecutor;
 use Piwigo\Event\User\LoadProfileInTemplate;
 use Piwigo\Event\User\SaveProfileFromPost;
-use Piwigo\Template\Template;
+use Piwigo\Lang\LangService;
+use Piwigo\Mail\MailService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
 /**
@@ -40,18 +55,18 @@ final class ProfileFormHandler
         private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly AdminContext $adminContext,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly ActivityService $activityService,
         private readonly UserService $userService,
         private readonly PasswordService $passwordService,
         private readonly AuthService $authService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Mail\MailService $mailService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly MailService $mailService,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     // ------------------------------------------------------ update & customization
@@ -63,7 +78,7 @@ final class ProfileFormHandler
     {
         $errors = [];
 
-        $profileFormSubmitRequest = Request\ProfileFormSubmitRequest::fromGlobals();
+        $profileFormSubmitRequest = ProfileFormSubmitRequest::fromGlobals();
 
         if (! $profileFormSubmitRequest->isValidateSubmitted) {
             return false;
@@ -125,12 +140,12 @@ final class ProfileFormHandler
                 $errors[] = $this->lang->t('Recent period must be a positive integer value');
             }
 
-            if (! in_array($post['language'] ?? null, array_keys(\Piwigo\Lang\LangService::getLanguages()), true)) {
+            if (! in_array($post['language'] ?? null, array_keys(LangService::getLanguages()), true)) {
                 $this->htmlRenderer
                     ->fatalError('Hacking attempt, incorrect language value');
             }
 
-            if (! in_array($post['theme'] ?? null, array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes($this->eventDispatcher)), true)) {
+            if (! in_array($post['theme'] ?? null, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher)), true)) {
                 $this->htmlRenderer
                     ->fatalError('Hacking attempt, incorrect theme value');
             }
@@ -140,7 +155,7 @@ final class ProfileFormHandler
             // if $_POST and $userdata have are same email
             // validate_mail_address allows, however, to check email
             $mail_address_input = is_string($post['mail_address']) ? $post['mail_address'] : null;
-            $mail_error = $this->userService->validateMailAddress(\Piwigo\Common\ValueObject\UserId::tryFrom($user_id), $mail_address_input);
+            $mail_error = $this->userService->validateMailAddress(UserId::tryFrom($user_id), $mail_address_input);
             if ($mail_error !== '' && $mail_error !== '0') {
                 $errors[] = $mail_error;
             }
@@ -163,7 +178,7 @@ final class ProfileFormHandler
             }
 
             if (! $this->adminContext->isActive()) {// changing password requires old password
-                $current_password = $this->authService->getPasswordHash(\Piwigo\Common\ValueObject\UserId::from($user_id));
+                $current_password = $this->authService->getPasswordHash(UserId::from($user_id));
 
                 // the password column allows NULL (external-authentication
                 // accounts with no local password set); such an account can
@@ -198,7 +213,7 @@ final class ProfileFormHandler
                 $username_for_update = $post['username'] ?? null;
                 if (is_string($username_for_update) and $username_for_update !== '' and $username_for_update !== '0') {
                     $username = $username_for_update;
-                    $usernameVo = \Piwigo\Common\ValueObject\Username::tryFrom($username);
+                    $usernameVo = Username::tryFrom($username);
                     if ($username !== $userdata['username'] and $usernameVo !== null and $this->userService->getUserId($usernameVo) !== null) {
                         $this->pageState->addError($this->lang->t('this login is already used'));
                         unset($post['redirect']);
@@ -233,7 +248,7 @@ final class ProfileFormHandler
                     }
                 }
 
-                $this->userService->updateAccountFields(\Piwigo\Common\ValueObject\UserId::from($user_id), $username_update, $password_update, $mail_address);
+                $this->userService->updateAccountFields(UserId::from($user_id), $username_update, $password_update, $mail_address);
 
                 if ($mail_address !== $userdata['email']) {
                     $this->authService->deactivatePasswordResetKey($user_id);
@@ -278,7 +293,7 @@ final class ProfileFormHandler
                 }
                 $infosUpdates = $data;
                 unset($infosUpdates['user_id']);
-                $this->userService->updateInfosForUser(\Piwigo\Common\ValueObject\UserId::from($user_id), $infosUpdates);
+                $this->userService->updateInfosForUser(UserId::from($user_id), $infosUpdates);
                 $this->entityManager->clear();
 
                 $activity_details_tables[] = 'user_infos';
@@ -334,12 +349,12 @@ final class ProfileFormHandler
         );
 
         $template->assign('template_selection', $userdata['theme']);
-        $template->assign('template_options', \Piwigo\Core\ThemeCatalog::getPwgThemes($this->eventDispatcher));
+        $template->assign('template_options', ThemeCatalog::getPwgThemes($this->eventDispatcher));
 
-        $profileFormSubmitRequest = Request\ProfileFormSubmitRequest::fromGlobals();
+        $profileFormSubmitRequest = ProfileFormSubmitRequest::fromGlobals();
 
         $language_options = [];
-        foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
+        foreach (LangService::getLanguages() as $language_code => $language_name) {
             if ($profileFormSubmitRequest->isSubmitPresent or (is_string($userdata['language']) and $userdata['language'] === $language_code)) {
                 $template->assign('language_selection', $language_code);
             }
@@ -354,7 +369,7 @@ final class ProfileFormHandler
 
         // api key expiration choice
         $conn = DbConnection::build();
-        $sqlDialectExecutor = new \Piwigo\Db\SqlDialectExecutor($conn);
+        $sqlDialectExecutor = new SqlDialectExecutor($conn);
         $dbnow_str = $sqlDialectExecutor->fetchTomorrow();
         $template->assign('API_CURRENT_DATE', explode(' ', $dbnow_str)[0]);
 
@@ -373,7 +388,7 @@ final class ProfileFormHandler
         $result = $sqlDialectExecutor->fetchFutureDatesFor($duration_days);
         foreach ($result as $day => $date) {
             $date_for_format = (is_string($date) || is_int($date)) ? $date : false;
-            $display_duration[$day] = $this->lang->t('%d days', $day) . ' (' . \Piwigo\Core\DateHelper::formatDate($date_for_format, ['day', 'month', 'year']) . ')';
+            $display_duration[$day] = $this->lang->t('%d days', $day) . ' (' . DateHelper::formatDate($date_for_format, ['day', 'month', 'year']) . ')';
         }
 
         if ($has_custom) {
@@ -393,6 +408,6 @@ final class ProfileFormHandler
         // allow plugins to add their own form data to content
         $this->eventDispatcher->dispatchNotify(new LoadProfileInTemplate($userdata));
 
-        $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
+        $template->assign('PWG_TOKEN', new CsrfService()->getToken());
     }
 }

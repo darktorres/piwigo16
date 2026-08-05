@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
+use Piwigo\Admin\PluginLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Db\Tables;
 
 /**
@@ -72,9 +74,9 @@ enum ExtensionType: string
     public function scanDirectory(): string
     {
         return match ($this) {
-            self::Plugin => \Piwigo\Admin\PluginLoader::pluginsPath(),
+            self::Plugin => PluginLoader::pluginsPath(),
             self::Theme => CurrentConfig::current()->themesPath(),
-            self::Language => \Piwigo\Core\CurrentPaths::get()->root . 'language/',
+            self::Language => CurrentPaths::get()->root . 'language/',
         };
     }
 

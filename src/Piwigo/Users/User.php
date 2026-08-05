@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use InvalidArgumentException;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
@@ -69,7 +70,7 @@ final readonly class User
 
         $id = UserId::tryFrom($row['id'] ?? null);
         if ($id === null) {
-            throw new \InvalidArgumentException('User::fromUserArray(): missing or invalid id');
+            throw new InvalidArgumentException('User::fromUserArray(): missing or invalid id');
         }
 
         return new self(

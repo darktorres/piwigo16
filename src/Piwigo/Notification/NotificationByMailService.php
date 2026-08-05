@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Notification;
 
+use Piwigo\Db\SqlDialect;
+use Piwigo\Notification\Projection\UserMailNotification;
 use Piwigo\Session\SessionService;
 
 /**
@@ -39,7 +41,7 @@ final readonly class NotificationByMailService
      * @param  array<array-key, mixed>  $checkKeyList  filtered to string
      *   elements here -- may come straight from $_POST
      *   (admin/notification_by_mail.php)
-     * @return list<\Piwigo\Notification\Projection\UserMailNotification>
+     * @return list<UserMailNotification>
      */
     public function getUserNotifications(string $action, array $checkKeyList, bool|string $enabledFilterValue): array
     {
@@ -62,7 +64,7 @@ final readonly class NotificationByMailService
         // this straight through as a query parameter.
         $enabledFilterString = '';
         if ($hasFilter) {
-            $converted = \Piwigo\Db\SqlDialect::booleanToInt($enabledFilterValue);
+            $converted = SqlDialect::booleanToInt($enabledFilterValue);
             $enabledFilterString = is_int($converted) ? (string) $converted : '';
         }
 

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
@@ -11,12 +12,12 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
 
 beforeEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     Kernel::boot(Paths::fromRoot('/tmp/piwigo-extension-type-test'));
 });
 
 afterEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     Kernel::reset();
 });
 
@@ -47,7 +48,7 @@ test('fromPluralWsParam returns null for an unrecognized string', function (): v
 test('scanDirectory returns each type\'s own filesystem root', function (): void {
     // P23 batch 8f-4: the PHPWG_PLUGINS_PATH define is gone --
     // Piwigo\Admin\PluginLoader::pluginsPath() is the canonical value now.
-    expect(ExtensionType::Plugin->scanDirectory())->toBe(\Piwigo\Admin\PluginLoader::pluginsPath())
+    expect(ExtensionType::Plugin->scanDirectory())->toBe(PluginLoader::pluginsPath())
         ->and(ExtensionType::Theme->scanDirectory())->toBe(CurrentConfig::current()->themesPath())
         ->and(ExtensionType::Language->scanDirectory())->toBe(CurrentPaths::get()->root . 'language/');
 });

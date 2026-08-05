@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Image;
 
+use Override;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
 
@@ -11,13 +12,13 @@ final class SrcImageTestFatalRenderer implements HtmlRenderingInterface
 {
     public ?string $lastMessage = null;
 
-    #[\Override]
+    #[Override]
     public function getCatDisplayName(array $catInformations, ?string $url = ''): string
     {
         return '';
     }
 
-    #[\Override]
+    #[Override]
     public function getCatDisplayNameCache(
         string $uppercats,
         ?string $url = '',
@@ -28,37 +29,37 @@ final class SrcImageTestFatalRenderer implements HtmlRenderingInterface
         return '';
     }
 
-    #[\Override]
+    #[Override]
     public function nameCompare(array $a, array $b): int
     {
         return 0;
     }
 
-    #[\Override]
+    #[Override]
     public function tagAlphaCompare(array $a, array $b): int
     {
         return 0;
     }
 
-    #[\Override]
+    #[Override]
     public function accessDenied(RedirectServiceInterface $redirectService): never
     {
         throw new SrcImageTestFatalSignal('accessDenied');
     }
 
-    #[\Override]
+    #[Override]
     public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
     {
         throw new SrcImageTestFatalSignal('badRequest');
     }
 
-    #[\Override]
+    #[Override]
     public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
     {
         throw new SrcImageTestFatalSignal('pageNotFound');
     }
 
-    #[\Override]
+    #[Override]
     public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
     {
         $this->lastMessage = $msg;
@@ -66,34 +67,34 @@ final class SrcImageTestFatalRenderer implements HtmlRenderingInterface
         throw new SrcImageTestFatalSignal('fatalError:' . $msg);
     }
 
-    #[\Override]
+    #[Override]
     public function getTagsContentTitle(array $tags): string
     {
         return '';
     }
 
-    #[\Override]
+    #[Override]
     public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string
     {
         return '';
     }
 
-    #[\Override]
+    #[Override]
     public function setStatusHeader(int $code, string $text = ''): void {}
 
-    #[\Override]
+    #[Override]
     public function renderElementName(array $info): string
     {
         return '';
     }
 
-    #[\Override]
+    #[Override]
     public function renderElementDescription(array $info, string $param = ''): string
     {
         return '';
     }
 
-    #[\Override]
+    #[Override]
     public function getThumbnailTitle(array $info, string $title, string $comment = ''): string
     {
         return '';

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\Env;
+use SensitiveParameter;
+
 /**
  * Password hashing/verification: native password_hash()/password_verify()
  * (bcrypt) as of P5, with a legacy phpass ($P$/$H$-prefixed) hash still
@@ -19,17 +23,17 @@ final readonly class PasswordService
 {
     public function __construct(
         private PasswordRepository $repo,
-        private \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private DeploymentPolicy $deploymentPolicy,
     ) {}
 
     /**
      * Hashes a password with native password_hash() (bcrypt).
      */
     public function hash(
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         string $password
     ): string {
-        $cost = \Piwigo\Core\Env::testModeIsActive() ? 4 : 13;
+        $cost = Env::testModeIsActive() ? 4 : 13;
 
         return password_hash($password, \PASSWORD_BCRYPT, [
             'cost' => $cost,
@@ -46,9 +50,9 @@ final readonly class PasswordService
      * @param int|null $userId only useful to update the hash format in database
      */
     public function verify(
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         string $password,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         string $hash,
         ?int $userId = null
     ): bool {
@@ -81,9 +85,9 @@ final readonly class PasswordService
      * @param string $hash phpass $P$/$H$-prefixed hash
      */
     public function verifyLegacyPhpass(
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         string $password,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         string $hash
     ): bool {
         /** @var string */

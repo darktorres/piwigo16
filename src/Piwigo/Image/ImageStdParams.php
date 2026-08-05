@@ -11,6 +11,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use LogicException;
+use Piwigo\Core\Kernel;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+
 /**
  * Container for standard derivatives parameters.
  *
@@ -134,10 +139,10 @@ final class ImageStdParams
      */
     public static function current(): self
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $instance = \Piwigo\Core\Kernel::container()->get(self::class);
+        if (Kernel::isBooted()) {
+            $instance = Kernel::container()->get(self::class);
             if (! $instance instanceof self) {
-                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+                throw new LogicException('Container returned an unexpected type for ' . self::class);
             }
             return $instance;
         }
@@ -328,12 +333,12 @@ final class ImageStdParams
         // DerivativeSettingsEntity's own #[ORM\Entity(repositoryClass:...)]
         // attribute -- PHPStan already proves this exact, no runtime guard
         // needed.
-        return \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(DerivativeSettingsEntity::class);
+        return EntityManagerFactory::build(DbConnection::build())->getRepository(DerivativeSettingsEntity::class);
     }
 
     private static function sizeRepository(): DerivativeSizeRepository
     {
-        return \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(DerivativeSizeEntity::class);
+        return EntityManagerFactory::build(DbConnection::build())->getRepository(DerivativeSizeEntity::class);
     }
 
     /**

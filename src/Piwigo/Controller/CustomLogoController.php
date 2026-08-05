@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
@@ -48,7 +49,7 @@ final class CustomLogoController implements ControllerInterface
         private readonly CurrentConfig $currentConfig,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $this->accessControl->checkStatus(AccessLevel::Guest);

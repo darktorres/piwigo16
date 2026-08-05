@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Activity\ActivityEntity;
 use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
+use Piwigo\Admin\Request\MaintenanceSysMethodRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
-use Piwigo\Template\Template;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Template\CurrentTemplate;
 
 /**
  * Ported from admin/maintenance_sys.php (the "sys" tab of the
@@ -29,7 +34,7 @@ final class MaintenanceSysPageRenderer
     /**
      * @param array<string, array{icon: string, label: string}> $maintActions
      */
-    public function render(Lang $lang, AccessControl $accessControl, array $maintActions, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig): void
+    public function render(Lang $lang, AccessControl $accessControl, array $maintActions, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
 
@@ -39,10 +44,10 @@ final class MaintenanceSysPageRenderer
 
         if ($accessControl->isWebmaster()) {
             // Get system activities data
-            if (Request\MaintenanceSysMethodRequest::fromGlobals()->isActivitySysGetList) {
+            if (MaintenanceSysMethodRequest::fromGlobals()->isActivitySysGetList) {
                 $data = [];
 
-                $activity_log = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)
+                $activity_log = EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)
                     ->findSystemObjectLogWithUsernames();
 
                 $formatter = new ActivityLogEntryFormatter();

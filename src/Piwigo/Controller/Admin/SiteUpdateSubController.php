@@ -6,23 +6,48 @@ namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Caddie\CaddieService;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Request\SiteUpdateRequest;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Env;
+use Piwigo\Core\FilterState;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\StringHelper;
+use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeCacheService;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
+use Piwigo\Lang\Translator;
+use Piwigo\Metadata\MetadataRepository;
+use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\LocalSiteReader;
-use Piwigo\Template\Template;
+use Piwigo\Site\SiteEntity;
+use Piwigo\Tag\TagService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -99,32 +124,32 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly CurrentLogger $currentLogger,
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Metadata\MetadataService $metadataService,
+        private readonly ActivityService $activityService,
+        private readonly MetadataService $metadataService,
         private readonly PermissionService $permissionService,
         private readonly CategoryService $categoryService,
-        private readonly \Piwigo\Tag\TagService $tagService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly TagService $tagService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\Lang\Translator $translator,
-        private readonly \Piwigo\Core\FilterState $filterState,
+        private readonly InputValidator $inputValidator,
+        private readonly Translator $translator,
+        private readonly FilterState $filterState,
     ) {}
 
     private function imageService(Connection $conn): ImageService
     {
-        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
+        return new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
     }
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $logger = $this->currentLogger->get();
@@ -139,7 +164,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 ->fatalError('synchronization is disabled');
         }
 
-        $siteUpdateRequest = Request\SiteUpdateRequest::fromGlobals($this->inputValidator);
+        $siteUpdateRequest = SiteUpdateRequest::fromGlobals($this->inputValidator);
 
         if (! is_numeric($siteUpdateRequest->siteRaw)) {
             $this->htmlRenderer
@@ -153,7 +178,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         // construction-chain debt (Phase 1d finding).
         $conn = DbConnection::build();
 
-        $site_url = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class)
+        $site_url = EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)
             ->findGalleriesUrlById($site_id);
         if (! is_string($site_url)) {
             $this->htmlRenderer
@@ -165,7 +190,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         // invisible to Env::now()'s own PIWIGO_TEST_NOW freeze, same
         // reasoning as every other NOW()-reading repository this
         // migration already retargeted (e.g. Comment\CommentRepository::insert()).
-        $dbnow = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
+        $dbnow = Env::now()->format('Y-m-d H:i:s');
 
         $error_labels = [
             'PWG-UPDATE-1' => [
@@ -202,7 +227,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             $this->htmlRenderer
                 ->fatalError('remote sites not supported');
         } else {
-            $site_reader = new LocalSiteReader($site_url, $this->currentConfig, new \Piwigo\Metadata\MetadataService($this->lang, new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState));
+            $site_reader = new LocalSiteReader($site_url, $this->currentConfig, new MetadataService($this->lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState));
         }
 
         if ($this->pageState->noMd5sumNumber !== null) {
@@ -240,7 +265,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         $post = $siteUpdateRequest->post;
 
         if ($siteUpdateRequest->quickSyncRequested) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $post['sync'] = 'files';
@@ -255,7 +280,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
         $general_failure = true;
         if (isset($post['submit'])) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             if ($site_reader->open()) {
@@ -276,7 +301,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         if (isset($post['submit'])
             and ($post['sync'] === 'dirs' or $post['sync'] === 'files')
             and ! $general_failure) {
-            $start = \Piwigo\Core\TimingHelper::getMoment();
+            $start = TimingHelper::getMoment();
             // which categories to update ?
             $extra_cat_id = null;
             $extra_recursive = false;
@@ -297,7 +322,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
             // get categort full directories in an array for comparison with file
             // system directory tree
-            $siteGalleriesUrlLookup = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Site\SiteEntity::class);
+            $siteGalleriesUrlLookup = EntityManagerFactory::build(DbConnection::build())->getRepository(SiteEntity::class);
             $db_fulldirs = $this->categoryService->getFulldirs(array_map(intval(...), array_keys($db_categories)), $siteGalleriesUrlLookup);
 
             // what is the base directory to search file system sub-directories ?
@@ -457,9 +482,9 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                     $category_up = array_values(array_unique($category_up));
                     if ($this->currentConfig->inheritanceByDefault() and $category_up !== []) {
-                        $granted_grps = new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn))
+                        $granted_grps = new PermissionRepository(EntityManagerFactory::build($conn))
                             ->findGrantedGroupIdsByCategory($category_up);
-                        $granted_users = new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn))
+                        $granted_users = new PermissionRepository(EntityManagerFactory::build($conn))
                             ->findGrantedUserIdsByCategory($category_up);
                         $insert_granted_users = [];
                         $insert_granted_grps = [];
@@ -498,8 +523,8 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     } else {
                         $this->permissionService
                             ->addPermissionOnCategory($category_ids, array_map(
-                                static fn (\Piwigo\Common\ValueObject\UserId $id): int => $id->value,
-                                (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))->findAdminIds()
+                                static fn (UserId $id): int => $id->value,
+                                (new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))->findAdminIds()
                             ));
                     }
                 }
@@ -523,7 +548,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 if (substr_compare($fulldir, '../', 0, 3) === 0) {
                     $fulldir = substr($fulldir, 3);
                 }
-                $to_delete_derivative_dirs[] = \Piwigo\Core\CurrentPaths::get()->root . $this->currentConfig->derivativeDir() . $fulldir;
+                $to_delete_derivative_dirs[] = CurrentPaths::get()->root . $this->currentConfig->derivativeDir() . $fulldir;
             }
 
             if (count($to_delete) > 0) {
@@ -540,7 +565,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             }
 
             $template->append('footer_elements', '<!-- scanning dirs : '
-              . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
+              . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
               . ' -->');
         }
         // +-----------------------------------------------------------------------+
@@ -548,13 +573,13 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
         if (isset($post['submit']) and $post['sync'] === 'files'
               and ! $general_failure) {
-            $start_files = \Piwigo\Core\TimingHelper::getMoment();
+            $start_files = TimingHelper::getMoment();
             $start = $start_files;
 
             $fs = $site_reader->get_elements($basedir);
 
             $template->append('footer_elements', '<!-- get_elements: '
-              . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
+              . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
               . ' -->');
 
             $cat_ids = array_values(array_diff(array_keys($db_categories), $to_delete));
@@ -570,7 +595,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             $next_element_id = $this->imageService($conn)
                 ->getNextId();
 
-            $start = \Piwigo\Core\TimingHelper::getMoment();
+            $start = TimingHelper::getMoment();
 
             $inserts = [];
             $insert_links = [];
@@ -599,7 +624,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 $insert = [
                     'id' => $next_element_id++,
                     'file' => $filename,
-                    'name' => \Piwigo\Core\StringHelper::getNameFromFile($filename),
+                    'name' => StringHelper::getNameFromFile($filename),
                     'date_available' => $dbnow,
                     'path' => $path,
                     'representative_ext' => $fs[$path]['representative_ext'],
@@ -662,7 +687,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                     // find formats for existing photos (already in database)
                     $existing_ids_int = array_values(array_map(intval(...), array_filter($existing_ids, is_numeric(...))));
-                    foreach (\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)->findFullFormatsByImageIds($existing_ids_int) as $formatRow) {
+                    foreach (EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)->findFullFormatsByImageIds($existing_ids_int) as $formatRow) {
                         $format_image_id = $formatRow->imageId;
                         if (! isset($db_formats[$format_image_id])) {
                             $db_formats[$format_image_id] = [];
@@ -731,7 +756,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                     // add new photos to caddie
                     if (isset($post['add_to_caddie']) and $post['add_to_caddie'] === '1') {
-                        \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($caddiables, $this->currentUser);
+                        CaddieService::fillCurrentUserCaddie($caddiables, $this->currentUser);
                     }
                 }
 
@@ -771,7 +796,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             }
 
             $template->append('footer_elements', '<!-- scanning files : '
-              . \Piwigo\Core\TimingHelper::getElapsedTime($start_files, \Piwigo\Core\TimingHelper::getMoment())
+              . TimingHelper::getElapsedTime($start_files, TimingHelper::getMoment())
               . ' -->');
         }
 
@@ -784,20 +809,20 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             if (! $simulate) {
                 $syncCategoryService = $this->categoryService;
 
-                $start = \Piwigo\Core\TimingHelper::getMoment();
+                $start = TimingHelper::getMoment();
                 $syncCategoryService->updateCategory('all');
                 $template->append('footer_elements', '<!-- update_category(all) : '
-                  . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
+                  . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
                   . ' -->');
-                $start = \Piwigo\Core\TimingHelper::getMoment();
+                $start = TimingHelper::getMoment();
                 $syncCategoryService->updateGlobalRank();
                 $template->append('footer_elements', '<!-- ordering categories : '
-                  . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
+                  . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
                   . ' -->');
             }
 
             if ($post['sync'] === 'files') {
-                $start = \Piwigo\Core\TimingHelper::getMoment();
+                $start = TimingHelper::getMoment();
                 $opts = [
                     'category_id' => '',
                     'recursive' => true,
@@ -817,9 +842,9 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                         false
                     );
                 $template->append('footer_elements', '<!-- get_filelist : '
-                  . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
+                  . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
                   . ' -->');
-                $start = \Piwigo\Core\TimingHelper::getMoment();
+                $start = TimingHelper::getMoment();
 
                 $datas = [];
                 foreach ($files as $id => $file) {
@@ -841,7 +866,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     $this->entityManager->clear();
                 }
                 $template->append('footer_elements', '<!-- update files : '
-                  . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
+                  . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
                   . ' -->');
             }// end if sync files
         }
@@ -884,7 +909,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     $opts['recursive'] = false;
                 }
             }
-            $start = \Piwigo\Core\TimingHelper::getMoment();
+            $start = TimingHelper::getMoment();
             $files = $this->metadataService
                 ->getFilelist(
                     $opts['category_id'],
@@ -894,10 +919,10 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 );
 
             $template->append('footer_elements', '<!-- get_filelist : '
-              . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
+              . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
               . ' -->');
 
-            $start = \Piwigo\Core\TimingHelper::getMoment();
+            $start = TimingHelper::getMoment();
             $datas = [];
             $tags_of = [];
 
@@ -956,7 +981,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             }
 
             $template->append('footer_elements', '<!-- metadata update : '
-              . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
+              . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
               . ' -->');
 
             $template->assign(
@@ -993,7 +1018,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 'METADATA_LIST' => $used_metadata,
                 'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=synchronize',
                 'ADMIN_PAGE_TITLE' => $this->lang->t('Synchronize'),
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
             ]
         );
@@ -1043,7 +1068,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             }
         }
 
-        $tpl_introduction['privacy_level_options'] = \Piwigo\Permission\PermissionService::getPrivacyLevelOptions();
+        $tpl_introduction['privacy_level_options'] = PermissionService::getPrivacyLevelOptions();
 
         $template->assign('introduction', $tpl_introduction);
 

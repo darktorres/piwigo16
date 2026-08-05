@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Admin;
 
+use PHPUnit\Framework\TestCase;
+use DateMalformedStringException;
 use DateTime;
 use InvalidArgumentException;
 use Piwigo\Admin\StatsPageRenderer;
@@ -13,7 +15,7 @@ use Piwigo\Admin\StatsPageRenderer;
  * admin/stats.php's own top-level free functions during the P23 batch 6b
  * port. Pure functions, no DB/globals needed.
  */
-final class StatsPageRendererDateHelpersTest extends \PHPUnit\Framework\TestCase
+final class StatsPageRendererDateHelpersTest extends TestCase
 {
     public function test_get_date_object_year_only_row_defaults_to_first_of_year(): void
     {
@@ -88,7 +90,7 @@ final class StatsPageRendererDateHelpersTest extends \PHPUnit\Framework\TestCase
         // failure message echoes the exact malformed string back, so this
         // also proves the fallback isn't some non-empty placeholder (which
         // would embed extra characters between the dashes).
-        $this->expectException(\DateMalformedStringException::class);
+        $this->expectException(DateMalformedStringException::class);
         $this->expectExceptionMessage('(2026-)');
 
         StatsPageRenderer::getDateObject([
@@ -101,7 +103,7 @@ final class StatsPageRendererDateHelpersTest extends \PHPUnit\Framework\TestCase
 
     public function test_get_date_object_rejects_a_non_numeric_day(): void
     {
-        $this->expectException(\DateMalformedStringException::class);
+        $this->expectException(DateMalformedStringException::class);
         $this->expectExceptionMessage('(2026-3-)');
 
         StatsPageRenderer::getDateObject([
@@ -114,7 +116,7 @@ final class StatsPageRendererDateHelpersTest extends \PHPUnit\Framework\TestCase
 
     public function test_get_date_object_rejects_a_non_numeric_hour(): void
     {
-        $this->expectException(\DateMalformedStringException::class);
+        $this->expectException(DateMalformedStringException::class);
         $this->expectExceptionMessage('(2026-3-17 :00)');
 
         StatsPageRenderer::getDateObject([

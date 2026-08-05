@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use function Sentry\init;
+
 /**
  * Initializes the Sentry PHP SDK. Explicit early-return no-op when no DSN
  * is configured -- defense in depth on top of the SDK's own internal guard
@@ -25,7 +27,7 @@ final class SentryBootstrap
             return;
         }
 
-        \Sentry\init($options);
+        init($options);
     }
 
     /**

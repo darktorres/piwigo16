@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Admin\AlbumNotificationPageRenderer;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\BatchManagerUnitPageRenderer;
@@ -42,7 +44,7 @@ use Piwigo\Tests\Support\KernelContainerOverride;
  * intact.
  */
 afterEach(function (): void {
-    \Piwigo\Core\Kernel::reset();
+    Kernel::reset();
 });
 
 test('every accessor returns its real, correctly-typed instance from a real container, without throwing', function (): void {
@@ -57,8 +59,8 @@ test('every accessor returns its real, correctly-typed instance from a real cont
     // container builder, not something resolved from CurrentPaths at
     // lookup time), so that needs seeding too even though nothing here
     // ever touches the filesystem.
-    \Piwigo\Core\Kernel::reset();
-    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
+    Kernel::reset();
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
     expect(AdminAccessor::categoryAdminService())->toBeInstanceOf(CategoryAdminService::class);
     expect(AdminAccessor::dbMaintenanceRepository())->toBeInstanceOf(DbMaintenanceRepository::class);

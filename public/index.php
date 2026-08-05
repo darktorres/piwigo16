@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Bootstrap\RequestBootstrap;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -39,7 +41,7 @@ use Piwigo\Http\ResponseEmitter;
 // DocumentRoot moves to public/ together with every entry file (see
 // Router's own docblock).
 $paths = Paths::fromRoot(dirname(__DIR__));
-\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
+RequestBootstrap::bootEntryPoint($paths);
 
 $response = RequestPipeline::handle(RequestFactory::fromGlobals());
 new ResponseEmitter()

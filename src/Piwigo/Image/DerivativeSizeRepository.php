@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Doctrine\ORM\EntityRepository;
+use LogicException;
 
 /**
  * Persistence layer for `derivative_size`. One row per named size,
@@ -75,7 +76,7 @@ final class DerivativeSizeRepository extends EntityRepository
         $wantedNames = [];
         foreach ($sizes as $size) {
             if ($size->enabled !== $enabled) {
-                throw new \LogicException('syncPartition(): every entity must already have enabled=' . $enabled);
+                throw new LogicException('syncPartition(): every entity must already have enabled=' . $enabled);
             }
 
             $wantedNames[] = $size->name;

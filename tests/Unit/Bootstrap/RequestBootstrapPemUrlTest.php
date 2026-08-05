@@ -30,7 +30,7 @@ test('pemUrl returns the alternative PEM URL when one is configured', function (
     Kernel::boot();
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
     if (! $currentConfig instanceof CurrentConfig) {
-        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
     $currentConfig->setAlternativePemUrl('https://pem.example.test/mirror');
 
@@ -41,7 +41,7 @@ test('pemUrl falls back to AppInfo::URL . "/ext" when no alternative is configur
     Kernel::boot();
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
     if (! $currentConfig instanceof CurrentConfig) {
-        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
     $currentConfig->setAlternativePemUrl('');
 

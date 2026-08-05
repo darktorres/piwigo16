@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
+    use Override;
+    use Piwigo\Core\Kernel;
+    use LogicException;
+    use Piwigo\Db\EntityManagerFactory;
     use Doctrine\DBAL\Connection;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
@@ -24,7 +28,7 @@ final class NotificationByMailServiceTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -36,16 +40,16 @@ final class NotificationByMailServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->service = new NotificationByMailService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Notification\UserMailNotificationEntity::class), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()));
+        $this->service = new NotificationByMailService(EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()));
     }
 
     public function test_find_available_check_key_matches_the_expected_shape(): void
@@ -59,7 +63,7 @@ final class NotificationByMailServiceTest extends IntegrationTestCase
     {
         $key = $this->service->findAvailableCheckKey();
 
-        self::assertSame(0, \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class)->countByCheckKey($key));
+        self::assertSame(0, EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class)->countByCheckKey($key));
     }
 
     public function test_get_user_notifications_returns_empty_for_an_unknown_action(): void

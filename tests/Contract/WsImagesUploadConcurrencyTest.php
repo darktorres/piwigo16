@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use Piwigo\Db\AdvisorySessionLock;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -37,7 +39,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
     /** @var list<int> image ids created by a test, deleted in tearDown. */
     private array $createdImageIds = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -45,7 +47,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
         $this->loginAsAdmin();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         foreach ($this->createdImageIds as $id) {
@@ -125,7 +127,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
         // equivalent is a session-level lock_timeout GUC set before a
         // plain (indefinitely-blocking) pg_advisory_lock() call.
         if ($this->dbDriver === 'pgsql') {
-            $key = \Piwigo\Db\AdvisorySessionLock::key($lockName);
+            $key = AdvisorySessionLock::key($lockName);
             $sql = sprintf(
                 "SET lock_timeout = '5s'; SELECT pg_advisory_lock(%d); SELECT pg_sleep(0.3); INSERT INTO %s (file, path, md5sum) VALUES ('%s', 'upload/%s', '%s'); SELECT pg_advisory_unlock(%d);",
                 $key,
@@ -224,7 +226,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
         $heldLockName = $this->uploadUniquenessLockName($heldMd5sum);
 
         $holderConn = DbConnection::build();
-        $acquired = \Piwigo\Db\AdvisorySessionLock::acquire($holderConn, $heldLockName, 5);
+        $acquired = AdvisorySessionLock::acquire($holderConn, $heldLockName, 5);
         self::assertTrue($acquired, 'the unrelated value\'s lock must genuinely be held for this test to prove anything');
 
         try {
@@ -254,7 +256,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
 
             self::assertLessThan(2.0, $elapsed, 'must never wait on a lock scoped to a completely different value');
         } finally {
-            \Piwigo\Db\AdvisorySessionLock::release($holderConn, $heldLockName);
+            AdvisorySessionLock::release($holderConn, $heldLockName);
         }
     }
 
@@ -271,7 +273,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
         $lockName = $this->uploadUniquenessLockName($sum);
 
         $holderConn = DbConnection::build();
-        $acquired = \Piwigo\Db\AdvisorySessionLock::acquire($holderConn, $lockName, 5);
+        $acquired = AdvisorySessionLock::acquire($holderConn, $lockName, 5);
         self::assertTrue($acquired, 'the same value\'s lock must genuinely be held for this test to prove anything');
 
         try {
@@ -301,7 +303,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
 
             self::assertLessThan(2.0, $elapsed, 'check_uniqueness=false must never block on another request\'s held lock');
         } finally {
-            \Piwigo\Db\AdvisorySessionLock::release($holderConn, $lockName);
+            AdvisorySessionLock::release($holderConn, $lockName);
         }
     }
 }

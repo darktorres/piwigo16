@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use LogicException;
+use RuntimeException;
+
 /**
  * Container-shared instance holding the current request's
  * `ThemeConfProviderInterface` implementation -- singleton/service-locator
@@ -35,7 +38,7 @@ final class CurrentThemeConfProvider
         if (Kernel::isBooted()) {
             $instance = Kernel::container()->get(self::class);
             if (! $instance instanceof self) {
-                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+                throw new LogicException('Container returned an unexpected type for ' . self::class);
             }
 
             return $instance;
@@ -47,7 +50,7 @@ final class CurrentThemeConfProvider
     public function get(): ThemeConfProviderInterface
     {
         if (! $this->provider instanceof ThemeConfProviderInterface) {
-            throw new \RuntimeException('SrcImage: no theme-conf provider set (Template not constructed yet?)');
+            throw new RuntimeException('SrcImage: no theme-conf provider set (Template not constructed yet?)');
         }
 
         return $this->provider;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Routing;
 
 use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
@@ -61,7 +62,7 @@ final readonly class Router
     {
         $routes = require $path;
         if (! $routes instanceof RouteCollection) {
-            throw new \RuntimeException("{$path} must return a RouteCollection");
+            throw new RuntimeException("{$path} must return a RouteCollection");
         }
 
         return new self($routes);
@@ -89,7 +90,7 @@ final readonly class Router
         if (! is_string($controller)) {
             $routeName = $match['_route'] ?? null;
             $routeNameForMessage = is_string($routeName) ? $routeName : 'unknown';
-            throw new \RuntimeException("Route '{$routeNameForMessage}' has no _controller default.");
+            throw new RuntimeException("Route '{$routeNameForMessage}' has no _controller default.");
         }
 
         $args = [];

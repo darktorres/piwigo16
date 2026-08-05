@@ -4,17 +4,25 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
+use DateTime;
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Cache\CachePools;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\Projection\Category;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\TemplateInterface;
+use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Section\SectionContext;
 use Piwigo\Tag\TagService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
 /**
@@ -53,22 +61,22 @@ final readonly class SearchFilterRenderer
         private CategoryRepository $categoryRepo,
         private PermissionService $permissionService,
         private UrlServiceInterface $urlService,
-        private \Piwigo\Core\CurrentLogger $currentLogger,
-        private \Piwigo\Users\CurrentUser $currentUser,
-        private \Piwigo\Config\CurrentConfig $currentConfig,
+        private CurrentLogger $currentLogger,
+        private CurrentUser $currentUser,
+        private CurrentConfig $currentConfig,
         private UserService $userService,
     ) {}
 
     private function cacheGet(string $key): mixed
     {
-        $item = \Piwigo\Cache\CachePools::searchResults()->getItem($key);
+        $item = CachePools::searchResults()->getItem($key);
 
         return $item->isHit() ? $item->get() : null;
     }
 
     private function cacheSet(string $key, mixed $value): void
     {
-        $pool = \Piwigo\Cache\CachePools::searchResults();
+        $pool = CachePools::searchResults();
         $item = $pool->getItem($key);
         $item->set($value);
         $pool->save($item);
@@ -906,7 +914,7 @@ final readonly class SearchFilterRenderer
         // here since nameCompare()'s signature (shared with every other
         // name-sort call site in this project) takes array<string, mixed>.
         $cats = array_map(
-            static fn (\Piwigo\Category\Projection\Category $cat): array => $cat->toArray(),
+            static fn (Category $cat): array => $cat->toArray(),
             $this->categoryRepo->findFullCategoriesByIds($allowedCatIds)
         );
         usort($cats, $this->htmlRenderer->nameCompare(...));
@@ -1043,7 +1051,7 @@ final readonly class SearchFilterRenderer
             // than this pure arithmetic.
             $thresholds = [];
             foreach (array_keys($labelForThreshold) as $threshold) {
-                $thresholds[$threshold] = (new \DateTime())->modify($this->intervalForThreshold($threshold))->format('Y-m-d H:i:s');
+                $thresholds[$threshold] = (new DateTime())->modify($this->intervalForThreshold($threshold))->format('Y-m-d H:i:s');
             }
 
             $filterRows = $this->repo->findDistinctImageRows(["{$dqlField} AS date"], $filterCondition);
@@ -1126,7 +1134,7 @@ final readonly class SearchFilterRenderer
                             if (! is_array($dayBucket)) {
                                 continue;
                             }
-                            $dayBucket['label'] = \Piwigo\Core\DateHelper::formatDate($ymd);
+                            $dayBucket['label'] = DateHelper::formatDate($ymd);
                             $daysBucket[$ymd] = $dayBucket;
                         }
                         $monthBucket['days'] = $daysBucket;
@@ -1246,7 +1254,7 @@ final readonly class SearchFilterRenderer
         $filterCache = is_array($searchDetails[__METHOD__] ?? null) ? $searchDetails[__METHOD__] : [];
 
         if (! isset($filterCache[$cacheKey])) {
-            $functionStart = \Piwigo\Core\TimingHelper::getMoment();
+            $functionStart = TimingHelper::getMoment();
 
             // every entry of $imageIdsForFilter is either a SearchRepository
             // id list (list<string|null>) or, for 'expert', the already-narrowed
@@ -1282,7 +1290,7 @@ final readonly class SearchFilterRenderer
 
             $debugMsg = '[' . __METHOD__ . '] cache computed for ' . (count($otherFilters) + 1) . ' other filters';
             $debugMsg .= ' (' . count($otherFiltersItems) . ' items)';
-            $debugMsg .= ', time = ' . \Piwigo\Core\TimingHelper::getElapsedTime($functionStart, \Piwigo\Core\TimingHelper::getMoment());
+            $debugMsg .= ', time = ' . TimingHelper::getElapsedTime($functionStart, TimingHelper::getMoment());
             $logger->debug($debugMsg);
 
             if ($otherFiltersItems === []) {

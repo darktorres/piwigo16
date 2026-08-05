@@ -4,23 +4,43 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use LogicException;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Bootstrap\Request\UserBootstrapRequest;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ApiKeyRequestFlag;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\Logger;
+use Piwigo\Core\MailerInterface;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\User\UserInit;
+use Piwigo\Group\GroupEntity;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 use Piwigo\Ws\PwgCore;
 use Piwigo\Ws\PwgError;
+use Piwigo\Ws\WsInitializer;
 
 /**
  * Ported from include/user.inc.php -- cookie/session/auto-login/Apache-
@@ -51,75 +71,75 @@ final class UserBootstrap
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly CurrentLogger $currentLogger,
         private readonly WsContext $wsContext,
-        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private readonly DeploymentPolicy $deploymentPolicy,
     ) {}
 
     public function initialize(): void
     {
-        $userBootstrapRequest = Request\UserBootstrapRequest::fromGlobals();
+        $userBootstrapRequest = UserBootstrapRequest::fromGlobals();
 
         $conn = DbConnection::build();
         $sessionService = Kernel::container()->get(SessionService::class);
         if (! $sessionService instanceof SessionService) {
-            throw new \LogicException('Container returned an unexpected type for ' . SessionService::class);
+            throw new LogicException('Container returned an unexpected type for ' . SessionService::class);
         }
-        $eventDispatcher = Kernel::container()->get(\Piwigo\PluginConfig\EventDispatcher::class);
-        if (! $eventDispatcher instanceof \Piwigo\PluginConfig\EventDispatcher) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\PluginConfig\EventDispatcher::class);
+        $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
+        if (! $eventDispatcher instanceof EventDispatcher) {
+            throw new LogicException('Container returned an unexpected type for ' . EventDispatcher::class);
         }
-        $pageState = Kernel::container()->get(\Piwigo\Core\PageState::class);
-        if (! $pageState instanceof \Piwigo\Core\PageState) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\PageState::class);
+        $pageState = Kernel::container()->get(PageState::class);
+        if (! $pageState instanceof PageState) {
+            throw new LogicException('Container returned an unexpected type for ' . PageState::class);
         }
-        $currentUser = Kernel::container()->get(\Piwigo\Users\CurrentUser::class);
-        if (! $currentUser instanceof \Piwigo\Users\CurrentUser) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\CurrentUser::class);
+        $currentUser = Kernel::container()->get(CurrentUser::class);
+        if (! $currentUser instanceof CurrentUser) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
         }
-        $mailer = Kernel::container()->get(\Piwigo\Core\MailerInterface::class);
-        if (! $mailer instanceof \Piwigo\Core\MailerInterface) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\MailerInterface::class);
+        $mailer = Kernel::container()->get(MailerInterface::class);
+        if (! $mailer instanceof MailerInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . MailerInterface::class);
         }
-        $installationFlag = Kernel::container()->get(\Piwigo\Core\InstallationFlag::class);
-        if (! $installationFlag instanceof \Piwigo\Core\InstallationFlag) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\InstallationFlag::class);
+        $installationFlag = Kernel::container()->get(InstallationFlag::class);
+        if (! $installationFlag instanceof InstallationFlag) {
+            throw new LogicException('Container returned an unexpected type for ' . InstallationFlag::class);
         }
         $authService = new AuthService(
-            new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
-            new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
-            \Piwigo\Bootstrap\RequestBootstrap::htmlService(),
-            new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), $this->deploymentPolicy),
+            new AuthRepository(EntityManagerFactory::build($conn)),
+            new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
+            RequestBootstrap::htmlService(),
+            new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), $this->deploymentPolicy),
             new CookieService(),
-            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
+            EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class),
             $sessionService,
             $eventDispatcher,
             $pageState,
             $currentUser,
-            \Piwigo\Bootstrap\RequestBootstrap::currentConfig(),
+            RequestBootstrap::currentConfig(),
         );
-        $userService = new \Piwigo\Users\UserService(
-            \Piwigo\Bootstrap\RequestBootstrap::lang(),
-            new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $eventDispatcher, \Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
-            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
+        $userService = new UserService(
+            RequestBootstrap::lang(),
+            new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, RequestBootstrap::currentConfig()),
+            EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
             $mailer,
-            new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
-            \Piwigo\Bootstrap\RequestBootstrap::htmlService(),
+            new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
+            RequestBootstrap::htmlService(),
             $conn,
             $sessionService,
             $eventDispatcher,
             $this->deploymentPolicy,
             $currentUser,
-            \Piwigo\Bootstrap\RequestBootstrap::currentConfig(),
+            RequestBootstrap::currentConfig(),
             $installationFlag,
-            \Piwigo\Bootstrap\RequestBootstrap::processCache(),
+            RequestBootstrap::processCache(),
         );
 
-        $guest_id_int = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->guestId();
+        $guest_id_int = RequestBootstrap::currentConfig()->guestId();
 
         // by default we start with guest
         $user = [];
-        $user['id'] = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->guestId();
+        $user['id'] = RequestBootstrap::currentConfig()->guestId();
 
         $session_cookie_name = session_name();
         $session_cookie_name = is_string($session_cookie_name) ? $session_cookie_name : '';
@@ -147,11 +167,11 @@ final class UserBootstrap
             $remote_user = self::resolveApacheRemoteUser($_SERVER);
 
             if ($remote_user !== null) {
-                $remoteUsername = \Piwigo\Common\ValueObject\Username::tryFrom($remote_user);
+                $remoteUsername = Username::tryFrom($remote_user);
                 if (! (bool) ($user['id'] = $remoteUsername === null ? null : $userService->getUserId($remoteUsername)?->value)) {
                     $urlService = Kernel::container()->get(UrlServiceInterface::class);
                     if (! $urlService instanceof UrlServiceInterface) {
-                        throw new \LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
+                        throw new LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
                     }
                     $user['id'] = $userService
                         ->registerUser($remote_user, '', '', $urlService, false)['userId'] ?? false;
@@ -189,9 +209,9 @@ final class UserBootstrap
                     // value -- never needed `global $service;` (see that
                     // class's own docblock for the now-removed
                     // $GLOBALS['service'] publish this predates).
-                    $wsInitializer = Kernel::container()->get(\Piwigo\Ws\WsInitializer::class);
-                    if (! $wsInitializer instanceof \Piwigo\Ws\WsInitializer) {
-                        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Ws\WsInitializer::class);
+                    $wsInitializer = Kernel::container()->get(WsInitializer::class);
+                    if (! $wsInitializer instanceof WsInitializer) {
+                        throw new LogicException('Container returned an unexpected type for ' . WsInitializer::class);
                     }
                     $service = $wsInitializer->init();
                     $service->sendResponse(new PwgError(401, 'Invalid api_key'));
@@ -204,7 +224,7 @@ final class UserBootstrap
                 // docblock): must stay visible to later $_POST/$_GET reads
                 // in this same request (Ws\Request\WsRawRequest::fromGlobals()
                 // and any downstream CSRF check).
-                $_POST['pwg_token'] = $_GET['pwg_token'] = new \Piwigo\Csrf\CsrfService()->getToken();
+                $_POST['pwg_token'] = $_GET['pwg_token'] = new CsrfService()->getToken();
 
                 // logger
                 $logger = $this->currentLogger->get();
@@ -218,9 +238,9 @@ final class UserBootstrap
             and $userBootstrapRequest->username !== null
             and $userBootstrapRequest->password !== null
         ) {
-            $wsInitializer = Kernel::container()->get(\Piwigo\Ws\WsInitializer::class);
-            if (! $wsInitializer instanceof \Piwigo\Ws\WsInitializer) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Ws\WsInitializer::class);
+            $wsInitializer = Kernel::container()->get(WsInitializer::class);
+            if (! $wsInitializer instanceof WsInitializer) {
+                throw new LogicException('Container returned an unexpected type for ' . WsInitializer::class);
             }
             $service = $wsInitializer->init();
 
@@ -231,7 +251,7 @@ final class UserBootstrap
 
             $pwgCore = Kernel::container()->get(PwgCore::class);
             if (! $pwgCore instanceof PwgCore) {
-                throw new \LogicException('Container returned an unexpected type for ' . PwgCore::class);
+                throw new LogicException('Container returned an unexpected type for ' . PwgCore::class);
             }
             $login = $pwgCore->sessionLogin($credentials, $service);
 
@@ -249,7 +269,7 @@ final class UserBootstrap
         // guest_id fallback already used earlier in this file.
         $user_id_int = is_numeric($user['id']) ? (int) $user['id'] : $guest_id_int;
 
-        $user = $userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($user_id_int));
+        $user = $userService->buildUser(UserId::from($user_id_int));
         // Legacy Coupling Retirement Track A batch A3: sync CurrentUser here,
         // not only in RequestBootstrap::connect() after this method returns
         // -- AccessControl::isAGuest()/isGeneric() right below already read
@@ -261,7 +281,7 @@ final class UserBootstrap
         // request (caught via a live Contract-test HTTP 500, not a unit
         // test -- the Integration/Unit harnesses independently seed
         // CurrentUser in their own setUp(), masking the gap).
-        $currentUser->set(\Piwigo\Users\User::fromUserArray($user));
+        $currentUser->set(User::fromUserArray($user));
         // Legacy Coupling Retirement Phase 8, 8h: this is the only real
         // per-request user resolver, so this is where ActivityService::
         // record()'s "was a real user ever resolved this request" flag
@@ -269,7 +289,7 @@ final class UserBootstrap
         // docblock for why isInitialized() can't substitute.
         $currentUser->markRealUserResolved();
 
-        if (\Piwigo\Bootstrap\RequestBootstrap::currentConfig()->browserLanguage() and ($this->accessControl->isAGuest() or $this->accessControl->isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
+        if (RequestBootstrap::currentConfig()->browserLanguage() and ($this->accessControl->isAGuest() or $this->accessControl->isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
             $user['language'] = $language;
             $currentUser->updateLanguage($language);
         }

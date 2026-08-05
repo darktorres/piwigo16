@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Permission;
 
+use Piwigo\Users\CurrentUser;
+
 /**
  * [SEC-33] Decides, from precomputed permission data only, whether an
  * image is visible to the current user -- false means the image belongs
@@ -46,7 +48,7 @@ final readonly class ImageVisibilityChecker
 {
     public function __construct(
         private PermissionRepository $permissionRepository,
-        private \Piwigo\Users\CurrentUser $currentUser,
+        private CurrentUser $currentUser,
     ) {}
 
     public function isVisibleToUser(int $imageId): bool

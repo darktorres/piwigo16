@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\Assert;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Admin\Image\ImageExtImagick;
 use Piwigo\Admin\Image\ImageInterface;
 use Piwigo\Admin\Image\ImageProcessingException;
@@ -36,7 +38,7 @@ function imageExtImagickTestMarker(): string
 function imageExtImagickTestSkipIfUnavailable(): void
 {
     if (! PwgImage::is_ext_imagick()) {
-        \PHPUnit\Framework\Assert::markTestSkipped('No external ImageMagick (magick/convert) binary available in this environment.');
+        Assert::markTestSkipped('No external ImageMagick (magick/convert) binary available in this environment.');
     }
 }
 
@@ -134,7 +136,7 @@ function imageExtImagickTestCurrentLogger(): CurrentLogger
 {
     $currentLogger = Kernel::container()->get(CurrentLogger::class);
     if (! $currentLogger instanceof CurrentLogger) {
-        throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
+        throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
     }
 
     return $currentLogger;
@@ -150,7 +152,7 @@ function imageExtImagickTestCurrentConfig(): CurrentConfig
 {
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
     if (! $currentConfig instanceof CurrentConfig) {
-        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
 
     return $currentConfig;
@@ -168,7 +170,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     Kernel::reset();
     $dir = imageExtImagickTestMarker();
     $files = glob($dir . '/*');
@@ -210,7 +212,7 @@ test('construct throws when an animated webp is too short for getimagesize to re
     expect(getimagesize($path))->toBeFalse();
 
     expect(fn () => imageExtImagickTestMake($path))
-        ->toThrow(\Exception::class, "ImageExtImagick(): getimagesize({$path}): Failed");
+        ->toThrow(Exception::class, "ImageExtImagick(): getimagesize({$path}): Failed");
 });
 
 test('construct sets MAGICK_THREAD_LIMIT=1 when SCRIPT_FILENAME starts with /kunden/ (1and1 hosting)', function (): void {
@@ -337,7 +339,7 @@ test('compose throws a LogicException when the overlay uses a different image ba
     imageExtImagickTestMakeJpeg($basePath, 20, 14, 10, 10, 10);
     imageExtImagickTestMakeJpeg($overlayPath, 8, 8, 200, 200, 200);
     $base = imageExtImagickTestMake($basePath);
-    $overlay = new PwgImage($overlayPath, imageExtImagickTestCurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), imageExtImagickTestCurrentConfig(), 'ext_imagick');
+    $overlay = new PwgImage($overlayPath, imageExtImagickTestCurrentLogger(), new EventDispatcher(), imageExtImagickTestCurrentConfig(), 'ext_imagick');
     // Swap in a fake, non-ImageExtImagick backend to force the mismatch --
     // same idea as ImageGdTest's own compose()-mismatch test, this class's
     // guard only cares that it's genuinely not `self` (ImageExtImagick).
@@ -405,7 +407,7 @@ test('compose throws when the overlay source path cannot be resolved', function 
     imageExtImagickTestMakeJpeg($basePath, 20, 14, 10, 10, 10);
     imageExtImagickTestMakeJpeg($overlayPath, 8, 8, 200, 200, 200);
     $base = imageExtImagickTestMake($basePath);
-    $overlay = new PwgImage($overlayPath, imageExtImagickTestCurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), imageExtImagickTestCurrentConfig(), 'ext_imagick');
+    $overlay = new PwgImage($overlayPath, imageExtImagickTestCurrentLogger(), new EventDispatcher(), imageExtImagickTestCurrentConfig(), 'ext_imagick');
     expect($overlay->image)->toBeInstanceOf(ImageExtImagick::class);
     // The overlay backend was legitimately constructed from a real file,
     // but that file is now gone by the time compose() actually resolves
@@ -413,7 +415,7 @@ test('compose throws when the overlay source path cannot be resolved', function 
     unlink($overlayPath);
 
     expect(fn () => $base->compose($overlay, 0, 0, 50))
-        ->toThrow(\Exception::class, "compose(): unable to resolve overlay path {$overlayPath}");
+        ->toThrow(Exception::class, "compose(): unable to resolve overlay path {$overlayPath}");
 });
 
 test('write throws when the destination directory cannot be resolved', function (): void {
@@ -427,7 +429,7 @@ test('write throws when the destination directory cannot be resolved', function 
     $dest = $missingDir . '/out.jpg';
 
     expect(fn () => $image->write($dest))
-        ->toThrow(\Exception::class, "write(): unable to resolve directory {$missingDir}");
+        ->toThrow(Exception::class, "write(): unable to resolve directory {$missingDir}");
 });
 
 test('write throws when the destination path has no directory component at all', function (): void {
@@ -442,7 +444,7 @@ test('write throws when the destination path has no directory component at all',
     // empty strings) -- every non-empty path, even a bare filename with no
     // slash, still gets a 'dirname' of '.'.
     expect(fn () => $image->write(''))
-        ->toThrow(\Exception::class, 'write(): unable to determine directory for ');
+        ->toThrow(Exception::class, 'write(): unable to determine directory for ');
 });
 
 test('write triggers E_USER_WARNING for each line of real CLI failure output', function (): void {

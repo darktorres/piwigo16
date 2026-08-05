@@ -6,6 +6,7 @@ namespace Piwigo\Validation;
 
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\ValidationPattern;
+use RuntimeException;
 
 /**
  * Typed replacement for the legacy `check_input_parameter()` free
@@ -40,7 +41,7 @@ final class InputValidator
         if ($this->htmlRenderer instanceof HtmlRenderingInterface) {
             $this->htmlRenderer->fatalError($msg);
         }
-        throw new \RuntimeException($msg);
+        throw new RuntimeException($msg);
     }
 
     /**

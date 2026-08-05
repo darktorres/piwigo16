@@ -5,23 +5,39 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Exception;
+use LogicException;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Cache\CachePools;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\TagId;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\PageFilterHelper;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Search\QsearchGetScopes;
 use Piwigo\Event\Search\QsearchPre;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Template\RenderCategoryName;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\Event\QsearchBeforeEval;
 use Piwigo\Search\Event\QsearchExpressionParsed;
 use Piwigo\Search\Event\QsearchGetImagesSqlScopes;
@@ -29,8 +45,13 @@ use Piwigo\Search\Event\QsearchResults;
 use Piwigo\Search\Inflector\InflectorInterface;
 use Piwigo\Search\Projection\Search;
 use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use RuntimeException;
 
 /**
  * Search domain business logic, ported from the deleted
@@ -80,15 +101,15 @@ final readonly class SearchService
         private HtmlRenderingInterface $htmlRenderer,
         private RedirectServiceInterface $redirectService,
         private SessionService $sessionService,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private \Piwigo\Users\CurrentUser $currentUser,
+        private EventDispatcher $eventDispatcher,
+        private CurrentUser $currentUser,
         private Lang $lang,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private \Piwigo\Core\CurrentLogger $currentLogger,
-        private \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private readonly CurrentConfig $currentConfig,
+        private CurrentLogger $currentLogger,
+        private DeploymentPolicy $deploymentPolicy,
         private ?TagService $tagService = null,
         private ?UserService $userService = null,
-        private ?\Piwigo\Users\PreferencesService $preferencesService = null,
+        private ?PreferencesService $preferencesService = null,
     ) {}
 
     /**
@@ -102,7 +123,7 @@ final readonly class SearchService
      */
     private function tagService(): TagService
     {
-        return $this->tagService ?? new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class), $this->permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger, $this->sessionService);
+        return $this->tagService ?? new TagService($this->lang, EntityManagerFactory::build(DbConnection::build())->getRepository(TagEntity::class), $this->permissionService, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger, $this->sessionService);
     }
 
     /**
@@ -114,18 +135,18 @@ final readonly class SearchService
      * pre-boot fallback (singleton/service-locator elimination campaign,
      * Phase 11 sub-phase 11G).
      */
-    private function processCache(): \Piwigo\Core\ProcessCache
+    private function processCache(): ProcessCache
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $processCache = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
-            if (! $processCache instanceof \Piwigo\Core\ProcessCache) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ProcessCache::class);
+        if (Kernel::isBooted()) {
+            $processCache = Kernel::container()->get(ProcessCache::class);
+            if (! $processCache instanceof ProcessCache) {
+                throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
             }
 
             return $processCache;
         }
 
-        return new \Piwigo\Core\ProcessCache();
+        return new ProcessCache();
     }
 
     public static function getSearchIdPattern(int|string $candidate): ?string
@@ -190,7 +211,7 @@ final readonly class SearchService
         $search = $this->getSearchInfo($candidate);
 
         if ($search !== null) {
-            if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws' and $clausePattern === 'id = ?' and $search->searchUuid !== null) {
+            if (PageFilterHelper::scriptBasename() !== 'ws' and $clausePattern === 'id = ?' and $search->searchUuid !== null) {
                 $this->htmlRenderer->fatalError('this search is not reachable with its id, need the search_uuid instead');
             }
 
@@ -611,7 +632,7 @@ final readonly class SearchService
             return '?';
         }, $condition->sql);
         if ($sql === null) {
-            throw new \RuntimeException('positionalCondition(): preg_replace_callback() failed');
+            throw new RuntimeException('positionalCondition(): preg_replace_callback() failed');
         }
 
         return [$sql, array_values($values)];
@@ -941,7 +962,7 @@ final readonly class SearchService
             if ($useFt) {
                 $parts = preg_split('/[' . preg_quote('-\'!"#$%&()*+,./:;<=>?@[\]^`{|}~', '/') . ']+/', $variant);
                 if ($parts === false) {
-                    throw new \Exception('qsearchGetTextTokenSearchSql(): preg_split() failed');
+                    throw new Exception('qsearchGetTextTokenSearchSql(): preg_split() failed');
                 }
 
                 $max = max(array_map(mb_strlen(...), $parts));
@@ -1476,7 +1497,7 @@ final readonly class SearchService
     {
         $user = $this->currentUser->get();
 
-        $pool = \Piwigo\Cache\CachePools::searchResults();
+        $pool = CachePools::searchResults();
         $cacheKey = md5(serialize([
             strtolower($q),
             $this->currentConfig->orderBy(),
@@ -1560,13 +1581,13 @@ final readonly class SearchService
         $expression = new QExpression($q, $scopes);
 
         $inflector = null;
-        $userService = $this->userService ?? new UserService($this->lang, new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, new \Piwigo\Core\InstallationFlag(), $this->processCache());
+        $userService = $this->userService ?? new UserService($this->lang, new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class), $this->mailer, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, new InstallationFlag(), $this->processCache());
         $langCode = substr($userService->getDefaultLanguage(), 0, 2);
         $className = '\\Piwigo\\Search\\Inflector\\Inflector_' . $langCode;
         if (class_exists($className)) {
             $inflector = new $className();
             if (! $inflector instanceof InflectorInterface) {
-                throw new \LogicException("qsearch: {$className} does not implement InflectorInterface");
+                throw new LogicException("qsearch: {$className} does not implement InflectorInterface");
             }
 
             foreach ($expression->stokens as $token) {
@@ -1726,7 +1747,7 @@ final readonly class SearchService
 
             $split = preg_split('/\s+/', str_replace($dropCharMatch, $dropCharReplace, $rawAllwords));
             if ($split === false) {
-                throw new \Exception('splitAllwords(): preg_split() failed');
+                throw new Exception('splitAllwords(): preg_split() failed');
             }
 
             $words = array_unique($split);
@@ -1752,7 +1773,7 @@ final readonly class SearchService
      */
     public function saveSearch(array $rules, UrlServiceInterface $urlService, ?int $forkedFrom = null): array
     {
-        $dbNow = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
+        $dbNow = Env::now()->format('Y-m-d H:i:s');
         $searchUuid = $this->getAvailableSearchUuid();
 
         $userId = $this->currentUser->get()
@@ -1762,7 +1783,7 @@ final readonly class SearchService
 
         if (! $this->accessControl->isAGuest() && ! $this->accessControl->isGeneric()) {
             $rulesFields = $rules['fields'] ?? [];
-            $preferencesService = $this->preferencesService ?? new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), $this->eventDispatcher, $this->currentConfig), $this->currentUser);
+            $preferencesService = $this->preferencesService ?? new PreferencesService(new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), $this->currentUser);
             $preferencesService->updateParam('gallery_search_filters', array_keys(is_array($rulesFields) ? $rulesFields : []));
         }
 

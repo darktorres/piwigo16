@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Piwigo\Category\CategoryEntity;
+use Piwigo\Db\Tables;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\SqlCondition;
@@ -133,8 +134,8 @@ final class SectionRepository
     {
         return $this->queryColumn('
 SELECT id
-  FROM ' . \Piwigo\Db\Tables::imageCategory() . '
-    INNER JOIN ' . \Piwigo\Db\Tables::images() . ' ON id = image_id
+  FROM ' . Tables::imageCategory() . '
+    INNER JOIN ' . Tables::images() . ' ON id = image_id
   WHERE
     ' . $whereSql . '
 ' . $forbiddenSql . '
@@ -157,8 +158,8 @@ SELECT id
     {
         return $this->queryColumn('
 SELECT id
-  FROM ' . \Piwigo\Db\Tables::images() . '
-    INNER JOIN ' . \Piwigo\Db\Tables::imageCategory() . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE '
   . $recentSql . '
   ' . $forbiddenSql . '
@@ -239,8 +240,8 @@ SELECT id
 
         return $this->queryColumn('
 SELECT id
-  FROM ' . \Piwigo\Db\Tables::images() . '
-    INNER JOIN ' . \Piwigo\Db\Tables::imageCategory() . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE image_id IN (:imageIds)
     ' . $forbiddenSql . '
   GROUP BY id

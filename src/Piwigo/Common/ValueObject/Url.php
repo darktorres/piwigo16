@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Common\ValueObject;
 
+use InvalidArgumentException;
+use Override;
+
 /**
  * Absolute URL with a scheme and host, validated by
  * `filter_var(FILTER_VALIDATE_URL)`.
@@ -20,22 +23,22 @@ final readonly class Url implements StringVo
     ) {}
 
     /**
-     * @throws \InvalidArgumentException when $value fails FILTER_VALIDATE_URL.
+     * @throws InvalidArgumentException when $value fails FILTER_VALIDATE_URL.
      */
-    #[\Override]
+    #[Override]
     public static function from(string $value): self
     {
         if ($value === '') {
-            throw new \InvalidArgumentException('Url must not be empty');
+            throw new InvalidArgumentException('Url must not be empty');
         }
         $filtered = filter_var($value, FILTER_VALIDATE_URL);
         if ($filtered === false) {
-            throw new \InvalidArgumentException("Invalid URL: '{$value}'");
+            throw new InvalidArgumentException("Invalid URL: '{$value}'");
         }
         return new self($filtered);
     }
 
-    #[\Override]
+    #[Override]
     public static function tryFrom(mixed $value): ?self
     {
         if (! is_string($value)) {
@@ -43,18 +46,18 @@ final readonly class Url implements StringVo
         }
         try {
             return self::from($value);
-        } catch (\InvalidArgumentException) {
+        } catch (InvalidArgumentException) {
             return null;
         }
     }
 
-    #[\Override]
+    #[Override]
     public function equals(StringVo $other): bool
     {
         return $other instanceof self && $other->value === $this->value;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return $this->value;

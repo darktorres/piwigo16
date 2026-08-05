@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity;
 
+use LogicException;
+use Override;
+use Piwigo\Activity\Projection\UserActivityLogEntry;
+use Piwigo\Activity\Request\ActivityContextRequest;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Env;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\PageFilterHelper;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -42,26 +49,26 @@ final readonly class ActivityService implements ActivityLoggerInterface
      */
     private function currentUser(): CurrentUser
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $currentUser = \Piwigo\Core\Kernel::container()->get(CurrentUser::class);
+        if (Kernel::isBooted()) {
+            $currentUser = Kernel::container()->get(CurrentUser::class);
             if (! $currentUser instanceof CurrentUser) {
-                throw new \LogicException('Container returned an unexpected type for ' . CurrentUser::class);
+                throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
             }
 
             return $currentUser;
         }
 
-        return new CurrentUser(new \Piwigo\Config\CurrentConfig());
+        return new CurrentUser(new CurrentConfig());
     }
 
     /**
      * @param int|string|array<int, int|string> $objectId
      * @param array<string, mixed> $details
      */
-    #[\Override]
+    #[Override]
     public function record(string $object, int|string|array $objectId, string $action, array $details = []): void
     {
-        $activityContextRequest = Request\ActivityContextRequest::fromGlobals();
+        $activityContextRequest = ActivityContextRequest::fromGlobals();
 
         $requestMethod = $activityContextRequest->requestMethod;
 
@@ -84,7 +91,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
         if ($requestMethod !== null) {
             $details['method'] = $requestMethod;
         } else {
-            $script = \Piwigo\Core\PageFilterHelper::scriptBasename();
+            $script = PageFilterHelper::scriptBasename();
             $pageParam = $activityContextRequest->pageParam;
             $details['script'] = $script === 'admin' && $pageParam !== null ? $script . '/' . $pageParam : $script;
         }
@@ -223,7 +230,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
     }
 
     /**
-     * @return list<\Piwigo\Activity\Projection\UserActivityLogEntry>
+     * @return list<UserActivityLogEntry>
      */
     public function getUserObjectLogWithUsernames(): array
     {

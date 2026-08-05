@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Page;
 
+use LogicException;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\AdminContext;
+use Piwigo\Core\CharsetHelper;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Lifecycle\LocAfterPageHeader;
 use Piwigo\Event\Location\LocBeginPageHeader;
 use Piwigo\Event\Location\LocEndPageHeader;
 use Piwigo\Event\Template\RenderPageBanner;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 
 /**
  * Renders the page `<head>`/opening chrome into $template. Injects
@@ -30,9 +38,9 @@ final class PageHeaderRenderer
 {
     private static function urlService(): UrlServiceInterface
     {
-        $urlService = \Piwigo\Core\Kernel::container()->get(UrlServiceInterface::class);
+        $urlService = Kernel::container()->get(UrlServiceInterface::class);
         if (! $urlService instanceof UrlServiceInterface) {
-            throw new \LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
+            throw new LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
         }
 
         return $urlService;
@@ -48,13 +56,13 @@ final class PageHeaderRenderer
      */
     private static function isAdminContextActive(): bool
     {
-        if (! \Piwigo\Core\Kernel::isBooted()) {
+        if (! Kernel::isBooted()) {
             return false;
         }
 
-        $adminContext = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\AdminContext::class);
-        if (! $adminContext instanceof \Piwigo\Core\AdminContext) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\AdminContext::class);
+        $adminContext = Kernel::container()->get(AdminContext::class);
+        if (! $adminContext instanceof AdminContext) {
+            throw new LogicException('Container returned an unexpected type for ' . AdminContext::class);
         }
 
         return $adminContext->isActive();
@@ -68,7 +76,7 @@ final class PageHeaderRenderer
      *   $refresh/$url_link top-level-scope contract -- Bootstrap\RedirectService::redirectHtml()
      *   is the one real caller that sets both today.
      */
-    public function render(string $title, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, ?string $refresh = null, ?string $urlLink = null): void
+    public function render(string $title, EventDispatcher $eventDispatcher, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, ?string $refresh = null, ?string $urlLink = null): void
     {
         $template = $currentTemplate->get();
 
@@ -101,7 +109,7 @@ final class PageHeaderRenderer
 
                 'BODY_ID' => $pageState->bodyId,
 
-                'CONTENT_ENCODING' => \Piwigo\Core\CharsetHelper::getPwgCharset(),
+                'CONTENT_ENCODING' => CharsetHelper::getPwgCharset(),
                 'PAGE_TITLE' => strip_tags($title),
 
                 'U_HOME' => self::urlService()->getGalleryHomeUrl(),
@@ -155,7 +163,7 @@ final class PageHeaderRenderer
 
         $eventDispatcher->dispatchNotify(new LocEndPageHeader());
 
-        header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
+        header('Content-Type: text/html; charset=' . CharsetHelper::getPwgCharset());
         $template->parse('header');
 
         $eventDispatcher->dispatchNotify(new LocAfterPageHeader());

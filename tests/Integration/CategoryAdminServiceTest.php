@@ -4,6 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use LogicException;
+use RuntimeException;
+use Piwigo\Core\FilterState;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Core\Lang;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Users\UserService;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Bootstrap\RedirectService;
@@ -16,7 +28,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 
@@ -31,7 +42,7 @@ final class CategoryAdminServiceFakeActivityLogger implements ActivityLoggerInte
     /** @var list<array{object: string, objectId: int|string|array<int, int|string>, action: string, details: array<string, mixed>}> */
     public array $calls = [];
 
-    #[\Override]
+    #[Override]
     public function record(string $object, int|string|array $objectId, string $action, array $details = []): void
     {
         $this->calls[] = [
@@ -64,26 +75,26 @@ final class CategoryAdminServiceFakeCapturingRedirectService implements Redirect
 
     public ?int $capturedStatus = null;
 
-    #[\Override]
+    #[Override]
     public function redirectHttp(string $url, int $status = 302): never
     {
-        throw new \LogicException('not used by saveImageOrder()\'s pageNotFound() call');
+        throw new LogicException('not used by saveImageOrder()\'s pageNotFound() call');
     }
 
-    #[\Override]
+    #[Override]
     public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
     {
         $this->capturedUrl = $url;
         $this->capturedMsg = $msg;
         $this->capturedRefreshTime = $refresh_time;
         $this->capturedStatus = $status;
-        throw new \RuntimeException('CATEGORY_ADMIN_SERVICE_TEST_PAGE_NOT_FOUND_MARKER');
+        throw new RuntimeException('CATEGORY_ADMIN_SERVICE_TEST_PAGE_NOT_FOUND_MARKER');
     }
 
-    #[\Override]
+    #[Override]
     public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
     {
-        throw new \LogicException('not used by saveImageOrder()\'s pageNotFound() call');
+        throw new LogicException('not used by saveImageOrder()\'s pageNotFound() call');
     }
 }
 
@@ -123,7 +134,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -135,9 +146,9 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -145,45 +156,45 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
         Kernel::boot();
 
-        $filterState = Kernel::container()->get(\Piwigo\Core\FilterState::class);
-        if (! $filterState instanceof \Piwigo\Core\FilterState) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        $filterState = Kernel::container()->get(FilterState::class);
+        if (! $filterState instanceof FilterState) {
+            throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
 
         $this->conn = DbConnection::build();
         $permissionService = new PermissionService(
-            new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
-            \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-            new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()),
-            \Piwigo\Users\CurrentUser::current(),
+            new PermissionRepository(EntityManagerFactory::build($this->conn)),
+            EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
+            new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
+            CurrentUser::current(),
             $filterState
         );
         $categoryService = new CategoryService(
-            \Piwigo\Core\Lang::current(),
-            new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()),
+            Lang::current(),
+            new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
             $permissionService,
-            \Piwigo\Config\CurrentConfig::current(),
-            new \Piwigo\PluginConfig\EventDispatcher(),
-            \Piwigo\Lang\Translator::get()
+            CurrentConfig::current(),
+            new EventDispatcher(),
+            Translator::get()
         );
-        $this->service = new CategoryAdminService($categoryService, $permissionService, \Piwigo\Tests\Support\HtmlServiceTestFactory::build());
+        $this->service = new CategoryAdminService($categoryService, $permissionService, HtmlServiceTestFactory::build());
     }
 
-    private function userService(): \Piwigo\Users\UserService
+    private function userService(): UserService
     {
         // Kernel::boot() already ran above -- resolve the same
         // container-shared instance a real request would get, matching
         // RedirectService's own real production callers (singleton/
         // service-locator elimination campaign, Phase 6).
-        $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
-        if (! $userService instanceof \Piwigo\Users\UserService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        $userService = Kernel::container()->get(UserService::class);
+        if (! $userService instanceof UserService) {
+            throw new LogicException('Container returned an unexpected type for ' . UserService::class);
         }
 
         return $userService;
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         // commentable/visible are genuine boolean columns -- bare `1`
@@ -338,7 +349,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function test_save_image_order_updates_the_category_row_only_when_subcats_is_false(): void
     {
-        $this->service->saveImageOrder(2, '`rank` ASC', false, new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()));
+        $this->service->saveImageOrder(2, '`rank` ASC', false, new RedirectService(Lang::current(), $this->userService()));
 
         $cat1 = $this->fetchCategory(1);
         $cat2 = $this->fetchCategory(2);
@@ -353,7 +364,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         // Category 2's own uppercats ('1,2') includes category 1 --
         // saving on category 1 with $applySubcats=true matches every row
         // whose uppercats starts with '1,', which includes category 2.
-        $this->service->saveImageOrder(1, 'id ASC', true, new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()));
+        $this->service->saveImageOrder(1, 'id ASC', true, new RedirectService(Lang::current(), $this->userService()));
 
         $cat1 = $this->fetchCategory(1);
         $cat2 = $this->fetchCategory(2);
@@ -383,7 +394,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function test_create_virtual_category_rejects_a_blank_name(): void
     {
-        $result = $this->service->createVirtualCategory('   ', new CategoryAdminServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current());
+        $result = $this->service->createVirtualCategory('   ', new CategoryAdminServiceFakeActivityLogger(), CurrentUser::current());
 
         self::assertFalse($result->success);
         self::assertNotNull($result->message);
@@ -392,7 +403,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function test_create_virtual_category_creates_a_real_row(): void
     {
-        $result = $this->service->createVirtualCategory('Integration Test Album', new CategoryAdminServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current());
+        $result = $this->service->createVirtualCategory('Integration Test Album', new CategoryAdminServiceFakeActivityLogger(), CurrentUser::current());
 
         self::assertTrue($result->success);
         self::assertNotNull($result->categoryId);
@@ -513,7 +524,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         try {
             $this->service->saveImageOrder(999999, 'id ASC', true, $redirectService);
             self::fail('Expected saveImageOrder() to reach pageNotFound() and throw.');
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             self::assertSame('CATEGORY_ADMIN_SERVICE_TEST_PAGE_NOT_FOUND_MARKER', $e->getMessage());
         }
 

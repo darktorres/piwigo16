@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Image;
 
+use Override;
+use LogicException;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 
@@ -19,61 +21,61 @@ final class SrcImageTestFakeUrlService implements UrlServiceInterface
      */
     public ?array $lastActionUrlArgs = null;
 
-    #[\Override]
+    #[Override]
     public function getRootUrl(): string
     {
         return '/root/';
     }
 
-    #[\Override]
+    #[Override]
     public function getAbsoluteRootUrl(bool $withScheme = true): string
     {
-        throw new \LogicException('not used');
+        throw new LogicException('not used');
     }
 
-    #[\Override]
+    #[Override]
     public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string
     {
-        throw new \LogicException('not used');
+        throw new LogicException('not used');
     }
 
-    #[\Override]
+    #[Override]
     public function makeIndexUrl(array $params = []): string
     {
-        throw new \LogicException('not used');
+        throw new LogicException('not used');
     }
 
-    #[\Override]
+    #[Override]
     public function duplicateIndexUrl(array $redefined = [], array $removed = []): string
     {
-        throw new \LogicException('not used');
+        throw new LogicException('not used');
     }
 
-    #[\Override]
+    #[Override]
     public function duplicatePictureUrl(array $redefined = [], array $removed = []): string
     {
-        throw new \LogicException('not used');
+        throw new LogicException('not used');
     }
 
-    #[\Override]
+    #[Override]
     public function makePictureUrl(array $params): string
     {
-        throw new \LogicException('not used');
+        throw new LogicException('not used');
     }
 
-    #[\Override]
+    #[Override]
     public function parseSectionUrl(array $tokens, &$nextToken, RedirectServiceInterface $redirectService): array
     {
-        throw new \LogicException('not used');
+        throw new LogicException('not used');
     }
 
-    #[\Override]
+    #[Override]
     public function parseWellKnownParamsUrl(array $tokens, int &$i): array
     {
-        throw new \LogicException('not used');
+        throw new LogicException('not used');
     }
 
-    #[\Override]
+    #[Override]
     public function getActionUrl($id, $whatPart, bool $download): string
     {
         $this->lastActionUrlArgs = [$id, $whatPart, $download];
@@ -81,45 +83,45 @@ final class SrcImageTestFakeUrlService implements UrlServiceInterface
         return '/action/' . $id . '/' . $whatPart;
     }
 
-    #[\Override]
+    #[Override]
     public function getElementUrl(array $elementInfo): string
     {
-        throw new \LogicException('not used');
+        throw new LogicException('not used');
     }
 
-    #[\Override]
+    #[Override]
     public function setMakeFullUrl(): void {}
 
-    #[\Override]
+    #[Override]
     public function unsetMakeFullUrl(): void {}
 
-    #[\Override]
+    #[Override]
     public function embellishUrl(string $url): string
     {
         return $url;
     }
 
-    #[\Override]
+    #[Override]
     public function getGalleryHomeUrl(): string
     {
-        throw new \LogicException('not used');
+        throw new LogicException('not used');
     }
 
-    #[\Override]
+    #[Override]
     public function getQueryStringDiff(array $rejects = [], bool $escape = true): string
     {
-        throw new \LogicException('not used');
+        throw new LogicException('not used');
     }
 
-    #[\Override]
+    #[Override]
     public function urlIsRemote(string $url): bool
     {
         return false;
     }
 
-    #[\Override]
+    #[Override]
     public function getUserFavorites(): array
     {
-        throw new \LogicException('not used');
+        throw new LogicException('not used');
     }
 }

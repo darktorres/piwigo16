@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Smarty\Smarty;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -53,7 +55,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     Lang::current()->reset();
     Translator::get()->reset();
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     Kernel::reset();
 });
 
@@ -93,7 +95,7 @@ test('modcompiler_translate returns a cached lang lookup when compiled_template_
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
     Lang::current()->loadArray(['Comment' => 'Commentaire']);
 
-    $result = \Piwigo\Tests\Support\TemplateTestFactory::build()->modcompiler_translate(["'Comment'"]);
+    $result = TemplateTestFactory::build()->modcompiler_translate(["'Comment'"]);
 
     expect($result)->toBe(var_export('Commentaire', true));
 });
@@ -102,7 +104,7 @@ test('modcompiler_translate falls back to a runtime Lang::current()->t() call wh
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
     Lang::current()->loadArray(['Comment' => 'Commentaire']);
 
-    $result = \Piwigo\Tests\Support\TemplateTestFactory::build()->modcompiler_translate(["'Comment'"]);
+    $result = TemplateTestFactory::build()->modcompiler_translate(["'Comment'"]);
 
     expect($result)->toBe("\\Piwigo\\Core\\Lang::current()->t('Comment')");
 });
@@ -111,7 +113,7 @@ test('modcompiler_translate falls back to a runtime Lang::current()->t() call wh
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
     Lang::current()->loadArray([]);
 
-    $result = \Piwigo\Tests\Support\TemplateTestFactory::build()->modcompiler_translate(["'Unknown'"]);
+    $result = TemplateTestFactory::build()->modcompiler_translate(["'Unknown'"]);
 
     expect($result)->toBe("\\Piwigo\\Core\\Lang::current()->t('Unknown')");
 });
@@ -120,7 +122,7 @@ test('modcompiler_translate wraps a runtime Lang::current()->t() call in sprintf
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
     Lang::current()->loadArray([]);
 
-    $result = \Piwigo\Tests\Support\TemplateTestFactory::build()->modcompiler_translate(["'%d comments'", '$count']);
+    $result = TemplateTestFactory::build()->modcompiler_translate(["'%d comments'", '$count']);
 
     expect($result)->toBe("\\Piwigo\\Core\\Lang::current()->t('%d comments',\$count)");
 });
@@ -128,7 +130,7 @@ test('modcompiler_translate wraps a runtime Lang::current()->t() call in sprintf
 test('modcompiler_translate_dec falls back to a runtime Lang::current()->plural() call when caching is off', function (): void {
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
 
-    $result = \Piwigo\Tests\Support\TemplateTestFactory::build()->modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
+    $result = TemplateTestFactory::build()->modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
 
     expect($result)->toBe("\\Piwigo\\Core\\Lang::current()->plural('%d comment','%d comments',\$count)");
 });
@@ -137,7 +139,7 @@ test('modcompiler_translate wraps a cached lang lookup in sprintf when extra par
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
     Lang::current()->loadArray(['%d comments' => '%d commentaires']);
 
-    $result = \Piwigo\Tests\Support\TemplateTestFactory::build()->modcompiler_translate(["'%d comments'", '$count']);
+    $result = TemplateTestFactory::build()->modcompiler_translate(["'%d comments'", '$count']);
 
     expect($result)->toBe("sprintf(" . var_export('%d commentaires', true) . ',$count)');
 });
@@ -147,7 +149,7 @@ test('modcompiler_translate_dec builds a plain >1 ternary from cached lang looku
     Lang::current()->setLangInfo(['zero_plural' => false]);
     Lang::current()->loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
 
-    $result = \Piwigo\Tests\Support\TemplateTestFactory::build()->modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
+    $result = TemplateTestFactory::build()->modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
 
     expect($result)->toBe("sprintf((\$tmp=(\$count))>1?'%d commentaires':'%d commentaire',\$tmp)");
 });
@@ -157,7 +159,7 @@ test('modcompiler_translate_dec also treats zero as plural when zero_plural is s
     Lang::current()->setLangInfo(['zero_plural' => true]);
     Lang::current()->loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
 
-    $result = \Piwigo\Tests\Support\TemplateTestFactory::build()->modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
+    $result = TemplateTestFactory::build()->modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
 
     expect($result)->toBe("sprintf((\$tmp=(\$count))>1||\$tmp==0?'%d commentaires':'%d commentaire',\$tmp)");
 });
@@ -190,13 +192,13 @@ test('postfilter_language replaces a compiled echo-string-literal with its evalu
     // $smarty is genuinely unused by this method's own body -- a bare
     // Smarty instance (no template dirs configured) is enough to satisfy
     // the parameter type.
-    $result = Template::postfilter_language("<?php echo 'Hello World';?>\n", new Smarty\Smarty());
+    $result = Template::postfilter_language("<?php echo 'Hello World';?>\n", new Smarty());
 
     expect($result)->toBe('Hello World');
 });
 
 test('postfilter_language handles a double-quoted literal and leaves non-matching PHP untouched', function (): void {
-    $result = Template::postfilter_language("<?php echo \"Bonjour\";?>\n<?php \$x = 1; ?>\n", new Smarty\Smarty());
+    $result = Template::postfilter_language("<?php echo \"Bonjour\";?>\n<?php \$x = 1; ?>\n", new Smarty());
 
     expect($result)->toBe("Bonjour<?php \$x = 1; ?>\n");
 });
@@ -208,7 +210,7 @@ test('prefilter_white_space strips leading whitespace before every recognized ta
     // something this test is trying to pin down.
     $source = "  {if x}\n  {/if}\n  {foreach x}\n  {/foreach}\n  {section x}\n  {/section}\n  {footer_script}\n  {/footer_script}\n  {include x}\n  {else}\n  {combine_script x}\n  {html_head}\nEND\n";
 
-    $result = Template::prefilter_white_space($source, new Smarty\Smarty());
+    $result = Template::prefilter_white_space($source, new Smarty());
 
     $expected = "{if x}\n{/if}\n{foreach x}\n{/foreach}\n{section x}\n{/section}\n{footer_script}\n{/footer_script}\n{include x}\n{else}\n{combine_script x}\n{html_head}\nEND\n";
     expect($result)->toBe($expected);

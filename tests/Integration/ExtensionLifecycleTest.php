@@ -4,6 +4,27 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
+    use Override;
+    use LogicException;
+    use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Core\CurrentLogger;
+    use Piwigo\Core\Logger;
+    use Piwigo\Activity\ActivityService;
+    use Piwigo\Users\UserService;
+    use Piwigo\Core\WsContext;
+    use Piwigo\Auth\AccessControl;
+    use Piwigo\Core\Lang;
+    use Piwigo\Tests\Support\UrlServiceTestFactory;
+    use Piwigo\PluginConfig\EventDispatcher;
+    use Piwigo\Core\CurrentPaths;
+    use mysqli;
+    use Piwigo\Http\ResponseReadyException;
+    use Piwigo\Admin\PluginLoader;
+    use ReflectionMethod;
+    use Piwigo\Admin\PluginMaintain;
+    use Piwigo\Admin\DummyPluginMaintain;
+    use Piwigo\Admin\ThemeMaintain;
+    use Piwigo\Admin\DummyThemeMaintain;
     use Doctrine\DBAL\Connection;
     use Piwigo\Admin\Extensions\ExtensionLifecycle;
     use Piwigo\Admin\Extensions\ExtensionRepository;
@@ -19,7 +40,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
     use Piwigo\Html\HtmlService;
-    use Piwigo\Url\UrlService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Users\User;
 
@@ -47,7 +67,7 @@ namespace Piwigo\Tests\Integration {
 
         private Connection $conn;
 
-        #[\Override]
+        #[Override]
         protected function setUp(): void
         {
             parent::setUp();
@@ -59,9 +79,9 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
-            $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-            if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+            $currentConfig = Kernel::container()->get(CurrentConfig::class);
+            if (! $currentConfig instanceof CurrentConfig) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
             }
             $currentConfig->reset();
             ConfigLoader::applyDefaults();
@@ -75,25 +95,25 @@ namespace Piwigo\Tests\Integration {
             Kernel::boot();
 
             $this->conn = DbConnection::build();
-            $this->repo = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
-            $pluginMigrationRepo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(PluginMigrationEntity::class);
+            $this->repo = new ExtensionRepository(EntityManagerFactory::build($this->conn));
+            $pluginMigrationRepo = EntityManagerFactory::build($this->conn)->getRepository(PluginMigrationEntity::class);
             self::assertInstanceOf(PluginMigrationRepository::class, $pluginMigrationRepo);
             $this->pluginMigrationRepo = $pluginMigrationRepo;
-            $currentLogger = new \Piwigo\Core\CurrentLogger();
-            $currentLogger->set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
-            $activityService = Kernel::container()->get(\Piwigo\Activity\ActivityService::class);
-            self::assertInstanceOf(\Piwigo\Activity\ActivityService::class, $activityService);
-            $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
-            self::assertInstanceOf(\Piwigo\Users\UserService::class, $userService);
-            $htmlService = Kernel::container()->get(\Piwigo\Html\HtmlService::class);
-            self::assertInstanceOf(\Piwigo\Html\HtmlService::class, $htmlService);
-            $wsContext = Kernel::container()->get(\Piwigo\Core\WsContext::class);
-            self::assertInstanceOf(\Piwigo\Core\WsContext::class, $wsContext);
-            $accessControl = Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
-            self::assertInstanceOf(\Piwigo\Auth\AccessControl::class, $accessControl);
-            $currentUser = Kernel::container()->get(\Piwigo\Users\CurrentUser::class);
-            self::assertInstanceOf(\Piwigo\Users\CurrentUser::class, $currentUser);
-            $this->lifecycle = new ExtensionLifecycle(\Piwigo\Core\Lang::current(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger, $currentUser), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig, $wsContext, $accessControl);
+            $currentLogger = new CurrentLogger();
+            $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+            $activityService = Kernel::container()->get(ActivityService::class);
+            self::assertInstanceOf(ActivityService::class, $activityService);
+            $userService = Kernel::container()->get(UserService::class);
+            self::assertInstanceOf(UserService::class, $userService);
+            $htmlService = Kernel::container()->get(HtmlService::class);
+            self::assertInstanceOf(HtmlService::class, $htmlService);
+            $wsContext = Kernel::container()->get(WsContext::class);
+            self::assertInstanceOf(WsContext::class, $wsContext);
+            $accessControl = Kernel::container()->get(AccessControl::class);
+            self::assertInstanceOf(AccessControl::class, $accessControl);
+            $currentUser = Kernel::container()->get(CurrentUser::class);
+            self::assertInstanceOf(CurrentUser::class, $currentUser);
+            $this->lifecycle = new ExtensionLifecycle(Lang::current(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger, $currentUser), UrlServiceTestFactory::build(), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig, $wsContext, $accessControl);
 
             $currentConfig->setEnableExtensionsInstall(true);
             $currentConfig->setPhpExtensionInUrls(false);
@@ -101,14 +121,14 @@ namespace Piwigo\Tests\Integration {
             // for real here) reads CurrentConfig::themesDir() -- provide the
             // production value so the real filesystem check runs against
             // the real themes/ dir.
-            $currentConfig->setThemesDir(\Piwigo\Core\CurrentPaths::get()->root . 'themes');
+            $currentConfig->setThemesDir(CurrentPaths::get()->root . 'themes');
             CurrentUser::current()->set(User::fromUserArray(['id' => 1]));
             CurrentUser::current()->markRealUserResolved();
             unset($_REQUEST['method'], $_REQUEST['action']);
             $_SERVER['SCRIPT_NAME'] = '/admin.php';
         }
 
-        #[\Override]
+        #[Override]
         protected function tearDown(): void
         {
             $this->conn->executeStatement('DELETE FROM ' . Tables::plugins());
@@ -121,7 +141,7 @@ namespace Piwigo\Tests\Integration {
             parent::tearDown();
         }
 
-        #[\Override]
+        #[Override]
         public static function tearDownAfterClass(): void
         {
             // Close the legacy global mysqli handle setUp() opened: the rest
@@ -129,7 +149,7 @@ namespace Piwigo\Tests\Integration {
             // to the invariant that no legacy connection exists (see e.g.
             // SectionInitializerTest's header) -- leaking it flips later
             // files' MysqliDb-reachable branches from dead to live.
-            if (($GLOBALS['mysqli'] ?? null) instanceof \mysqli) {
+            if (($GLOBALS['mysqli'] ?? null) instanceof mysqli) {
                 $GLOBALS['mysqli']->close();
             }
             unset($GLOBALS['mysqli']);
@@ -300,7 +320,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 $this->lifecycle->performAction(ExtensionType::Plugin, 'delete', $this->pluginId(), null);
                 self::fail('Expected ExtensionLifecycle::performAction() to throw ResponseReadyException');
-            } catch (\Piwigo\Http\ResponseReadyException) {
+            } catch (ResponseReadyException) {
             } finally {
                 restore_error_handler();
             }
@@ -585,7 +605,7 @@ namespace Piwigo\Tests\Integration {
          */
         private function writePluginMaintainFile(string $id, string $ext, bool $extendsBase, string $body = ''): void
         {
-            $dir = \Piwigo\Admin\PluginLoader::pluginsPath() . $id;
+            $dir = PluginLoader::pluginsPath() . $id;
             mkdir($dir, 0o777, true);
             $classname = str_replace('-', '_', $id . '_maintain');
             $extends = $extendsBase ? ' extends \\Piwigo\\Admin\\PluginMaintain' : '';
@@ -597,7 +617,7 @@ namespace Piwigo\Tests\Integration {
 
         private function removePluginDir(string $id): void
         {
-            $this->rrmdir(\Piwigo\Admin\PluginLoader::pluginsPath() . $id);
+            $this->rrmdir(PluginLoader::pluginsPath() . $id);
         }
 
         /**
@@ -608,7 +628,7 @@ namespace Piwigo\Tests\Integration {
          */
         private function writeThemeMaintainFile(string $id, bool $extendsBase, string $body = ''): void
         {
-            $dir = \Piwigo\Core\CurrentPaths::get()->root . 'themes/' . $id . '/admin';
+            $dir = CurrentPaths::get()->root . 'themes/' . $id . '/admin';
             mkdir($dir, 0o777, true);
             $classname = $id . '_maintain';
             $extends = $extendsBase ? ' extends \\Piwigo\\Admin\\ThemeMaintain' : '';
@@ -627,7 +647,7 @@ namespace Piwigo\Tests\Integration {
          */
         private function writeThemeConf(string $id, array $conf = []): void
         {
-            $dir = \Piwigo\Core\CurrentPaths::get()->root . 'themes/' . $id;
+            $dir = CurrentPaths::get()->root . 'themes/' . $id;
             mkdir($dir, 0o777, true);
             $name = $conf['name'] ?? $id;
             $lines = "<?php\n/*\nTheme Name: {$name}\nVersion: 1.0\n*/\n";
@@ -642,14 +662,14 @@ namespace Piwigo\Tests\Integration {
 
         private function removeThemeDir(string $id): void
         {
-            $this->rrmdir(\Piwigo\Core\CurrentPaths::get()->root . 'themes/' . $id);
+            $this->rrmdir(CurrentPaths::get()->root . 'themes/' . $id);
         }
 
         // --------------------------------------------- plugin update/errors
 
         public function test_plugin_update_without_a_revision_option_throws(): void
         {
-            $this->expectException(\LogicException::class);
+            $this->expectException(LogicException::class);
             $this->expectExceptionMessage("performPluginAction('update'): missing 'revision' option");
 
             $this->lifecycle->performAction(ExtensionType::Plugin, 'update', $this->pluginId(), ['version' => '1.0'], []);
@@ -771,11 +791,11 @@ PHP);
             $this->writePluginMaintainFile($id, 'class.php', extendsBase: true);
 
             try {
-                $method = new \ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
+                $method = new ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
                 $maintain = $method->invoke($this->lifecycle, $id);
 
-                self::assertInstanceOf(\Piwigo\Admin\PluginMaintain::class, $maintain);
-                self::assertNotInstanceOf(\Piwigo\Admin\DummyPluginMaintain::class, $maintain);
+                self::assertInstanceOf(PluginMaintain::class, $maintain);
+                self::assertNotInstanceOf(DummyPluginMaintain::class, $maintain);
             } finally {
                 $this->removePluginDir($id);
             }
@@ -788,9 +808,9 @@ PHP);
             $classname = str_replace('-', '_', $id . '_maintain');
 
             try {
-                $method = new \ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
+                $method = new ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
 
-                $this->expectException(\LogicException::class);
+                $this->expectException(LogicException::class);
                 $this->expectExceptionMessage("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
 
                 $method->invoke($this->lifecycle, $id);
@@ -805,11 +825,11 @@ PHP);
             $this->writePluginMaintainFile($id, 'inc.php', extendsBase: true);
 
             try {
-                $method = new \ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
+                $method = new ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
                 $maintain = $method->invoke($this->lifecycle, $id);
 
-                self::assertInstanceOf(\Piwigo\Admin\PluginMaintain::class, $maintain);
-                self::assertNotInstanceOf(\Piwigo\Admin\DummyPluginMaintain::class, $maintain);
+                self::assertInstanceOf(PluginMaintain::class, $maintain);
+                self::assertNotInstanceOf(DummyPluginMaintain::class, $maintain);
             } finally {
                 $this->removePluginDir($id);
             }
@@ -822,9 +842,9 @@ PHP);
             $classname = str_replace('-', '_', $id . '_maintain');
 
             try {
-                $method = new \ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
+                $method = new ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
 
-                $this->expectException(\LogicException::class);
+                $this->expectException(LogicException::class);
                 $this->expectExceptionMessage("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
 
                 $method->invoke($this->lifecycle, $id);
@@ -841,11 +861,11 @@ PHP);
             $this->writeThemeMaintainFile($id, extendsBase: true);
 
             try {
-                $method = new \ReflectionMethod($this->lifecycle, 'buildThemeMaintain');
+                $method = new ReflectionMethod($this->lifecycle, 'buildThemeMaintain');
                 $maintain = $method->invoke($this->lifecycle, $id);
 
-                self::assertInstanceOf(\Piwigo\Admin\ThemeMaintain::class, $maintain);
-                self::assertNotInstanceOf(\Piwigo\Admin\DummyThemeMaintain::class, $maintain);
+                self::assertInstanceOf(ThemeMaintain::class, $maintain);
+                self::assertNotInstanceOf(DummyThemeMaintain::class, $maintain);
             } finally {
                 $this->removeThemeDir($id);
             }
@@ -857,9 +877,9 @@ PHP);
             $this->writeThemeMaintainFile($id, extendsBase: false);
 
             try {
-                $method = new \ReflectionMethod($this->lifecycle, 'buildThemeMaintain');
+                $method = new ReflectionMethod($this->lifecycle, 'buildThemeMaintain');
 
-                $this->expectException(\LogicException::class);
+                $this->expectException(LogicException::class);
                 $this->expectExceptionMessage("buildThemeMaintain(): {$id}_maintain does not extend ThemeMaintain");
 
                 $method->invoke($this->lifecycle, $id);
@@ -1074,7 +1094,7 @@ PHP);
             $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $keep, ['version' => '1.0', 'name' => 'Keep']);
             $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $exclude, ['version' => '1.0', 'name' => 'Exclude']);
 
-            $method = new \ReflectionMethod($this->lifecycle, 'pickReplacementDefaultTheme');
+            $method = new ReflectionMethod($this->lifecycle, 'pickReplacementDefaultTheme');
             $result = $method->invoke($this->lifecycle, $exclude);
 
             self::assertSame($keep, $result);
@@ -1082,7 +1102,7 @@ PHP);
 
         public function test_pick_replacement_default_theme_falls_back_to_default_when_none_other_exists(): void
         {
-            $method = new \ReflectionMethod($this->lifecycle, 'pickReplacementDefaultTheme');
+            $method = new ReflectionMethod($this->lifecycle, 'pickReplacementDefaultTheme');
             $result = $method->invoke($this->lifecycle, 'a-theme-id-that-is-not-installed-xyz');
 
             self::assertSame('default', $result);
@@ -1101,7 +1121,7 @@ PHP);
             $before = $this->conn->fetchAllAssociative("SELECT user_id, theme FROM " . Tables::userInfos() . " WHERE theme = 'default'");
 
             try {
-                $method = new \ReflectionMethod($this->lifecycle, 'setDefaultTheme');
+                $method = new ReflectionMethod($this->lifecycle, 'setDefaultTheme');
                 $method->invoke($this->lifecycle, $new);
 
                 foreach ($before as $row) {

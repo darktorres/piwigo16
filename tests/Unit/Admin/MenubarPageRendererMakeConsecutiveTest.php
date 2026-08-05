@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Admin;
 
+use PHPUnit\Framework\TestCase;
 use Piwigo\Admin\MenubarPageRenderer;
 
 /**
@@ -11,7 +12,7 @@ use Piwigo\Admin\MenubarPageRenderer;
  * include/admin/menubar.php's own top-level free functions during the P23
  * batch 6a port. Pure functions, no DB/globals needed.
  */
-final class MenubarPageRendererMakeConsecutiveTest extends \PHPUnit\Framework\TestCase
+final class MenubarPageRendererMakeConsecutiveTest extends TestCase
 {
     public function test_abs_fn_cmp_orders_by_magnitude(): void
     {

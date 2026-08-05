@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+
 final class WsPluginsTest extends ContractTestCase
 {
     /** @var list<string> */
     private array $pluginDirsToRemove = [];
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         foreach ($this->pluginDirsToRemove as $dir) {

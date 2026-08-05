@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use LogicException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -41,7 +43,7 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
      */
     private array $originalRows;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -61,7 +63,7 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
         $this->repo = $repo;
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
@@ -89,7 +91,7 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
 
     public function test_sync_enabled_throws_when_given_an_entity_that_is_not_actually_enabled(): void
     {
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage('syncPartition(): every entity must already have enabled=1');
 
         $this->repo->syncEnabled([$this->newSize('p17-test-mismatch', enabled: 0)]);
@@ -97,7 +99,7 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
 
     public function test_sync_disabled_throws_when_given_an_entity_that_is_actually_enabled(): void
     {
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage('syncPartition(): every entity must already have enabled=0');
 
         $this->repo->syncDisabled([$this->newSize('p17-test-mismatch', enabled: 1)]);

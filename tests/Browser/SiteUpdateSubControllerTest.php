@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
@@ -67,7 +68,7 @@ function suDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function suConnect(): \mysqli|\PgSql\Connection
+function suConnect(): mysqli|Connection
 {
     return H::connect();
 }
@@ -199,7 +200,7 @@ function suSetCategoryVisible(int $catId, bool $visible): void
     // categories.visible is a genuine boolean column on Postgres -- a
     // bare 0/1 literal is valid MySQL tinyint(1) input but Postgres
     // rejects it outright.
-    $sqlValue = $db instanceof \mysqli ? ($visible ? '1' : '0') : ($visible ? 'true' : 'false');
+    $sqlValue = $db instanceof mysqli ? ($visible ? '1' : '0') : ($visible ? 'true' : 'false');
     H::dbQuery($db, sprintf(
         'UPDATE %scategories SET visible = %s WHERE id = %d',
         suDbPrefix(),

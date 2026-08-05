@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Http\Middleware;
 
+use LogicException;
+use Override;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
@@ -29,12 +31,12 @@ final readonly class ControllerInvokerMiddleware implements MiddlewareInterface
         private ContainerInterface $container
     ) {}
 
-    #[\Override]
+    #[Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $result = $request->getAttribute(RouteResult::class);
         if (! $result instanceof RouteResult) {
-            throw new \LogicException(
+            throw new LogicException(
                 'No RouteResult attribute on the request -- RoutingMiddleware must run before ControllerInvokerMiddleware.'
             );
         }
@@ -45,7 +47,7 @@ final readonly class ControllerInvokerMiddleware implements MiddlewareInterface
 
         $controller = $this->container->get($result->handler);
         if (! $controller instanceof ControllerInterface) {
-            throw new \LogicException(
+            throw new LogicException(
                 "Route handler '{$result->handler}' must implement Piwigo\\Http\\ControllerInterface."
             );
         }

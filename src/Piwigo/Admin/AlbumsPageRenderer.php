@@ -5,13 +5,23 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Request\AlbumsRequest;
 use Piwigo\Category\CategoryRefDateAggregate;
 use Piwigo\Category\CategoryRefDateField;
+use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\DateHelper;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Template\RenderCategoryName;
-use Piwigo\Template\Template;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/albums.php (page slug "albums").
@@ -37,13 +47,13 @@ use Piwigo\Template\Template;
  */
 final class AlbumsPageRenderer
 {
-    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, CategoryAdminService $categoryAdminService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer, \Piwigo\Validation\InputValidator $inputValidator): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CategoryAdminService $categoryAdminService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator): void
     {
         $template = $currentTemplate->get();
 
         $albums_counter = $categoryService->countAllCategories();
 
-        $albumsRequest = Request\AlbumsRequest::fromGlobals($inputValidator);
+        $albumsRequest = AlbumsRequest::fromGlobals($inputValidator);
 
         // +-------------------------------------------------------------------+
         // | tabs                                                              |
@@ -127,7 +137,7 @@ final class AlbumsPageRenderer
                     assert(is_int($cat_row_id) || is_string($cat_row_id));
                     $sort[] = $ref_dates[$cat_row_id];
                 } else {
-                    $sort[] = \Piwigo\Core\StringHelper::removeAccents($cat_row['name']);
+                    $sort[] = StringHelper::removeAccents($cat_row['name']);
                 }
 
                 $categories[] = [
@@ -222,7 +232,7 @@ final class AlbumsPageRenderer
             $nameEvent = $eventDispatcher->dispatchChange(new RenderCategoryName(is_string($album['name']) ? $album['name'] : '', 'admin_cat_list'));
             $album['name'] = $nameEvent->categoryName;
             $album_lastmodified = $album['lastmodified'];
-            $album['lastmodified'] = \Piwigo\Core\DateHelper::timeSince(is_scalar($album_lastmodified) ? (string) $album_lastmodified : '', 'year');
+            $album['lastmodified'] = DateHelper::timeSince(is_scalar($album_lastmodified) ? (string) $album_lastmodified : '', 'year');
 
             $the_place['cat'] = $album;
         }
@@ -264,7 +274,7 @@ final class AlbumsPageRenderer
         $template->assign(
             [
                 'album_data' => self::assocToOrderedTree($associatedTree, $nb_photos_in, $nb_sub_photos, $is_forbidden),
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
                 'nb_albums' => count($allAlbum),
                 'ADMIN_PAGE_TITLE' => $lang->t('Albums'),

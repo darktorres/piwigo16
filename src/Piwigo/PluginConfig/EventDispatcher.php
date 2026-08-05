@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\PluginConfig;
 
+use Closure;
+use Error;
+use LogicException;
+use Piwigo\Core\Kernel;
+use ReflectionFunction;
+
 /**
  * Plugin event-handler registry -- self-managed singleton, same bridging
  * pattern as Piwigo\Session\SessionService::get(). Holds the state
@@ -57,10 +63,10 @@ final class EventDispatcher
      */
     public static function get(): self
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $dispatcher = \Piwigo\Core\Kernel::container()->get(self::class);
+        if (Kernel::isBooted()) {
+            $dispatcher = Kernel::container()->get(self::class);
             if (! $dispatcher instanceof self) {
-                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+                throw new LogicException('Container returned an unexpected type for ' . self::class);
             }
 
             return $dispatcher;
@@ -164,7 +170,7 @@ final class EventDispatcher
             return $this->addEventHandler($event, $handler, $priority);
         }
 
-        throw new \LogicException('Unreachable: a callable is always string, array, or object.');
+        throw new LogicException('Unreachable: a callable is always string, array, or object.');
     }
 
     /**
@@ -183,9 +189,9 @@ final class EventDispatcher
      */
     private static function callablesEqual(string|array|object $a, string|array|object $b): bool
     {
-        if ($a instanceof \Closure && $b instanceof \Closure) {
-            $ra = new \ReflectionFunction($a);
-            $rb = new \ReflectionFunction($b);
+        if ($a instanceof Closure && $b instanceof Closure) {
+            $ra = new ReflectionFunction($a);
+            $rb = new ReflectionFunction($b);
 
             // getClosureScopeClass() returns a fresh ReflectionClass wrapper
             // on every call, so compare by class name, not object identity.
@@ -234,7 +240,7 @@ final class EventDispatcher
                     // fatalling on a genuinely dead registration (see the
                     // $handlers docblock) -- never reached by any handler
                     // actually registered for a real, triggered event.
-                    throw new \Error("Event handler for '{$event}' is not callable.");
+                    throw new Error("Event handler for '{$event}' is not callable.");
                 }
 
                 $data = call_user_func_array($handler->function, $args);
@@ -295,13 +301,13 @@ final class EventDispatcher
                     }
 
                     if (! is_callable($handler->function)) {
-                        throw new \Error("Event handler for '{$eventClass}' is not callable.");
+                        throw new Error("Event handler for '{$eventClass}' is not callable.");
                     }
 
                     $result = call_user_func($handler->function, $event);
 
                     if (! $result instanceof $eventClass) {
-                        throw new \Error("Change handler for '{$eventClass}' must return an instance of {$eventClass}.");
+                        throw new Error("Change handler for '{$eventClass}' must return an instance of {$eventClass}.");
                     }
 
                     $event = $result;
@@ -344,7 +350,7 @@ final class EventDispatcher
                 }
 
                 if (! is_callable($handler->function)) {
-                    throw new \Error("Event handler for '{$event}' is not callable.");
+                    throw new Error("Event handler for '{$event}' is not callable.");
                 }
 
                 call_user_func_array($handler->function, $args);
@@ -387,7 +393,7 @@ final class EventDispatcher
                 }
 
                 if (! is_callable($handler->function)) {
-                    throw new \Error("Event handler for '{$eventClass}' is not callable.");
+                    throw new Error("Event handler for '{$eventClass}' is not callable.");
                 }
 
                 call_user_func($handler->function, $event);

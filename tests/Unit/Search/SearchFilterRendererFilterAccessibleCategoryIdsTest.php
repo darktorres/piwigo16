@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Search;
 
+use PHPUnit\Framework\TestCase;
 use Piwigo\Search\SearchFilterRenderer;
 
 /**
@@ -15,7 +16,7 @@ use Piwigo\Search\SearchFilterRenderer;
  * forbidden category's name must never reach the display list. Pure
  * function, no DB/globals needed.
  */
-final class SearchFilterRendererFilterAccessibleCategoryIdsTest extends \PHPUnit\Framework\TestCase
+final class SearchFilterRendererFilterAccessibleCategoryIdsTest extends TestCase
 {
     public function test_excludes_a_forbidden_category_id(): void
     {

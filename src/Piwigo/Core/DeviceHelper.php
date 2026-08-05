@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Request\MobileThemeRequest;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Session\SessionService;
 
 /**
@@ -51,14 +54,14 @@ final class DeviceHelper
         // CurrentConfig::mobilTheme() is SCHEMA-typed 'string' only (never null/int/
         // float/bool/array) -- '' and '0' are the only two of empty()'s
         // falsy cases a string value can actually satisfy.
-        $mobile_theme_conf = \Piwigo\Config\CurrentConfig::current()->mobilTheme();
+        $mobile_theme_conf = CurrentConfig::current()->mobilTheme();
         if ($mobile_theme_conf === '' || $mobile_theme_conf === '0') {
             return false;
         }
 
-        $mobileThemeRequest = Request\MobileThemeRequest::fromGlobals();
+        $mobileThemeRequest = MobileThemeRequest::fromGlobals();
         if ($mobileThemeRequest->mobilePresent) {
-            $is_mobile_theme = \Piwigo\Db\SqlDialect::getBoolean($mobileThemeRequest->mobileRaw);
+            $is_mobile_theme = SqlDialect::getBoolean($mobileThemeRequest->mobileRaw);
             SessionService::get()->setSessionVar('mobile_theme', $is_mobile_theme);
         } else {
             $session_mobile_theme = SessionService::get()->getSessionVar('mobile_theme');

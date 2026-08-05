@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Error;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
@@ -31,7 +35,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -44,9 +48,9 @@ final class ThemeCatalogTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         // Untranslated-key fallback for Lang::t('Mobile') below --
@@ -56,14 +60,14 @@ final class ThemeCatalogTest extends IntegrationTestCase
         Translator::get()->reset();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         Lang::current()->reset();
         Translator::get()->reset();
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         parent::tearDown();
@@ -95,9 +99,9 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $this->conn->executeStatement(
             'INSERT INTO ' . Tables::themes() . " (id, version, name) VALUES ('mobile-candidate', '1.0', 'Mobile Candidate')"
         );
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->setMobilTheme('mobile-candidate');
 
@@ -115,9 +119,9 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $this->conn->executeStatement(
             "INSERT INTO " . Tables::themes() . " (id, version, name) VALUES ('default', '1.0', 'Default')"
         );
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->setMobilTheme('default');
 
@@ -141,7 +145,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         // static one.
         EventDispatcher::get()->addEventHandler(GetPwgThemes::class, static fn (): ?string => null);
 
-        $this->expectException(\Error::class);
+        $this->expectException(Error::class);
         $this->expectExceptionMessage('must return an instance of');
 
         try {

@@ -9,7 +9,9 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
+use Override;
 use Piwigo\Comment\Projection\Comment;
 use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Common\Dto\PaginatedResult;
@@ -19,6 +21,8 @@ use Piwigo\Core\Env;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Users\UserEntity;
+use UnexpectedValueException;
 
 /**
  * Persistence layer for the comment domain: `comments` itself, plus a
@@ -248,7 +252,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         $value = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('COUNT(u.id)')
-            ->from(\Piwigo\Users\UserEntity::class, 'u')
+            ->from(UserEntity::class, 'u')
             ->where('u.username = :username')
             ->setParameter('username', $username)
             ->getQuery()
@@ -581,7 +585,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             // int|numeric-string parsing.
             $id = $row['id'] ?? null;
             if (! $id instanceof CommentId) {
-                throw new \UnexpectedValueException(sprintf('Expected c.id to hydrate as a CommentId, got %s', get_debug_type($id)));
+                throw new UnexpectedValueException(sprintf('Expected c.id to hydrate as a CommentId, got %s', get_debug_type($id)));
             }
 
             $summaries[] = new CommentSummary(
@@ -608,7 +612,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * @param  list<int|string>  $imageIds
      * @return array<string, int> keyed by image id
      */
-    #[\Override]
+    #[Override]
     public function countValidatedByImageIds(array $imageIds): array
     {
         if ($imageIds === []) {
@@ -679,7 +683,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
                 'com.content AS content',
                 'com.validated AS validated',
             )
-            ->leftJoin(\Piwigo\Users\UserEntity::class, 'u', Join::WITH, 'u.id = com.authorId')
+            ->leftJoin(UserEntity::class, 'u', Join::WITH, 'u.id = com.authorId')
             ->where('com.imageId = :imageId')
             ->orderBy('com.date', $order)
             ->setMaxResults($limit)
@@ -846,7 +850,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         self::applyApiConditions($qb, $criteria, includeAuthorId: true);
 
         $row = $qb->getQuery()
-            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
         if (! is_array($row)) {
             return null;
@@ -932,7 +936,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         self::applyApiConditionsWithStatus($qb, $criteria, includeAuthorId: true);
 
         $row = $qb->getQuery()
-            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
         if (! is_array($row)) {
             return null;

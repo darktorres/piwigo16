@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Paths;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Bootstrap\ExtendedDomainAccessor;
 use Piwigo\Core\Kernel;
@@ -38,7 +39,7 @@ afterEach(function (): void {
 });
 
 test('activityService resolves a real ActivityService from the container', function (): void {
-    Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
     expect(ExtendedDomainAccessor::activityService())->toBeInstanceOf(ActivityService::class);
 });
@@ -51,7 +52,7 @@ test('activityService throws when the container returns an unexpected type', fun
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . ActivityService::class);
 
 test('metadataService resolves a real MetadataService from the container', function (): void {
-    Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
     expect(ExtendedDomainAccessor::metadataService())->toBeInstanceOf(MetadataService::class);
 });

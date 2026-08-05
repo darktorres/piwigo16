@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use LogicException;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -64,8 +65,8 @@ final class Kernel
      */
     public static function container(): ContainerInterface
     {
-        if (! self::$container instanceof \Psr\Container\ContainerInterface) {
-            throw new \LogicException('Kernel not booted — call Kernel::boot() first.');
+        if (! self::$container instanceof ContainerInterface) {
+            throw new LogicException('Kernel not booted — call Kernel::boot() first.');
         }
         return self::$container;
     }

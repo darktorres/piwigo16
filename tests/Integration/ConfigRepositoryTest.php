@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\DbCredentials;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
@@ -34,7 +38,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
 
     private EntityManagerInterface $em;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -46,9 +50,9 @@ final class ConfigRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -58,7 +62,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 2) . '/src/Piwigo'], isDevMode: true);
         $ormConfig->enableNativeLazyObjects(true);
         $this->em = new EntityManager($conn, $ormConfig);
-        $this->em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(\Piwigo\Db\DbCredentials::current()));
+        $this->em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentials::current()));
 
         $repo = $this->em->getRepository(ConfigEntry::class);
         self::assertInstanceOf(ConfigRepository::class, $repo);
@@ -243,7 +247,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 2) . '/src/Piwigo'], isDevMode: true);
         $ormConfig->enableNativeLazyObjects(true);
         $em = new EntityManager($conn, $ormConfig);
-        $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(\Piwigo\Db\DbCredentials::current()));
+        $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentials::current()));
 
         $repo = $em->getRepository(ConfigEntry::class);
         self::assertInstanceOf(ConfigRepository::class, $repo);

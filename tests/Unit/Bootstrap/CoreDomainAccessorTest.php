@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Bootstrap\CoreDomainAccessor;
 use Piwigo\Image\ImageService;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -35,11 +37,11 @@ use Piwigo\Users\UserService;
  * docblock for the KernelContainerOverride rationale.
  */
 afterEach(function (): void {
-    \Piwigo\Core\Kernel::reset();
+    Kernel::reset();
 });
 
 test('userService resolves a real UserService from the container', function (): void {
-    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
     expect(CoreDomainAccessor::userService())->toBeInstanceOf(UserService::class);
 });
@@ -52,7 +54,7 @@ test('userService throws when the container returns an unexpected type', functio
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . UserService::class);
 
 test('imageService resolves a real ImageService from the container', function (): void {
-    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
     expect(CoreDomainAccessor::imageService())->toBeInstanceOf(ImageService::class);
 });

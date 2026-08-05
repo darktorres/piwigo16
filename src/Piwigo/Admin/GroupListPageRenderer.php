@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Request\GroupListActionRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 
 /**
  * Ported from admin/group_list.php (page slug "group_list").
@@ -24,9 +31,9 @@ final class GroupListPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly Translator $translator,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly EventDispatcher $eventDispatcher,
     ) {}
 
     public function render(): void
@@ -46,8 +53,8 @@ final class GroupListPageRenderer
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        if (Request\GroupListActionRequest::fromGlobals()->requiresCsrfCheck) {
-            new \Piwigo\Csrf\CsrfService()
+        if (GroupListActionRequest::fromGlobals()->requiresCsrfCheck) {
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
@@ -58,13 +65,13 @@ final class GroupListPageRenderer
         $template->assign(
             [
                 'F_ADD_ACTION' => $this->urlService->getRootUrl() . 'admin.php?page=group_list',
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
                 'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
             ]
         );
 
-        $group_repo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class);
+        $group_repo = EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class);
         $groups = $group_repo->findAllBasic();
 
         $admin_url = $this->urlService->getRootUrl() . 'admin.php?page=';
@@ -91,10 +98,10 @@ final class GroupListPageRenderer
                     'NB_MEMBERS' => count($members),
                     'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
                     'MEMBERS' => $this->translator->plural('%d member', '%d members', count($members)),
-                    'U_DELETE' => $del_url . $row->id->value . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
+                    'U_DELETE' => $del_url . $row->id->value . '&amp;pwg_token=' . new CsrfService()->getToken(),
                     'U_PERM' => $perm_url . $row->id->value,
                     'U_USERS' => $users_url . $row->id->value,
-                    'U_ISDEFAULT' => $toggle_is_default_url . $row->id->value . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
+                    'U_ISDEFAULT' => $toggle_is_default_url . $row->id->value . '&amp;pwg_token=' . new CsrfService()->getToken(),
                 ]
             );
 

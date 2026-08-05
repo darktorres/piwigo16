@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Throwable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Piwigo\Db\BatchWriter;
@@ -35,7 +37,7 @@ final class BatchWriterTest extends IntegrationTestCase
 
     private BatchWriter $writer;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -69,7 +71,7 @@ final class BatchWriterTest extends IntegrationTestCase
         $this->writer = new BatchWriter($this->conn);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement('DROP TABLE IF EXISTS ' . self::TABLE);
@@ -121,7 +123,7 @@ final class BatchWriterTest extends IntegrationTestCase
                 ['id' => 10, 'name' => 'first-name'],
                 ['id' => 11, 'name' => 'first-name'], // duplicate `name` -> unique violation
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $thrown = $e;
         }
 
@@ -145,7 +147,7 @@ final class BatchWriterTest extends IntegrationTestCase
                 ['id' => 1, 'name' => 'zeta'],
                 ['id' => 2, 'name' => 'zeta'], // duplicate `name` -> unique violation
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $thrown = $e;
         }
 

@@ -4,6 +4,24 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Core\Lang;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Lang\Translator;
+use Piwigo\Core\FilterState;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Caddie\CaddieEntity;
+use Piwigo\Users\UserRepository;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\ProcessCache;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterResolver;
@@ -38,7 +56,7 @@ final class FilterResolverTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -50,9 +68,9 @@ final class FilterResolverTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -61,52 +79,52 @@ final class FilterResolverTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
 
         $em = EntityManagerFactory::build($this->conn);
-        $sessionService = new SessionService($em->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current());
+        $sessionService = new SessionService($em->getRepository(SessionEntity::class),CurrentConfig::current());
         $imageService = new ImageService(
-            \Piwigo\Core\Lang::current(),
-            $em->getRepository(\Piwigo\Image\ImageEntity::class),
-            new ActivityService($em->getRepository(\Piwigo\Activity\ActivityEntity::class)),
+            Lang::current(),
+            $em->getRepository(ImageEntity::class),
+            new ActivityService($em->getRepository(ActivityEntity::class)),
             $sessionService,
-            new \Piwigo\PluginConfig\EventDispatcher(),
+            new EventDispatcher(),
             CurrentConfig::current(),
-            \Piwigo\Lang\Translator::get(),
+            Translator::get(),
         );
-        $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
-        if (! $filterState instanceof \Piwigo\Core\FilterState) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        $filterState = Kernel::container()->get(FilterState::class);
+        if (! $filterState instanceof FilterState) {
+            throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
         $categoryService = new CategoryService(
-            \Piwigo\Core\Lang::current(),
-            new \Piwigo\Category\CategoryRepository($em, CurrentConfig::current()),
+            Lang::current(),
+            new CategoryRepository($em, CurrentConfig::current()),
             new PermissionService(
                 new PermissionRepository($em),
-                $em->getRepository(\Piwigo\Group\GroupEntity::class),
-                new \Piwigo\Category\CategoryRepository($em, CurrentConfig::current()),
-                \Piwigo\Users\CurrentUser::current(),
+                $em->getRepository(GroupEntity::class),
+                new CategoryRepository($em, CurrentConfig::current()),
+                CurrentUser::current(),
                 $filterState,
             ),
-            \Piwigo\Config\CurrentConfig::current(),
-            new \Piwigo\PluginConfig\EventDispatcher(),
-            \Piwigo\Lang\Translator::get(),
+            CurrentConfig::current(),
+            new EventDispatcher(),
+            Translator::get(),
         );
-        $caddieRepo = $em->getRepository(\Piwigo\Caddie\CaddieEntity::class);
-        $mailer = \Piwigo\Core\Kernel::container()->get(MailService::class);
+        $caddieRepo = $em->getRepository(CaddieEntity::class);
+        $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
         $userService = new UserService(
-            \Piwigo\Core\Lang::current(),
-            new \Piwigo\Users\UserRepository($em, new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current()),
-            $em->getRepository(\Piwigo\Group\GroupEntity::class),
+            Lang::current(),
+            new UserRepository($em, new EventDispatcher(), CurrentConfig::current()),
+            $em->getRepository(GroupEntity::class),
             $mailer,
-            new ActivityService($em->getRepository(\Piwigo\Activity\ActivityEntity::class)),
-            \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
+            new ActivityService($em->getRepository(ActivityEntity::class)),
+            HtmlServiceTestFactory::build(),
             $this->conn,
             $sessionService,
-            new \Piwigo\PluginConfig\EventDispatcher(),
-            new \Piwigo\Config\DeploymentPolicy(),
-            \Piwigo\Users\CurrentUser::current(),
-            \Piwigo\Config\CurrentConfig::current(),
-            new \Piwigo\Core\InstallationFlag(),
-            new \Piwigo\Core\ProcessCache(),
+            new EventDispatcher(),
+            new DeploymentPolicy(),
+            CurrentUser::current(),
+            CurrentConfig::current(),
+            new InstallationFlag(),
+            new ProcessCache(),
         );
 
         $this->resolver = new FilterResolver($imageService, $categoryService, $caddieRepo, $userService);

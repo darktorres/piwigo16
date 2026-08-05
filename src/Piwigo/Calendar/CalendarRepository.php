@@ -9,8 +9,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\PhotoSortField;
 use Piwigo\Permission\SqlCondition;
 
 /**
@@ -86,7 +88,7 @@ final class CalendarRepository
             // and a calendar view has no single category context the way
             // CategoryRepository::findImageIdsForCategories() does, so
             // there's no query-independent way to express it here.
-            $dqlOrderBy = \Piwigo\Image\PhotoSortField::resolveDqlOrderBy($orderBySql, 'i');
+            $dqlOrderBy = PhotoSortField::resolveDqlOrderBy($orderBySql, 'i');
             if ($dqlOrderBy !== null) {
                 $qb = $this->baseQueryBuilder($dqlScope)
                     ->select('i.id')
@@ -112,7 +114,7 @@ final class CalendarRepository
         // already fixed for CategoryRepository's own raw-DBAL fallback
         // ("function rand() does not exist" against a real Postgres
         // server otherwise).
-        $orderBySql = str_ireplace('RAND()', \Piwigo\Db\SqlDialect::randomFunction() . '()', $orderBySql);
+        $orderBySql = str_ireplace('RAND()', SqlDialect::randomFunction() . '()', $orderBySql);
 
         $ids = $this->em->getConnection()
             ->executeQuery(

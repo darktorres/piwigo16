@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\Assert;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Admin\Image\ImageImagick;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Core\CurrentLogger;
@@ -46,11 +49,11 @@ function imageImagickTestMakeJpeg(string $path, int $width, int $height, int $r,
 
     $im = imagecreatetruecolor($width, $height);
     if ($im === false) {
-        throw new \RuntimeException('imagecreatetruecolor() failed building the test fixture image.');
+        throw new RuntimeException('imagecreatetruecolor() failed building the test fixture image.');
     }
     $color = imagecolorallocate($im, $r, $g, $b);
     if ($color === false) {
-        throw new \RuntimeException('imagecolorallocate() failed building the test fixture image.');
+        throw new RuntimeException('imagecolorallocate() failed building the test fixture image.');
     }
     imagefill($im, 0, 0, $color);
     imagejpeg($im, $path);
@@ -59,7 +62,7 @@ function imageImagickTestMakeJpeg(string $path, int $width, int $height, int $r,
 function imageImagickTestSkipIfUnavailable(): void
 {
     if (! PwgImage::is_imagick()) {
-        \PHPUnit\Framework\Assert::markTestSkipped('ext-imagick is not available in this environment.');
+        Assert::markTestSkipped('ext-imagick is not available in this environment.');
     }
 }
 
@@ -82,7 +85,7 @@ test('construct throws for content that is not a real image', function (): void 
     $path = imageImagickTestMarker() . '/photo.jpg';
     file_put_contents($path, 'this is plain text, not a real JPEG');
 
-    expect(fn () => new ImageImagick($path))->toThrow(\ImagickException::class);
+    expect(fn () => new ImageImagick($path))->toThrow(ImagickException::class);
 });
 
 test('get_width and get_height report the real source dimensions', function (): void {
@@ -179,11 +182,11 @@ test('sharpen applies a real convolution and reports success, actually changing 
     // differ byte-for-byte from the untouched source.
     $im = imagecreatetruecolor(40, 40);
     if ($im === false) {
-        throw new \RuntimeException('imagecreatetruecolor() failed building the test fixture image.');
+        throw new RuntimeException('imagecreatetruecolor() failed building the test fixture image.');
     }
     $color = imagecolorallocate($im, 200, 50, 50);
     if ($color === false) {
-        throw new \RuntimeException('imagecolorallocate() failed building the test fixture image.');
+        throw new RuntimeException('imagecolorallocate() failed building the test fixture image.');
     }
     imagefilledrectangle($im, 10, 10, 29, 29, $color);
     imagejpeg($im, $path);
@@ -230,7 +233,7 @@ test('compose composites a same-backend overlay and preserves the base dimension
     imageImagickTestMakeJpeg($basePath, 200, 120, 0, 0, 0);
     imageImagickTestMakeJpeg($overlayPath, 50, 50, 255, 255, 255);
     $base = new ImageImagick($basePath);
-    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\CurrentConfig(), 'imagick');
+    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
 
     $result = $base->compose($overlay, 10, 10, 50);
 
@@ -259,7 +262,7 @@ test('compose only dims a shared overlay once across repeated calls', function (
     imageImagickTestMakeJpeg($basePath, 200, 120, 0, 0, 0);
     imageImagickTestMakeJpeg($overlayPath, 50, 50, 255, 255, 255);
     $base = new ImageImagick($basePath);
-    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\CurrentConfig(), 'imagick');
+    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
     $overlayBackend = $overlay->image;
     expect($overlayBackend)->toBeInstanceOf(ImageImagick::class);
     // dirtyTrickXrepeatApplied gates the alpha-dimming evaluateImage() call
@@ -268,7 +271,7 @@ test('compose only dims a shared overlay once across repeated calls', function (
     // read the real flag via reflection (private, no public accessor) so
     // the assertions below check the actual memoization state instead of
     // just "the 2nd call doesn't throw".
-    $dirtyFlag = new \ReflectionProperty(ImageImagick::class, 'dirtyTrickXrepeatApplied');
+    $dirtyFlag = new ReflectionProperty(ImageImagick::class, 'dirtyTrickXrepeatApplied');
 
     expect($dirtyFlag->getValue($overlayBackend))->toBeFalse('a freshly constructed overlay must start undimmed');
 
@@ -291,8 +294,8 @@ test('compose throws when the overlay uses a different image backend', function 
     imageImagickTestMakeJpeg($basePath, 200, 120, 0, 0, 0);
     imageImagickTestMakeJpeg($overlayPath, 50, 50, 255, 255, 255);
     $base = new ImageImagick($basePath);
-    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\CurrentConfig(), 'gd');
+    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
 
     expect(fn () => $base->compose($overlay, 0, 0, 50))
-        ->toThrow(\LogicException::class, 'PwgImage::compose(): overlay must use the same image backend');
+        ->toThrow(LogicException::class, 'PwgImage::compose(): overlay must use the same image backend');
 });

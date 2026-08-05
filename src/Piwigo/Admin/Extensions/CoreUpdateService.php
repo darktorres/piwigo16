@@ -4,16 +4,25 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
+use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\ContainerDetector;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\VersionHelper;
+use Piwigo\Db\DbConnection;
 use Piwigo\Http\HttpClientService;
+use Piwigo\Mail\MailService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\UserService;
 
 /**
  * Piwigo-core (not extension) self-update: checking piwigo.org for a newer
@@ -41,12 +50,12 @@ final readonly class CoreUpdateService
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly Paths $paths,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Users\UserService $userService,
-        private readonly \Piwigo\Mail\MailService $mailService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly ActivityService $activityService,
+        private readonly UserService $userService,
+        private readonly MailService $mailService,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     public function checkPiwigoUpgrade(): void
@@ -79,13 +88,13 @@ final readonly class CoreUpdateService
             'is_dev' => true,
         ];
 
-        [$env, $buildVersion] = \Piwigo\Core\ContainerDetector::detect();
+        [$env, $buildVersion] = ContainerDetector::detect();
         if (! (bool) preg_match('/^(\d+\.\d+)\.(\d+)$/', AppInfo::VERSION)) {
             return $newVersions;
         }
 
         $newVersions['is_dev'] = false;
-        $actualBranch = \Piwigo\Core\VersionHelper::getBranchFromVersion($env === 'Official' ? substr((string) $buildVersion, 0, -1) : AppInfo::VERSION);
+        $actualBranch = VersionHelper::getBranchFromVersion($env === 'Official' ? substr((string) $buildVersion, 0, -1) : AppInfo::VERSION);
 
         $url = AppInfo::URL . '/download/all_versions.php';
         $url .= '?rand=' . md5(uniqid((string) mt_rand(), true));
@@ -104,13 +113,13 @@ final readonly class CoreUpdateService
 
         if ($env === 'Official') {
             if ($this->containerVersionCompare($buildVersion, $lastVersion) === -1) {
-                $lastBranch = \Piwigo\Core\VersionHelper::getBranchFromVersion(substr($lastVersion, 0, -1));
+                $lastBranch = VersionHelper::getBranchFromVersion(substr($lastVersion, 0, -1));
                 if ($lastBranch === $actualBranch) {
                     $newVersions['minor'] = $lastVersion;
                 } else {
                     $newVersions['major'] = $lastVersion;
                     foreach ($allVersions as $version) {
-                        $branch = \Piwigo\Core\VersionHelper::getBranchFromVersion(substr($version, 0, -1));
+                        $branch = VersionHelper::getBranchFromVersion(substr($version, 0, -1));
                         if ($branch === $actualBranch) {
                             if ($this->containerVersionCompare($buildVersion, $version) === -1) {
                                 $newVersions['minor'] = $version;
@@ -127,7 +136,7 @@ final readonly class CoreUpdateService
         [$lastVersionNumber, $lastVersionPhp] = explode('/', trim($allVersions[0]));
 
         if (version_compare(AppInfo::VERSION, $lastVersionNumber, '<')) {
-            $lastBranch = \Piwigo\Core\VersionHelper::getBranchFromVersion($lastVersionNumber);
+            $lastBranch = VersionHelper::getBranchFromVersion($lastVersionNumber);
 
             if ($lastBranch === $actualBranch) {
                 $newVersions['minor'] = $lastVersionNumber;
@@ -138,7 +147,7 @@ final readonly class CoreUpdateService
 
                 foreach ($allVersions as $version) {
                     [$versionNumber, $versionPhp] = explode('/', trim($version));
-                    $branch = \Piwigo\Core\VersionHelper::getBranchFromVersion($versionNumber);
+                    $branch = VersionHelper::getBranchFromVersion($versionNumber);
 
                     if ($branch === $actualBranch) {
                         if (version_compare(AppInfo::VERSION, $versionNumber, '<')) {
@@ -208,7 +217,7 @@ final readonly class CoreUpdateService
             return;
         }
 
-        $notifyConn = \Piwigo\Db\DbConnection::build();
+        $notifyConn = DbConnection::build();
         $this->mailService
             ->switchLangTo($this->userService->getDefaultLanguage());
 
@@ -266,7 +275,7 @@ final readonly class CoreUpdateService
         $obsoleteList = null;
 
         if ($this->stepIs($step, 2)) {
-            $code = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.x_to_' . $upgradeTo;
+            $code = VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.x_to_' . $upgradeTo;
             $dlCode = str_replace(['.', '_'], '', $code);
             $removePath = $code;
         } else {
@@ -282,7 +291,7 @@ final readonly class CoreUpdateService
 
         $path = $this->paths->root . $dataLocation . 'update';
         $filename = $path . '/' . $code . '.zip';
-        @\Piwigo\Core\FilesystemHelper::mkgetdir($path);
+        @FilesystemHelper::mkgetdir($path);
 
         $chunkNum = 0;
         $end = false;

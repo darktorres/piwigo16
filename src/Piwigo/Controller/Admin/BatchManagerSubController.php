@@ -5,28 +5,45 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\BatchManagerGlobalPageRenderer;
 use Piwigo\Admin\BatchManagerUnitPageRenderer;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\TagId;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Request\BatchManagerRequest;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Admin\BatchManagerPerformFilters;
 use Piwigo\Event\Admin\BatchManagerRegisterFilters;
 use Piwigo\Event\Admin\BatchManagerUrlFilter;
 use Piwigo\Event\Admin\PerformBatchManagerPrefilters;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageDuplicateField;
 use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -73,35 +90,35 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly CurrentLogger $currentLogger,
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
         private readonly Translator $translator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly ImageStdParams $imageStdParams,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
         private readonly FilterResolver $filterResolver,
         private readonly BatchManagerUnitPageRenderer $batchManagerUnitPageRenderer,
-        private readonly \Piwigo\Search\SearchService $searchService,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly SearchService $searchService,
+        private readonly ActivityService $activityService,
         private readonly ImageService $imageService,
         private readonly TagService $tagService,
         private readonly CategoryService $categoryService,
-        private readonly \Piwigo\Html\HtmlService $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\Core\FilterState $filterState,
+        private readonly HtmlService $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly FilterState $filterState,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $template = $this->currentTemplate->get();
 
-        $batchManagerRequest = Request\BatchManagerRequest::fromGlobals($this->inputValidator);
+        $batchManagerRequest = BatchManagerRequest::fromGlobals($this->inputValidator);
 
         $user_id = $this->currentUser->get()
             ->id->value;
@@ -184,7 +201,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         }
     }
 
-    private function handleGetActions(Request\BatchManagerRequest $batchManagerRequest, string $getPage, int $userId): void
+    private function handleGetActions(BatchManagerRequest $batchManagerRequest, string $getPage, int $userId): void
     {
         $action = $batchManagerRequest->action;
         if ($action === null) {
@@ -192,10 +209,10 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         }
 
         if ($action === 'empty_caddie') {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
-            \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Caddie\CaddieEntity::class)
+            EntityManagerFactory::build(DbConnection::build())->getRepository(CaddieEntity::class)
                 ->replaceForUser($userId, []);
 
             $_SESSION['page_infos'] = [
@@ -245,7 +262,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
      *   CurrentConfig::availablePermissionLevels()'s own already-precise
      *   return type (this method's only real caller passes it straight through)
      */
-    private function resolveSessionFilter(Request\BatchManagerRequest $batchManagerRequest, array $availablePermissionLevels): void
+    private function resolveSessionFilter(BatchManagerRequest $batchManagerRequest, array $availablePermissionLevels): void
     {
         $post = $batchManagerRequest->post;
 

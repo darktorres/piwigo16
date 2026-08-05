@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Core\Kernel;
+use Piwigo\Bootstrap\InfrastructureAccessor;
+use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\PwgCore;
 use Doctrine\DBAL\Connection;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
@@ -13,7 +19,7 @@ final class WsTopLevelTest extends ContractTestCase
 {
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -152,7 +158,7 @@ final class WsTopLevelTest extends ContractTestCase
         $msizes = $values['msizes'];
         self::assertIsArray($msizes);
 
-        $expectedKeys = [...array_keys(\Piwigo\Image\ImageStdParams::current()->get_defined_type_map()), 'custom', 'all'];
+        $expectedKeys = [...array_keys(ImageStdParams::current()->get_defined_type_map()), 'custom', 'all'];
         foreach ($expectedKeys as $key) {
             self::assertArrayHasKey($key, $msizes, "msizes must always report a '{$key}' entry");
             self::assertIsInt($msizes[$key]);
@@ -271,17 +277,17 @@ final class WsTopLevelTest extends ContractTestCase
      */
     public function test_getMissingDerivatives_with_an_empty_gallery_returns_an_empty_array_early(): void
     {
-        \Piwigo\Core\Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
+        Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
 
         try {
-            $conn = \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->getConnection();
+            $conn = InfrastructureAccessor::entityManager()->getConnection();
             $conn->beginTransaction();
 
             try {
                 $conn->executeStatement('DELETE FROM ' . Tables::images());
 
-                $service = \Piwigo\Core\Kernel::container()->get(\Piwigo\Ws\PwgServer::class);
-                self::assertInstanceOf(\Piwigo\Ws\PwgServer::class, $service);
+                $service = Kernel::container()->get(PwgServer::class);
+                self::assertInstanceOf(PwgServer::class, $service);
                 $params = [
                     'types' => [],
                     'ids' => [],
@@ -299,8 +305,8 @@ final class WsTopLevelTest extends ContractTestCase
                     'f_min_date_created' => null,
                     'f_max_date_created' => null,
                 ];
-                $pwgCore = \Piwigo\Core\Kernel::container()->get(\Piwigo\Ws\PwgCore::class);
-                self::assertInstanceOf(\Piwigo\Ws\PwgCore::class, $pwgCore);
+                $pwgCore = Kernel::container()->get(PwgCore::class);
+                self::assertInstanceOf(PwgCore::class, $pwgCore);
                 $result = $pwgCore->getMissingDerivatives($params, $service);
 
                 self::assertSame([], $result);
@@ -308,7 +314,7 @@ final class WsTopLevelTest extends ContractTestCase
                 $conn->rollBack();
             }
         } finally {
-            \Piwigo\Core\Kernel::reset();
+            Kernel::reset();
         }
     }
 

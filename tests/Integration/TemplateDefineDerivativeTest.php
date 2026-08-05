@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
@@ -28,7 +32,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
 
     private Template $template;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -44,14 +48,14 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
         ImageStdParams::current()->load_from_db();
         CurrentUser::current()->attachGlobals();
 
-        $this->template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $this->template = TemplateTestFactory::build();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         CurrentUser::current()->reset();

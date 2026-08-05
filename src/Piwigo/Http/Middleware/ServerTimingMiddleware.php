@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Http\Middleware;
 
+use Override;
 use Piwigo\Core\ServerTiming;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -23,7 +24,7 @@ final class ServerTimingMiddleware implements MiddlewareInterface
         private readonly ServerTiming $serverTiming
     ) {}
 
-    #[\Override]
+    #[Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $response = $handler->handle($request);

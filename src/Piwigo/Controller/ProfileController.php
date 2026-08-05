@@ -5,18 +5,40 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AuthService;
+use Piwigo\Auth\PasswordService;
+use Piwigo\Bootstrap\PageTail;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Request\ProfileActionRequest;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\AdminContext;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Location\LocBeginProfile;
 use Piwigo\Event\Location\LocEndProfile;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Lang\LangService;
+use Piwigo\Lang\Translator;
+use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -49,38 +71,38 @@ final class ProfileController implements ControllerInterface
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\FilterState $filterState,
-        private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
-        private readonly \Piwigo\Core\AdminContext $adminContext,
+        private readonly FilterState $filterState,
+        private readonly SectionContextRegistry $sectionContextRegistry,
+        private readonly AdminContext $adminContext,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly DeploymentPolicy $deploymentPolicy,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly ActivityService $activityService,
         private readonly UserService $userService,
-        private readonly \Piwigo\Auth\PasswordService $passwordService,
-        private readonly \Piwigo\Auth\AuthService $authService,
-        private readonly \Piwigo\Html\HtmlService $htmlService,
-        private readonly \Piwigo\Mail\MailService $mailService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Lang\Translator $translator,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly PasswordService $passwordService,
+        private readonly AuthService $authService,
+        private readonly HtmlService $htmlService,
+        private readonly MailService $mailService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly Translator $translator,
+        private readonly CurrentLogger $currentLogger,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $template = $this->currentTemplate->get();
 
         $this->accessControl->checkStatus(AccessLevel::Classic);
 
-        $profileAction = Request\ProfileActionRequest::fromGlobals();
+        $profileAction = ProfileActionRequest::fromGlobals();
 
         if ($profileAction->requiresCsrfCheck) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlService, $this->redirectService);
         }
 
@@ -103,7 +125,7 @@ final class ProfileController implements ControllerInterface
                 $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
             }
-            if (! array_key_exists($cookie_lang, \Piwigo\Lang\LangService::getLanguages())) {
+            if (! array_key_exists($cookie_lang, LangService::getLanguages())) {
                 $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
@@ -195,12 +217,12 @@ final class ProfileController implements ControllerInterface
             }
         }
 
-        new \Piwigo\Page\PageHeaderRenderer()
+        new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
 
         // Get list of languages
         $language_options = [];
-        foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
+        foreach (LangService::getLanguages() as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
 
@@ -223,7 +245,7 @@ final class ProfileController implements ControllerInterface
         $this->htmlService
             ->flushPageMessages();
         $template->parse('profile', false);
-        $body = \Piwigo\Bootstrap\PageTail::renderToString();
+        $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

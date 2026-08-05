@@ -2,7 +2,21 @@
 
 declare(strict_types=1);
 
+use Piwigo\Bootstrap\CoreDomainAccessor;
+use Piwigo\Bootstrap\ExtendedDomainAccessor;
+use Piwigo\Bootstrap\InfrastructureAccessor;
+use Piwigo\Bootstrap\PresentationAccessor;
+use Piwigo\Bootstrap\RequestBootstrap;
+use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Job\BatchUploadJob;
 use Piwigo\Job\GenerateDerivativeJob;
@@ -14,9 +28,14 @@ use Piwigo\Job\Handler\SendNotificationEmailHandler;
 use Piwigo\Job\RegenerateAllDerivativesJob;
 use Piwigo\Job\ReindexImagesJob;
 use Piwigo\Job\SendNotificationEmailJob;
+use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Transport + routing + handler-factory configuration for
@@ -52,58 +71,58 @@ return [
         // yet would break every job type's construction, not just this
         // one's.
         BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(
-            new \Piwigo\Core\Lang(
-                new \Piwigo\Lang\Translator(\Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-                \Piwigo\Core\Paths::fromRoot(dirname(__DIR__)),
-                new \Piwigo\Core\InstallationFlag(),
+            new Lang(
+                new Translator(RequestBootstrap::currentConfig()),
+                PresentationAccessor::htmlService(),
+                Paths::fromRoot(dirname(__DIR__)),
+                new InstallationFlag(),
             ),
-            \Piwigo\Bootstrap\PresentationAccessor::urlService(),
-            \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(),
-            \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(),
-            \Piwigo\PluginConfig\EventDispatcher::get(),
-            new \Piwigo\Config\ConfigService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Config\ConfigEntry::class), \Piwigo\PluginConfig\EventDispatcher::get(), new \Piwigo\Config\CurrentConfig()),
-            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(),
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(),
-            \Piwigo\Bootstrap\CoreDomainAccessor::imageService(),
-            \Piwigo\Bootstrap\RequestBootstrap::currentConfig(),
-            \Piwigo\Bootstrap\InfrastructureAccessor::wsContext(),
-            \Piwigo\Bootstrap\RequestBootstrap::currentUser()
+            PresentationAccessor::urlService(),
+            InfrastructureAccessor::currentLogger(),
+            InfrastructureAccessor::storageRegistry(),
+            EventDispatcher::get(),
+            new ConfigService(EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class), EventDispatcher::get(), new CurrentConfig()),
+            InfrastructureAccessor::entityManager(),
+            ExtendedDomainAccessor::activityService(),
+            ExtendedDomainAccessor::metadataService(),
+            CoreDomainAccessor::imageService(),
+            RequestBootstrap::currentConfig(),
+            InfrastructureAccessor::wsContext(),
+            RequestBootstrap::currentUser()
         ),
-        GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService(\Piwigo\Bootstrap\RequestBootstrap::currentConfig())),
-        RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService(\Piwigo\Bootstrap\RequestBootstrap::currentConfig())),
+        GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService(RequestBootstrap::currentConfig())),
+        RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService(RequestBootstrap::currentConfig())),
         ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(new MetadataService(
-            new \Piwigo\Core\Lang(
-                new \Piwigo\Lang\Translator(\Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-                \Piwigo\Core\Paths::fromRoot(dirname(__DIR__)),
-                new \Piwigo\Core\InstallationFlag(),
+            new Lang(
+                new Translator(RequestBootstrap::currentConfig()),
+                PresentationAccessor::htmlService(),
+                Paths::fromRoot(dirname(__DIR__)),
+                new InstallationFlag(),
             ),
-            new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
-            \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(),
-            \Piwigo\PluginConfig\EventDispatcher::get(),
-            \Piwigo\Bootstrap\RequestBootstrap::currentConfig(),
-            \Piwigo\Bootstrap\RequestBootstrap::currentUser(),
-            \Piwigo\Bootstrap\RequestBootstrap::sessionService(),
-            \Piwigo\Bootstrap\RequestBootstrap::filterState()
+            new MetadataRepository(EntityManagerFactory::build(DbConnection::build())),
+            InfrastructureAccessor::currentLogger(),
+            EventDispatcher::get(),
+            RequestBootstrap::currentConfig(),
+            RequestBootstrap::currentUser(),
+            RequestBootstrap::sessionService(),
+            RequestBootstrap::filterState()
         )),
         SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(new MailService(
-            new \Piwigo\Core\Lang(
-                new \Piwigo\Lang\Translator(\Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-                \Piwigo\Core\Paths::fromRoot(dirname(__DIR__)),
-                new \Piwigo\Core\InstallationFlag(),
+            new Lang(
+                new Translator(RequestBootstrap::currentConfig()),
+                PresentationAccessor::htmlService(),
+                Paths::fromRoot(dirname(__DIR__)),
+                new InstallationFlag(),
             ),
-            \Piwigo\Bootstrap\RequestBootstrap::currentConfig(),
-            new \Piwigo\Config\DeploymentPolicy(),
-            new \Piwigo\Core\PageState(),
-            \Piwigo\Core\Paths::fromRoot(dirname(__DIR__)),
-            new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Session\SessionEntity::class), \Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
-            new \Piwigo\Lang\Translator(\Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
-            \Piwigo\PluginConfig\EventDispatcher::get(),
-            new \Piwigo\Users\CurrentUser(\Piwigo\Bootstrap\RequestBootstrap::currentConfig()),
-            \Piwigo\Bootstrap\PresentationAccessor::urlService(),
+            RequestBootstrap::currentConfig(),
+            new DeploymentPolicy(),
+            new PageState(),
+            Paths::fromRoot(dirname(__DIR__)),
+            new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), RequestBootstrap::currentConfig()),
+            new Translator(RequestBootstrap::currentConfig()),
+            EventDispatcher::get(),
+            new CurrentUser(RequestBootstrap::currentConfig()),
+            PresentationAccessor::urlService(),
         )),
     ],
 ];

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Upload\UploadService;
@@ -23,21 +24,24 @@ use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Picture\WsImagesUploadCompleted;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImagePathHelper;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
@@ -51,6 +55,9 @@ use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
+use Piwigo\Ws\Request\ChunkedUploadRequest;
+use Piwigo\Ws\Request\TagListRequest;
+use Piwigo\Ws\Request\UploadedFileRequest;
 
 /**
  * P23 batch 8e-7: relocated from include/ws_functions/pwg.images.php, the
@@ -84,7 +91,7 @@ final class PwgImages
         private readonly CurrentConfig $currentConfig,
         private readonly UrlServiceInterface $urlService,
         private readonly EventDispatcher $eventDispatcher,
-        private readonly \Doctrine\ORM\EntityManagerInterface $entityManager,
+        private readonly EntityManagerInterface $entityManager,
         private readonly Lang $lang,
         private readonly CurrentLogger $currentLogger,
         private readonly CurrentUser $currentUser,
@@ -1150,7 +1157,7 @@ final class PwgImages
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
-        if (! \Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
+        if (! FilesystemHelper::mkgetdir($upload_dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
 
@@ -1460,7 +1467,7 @@ final class PwgImages
     {
         $logger = $this->currentLogger->get();
 
-        $uploaded_image = \Piwigo\Ws\Request\UploadedFileRequest::fromFilesKey('image');
+        $uploaded_image = UploadedFileRequest::fromFilesKey('image');
         if (! $uploaded_image->present) {
             return new PwgError(405, 'The image (file) is missing');
         }
@@ -1586,7 +1593,7 @@ final class PwgImages
     {
         $format_ext = null;
 
-        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -1612,12 +1619,12 @@ final class PwgImages
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
-        if (! \Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
+        if (! FilesystemHelper::mkgetdir($upload_dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
 
-        $chunkedUploadRequest = \Piwigo\Ws\Request\ChunkedUploadRequest::fromGlobals();
-        $uploaded_file = \Piwigo\Ws\Request\UploadedFileRequest::fromFilesKey('file');
+        $chunkedUploadRequest = ChunkedUploadRequest::fromGlobals();
+        $uploaded_file = UploadedFileRequest::fromFilesKey('file');
 
         // Get a file name
         if ($chunkedUploadRequest->requestNamePresent) {
@@ -1797,13 +1804,13 @@ final class PwgImages
         $chunkfile_path = sprintf($chunkfile_path_pattern, $params['chunk'] + 1, $params['chunks']);
 
         // create the upload directory tree if not exists
-        if (! \Piwigo\Core\FilesystemHelper::mkgetdir(dirname($chunkfile_path), \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
+        if (! FilesystemHelper::mkgetdir(dirname($chunkfile_path), FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
-        \Piwigo\Core\FilesystemHelper::secureDirectory(dirname($chunkfile_path));
+        FilesystemHelper::secureDirectory(dirname($chunkfile_path));
 
         // move uploaded file
-        $uploaded_chunk_tmp_name = \Piwigo\Ws\Request\UploadedFileRequest::fromFilesKey('file')->tmpName;
+        $uploaded_chunk_tmp_name = UploadedFileRequest::fromFilesKey('file')->tmpName;
         if ($uploaded_chunk_tmp_name === null) {
             return new PwgError(500, 'missing uploaded chunk file');
         }
@@ -2107,7 +2114,7 @@ final class PwgImages
         $unique_filenames_db = [];
 
         foreach ($this->imageService->getAllIdsAndFiles() as $row) {
-            $filename_wo_ext = \Piwigo\Core\StringHelper::getFilenameWoExtension($row['file']);
+            $filename_wo_ext = StringHelper::getFilenameWoExtension($row['file']);
             @$unique_filenames_db[$filename_wo_ext][] = $row['id'];
         }
 
@@ -2191,7 +2198,7 @@ final class PwgImages
      */
     public function formatsDelete(array $params, PwgServer $service): PwgError|bool
     {
-        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -2242,11 +2249,11 @@ final class PwgImages
             }
 
             $files = [];
-            $image_path = \Piwigo\Image\ImagePathHelper::getElementPath($image_row, $urlService);
+            $image_path = ImagePathHelper::getElementPath($image_row, $urlService);
 
             if (isset($formats_of[$image_row['id']])) {
                 foreach ($formats_of[$image_row['id']] as $format_ext) {
-                    $files[] = \Piwigo\Image\ImagePathHelper::originalToFormat($image_path, $format_ext);
+                    $files[] = ImagePathHelper::originalToFormat($image_path, $format_ext);
                 }
             }
 
@@ -2292,7 +2299,7 @@ final class PwgImages
         // getElementPath()), rather than handing the bare DB value straight
         // to md5_file() below, which silently fails (false, never equal to
         // any real hash) for every non-remote photo.
-        $path = \Piwigo\Image\ImagePathHelper::getElementPath(
+        $path = ImagePathHelper::getElementPath(
             [
                 'path' => $path,
             ],
@@ -2344,7 +2351,7 @@ final class PwgImages
     public function setInfo(array $params, PwgServer $service): ?PwgError
     {
 
-        if (isset($params['pwg_token']) and new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
+        if (isset($params['pwg_token']) and new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -2463,7 +2470,7 @@ final class PwgImages
         // Temporary use of the batch manager's unit mode,
         // not to be used by an external application,
         // as this code bellow will be deleted when a tag selector is added.
-        $tagListRequest = \Piwigo\Ws\Request\TagListRequest::fromGlobals();
+        $tagListRequest = TagListRequest::fromGlobals();
         if ($tagListRequest->present) {
             if (isset($params['tag_ids'])) {
                 return new PwgError(WsError::INVALID_PARAM, 'Do not use tag_list and tag_ids at the same time.');
@@ -2497,7 +2504,7 @@ final class PwgImages
      */
     public function delete(array $params, PwgServer $service): PwgError|int
     {
-        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -2578,7 +2585,7 @@ final class PwgImages
      */
     public function uploadCompleted(array $params, PwgServer $service): PwgError|array
     {
-        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -2643,7 +2650,7 @@ final class PwgImages
      */
     public function setMd5sum(array $params, PwgServer $service): PwgError|array
     {
-        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -2673,7 +2680,7 @@ final class PwgImages
      */
     public function syncMetadata(array $params, PwgServer $service): PwgError|array
     {
-        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -2729,7 +2736,7 @@ final class PwgImages
      */
     public function deleteOrphans(array $params, PwgServer $service): PwgError|array
     {
-        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -2758,7 +2765,7 @@ final class PwgImages
      */
     public function setCategory(array $params, PwgServer $service): ?PwgError
     {
-        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 

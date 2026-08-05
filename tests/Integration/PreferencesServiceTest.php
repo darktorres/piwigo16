@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\PluginConfig\EventDispatcher;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
@@ -22,7 +27,7 @@ final class PreferencesServiceTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -34,21 +39,21 @@ final class PreferencesServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->service = new PreferencesService(new UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\PluginConfig\EventDispatcher::get(), $currentConfig), \Piwigo\Users\CurrentUser::current());
+        $this->service = new PreferencesService(new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcher::get(), $currentConfig), CurrentUser::current());
 
         CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'preferences' => []]));
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET preferences = NULL WHERE user_id = 1');

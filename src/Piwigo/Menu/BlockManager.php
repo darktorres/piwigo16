@@ -15,7 +15,8 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Event\BlockManager\BlockManagerApply;
 use Piwigo\Event\BlockManager\BlockManagerPrepareDisplay;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
-use Piwigo\Template\Template;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 
 /**
  * Manages a set of RegisteredBlock and DisplayBlock.
@@ -37,8 +38,8 @@ final class BlockManager
      */
     public function __construct(
         private $id,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly CurrentConfig $currentConfig,
     ) {}
 

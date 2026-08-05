@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
+use RuntimeException;
+
 /**
  * P23 Stage 1e: replaces the 17 real die() calls across
  * ImageGd.php/PwgImage.php/ImageExtImagick.php/Admin\Upload\UploadService.php
@@ -20,4 +22,4 @@ namespace Piwigo\Admin\Image;
  * Both are strict improvements over die(), which produced neither logging
  * nor Sentry visibility and skipped every pending `finally` block.
  */
-final class ImageProcessingException extends \RuntimeException {}
+final class ImageProcessingException extends RuntimeException {}

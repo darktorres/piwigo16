@@ -2,6 +2,19 @@
 
 declare(strict_types=1);
 
+use Piwigo\Http\RequestFactory;
+use Piwigo\Http\ResponseEmitter;
+use Piwigo\Http\ResponseFactory;
+use Piwigo\Http\MiddlewarePipeline;
+use Piwigo\Http\BaselineSecurityHeaders;
+use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
+use Piwigo\Http\Middleware\SecurityHeadersMiddleware;
+use Piwigo\Http\Middleware\RoutingMiddleware;
+use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
+use Piwigo\Routing\Router;
+use Piwigo\Routing\RouteResult;
+use Piwigo\Bootstrap\RequestPipeline;
+
 // P6: real structural rules for src/Piwigo/, replacing the P0 placeholder.
 
 arch()->expect('Piwigo')->toUseStrictTypes();
@@ -2294,18 +2307,18 @@ test('RequestFactory, ResponseEmitter, and the P9 middleware/pipeline/routing cl
     // Kernel::reset(), which a worker loop will call between requests once
     // that mode exists.
     foreach ([
-        Piwigo\Http\RequestFactory::class,
-        Piwigo\Http\ResponseEmitter::class,
-        Piwigo\Http\ResponseFactory::class,
-        Piwigo\Http\MiddlewarePipeline::class,
-        Piwigo\Http\BaselineSecurityHeaders::class,
-        Piwigo\Http\Middleware\ExceptionHandlerMiddleware::class,
-        Piwigo\Http\Middleware\SecurityHeadersMiddleware::class,
-        Piwigo\Http\Middleware\RoutingMiddleware::class,
-        Piwigo\Http\Middleware\ControllerInvokerMiddleware::class,
-        Piwigo\Routing\Router::class,
-        Piwigo\Routing\RouteResult::class,
-        Piwigo\Bootstrap\RequestPipeline::class,
+        RequestFactory::class,
+        ResponseEmitter::class,
+        ResponseFactory::class,
+        MiddlewarePipeline::class,
+        BaselineSecurityHeaders::class,
+        ExceptionHandlerMiddleware::class,
+        SecurityHeadersMiddleware::class,
+        RoutingMiddleware::class,
+        ControllerInvokerMiddleware::class,
+        Router::class,
+        RouteResult::class,
+        RequestPipeline::class,
     ] as $fqcn) {
         $mutableProperties = array_filter(
             new ReflectionClass($fqcn)->getProperties(),

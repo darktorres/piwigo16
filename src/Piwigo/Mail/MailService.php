@@ -4,13 +4,32 @@ declare(strict_types=1);
 
 namespace Piwigo\Mail;
 
+use Exception;
+use InvalidArgumentException;
+use LogicException;
+use Override;
+use Pelago\Emogrifier\CssInliner;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AuthRepository;
+use Piwigo\Auth\AuthService;
+use Piwigo\Auth\CookieService;
+use Piwigo\Auth\PasswordRepository;
+use Piwigo\Auth\PasswordService;
+use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageState;
@@ -18,15 +37,21 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Event\Mail\BeforeParseMailTemplate;
 use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Event\Mail\RenderLostPasswordMailContent;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
+use Piwigo\Mail\Projection\MailRecipient;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mailer\Transport;
@@ -128,7 +153,7 @@ final class MailService implements MailerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly ?WebmasterMailProviderInterface $webmasterMailProvider = null,
         private readonly ?MailRecipientRepositoryInterface $mailRecipientRepo = null,
-        private readonly ?\Piwigo\Auth\AuthService $authService = null,
+        private readonly ?AuthService $authService = null,
     ) {}
 
     /**
@@ -142,11 +167,11 @@ final class MailService implements MailerInterface
      * (see this class's git history) and for authService()/userService()'s
      * own real-cycle-avoidance reasoning below.
      */
-    private function accessControl(): \Piwigo\Auth\AccessControl
+    private function accessControl(): AccessControl
     {
-        $accessControl = \Piwigo\Core\Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
-        if (! $accessControl instanceof \Piwigo\Auth\AccessControl) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Auth\AccessControl::class);
+        $accessControl = Kernel::container()->get(AccessControl::class);
+        if (! $accessControl instanceof AccessControl) {
+            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
 
         return $accessControl;
@@ -177,9 +202,9 @@ final class MailService implements MailerInterface
      */
     private function adminContext(): AdminContext
     {
-        $adminContext = \Piwigo\Core\Kernel::container()->get(AdminContext::class);
+        $adminContext = Kernel::container()->get(AdminContext::class);
         if (! $adminContext instanceof AdminContext) {
-            throw new \LogicException('Container returned an unexpected type for ' . AdminContext::class);
+            throw new LogicException('Container returned an unexpected type for ' . AdminContext::class);
         }
 
         return $adminContext;
@@ -187,9 +212,9 @@ final class MailService implements MailerInterface
 
     private function errorCollector(): ErrorCollector
     {
-        $errorCollector = \Piwigo\Core\Kernel::container()->get(ErrorCollector::class);
+        $errorCollector = Kernel::container()->get(ErrorCollector::class);
         if (! $errorCollector instanceof ErrorCollector) {
-            throw new \LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
+            throw new LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
         }
 
         return $errorCollector;
@@ -205,11 +230,11 @@ final class MailService implements MailerInterface
      * (singleton/service-locator elimination campaign, Phase 11 sub-phase
      * 11E).
      */
-    private function htmlRenderer(): \Piwigo\Core\HtmlRenderingInterface
+    private function htmlRenderer(): HtmlRenderingInterface
     {
-        $htmlRenderer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\HtmlRenderingInterface::class);
-        if (! $htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\HtmlRenderingInterface::class);
+        $htmlRenderer = Kernel::container()->get(HtmlRenderingInterface::class);
+        if (! $htmlRenderer instanceof HtmlRenderingInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . HtmlRenderingInterface::class);
         }
 
         return $htmlRenderer;
@@ -217,9 +242,9 @@ final class MailService implements MailerInterface
 
     private function processCache(): ProcessCache
     {
-        $processCache = \Piwigo\Core\Kernel::container()->get(ProcessCache::class);
+        $processCache = Kernel::container()->get(ProcessCache::class);
         if (! $processCache instanceof ProcessCache) {
-            throw new \LogicException('Container returned an unexpected type for ' . ProcessCache::class);
+            throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
         }
 
         return $processCache;
@@ -232,11 +257,11 @@ final class MailService implements MailerInterface
      * collaborators (singleton/service-locator elimination campaign,
      * Phase 11 sub-phase 11G).
      */
-    private function installationFlag(): \Piwigo\Core\InstallationFlag
+    private function installationFlag(): InstallationFlag
     {
-        $installationFlag = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\InstallationFlag::class);
-        if (! $installationFlag instanceof \Piwigo\Core\InstallationFlag) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\InstallationFlag::class);
+        $installationFlag = Kernel::container()->get(InstallationFlag::class);
+        if (! $installationFlag instanceof InstallationFlag) {
+            throw new LogicException('Container returned an unexpected type for ' . InstallationFlag::class);
         }
 
         return $installationFlag;
@@ -244,9 +269,9 @@ final class MailService implements MailerInterface
 
     private function currentConfigService(): CurrentConfigService
     {
-        $currentConfigService = \Piwigo\Core\Kernel::container()->get(CurrentConfigService::class);
+        $currentConfigService = Kernel::container()->get(CurrentConfigService::class);
         if (! $currentConfigService instanceof CurrentConfigService) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfigService::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfigService::class);
         }
 
         return $currentConfigService;
@@ -255,7 +280,7 @@ final class MailService implements MailerInterface
     private function webmasterMailAddress(): string
     {
         $provider = $this->webmasterMailProvider
-            ?? new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), $this->eventDispatcher, $this->currentConfig);
+            ?? new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig);
 
         return $provider->getWebmasterMailAddress();
     }
@@ -268,7 +293,7 @@ final class MailService implements MailerInterface
     private function recipientRepo(): MailRecipientRepositoryInterface
     {
         return $this->mailRecipientRepo
-            ?? new MailRecipientRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()));
+            ?? new MailRecipientRepository(EntityManagerFactory::build(DbConnection::build()));
     }
 
     /**
@@ -280,16 +305,16 @@ final class MailService implements MailerInterface
      * is just the usual high-caller-count lazy-default, not a circular-
      * dependency workaround.
      */
-    private function authService(): \Piwigo\Auth\AuthService
+    private function authService(): AuthService
     {
         return $this->authService
-            ?? new \Piwigo\Auth\AuthService(
-                new \Piwigo\Auth\AuthRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())),
-                new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)),
+            ?? new AuthService(
+                new AuthRepository(EntityManagerFactory::build(DbConnection::build())),
+                new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)),
                 $this->htmlRenderer(),
-                new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())), $this->deploymentPolicy),
-                new \Piwigo\Auth\CookieService(),
-                \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
+                new PasswordService(new PasswordRepository(EntityManagerFactory::build(DbConnection::build())), $this->deploymentPolicy),
+                new CookieService(),
+                EntityManagerFactory::build(DbConnection::build())->getRepository(UserFailedLoginEntity::class),
                 $this->sessionService,
                 $this->eventDispatcher,
                 $this->pageState,
@@ -309,16 +334,16 @@ final class MailService implements MailerInterface
      * $mailer, not $this) -- was repeated verbatim at 2 call sites (Phase
      * 1k DI-chain audit).
      */
-    private function userService(): \Piwigo\Users\UserService
+    private function userService(): UserService
     {
-        return new \Piwigo\Users\UserService(
+        return new UserService(
             $this->lang,
-            new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), $this->eventDispatcher, $this->currentConfig),
-            \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class),
+            new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig),
+            EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class),
             new self($this->lang, $this->currentConfig, $this->deploymentPolicy, $this->pageState, $this->paths, $this->sessionService, $this->translator, $this->eventDispatcher, $this->currentUser, $this->urlService),
-            new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)),
+            new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)),
             $this->htmlRenderer(),
-            \Piwigo\Db\DbConnection::build(),
+            DbConnection::build(),
             $this->sessionService,
             $this->eventDispatcher,
             $this->deploymentPolicy,
@@ -342,7 +367,7 @@ final class MailService implements MailerInterface
     private array $switchLangStack = [];
 
     /**
-     * @var array<string, array{lang_info: array<string, string|bool>, lang: array<string, string|array<int, string>>, translator: \Piwigo\Lang\Translator}>
+     * @var array<string, array{lang_info: array<string, string|bool>, lang: array<string, string|array<int, string>>, translator: Translator}>
      */
     private array $switchLangLanguages = [];
 
@@ -439,7 +464,7 @@ final class MailService implements MailerInterface
     {
         if (is_array($input)) {
             if (! isset($input['email']) || ! is_string($input['email'])) {
-                throw new \InvalidArgumentException(__METHOD__ . '(): array input must contain a string "email" key');
+                throw new InvalidArgumentException(__METHOD__ . '(): array input must contain a string "email" key');
             }
 
             return [
@@ -661,7 +686,7 @@ final class MailService implements MailerInterface
      * @param string|list<array{key_args: array<int, mixed>}> $content
      * @param bool $sendTechnicalDetails send user IP and browser
      */
-    #[\Override]
+    #[Override]
     public function mailNotificationAdmins(string|array $subject, string|array $content, bool $sendTechnicalDetails = true, int|string|null $groupId = null): bool
     {
         if ($subject === '' || $content === '') {
@@ -747,7 +772,7 @@ final class MailService implements MailerInterface
         // getCleanRecipientsList()'s own docblock) -- converted back to
         // array form here, at this one boundary, rather than widening that
         // shared contract to also understand a real MailRecipient object.
-        $adminRows = array_map(static fn (\Piwigo\Mail\Projection\MailRecipient $r): array => $r->toArray(), $admins);
+        $adminRows = array_map(static fn (MailRecipient $r): array => $r->toArray(), $admins);
 
         $this->switchLangTo($this->userService()->getDefaultLanguage());
         $return = $this->mail($adminRows, $args, $tpl);
@@ -862,7 +887,7 @@ final class MailService implements MailerInterface
      *        auth_key: authentication key to add on the footer link
      * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl custom content template
      */
-    #[\Override]
+    #[Override]
     public function mail(string|array $to, array $args = [], array $tpl = []): bool
     {
         if (self::emptyValue($to) && (! isset($args['Cc']) || self::emptyValue($args['Cc'])) && (! isset($args['Bcc']) || self::emptyValue($args['Bcc']))) {
@@ -1001,7 +1026,7 @@ final class MailService implements MailerInterface
                         'GALLERY_TITLE' => $this->currentConfig->galleryTitle(),
                         'VERSION' => $this->currentConfig->showVersion() ? AppInfo::VERSION : '',
                         'PHPWG_URL' => AppInfo::URL,
-                        'CONTENT_ENCODING' => \Piwigo\Core\CharsetHelper::getPwgCharset(),
+                        'CONTENT_ENCODING' => CharsetHelper::getPwgCharset(),
                         'CONTACT_MAIL' => $confMail['email_webmaster'],
                     ]
                 );
@@ -1181,8 +1206,8 @@ final class MailService implements MailerInterface
         }
 
         try {
-            return \Pelago\Emogrifier\CssInliner::fromHtml($content)->inlineCss()->render();
-        } catch (\Exception) {
+            return CssInliner::fromHtml($content)->inlineCss()->render();
+        } catch (Exception) {
             return $content;
         }
     }
@@ -1200,7 +1225,7 @@ final class MailService implements MailerInterface
         $dataLocation = $this->currentConfig->dataLocation();
 
         $dir = $this->paths->root . $dataLocation . 'tmp';
-        if (\Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
+        if (FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             $username = $this->currentUser->get()
                 ->username;
             $langCode = $this->lang->langInfo()['code'] ?? null;

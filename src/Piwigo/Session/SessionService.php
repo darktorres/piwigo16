@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Session;
 
+use InvalidArgumentException;
+use LogicException;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\EntityManagerFactory;
 
 final class SessionService
@@ -30,10 +33,10 @@ final class SessionService
      */
     private function apiKeyRequestFlag(): ApiKeyRequestFlag
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $apiKeyRequestFlag = \Piwigo\Core\Kernel::container()->get(ApiKeyRequestFlag::class);
+        if (Kernel::isBooted()) {
+            $apiKeyRequestFlag = Kernel::container()->get(ApiKeyRequestFlag::class);
             if (! $apiKeyRequestFlag instanceof ApiKeyRequestFlag) {
-                throw new \LogicException('Container returned an unexpected type for ' . ApiKeyRequestFlag::class);
+                throw new LogicException('Container returned an unexpected type for ' . ApiKeyRequestFlag::class);
             }
 
             return $apiKeyRequestFlag;
@@ -60,10 +63,10 @@ final class SessionService
      */
     public static function get(): self
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $sessionService = \Piwigo\Core\Kernel::container()->get(self::class);
+        if (Kernel::isBooted()) {
+            $sessionService = Kernel::container()->get(self::class);
             if (! $sessionService instanceof self) {
-                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+                throw new LogicException('Container returned an unexpected type for ' . self::class);
             }
 
             return $sessionService;
@@ -79,7 +82,7 @@ final class SessionService
     public function generateKey(int $size): string
     {
         if ($size < 1) {
-            throw new \InvalidArgumentException('generateKey(): $size must be at least 1');
+            throw new InvalidArgumentException('generateKey(): $size must be at least 1');
         }
         $bytes = random_bytes($size + 10);
 

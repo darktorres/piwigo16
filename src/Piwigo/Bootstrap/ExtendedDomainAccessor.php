@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use LogicException;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Core\Kernel;
 use Piwigo\Metadata\MetadataService;
@@ -33,7 +34,7 @@ final class ExtendedDomainAccessor
     {
         $service = Kernel::container()->get(ActivityService::class);
         if (! $service instanceof ActivityService) {
-            throw new \LogicException('Container returned an unexpected type for ' . ActivityService::class);
+            throw new LogicException('Container returned an unexpected type for ' . ActivityService::class);
         }
         return $service;
     }
@@ -42,7 +43,7 @@ final class ExtendedDomainAccessor
     {
         $service = Kernel::container()->get(MetadataService::class);
         if (! $service instanceof MetadataService) {
-            throw new \LogicException('Container returned an unexpected type for ' . MetadataService::class);
+            throw new LogicException('Container returned an unexpected type for ' . MetadataService::class);
         }
         return $service;
     }

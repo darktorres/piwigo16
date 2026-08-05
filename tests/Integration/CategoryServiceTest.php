@@ -4,6 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
+    use Override;
+    use LogicException;
+    use RuntimeException;
+    use Piwigo\Core\Kernel;
+    use Piwigo\Core\FilterState;
+    use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Core\Lang;
+    use Piwigo\Group\GroupEntity;
+    use Piwigo\Lang\Translator;
+    use Error;
+    use Piwigo\Tests\Support\UrlServiceTestFactory;
+    use Piwigo\Site\SiteEntity;
+    use Exception;
     use Doctrine\DBAL\Connection;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\CategoryService;
@@ -20,16 +33,12 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\Tables;
     use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
     use Piwigo\Event\Site\DeleteSite;
-    use Piwigo\Group\GroupRepository;
-    use Piwigo\Html\HtmlService;
-    use Piwigo\Image\DerivativeImage;
     use Piwigo\Image\ImageStdParams;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
-    use Piwigo\Url\UrlService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Users\User;
 
@@ -44,7 +53,7 @@ final class CategoryServiceFakeActivityLogger implements ActivityLoggerInterface
     /** @var list<array{object: string, objectId: int|string|array<int, int|string>, action: string, details: array<string, mixed>}> */
     public array $calls = [];
 
-    #[\Override]
+    #[Override]
     public function record(string $object, int|string|array $objectId, string $action, array $details = []): void
     {
         $this->calls[] = [
@@ -66,13 +75,13 @@ final class CategoryServiceFakeActivityLogger implements ActivityLoggerInterface
  */
 final class CategoryServiceFakeHtmlRendererDeniesAccess implements HtmlRenderingInterface
 {
-    #[\Override]
+    #[Override]
     public function getCatDisplayName(array $catInformations, ?string $url = ''): string
     {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 
-    #[\Override]
+    #[Override]
     public function getCatDisplayNameCache(
         string $uppercats,
         ?string $url = '',
@@ -80,79 +89,79 @@ final class CategoryServiceFakeHtmlRendererDeniesAccess implements HtmlRendering
         ?string $linkClass = null,
         ?string $authKey = null,
     ): string {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 
-    #[\Override]
+    #[Override]
     public function nameCompare(array $a, array $b): int
     {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 
-    #[\Override]
+    #[Override]
     public function tagAlphaCompare(array $a, array $b): int
     {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 
-    #[\Override]
+    #[Override]
     public function accessDenied(RedirectServiceInterface $redirectService): never
     {
-        throw new \RuntimeException('CATEGORY_SERVICE_ACCESS_DENIED_MARKER');
+        throw new RuntimeException('CATEGORY_SERVICE_ACCESS_DENIED_MARKER');
     }
 
-    #[\Override]
+    #[Override]
     public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
     {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 
-    #[\Override]
+    #[Override]
     public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
     {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 
-    #[\Override]
+    #[Override]
     public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
     {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 
-    #[\Override]
+    #[Override]
     public function getTagsContentTitle(array $tags): string
     {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 
-    #[\Override]
+    #[Override]
     public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string
     {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 
-    #[\Override]
+    #[Override]
     public function setStatusHeader(int $code, string $text = ''): void
     {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 
-    #[\Override]
+    #[Override]
     public function renderElementName(array $info): string
     {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 
-    #[\Override]
+    #[Override]
     public function renderElementDescription(array $info, string $param = ''): string
     {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 
-    #[\Override]
+    #[Override]
     public function getThumbnailTitle(array $info, string $title, string $comment = ''): string
     {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 }
 
@@ -164,22 +173,22 @@ final class CategoryServiceFakeHtmlRendererDeniesAccess implements HtmlRendering
  */
 final class CategoryServiceFakeRedirectServiceNeverCalled implements RedirectServiceInterface
 {
-    #[\Override]
+    #[Override]
     public function redirectHttp(string $url, int $status = 302): never
     {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 
-    #[\Override]
+    #[Override]
     public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
     {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 
-    #[\Override]
+    #[Override]
     public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
     {
-        throw new \LogicException('not used by checkRestrictions()');
+        throw new LogicException('not used by checkRestrictions()');
     }
 }
 
@@ -198,7 +207,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -210,28 +219,28 @@ final class CategoryServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
-        if (! $filterState instanceof \Piwigo\Core\FilterState) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        $filterState = Kernel::container()->get(FilterState::class);
+        if (! $filterState instanceof FilterState) {
+            throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
 
         $this->conn = DbConnection::build();
-        $this->repo = new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig);
+        $this->repo = new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig);
         $this->service = new CategoryService(
-            \Piwigo\Core\Lang::current(),
+            Lang::current(),
             $this->repo,
-            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig), \Piwigo\Users\CurrentUser::current(), $filterState),
-            \Piwigo\Config\CurrentConfig::current(),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState),
+            CurrentConfig::current(),
             EventDispatcher::get(),
-            \Piwigo\Lang\Translator::get()
+            Translator::get()
         );
 
         CurrentUser::current()->set(User::fromUserArray(['id' => 1]));
@@ -245,11 +254,11 @@ final class CategoryServiceTest extends IntegrationTestCase
         // explicit wiring needed here anymore, same reasoning as
         // NotificationByMailSenderTest's own identical setUp.
         // ImageStdParams::load_from_db() itself needs CurrentConfigService.
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
         ImageStdParams::current()->load_from_db();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public'");
@@ -541,7 +550,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // static one.
         EventDispatcher::get()->addEventHandler(GetCategoryPreferredImageOrders::class, static fn (): string => 'not-an-array');
 
-        $this->expectException(\Error::class);
+        $this->expectException(Error::class);
         $this->expectExceptionMessage('must return an instance of');
 
         try {
@@ -674,10 +683,10 @@ final class CategoryServiceTest extends IntegrationTestCase
     {
         CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'forbidden_categories' => '2,5']));
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('CATEGORY_SERVICE_ACCESS_DENIED_MARKER');
 
-        $this->service->checkRestrictions(2, new CategoryServiceFakeHtmlRendererDeniesAccess(), new CategoryServiceFakeRedirectServiceNeverCalled(), \Piwigo\Users\CurrentUser::current());
+        $this->service->checkRestrictions(2, new CategoryServiceFakeHtmlRendererDeniesAccess(), new CategoryServiceFakeRedirectServiceNeverCalled(), CurrentUser::current());
     }
 
     public function test_get_subcat_ids_warns_and_skips_a_non_numeric_id(): void
@@ -710,7 +719,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // needs the ancestor present to correctly nest category 2 under
         // it (LEVEL-based <ul> nesting), it just renders a bare link with
         // no href via its own isset($cat.url) guard.
-        $cats = $this->service->getRelatedCategoriesMenuWithUrls([4], \Piwigo\Tests\Support\UrlServiceTestFactory::build());
+        $cats = $this->service->getRelatedCategoriesMenuWithUrls([4], UrlServiceTestFactory::build());
 
         $ids = array_map(static fn (array $c): mixed => $c['id'], $cats);
         self::assertContains(1, $ids);
@@ -729,7 +738,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_related_categories_menu_with_urls_merges_combined_categories_into_the_url(): void
     {
-        $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $urlService = UrlServiceTestFactory::build();
         $priorCat = ['id' => 99, 'name' => 'Prior Combined Category', 'permalink' => null];
         $pageCategory = ['id' => 1, 'name' => 'Sample Album', 'permalink' => null];
 
@@ -763,9 +772,9 @@ final class CategoryServiceTest extends IntegrationTestCase
     public function test_delete_categories_delete_orphans_mode_preserves_an_image_still_linked_elsewhere(): void
     {
         $activityLogger = new CategoryServiceFakeActivityLogger();
-        $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $urlService = UrlServiceTestFactory::build();
 
-        $result = $this->service->createVirtualCategory('Orphan Diff Temp', $activityLogger, \Piwigo\Users\CurrentUser::current());
+        $result = $this->service->createVirtualCategory('Orphan Diff Temp', $activityLogger, CurrentUser::current());
         $tempIdRaw = $result['id'] ?? null;
         self::assertTrue(is_numeric($tempIdRaw));
         $tempId = (int) $tempIdRaw;
@@ -776,7 +785,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // image.
         $this->conn->executeStatement("INSERT INTO " . Tables::imageCategory() . " (image_id, category_id) VALUES (1, {$tempId})");
 
-        $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), EventDispatcher::get(), 'delete_orphans');
+        $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcher::get(), 'delete_orphans');
 
         self::assertNull($this->repo->findById($tempId));
         $stillLinked = $this->conn->createQueryBuilder()
@@ -797,7 +806,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // this registers the SAME listener shape RequestBootstrap.php
         // itself registers in production, to prove the wiring (not just
         // the individual pieces) actually works end to end.
-        $siteRepo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Site\SiteEntity::class);
+        $siteRepo = EntityManagerFactory::build($this->conn)->getRepository(SiteEntity::class);
         $siteUrl = 'p17-test-delete-site-' . bin2hex(random_bytes(4));
         $siteRepo->insert($siteUrl);
         // lastInsertId() isn't reliable straight after an ORM persist()+
@@ -814,7 +823,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         self::assertTrue(is_numeric($rawSiteId));
         $siteId = (int) $rawSiteId;
 
-        $categoryId = $this->service->createVirtualCategory('Site Delete Temp', new CategoryServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current())['id'] ?? null;
+        $categoryId = $this->service->createVirtualCategory('Site Delete Temp', new CategoryServiceFakeActivityLogger(), CurrentUser::current())['id'] ?? null;
         self::assertTrue(is_numeric($categoryId));
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = ? WHERE id = ?', [$siteId, $categoryId]);
 
@@ -824,7 +833,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         EventDispatcher::get()->addTypedHandler(DeleteSite::class, $handler);
 
         try {
-            $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), EventDispatcher::get());
+            $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcher::get());
 
             self::assertNull($this->repo->findById((int) $categoryId));
             self::assertNull($siteRepo->findGalleriesUrlById($siteId));
@@ -1058,15 +1067,15 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_category_representant_properties_throws_for_a_missing_image(): void
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionMessage('getCategoryRepresentantProperties(): image 999999 does not exist (stale representative_picture_id?)');
 
-        $this->service->getCategoryRepresentantProperties(999999, \Piwigo\Tests\Support\UrlServiceTestFactory::build());
+        $this->service->getCategoryRepresentantProperties(999999, UrlServiceTestFactory::build());
     }
 
     public function test_get_category_representant_properties_returns_a_thumb_url_when_size_is_null(): void
     {
-        $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $urlService = UrlServiceTestFactory::build();
 
         $props = $this->service->getCategoryRepresentantProperties(1, $urlService);
 
@@ -1080,7 +1089,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = 1 WHERE id = 1');
 
         try {
-            $this->service->updatePath(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Site\SiteEntity::class));
+            $this->service->updatePath(EntityManagerFactory::build($this->conn)->getRepository(SiteEntity::class));
 
             $path = $this->conn->createQueryBuilder()
                 ->select('path')
@@ -1106,7 +1115,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         PageState::current()->reset();
         $activityLogger = new CategoryServiceFakeActivityLogger();
 
-        $this->service->moveCategories([1], $activityLogger, \Piwigo\Core\PageState::current(), 2);
+        $this->service->moveCategories([1], $activityLogger, PageState::current(), 2);
 
         self::assertContains('You cannot move an album in its own sub album', PageState::current()->errors);
         // the move must not have actually happened.
@@ -1121,7 +1130,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_create_virtual_category_returns_an_error_when_the_parent_does_not_exist(): void
     {
-        $result = $this->service->createVirtualCategory('Orphan Parent Test', new CategoryServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current(), 999999);
+        $result = $this->service->createVirtualCategory('Orphan Parent Test', new CategoryServiceFakeActivityLogger(), CurrentUser::current(), 999999);
 
         self::assertSame(['error' => 'The parent album does not exist'], $result);
     }
@@ -1136,7 +1145,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET visible = {$falseLiteral} WHERE id = 1");
 
         try {
-            $result = $this->service->createVirtualCategory('Invisible Child Test', new CategoryServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current(), 1);
+            $result = $this->service->createVirtualCategory('Invisible Child Test', new CategoryServiceFakeActivityLogger(), CurrentUser::current(), 1);
             $newIdRaw = $result['id'] ?? null;
             self::assertTrue(is_numeric($newIdRaw));
             $newId = (int) $newIdRaw;
@@ -1162,7 +1171,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->conn->executeStatement('INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (3, 1)');
 
         try {
-            $result = $this->service->createVirtualCategory('Inherited Child Test', new CategoryServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current(), 1, ['inherit' => true]);
+            $result = $this->service->createVirtualCategory('Inherited Child Test', new CategoryServiceFakeActivityLogger(), CurrentUser::current(), 1, ['inherit' => true]);
             $newIdRaw = $result['id'] ?? null;
             self::assertTrue(is_numeric($newIdRaw));
             $newId = (int) $newIdRaw;
@@ -1270,7 +1279,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         PageState::current()->reset();
         $activityLogger = new CategoryServiceFakeActivityLogger();
 
-        $this->service->moveCategories([], $activityLogger, \Piwigo\Core\PageState::current());
+        $this->service->moveCategories([], $activityLogger, PageState::current());
 
         // the count()===0 early return skips updateCategoryParent(),
         // updateUppercats()/updateGlobalRank(), the PageState::addInfo()
@@ -1291,7 +1300,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             // default $newParent = -1 -> $newParentSql = 'NULL' -> moving
             // to root, the branch that hardcodes $parentStatus = 'public'
             // rather than looking an actual parent category up.
-            $this->service->moveCategories([2], $activityLogger, \Piwigo\Core\PageState::current());
+            $this->service->moveCategories([2], $activityLogger, PageState::current());
 
             $idUppercat = $this->conn->createQueryBuilder()
                 ->select('id_uppercat')
@@ -1316,7 +1325,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $privateParent = $this->service->createVirtualCategory(
             'ct_move_private_parent_' . uniqid(),
             $activityLogger,
-            \Piwigo\Users\CurrentUser::current(),
+            CurrentUser::current(),
             null,
             ['status' => 'private']
         );
@@ -1329,7 +1338,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             // findCategoryStatus()) that happens to be private -- the
             // setCatStatus(..., 'private') cascade onto the moved
             // categories themselves only fires on this branch.
-            $this->service->moveCategories([2], $activityLogger, \Piwigo\Core\PageState::current(), $privateParentId);
+            $this->service->moveCategories([2], $activityLogger, PageState::current(), $privateParentId);
 
             self::assertSame('private', $this->repo->findCategoryStatus(2));
         } finally {
@@ -1342,14 +1351,14 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_create_virtual_category_with_last_position_ranks_after_existing_siblings(): void
     {
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->setNewcatDefaultPosition('last');
 
         try {
-            $result = $this->service->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current());
+            $result = $this->service->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceFakeActivityLogger(), CurrentUser::current());
             $newIdRaw = $result['id'] ?? null;
             self::assertTrue(is_numeric($newIdRaw));
             $newId = (int) $newIdRaw;

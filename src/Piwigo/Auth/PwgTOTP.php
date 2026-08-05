@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use Endroid\QrCode\Builder\Builder;
+use InvalidArgumentException;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Users\CurrentUser;
 
 final class PwgTOTP
 {
@@ -45,7 +47,7 @@ final class PwgTOTP
     public static function generateSecret($length = 20): string
     {
         if ($length < 1) {
-            throw new \InvalidArgumentException('generateSecret(): $length must be at least 1');
+            throw new InvalidArgumentException('generateSecret(): $length must be at least 1');
         }
         $random = random_bytes($length);
         return PwgBase32::encode($random, false);
@@ -55,7 +57,7 @@ final class PwgTOTP
      * @param string $secret Encoded base32 secret
      * @return string otpauth://totp/ url
      */
-    public static function getOtpAuthUrl($secret, UrlServiceInterface $urlService, \Piwigo\Users\CurrentUser $currentUser): string
+    public static function getOtpAuthUrl($secret, UrlServiceInterface $urlService, CurrentUser $currentUser): string
     {
         $username = $currentUser->get()
             ->username;
@@ -67,7 +69,7 @@ final class PwgTOTP
      * @param string $secret Encoded base32 secret
      * @return string data:image/png;base64..
      */
-    public static function getQrCode($secret, UrlServiceInterface $urlService, \Piwigo\Users\CurrentUser $currentUser): string
+    public static function getQrCode($secret, UrlServiceInterface $urlService, CurrentUser $currentUser): string
     {
         $otp_url = self::getOtpAuthUrl($secret, $urlService, $currentUser);
 

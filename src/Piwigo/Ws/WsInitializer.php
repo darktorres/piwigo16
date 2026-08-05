@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Ws\GetHistory;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -14,6 +17,7 @@ use Piwigo\Ws\Protocol\PwgRestEncoder;
 use Piwigo\Ws\Protocol\PwgRestRequestHandler;
 use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
 use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
+use Piwigo\Ws\Request\WsFormatRequest;
 
 /**
  * Builds the per-request PwgServer and registers the WS default event
@@ -70,9 +74,9 @@ final class WsInitializer
         private readonly PwgCore $pwgCore,
         private readonly UrlServiceInterface $urlService,
         private readonly WsHelper $wsHelper,
-        private readonly \Piwigo\Auth\AccessControl $accessControl,
-        private readonly \Piwigo\Core\ApiKeyRequestFlag $apiKeyRequestFlag,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly AccessControl $accessControl,
+        private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     public function init(): PwgServer
@@ -99,7 +103,7 @@ final class WsInitializer
         $this->eventDispatcher->addTypedHandler(GetHistory::class, $this->pwgCore->historyGet(...));
 
         $requestFormat = 'rest';
-        $responseFormat = Request\WsFormatRequest::fromGlobals()->responseFormat;
+        $responseFormat = WsFormatRequest::fromGlobals()->responseFormat;
 
         $service = new PwgServer($this->eventDispatcher, $this->accessControl, $this->apiKeyRequestFlag, $this->currentConfig);
 

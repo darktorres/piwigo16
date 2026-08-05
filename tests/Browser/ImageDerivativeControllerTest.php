@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -150,7 +151,7 @@ function idcDerivativeDiskPath(string $imagePath, string $suffix, string $ext = 
 }
 
 /** @return array{red: int, green: int, blue: int} */
-function idcPixel(\GdImage $image, int $x, int $y): array
+function idcPixel(GdImage $image, int $x, int $y): array
 {
     $rgb = imagecolorat($image, $x, $y);
     if ($rgb === false) {
@@ -168,7 +169,7 @@ function idcPixel(\GdImage $image, int $x, int $y): array
  * idcSetImageRotationCode()'s own established connect-query-close shape
  * rather than duplicating the connection boilerplate at every call site.
  */
-function idcDb(): \mysqli|\PgSql\Connection
+function idcDb(): mysqli|Connection
 {
     return H::connect();
 }
@@ -1187,7 +1188,7 @@ it('generates a previously-unregistered custom size once its own key is register
         // JSON_OBJECT() is MySQL-only -- Postgres's own function is
         // jsonb_build_object() (verified live, matches custom_json's real
         // jsonb column type directly).
-        $jsonObjectExpr = $db instanceof \mysqli
+        $jsonObjectExpr = $db instanceof mysqli
             ? "JSON_OBJECT('%s', %d)"
             : "jsonb_build_object('%s', %d)";
         H::dbQuery($db, sprintf(

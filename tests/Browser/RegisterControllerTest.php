@@ -186,7 +186,7 @@ function registerAddLanguage(string $code, string $name): void
 {
     $db = H::connect();
     $prefix = registerDbPrefix();
-    $upsertSql = $db instanceof \mysqli
+    $upsertSql = $db instanceof mysqli
         ? "INSERT INTO %slanguages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON DUPLICATE KEY UPDATE version = VALUES(version)"
         : "INSERT INTO %slanguages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON CONFLICT (id) DO UPDATE SET version = EXCLUDED.version";
     H::dbQuery($db, sprintf(

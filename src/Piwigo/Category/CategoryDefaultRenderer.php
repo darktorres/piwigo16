@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Piwigo\Category\Request\CategorySlideshowRequest;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Lang;
+use Piwigo\Core\ProcessCache;
+use Piwigo\Core\RecentIconResolver;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\TemplateInterface;
+use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Location\LocBeginIndexThumbnails;
 use Piwigo\Event\Location\LocEndIndexThumbnails;
@@ -15,7 +22,9 @@ use Piwigo\Image\Event\GetIndexDerivativeParams;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Renders the main/index page's thumbnail grid for the current page's image
@@ -34,12 +43,12 @@ final readonly class CategoryDefaultRenderer
         private CommentCounterInterface $commentCounter,
         private UrlServiceInterface $urlService,
         private SessionService $sessionService,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private \Piwigo\Image\ImageStdParams $imageStdParams,
-        private \Piwigo\Users\CurrentUser $currentUser,
-        private \Piwigo\Config\CurrentConfig $currentConfig,
-        private \Piwigo\Core\Lang $lang,
-        private \Piwigo\Core\ProcessCache $processCache,
+        private EventDispatcher $eventDispatcher,
+        private ImageStdParams $imageStdParams,
+        private CurrentUser $currentUser,
+        private CurrentConfig $currentConfig,
+        private Lang $lang,
+        private ProcessCache $processCache,
     ) {}
 
     /**
@@ -112,7 +121,7 @@ final readonly class CategoryDefaultRenderer
                       ['start']
                   ),
                   [
-                      'slideshow' => Request\CategorySlideshowRequest::fromGlobals()->slideshow,
+                      'slideshow' => CategorySlideshowRequest::fromGlobals()->slideshow,
                   ]
               );
 
@@ -159,8 +168,8 @@ final readonly class CategoryDefaultRenderer
                 'URL' => $url,
                 'DESCRIPTION' => $desc,
                 'src_image' => new SrcImage($row),
-                'path_ext' => strtolower(\Piwigo\Core\StringHelper::getExtension($rowPath)),
-                'file_ext' => strtolower(\Piwigo\Core\StringHelper::getExtension($rowFile)),
+                'path_ext' => strtolower(StringHelper::getExtension($rowPath)),
+                'file_ext' => strtolower(StringHelper::getExtension($rowFile)),
             ]);
 
             if ($this->currentConfig->indexNewIcon()) {
@@ -171,7 +180,7 @@ final readonly class CategoryDefaultRenderer
                 $recentPeriodRaw = $this->currentUser->get()
                     ->rawAttributes['recent_period'] ?? null;
                 $recentPeriodForIcon = is_numeric($recentPeriodRaw) ? (int) $recentPeriodRaw : 0;
-                $tplVar['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon($dateAvailable, $recentPeriodForIcon, $this->processCache, $this->lang);
+                $tplVar['icon_ts'] = RecentIconResolver::getIcon($dateAvailable, $recentPeriodForIcon, $this->processCache, $this->lang);
             }
 
             if ((bool) $this->currentUser->get()->rawAttributes['show_nb_hits']) {
@@ -220,7 +229,7 @@ final readonly class CategoryDefaultRenderer
         $template->assign_var_from_handle('THUMBNAILS', 'index_thumbnails');
         unset($pictures, $selection, $tplThumbnailsVar);
         $template->clear_assign('thumbnails');
-        \Piwigo\Core\TimingHelper::debug('end CategoryDefaultRenderer::render()');
+        TimingHelper::debug('end CategoryDefaultRenderer::render()');
 
         return $slideshowUrl;
     }

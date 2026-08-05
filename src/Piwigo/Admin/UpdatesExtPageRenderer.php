@@ -6,12 +6,16 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
-use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Template\Template;
+use Piwigo\Csrf\CsrfService;
+use Piwigo\Template\CurrentTemplate;
 
 /**
  * Ported from admin/updates_ext.php -- cross-type "which installed
@@ -42,7 +46,7 @@ final class UpdatesExtPageRenderer
      * slug statically (config/admin_pages.php registers each of those 4
      * controllers for exactly one slug), so each passes its own literal.
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer, \Piwigo\Config\CurrentConfig $currentConfig): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, PageState $pageState, CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
 
@@ -89,7 +93,7 @@ final class UpdatesExtPageRenderer
         // partial result no legacy code path could ever produce.
         $all_types_reachable = true;
 
-        $pem_base_url = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
+        $pem_base_url = RequestBootstrap::pemUrl();
 
         foreach ($types_to_check as $extension_type) {
             $type = $plural_by_type[$extension_type->value];
@@ -158,7 +162,7 @@ final class UpdatesExtPageRenderer
 
         $template->assign('UPDATES_EXTENSION', $updates_extension);
         $template->assign('SHOW_RESET', $show_reset);
-        $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
+        $template->assign('PWG_TOKEN', new CsrfService()->getToken());
         $template->assign('EXT_TYPE', $pageSlug === 'updates' ? 'extensions' : $pageSlug);
         $template->assign('isWebmaster', ($accessControl->isWebmaster()) ? 1 : 0);
         $template->set_filename('plugin_admin_content', 'updates_ext.tpl');

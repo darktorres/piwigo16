@@ -5,28 +5,53 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use LogicException;
+use Override;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AuthService;
+use Piwigo\Auth\PasswordService;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Request\ConfigurationRequest;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AdminContext;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\DateHelper;
+use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\WsContext;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Group\GroupService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeUrlCodec;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Image\WatermarkParams;
+use Piwigo\Mail\MailService;
+use Piwigo\Metadata\MetadataService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -110,28 +135,28 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
-        private readonly \Piwigo\Core\AdminContext $adminContext,
+        private readonly AdminContext $adminContext,
         private readonly CoreTabs $coreTabs,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly ImageStdParams $imageStdParams,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Metadata\MetadataService $metadataService,
-        private readonly \Piwigo\Image\ImageService $imageService,
-        private readonly \Piwigo\Users\UserService $userService,
-        private readonly \Piwigo\Group\GroupService $groupService,
-        private readonly \Piwigo\Auth\PasswordService $passwordService,
-        private readonly \Piwigo\Auth\AuthService $authService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Mail\MailService $mailService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\Core\WsContext $wsContext,
+        private readonly ActivityService $activityService,
+        private readonly MetadataService $metadataService,
+        private readonly ImageService $imageService,
+        private readonly UserService $userService,
+        private readonly GroupService $groupService,
+        private readonly PasswordService $passwordService,
+        private readonly AuthService $authService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly MailService $mailService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly WsContext $wsContext,
     ) {}
 
     /**
@@ -144,7 +169,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      */
     private bool $sizesLoadedInTpl = false;
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $template = $this->currentTemplate->get();
@@ -164,7 +189,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         // -------------------------------------------------------- sections definitions
 
-        $configurationRequest = Request\ConfigurationRequest::fromGlobals($this->inputValidator);
+        $configurationRequest = ConfigurationRequest::fromGlobals($this->inputValidator);
 
         $page_section = $configurationRequest->section;
         $page['section'] = $page_section;
@@ -288,7 +313,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         // ------------------------------ verification and registration of modifications
         if ($configurationRequest->isSubmitted) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
             $int_pattern = '/^\d+$/';
 
@@ -481,7 +506,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         // restore default derivatives settings
         if ($page['section'] === 'sizes' and $configurationRequest->restoreSettingsRequested and $this->accessControl->isWebmaster()) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->imageStdParams->restore_default();
@@ -531,7 +556,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $template->assign(
             [
                 'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=configuration',
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
                 'F_ACTION' => $action,
             ]
@@ -629,7 +654,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                 $guest_id = $this->currentConfig->guestId();
 
-                $edit_user = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
+                $edit_user = $this->userService->buildUser(UserId::from($guest_id));
                 // P22: profile.php's own save_profile_from_post()/
                 // load_profile_in_template() ported to Piwigo\Controller\
                 // ProfileFormHandler in P23 batch 8c.
@@ -638,7 +663,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
                     // Reload user
-                    $edit_user = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
+                    $edit_user = $this->userService->buildUser(UserId::from($guest_id));
                     $this->pageState->addInfo($this->lang->t('Information data registered in database'));
                 }
                 $this->pageState->errors = array_merge($this->pageState->errors, array_values(array_filter($errors, is_string(...))));
@@ -736,7 +761,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $tpl_vars = [];
                     $now = time();
                     foreach ($this->imageStdParams->get_custom_timestamps() as $custom => $time) {
-                        $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? $this->lang->t('today') : \Piwigo\Core\DateHelper::timeSince($time, 'day');
+                        $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? $this->lang->t('today') : DateHelper::timeSince($time, 'day');
                     }
                     $template->assign('custom_derivatives', $tpl_vars);
                 }
@@ -854,7 +879,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // these keys genuinely depends on a file that may not exist and
         // isn't part of this codebase.
         $paths = CurrentPaths::get();
-        $conf = \Piwigo\Config\CurrentConfig::defaultsArray();
+        $conf = CurrentConfig::defaultsArray();
         @include $paths->local . 'config/config.inc.php';
         if (isset($conf['local_dir_site'])) {
             @include $paths->siteLocal . 'config/config.inc.php';
@@ -934,7 +959,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             'picture_menu' => $this->currentConfig->pictureMenu(),
             'show_mobile_app_banner_in_gallery' => $this->currentConfig->showMobileAppBannerInGallery(),
             'show_mobile_app_banner_in_admin' => $this->currentConfig->showMobileAppBannerInAdmin(),
-            default => throw new \LogicException("checkboxValue(): unknown checkbox key '{$checkbox}'."),
+            default => throw new LogicException("checkboxValue(): unknown checkbox key '{$checkbox}'."),
         };
     }
 
@@ -1268,15 +1293,15 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             } else {
                 $paths = CurrentPaths::get();
                 $upload_dir = $paths->siteLocal . 'watermarks';
-                if (\Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
+                if (FilesystemHelper::mkgetdir($upload_dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
                     // file name may include exotic chars like single quote, we need a safe name
-                    $new_name = \Piwigo\Core\StringHelper::str2url(\Piwigo\Core\StringHelper::getFilenameWoExtension($watermark_upload_name ?? ''));
+                    $new_name = StringHelper::str2url(StringHelper::getFilenameWoExtension($watermark_upload_name ?? ''));
 
                     // we need existing watermarks to avoid overwritting one
                     $watermark_files = [];
                     if (($glob = glob($paths->siteLocal . 'watermarks/*.png')) !== false) {
                         foreach ($glob as $file) {
-                            $watermark_files[] = \Piwigo\Core\StringHelper::getFilenameWoExtension(substr($file, strlen($paths->siteLocal . 'watermarks/')));
+                            $watermark_files[] = StringHelper::getFilenameWoExtension(substr($file, strlen($paths->siteLocal . 'watermarks/')));
                         }
                     }
 

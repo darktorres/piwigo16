@@ -2,13 +2,17 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\Webpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\AwaitableWebpage;
+use Piwigo\Cache\CachePools;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
  * Piwigo\Controller\TagsController (tags.php) -- the front-end tag cloud/
  * letter-index browsing page.
  */
-function tagsControllerAddTag(Pest\Browser\Api\Webpage|Pest\Browser\Api\PendingAwaitablePage|Pest\Browser\Api\AwaitableWebpage $page, string $name): int
+function tagsControllerAddTag(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $name): int
 {
     $result = H::wsCall($page, 'pwg.tags.add', ['name' => $name]);
     $tagResult = $result['result'] ?? null;
@@ -56,7 +60,7 @@ it('renders the letters display mode, grouping tags by first letter', function (
     ]);
     expect($updateResult['stat'] ?? null)->toBe('ok');
 
-    \Piwigo\Cache\CachePools::tagCloud()->clear();
+    CachePools::tagCloud()->clear();
 
     $page = H::navigateOk($page, '/tags.php?display_mode=letters');
 
@@ -131,7 +135,7 @@ it('fatal-errors instead of silently swallowing a real render_tag_name hook that
         ]);
         expect($updateResult['stat'] ?? null)->toBe('ok');
 
-        \Piwigo\Cache\CachePools::tagCloud()->clear();
+        CachePools::tagCloud()->clear();
 
         H::dbQuery($db, sprintf(
             "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",

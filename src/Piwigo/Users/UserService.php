@@ -6,11 +6,17 @@ namespace Piwigo\Users;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Exception;
+use LogicException;
+use Override;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -19,27 +25,45 @@ use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\ArrayHelper;
 use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\Env;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\PageFilterHelper;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ProcessCache;
+use Piwigo\Core\ThemeCatalog;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Event\User\DeleteUser;
 use Piwigo\Event\User\RegisterUser;
 use Piwigo\Event\User\RegisterUserCheck;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Lang\LangService;
+use Piwigo\Lang\Translator;
 use Piwigo\Permission\EffectiveForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Users\Projection\ActivationKeyRow;
+use Piwigo\Validation\InputValidator;
+use SensitiveParameter;
 
 /**
  * User domain business logic: registration, login/email lookup,
@@ -70,12 +94,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         private HtmlRenderingInterface $htmlRenderer,
         private Connection $conn,
         private SessionService $sessionService,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
-        private \Piwigo\Users\CurrentUser $currentUser,
-        private \Piwigo\Config\CurrentConfig $currentConfig,
-        private \Piwigo\Core\InstallationFlag $installationFlag,
-        private \Piwigo\Core\ProcessCache $processCache,
+        private EventDispatcher $eventDispatcher,
+        private DeploymentPolicy $deploymentPolicy,
+        private CurrentUser $currentUser,
+        private CurrentConfig $currentConfig,
+        private InstallationFlag $installationFlag,
+        private ProcessCache $processCache,
     ) {}
 
     /**
@@ -87,11 +111,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * Template\Template's own identical accessControl() helper (singleton/
      * service-locator elimination campaign, Phase 11 sub-phase 11G).
      */
-    private function accessControl(): \Piwigo\Auth\AccessControl
+    private function accessControl(): AccessControl
     {
-        $accessControl = \Piwigo\Core\Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
-        if (! $accessControl instanceof \Piwigo\Auth\AccessControl) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Auth\AccessControl::class);
+        $accessControl = Kernel::container()->get(AccessControl::class);
+        if (! $accessControl instanceof AccessControl) {
+            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
 
         return $accessControl;
@@ -105,11 +129,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * (singleton/service-locator elimination campaign, Phase 11 sub-phase
      * 11G).
      */
-    private function translator(): \Piwigo\Lang\Translator
+    private function translator(): Translator
     {
-        $translator = \Piwigo\Core\Kernel::container()->get(\Piwigo\Lang\Translator::class);
-        if (! $translator instanceof \Piwigo\Lang\Translator) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Lang\Translator::class);
+        $translator = Kernel::container()->get(Translator::class);
+        if (! $translator instanceof Translator) {
+            throw new LogicException('Container returned an unexpected type for ' . Translator::class);
         }
 
         return $translator;
@@ -124,7 +148,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     private function permissionService(): PermissionService
     {
-        return new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $this->currentConfig), $this->currentUser, $this->filterState());
+        return new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $this->currentConfig), $this->currentUser, $this->filterState());
     }
 
     /**
@@ -133,18 +157,18 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * `FilterState`'s own former `isInitializedStatic()` shim's identical
      * pre-boot fallback.
      */
-    private function filterState(): \Piwigo\Core\FilterState
+    private function filterState(): FilterState
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
-            if (! $filterState instanceof \Piwigo\Core\FilterState) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        if (Kernel::isBooted()) {
+            $filterState = Kernel::container()->get(FilterState::class);
+            if (! $filterState instanceof FilterState) {
+                throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
             }
 
             return $filterState;
         }
 
-        return new \Piwigo\Core\FilterState();
+        return new FilterState();
     }
 
     /**
@@ -155,7 +179,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     private function categoryService(): CategoryService
     {
-        return new CategoryService($this->lang, new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $this->currentConfig), $this->permissionService(), $this->currentConfig, $this->eventDispatcher, $this->translator());
+        return new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($this->conn), $this->currentConfig), $this->permissionService(), $this->currentConfig, $this->eventDispatcher, $this->translator());
     }
 
     /**
@@ -164,7 +188,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     private function passwordService(): PasswordService
     {
-        return new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->deploymentPolicy);
+        return new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), $this->deploymentPolicy);
     }
 
     /**
@@ -177,12 +201,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $isEmpty = $mailAddress === null || $mailAddress === '';
         if (
             $isEmpty
-            && ! ($this->currentConfig->obligatoryUserMailAddress() && in_array(\Piwigo\Core\PageFilterHelper::scriptBasename(), ['register', 'profile'], true))
+            && ! ($this->currentConfig->obligatoryUserMailAddress() && in_array(PageFilterHelper::scriptBasename(), ['register', 'profile'], true))
         ) {
             return '';
         }
 
-        $email = \Piwigo\Validation\InputValidator::checkEmailFormat($mailAddress) ? Email::tryFrom($mailAddress) : null;
+        $email = InputValidator::checkEmailFormat($mailAddress) ? Email::tryFrom($mailAddress) : null;
         if ($email === null) {
             return $this->lang->t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
@@ -313,7 +337,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function registerUser(
         string $login,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         string $password,
         ?string $mailAddress,
         UrlServiceInterface $urlService,
@@ -376,7 +400,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $userId = $this->repo->insertUser(
             $login,
-            new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->deploymentPolicy)
+            new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), $this->deploymentPolicy)
                 ->hash($password),
             $mailAddress,
         );
@@ -412,7 +436,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->notifyAdminsOfNewRegistration($userId, $login, $mailAddress, $urlService);
         }
 
-        if ($notifyUser && \Piwigo\Validation\InputValidator::checkEmailFormat($mailAddress)) {
+        if ($notifyUser && InputValidator::checkEmailFormat($mailAddress)) {
             assert($mailAddress !== null);
             $this->sendWelcomeEmail($login, $mailAddress, $urlService);
         }
@@ -571,7 +595,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     private function notifyExistingAccountOfDuplicateRegistration(string $login, ?string $mailAddress): void
     {
         $existing = $this->repo->findByUsernameCaseInsensitive($login);
-        if ($existing === null || $existing['email'] === '' || ! \Piwigo\Validation\InputValidator::checkEmailFormat($existing['email'])) {
+        if ($existing === null || $existing['email'] === '' || ! InputValidator::checkEmailFormat($existing['email'])) {
             return;
         }
 
@@ -690,7 +714,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // 1. the user_infos.theme was not found in the themes table, thus themes.name is null
         // 2. the theme is not really installed on the filesystem
         $theme = $user['theme'] ?? null;
-        if (! isset($user['theme_name']) or ! is_string($theme) or ! \Piwigo\Core\ThemeCatalog::checkThemeInstalled($theme)) {
+        if (! isset($user['theme_name']) or ! is_string($theme) or ! ThemeCatalog::checkThemeInstalled($theme)) {
             $user['theme'] = $this->getDefaultTheme();
             $user['theme_name'] = $user['theme'];
         }
@@ -708,7 +732,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // retrieve basic user data
         $row = $this->repo->fetchBasicUserRow($userId);
         if ($row === false) {
-            throw new \Exception('UserService::getUserData(): no such user_id ' . $userId->value);
+            throw new Exception('UserService::getUserData(): no such user_id ' . $userId->value);
         }
 
         // retrieve additional user data ?
@@ -730,7 +754,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // (deleted alongside this same stage's lock/wait/503 mechanism).
         $user_infos_row = $this->repo->fetchUserInfosWithThemeName($userId);
         if ($user_infos_row === false) {
-            throw new \Exception('UserService::getUserData(): user_infos fetch failed for user_id ' . $userId->value);
+            throw new Exception('UserService::getUserData(): user_infos fetch failed for user_id ' . $userId->value);
         }
 
         // then merge basic + additional user data
@@ -779,7 +803,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // a second decode path.
         $preferences_raw = $userdata['preferences'];
         $preferences = ! self::emptyValue($preferences_raw) && (is_array($preferences_raw) || is_string($preferences_raw))
-            ? \Piwigo\Core\ArrayHelper::safeJsonDecode($preferences_raw)
+            ? ArrayHelper::safeJsonDecode($preferences_raw)
             : [];
 
         // Gap-closure Stage 4g (docs/plan/gap-closure-p0-p23.md): this used
@@ -810,8 +834,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->accessControl(),
             $this->permissionService(),
             $this->categoryService(),
-            new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
-            \Piwigo\Cache\CachePools::effectivePermissions()
+            new PermissionRepository(EntityManagerFactory::build($this->conn)),
+            CachePools::effectivePermissions()
         )->getForUser($userId->value, $effective_status, $effective_level);
 
         $userdata['forbidden_categories'] = $effective['forbiddenCategories'];
@@ -956,19 +980,19 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         if (! is_string($theme)) {
             $theme = AppInfo::DEFAULT_TEMPLATE;
         }
-        if (\Piwigo\Core\ThemeCatalog::checkThemeInstalled($theme)) {
+        if (ThemeCatalog::checkThemeInstalled($theme)) {
             return $theme;
         }
 
         // let's find the first available theme
-        $active_themes = array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes($this->eventDispatcher));
+        $active_themes = array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher));
         return isset($active_themes[0]) ? (string) $active_themes[0] : 'default';
     }
 
     /**
      * Returns the default language.
      */
-    #[\Override]
+    #[Override]
     public function getDefaultLanguage(): string
     {
         $language = $this->getDefaultUserValue('language', AppInfo::DEFAULT_LANGUAGE);
@@ -996,7 +1020,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * per DefaultLanguageProviderInterface::getCurrentLanguage()'s own
      * docblock.
      */
-    #[\Override]
+    #[Override]
     public function getCurrentLanguage(): ?string
     {
         return $this->currentUser->isInitialized() ? $this->currentUser->get()
@@ -1072,7 +1096,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // list all enabled language codes in the Piwigo installation
         // in both full and short forms, and case insensitive
         $languages_available = [];
-        foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
+        foreach (LangService::getLanguages() as $language_code => $language_name) {
             $lowercase_full = strtolower($language_code);
             $lowercase_parts = explode('_', $lowercase_full, 2);
             $lowercase_prefix = $lowercase_parts[0];
@@ -1239,7 +1263,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      *
      * @return mixed[]
      */
-    public function checkAndSaveUserInfos(array $params, \Piwigo\Core\PageState $pageState): array
+    public function checkAndSaveUserInfos(array $params, PageState $pageState): array
     {
         if (isset($params['username'])) {
             $username_check = $params['username'];
@@ -1417,7 +1441,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (! self::emptyValue($params['language'] ?? null)) {
             $language_param = $params['language'] ?? null;
-            if (! in_array($language_param, array_keys(\Piwigo\Lang\LangService::getLanguages()), true)) {
+            if (! in_array($language_param, array_keys(LangService::getLanguages()), true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1430,7 +1454,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (! self::emptyValue($params['theme'] ?? null)) {
             $theme_param = $params['theme'] ?? null;
-            if (! in_array($theme_param, array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes($this->eventDispatcher)), true)) {
+            if (! in_array($theme_param, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher)), true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1469,12 +1493,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $this->repo->updateAccountFields(UserId::from($user_ids[0]), $username_update, $password_update, $email_update);
 
         $authService = new AuthService(
-            new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
+            new AuthRepository(EntityManagerFactory::build($this->conn)),
             $this->activityLogger,
             $this->htmlRenderer,
             $this->passwordService(),
             new CookieService(),
-            \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
+            EntityManagerFactory::build($this->conn)->getRepository(UserFailedLoginEntity::class),
             $this->sessionService,
             $this->eventDispatcher,
             $pageState,
@@ -1625,7 +1649,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     }
 
     /**
-     * @return list<\Piwigo\Users\Projection\ActivationKeyRow>
+     * @return list<ActivationKeyRow>
      */
     public function getPendingActivationKeyRows(): array
     {

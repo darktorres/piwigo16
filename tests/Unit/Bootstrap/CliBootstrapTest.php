@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ShutdownHandler;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserStatus;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Bootstrap\CliBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Kernel;
@@ -30,7 +34,7 @@ afterEach(function (): void {
     // wiring a genuine SIGTERM handler -- reset it back to SIG_DFL so it
     // doesn't bleed into unrelated tests in the same worker process,
     // matching ShutdownHandlerTest.php's own established convention.
-    \Piwigo\Core\ShutdownHandler::reset();
+    ShutdownHandler::reset();
     pcntl_signal(SIGTERM, SIG_DFL);
 });
 
@@ -57,20 +61,20 @@ test('the built Application also exposes the Console built-in commands', functio
 });
 
 test('buildApplication attaches a real CurrentUser (guest) globally', function (): void {
-    \Piwigo\Users\CurrentUser::current()->reset();
+    CurrentUser::current()->reset();
 
     CliBootstrap::buildApplication();
 
-    expect(\Piwigo\Users\CurrentUser::current()->get()->status)->toBe(\Piwigo\Users\UserStatus::Guest);
+    expect(CurrentUser::current()->get()->status)->toBe(UserStatus::Guest);
 
-    \Piwigo\Users\CurrentUser::current()->reset();
+    CurrentUser::current()->reset();
 });
 
 test('buildApplication initializes CurrentConfigService with a real, resolved ConfigService', function (): void {
     CliBootstrap::buildApplication();
 
-    expect(fn () => \Piwigo\Config\CurrentConfigService::current()->get())->not->toThrow(LogicException::class);
-    expect(\Piwigo\Config\CurrentConfigService::current()->get())->toBeInstanceOf(ConfigService::class);
+    expect(fn () => CurrentConfigService::current()->get())->not->toThrow(LogicException::class);
+    expect(CurrentConfigService::current()->get())->toBeInstanceOf(ConfigService::class);
 });
 
 test('run() installs the shutdown handler, builds the Application and executes the given argv', function (): void {

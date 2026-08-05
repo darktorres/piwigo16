@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use Piwigo\Cache\CachePools;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -18,14 +20,14 @@ final class WsCategoriesTest extends ContractTestCase
     /** @var list<int> */
     private array $imageIdsToDelete = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
         $this->conn = DbConnection::build();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         foreach ($this->imageIdsToDelete as $imageId) {
@@ -526,7 +528,7 @@ final class WsCategoriesTest extends ContractTestCase
     public function test_getList_picks_a_random_representative_when_enabled_and_none_is_set(): void
     {
         $this->upsertConfig('allow_random_representative', 'true');
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         try {
             $catId = $this->createCategory('ct_randomrep_' . uniqid());
@@ -550,7 +552,7 @@ final class WsCategoriesTest extends ContractTestCase
             self::assertSame(1, $entry['representative_picture_id'], 'only image in the category, so the random pick is deterministic');
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'allow_random_representative'");
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 
@@ -584,7 +586,7 @@ final class WsCategoriesTest extends ContractTestCase
         // effective-permissions pools) -- clear it explicitly so
         // regular_user's getList() call below sees the association just
         // made, not a stale pre-association snapshot.
-        \Piwigo\Cache\CachePools::categoryTree()->clear();
+        CachePools::categoryTree()->clear();
 
         $login = $this->callWs('pwg.session.login', [
             'username' => 'regular_user',

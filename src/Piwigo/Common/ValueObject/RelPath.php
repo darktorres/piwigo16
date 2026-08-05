@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Common\ValueObject;
 
+use InvalidArgumentException;
+use Override;
+
 /**
  * Storage-relative filesystem path (e.g. the `images.path` column,
  * `./galleries/2024/IMG_0001.jpg`). Constrained against directory
@@ -22,38 +25,38 @@ final readonly class RelPath implements StringVo
     ) {}
 
     /**
-     * @throws \InvalidArgumentException when $value contains `..` segments, null bytes, or starts with `/`.
+     * @throws InvalidArgumentException when $value contains `..` segments, null bytes, or starts with `/`.
      */
-    #[\Override]
+    #[Override]
     public static function from(string $value): self
     {
         if ($value === '') {
-            throw new \InvalidArgumentException('RelPath must not be empty');
+            throw new InvalidArgumentException('RelPath must not be empty');
         }
         if (strlen($value) > self::MAX_LENGTH) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'RelPath exceeds ' . self::MAX_LENGTH . " chars: '{$value}'",
             );
         }
         if (str_contains($value, "\x00")) {
-            throw new \InvalidArgumentException('RelPath must not contain null bytes');
+            throw new InvalidArgumentException('RelPath must not contain null bytes');
         }
         if (str_starts_with($value, '/')) {
-            throw new \InvalidArgumentException("RelPath must be relative, got absolute path: '{$value}'");
+            throw new InvalidArgumentException("RelPath must be relative, got absolute path: '{$value}'");
         }
         if (str_contains($value, '\\')) {
-            throw new \InvalidArgumentException("RelPath must use forward slashes only: '{$value}'");
+            throw new InvalidArgumentException("RelPath must use forward slashes only: '{$value}'");
         }
         // Reject `..` as a path component (allow it inside a name like `foo..bar`).
         foreach (explode('/', $value) as $segment) {
             if ($segment === '..') {
-                throw new \InvalidArgumentException("RelPath must not contain '..' segments: '{$value}'");
+                throw new InvalidArgumentException("RelPath must not contain '..' segments: '{$value}'");
             }
         }
         return new self($value);
     }
 
-    #[\Override]
+    #[Override]
     public static function tryFrom(mixed $value): ?self
     {
         if (! is_string($value)) {
@@ -61,18 +64,18 @@ final readonly class RelPath implements StringVo
         }
         try {
             return self::from($value);
-        } catch (\InvalidArgumentException) {
+        } catch (InvalidArgumentException) {
             return null;
         }
     }
 
-    #[\Override]
+    #[Override]
     public function equals(StringVo $other): bool
     {
         return $other instanceof self && $other->value === $this->value;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return $this->value;

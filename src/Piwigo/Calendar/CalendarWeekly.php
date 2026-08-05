@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Override;
+use Piwigo\Core\TemplateInterface;
 use Piwigo\Permission\SqlCondition;
 
 /**
@@ -21,7 +23,7 @@ final class CalendarWeekly extends CalendarBase
     /**
      * Initialize the calendar
      */
-    #[\Override]
+    #[Override]
     public function initialize(CalendarQueryScope $scope): void
     {
         parent::initialize($scope);
@@ -73,8 +75,8 @@ final class CalendarWeekly extends CalendarBase
      *
      * @return bool false indicates that thumbnails where not included
      */
-    #[\Override]
-    public function generate_category_content(\Piwigo\Core\TemplateInterface $template): bool
+    #[Override]
+    public function generate_category_content(TemplateInterface $template): bool
     {
         $nb_date_parts = count($this->chronology_date);
         if ($nb_date_parts === 0) {
@@ -95,7 +97,7 @@ final class CalendarWeekly extends CalendarBase
      *
      * @param int $max_levels (e.g. 2=only year and month)
      */
-    #[\Override]
+    #[Override]
     public function get_date_where($max_levels = 3, bool $forDql = false): SqlCondition
     {
         $dateField = $forDql ? $this->date_field_dql : $this->date_field;

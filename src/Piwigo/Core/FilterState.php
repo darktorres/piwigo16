@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use LogicException;
+
 /**
  * Typed reader/writer for the current request's recent-content filter --
  * Phase 2 global-residual sweep, replacing the legacy `global $filter;`
@@ -104,7 +106,7 @@ final class FilterState
     private function assertInitialized(): void
     {
         if (! $this->initialized) {
-            throw new \LogicException('FilterState not initialised -- call Piwigo\Filter\FilterService::initializeFromRequest() (or RequestBootstrap::finalize()\'s own disabled-filter fallback) first.');
+            throw new LogicException('FilterState not initialised -- call Piwigo\Filter\FilterService::initializeFromRequest() (or RequestBootstrap::finalize()\'s own disabled-filter fallback) first.');
         }
     }
 

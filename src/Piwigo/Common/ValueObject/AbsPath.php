@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Common\ValueObject;
 
+use InvalidArgumentException;
+use Override;
+
 /**
  * Absolute POSIX filesystem path (must start with `/`).
  *
@@ -21,32 +24,32 @@ final readonly class AbsPath implements StringVo
     ) {}
 
     /**
-     * @throws \InvalidArgumentException when $value is not absolute or contains null bytes or `..` segments.
+     * @throws InvalidArgumentException when $value is not absolute or contains null bytes or `..` segments.
      */
-    #[\Override]
+    #[Override]
     public static function from(string $value): self
     {
         if ($value === '') {
-            throw new \InvalidArgumentException('AbsPath must not be empty');
+            throw new InvalidArgumentException('AbsPath must not be empty');
         }
         if (! str_starts_with($value, '/')) {
-            throw new \InvalidArgumentException("AbsPath must start with '/', got: '{$value}'");
+            throw new InvalidArgumentException("AbsPath must start with '/', got: '{$value}'");
         }
         if (str_contains($value, "\x00")) {
-            throw new \InvalidArgumentException('AbsPath must not contain null bytes');
+            throw new InvalidArgumentException('AbsPath must not contain null bytes');
         }
         if (str_contains($value, '\\')) {
-            throw new \InvalidArgumentException("AbsPath must use forward slashes only: '{$value}'");
+            throw new InvalidArgumentException("AbsPath must use forward slashes only: '{$value}'");
         }
         foreach (explode('/', $value) as $segment) {
             if ($segment === '..') {
-                throw new \InvalidArgumentException("AbsPath must not contain '..' segments: '{$value}'");
+                throw new InvalidArgumentException("AbsPath must not contain '..' segments: '{$value}'");
             }
         }
         return new self($value);
     }
 
-    #[\Override]
+    #[Override]
     public static function tryFrom(mixed $value): ?self
     {
         if (! is_string($value)) {
@@ -54,18 +57,18 @@ final readonly class AbsPath implements StringVo
         }
         try {
             return self::from($value);
-        } catch (\InvalidArgumentException) {
+        } catch (InvalidArgumentException) {
             return null;
         }
     }
 
-    #[\Override]
+    #[Override]
     public function equals(StringVo $other): bool
     {
         return $other instanceof self && $other->value === $this->value;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return $this->value;

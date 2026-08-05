@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
+    use Override;
+    use Piwigo\Core\Kernel;
+    use LogicException;
+    use Piwigo\Db\EntityManagerFactory;
     use Doctrine\DBAL\Connection;
     use Piwigo\Category\CategoryAdminListCriteria;
     use Piwigo\Category\CategoryListCriteria;
@@ -32,7 +36,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -44,16 +48,16 @@ final class CategoryRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig);
+        $this->repo = new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig);
     }
 
     private function countRows(string $table): int
@@ -63,7 +67,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         return is_numeric($count) ? (int) $count : 0;
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public'");

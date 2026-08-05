@@ -4,6 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Core\FilterState;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Core\Lang;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Lang\Translator;
 use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -11,7 +22,6 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\EffectiveForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -52,7 +62,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -64,39 +74,39 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
-        if (! $filterState instanceof \Piwigo\Core\FilterState) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        $filterState = Kernel::container()->get(FilterState::class);
+        if (! $filterState instanceof FilterState) {
+            throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
 
         $this->conn = DbConnection::build();
         $this->pool = new ArrayAdapter();
 
         $permissionService = new PermissionService(
-            new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
-            \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-            new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()),
-            \Piwigo\Users\CurrentUser::current(),
+            new PermissionRepository(EntityManagerFactory::build($this->conn)),
+            EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
+            new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
+            CurrentUser::current(),
             $filterState,
         );
         $this->cache = new EffectiveForbiddenCategoriesCache(
-            \Piwigo\Auth\AccessControl::current(),
+            AccessControl::current(),
             $permissionService,
-            new CategoryService(\Piwigo\Core\Lang::current(), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), $permissionService, \Piwigo\Config\CurrentConfig::current(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Lang\Translator::get()),
-            new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
+            new CategoryService(Lang::current(), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), $permissionService, CurrentConfig::current(), new EventDispatcher(), Translator::get()),
+            new PermissionRepository(EntityManagerFactory::build($this->conn)),
             $this->pool,
         );
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $visibleLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
@@ -148,15 +158,15 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
             // A fresh pool (not $this->cache's), same user -- the point
             // here is a genuinely fresh computation reflecting the new
             // forbidden category, not a per-user cache-entry distinction.
-            $afterCacheFilterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
-            if (! $afterCacheFilterState instanceof \Piwigo\Core\FilterState) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+            $afterCacheFilterState = Kernel::container()->get(FilterState::class);
+            if (! $afterCacheFilterState instanceof FilterState) {
+                throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
             }
             $afterCache = new EffectiveForbiddenCategoriesCache(
-                \Piwigo\Auth\AccessControl::current(),
-                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Users\CurrentUser::current(), $afterCacheFilterState),
-                new CategoryService(\Piwigo\Core\Lang::current(), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Users\CurrentUser::current(), $afterCacheFilterState), \Piwigo\Config\CurrentConfig::current(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Lang\Translator::get()),
-                new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
+                AccessControl::current(),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $afterCacheFilterState),
+                new CategoryService(Lang::current(), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $afterCacheFilterState), CurrentConfig::current(), new EventDispatcher(), Translator::get()),
+                new PermissionRepository(EntityManagerFactory::build($this->conn)),
                 new ArrayAdapter(),
             );
             $after = $afterCache->getForUser(2, 'normal', '0');
@@ -176,7 +186,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
      */
     public function test_get_for_user_widens_forbidden_categories_for_a_non_admin_with_an_empty_album(): void
     {
-        $categoryRepo = new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current());
+        $categoryRepo = new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current());
         // 'uppercats' is deliberately omitted here, not passed as '' --
         // BatchWriter::singleInsert() maps an empty-string value to a bare
         // SQL NULL, which the NOT NULL column rejects; the schema's own

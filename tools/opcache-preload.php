@@ -109,7 +109,7 @@ foreach (array_keys($classMap) as $symbol) {
         } else {
             ++$skipped;
         }
-    } catch (\Throwable) {
+    } catch (Throwable) {
         ++$skipped;
     }
 }

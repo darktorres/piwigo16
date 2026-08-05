@@ -8,6 +8,12 @@ declare(strict_types=1);
 // intercept, so the stub was unreachable dead code.
 namespace Piwigo\Tests\Integration {
 
+use Override;
+use Piwigo\Core\Kernel;
+use Piwigo\Config\CurrentConfig;
+use LogicException;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\Projection\UserActivityLogEntry;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
@@ -27,7 +33,7 @@ final class ActivityServiceTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -39,9 +45,9 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -54,10 +60,10 @@ final class ActivityServiceTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/some/script.php';
 
         $this->conn = DbConnection::build();
-        $this->service = new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class));
+        $this->service = new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class));
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object LIKE 'test-%'");
@@ -314,7 +320,7 @@ final class ActivityServiceTest extends IntegrationTestCase
         // asserts directly against the repository.
         self::assertCount(4, $rows);
         foreach ($rows as $row) {
-            self::assertInstanceOf(\Piwigo\Activity\Projection\UserActivityLogEntry::class, $row);
+            self::assertInstanceOf(UserActivityLogEntry::class, $row);
             self::assertSame('user', $row->object);
             self::assertSame('fixture_admin', $row->username);
         }
@@ -370,7 +376,7 @@ final class ActivityServiceTest extends IntegrationTestCase
         // action filter), so this inserts its own disposable row directly
         // via the repository, same technique/shape as
         // ActivityRepositoryTest::test_find_core_update_history_filters_by_object_and_actions().
-        $repo = EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class);
+        $repo = EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class);
         self::assertInstanceOf(ActivityRepository::class, $repo);
         $repo->insertMany([
             [

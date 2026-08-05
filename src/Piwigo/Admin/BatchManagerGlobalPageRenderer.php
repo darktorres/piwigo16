@@ -5,29 +5,49 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
+use Piwigo\Admin\Request\BatchManagerGlobalRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Caddie\CaddieEntity;
+use Piwigo\Caddie\CaddieService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\TagId;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Core\PaginationService;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Admin\ElementSetGlobalAction;
 use Piwigo\Event\Location\LocBeginElementSetGlobal;
 use Piwigo\Event\Location\LocEndElementSetGlobal;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageDuplicateField;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\ImageTextField;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
+use Piwigo\Metadata\MetadataRepository;
+use Piwigo\Metadata\MetadataService;
+use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Tag\TagService;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/batch_manager_global.php (the "global" mode tab of the
@@ -60,23 +80,23 @@ final class BatchManagerGlobalPageRenderer
         private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly CurrentLogger $currentLogger,
         private readonly SessionService $sessionService,
         private readonly Translator $translator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly EventDispatcher $eventDispatcher,
         private readonly ImageStdParams $imageStdParams,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly ActivityService $activityService,
         private readonly TagService $tagService,
         private readonly CategoryService $categoryService,
         private readonly ImageService $imageService,
-        private readonly \Piwigo\Html\HtmlService $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\Core\FilterState $filterState,
+        private readonly HtmlService $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly FilterState $filterState,
     ) {}
 
     /**
@@ -96,13 +116,13 @@ final class BatchManagerGlobalPageRenderer
         // yet -- a minimal, single-fact existence check, same shape as
         // Ws\PwgServer::isPost()'s own already-reviewed raw $_POST read.
         if (count($_POST) > 0) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
         $this->eventDispatcher->dispatchNotify(new LocBeginElementSetGlobal());
 
-        $batchManagerGlobalRequest = Request\BatchManagerGlobalRequest::fromGlobals($this->inputValidator);
+        $batchManagerGlobalRequest = BatchManagerGlobalRequest::fromGlobals($this->inputValidator);
 
         // +-------------------------------------------------------------------+
         // |                            current selection                          |
@@ -184,12 +204,12 @@ final class BatchManagerGlobalPageRenderer
             $redirect = false;
 
             $tagService = $this->tagService;
-            $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
+            $imageService = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = $this->currentUser->get()
                     ->id->value;
-                \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Caddie\CaddieEntity::class)
+                EntityManagerFactory::build($conn)->getRepository(CaddieEntity::class)
                     ->removeElementsForUser($current_user_id, $collection);
 
                 // remove from caddie action available only in caddie so reload content
@@ -385,7 +405,7 @@ final class BatchManagerGlobalPageRenderer
 
             // add_to_caddie
             elseif ($action === 'add_to_caddie') {
-                \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($collection, $this->currentUser);
+                CaddieService::fillCurrentUserCaddie($collection, $this->currentUser);
             }
 
             // delete
@@ -492,13 +512,13 @@ final class BatchManagerGlobalPageRenderer
         // image level options
         $template->assign(
             [
-                'level_options' => \Piwigo\Permission\PermissionService::getPrivacyLevelOptions(),
+                'level_options' => PermissionService::getPrivacyLevelOptions(),
                 'level_options_selected' => 0,
             ]
         );
 
         // metadata
-        $site_reader = new LocalSiteReader('./', $this->currentConfig, new \Piwigo\Metadata\MetadataService($this->lang, new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState));
+        $site_reader = new LocalSiteReader('./', $this->currentConfig, new MetadataService($this->lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState));
         $used_metadata = implode(', ', $site_reader->get_metadata_attributes());
 
         $template->assign(
@@ -541,7 +561,7 @@ final class BatchManagerGlobalPageRenderer
         $nb_thumbs_page = 0;
 
         if (count($cat_elements_id) > 0) {
-            $nav_bar = new \Piwigo\Core\PaginationService($this->currentConfig)
+            $nav_bar = new PaginationService($this->currentConfig)
                 ->createNavigationBar($base_url . $this->urlService->getQueryStringDiff(['start']), count($cat_elements_id), $page_start, $nb_images);
             $template->assign('navbar', $nav_bar);
 
@@ -585,7 +605,7 @@ final class BatchManagerGlobalPageRenderer
                 $ttitle = $this->htmlRenderer
                     ->renderElementName($row);
                 $row_file = is_string($row['file']) ? $row['file'] : '';
-                if ($ttitle !== \Piwigo\Core\StringHelper::getNameFromFile($row_file)) {
+                if ($ttitle !== StringHelper::getNameFromFile($row_file)) {
                     $ttitle .= ' (' . $row_file . ')';
                 }
 

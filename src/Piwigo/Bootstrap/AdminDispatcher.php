@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use LogicException;
 use Piwigo\Controller\Admin\AdminSubControllerInterface;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -30,14 +32,14 @@ final class AdminDispatcher
         $map = self::map();
 
         if (! isset($map[$pageSlug])) {
-            throw new \LogicException(
+            throw new LogicException(
                 "Admin page '{$pageSlug}' is not registered in config/admin_pages.php."
             );
         }
 
         $controller = Kernel::container()->get($map[$pageSlug]);
         if (! $controller instanceof AdminSubControllerInterface) {
-            throw new \LogicException(
+            throw new LogicException(
                 "Admin page '{$pageSlug}' maps to '{$map[$pageSlug]}', which does not implement AdminSubControllerInterface."
             );
         }
@@ -51,7 +53,7 @@ final class AdminDispatcher
     private static function map(): array
     {
         /** @var array<string, class-string<AdminSubControllerInterface>> $map */
-        $map = require \Piwigo\Core\CurrentPaths::get()->root . 'config/admin_pages.php';
+        $map = require CurrentPaths::get()->root . 'config/admin_pages.php';
         return $map;
     }
 }

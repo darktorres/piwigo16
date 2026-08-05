@@ -4,22 +4,39 @@ declare(strict_types=1);
 
 namespace Piwigo\Page;
 
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
+use Piwigo\Core\MailerInterface;
+use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocEndNoPhotoYet;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Page\Request\NoPhotoYetRequest;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 /**
  * The "No Photo Yet" feature: if the gallery has no photo yet, replace
@@ -51,28 +68,28 @@ final readonly class NoPhotoYetRenderer
         private readonly Paths $paths,
         private readonly AdminContext $adminContext,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Core\MailerInterface $mailer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly DeploymentPolicy $deploymentPolicy,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly MailerInterface $mailer,
+        private readonly CurrentConfig $currentConfig,
         private readonly PageState $pageState,
         private readonly ErrorCollector $errorCollector,
         private readonly ProcessCache $processCache,
         private readonly CurrentConfigService $currentConfigService,
         private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Core\InstallationFlag $installationFlag,
+        private readonly InstallationFlag $installationFlag,
     ) {}
 
     public function render(): void
     {
         if (
             ! $this->adminContext->isActive()   // no message inside administration
-            and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'identification' // keep the ability to login
-            and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'password'       // keep the ability to reset password
-            and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws'             // keep the ability to discuss with web API
-            and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'popuphelp'      // keep the ability to display help popups
+            and PageFilterHelper::scriptBasename() !== 'identification' // keep the ability to login
+            and PageFilterHelper::scriptBasename() !== 'password'       // keep the ability to reset password
+            and PageFilterHelper::scriptBasename() !== 'ws'             // keep the ability to discuss with web API
+            and PageFilterHelper::scriptBasename() !== 'popuphelp'      // keep the ability to display help popups
             and ($this->accessControl->isAGuest() or $this->accessControl->isAdmin())          // normal users are not concerned by no_photo_yet
             and ! isset($_SESSION['no_photo_yet'])     // temporary hide
         ) {
@@ -83,11 +100,11 @@ final readonly class NoPhotoYetRenderer
                 // the "no photo yet" feature
                 $user_theme = $this->currentUser->get()
                     ->theme;
-                $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService($this->lang, new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), $this->eventDispatcher, $this->currentConfig), \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->htmlRenderer, \Piwigo\Db\DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, $this->installationFlag, $this->processCache)->getDefaultTheme();
+                $user_theme = $user_theme !== '' ? $user_theme : new UserService($this->lang, new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class), $this->mailer, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, $this->installationFlag, $this->processCache)->getDefaultTheme();
                 $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths->root . 'themes', $user_theme);
                 $this->currentTemplate->set($template);
 
-                $noPhotoYetAction = Request\NoPhotoYetRequest::fromGlobals()->action;
+                $noPhotoYetAction = NoPhotoYetRequest::fromGlobals()->action;
                 if ($noPhotoYetAction === 'browse') {
                     $_SESSION['no_photo_yet'] = 'browse';
                     $this->redirectService->redirect($this->urlService->makeIndexUrl());
@@ -98,7 +115,7 @@ final readonly class NoPhotoYetRenderer
                     $this->redirectService->redirect($this->urlService->makeIndexUrl());
                 }
 
-                header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
+                header('Content-Type: text/html; charset=' . CharsetHelper::getPwgCharset());
                 $template->set_filenames([
                     'no_photo_yet' => 'no_photo_yet.tpl',
                 ]);

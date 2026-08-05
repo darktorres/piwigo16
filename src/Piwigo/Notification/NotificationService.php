@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Notification;
 
 use Piwigo\Auth\AccessControl;
+use Piwigo\Cache\CachePools;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -12,6 +13,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Users\CurrentUser;
 
 /**
  * "What's new" aggregation, ported from the deleted
@@ -33,7 +35,7 @@ final readonly class NotificationService
         private HtmlRenderingInterface $htmlRenderer,
         private UrlServiceInterface $urlService,
         private Translator $translator,
-        private \Piwigo\Users\CurrentUser $currentUser,
+        private CurrentUser $currentUser,
     ) {}
 
     /**
@@ -215,7 +217,7 @@ final readonly class NotificationService
         $userId = (string) $this->currentUser->get()
             ->id->value;
 
-        $pool = \Piwigo\Cache\CachePools::notifications();
+        $pool = CachePools::notifications();
         $cacheItem = $pool->getItem('recent_posts_' . $userId . '_' . $maxDates . '_' . $maxElements . '_' . $maxCats);
         if ($cacheItem->isHit()) {
             $cached = $cacheItem->get();

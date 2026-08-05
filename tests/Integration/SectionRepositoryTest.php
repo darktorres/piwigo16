@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Db\EntityManagerFactory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -30,7 +32,7 @@ final class SectionRepositoryTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -43,7 +45,7 @@ final class SectionRepositoryTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
-        $this->repo = new SectionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
+        $this->repo = new SectionRepository(EntityManagerFactory::build($this->conn));
     }
 
     public function test_escape_token_escapes_a_value_without_surrounding_quotes(): void

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Config\CurrentConfig;
@@ -11,7 +13,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Lang\Translator;
-use Piwigo\Url\UrlService;
 
 /**
  * Piwigo\Admin\CoreTabs::addCoreTabs() -- the pure 'tabsheet_before_select'
@@ -28,7 +29,7 @@ use Piwigo\Url\UrlService;
  */
 function coreTabsUrlService(): UrlServiceInterface
 {
-    return \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    return UrlServiceTestFactory::build();
 }
 
 /**
@@ -40,7 +41,7 @@ function coreTabsUrlService(): UrlServiceInterface
  */
 function coreTabsLang(): Lang
 {
-    return new Lang(new Translator(new CurrentConfig()), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 /**

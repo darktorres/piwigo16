@@ -37,7 +37,7 @@ function installation_stats_test_make(): InstallationStats
 {
     $installationStats = Kernel::container()->get(InstallationStats::class);
     if (! $installationStats instanceof InstallationStats) {
-        throw new \LogicException('Container returned an unexpected type for ' . InstallationStats::class);
+        throw new LogicException('Container returned an unexpected type for ' . InstallationStats::class);
     }
 
     return $installationStats;

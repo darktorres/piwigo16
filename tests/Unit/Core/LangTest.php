@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\AppInfo;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Gettext\Headers;
 use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -105,10 +108,10 @@ function langTestLoad(Lang $lang, string $filename, string $dirname, mixed $opti
     return $method->invoke($lang, $filename, $dirname, $options);
 }
 
-function langTestMakeFatalRenderer(\stdClass $capture): HtmlRenderingInterface
+function langTestMakeFatalRenderer(stdClass $capture): HtmlRenderingInterface
 {
     return new class($capture) implements HtmlRenderingInterface {
-        public function __construct(private readonly \stdClass $capture)
+        public function __construct(private readonly stdClass $capture)
         {
         }
 
@@ -139,24 +142,24 @@ function langTestMakeFatalRenderer(\stdClass $capture): HtmlRenderingInterface
 
         public function accessDenied(RedirectServiceInterface $redirectService): never
         {
-            throw new \RuntimeException('accessDenied');
+            throw new RuntimeException('accessDenied');
         }
 
         public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
         {
-            throw new \RuntimeException('badRequest');
+            throw new RuntimeException('badRequest');
         }
 
         public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
         {
-            throw new \RuntimeException('pageNotFound');
+            throw new RuntimeException('pageNotFound');
         }
 
         public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
         {
             $this->capture->lastMessage = $msg;
 
-            throw new \RuntimeException('renderer-fatal:' . $msg);
+            throw new RuntimeException('renderer-fatal:' . $msg);
         }
 
         public function getTagsContentTitle(array $tags): string
@@ -201,7 +204,7 @@ function langTestMakeProvider(?string $defaultLanguage = null, ?string $currentL
 
         public function getDefaultLanguage(): string
         {
-            return $this->defaultLanguage ?? \Piwigo\Core\AppInfo::DEFAULT_LANGUAGE;
+            return $this->defaultLanguage ?? AppInfo::DEFAULT_LANGUAGE;
         }
 
         public function getCurrentLanguage(): ?string
@@ -255,8 +258,8 @@ function langTestMake(
     ?InstallationFlag $installationFlag = null,
 ): Lang {
     return new Lang(
-        $translator ?? new Translator(new \Piwigo\Config\CurrentConfig()),
-        $htmlRenderer ?? \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
+        $translator ?? new Translator(new CurrentConfig()),
+        $htmlRenderer ?? HtmlServiceTestFactory::build(),
         Paths::fromRoot($root ?? sys_get_temp_dir()),
         $installationFlag ?? new InstallationFlag(),
     );
@@ -322,7 +325,7 @@ test('has reflects the loaded data set', function (): void {
 });
 
 test('attachGlobals seeds from Translator\'s already-mirrored strings', function (): void {
-    $translator = new Translator(new \Piwigo\Config\CurrentConfig());
+    $translator = new Translator(new CurrentConfig());
     $translator->loadArray(['greeting' => 'hi']);
     $lang = langTestMake(translator: $translator);
 
@@ -332,7 +335,7 @@ test('attachGlobals seeds from Translator\'s already-mirrored strings', function
 });
 
 test('attachGlobals takes a one-time snapshot -- a later Translator mirror change is not retroactively visible', function (): void {
-    $translator = new Translator(new \Piwigo\Config\CurrentConfig());
+    $translator = new Translator(new CurrentConfig());
     $translator->loadArray(['greeting' => 'hi']);
     $lang = langTestMake(translator: $translator);
     $lang->attachGlobals();
@@ -448,7 +451,7 @@ test('attachGlobals silently drops a mirrored key that PHP auto-casts to an int 
     // makes impossible to satisfy for a literal numeric-string key, so
     // $mirror is seeded directly via reflection here instead of going
     // through that type-checked method.
-    $translator = new Translator(new \Piwigo\Config\CurrentConfig());
+    $translator = new Translator(new CurrentConfig());
     $mirror = ['42' => 'forty-two', 'greeting' => 'hi'];
     new ReflectionProperty(Translator::class, 'mirror')->setValue($translator, $mirror);
     $lang = langTestMake(translator: $translator);
@@ -486,7 +489,7 @@ test('args delegates the fatal error to the installed HtmlRenderingInterface', f
     $lang = langTestMake(htmlRenderer: langTestMakeFatalRenderer($capture));
 
     expect(fn () => $lang->args('not-an-array'))
-        ->toThrow(\RuntimeException::class, 'renderer-fatal:Lang::args: Invalid arguments');
+        ->toThrow(RuntimeException::class, 'renderer-fatal:Lang::args: Invalid arguments');
 
     expect($capture->lastMessage)->toBe('Lang::args: Invalid arguments');
 });
@@ -1096,5 +1099,5 @@ test('current() resolves the real container-shared instance once Kernel::boot() 
 
 test('current() throws when Kernel has not been booted -- no memoized pre-boot fallback, unlike e.g. CurrentUser::current()', function (): void {
     expect(fn () => Lang::current())
-        ->toThrow(\LogicException::class, 'Kernel not booted — call Kernel::boot() first.');
+        ->toThrow(LogicException::class, 'Kernel not booted — call Kernel::boot() first.');
 });

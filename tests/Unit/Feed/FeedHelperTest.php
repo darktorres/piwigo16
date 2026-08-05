@@ -143,14 +143,14 @@ test('generateRss2Feed produces the exact well-formed RSS document, byte for byt
     expect($matched)->toBe(1);
     assert(isset($matches[1]));
 
-    $lastBuildDate = \DateTimeImmutable::createFromFormat(\DATE_RFC2822, $matches[1]);
+    $lastBuildDate = DateTimeImmutable::createFromFormat(\DATE_RFC2822, $matches[1]);
     expect($lastBuildDate)->not->toBeFalse();
-    assert($lastBuildDate instanceof \DateTimeImmutable);
+    assert($lastBuildDate instanceof DateTimeImmutable);
     expect(abs($lastBuildDate->getTimestamp() - time()))->toBeLessThan(5);
 
     $normalized = preg_replace('/<lastBuildDate>[^<]*<\/lastBuildDate>/', '<lastBuildDate>DATE</lastBuildDate>', $feed);
 
-    $pubDate = new \DateTimeImmutable('2020-06-15T10:30:00+00:00')->format(\DATE_RFC2822);
+    $pubDate = new DateTimeImmutable('2020-06-15T10:30:00+00:00')->format(\DATE_RFC2822);
     $expected = '<?xml version="1.0" encoding="utf-8"?>' . "\n"
         . "<rss version=\"2.0\">\n"
         . "  <channel>\n"

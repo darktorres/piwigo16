@@ -5,16 +5,32 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use DateTimeImmutable;
+use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Request\FeedRequest;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\CharsetHelper;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\DateHelper;
+use Piwigo\Core\Env;
+use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Feed\FeedEntity;
 use Piwigo\Feed\FeedHelper;
-use Piwigo\Feed\FeedRepository;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Notification\NotificationService;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
+use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -37,25 +53,25 @@ final class FeedController implements ControllerInterface
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Notification\NotificationService $notificationService,
-        private readonly \Piwigo\Users\UserService $userService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly CurrentUser $currentUser,
+        private readonly NotificationService $notificationService,
+        private readonly UserService $userService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $htmlRenderer = $this->htmlRenderer;
 
         $feed_helper = new FeedHelper();
         $conn = DbConnection::build();
-        $feed_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Feed\FeedEntity::class);
+        $feed_repo = EntityManagerFactory::build($conn)->getRepository(FeedEntity::class);
         $notificationService = $this->notificationService;
 
-        $feedRequest = Request\FeedRequest::fromGlobals($this->inputValidator);
+        $feedRequest = FeedRequest::fromGlobals($this->inputValidator);
         $feed_id = $feedRequest->feedId;
         $image_only = $feedRequest->imageOnly;
         // Only read below when $image_only is false, which implies $feed_id
@@ -69,17 +85,17 @@ final class FeedController implements ControllerInterface
             }
             $feed_last_check = $feed_row['lastCheck'];
             if ($feed_row['userId'] !== $this->currentUser->get()->id->value) { // new user
-                $feed_owner = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($feed_row['userId']));
+                $feed_owner = $this->userService->buildUser(UserId::from($feed_row['userId']));
                 // The feed is per-user-token, so this request's "current user"
                 // genuinely becomes the feed owner, not the real session user.
-                $this->currentUser->set(\Piwigo\Users\User::fromUserArray($feed_owner));
+                $this->currentUser->set(User::fromUserArray($feed_owner));
             }
         } else {
             $image_only = true;
             if (! $this->accessControl->isAGuest()) {// auto session was created - so switch to guest
                 $guest_id = $this->currentConfig->guestId();
-                $guest_user = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
-                $this->currentUser->set(\Piwigo\Users\User::fromUserArray($guest_user));
+                $guest_user = $this->userService->buildUser(UserId::from($guest_id));
+                $this->currentUser->set(User::fromUserArray($guest_user));
             }
         }
 
@@ -90,11 +106,11 @@ final class FeedController implements ControllerInterface
         // invisible to Env::now()'s own PIWIGO_TEST_NOW freeze, same
         // reasoning as every other NOW()-reading call site this migration
         // already retargeted.
-        $dbnow = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
+        $dbnow = Env::now()->format('Y-m-d H:i:s');
 
         $this->urlService->setMakeFullUrl();
 
-        $rss_encoding = \Piwigo\Core\CharsetHelper::getPwgCharset();
+        $rss_encoding = CharsetHelper::getPwgCharset();
 
         $conf_gallery_title = $this->currentConfig->galleryTitle();
         $conf_rss_feed_author = $this->currentConfig->rssReedAuthor();
@@ -127,7 +143,7 @@ final class FeedController implements ControllerInterface
                 assert($dbnow_ts !== false);
 
                 $rss_items[] = [
-                    'title' => $this->lang->t('New on %s', \Piwigo\Core\DateHelper::formatDate($dbnow)),
+                    'title' => $this->lang->t('New on %s', DateHelper::formatDate($dbnow)),
                     'link' => $this->urlService->getGalleryHomeUrl(),
                     'description' => $description,
                     'html' => true,
@@ -212,8 +228,8 @@ final class FeedController implements ControllerInterface
 
         $data_location = $this->currentConfig->dataLocation();
 
-        $fileName = \Piwigo\Core\CurrentPaths::get()->root . $data_location . 'tmp';
-        \Piwigo\Core\FilesystemHelper::mkgetdir($fileName); // just in case
+        $fileName = CurrentPaths::get()->root . $data_location . 'tmp';
+        FilesystemHelper::mkgetdir($fileName); // just in case
         $fileName .= '/feed.xml';
         file_put_contents($fileName, $feed_content);
 

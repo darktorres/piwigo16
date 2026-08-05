@@ -5,11 +5,20 @@ declare(strict_types=1);
 namespace Piwigo\Page;
 
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\DeviceHelper;
+use Piwigo\Core\PageState;
 use Piwigo\Core\TelemetrySenderInterface;
+use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocBeginPageTail;
 use Piwigo\Event\Location\LocEndPageTail;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\UserRepository;
 
 /**
  * Renders the page footer into $template.
@@ -49,10 +58,10 @@ final readonly class PageTailRenderer
         private AccessControl $accessControl,
         private TelemetrySenderInterface $telemetrySender,
         private UrlServiceInterface $urlService,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private \Piwigo\Core\PageState $pageState,
-        private \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private \Piwigo\Config\CurrentConfig $currentConfig,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private CurrentConfig $currentConfig,
     ) {}
 
     public function render(float $startTime): void
@@ -103,7 +112,7 @@ final readonly class PageTailRenderer
         if (! $this->accessControl->isAGuest()) {
             $template->assign(
                 'CONTACT_MAIL',
-                (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->getWebmasterMailAddress()
+                (new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->getWebmasterMailAddress()
             );
         }
 
@@ -122,7 +131,7 @@ final readonly class PageTailRenderer
             $count_queries = $this->pageState->countQueries;
             $queries_time = $this->pageState->queriesTime;
 
-            $time = \Piwigo\Core\TimingHelper::getElapsedTime($startTime, \Piwigo\Core\TimingHelper::getMoment());
+            $time = TimingHelper::getElapsedTime($startTime, TimingHelper::getMoment());
 
             $debug_vars = array_merge(
                 $debug_vars,
@@ -137,14 +146,14 @@ final readonly class PageTailRenderer
         $template->assign('debug', $debug_vars);
 
         // ------------------------------------------------------------- mobile version
-        if (! self::emptyValue($this->currentConfig->mobilTheme()) && (\Piwigo\Core\DeviceHelper::getDevice() !== 'desktop' || \Piwigo\Core\DeviceHelper::mobileTheme())) {
+        if (! self::emptyValue($this->currentConfig->mobilTheme()) && (DeviceHelper::getDevice() !== 'desktop' || DeviceHelper::mobileTheme())) {
             $request_uri = $_SERVER['REQUEST_URI'] ?? '';
             $template->assign(
                 'TOGGLE_MOBILE_THEME_URL',
                 $this->urlService->addUrlParams(
                     htmlspecialchars(is_string($request_uri) ? $request_uri : ''),
                     [
-                        'mobile' => \Piwigo\Core\DeviceHelper::mobileTheme() ? 'false' : 'true',
+                        'mobile' => DeviceHelper::mobileTheme() ? 'false' : 'true',
                     ]
                 )
             );

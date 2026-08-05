@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\History\HistoryService;
 use Piwigo\Admin\StatsPageRenderer;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -43,9 +44,9 @@ function statsGetMonthOfLastYearsInvoke(): array
 {
     $method = new ReflectionMethod(StatsPageRenderer::class, 'getMonthOfLastYears');
 
-    $historyService = Kernel::container()->get(\Piwigo\History\HistoryService::class);
-    if (! $historyService instanceof \Piwigo\History\HistoryService) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\History\HistoryService::class);
+    $historyService = Kernel::container()->get(HistoryService::class);
+    if (! $historyService instanceof HistoryService) {
+        throw new LogicException('Container returned an unexpected type for ' . HistoryService::class);
     }
 
     $result = $method->invoke(null, $historyService, 'all');

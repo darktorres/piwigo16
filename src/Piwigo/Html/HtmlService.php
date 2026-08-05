@@ -4,16 +4,25 @@ declare(strict_types=1);
 
 namespace Piwigo\Html;
 
+use LogicException;
+use Override;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Event\Picture\GetThumbnailTitle;
 use Piwigo\Event\Picture\RenderElementDescription;
@@ -22,12 +31,15 @@ use Piwigo\Event\Template\RenderCategoryLiteralDescription;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Event\Template\SetStatusHeader;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Menu\RegisteredBlock;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
@@ -105,7 +117,7 @@ final class HtmlService implements HtmlRenderingInterface
     public function __construct(
         private readonly CurrentConfig $currentConfig,
         private readonly EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Core\ProcessCache $processCache,
+        private readonly ProcessCache $processCache,
         private readonly ErrorCollector $errorCollector,
         private readonly CurrentUser $currentUser,
         private readonly CurrentTemplate $currentTemplate,
@@ -117,7 +129,7 @@ final class HtmlService implements HtmlRenderingInterface
     private function categoryRepo(): CategoryRepository
     {
         return $this->categoryRepo
-            ?? new CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), $this->currentConfig);
+            ?? new CategoryRepository(EntityManagerFactory::build(DbConnection::build()), $this->currentConfig);
     }
 
     /**
@@ -130,9 +142,9 @@ final class HtmlService implements HtmlRenderingInterface
      */
     private function lang(): Lang
     {
-        $lang = \Piwigo\Core\Kernel::container()->get(Lang::class);
+        $lang = Kernel::container()->get(Lang::class);
         if (! $lang instanceof Lang) {
-            throw new \LogicException('Container returned an unexpected type for ' . Lang::class);
+            throw new LogicException('Container returned an unexpected type for ' . Lang::class);
         }
 
         return $lang;
@@ -147,18 +159,18 @@ final class HtmlService implements HtmlRenderingInterface
      * fallback -- that PermissionService is never actually read back out
      * on getCatDisplayNameFromId()'s own call path.
      */
-    private function filterState(): \Piwigo\Core\FilterState
+    private function filterState(): FilterState
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
-            if (! $filterState instanceof \Piwigo\Core\FilterState) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        if (Kernel::isBooted()) {
+            $filterState = Kernel::container()->get(FilterState::class);
+            if (! $filterState instanceof FilterState) {
+                throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
             }
 
             return $filterState;
         }
 
-        return new \Piwigo\Core\FilterState();
+        return new FilterState();
     }
 
     /**
@@ -166,11 +178,11 @@ final class HtmlService implements HtmlRenderingInterface
      * constructor requires HtmlRenderingInterface directly, same real-cycle
      * reasoning as lang() above.
      */
-    private function accessControl(): \Piwigo\Auth\AccessControl
+    private function accessControl(): AccessControl
     {
-        $accessControl = \Piwigo\Core\Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
-        if (! $accessControl instanceof \Piwigo\Auth\AccessControl) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Auth\AccessControl::class);
+        $accessControl = Kernel::container()->get(AccessControl::class);
+        if (! $accessControl instanceof AccessControl) {
+            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
 
         return $accessControl;
@@ -178,9 +190,9 @@ final class HtmlService implements HtmlRenderingInterface
 
     private function urlService(): UrlServiceInterface
     {
-        $urlService = \Piwigo\Core\Kernel::container()->get(UrlServiceInterface::class);
+        $urlService = Kernel::container()->get(UrlServiceInterface::class);
         if (! $urlService instanceof UrlServiceInterface) {
-            throw new \LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
+            throw new LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
         }
 
         return $urlService;
@@ -203,7 +215,7 @@ final class HtmlService implements HtmlRenderingInterface
      *
      * @param array<int, array<string, mixed>> $catInformations
      */
-    #[\Override]
+    #[Override]
     public function getCatDisplayName(array $catInformations, ?string $url = ''): string
     {
         $level_separator = $this->currentConfig->levelSeparator();
@@ -246,7 +258,7 @@ final class HtmlService implements HtmlRenderingInterface
      * Generates breadcrumb from categories list using a cache.
      * @see getCatDisplayName()
      */
-    #[\Override]
+    #[Override]
     public function getCatDisplayNameCache(
         string $uppercats,
         ?string $url = '',
@@ -347,10 +359,10 @@ final class HtmlService implements HtmlRenderingInterface
         $cat_info = new CategoryService(
             $this->lang(),
             $this->categoryRepo(),
-            new \Piwigo\Permission\PermissionService(
-                new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)),
-                \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class),
-                new CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig),
+            new PermissionService(
+                new PermissionRepository(EntityManagerFactory::build($categoryConn)),
+                EntityManagerFactory::build($categoryConn)->getRepository(GroupEntity::class),
+                new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig),
                 $this->currentUser,
                 $this->filterState()
             ),
@@ -418,7 +430,7 @@ final class HtmlService implements HtmlRenderingInterface
      * @param array<string, mixed> $a
      * @param array<string, mixed> $b
      */
-    #[\Override]
+    #[Override]
     public function nameCompare(array $a, array $b): int
     {
         $name_a = is_string($a['name'] ?? null) ? $a['name'] : '';
@@ -434,7 +446,7 @@ final class HtmlService implements HtmlRenderingInterface
      * @param array<string, mixed> $a
      * @param array<string, mixed> $b
      */
-    #[\Override]
+    #[Override]
     public function tagAlphaCompare(array $a, array $b): int
     {
         $name_a = is_string($a['name'] ?? null) ? $a['name'] : '';
@@ -451,14 +463,14 @@ final class HtmlService implements HtmlRenderingInterface
             // (re)computed -- a real runtime guard equivalent to the original
             // isset() check (fix pattern #6).
             if (! is_string($transliterated[$tag_name] ?? null)) {
-                $transliterated[$tag_name] = \Piwigo\Core\StringHelper::pwgTransliterate($tag_name);
+                $transliterated[$tag_name] = StringHelper::pwgTransliterate($tag_name);
             }
         }
 
         $this->processCache->set(self::class . '::tagAlphaCompare', $transliterated);
 
-        $translit_a = is_string($transliterated[$name_a] ?? null) ? $transliterated[$name_a] : \Piwigo\Core\StringHelper::pwgTransliterate($name_a);
-        $translit_b = is_string($transliterated[$name_b] ?? null) ? $transliterated[$name_b] : \Piwigo\Core\StringHelper::pwgTransliterate($name_b);
+        $translit_a = is_string($transliterated[$name_a] ?? null) ? $transliterated[$name_a] : StringHelper::pwgTransliterate($name_a);
+        $translit_b = is_string($transliterated[$name_b] ?? null) ? $transliterated[$name_b] : StringHelper::pwgTransliterate($name_b);
 
         return strcmp($translit_a, $translit_b);
     }
@@ -468,7 +480,7 @@ final class HtmlService implements HtmlRenderingInterface
      * or a redirect to the login page) instead of exiting directly -- see
      * that exception class's own docblock for why and where it's caught.
      */
-    #[\Override]
+    #[Override]
     public function accessDenied(RedirectServiceInterface $redirectService): never
     {
         if ($this->currentUser->isInitialized() and ! $this->accessControl()->isAGuest()) {
@@ -517,7 +529,7 @@ final class HtmlService implements HtmlRenderingInterface
      * setStatusHeader() call.
      * @todo nice display if $template loaded
      */
-    #[\Override]
+    #[Override]
     public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
     {
         if ($alternateUrl === null) {
@@ -543,7 +555,7 @@ final class HtmlService implements HtmlRenderingInterface
      * @param string|null $msg null is treated the same as '' below (string
      *   concatenation); comments.php passes null when comments are disabled
      */
-    #[\Override]
+    #[Override]
     public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
     {
         if ($alternateUrl === null) {
@@ -568,7 +580,7 @@ final class HtmlService implements HtmlRenderingInterface
      * deprecated as of PHP 8.4).
      * @todo nice display if $template loaded
      */
-    #[\Override]
+    #[Override]
     public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
     {
         if ($title === null || $title === '') {
@@ -641,7 +653,7 @@ final class HtmlService implements HtmlRenderingInterface
      *
      * @param list<array<string, mixed>> $tags
      */
-    #[\Override]
+    #[Override]
     public function getTagsContentTitle(array $tags): string
     {
         return '<a href="' . $this->urlService()->getRootUrl() . 'tags.php" title="' . $this->lang()->t('display available tags') . '">'
@@ -661,7 +673,7 @@ final class HtmlService implements HtmlRenderingInterface
      * @param array<string, mixed>|null $category
      * @param list<array<string, mixed>> $combinedCategories
      */
-    #[\Override]
+    #[Override]
     public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string
     {
         $title = $this->lang()
@@ -719,7 +731,7 @@ final class HtmlService implements HtmlRenderingInterface
     /**
      * Sets the http status header (200,401,...).
      */
-    #[\Override]
+    #[Override]
     public function setStatusHeader(int $code, string $text = ''): void
     {
         if ($text === '') {
@@ -781,7 +793,7 @@ final class HtmlService implements HtmlRenderingInterface
 
         // We hide the quick identification menu on the identification page. It
         // would be confusing.
-        if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'identification') {
+        if (PageFilterHelper::scriptBasename() !== 'identification') {
             $menu->register_block(new RegisteredBlock('mbIdentification', 'Identification', 'piwigo'));
         }
     }
@@ -796,7 +808,7 @@ final class HtmlService implements HtmlRenderingInterface
      *
      * @param array<string, mixed> $info at least file or name
      */
-    #[\Override]
+    #[Override]
     public function renderElementName(array $info): string
     {
         if (isset($info['name']) && is_string($info['name']) && $info['name'] !== '') {
@@ -806,7 +818,7 @@ final class HtmlService implements HtmlRenderingInterface
         }
         $filename = $info['file'] ?? null;
 
-        return \Piwigo\Core\StringHelper::getNameFromFile(is_string($filename) ? $filename : '');
+        return StringHelper::getNameFromFile(is_string($filename) ? $filename : '');
     }
 
     /**
@@ -818,7 +830,7 @@ final class HtmlService implements HtmlRenderingInterface
      * @param array<string, mixed> $info at least comment
      * @param string $param used to identify the trigger
      */
-    #[\Override]
+    #[Override]
     public function renderElementDescription(array $info, string $param = ''): string
     {
         if (isset($info['comment']) && is_string($info['comment']) && $info['comment'] !== '') {
@@ -838,7 +850,7 @@ final class HtmlService implements HtmlRenderingInterface
      *
      * @param array<string, mixed> $info hit, rating_score, nb_comments
      */
-    #[\Override]
+    #[Override]
     public function getThumbnailTitle(array $info, string $title, string $comment = ''): string
     {
 
@@ -894,7 +906,7 @@ final class HtmlService implements HtmlRenderingInterface
         $infos = $event->elementInfo;
         if ($this->currentConfig->originalUrlProtection() === 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
             $path = $infos['path'] ?? null;
-            $ext = \Piwigo\Core\StringHelper::getExtension(is_string($path) ? $path : null);
+            $ext = StringHelper::getExtension(is_string($path) ? $path : null);
             $picture_ext = $this->currentConfig->pictureExtensions();
             if (! in_array($ext, $picture_ext, true)) {
                 return $event;

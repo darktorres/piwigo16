@@ -4,9 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
+    use Override;
+    use LogicException;
+    use RuntimeException;
+    use Piwigo\Core\Kernel;
+    use Piwigo\Core\PageState;
+    use Piwigo\Core\Lang;
+    use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Comment\CommentEntity;
+    use Piwigo\Tests\Support\HtmlServiceTestFactory;
+    use Piwigo\Tests\Support\UrlServiceTestFactory;
+    use Piwigo\PluginConfig\EventDispatcher;
+    use Piwigo\Auth\AccessControl;
     use Doctrine\DBAL\Connection;
     use Piwigo\Auth\EphemeralKeyService;
-    use Piwigo\Comment\CommentRepository;
     use Piwigo\Comment\CommentService;
     use Piwigo\Common\ValueObject\CommentId;
     use Piwigo\Config\CurrentConfig;
@@ -17,9 +28,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
     use Piwigo\Event\User\UserCommentCheck;
-    use Piwigo\Html\HtmlService;
     use Piwigo\Mail\MailService;
-    use Piwigo\Url\UrlService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;
@@ -36,13 +45,13 @@ namespace Piwigo\Tests\Integration {
         /** @var list<array{subject: string|array{key_args: array<int, mixed>}, content: string|list<array{key_args: array<int, mixed>}>, sendTechnicalDetails: bool, groupId: int|string|null}> */
         public array $calls = [];
 
-        #[\Override]
+        #[Override]
         public function mail(string|array $to, array $args = [], array $tpl = []): bool
         {
-            throw new \LogicException("not used by CommentService's mail dispatch paths");
+            throw new LogicException("not used by CommentService's mail dispatch paths");
         }
 
-        #[\Override]
+        #[Override]
         public function mailNotificationAdmins(string|array $subject, string|array $content, bool $sendTechnicalDetails = true, int|string|null $groupId = null): bool
         {
             $this->calls[] = [
@@ -64,13 +73,13 @@ namespace Piwigo\Tests\Integration {
      */
     final class CommentServiceFakeHtmlRendererThrowsOnFatalError implements HtmlRenderingInterface
     {
-        #[\Override]
+        #[Override]
         public function getCatDisplayName(array $catInformations, ?string $url = ''): string
         {
-            throw new \LogicException('not used by getCommentAuthorId()');
+            throw new LogicException('not used by getCommentAuthorId()');
         }
 
-        #[\Override]
+        #[Override]
         public function getCatDisplayNameCache(
             string $uppercats,
             ?string $url = '',
@@ -78,79 +87,79 @@ namespace Piwigo\Tests\Integration {
             ?string $linkClass = null,
             ?string $authKey = null,
         ): string {
-            throw new \LogicException('not used by getCommentAuthorId()');
+            throw new LogicException('not used by getCommentAuthorId()');
         }
 
-        #[\Override]
+        #[Override]
         public function nameCompare(array $a, array $b): int
         {
-            throw new \LogicException('not used by getCommentAuthorId()');
+            throw new LogicException('not used by getCommentAuthorId()');
         }
 
-        #[\Override]
+        #[Override]
         public function tagAlphaCompare(array $a, array $b): int
         {
-            throw new \LogicException('not used by getCommentAuthorId()');
+            throw new LogicException('not used by getCommentAuthorId()');
         }
 
-        #[\Override]
+        #[Override]
         public function accessDenied(RedirectServiceInterface $redirectService): never
         {
-            throw new \LogicException('not used by getCommentAuthorId()');
+            throw new LogicException('not used by getCommentAuthorId()');
         }
 
-        #[\Override]
+        #[Override]
         public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
         {
-            throw new \LogicException('not used by getCommentAuthorId()');
+            throw new LogicException('not used by getCommentAuthorId()');
         }
 
-        #[\Override]
+        #[Override]
         public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
         {
-            throw new \LogicException('not used by getCommentAuthorId()');
+            throw new LogicException('not used by getCommentAuthorId()');
         }
 
-        #[\Override]
+        #[Override]
         public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
         {
-            throw new \RuntimeException('COMMENT_SERVICE_FATAL_ERROR_MARKER: ' . $msg);
+            throw new RuntimeException('COMMENT_SERVICE_FATAL_ERROR_MARKER: ' . $msg);
         }
 
-        #[\Override]
+        #[Override]
         public function getTagsContentTitle(array $tags): string
         {
-            throw new \LogicException('not used by getCommentAuthorId()');
+            throw new LogicException('not used by getCommentAuthorId()');
         }
 
-        #[\Override]
+        #[Override]
         public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string
         {
-            throw new \LogicException('not used by getCommentAuthorId()');
+            throw new LogicException('not used by getCommentAuthorId()');
         }
 
-        #[\Override]
+        #[Override]
         public function setStatusHeader(int $code, string $text = ''): void
         {
-            throw new \LogicException('not used by getCommentAuthorId()');
+            throw new LogicException('not used by getCommentAuthorId()');
         }
 
-        #[\Override]
+        #[Override]
         public function renderElementName(array $info): string
         {
-            throw new \LogicException('not used by getCommentAuthorId()');
+            throw new LogicException('not used by getCommentAuthorId()');
         }
 
-        #[\Override]
+        #[Override]
         public function renderElementDescription(array $info, string $param = ''): string
         {
-            throw new \LogicException('not used by getCommentAuthorId()');
+            throw new LogicException('not used by getCommentAuthorId()');
         }
 
-        #[\Override]
+        #[Override]
         public function getThumbnailTitle(array $info, string $title, string $comment = ''): string
         {
-            throw new \LogicException('not used by getCommentAuthorId()');
+            throw new LogicException('not used by getCommentAuthorId()');
         }
     }
 
@@ -171,7 +180,7 @@ namespace Piwigo\Tests\Integration {
 
         private Connection $conn;
 
-        #[\Override]
+        #[Override]
         protected function setUp(): void
         {
             parent::setUp();
@@ -183,9 +192,9 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
-            $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-            if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+            $currentConfig = Kernel::container()->get(CurrentConfig::class);
+            if (! $currentConfig instanceof CurrentConfig) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
             }
             $currentConfig->reset();
             ConfigLoader::applyDefaults();
@@ -206,22 +215,22 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::current()->setEmailAdminOnCommentEdition(false);
             CurrentConfig::current()->setEmailAdminOnCommentDeletion(false);
             CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin', 'email' => 'fixture_admin@example.test']));
-            \Piwigo\Core\PageState::current()->reset();
+            PageState::current()->reset();
 
             $this->conn = DbConnection::build();
-            $mailer = \Piwigo\Core\Kernel::container()->get(MailService::class);
+            $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
-            $this->service = new CommentService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current()), $mailer, \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current(), $this->accessControl());
+            $this->service = new CommentService(Lang::current(), EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class), new EphemeralKeyService(CurrentConfig::current()), $mailer, HtmlServiceTestFactory::build(), UrlServiceTestFactory::build(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentConfig::current(), $this->accessControl());
         }
 
-        private function accessControl(): \Piwigo\Auth\AccessControl
+        private function accessControl(): AccessControl
         {
             // Kernel is already booted by parent::setUp() above -- resolve
             // the same container-shared instance a real request would get
             // (singleton/service-locator elimination campaign, Phase 7).
-            $accessControl = \Piwigo\Core\Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
-            if (! $accessControl instanceof \Piwigo\Auth\AccessControl) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Auth\AccessControl::class);
+            $accessControl = Kernel::container()->get(AccessControl::class);
+            if (! $accessControl instanceof AccessControl) {
+                throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
             }
 
             return $accessControl;
@@ -737,7 +746,7 @@ namespace Piwigo\Tests\Integration {
         {
             $service = $this->serviceWithHtmlRenderer(new CommentServiceFakeHtmlRendererThrowsOnFatalError());
 
-            $this->expectException(\RuntimeException::class);
+            $this->expectException(RuntimeException::class);
             $this->expectExceptionMessage('COMMENT_SERVICE_FATAL_ERROR_MARKER: Unknown comment identifier');
 
             $service->getCommentAuthorId(CommentId::from(999999));
@@ -813,7 +822,7 @@ namespace Piwigo\Tests\Integration {
             // CommentRepositoryTest's own countAvailableWithConditions()
             // tests exercise the same repository mechanism, but never
             // through this exact caller.
-            $repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class);
+            $repo = EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class);
             $baseline = CommentService::getNbAvailableComments();
 
             $validatedId = $repo->insert(['author' => 'nbc-test', 'authorId' => null, 'anonymousId' => '10.40.0.1', 'content' => 'nbc validated', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
@@ -847,7 +856,7 @@ namespace Piwigo\Tests\Integration {
          */
         private function postCr(): array
         {
-            return \Piwigo\Core\PageState::current()->commentRejectionReasons;
+            return PageState::current()->commentRejectionReasons;
         }
 
         /**
@@ -855,7 +864,7 @@ namespace Piwigo\Tests\Integration {
          */
         private function pageErrors(): array
         {
-            return \Piwigo\Core\PageState::current()->errors;
+            return PageState::current()->errors;
         }
 
         /**
@@ -867,16 +876,16 @@ namespace Piwigo\Tests\Integration {
         private function serviceWithMailer(MailerInterface $mailer): CommentService
         {
             return new CommentService(
-                \Piwigo\Core\Lang::current(),
-                \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class),
-                new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current()),
+                Lang::current(),
+                EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class),
+                new EphemeralKeyService(CurrentConfig::current()),
                 $mailer,
-                \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
-                \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
-                new \Piwigo\PluginConfig\EventDispatcher(),
-                \Piwigo\Core\PageState::current(),
-                \Piwigo\Users\CurrentUser::current(),
-                \Piwigo\Config\CurrentConfig::current(),
+                HtmlServiceTestFactory::build(),
+                UrlServiceTestFactory::build(),
+                new EventDispatcher(),
+                PageState::current(),
+                CurrentUser::current(),
+                CurrentConfig::current(),
                 $this->accessControl(),
             );
         }
@@ -889,27 +898,27 @@ namespace Piwigo\Tests\Integration {
          */
         private function serviceWithHtmlRenderer(HtmlRenderingInterface $htmlRenderer): CommentService
         {
-            $mailer = \Piwigo\Core\Kernel::container()->get(MailService::class);
+            $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
 
             return new CommentService(
-                \Piwigo\Core\Lang::current(),
-                \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class),
-                new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current()),
+                Lang::current(),
+                EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class),
+                new EphemeralKeyService(CurrentConfig::current()),
                 $mailer,
                 $htmlRenderer,
-                \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
-                new \Piwigo\PluginConfig\EventDispatcher(),
-                \Piwigo\Core\PageState::current(),
-                \Piwigo\Users\CurrentUser::current(),
-                \Piwigo\Config\CurrentConfig::current(),
+                UrlServiceTestFactory::build(),
+                new EventDispatcher(),
+                PageState::current(),
+                CurrentUser::current(),
+                CurrentConfig::current(),
                 $this->accessControl(),
             );
         }
 
         private function absoluteRootUrl(): string
         {
-            return (\Piwigo\Tests\Support\UrlServiceTestFactory::build())->getAbsoluteRootUrl();
+            return (UrlServiceTestFactory::build())->getAbsoluteRootUrl();
         }
 
         private function insertedId(mixed $comm): int

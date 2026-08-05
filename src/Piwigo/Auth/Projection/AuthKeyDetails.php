@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth\Projection;
 
+use Piwigo\Users\UserStatus;
+
 /**
  * Typed row shape for
  * {@see \Piwigo\Auth\AuthRepository::findAuthKeyDetails()} (P17-23 Stage 1b,
@@ -57,7 +59,7 @@ final readonly class AuthKeyDetails
             // Phase 5 Item 21: see \Piwigo\Auth\Projection\AuthUser::fromRow()'s
             // own comment -- `ui.status` array-hydrates as a UserStatus
             // instance now, not a raw string.
-            status: ($row['status'] ?? null) instanceof \Piwigo\Users\UserStatus ? $row['status']->value : '',
+            status: ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : '',
             username: is_string($row['username'] ?? null) ? $row['username'] : '',
             email: is_string($row['email'] ?? null) ? $row['email'] : '',
         );

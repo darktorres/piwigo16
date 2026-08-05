@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Browser\Helpers;
 
+use InvalidArgumentException;
+use RuntimeException;
+
 /**
  * The deterministic solid-color + "Photo N" label content every fixture
  * photo (piwigo_images ids 1-5, in RegenerateFixtureTest's own upload
@@ -35,30 +38,30 @@ final class FixturePhotoGenerator
     {
         $color = self::COLORS[$index - 1] ?? null;
         if ($color === null) {
-            throw new \InvalidArgumentException("No fixture color defined for photo index {$index}.");
+            throw new InvalidArgumentException("No fixture color defined for photo index {$index}.");
         }
         [$r, $g, $b] = $color;
 
         $img = imagecreatetruecolor(200, 150);
         if ($img === false) {
-            throw new \RuntimeException('imagecreatetruecolor failed');
+            throw new RuntimeException('imagecreatetruecolor failed');
         }
 
         $bgColor = imagecolorallocate($img, $r, $g, $b);
         if ($bgColor === false) {
-            throw new \RuntimeException('imagecolorallocate failed');
+            throw new RuntimeException('imagecolorallocate failed');
         }
         imagefill($img, 0, 0, $bgColor);
 
         $textColor = imagecolorallocate($img, 255, 255, 255);
         if ($textColor === false) {
-            throw new \RuntimeException('imagecolorallocate failed');
+            throw new RuntimeException('imagecolorallocate failed');
         }
         imagestring($img, 5, 60, 70, 'Photo ' . $index, $textColor);
 
         $dir = dirname($destPath);
         if (! is_dir($dir) && ! mkdir($dir, 0777, true) && ! is_dir($dir)) {
-            throw new \RuntimeException("Failed to create directory: {$dir}");
+            throw new RuntimeException("Failed to create directory: {$dir}");
         }
 
         // A pre-existing $destPath may be www-data-owned (a live, Apache-
@@ -69,11 +72,11 @@ final class FixturePhotoGenerator
         // clears), so remove it first rather than trying to truncate a
         // file this process may not own.
         if (is_file($destPath) && ! @unlink($destPath)) {
-            throw new \RuntimeException("Failed to remove the existing file before regenerating it: {$destPath}");
+            throw new RuntimeException("Failed to remove the existing file before regenerating it: {$destPath}");
         }
 
         if (! imagejpeg($img, $destPath, 80)) {
-            throw new \RuntimeException("Failed to write JPEG to: {$destPath}");
+            throw new RuntimeException("Failed to write JPEG to: {$destPath}");
         }
     }
 }

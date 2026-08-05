@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
+use Override;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\NumericIdContract;
@@ -11,13 +12,13 @@ use Piwigo\Tests\Unit\Common\ValueObject\Contract\NumericIdContract;
 /** @extends NumericIdContract<GroupId> */
 final class GroupIdTest extends NumericIdContract
 {
-    #[\Override]
+    #[Override]
     protected static function voClass(): string
     {
         return GroupId::class;
     }
 
-    #[\Override]
+    #[Override]
     protected static function otherVoClass(): string
     {
         return CommentId::class;

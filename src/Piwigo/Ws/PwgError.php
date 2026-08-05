@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Piwigo\Bootstrap\PresentationAccessor;
+
 /**
  * PwgError object can be returned from any web service function implementation.
  */
@@ -25,7 +27,7 @@ final class PwgError
         string $codeText
     ) {
         if ($code >= 400 and $code < 600) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            PresentationAccessor::htmlService()
                 ->setStatusHeader($code, $codeText);
         }
 

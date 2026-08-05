@@ -11,6 +11,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Cache;
 
+use Override;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\FilesystemHelper;
+
 /**
  * Implementation of a persistent cache using files.
  */
@@ -19,13 +24,13 @@ final class PersistentFileCache extends PersistentCache
     private readonly string $dir;
 
     public function __construct(
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentConfig $currentConfig,
     ) {
         $data_location = $this->currentConfig->dataLocation();
-        $this->dir = \Piwigo\Core\CurrentPaths::get()->root . $data_location . 'cache/';
+        $this->dir = CurrentPaths::get()->root . $data_location . 'cache/';
     }
 
-    #[\Override]
+    #[Override]
     public function get($key, mixed &$value): bool
     {
         $file = $this->dir . $key . '.cache';
@@ -56,7 +61,7 @@ final class PersistentFileCache extends PersistentCache
         return false;
     }
 
-    #[\Override]
+    #[Override]
     public function set($key, $value, $lifetime = null): bool
     {
         if ($lifetime === null) {
@@ -75,7 +80,7 @@ final class PersistentFileCache extends PersistentCache
         $path = $this->dir . $key . '.cache';
         $written = @file_put_contents($path, $serialized);
         if ($written === false) {
-            \Piwigo\Core\FilesystemHelper::mkgetdir($this->dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
+            FilesystemHelper::mkgetdir($this->dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
             $written = @file_put_contents($path, $serialized);
             if ($written === false) {
                 return false;
@@ -84,7 +89,7 @@ final class PersistentFileCache extends PersistentCache
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function purge($all): void
     {
         $files = glob($this->dir . '*.cache');

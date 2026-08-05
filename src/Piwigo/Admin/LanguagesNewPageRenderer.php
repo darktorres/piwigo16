@@ -4,20 +4,33 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\PluginMigrationEntity;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Request\LanguagesNewInstallRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
-use Piwigo\Template\Template;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserService;
 
 /**
  * Ported from admin/languages_new.php (the "new" tab of the "languages" page
@@ -37,15 +50,15 @@ final class LanguagesNewPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Users\UserService $userService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentLogger $currentLogger,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly ActivityService $activityService,
+        private readonly UserService $userService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
         private readonly WsContext $wsContext,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly CurrentUser $currentUser,
     ) {}
 
     /**
@@ -74,17 +87,17 @@ final class LanguagesNewPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
 
-        $extension_repository = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()));
+        $extension_repository = new ExtensionRepository(EntityManagerFactory::build(DbConnection::build()));
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser);
         $extension_scanner = new ExtensionScanner();
-        $plugin_migration_repo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
+        $plugin_migration_repo = EntityManagerFactory::build(DbConnection::build())->getRepository(PluginMigrationEntity::class);
         $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl);
 
         // +-----------------------------------------------------------------------+
         // |                           setup check                                 |
         // +-----------------------------------------------------------------------+
 
-        $languages_dir = \Piwigo\Core\CurrentPaths::get()->root . 'language';
+        $languages_dir = CurrentPaths::get()->root . 'language';
         if (! is_writable($languages_dir)) {
             $this->pageState->addError($this->lang->t('Add write access to the "%s" directory', 'language'));
         }
@@ -93,13 +106,13 @@ final class LanguagesNewPageRenderer
         // |                       perform installation                            |
         // +-----------------------------------------------------------------------+
 
-        $languagesNewInstall = Request\LanguagesNewInstallRequest::fromGlobals();
+        $languagesNewInstall = LanguagesNewInstallRequest::fromGlobals();
 
         if ($languagesNewInstall->revision !== null) {
             if (! $this->accessControl->isWebmaster()) {
                 $this->pageState->addError($this->lang->t('Webmaster status is required.'));
             } else {
-                new \Piwigo\Csrf\CsrfService()
+                new CsrfService()
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
                 $revision = $languagesNewInstall->revision;
@@ -149,7 +162,7 @@ final class LanguagesNewPageRenderer
         $server_languages = $pem_catalog->getServerExtensions(ExtensionType::Language, $fs_language_ids, true);
 
         if ($server_languages !== null) {
-            $pem_base_url = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
+            $pem_base_url = RequestBootstrap::pemUrl();
 
             foreach ($server_languages as $language) {
                 // $language comes from an untyped unserialize() of a remote PEM
@@ -172,7 +185,7 @@ final class LanguagesNewPageRenderer
 
                 $url_auto_install = htmlentities($base_url)
                   . '&amp;revision=' . $revision_id
-                  . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken()
+                  . '&amp;pwg_token=' . new CsrfService()->getToken()
                 ;
 
                 $template->append('languages', [

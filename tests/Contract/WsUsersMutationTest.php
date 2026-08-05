@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use Piwigo\Cache\CachePools;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -20,7 +22,7 @@ final class WsUsersMutationTest extends ContractTestCase
     /** @var list<int> */
     private array $imageIdsToDelete = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,7 +30,7 @@ final class WsUsersMutationTest extends ContractTestCase
         $this->loginAsAdmin();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $token = $this->getPwgToken();
@@ -277,7 +279,7 @@ final class WsUsersMutationTest extends ContractTestCase
     public function test_add_password_confirmation_mismatch_returns_error(): void
     {
         $this->upsertConfig('double_password_type_in_admin', 'true');
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         try {
             $token = $this->getPwgToken();
@@ -294,7 +296,7 @@ final class WsUsersMutationTest extends ContractTestCase
             self::assertSame('The passwords do not match', $response['message']);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'double_password_type_in_admin'");
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 
@@ -616,7 +618,7 @@ final class WsUsersMutationTest extends ContractTestCase
     public function test_setMyInfo_ignores_theme_when_user_customization_is_disabled(): void
     {
         $this->upsertConfig('allow_user_customization', 'false');
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         try {
             $token = $this->getPwgToken();
@@ -632,7 +634,7 @@ final class WsUsersMutationTest extends ContractTestCase
             self::assertSame($before, $after);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'allow_user_customization'");
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 
@@ -649,7 +651,7 @@ final class WsUsersMutationTest extends ContractTestCase
         $this->conn->executeStatement(
             "UPDATE " . Tables::config() . " SET value = 'false' WHERE param = 'activate_comments'"
         );
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         try {
             $token = $this->getPwgToken();
@@ -665,7 +667,7 @@ final class WsUsersMutationTest extends ContractTestCase
             self::assertSame($before, $after, 'show_nb_comments must be silently dropped, not applied, while comments are disabled gallery-wide');
         } finally {
             $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = 'true' WHERE param = 'activate_comments'");
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 
@@ -687,7 +689,7 @@ final class WsUsersMutationTest extends ContractTestCase
         $originalDefaultUserId = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'default_user_id'");
 
         $this->upsertConfig('default_user_id', (string) $userId);
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         try {
             $before = $this->conn->fetchAssociative(
@@ -731,7 +733,7 @@ final class WsUsersMutationTest extends ContractTestCase
                     [$originalDefaultUserId]
                 );
             }
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 
@@ -993,7 +995,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
         $originalSmtpHost = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'smtp_host'");
         $this->upsertConfig('smtp_host', '"127.0.0.1:1"');
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         try {
             $first = $this->callWs('pwg.users.generatePasswordLink', [
@@ -1032,7 +1034,7 @@ final class WsUsersMutationTest extends ContractTestCase
                     [$originalSmtpHost]
                 );
             }
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 
@@ -1144,7 +1146,7 @@ final class WsUsersMutationTest extends ContractTestCase
                 "UPDATE " . Tables::config() . " SET value = ? WHERE param = 'webmaster_id'",
                 [$originalWebmasterId]
             );
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 

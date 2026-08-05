@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Category\CategoryService;
 use Piwigo\Admin\CatModifyPageRenderer;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -49,9 +50,9 @@ function catModifyReflect(string $method, int|string $categoryId): string
 {
     $reflected = new ReflectionMethod(CatModifyPageRenderer::class, $method);
 
-    $categoryService = Kernel::container()->get(\Piwigo\Category\CategoryService::class);
-    if (! $categoryService instanceof \Piwigo\Category\CategoryService) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Category\CategoryService::class);
+    $categoryService = Kernel::container()->get(CategoryService::class);
+    if (! $categoryService instanceof CategoryService) {
+        throw new LogicException('Container returned an unexpected type for ' . CategoryService::class);
     }
 
     /** @var string */
@@ -65,12 +66,12 @@ test('getLocalDir throws when the category id matches no real row', function ():
     $missingId = 999999;
 
     expect(fn () => catModifyReflect('getLocalDir', $missingId))
-        ->toThrow(\Exception::class, "getLocalDir(): category #{$missingId} not found");
+        ->toThrow(Exception::class, "getLocalDir(): category #{$missingId} not found");
 });
 
 test('getSiteUrl throws when the category id matches no real row', function (): void {
     $missingId = 999999;
 
     expect(fn () => catModifyReflect('getSiteUrl', $missingId))
-        ->toThrow(\Exception::class, "getSiteUrl(): category #{$missingId} not found");
+        ->toThrow(Exception::class, "getSiteUrl(): category #{$missingId} not found");
 });

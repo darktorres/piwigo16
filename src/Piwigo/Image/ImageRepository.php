@@ -17,6 +17,7 @@ use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageFormat;
@@ -711,7 +712,7 @@ final class ImageRepository extends EntityRepository
             ->createQueryBuilder()
             ->select('i.dateAvailable AS date_available')
             ->from(LoungeEntity::class, 'l')
-            ->innerJoin(ImageEntity::class, 'i', \Doctrine\ORM\Query\Expr\Join::WITH, 'l.imageId = i.id')
+            ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'l.imageId = i.id')
             ->orderBy('l.imageId', 'ASC')
             ->setMaxResults(1)
             ->getQuery()
@@ -964,7 +965,7 @@ final class ImageRepository extends EntityRepository
                 ->createQueryBuilder()
                 ->select('i.id')
                 ->from(ImageCategoryEntity::class, 'ic')
-                ->innerJoin(ImageEntity::class, 'i', \Doctrine\ORM\Query\Expr\Join::WITH, 'ic.imageId = i.id')
+                ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'ic.imageId = i.id')
                 ->where('ic.categoryId = :category')
                 ->andWhere('i.id IN (:images)')
                 ->andWhere('(ic.categoryId != i.storageCategoryId OR i.storageCategoryId IS NULL)')
@@ -1666,7 +1667,7 @@ final class ImageRepository extends EntityRepository
     {
         $qb = $this->createQueryBuilder('i')
             ->select('i.id')
-            ->leftJoin(ImageCategoryEntity::class, 'ic', \Doctrine\ORM\Query\Expr\Join::WITH, 'i.id = ic.imageId')
+            ->leftJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
             ->where('ic.categoryId IS NULL')
             ->orderBy('i.id', 'ASC');
 
@@ -1891,7 +1892,7 @@ final class ImageRepository extends EntityRepository
             ->createQueryBuilder()
             ->select('DISTINCT ic.categoryId AS id')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->innerJoin(ImageEntity::class, 'i', \Doctrine\ORM\Query\Expr\Join::WITH, 'i.id = ic.imageId')
+            ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'i.id = ic.imageId')
             ->where('ic.imageId IN (:ids)')
             ->andWhere('(ic.categoryId != i.storageCategoryId OR i.storageCategoryId IS NULL)')
             ->setParameter('ids', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
@@ -1930,7 +1931,7 @@ final class ImageRepository extends EntityRepository
     {
         $rows = $this->createQueryBuilder('i')
             ->select('i.id', 'i.file', 'i.path', 'i.representativeExt AS representative_ext', 'i.width', 'i.height', 'i.rotation', 'i.name', 'ic.rank')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', \Doctrine\ORM\Query\Expr\Join::WITH, 'ic.imageId = i.id')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
             ->where('ic.categoryId = :categoryId')
             ->orderBy('ic.rank')
             ->setParameter('categoryId', CategoryId::from($categoryId))
@@ -2104,8 +2105,8 @@ final class ImageRepository extends EntityRepository
     {
         $row = $this->createQueryBuilder('i')
             ->select('ic.categoryId', 'c.uppercats')
-            ->innerJoin(ImageCategoryEntity::class, 'ic', \Doctrine\ORM\Query\Expr\Join::WITH, 'ic.imageId = i.id')
-            ->innerJoin(CategoryEntity::class, 'c', \Doctrine\ORM\Query\Expr\Join::WITH, 'ic.categoryId = c.id')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
+            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'ic.categoryId = c.id')
             ->orderBy('i.id', 'DESC')
             ->setMaxResults(1)
             ->getQuery()
@@ -2384,7 +2385,7 @@ final class ImageRepository extends EntityRepository
             ->createQueryBuilder()
             ->select('ic.categoryId AS category_id', 'c.uppercats', 'c.dir')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->innerJoin(CategoryEntity::class, 'c', \Doctrine\ORM\Query\Expr\Join::WITH, 'c.id = ic.categoryId')
+            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'c.id = ic.categoryId')
             ->where('ic.imageId = :imageId')
             ->setParameter('imageId', $imageId, ParameterType::INTEGER)
             ->getQuery()
@@ -2529,7 +2530,7 @@ final class ImageRepository extends EntityRepository
                 ->createQueryBuilder()
                 ->select('ic.imageId')
                 ->from(ImageCategoryEntity::class, 'ic')
-                ->leftJoin(ImageEntity::class, 'i', \Doctrine\ORM\Query\Expr\Join::WITH, 'i.id = ic.imageId')
+                ->leftJoin(ImageEntity::class, 'i', Join::WITH, 'i.id = ic.imageId')
                 ->where('i.id IS NULL')
                 ->getQuery()
                 ->getSingleColumnResult()
@@ -2634,7 +2635,7 @@ final class ImageRepository extends EntityRepository
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->createQueryBuilder('i')
                 ->select('i.id')
-                ->innerJoin(ImageCategoryEntity::class, 'ic', \Doctrine\ORM\Query\Expr\Join::WITH, 'ic.imageId = i.id')
+                ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
                 ->where('i.file = :filename')
                 ->andWhere('ic.categoryId = :categoryId')
                 ->setParameter('filename', $filename)
@@ -2984,7 +2985,7 @@ final class ImageRepository extends EntityRepository
                 ->createQueryBuilder()
                 ->select('c.id')
                 ->from(CategoryEntity::class, 'c')
-                ->innerJoin(ImageCategoryEntity::class, 'ic', \Doctrine\ORM\Query\Expr\Join::WITH, 'c.id = ic.categoryId')
+                ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'c.id = ic.categoryId')
                 ->where('ic.imageId = :imageId')
                 ->setParameter('imageId', $imageId, ParameterType::INTEGER)
                 ->getQuery()
@@ -3709,7 +3710,7 @@ final class ImageRepository extends EntityRepository
         // Postgres server otherwise).
         $orderBySql = $orderBySql === '' ? 'ORDER BY id' : str_ireplace(
             'RAND()',
-            \Piwigo\Db\SqlDialect::randomFunction() . '()',
+            SqlDialect::randomFunction() . '()',
             $orderBySql
         );
 

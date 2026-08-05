@@ -11,6 +11,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
+use Exception;
+use LogicException;
+use Override;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\StringHelper;
+
 final class ImageExtImagick implements ImageInterface
 {
     public string $imagickdir = '';
@@ -37,8 +44,8 @@ final class ImageExtImagick implements ImageInterface
 
     public function __construct(
         public string $source_filepath,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentLogger $currentLogger,
+        private readonly CurrentConfig $currentConfig,
     ) {
         $imagick_dir = $this->currentConfig->extImagickDir();
         $this->imagickdir = $imagick_dir;
@@ -48,7 +55,7 @@ final class ImageExtImagick implements ImageInterface
             @putenv('MAGICK_THREAD_LIMIT=1');
         }
 
-        if (strtolower(\Piwigo\Core\StringHelper::getExtension($this->source_filepath)) === 'webp') {
+        if (strtolower(StringHelper::getExtension($this->source_filepath)) === 'webp') {
             $webp_info = PwgImage::webp_info($this->source_filepath);
 
             if ($webp_info['has-animation']) {
@@ -60,7 +67,7 @@ final class ImageExtImagick implements ImageInterface
                 // getimagesize here.
                 $size = getimagesize($this->source_filepath);
                 if ($size === false) {
-                    throw new \Exception("ImageExtImagick(): getimagesize({$this->source_filepath}): Failed");
+                    throw new Exception("ImageExtImagick(): getimagesize({$this->source_filepath}): Failed");
                 }
                 [$this->width, $this->height] = $size;
                 return;
@@ -87,19 +94,19 @@ final class ImageExtImagick implements ImageInterface
         $this->commands[$command] = $params;
     }
 
-    #[\Override]
+    #[Override]
     public function get_width(): int|float
     {
         return $this->width;
     }
 
-    #[\Override]
+    #[Override]
     public function get_height(): int|float
     {
         return $this->height;
     }
 
-    #[\Override]
+    #[Override]
     public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
     {
         $this->width = $width;
@@ -110,14 +117,14 @@ final class ImageExtImagick implements ImageInterface
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function strip(): bool
     {
         $this->add_command('strip');
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function rotate(int|float $rotation): bool
     {
         if ($rotation === 0 || $rotation === 0.0) {
@@ -134,7 +141,7 @@ final class ImageExtImagick implements ImageInterface
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function set_compression_quality(int $quality): bool
     {
 
@@ -150,7 +157,7 @@ final class ImageExtImagick implements ImageInterface
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function resize(int|float $width, int|float $height): bool
     {
         $this->width = $width;
@@ -161,7 +168,7 @@ final class ImageExtImagick implements ImageInterface
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function sharpen(int|float $amount): bool
     {
         $m = PwgImage::get_sharpen_matrix($amount);
@@ -176,18 +183,18 @@ final class ImageExtImagick implements ImageInterface
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
     {
         // See ImageImagick::compose()'s comment: only valid when both
         // images use the same backend, always true in practice.
         $overlay_backend = $overlay->image;
         if (! $overlay_backend instanceof self) {
-            throw new \LogicException('PwgImage::compose(): overlay must use the same image backend');
+            throw new LogicException('PwgImage::compose(): overlay must use the same image backend');
         }
         $overlay_realpath = realpath($overlay_backend->source_filepath);
         if ($overlay_realpath === false) {
-            throw new \Exception("compose(): unable to resolve overlay path {$overlay_backend->source_filepath}");
+            throw new Exception("compose(): unable to resolve overlay path {$overlay_backend->source_filepath}");
         }
 
         $param = 'compose dissolve -define compose:args=' . (string) $opacity;
@@ -198,7 +205,7 @@ final class ImageExtImagick implements ImageInterface
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function write(string $destination_filepath): bool
     {
         // Set unconditionally by i.php / include/common.inc.php before any
@@ -236,11 +243,11 @@ final class ImageExtImagick implements ImageInterface
         }
         $dest = pathinfo($destination_filepath);
         if (! isset($dest['dirname'])) {
-            throw new \Exception("write(): unable to determine directory for {$destination_filepath}");
+            throw new Exception("write(): unable to determine directory for {$destination_filepath}");
         }
         $dest_dirname_realpath = realpath($dest['dirname']);
         if ($dest_dirname_realpath === false) {
-            throw new \Exception("write(): unable to resolve directory {$dest['dirname']}");
+            throw new Exception("write(): unable to resolve directory {$dest['dirname']}");
         }
         $exec .= ' ' . escapeshellarg($dest_dirname_realpath . '/' . $dest['basename']) . ' 2>&1';
         $logger->debug($exec, 'i.php');

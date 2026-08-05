@@ -145,7 +145,7 @@ final class UniqueExecLock
 
     public static function begins(string $tokenName, int $timeout = 0): bool
     {
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = CurrentLogger::getStatic();
         $conn = self::connection();
 
         $acquired = AdvisorySessionLock::acquire($conn, self::lockName($tokenName), $timeout);
@@ -174,7 +174,7 @@ final class UniqueExecLock
 
     public static function ends(string $tokenName): void
     {
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = CurrentLogger::getStatic();
         $conn = self::connection();
 
         AdvisorySessionLock::release($conn, self::lockName($tokenName));

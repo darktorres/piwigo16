@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Section;
 
+use PHPUnit\Framework\TestCase;
 use Piwigo\Section\SectionPopulator;
 use ReflectionMethod;
 
@@ -16,7 +17,7 @@ use ReflectionMethod;
  * private static helpers (e.g. Piwigo\Core\LangTest's getParentLanguage()
  * coverage).
  */
-final class SectionPopulatorEmptyValueTest extends \PHPUnit\Framework\TestCase
+final class SectionPopulatorEmptyValueTest extends TestCase
 {
     public function test_matches_php_emptys_exact_truthiness_semantics(): void
     {

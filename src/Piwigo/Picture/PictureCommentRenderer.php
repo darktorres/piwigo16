@@ -6,19 +6,30 @@ namespace Piwigo\Picture;
 
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\EphemeralKeyService;
-use Piwigo\Comment\CommentRepository;
+use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\MailerInterface;
+use Piwigo\Core\PageState;
+use Piwigo\Core\PaginationService;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Template\RenderCommentAuthor;
 use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Event\User\UserCommentInsertion;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Picture\Request\PictureCommentSubmitRequest;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Renders the picture page's comment list + add/edit form. Ported from
@@ -75,16 +86,16 @@ final class PictureCommentRenderer
      *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
      *   genuinely string|null.
      */
-    public function render(Lang $lang, AccessControl $accessControl, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Core\MailerInterface $mailer, HtmlRenderingInterface $htmlRenderer): void
+    public function render(Lang $lang, AccessControl $accessControl, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, MailerInterface $mailer, HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
-        $commentRepository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class);
+        $commentRepository = EntityManagerFactory::build(DbConnection::build())->getRepository(CommentEntity::class);
         $commentService = new CommentService($lang, $commentRepository, new EphemeralKeyService($currentConfig), $mailer, $htmlRenderer, $urlService, $eventDispatcher, $pageState, $currentUser, $currentConfig, $accessControl);
 
         $commentAction = null;
 
-        $pictureCommentSubmitRequest = Request\PictureCommentSubmitRequest::fromGlobals();
+        $pictureCommentSubmitRequest = PictureCommentSubmitRequest::fromGlobals();
 
         // the picture is commentable if it belongs at least to one category
         // which is commentable
@@ -170,7 +181,7 @@ final class PictureCommentRenderer
         // navigation bar creation
         $nbCommentPage = $currentConfig->nbCommentPage();
 
-        $navigationBar = new \Piwigo\Core\PaginationService($currentConfig)
+        $navigationBar = new PaginationService($currentConfig)
             ->createNavigationBar($urlService->duplicatePictureUrl([], ['start']), $nbComments, $start, $nbCommentPage, true);
 
         $template->assign(
@@ -232,7 +243,7 @@ final class PictureCommentRenderer
                   [
                       'ID' => $row->id->value,
                       'AUTHOR' => $authorEvent->commentAuthor,
-                      'DATE' => \Piwigo\Core\DateHelper::formatDate($rowDate, ['day_name', 'day', 'month', 'year', 'time']),
+                      'DATE' => DateHelper::formatDate($rowDate, ['day_name', 'day', 'month', 'year', 'time']),
                       'CONTENT' => $contentEvent->commentContent,
                       'WEBSITE_URL' => $row->websiteUrl,
                   ];
@@ -248,7 +259,7 @@ final class PictureCommentRenderer
                         [
                             'action' => 'delete_comment',
                             'comment_to_delete' => $row->id->value,
-                            'pwg_token' => new \Piwigo\Csrf\CsrfService()
+                            'pwg_token' => new CsrfService()
                                 ->getToken(),
                         ]
                     );
@@ -263,11 +274,11 @@ final class PictureCommentRenderer
                     );
                     if ($editCommentId !== null and $row->id->equals($editCommentId)) {
                         $tplComment['IN_EDIT'] = true;
-                        $key = new \Piwigo\Auth\EphemeralKeyService($currentConfig)
+                        $key = new EphemeralKeyService($currentConfig)
                             ->generate(2, (string) $imageId);
                         $tplComment['KEY'] = $key;
                         $tplComment['CONTENT'] = $row->content;
-                        $tplComment['PWG_TOKEN'] = new \Piwigo\Csrf\CsrfService()->getToken();
+                        $tplComment['PWG_TOKEN'] = new CsrfService()->getToken();
                         $tplComment['U_CANCEL'] = $url_self;
                     }
                 }
@@ -280,7 +291,7 @@ final class PictureCommentRenderer
                             [
                                 'action' => 'validate_comment',
                                 'comment_to_validate' => $row->id->value,
-                                'pwg_token' => new \Piwigo\Csrf\CsrfService()
+                                'pwg_token' => new CsrfService()
                                     ->getToken(),
                             ]
                         );
@@ -299,7 +310,7 @@ final class PictureCommentRenderer
         }
 
         if ($showAddCommentForm) {
-            $key = new \Piwigo\Auth\EphemeralKeyService($currentConfig)
+            $key = new EphemeralKeyService($currentConfig)
                 ->generate(3, (string) $imageId);
 
             $userEmail = $currentUser->get()

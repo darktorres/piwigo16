@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Admin;
 
+use Override;
+use LogicException;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 
@@ -14,111 +16,111 @@ use Piwigo\Core\UrlServiceInterface;
  */
 final class PhotosAddDirectPageRendererTestFakeUrlService implements UrlServiceInterface
 {
-    #[\Override]
+    #[Override]
     public function getRootUrl(): string
     {
         return '/piwigo/';
     }
 
-    #[\Override]
+    #[Override]
     public function getAbsoluteRootUrl(bool $withScheme = true): string
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function makeIndexUrl(array $params = []): string
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function duplicateIndexUrl(array $redefined = [], array $removed = []): string
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function duplicatePictureUrl(array $redefined = [], array $removed = []): string
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function makePictureUrl(array $params): string
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function parseSectionUrl(array $tokens, &$nextToken, RedirectServiceInterface $redirectService): array
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function parseWellKnownParamsUrl(array $tokens, int &$i): array
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function getActionUrl($id, $whatPart, bool $download): string
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function getElementUrl(array $elementInfo): string
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function setMakeFullUrl(): void
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function unsetMakeFullUrl(): void
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function embellishUrl(string $url): string
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function getGalleryHomeUrl(): string
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function getQueryStringDiff(array $rejects = [], bool $escape = true): string
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function urlIsRemote(string $url): bool
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 
-    #[\Override]
+    #[Override]
     public function getUserFavorites(): array
     {
-        throw new \LogicException('not used by baseUrl()');
+        throw new LogicException('not used by baseUrl()');
     }
 }

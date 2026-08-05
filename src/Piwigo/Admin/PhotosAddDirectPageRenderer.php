@@ -6,19 +6,41 @@ namespace Piwigo\Admin;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Admin\Request\PhotosAddDirectRequest;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Caddie\CaddieEntity;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Env;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\WsContext;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocEndPhotoAddDirect;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Metadata\MetadataService;
+use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserRepository;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/photos_add_direct.php (the "direct" tab of the
@@ -41,22 +63,22 @@ final class PhotosAddDirectPageRenderer
         private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Config\ConfigService $configService,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly ConfigService $configService,
         private readonly EntityManagerInterface $entityManager,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Metadata\MetadataService $metadataService,
-        private readonly \Piwigo\Image\ImageService $imageService,
-        private readonly \Piwigo\Users\PreferencesService $preferencesService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\Core\WsContext $wsContext,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly ActivityService $activityService,
+        private readonly MetadataService $metadataService,
+        private readonly ImageService $imageService,
+        private readonly PreferencesService $preferencesService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly WsContext $wsContext,
     ) {}
 
     /**
@@ -84,17 +106,17 @@ final class PhotosAddDirectPageRenderer
         $user_id = $this->currentUser->get()
             ->id->value;
 
-        $photosAddDirectRequest = Request\PhotosAddDirectRequest::fromGlobals($this->currentConfig->isFormatsEnabled(), $this->inputValidator);
+        $photosAddDirectRequest = PhotosAddDirectRequest::fromGlobals($this->currentConfig->isFormatsEnabled(), $this->inputValidator);
 
         // +-------------------------------------------------------------------+
         // |                        batch management request                   |
         // +-------------------------------------------------------------------+
 
         if ($photosAddDirectRequest->batchPresent) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
-            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Caddie\CaddieEntity::class)
+            EntityManagerFactory::build($conn)->getRepository(CaddieEntity::class)
                 ->replaceForUser(
                     $user_id,
                     array_values(array_map(intval(...), array_unique(explode(',', $photosAddDirectRequest->batch))))
@@ -104,11 +126,11 @@ final class PhotosAddDirectPageRenderer
         }
 
         if ((bool) $this->preferencesService->getParam('promote-mobile-apps', true)) {
-            $register_date = (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
+            $register_date = (new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
                 ->findEarliestRegistrationDate();
-            $nb_cats = new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig)
+            $nb_cats = new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig)
                 ->countAllCategories();
-            $nb_images = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+            $nb_images = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
                 ->countAllImages();
 
             // To see the mobile app promote, the account must have 2 weeks
@@ -148,7 +170,7 @@ final class PhotosAddDirectPageRenderer
 
                 $formats_image_id = $formats_original_info['id'];
 
-                $formats = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+                $formats = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
                     ->findFormatsForImage($formats_image_id);
 
                 if ($formats !== []) {
@@ -213,7 +235,7 @@ final class PhotosAddDirectPageRenderer
      * render(), unlike the shared admin/include/*.inc.php files this
      * project has kept as real includes elsewhere.
      */
-    private function prepareUploadForm(Connection $conn, Request\PhotosAddDirectRequest $photosAddDirectRequest): void
+    private function prepareUploadForm(Connection $conn, PhotosAddDirectRequest $photosAddDirectRequest): void
     {
         $template = $this->currentTemplate->get();
 
@@ -275,7 +297,7 @@ final class PhotosAddDirectPageRenderer
         $template->assign(
             [
                 'form_action' => self::baseUrl($this->urlService),
-                'pwg_token' => new \Piwigo\Csrf\CsrfService()
+                'pwg_token' => new CsrfService()
                     ->getToken(),
             ]
         );
@@ -302,7 +324,7 @@ final class PhotosAddDirectPageRenderer
             $album_id = $photosAddDirectRequest->albumId;
 
             // test if album really exists
-            $uppercats = new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig)
+            $uppercats = new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig)
                 ->findCategoryUppercatsById($album_id ?? 0);
             if ($album_id !== null && $uppercats !== null) {
                 $selected_category = [$album_id];
@@ -313,7 +335,7 @@ final class PhotosAddDirectPageRenderer
             }
         } else {
             // we need to know the category in which the last photo was added
-            $mostRecentCategoryInfo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+            $mostRecentCategoryInfo = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
                 ->findMostRecentImageCategoryInfo();
             if ($mostRecentCategoryInfo !== null) {
                 $selected_category = [$mostRecentCategoryInfo['category_id']];
@@ -327,7 +349,7 @@ final class PhotosAddDirectPageRenderer
         $template->assign('selected_category', $selected_category);
 
         // how many existing albums?
-        $nb_albums = new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig)
+        $nb_albums = new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig)
             ->countAllCategories();
         $template->assign('NB_ALBUMS', $nb_albums);
 
@@ -335,7 +357,7 @@ final class PhotosAddDirectPageRenderer
         $selected_level = $photosAddDirectRequest->postLevel;
         $template->assign(
             [
-                'level_options' => \Piwigo\Permission\PermissionService::getPrivacyLevelOptions(),
+                'level_options' => PermissionService::getPrivacyLevelOptions(),
                 'level_options_selected' => [$selected_level],
             ]
         );

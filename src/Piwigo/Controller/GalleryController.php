@@ -4,29 +4,49 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Bootstrap\PageTail;
+use Piwigo\Caddie\CaddieService;
+use Piwigo\Category\CategoryCatsRenderer;
+use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Request\GalleryDisplayRequest;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Core\PaginationService;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Location\LocBeginIndex;
 use Piwigo\Event\Location\LocEndIndex;
 use Piwigo\Event\Tag\RenderTagName;
+use Piwigo\History\HistoryService;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Lang\Translator;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionPopulator;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
 
 /**
  * Replaces index.php -- the main gallery browsing page (categories,
@@ -64,29 +84,29 @@ final class GalleryController implements ControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
-        private readonly \Piwigo\Core\FilterState $filterState,
+        private readonly FilterState $filterState,
         private readonly SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
-        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Section\SectionPopulator $sectionPopulator,
-        private readonly \Piwigo\Search\SearchFilterRenderer $searchFilterRenderer,
-        private readonly \Piwigo\History\HistoryService $historyService,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly DeploymentPolicy $deploymentPolicy,
+        private readonly ImageStdParams $imageStdParams,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly SectionPopulator $sectionPopulator,
+        private readonly SearchFilterRenderer $searchFilterRenderer,
+        private readonly HistoryService $historyService,
         private readonly CategoryService $categoryService,
         private readonly TagService $tagService,
-        private readonly \Piwigo\Category\CategoryCatsRenderer $categoryCatsRenderer,
-        private readonly \Piwigo\Category\CategoryDefaultRenderer $categoryDefaultRenderer,
-        private readonly \Piwigo\Html\HtmlService $htmlService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Lang\Translator $translator,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly CategoryCatsRenderer $categoryCatsRenderer,
+        private readonly CategoryDefaultRenderer $categoryDefaultRenderer,
+        private readonly HtmlService $htmlService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly Translator $translator,
+        private readonly CurrentLogger $currentLogger,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $template = $this->currentTemplate->get();
@@ -103,7 +123,7 @@ final class GalleryController implements ControllerInterface
         // guard, not dead code, since the type itself is nullable.
         $section_context = $this->sectionContextRegistry->current();
         if (! $section_context instanceof SectionContext) {
-            throw new \RuntimeException('SectionContextRegistry::current() is null after SectionPopulator::populate()');
+            throw new RuntimeException('SectionContextRegistry::current() is null after SectionPopulator::populate()');
         }
 
         $page_items = array_values(array_filter(array_map(
@@ -138,7 +158,7 @@ final class GalleryController implements ControllerInterface
 
         $this->eventDispatcher->dispatchNotify(new LocBeginIndex());
 
-        $galleryDisplay = Request\GalleryDisplayRequest::fromGlobals();
+        $galleryDisplay = GalleryDisplayRequest::fromGlobals();
 
         // ---------------------------------------- change of image display order
         if ($galleryDisplay->hasImageOrder) {
@@ -165,7 +185,7 @@ final class GalleryController implements ControllerInterface
         // navigation bar
         $navigationBar = [];
         if (count($page_items) > $page_nb_image_page) {
-            $navigationBar = new \Piwigo\Core\PaginationService($this->currentConfig)
+            $navigationBar = new PaginationService($this->currentConfig)
                 ->createNavigationBar($urlService->duplicateIndexUrl([], ['start']), count($page_items), $page_start, $page_nb_image_page, true, 'start');
         }
 
@@ -173,7 +193,7 @@ final class GalleryController implements ControllerInterface
 
         // caddie filling :-)
         if ($galleryDisplay->hasCaddie) {
-            \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($page_items, $this->currentUser);
+            CaddieService::fillCurrentUserCaddie($page_items, $this->currentUser);
             $redirectService->redirect($urlService->duplicateIndexUrl());
         }
 
@@ -589,7 +609,7 @@ final class GalleryController implements ControllerInterface
         }
 
         // ---------------------------------------------------------- end
-        new \Piwigo\Page\PageHeaderRenderer()
+        new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatchNotify(new LocEndIndex());
         $this->htmlService
@@ -605,7 +625,7 @@ final class GalleryController implements ControllerInterface
                 tagIds: $section_context->tagIds,
                 searchId: $resolved_search_id,
             );
-        $body = \Piwigo\Bootstrap\PageTail::renderToString();
+        $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

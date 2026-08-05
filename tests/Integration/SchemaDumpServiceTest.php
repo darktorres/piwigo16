@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\DbConnection;
@@ -42,7 +43,7 @@ final class SchemaDumpServiceTest extends IntegrationTestCase
 
     private string $originalSchemaFileContent;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -62,7 +63,7 @@ final class SchemaDumpServiceTest extends IntegrationTestCase
         $this->originalSchemaFileContent = (string) file_get_contents($this->schemaFilePath);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         file_put_contents($this->schemaFilePath, $this->originalSchemaFileContent);

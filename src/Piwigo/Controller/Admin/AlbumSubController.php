@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\AlbumNotificationPageRenderer;
 use Piwigo\Admin\CatModifyPageRenderer;
 use Piwigo\Admin\CatPermPageRenderer;
@@ -11,10 +13,19 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\ElementSetRanksPageRenderer;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Template\RenderCategoryName;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -42,20 +53,20 @@ final class AlbumSubController implements AdminSubControllerInterface
         private readonly Lang $lang,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly ElementSetRanksPageRenderer $elementSetRanksPageRenderer,
         private readonly CatPermPageRenderer $catPermPageRenderer,
         private readonly AlbumNotificationPageRenderer $albumNotificationPageRenderer,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Category\CategoryService $categoryService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly ActivityService $activityService,
+        private readonly CategoryService $categoryService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $template = $this->currentTemplate->get();
@@ -67,7 +78,7 @@ final class AlbumSubController implements AdminSubControllerInterface
         $adminAlbumBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=album-' . $cat_id;
         $this->coreTabs->setContext(new CoreTabsContext(adminAlbumBaseUrl: $adminAlbumBaseUrl));
 
-        $categoryRow = new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), $this->currentConfig)
+        $categoryRow = new CategoryRepository(EntityManagerFactory::build(DbConnection::build()), $this->currentConfig)
             ->findById($cat_id);
         if ($categoryRow === null) {
             $this->htmlRenderer

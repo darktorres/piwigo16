@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\DateHelper;
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
 use Piwigo\Core\ActivitySystem;
@@ -510,6 +511,6 @@ test('date and hour are split from occured_on and id/user/username pass through'
     expect($entry['id'])->toBe(7)
         ->and($entry['user_id'])->toBe(3)
         ->and($entry['username'])->toBe('someone')
-        ->and($entry['date'])->toBe(\Piwigo\Core\DateHelper::formatDate('2026-08-01'))
+        ->and($entry['date'])->toBe(DateHelper::formatDate('2026-08-01'))
         ->and($entry['hour'])->toBe('09:15:30');
 });

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use DateTimeImmutable;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Types;
 use Piwigo\Config\CurrentConfig;
@@ -20,7 +24,7 @@ final class SessionRepositoryTest extends IntegrationTestCase
 
     private SessionRepository $repo;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -32,9 +36,9 @@ final class SessionRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -101,7 +105,7 @@ final class SessionRepositoryTest extends IntegrationTestCase
             : 'ON DUPLICATE KEY UPDATE data = VALUES(data), expiration = VALUES(expiration)';
         $conn->executeStatement(
             'INSERT INTO ' . Tables::sessions() . " (id, data, expiration) VALUES (?, ?, ?) {$onConflict}",
-            [$oldId, 'stale', new \DateTimeImmutable('-1 year')],
+            [$oldId, 'stale', new DateTimeImmutable('-1 year')],
             [ParameterType::STRING, ParameterType::STRING, Types::DATETIME_IMMUTABLE],
         );
         $this->repo->write($freshId, 'fresh');

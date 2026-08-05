@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Env;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Image\Request\EmptyLoungeRequest;
 
 /**
  * Relocated from Piwigo\Core (P23 batch 8d's original placement): its own
@@ -40,11 +43,11 @@ final class LoungeMaintenance
     public static function needsEmptying(): bool
     {
 
-        if (! \Piwigo\Config\CurrentConfig::current()->loungeActive()) {
+        if (! CurrentConfig::current()->loungeActive()) {
             return false;
         }
 
-        $requestMethod = Request\EmptyLoungeRequest::fromGlobals()->requestMethod;
+        $requestMethod = EmptyLoungeRequest::fromGlobals()->requestMethod;
         if (in_array($requestMethod, ['pwg.images.upload', 'pwg.images.uploadAsync'], true)) {
             return false;
         }
@@ -56,7 +59,7 @@ final class LoungeMaintenance
             return false;
         }
 
-        $dbnow = \Piwigo\Core\Env::now()->getTimestamp();
+        $dbnow = Env::now()->getTimestamp();
         $date_available = strtotime($dateAvailable);
         // date_available comes straight from a required, populated
         // lounge-table column -- always a well-formed MySQL datetime in
@@ -64,7 +67,7 @@ final class LoungeMaintenance
         // an expected real path.
         $age = $dbnow - ($date_available !== false ? $date_available : 0);
 
-        $lounge_max_duration = \Piwigo\Config\CurrentConfig::current()->loungeMaxDuration();
+        $lounge_max_duration = CurrentConfig::current()->loungeMaxDuration();
 
         return $age > $lounge_max_duration;
     }

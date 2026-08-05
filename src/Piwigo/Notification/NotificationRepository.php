@@ -6,9 +6,11 @@ namespace Piwigo\Notification;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
+use InvalidArgumentException;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Common\ValueObject\NumericId;
@@ -126,7 +128,7 @@ final class NotificationRepository
 
                 break;
             default:
-                throw new \InvalidArgumentException('Unknown notification type: ' . $type);
+                throw new InvalidArgumentException('Unknown notification type: ' . $type);
         }
 
         if ($start !== null && $start !== '') {
@@ -150,7 +152,7 @@ final class NotificationRepository
             // same way {@see \Piwigo\Comment\CommentEntity::$validated}
             // already does everywhere else.
             $qb->andWhere('c.validated = :false')
-                ->setParameter('false', false, \Doctrine\DBAL\Types\Types::BOOLEAN);
+                ->setParameter('false', false, Types::BOOLEAN);
         }
 
         self::applyCondition($qb, $restrictCondition);

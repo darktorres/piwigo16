@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Storage;
 
+use Closure;
+use InvalidArgumentException;
 use League\Flysystem\FilesystemOperator;
 
 /**
@@ -32,7 +34,7 @@ final class StorageRegistry
     private array $resolved = [];
 
     /**
-     * @param array<string, \Closure(): FilesystemOperator> $factories
+     * @param array<string, Closure():FilesystemOperator> $factories
      */
     public function __construct(
         private readonly array $factories
@@ -51,7 +53,7 @@ final class StorageRegistry
      */
     public static function fromConfig(string $configPath): self
     {
-        /** @var array<string, \Closure(): FilesystemOperator> $factories */
+        /** @var array<string, Closure():FilesystemOperator> $factories */
         $factories = require $configPath;
 
         return new self($factories);
@@ -63,7 +65,7 @@ final class StorageRegistry
             if (! array_key_exists($name, $this->factories)) {
                 $available = implode(', ', array_keys($this->factories));
 
-                throw new \InvalidArgumentException("Unknown storage disk '{$name}'. Available: {$available}.");
+                throw new InvalidArgumentException("Unknown storage disk '{$name}'. Available: {$available}.");
             }
             $this->resolved[$name] = ($this->factories[$name])();
         }

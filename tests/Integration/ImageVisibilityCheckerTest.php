@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -29,7 +30,7 @@ final class ImageVisibilityCheckerTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -42,10 +43,10 @@ final class ImageVisibilityCheckerTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
-        $this->checker = new ImageVisibilityChecker(new PermissionRepository(EntityManagerFactory::build($this->conn)), \Piwigo\Users\CurrentUser::current());
+        $this->checker = new ImageVisibilityChecker(new PermissionRepository(EntityManagerFactory::build($this->conn)), CurrentUser::current());
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         CurrentUser::current()->reset();

@@ -23,10 +23,10 @@ test('every getter throws before set() has ever been called', function (): void 
 
     $message = 'FilterState not initialised -- call Piwigo\Filter\FilterService::initializeFromRequest() (or RequestBootstrap::finalize()\'s own disabled-filter fallback) first.';
 
-    expect(fn () => $filterState->isEnabled())->toThrow(\LogicException::class, $message);
-    expect(fn () => $filterState->visibleCategories())->toThrow(\LogicException::class, $message);
-    expect(fn () => $filterState->visibleImages())->toThrow(\LogicException::class, $message);
-    expect(fn () => $filterState->categories())->toThrow(\LogicException::class, $message);
+    expect(fn () => $filterState->isEnabled())->toThrow(LogicException::class, $message);
+    expect(fn () => $filterState->visibleCategories())->toThrow(LogicException::class, $message);
+    expect(fn () => $filterState->visibleImages())->toThrow(LogicException::class, $message);
+    expect(fn () => $filterState->categories())->toThrow(LogicException::class, $message);
 });
 
 test('set() initializes every field and isInitialized flips to true', function (): void {

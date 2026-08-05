@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use ReflectionProperty;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -60,7 +62,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
      */
     private array $originalSizeRows;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -80,7 +82,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
         $this->imageStdParams = new ImageStdParams();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSettings());
@@ -202,7 +204,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
         // the real fixture rows regardless, but an upsert (rather than a
         // delete followed by a same-test re-read) keeps this test's own
         // assertions simple.
-        new \ReflectionProperty(ImageStdParams::class, 'disabled_type_map')
+        new ReflectionProperty(ImageStdParams::class, 'disabled_type_map')
             ->setValue($this->imageStdParams, ImageStdParams::get_disabled_default_sizes());
 
         $watermark = new WatermarkParams();

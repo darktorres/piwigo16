@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Common\ValueObject;
 
+use InvalidArgumentException;
+use Override;
+
 /**
  * Email address. Validated with `filter_var(FILTER_VALIDATE_EMAIL)` and
  * capped at the `users.mail_address` column width (VARCHAR 255).
@@ -22,24 +25,24 @@ final readonly class Email implements StringVo
     ) {}
 
     /**
-     * @throws \InvalidArgumentException when $value is not a valid email or exceeds 255 chars
+     * @throws InvalidArgumentException when $value is not a valid email or exceeds 255 chars
      */
-    #[\Override]
+    #[Override]
     public static function from(string $value): self
     {
         if (strlen($value) > self::MAX_LENGTH) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Email exceeds ' . self::MAX_LENGTH . " chars: '{$value}'",
             );
         }
         $filtered = filter_var($value, FILTER_VALIDATE_EMAIL);
         if ($filtered === false) {
-            throw new \InvalidArgumentException("Invalid email address: '{$value}'");
+            throw new InvalidArgumentException("Invalid email address: '{$value}'");
         }
         return new self($filtered);
     }
 
-    #[\Override]
+    #[Override]
     public static function tryFrom(mixed $value): ?self
     {
         if (! is_string($value)) {
@@ -47,18 +50,18 @@ final readonly class Email implements StringVo
         }
         try {
             return self::from($value);
-        } catch (\InvalidArgumentException) {
+        } catch (InvalidArgumentException) {
             return null;
         }
     }
 
-    #[\Override]
+    #[Override]
     public function equals(StringVo $other): bool
     {
         return $other instanceof self && $other->value === $this->value;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return $this->value;

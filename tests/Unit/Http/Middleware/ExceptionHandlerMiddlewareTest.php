@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use function Sentry\init;
 use Monolog\Handler\TestHandler;
 use Monolog\Level;
 use Monolog\Logger;
@@ -101,7 +102,7 @@ test('reports the caught throwable to Sentry', function (): void {
             return new Result(ResultStatus::success());
         }
     };
-    \Sentry\init([
+    init([
         'dsn' => 'https://fake@fake.ingest.sentry.io/1',
         'default_integrations' => false,
         'transport' => $spyTransport,

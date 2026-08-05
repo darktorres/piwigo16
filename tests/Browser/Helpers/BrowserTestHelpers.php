@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Browser\Helpers;
 
+use mysqli;
+use PgSql\Connection;
+use RuntimeException;
+use mysqli_result;
+use InvalidArgumentException;
+use CURLFile;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
@@ -438,7 +444,7 @@ final class BrowserTestHelpers
      * SELECT-driven methods (configValue(), imagePath(), ...) need that
      * RegenerateFixtureTest's insert-only usage never did.
      */
-    public static function connect(): \mysqli|\PgSql\Connection
+    public static function connect(): mysqli|Connection
     {
         $host = (string) getenv('PIWIGO_DB_HOST');
         $user = (string) getenv('PIWIGO_DB_USER');
@@ -454,32 +460,32 @@ final class BrowserTestHelpers
 
             $conn = pg_connect(implode(' ', $connStringParts), PGSQL_CONNECT_FORCE_NEW);
             if ($conn === false) {
-                throw new \RuntimeException('BrowserTestHelpers: pg_connect failed');
+                throw new RuntimeException('BrowserTestHelpers: pg_connect failed');
             }
 
             return $conn;
         }
 
-        return new \mysqli($host, $user, $password, $base);
+        return new mysqli($host, $user, $password, $base);
     }
 
-    public static function dbQuery(\mysqli|\PgSql\Connection $db, string $sql): void
+    public static function dbQuery(mysqli|Connection $db, string $sql): void
     {
-        if ($db instanceof \mysqli) {
+        if ($db instanceof mysqli) {
             $db->query($sql);
         } else {
             pg_query($db, $sql);
         }
     }
 
-    public static function dbEscape(\mysqli|\PgSql\Connection $db, string $value): string
+    public static function dbEscape(mysqli|Connection $db, string $value): string
     {
-        return $db instanceof \mysqli ? $db->real_escape_string($value) : pg_escape_string($db, $value);
+        return $db instanceof mysqli ? $db->real_escape_string($value) : pg_escape_string($db, $value);
     }
 
-    public static function dbClose(\mysqli|\PgSql\Connection $db): void
+    public static function dbClose(mysqli|Connection $db): void
     {
-        if ($db instanceof \mysqli) {
+        if ($db instanceof mysqli) {
             $db->close();
         } else {
             pg_close($db);
@@ -500,9 +506,9 @@ final class BrowserTestHelpers
      * suite's single-INSERT-then-read call shape. Verified live before
      * porting every real `$db->insert_id` call site to this.
      */
-    public static function dbInsertId(\mysqli|\PgSql\Connection $db): int
+    public static function dbInsertId(mysqli|Connection $db): int
     {
-        if ($db instanceof \mysqli) {
+        if ($db instanceof mysqli) {
             return (int) $db->insert_id;
         }
 
@@ -540,11 +546,11 @@ final class BrowserTestHelpers
     }
 
     /** @return array<string, float|int|string|null>|null */
-    public static function dbFetchAssoc(\mysqli|\PgSql\Connection $db, string $sql): ?array
+    public static function dbFetchAssoc(mysqli|Connection $db, string $sql): ?array
     {
-        if ($db instanceof \mysqli) {
+        if ($db instanceof mysqli) {
             $result = $db->query($sql);
-            if (! $result instanceof \mysqli_result) {
+            if (! $result instanceof mysqli_result) {
                 return null;
             }
             $row = $result->fetch_assoc();
@@ -562,11 +568,11 @@ final class BrowserTestHelpers
     }
 
     /** @return list<array<string, float|int|string|null>> */
-    public static function dbFetchAll(\mysqli|\PgSql\Connection $db, string $sql): array
+    public static function dbFetchAll(mysqli|Connection $db, string $sql): array
     {
-        if ($db instanceof \mysqli) {
+        if ($db instanceof mysqli) {
             $result = $db->query($sql);
-            if (! $result instanceof \mysqli_result) {
+            if (! $result instanceof mysqli_result) {
                 return [];
             }
             $rows = [];
@@ -1103,7 +1109,7 @@ final class BrowserTestHelpers
     {
         $encoded = json_encode($value);
         if ($encoded === false) {
-            throw new \RuntimeException('json_encode() failed for: ' . var_export($value, true));
+            throw new RuntimeException('json_encode() failed for: ' . var_export($value, true));
         }
 
         return $encoded;
@@ -1134,7 +1140,7 @@ final class BrowserTestHelpers
             // CONFLICT (param) DO UPDATE SET is the real one, same as
             // ContractTestCase::upsertConfig()'s own established branch
             // (piwigo_config.param is the PRIMARY KEY on both platforms).
-            $upsertSql = $db instanceof \mysqli
+            $upsertSql = $db instanceof mysqli
                 ? "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE value = VALUES(value)"
                 : "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON CONFLICT (param) DO UPDATE SET value = EXCLUDED.value";
             self::dbQuery($db, sprintf(
@@ -1303,7 +1309,7 @@ final class BrowserTestHelpers
      *
      * @param array<string, mixed> $row
      */
-    private static function insertRow(\mysqli|\PgSql\Connection $db, string $table, array $row): void
+    private static function insertRow(mysqli|Connection $db, string $table, array $row): void
     {
         $columns = array_keys($row);
         $values = array_map(static function (mixed $value) use ($db): string {
@@ -1311,7 +1317,7 @@ final class BrowserTestHelpers
                 return 'NULL';
             }
             if (! is_scalar($value)) {
-                throw new \InvalidArgumentException('insertRow() only accepts scalar column values, got ' . get_debug_type($value));
+                throw new InvalidArgumentException('insertRow() only accepts scalar column values, got ' . get_debug_type($value));
             }
 
             return "'" . self::dbEscape($db, (string) $value) . "'";
@@ -1358,8 +1364,8 @@ final class BrowserTestHelpers
         self::dbQuery($db, sprintf("UPDATE %scategories SET status = '%s' WHERE id = %d", $prefix, $status, $categoryId));
         self::dbClose($db);
 
-        \Piwigo\Cache\CachePools::permissions()->clear();
-        \Piwigo\Cache\CachePools::effectivePermissions()->clear();
+        CachePools::permissions()->clear();
+        CachePools::effectivePermissions()->clear();
     }
 
     /**
@@ -1380,7 +1386,7 @@ final class BrowserTestHelpers
         self::dbClose($db);
         $path = is_array($row) ? ($row['path'] ?? null) : null;
         if (! is_string($path)) {
-            throw new \RuntimeException("imagePath(): no path found for image {$imageId}");
+            throw new RuntimeException("imagePath(): no path found for image {$imageId}");
         }
 
         return $path;
@@ -1559,7 +1565,7 @@ final class BrowserTestHelpers
             'method'   => 'pwg.images.addSimple',
             'category' => (string) $albumId,
             'name'     => $name,
-            'image'    => new \CURLFile($imagePath, 'image/jpeg', basename($imagePath)),
+            'image'    => new CURLFile($imagePath, 'image/jpeg', basename($imagePath)),
         ]);
 
         $decoded = json_decode($body, true);
@@ -1644,7 +1650,7 @@ final class BrowserTestHelpers
      *
      * @return array<string, float|int|string|null>
      */
-    public static function fetchAssocOrFail(\mysqli|\PgSql\Connection $db, string $sql): array
+    public static function fetchAssocOrFail(mysqli|Connection $db, string $sql): array
     {
         $row = self::dbFetchAssoc($db, $sql);
         if ($row === null) {

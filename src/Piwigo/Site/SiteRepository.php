@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Site;
 
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
+use Override;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\SiteGalleriesUrlLookupInterface;
 use Piwigo\Image\ImageEntity;
@@ -105,7 +107,7 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
      *
      * @return array<int|string, string> id => galleries_url
      */
-    #[\Override]
+    #[Override]
     public function findAllGalleriesUrls(): array
     {
         $rows = $this->getEntityManager()
@@ -135,7 +137,7 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
      * this join is a legal same-repository DQL query, not a boundary
      * crossing.
      */
-    #[\Override]
+    #[Override]
     public function findGalleriesUrlForCategory(int|string $categoryId): ?string
     {
         $galleriesUrl = $this->getEntityManager()
@@ -147,7 +149,7 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
             ->setParameter('categoryId', $categoryId)
             ->setMaxResults(1)
             ->getQuery()
-            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_SINGLE_SCALAR);
+            ->getOneOrNullResult(Query::HYDRATE_SINGLE_SCALAR);
 
         return is_string($galleriesUrl) ? $galleriesUrl : null;
     }

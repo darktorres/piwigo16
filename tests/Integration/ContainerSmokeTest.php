@@ -4,6 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\TemplateInterface;
+use Piwigo\Cache\PersistentCache;
+use Piwigo\Storage\StorageRegistry;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\DefaultLanguageProviderInterface;
+use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\TelemetrySenderInterface;
+use Piwigo\Core\FilterUpdaterInterface;
+use Piwigo\Core\MailerInterface;
+use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Validation\InputValidator;
+use Throwable;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Core\Kernel;
 use Psr\Container\ContainerInterface;
@@ -21,7 +35,7 @@ use Psr\Container\ContainerInterface;
  */
 final class ContainerSmokeTest extends TestCase
 {
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         Kernel::reset();
@@ -55,37 +69,37 @@ final class ContainerSmokeTest extends TestCase
      * this binding) and each Track A batch's own live curl smoke.
      */
     private const array REQUEST_SCOPED_ONLY_ENTRIES = [
-        \Piwigo\Core\TemplateInterface::class,
+        TemplateInterface::class,
         // Piwigo\Cache\PersistentCache's binding (singleton/service-locator
         // elimination campaign, Phase 0) resolves to PersistentFileCache,
         // whose constructor reads Piwigo\Core\CurrentPaths::get()->root --
         // genuinely unavailable here, same "Kernel booted with no real
         // Paths" reasoning as TemplateInterface above, not a wiring bug.
-        \Piwigo\Cache\PersistentCache::class,
+        PersistentCache::class,
         // Piwigo\Storage\StorageRegistry's own factory binding requires
         // config/storage.php, whose own top-level `$paths =
         // CurrentPaths::get();` (config/storage.php:25) is unconditional --
         // same "Kernel booted with no real Paths" reasoning as
         // PersistentCache above, not a wiring bug.
-        \Piwigo\Storage\StorageRegistry::class,
+        StorageRegistry::class,
         // Piwigo\Config\DeploymentPolicy's own factory binding (singleton/
         // service-locator elimination campaign, Phase 4) takes Paths $paths
         // as an autowired param -- same "Kernel booted with no real Paths"
         // reasoning as PersistentCache/StorageRegistry above, not a wiring
         // bug.
-        \Piwigo\Config\DeploymentPolicy::class,
+        DeploymentPolicy::class,
         // Piwigo\Core\DefaultLanguageProviderInterface resolves to
         // Piwigo\Users\UserService, which now constructor-injects
         // DeploymentPolicy (Phase 4) -- fails to resolve for the identical
         // reason, one level removed.
-        \Piwigo\Core\DefaultLanguageProviderInterface::class,
+        DefaultLanguageProviderInterface::class,
         // Piwigo\Core\RedirectServiceInterface resolves to
         // Piwigo\Bootstrap\RedirectService, which now constructor-injects
         // Piwigo\Users\UserService (singleton/service-locator elimination
         // campaign, Phase 6) -- same "Kernel booted with no real Paths"
         // reasoning as DefaultLanguageProviderInterface above, one level
         // removed through UserService's own DeploymentPolicy dependency.
-        \Piwigo\Core\RedirectServiceInterface::class,
+        RedirectServiceInterface::class,
         // Piwigo\Core\TelemetrySenderInterface resolves to
         // Piwigo\Admin\PiwigoInfosSender, which constructor-injects
         // Piwigo\Admin\InstallationStats (singleton/service-locator
@@ -93,28 +107,28 @@ final class ContainerSmokeTest extends TestCase
         // sub-batch), which itself constructor-injects UserService -- same
         // "Kernel booted with no real Paths" reasoning as
         // DefaultLanguageProviderInterface above, two levels removed.
-        \Piwigo\Core\TelemetrySenderInterface::class,
+        TelemetrySenderInterface::class,
         // Piwigo\Core\FilterUpdaterInterface resolves to
         // Piwigo\Filter\FilterService, which now constructor-injects
         // Piwigo\Core\Lang (singleton/service-locator elimination
         // campaign, Phase 8), whose own Paths param the container can't
         // guess without a real one -- same "Kernel booted with no real
         // Paths" reasoning as TemplateInterface above, one level removed.
-        \Piwigo\Core\FilterUpdaterInterface::class,
+        FilterUpdaterInterface::class,
         // Piwigo\Core\MailerInterface resolves to Piwigo\Mail\MailService,
         // which now constructor-injects Piwigo\Core\Lang (singleton/
         // service-locator elimination campaign, Phase 11 sub-phase 11E),
         // whose own Paths param the container can't guess without a real
         // one -- same "Kernel booted with no real Paths" reasoning as
         // FilterUpdaterInterface above.
-        \Piwigo\Core\MailerInterface::class,
+        MailerInterface::class,
         // Piwigo\Core\UrlServiceInterface resolves to Piwigo\Url\UrlService,
         // which now constructor-injects Piwigo\Core\Lang (singleton/
         // service-locator elimination campaign, Phase 11 sub-phase 11E),
         // whose own Paths param the container can't guess without a real
         // one -- same "Kernel booted with no real Paths" reasoning as
         // MailerInterface above.
-        \Piwigo\Core\UrlServiceInterface::class,
+        UrlServiceInterface::class,
         // Piwigo\Core\HtmlRenderingInterface resolves to Piwigo\Html\HtmlService,
         // which now constructor-injects Piwigo\Core\ErrorCollector
         // (singleton/service-locator elimination campaign, Phase 11
@@ -122,11 +136,11 @@ final class ContainerSmokeTest extends TestCase
         // binding needs a real Paths to autowire -- same "Kernel booted
         // with no real Paths" reasoning as MailerInterface above, via a
         // different (ErrorCollector, not Lang) dependency chain.
-        \Piwigo\Core\HtmlRenderingInterface::class,
+        HtmlRenderingInterface::class,
         // Piwigo\Validation\InputValidator's own factory binding takes
         // HtmlRenderingInterface directly, so it fails to resolve for the
         // identical reason, one level removed.
-        \Piwigo\Validation\InputValidator::class,
+        InputValidator::class,
     ];
 
     public function test_every_container_entry_resolves(): void
@@ -145,7 +159,7 @@ final class ContainerSmokeTest extends TestCase
             }
             try {
                 $container->get($id);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $failures[$id] = $e::class . ': ' . $e->getMessage();
             }
         }

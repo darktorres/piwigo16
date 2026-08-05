@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Admin\AdminUiHelper;
-use Piwigo\Html\HtmlService;
 use Piwigo\Url\UrlService;
 
 /**
@@ -19,7 +19,7 @@ use Piwigo\Url\UrlService;
  */
 function adminUiHelperUrlService(): UrlService
 {
-    return \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    return UrlServiceTestFactory::build();
 }
 
 test('getAdminClientCacheKeys returns all 5 known table keys plus _hash when nothing specific is requested', function (): void {

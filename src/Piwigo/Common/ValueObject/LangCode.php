@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Common\ValueObject;
 
+use InvalidArgumentException;
+use Override;
+
 /**
  * Piwigo language code in `ll_RR` form (e.g. `en_US`, `fr_FR`, `pt_BR`).
  *
@@ -21,18 +24,18 @@ final readonly class LangCode implements StringVo
     ) {}
 
     /**
-     * @throws \InvalidArgumentException when $value is not in `ll_RR` form
+     * @throws InvalidArgumentException when $value is not in `ll_RR` form
      */
-    #[\Override]
+    #[Override]
     public static function from(string $value): self
     {
         if (preg_match(self::PATTERN, $value) !== 1) {
-            throw new \InvalidArgumentException("LangCode must match `ll_RR`, got '{$value}'");
+            throw new InvalidArgumentException("LangCode must match `ll_RR`, got '{$value}'");
         }
         return new self($value);
     }
 
-    #[\Override]
+    #[Override]
     public static function tryFrom(mixed $value): ?self
     {
         if (! is_string($value)) {
@@ -40,18 +43,18 @@ final readonly class LangCode implements StringVo
         }
         try {
             return self::from($value);
-        } catch (\InvalidArgumentException) {
+        } catch (InvalidArgumentException) {
             return null;
         }
     }
 
-    #[\Override]
+    #[Override]
     public function equals(StringVo $other): bool
     {
         return $other instanceof self && $other->value === $this->value;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return $this->value;

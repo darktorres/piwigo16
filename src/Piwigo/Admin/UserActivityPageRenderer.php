@@ -4,11 +4,23 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Request\UserActivityRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Template\Template;
+use Piwigo\Csrf\CsrfService;
+use Piwigo\Group\GroupService;
+use Piwigo\Image\ImageService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/user_activity.php (page slug "user_activity") -- a
@@ -20,13 +32,13 @@ use Piwigo\Template\Template;
  */
 final class UserActivityPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Users\UserService $userService, \Piwigo\Image\ImageService $imageService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Group\GroupService $groupService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer, \Piwigo\Validation\InputValidator $inputValidator, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, ActivityService $activityService, UserService $userService, ImageService $imageService, CategoryService $categoryService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, EventDispatcher $eventDispatcher): void
     {
         $template = $currentTemplate->get();
 
         $accessControl->checkStatus(AccessLevel::Administrator);
 
-        $userActivityRequest = Request\UserActivityRequest::fromGlobals($inputValidator);
+        $userActivityRequest = UserActivityRequest::fromGlobals($inputValidator);
 
         $coreTabs->setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
 
@@ -79,7 +91,7 @@ final class UserActivityPageRenderer
         $template->assign('ADMIN_PAGE_TITLE', $lang->t('Users'));
 
         $template->assign([
-            'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+            'PWG_TOKEN' => new CsrfService()
                 ->getToken(),
             'INHERIT' => $currentConfig->inheritanceByDefault(),
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($urlService, ['users']),
@@ -143,7 +155,7 @@ final class UserActivityPageRenderer
                 $name = match ($filter_key) {
                     'photo' => $imageService->getImageRow($filter_id)['name'] ?? null,
                     'album' => $categoryService->getNamesByIds([$filter_id])[$filter_id]['name'] ?? null,
-                    'group' => $groupService->getName(\Piwigo\Common\ValueObject\GroupId::from($filter_id)),
+                    'group' => $groupService->getName(GroupId::from($filter_id)),
                 };
 
                 if ($name === null) {

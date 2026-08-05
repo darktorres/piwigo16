@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use Exception;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
@@ -32,7 +35,7 @@ final readonly class ApiKeyService
         private PasswordService $passwordService,
         private UrlServiceInterface $urlService,
         private SessionService $sessionService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -116,30 +119,30 @@ final readonly class ApiKeyService
             // created_on/expired_on are real NOT NULL columns -- Projection\
             // ApiKey::fromRow() already guarantees a string, no assert() needed.
             $created_on = $api_key_row->createdOn;
-            $api_key['created_on_format'] = \Piwigo\Core\DateHelper::formatDate($created_on, ['day', 'month', 'year']);
+            $api_key['created_on_format'] = DateHelper::formatDate($created_on, ['day', 'month', 'year']);
 
             $expired_on_raw = $api_key_row->expiredOn;
-            $api_key['expired_on_format'] = \Piwigo\Core\DateHelper::formatDate($expired_on_raw, ['day', 'month', 'year']);
+            $api_key['expired_on_format'] = DateHelper::formatDate($expired_on_raw, ['day', 'month', 'year']);
 
             $revoked_on = $api_key_row->revokedOn;
 
             $last_used_on = $api_key_row->lastUsedOn;
             $api_key['last_used_on_since'] =
               $last_used_on !== null
-              ? \Piwigo\Core\DateHelper::timeSince($last_used_on, 'day')
+              ? DateHelper::timeSince($last_used_on, 'day')
               : $this->lang->t('Never');
 
-            $expired_on = \Piwigo\Core\DateHelper::str2DateTime($expired_on_raw);
-            $now = \Piwigo\Core\DateHelper::str2DateTime($now);
+            $expired_on = DateHelper::str2DateTime($expired_on_raw);
+            $now = DateHelper::str2DateTime($now);
             if ($expired_on === false || $now === false) {
-                throw new \Exception('ApiKeyService::get(): str2DateTime() failed on a DB-stored date');
+                throw new Exception('ApiKeyService::get(): str2DateTime() failed on a DB-stored date');
             }
 
             $api_key['is_expired'] = $expired_on < $now;
             if ($api_key['is_expired']) {
                 $api_key['expiration'] = $this->lang->t('Expired');
             } else {
-                $diff = \Piwigo\Core\DateHelper::dateDiff($now, $expired_on);
+                $diff = DateHelper::dateDiff($now, $expired_on);
                 if ($diff->days > 0) {
                     $api_key['expiration'] = $this->lang->t('%d days', $diff->days);
                 } elseif ($diff->h > 0) {
@@ -149,16 +152,16 @@ final readonly class ApiKeyService
                 }
             }
 
-            $api_key['expired_on_since'] = \Piwigo\Core\DateHelper::timeSince($expired_on_raw, 'day');
+            $api_key['expired_on_since'] = DateHelper::timeSince($expired_on_raw, 'day');
 
             $api_key['revoked_on_since'] =
               (bool) $revoked_on
-              ? \Piwigo\Core\DateHelper::timeSince($revoked_on, 'day')
+              ? DateHelper::timeSince($revoked_on, 'day')
               : null;
 
             $api_key['revoked_on_message'] =
               (bool) $revoked_on
-              ? $this->lang->t('This API key was manually revoked on %s', \Piwigo\Core\DateHelper::formatDate($revoked_on, ['day', 'month', 'year']))
+              ? $this->lang->t('This API key was manually revoked on %s', DateHelper::formatDate($revoked_on, ['day', 'month', 'year']))
               : null;
 
             $results[] = $api_key;

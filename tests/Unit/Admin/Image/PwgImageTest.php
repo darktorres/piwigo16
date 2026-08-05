@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Admin\Image\ImageInterface;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Core\CurrentLogger;
@@ -82,7 +85,7 @@ function pwgImageTestMarker(): string
  */
 function pwgImageTestMake(string $sourceFilepath, ?string $library = null): PwgImage
 {
-    return new PwgImage($sourceFilepath, new CurrentLogger(), \Piwigo\PluginConfig\EventDispatcher::get(), new \Piwigo\Config\CurrentConfig(), $library);
+    return new PwgImage($sourceFilepath, new CurrentLogger(), EventDispatcher::get(), new CurrentConfig(), $library);
 }
 
 /**
@@ -285,7 +288,7 @@ test('get_rotation_code_from_angle maps every known angle, treating null the sam
 
 test('get_rotation_code_from_angle throws for an unexpected angle', function (): void {
     expect(fn () => PwgImage::get_rotation_code_from_angle(45))
-        ->toThrow(\Exception::class, 'get_rotation_code_from_angle(): unexpected rotation angle 45');
+        ->toThrow(Exception::class, 'get_rotation_code_from_angle(): unexpected rotation angle 45');
 });
 
 test('get_rotation_angle_from_code maps every known code, wrapping modulo 4', function (): void {
@@ -301,7 +304,7 @@ test('get_rotation_angle_from_code maps every known code, wrapping modulo 4', fu
 
 test('get_rotation_angle_from_code throws for an unexpected code', function (): void {
     expect(fn () => PwgImage::get_rotation_angle_from_code(-1))
-        ->toThrow(\Exception::class);
+        ->toThrow(Exception::class);
 });
 
 test('get_rotation_angle returns null for a non-JPEG source', function (): void {
@@ -440,7 +443,7 @@ test('webp_info throws for a file that is not a real WEBP container', function (
     file_put_contents($path, str_repeat('x', 30));
 
     expect(fn () => PwgImage::webp_info($path))
-        ->toThrow(\Exception::class, 'webp_info(): not a valid webp image');
+        ->toThrow(Exception::class, 'webp_info(): not a valid webp image');
 });
 
 test('is_gd reports GD as available in this environment', function (): void {
@@ -474,7 +477,7 @@ test('get_graphics_library_label formats the resolved library and version', func
 });
 
 test('constructor uses a plugin-provided image instance and skips its own library resolution entirely', function (): void {
-    $fake = new class implements \Piwigo\Admin\Image\ImageInterface {
+    $fake = new class implements ImageInterface {
         public function get_width(): int
         {
             return 123;
@@ -533,7 +536,7 @@ test('constructor uses a plugin-provided image instance and skips its own librar
         }
         $target->image = $fake;
     };
-    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(LoadImageLibrary::class, $handler);
+    EventDispatcher::get()->addTypedHandler(LoadImageLibrary::class, $handler);
 
     try {
         // A path this class's own real library resolution would reject
@@ -545,7 +548,7 @@ test('constructor uses a plugin-provided image instance and skips its own librar
         expect($img->get_width())->toBe(123);
         expect($img->library)->toBe('');
     } finally {
-        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(LoadImageLibrary::class, $handler);
+        EventDispatcher::get()->removeEventHandler(LoadImageLibrary::class, $handler);
     }
 });
 
@@ -676,7 +679,7 @@ test('webp_info throws when the file cannot be opened for reading', function ():
     set_error_handler(static fn (): bool => true);
     try {
         expect(fn () => PwgImage::webp_info($path))
-            ->toThrow(\Exception::class, "webp_info(): fopen({$path}): Failed");
+            ->toThrow(Exception::class, "webp_info(): fopen({$path}): Failed");
     } finally {
         restore_error_handler();
     }
@@ -688,7 +691,7 @@ test('webp_info throws for a well-formed VP8 header with an unrecognized sub-for
     file_put_contents($path, 'RIFF' . "\x00\x00\x00\x00" . 'WEBP' . 'VP8' . '?' . str_repeat("\x00", 9));
 
     expect(fn () => PwgImage::webp_info($path))
-        ->toThrow(\Exception::class, 'webp_info(): could not detect webp type');
+        ->toThrow(Exception::class, 'webp_info(): could not detect webp type');
 });
 
 test('get_rotation_angle returns null when getimagesize() fails to read the file, instead of throwing', function (): void {
@@ -737,17 +740,17 @@ test('get_rotation_angle maps EXIF orientation 8 to a 90-degree rotation', funct
 });
 
 test('is_ext_imagick returns false when the configured binary directory has no real ImageMagick binary', function (): void {
-    $original = \Piwigo\Config\CurrentConfig::current()->extImagickDir();
+    $original = CurrentConfig::current()->extImagickDir();
     // Concatenated adjacent to the (memoized, real) command name via
     // escapeshellarg() -- see get_ext_imagick_command()'s own [SEC-16]
     // comment -- so this genuinely points `exec()` at a nonexistent path
     // regardless of which real binary this environment already resolved.
-    \Piwigo\Config\CurrentConfig::current()->setExtImagickDir('/totally/nonexistent/dir/');
+    CurrentConfig::current()->setExtImagickDir('/totally/nonexistent/dir/');
 
     try {
         expect(PwgImage::is_ext_imagick())->toBeFalse();
     } finally {
-        \Piwigo\Config\CurrentConfig::current()->setExtImagickDir($original);
+        CurrentConfig::current()->setExtImagickDir($original);
     }
 });
 
@@ -759,15 +762,15 @@ test('is_ext_imagick detects the real, installed magick binary and parses its ve
     // real `magick` CLI is genuinely installed in this environment
     // (confirmed via `command -v magick`), so this exercises the actual
     // success path end to end, not a mock.
-    \Piwigo\Admin\Image\PwgImage::$ext_imagick_version = '';
+    PwgImage::$ext_imagick_version = '';
 
     expect(PwgImage::is_ext_imagick())->toBeTrue()
         ->and(PwgImage::$ext_imagick_version)->toMatch('/^\d+\.\d+\.\d+/');
 });
 
 test('get_graphics_library reports a real ImageMagick PHP-extension version when ext_imagick itself is unavailable', function (): void {
-    $original = \Piwigo\Config\CurrentConfig::current()->extImagickDir();
-    \Piwigo\Config\CurrentConfig::current()->setExtImagickDir('/totally/nonexistent/dir/');
+    $original = CurrentConfig::current()->extImagickDir();
+    CurrentConfig::current()->setExtImagickDir('/totally/nonexistent/dir/');
 
     try {
         // is_ext_imagick() forced false above; the 'imagick' PHP extension
@@ -778,7 +781,7 @@ test('get_graphics_library reports a real ImageMagick PHP-extension version when
         expect($library)->toBeString();
         expect($library)->toStartWith('imagick/');
     } finally {
-        \Piwigo\Config\CurrentConfig::current()->setExtImagickDir($original);
+        CurrentConfig::current()->setExtImagickDir($original);
     }
 });
 
@@ -800,7 +803,7 @@ test('webp_info throws when fread() fails after a successful fopen()', function 
     set_error_handler(static fn (): bool => true);
     try {
         expect(fn () => PwgImage::webp_info($dir))
-            ->toThrow(\Exception::class, "webp_info(): fread({$dir}): Failed");
+            ->toThrow(Exception::class, "webp_info(): fread({$dir}): Failed");
     } finally {
         restore_error_handler();
     }

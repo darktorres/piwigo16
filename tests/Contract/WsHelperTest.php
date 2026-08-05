@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -54,7 +57,7 @@ final class WsHelperTest extends ContractTestCase
 {
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -376,9 +379,9 @@ final class WsHelperTest extends ContractTestCase
      */
     public function test_categoriesFlatlistToTree_skips_a_row_with_a_non_scalar_id(): void
     {
-        \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 2)));
+        Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
         try {
-            $wsHelper = \Piwigo\Core\Kernel::container()->get(WsHelper::class);
+            $wsHelper = Kernel::container()->get(WsHelper::class);
             self::assertInstanceOf(WsHelper::class, $wsHelper);
 
             $tree = $wsHelper->categoriesFlatlistToTree([
@@ -386,7 +389,7 @@ final class WsHelperTest extends ContractTestCase
                 ['id' => 1, 'name' => 'Valid Root'],
             ]);
         } finally {
-            \Piwigo\Core\Kernel::reset();
+            Kernel::reset();
         }
 
         self::assertCount(1, $tree, 'the malformed row must be skipped entirely, not just left out of the tree');
@@ -400,9 +403,9 @@ final class WsHelperTest extends ContractTestCase
      */
     public function test_categoriesFlatlistToTree_skips_a_child_row_with_a_non_scalar_uppercat_id(): void
     {
-        \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 2)));
+        Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
         try {
-            $wsHelper = \Piwigo\Core\Kernel::container()->get(WsHelper::class);
+            $wsHelper = Kernel::container()->get(WsHelper::class);
             self::assertInstanceOf(WsHelper::class, $wsHelper);
 
             $tree = $wsHelper->categoriesFlatlistToTree([
@@ -410,7 +413,7 @@ final class WsHelperTest extends ContractTestCase
                 ['id' => 2, 'id_uppercat' => ['not', 'scalar'], 'name' => 'Bad Child'],
             ]);
         } finally {
-            \Piwigo\Core\Kernel::reset();
+            Kernel::reset();
         }
 
         self::assertCount(1, $tree, 'the malformed child row must never be attached anywhere');

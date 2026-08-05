@@ -146,7 +146,7 @@ test('treats a missing directory option as empty, not as a literal option value,
     set_error_handler(static fn (): bool => true);
     try {
         expect(fn () => $logger->write('unreachable'))
-            ->toThrow(\RuntimeException::class, 'The file could not be opened. Check permissions.');
+            ->toThrow(RuntimeException::class, 'The file could not be opened. Check permissions.');
     } finally {
         restore_error_handler();
     }
@@ -223,7 +223,7 @@ test('throws writefail when the target file already exists but has lost its writ
     $logger = new Logger(['directory' => $dir, 'filename' => $filename]);
 
     expect(fn () => $logger->write('new content'))
-        ->toThrow(\RuntimeException::class, 'The file could not be written to. Check that appropriate permissions have been set.');
+        ->toThrow(RuntimeException::class, 'The file could not be written to. Check that appropriate permissions have been set.');
 });
 
 /**
@@ -255,7 +255,7 @@ test('write() on a severity-OFF logger still normalizes a never-set directory to
     $logger = new Logger(['severity' => Logger::OFF]);
 
     expect(fn () => $logger->write('bypasses the severity gate'))
-        ->toThrow(\RuntimeException::class);
+        ->toThrow(RuntimeException::class);
 });
 
 test('throws openfail when fopen cannot create the target file inside a locked directory', function (): void {
@@ -268,7 +268,7 @@ test('throws openfail when fopen cannot create the target file inside a locked d
     set_error_handler(static fn (): bool => true);
     try {
         expect(fn () => $logger->write('anything'))
-            ->toThrow(\RuntimeException::class, 'The file could not be opened. Check permissions.');
+            ->toThrow(RuntimeException::class, 'The file could not be opened. Check permissions.');
     } finally {
         restore_error_handler();
         chmod($dir, 0o755);
@@ -524,7 +524,7 @@ test('levelToCode includes the actual unrecognized level in its exception messag
     // Kills line 480's UnwrapConcat (dropping the 'Unknown severity
     // level ' prefix, throwing with just the bare level number instead).
     expect(fn () => Logger::levelToCode(999))
-        ->toThrow(\RuntimeException::class, 'Unknown severity level 999');
+        ->toThrow(RuntimeException::class, 'Unknown severity level 999');
 });
 
 test('throws writefail when fwrite itself fails on an already-open handle (e.g. a full device)', function (): void {
@@ -538,7 +538,7 @@ test('throws writefail when fwrite itself fails on an already-open handle (e.g. 
     set_error_handler(static fn (): bool => true);
     try {
         expect(fn () => $logger->write('this will not fit'))
-            ->toThrow(\RuntimeException::class, 'The file could not be written to. Check that appropriate permissions have been set.');
+            ->toThrow(RuntimeException::class, 'The file could not be written to. Check that appropriate permissions have been set.');
     } finally {
         restore_error_handler();
     }
@@ -714,7 +714,7 @@ test('codeToLevel converts every known severity code, case-insensitively, to its
 
 test('codeToLevel throws for an unrecognized severity code', function (): void {
     expect(fn () => Logger::codeToLevel('NOT_A_LEVEL'))
-        ->toThrow(\RuntimeException::class, 'Unknown severity code NOT_A_LEVEL');
+        ->toThrow(RuntimeException::class, 'Unknown severity code NOT_A_LEVEL');
 });
 
 test('levelToCode converts every level constant to its own string name', function (): void {

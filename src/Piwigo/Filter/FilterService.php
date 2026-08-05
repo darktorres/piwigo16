@@ -5,15 +5,27 @@ declare(strict_types=1);
 namespace Piwigo\Filter;
 
 use Doctrine\DBAL\Connection;
+use Override;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageFilterHelper;
+use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Filter\Request\RecentFilterRequest;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Applies the current request's recent-content filter ($filter['enabled']/
@@ -25,12 +37,12 @@ use Piwigo\Session\SessionService;
 final class FilterService implements FilterUpdaterInterface
 {
     public function __construct(
-        private readonly \Piwigo\Core\FilterState $filterState,
+        private readonly FilterState $filterState,
         private readonly SessionService $sessionService,
         private readonly Translator $translator,
         private readonly Lang $lang,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly CurrentConfig $currentConfig,
+        private readonly EventDispatcher $eventDispatcher,
         private ?Connection $conn = null,
     ) {}
 
@@ -51,7 +63,7 @@ final class FilterService implements FilterUpdaterInterface
      *  List of visible categories (count(visible) < count(forbidden) more often)
      * $filter['visible_images']: List of visible images
      */
-    public function initializeFromRequest(\Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser): void
+    public function initializeFromRequest(PageState $pageState, CurrentUser $currentUser): void
     {
         // Phase 2 global-residual sweep: $filter is now a local scratch
         // array for this method's own body only (no longer `global
@@ -71,9 +83,9 @@ final class FilterService implements FilterUpdaterInterface
 
         $user = $currentUser->get();
 
-        $recentFilterRequest = Request\RecentFilterRequest::fromGlobals();
+        $recentFilterRequest = RecentFilterRequest::fromGlobals();
 
-        if (! (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('cancel')) {
+        if (! (bool) PageFilterHelper::getFilterPageValue('cancel')) {
             if ($recentFilterRequest->filterPresent) {
                 $filter['matches'] = [];
                 $filter_get_param = $recentFilterRequest->filterValue;
@@ -164,8 +176,8 @@ final class FilterService implements FilterUpdaterInterface
                 // value.
                 $computedCategories = new CategoryService(
                     $this->lang,
-                    new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig),
-                    new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig), $currentUser, $this->filterState),
+                    new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig),
+                    new PermissionService(new PermissionRepository(EntityManagerFactory::build($categoryConn)), EntityManagerFactory::build($categoryConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig), $currentUser, $this->filterState),
                     $this->currentConfig,
                     $this->eventDispatcher,
                     $this->translator
@@ -187,7 +199,7 @@ final class FilterService implements FilterUpdaterInterface
 
                 $visible_image_ids = array_map(
                     strval(...),
-                    \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Image\ImageEntity::class)
+                    EntityManagerFactory::build($categoryConn)->getRepository(ImageEntity::class)
                         ->findIdsVisibleInCategoriesRecentlyAvailable($visibleCategoriesCsv, $recentPeriodExpr)
                 );
                 $filter['visible_images'] = implode(',', $visible_image_ids);
@@ -211,7 +223,7 @@ final class FilterService implements FilterUpdaterInterface
                 $filter['visible_images'] = $this->sessionService->getSessionVar('filter_visible_images', '');
             }
             unset($filter_key);
-            if ((bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('add_notes')) {
+            if ((bool) PageFilterHelper::getFilterPageValue('add_notes')) {
                 $pageState->addHeaderNote($this->translator->plural(
                     'Photos posted within the last %d day.',
                     'Photos posted within the last %d days.',
@@ -251,7 +263,7 @@ final class FilterService implements FilterUpdaterInterface
      *
      * @param array<int, array<string, mixed>> $cats
      */
-    #[\Override]
+    #[Override]
     public function updateCatsWithFilteredData(array &$cats): void
     {
         // Phase 2 global-residual sweep: retargeted from `global $filter;`

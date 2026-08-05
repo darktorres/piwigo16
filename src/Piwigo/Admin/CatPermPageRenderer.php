@@ -5,11 +5,19 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Request\CatPermSubmitRequest;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
-use Piwigo\Template\Template;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupService;
+use Piwigo\Html\HtmlService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\UserService;
 
 /**
  * Ported from admin/cat_perm.php (the "permissions" tab of the "album"
@@ -27,12 +35,12 @@ final class CatPermPageRenderer
         private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly CategoryAdminService $categoryAdminService,
-        private readonly \Piwigo\Group\GroupService $groupService,
-        private readonly \Piwigo\Users\UserService $userService,
-        private readonly \Piwigo\Html\HtmlService $htmlService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly GroupService $groupService,
+        private readonly UserService $userService,
+        private readonly HtmlService $htmlService,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -70,9 +78,9 @@ final class CatPermPageRenderer
         // |                           form submission                         |
         // +-------------------------------------------------------------------+
 
-        $catPermSubmit = Request\CatPermSubmitRequest::fromGlobals();
+        $catPermSubmit = CatPermSubmitRequest::fromGlobals();
         if ($catPermSubmit->isSubmitted) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlService, $this->redirectService);
 
             $post_status = $catPermSubmit->status;
@@ -125,7 +133,7 @@ final class CatPermPageRenderer
         $template->assign('groups', $groups);
 
         // groups granted to access the category
-        $permissionRepository = new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
+        $permissionRepository = new PermissionRepository(EntityManagerFactory::build($conn));
         $cat_id = $page['cat'];
         $group_granted_ids = $permissionRepository->findGrantedGroupIdsByCategory([$cat_id])[$cat_id] ?? [];
         $template->assign('groups_selected', $group_granted_ids);
@@ -198,7 +206,7 @@ final class CatPermPageRenderer
         // |                           sending html code                       |
         // +-------------------------------------------------------------------+
         $template->assign([
-            'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+            'PWG_TOKEN' => new CsrfService()
                 ->getToken(),
             'INHERIT' => $this->currentConfig->inheritanceByDefault(),
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),

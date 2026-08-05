@@ -4,22 +4,36 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Admin\Maintenance\Request\MaintenanceActionRequest;
+use Piwigo\Cache\PersistentCache;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\ContainerDetector;
+use Piwigo\Core\DateHelper;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Event\Admin\GetAdminAdvancedFeaturesLinks;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Lang\Translator;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Rate\RateService;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\Template;
+use Piwigo\Tag\TagService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/maintenance_env.php (the "env" tab of the "maintenance"
@@ -50,22 +64,22 @@ final class MaintenanceEnvPageRenderer
         private readonly ConfigService $configService,
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\Lang\Translator $translator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly Translator $translator,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly ImageStdParams $imageStdParams,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly DbMaintenanceRepository $dbMaintenanceRepository,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Rate\RateService $rateService,
+        private readonly ActivityService $activityService,
+        private readonly RateService $rateService,
         private readonly InstallationStats $installationStats,
-        private readonly \Piwigo\Category\CategoryService $categoryService,
-        private readonly \Piwigo\Tag\TagService $tagService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly CategoryService $categoryService,
+        private readonly TagService $tagService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly Lang $lang,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly ?PersistentCache $persistentCache = null,
     ) {}
 
     public function render(): void
@@ -84,7 +98,7 @@ final class MaintenanceEnvPageRenderer
             'maintenance' => 'maintenance_env.tpl',
         ]);
 
-        $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken();
+        $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new CsrfService()->getToken();
 
         /** @var array<string, string> $purge_urls */
         $purge_urls = [];
@@ -99,7 +113,7 @@ final class MaintenanceEnvPageRenderer
         $db_version = $dbInfo->version();
         $db_current_date = $dbInfo->currentDateTime();
 
-        [$container_name, $container_version] = \Piwigo\Core\ContainerDetector::detect();
+        [$container_name, $container_version] = ContainerDetector::detect();
 
         if (! in_array($container_name, ['Official', 'none'], true)) {
             $container_name = '(unofficial) ' . $container_name;
@@ -109,7 +123,7 @@ final class MaintenanceEnvPageRenderer
 
         $time_elapsed_since_last_calc = null;
         if ($cache_sizes !== null && is_array($cache_sizes[3] ?? null) && (is_string($cache_sizes[3]['value'] ?? null) || is_int($cache_sizes[3]['value'] ?? null))) {
-            $time_elapsed_since_last_calc = \Piwigo\Core\DateHelper::timeSince($cache_sizes[3]['value'], 'year');
+            $time_elapsed_since_last_calc = DateHelper::timeSince($cache_sizes[3]['value'], 'year');
         }
 
         $template->assign(
@@ -170,8 +184,8 @@ final class MaintenanceEnvPageRenderer
         if (is_string($installed_on) && $installed_on !== '') {
             $template->assign(
                 [
-                    'INSTALLED_ON' => \Piwigo\Core\DateHelper::formatDate($installed_on, ['day', 'month', 'year']),
-                    'INSTALLED_SINCE' => \Piwigo\Core\DateHelper::timeSince($installed_on, 'day'),
+                    'INSTALLED_ON' => DateHelper::formatDate($installed_on, ['day', 'month', 'year']),
+                    'INSTALLED_SINCE' => DateHelper::timeSince($installed_on, 'day'),
                 ]
             );
         }

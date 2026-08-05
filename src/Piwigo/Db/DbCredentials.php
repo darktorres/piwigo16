@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Db;
 
 use Piwigo\Core\Kernel;
+use Psr\Container\ContainerExceptionInterface;
 
 /**
  * The 7 PIWIGO_DB_* connection parameters, read from the process
@@ -88,7 +89,7 @@ final class DbCredentials
                 if ($instance instanceof self) {
                     return $instance;
                 }
-            } catch (\Psr\Container\ContainerExceptionInterface) {
+            } catch (ContainerExceptionInterface) {
                 // Falls through to fromEnv() below -- see this class's own
                 // docblock (same has()-is-unreliable reasoning CurrentPaths
                 // documents, not applicable here since this method already

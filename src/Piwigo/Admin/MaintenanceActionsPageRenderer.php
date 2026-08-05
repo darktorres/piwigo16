@@ -5,23 +5,36 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Imagick;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Admin\Maintenance\Request\MaintenanceActionRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Cache\PersistentCache;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\DateHelper;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Event\Admin\GetAdminAdvancedFeaturesLinks;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Lang\Translator;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Rate\RateService;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\Template;
+use Piwigo\Tag\TagService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/maintenance_actions.php (the "actions" tab of the
@@ -51,21 +64,21 @@ final class MaintenanceActionsPageRenderer
         private readonly ConfigService $configService,
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\Lang\Translator $translator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly Translator $translator,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly ImageStdParams $imageStdParams,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly DbMaintenanceRepository $dbMaintenanceRepository,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Rate\RateService $rateService,
-        private readonly \Piwigo\Category\CategoryService $categoryService,
-        private readonly \Piwigo\Tag\TagService $tagService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly ActivityService $activityService,
+        private readonly RateService $rateService,
+        private readonly CategoryService $categoryService,
+        private readonly TagService $tagService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly Lang $lang,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly ?PersistentCache $persistentCache = null,
     ) {}
 
     /**
@@ -88,9 +101,9 @@ final class MaintenanceActionsPageRenderer
         $template->set_filenames([
             'maintenance' => 'maintenance_actions.tpl',
         ]);
-        $pwg_token = new \Piwigo\Csrf\CsrfService()
+        $pwg_token = new CsrfService()
             ->getToken();
-        $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken();
+        $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new CsrfService()->getToken();
 
         if (! $this->accessControl->isWebmaster()) {
             $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));
@@ -124,7 +137,7 @@ final class MaintenanceActionsPageRenderer
             if (is_array($last_calc_row)) {
                 $last_calc_value = $last_calc_row['value'] ?? null;
                 if (is_int($last_calc_value) || is_string($last_calc_value)) {
-                    $time_elapsed_since_last_calc = \Piwigo\Core\DateHelper::timeSince($last_calc_value, 'year');
+                    $time_elapsed_since_last_calc = DateHelper::timeSince($last_calc_value, 'year');
                 }
             }
         }

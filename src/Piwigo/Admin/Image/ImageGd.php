@@ -11,9 +11,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
+use GdImage;
+use LogicException;
+use Override;
+use Piwigo\Core\StringHelper;
+
 final class ImageGd implements ImageInterface
 {
-    public \GdImage $image;
+    public GdImage $image;
 
     public int $quality = 95;
 
@@ -21,7 +26,7 @@ final class ImageGd implements ImageInterface
         string $source_filepath
     ) {
         $gd_info = gd_info();
-        $extension = strtolower(\Piwigo\Core\StringHelper::getExtension($source_filepath));
+        $extension = strtolower(StringHelper::getExtension($source_filepath));
 
         if (in_array($extension, ['jpg', 'jpeg'], true)) {
             $image = imagecreatefromjpeg($source_filepath);
@@ -40,19 +45,19 @@ final class ImageGd implements ImageInterface
         $this->image = $image;
     }
 
-    #[\Override]
+    #[Override]
     public function get_width(): int
     {
         return imagesx($this->image);
     }
 
-    #[\Override]
+    #[Override]
     public function get_height(): int
     {
         return imagesy($this->image);
     }
 
-    #[\Override]
+    #[Override]
     public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
     {
         // GD's native imagecreatetruecolor()/imagecopymerge() require int
@@ -91,13 +96,13 @@ final class ImageGd implements ImageInterface
         return $result;
     }
 
-    #[\Override]
+    #[Override]
     public function strip(): bool
     {
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function rotate(int|float $rotation): bool
     {
         $dest = imagerotate($this->image, $rotation, 0);
@@ -108,14 +113,14 @@ final class ImageGd implements ImageInterface
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function set_compression_quality(int $quality): bool
     {
         $this->quality = $quality;
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function resize(int|float $width, int|float $height): bool
     {
         // see crop()'s comment: GD's native functions require int arguments
@@ -142,14 +147,14 @@ final class ImageGd implements ImageInterface
         return $result;
     }
 
-    #[\Override]
+    #[Override]
     public function sharpen(int|float $amount): bool
     {
         $m = PwgImage::get_sharpen_matrix($amount);
         return imageconvolution($this->image, $m, 1, 0);
     }
 
-    #[\Override]
+    #[Override]
     public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
     {
         // see crop()'s comment: GD's native imagecopy()/imagecopymerge()
@@ -164,7 +169,7 @@ final class ImageGd implements ImageInterface
         // images use the same backend, always true in practice.
         $overlay_backend = $overlay->image;
         if (! $overlay_backend instanceof self) {
-            throw new \LogicException('PwgImage::compose(): overlay must use the same image backend');
+            throw new LogicException('PwgImage::compose(): overlay must use the same image backend');
         }
         $ioverlay = $overlay_backend->image;
         /* A replacement for php's imagecopymerge() function that supports the alpha channel
@@ -189,10 +194,10 @@ final class ImageGd implements ImageInterface
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function write(string $destination_filepath): bool
     {
-        $extension = strtolower(\Piwigo\Core\StringHelper::getExtension($destination_filepath));
+        $extension = strtolower(StringHelper::getExtension($destination_filepath));
 
         if ($extension === 'png') {
             return imagepng($this->image, $destination_filepath);

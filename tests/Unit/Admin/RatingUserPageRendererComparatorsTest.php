@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Admin;
 
+use PHPUnit\Framework\TestCase;
 use Piwigo\Admin\RatingUserPageRenderer;
 
 /**
@@ -11,7 +12,7 @@ use Piwigo\Admin\RatingUserPageRenderer;
  * from include/admin/rating_user.php's own top-level free functions during
  * the P23 batch 6a port. Pure functions, no DB/globals needed.
  */
-final class RatingUserPageRendererComparatorsTest extends \PHPUnit\Framework\TestCase
+final class RatingUserPageRendererComparatorsTest extends TestCase
 {
     public function test_avg_compare_orders_ascending(): void
     {

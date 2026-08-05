@@ -6,9 +6,12 @@ namespace Piwigo\Picture;
 
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Rate\RateRepository;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Renders the picture page's rating summary + rate form. Ported from
@@ -22,9 +25,9 @@ final class PictureRateRenderer
     public function __construct(
         private readonly AccessControl $accessControl,
         private readonly RateRepository $repo,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**

@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Core\CurrentPaths;
+use RuntimeException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
@@ -31,7 +36,7 @@ final class MessengerRoundTripTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -43,9 +48,9 @@ final class MessengerRoundTripTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -57,23 +62,23 @@ final class MessengerRoundTripTest extends IntegrationTestCase
         // marker-suffixed subdirectory, verified before any destructive
         // operation.
         $currentConfig->setDataLocation($this->marker() . '/');
-        mkdir(\Piwigo\Core\CurrentPaths::get()->root . $currentConfig->derivativeDir(), 0o777, true);
+        mkdir(CurrentPaths::get()->root . $currentConfig->derivativeDir(), 0o777, true);
 
         $this->conn = DbConnection::build();
         $this->conn->executeStatement('DROP TABLE IF EXISTS messenger_messages');
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
-        $dir = \Piwigo\Core\CurrentPaths::get()->root . $this->marker();
+        $dir = CurrentPaths::get()->root . $this->marker();
         if (is_dir($dir)) {
             $this->rrmdir($dir);
         }
         $this->conn->executeStatement('DROP TABLE IF EXISTS messenger_messages');
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         parent::tearDown();
@@ -90,7 +95,7 @@ final class MessengerRoundTripTest extends IntegrationTestCase
     private function rrmdir(string $dir): void
     {
         if (! str_contains($dir, $this->marker())) {
-            throw new \RuntimeException("Refusing to recursively delete '{$dir}': missing this test run's marker.");
+            throw new RuntimeException("Refusing to recursively delete '{$dir}': missing this test run's marker.");
         }
         $nodes = scandir($dir);
         foreach ($nodes !== false ? $nodes : [] as $node) {
@@ -105,11 +110,11 @@ final class MessengerRoundTripTest extends IntegrationTestCase
 
     public function test_a_dispatched_job_is_persisted_received_and_handled_via_the_real_doctrine_transport(): void
     {
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $derivDir = \Piwigo\Core\CurrentPaths::get()->root . $currentConfig->derivativeDir() . '2026/07';
+        $derivDir = CurrentPaths::get()->root . $currentConfig->derivativeDir() . '2026/07';
         mkdir($derivDir, 0o777, true);
         file_put_contents($derivDir . '/photo-th.jpg', 'x');
         file_put_contents($derivDir . '/photo-sq.jpg', 'x');

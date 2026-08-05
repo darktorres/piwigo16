@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\Projection\ApiKey;
 
@@ -63,7 +64,7 @@ final readonly class ApiKeyRepository
         return is_numeric($value) ? (int) $value : 0;
     }
 
-    public function revoke(string $authKey, int $userId, \DateTimeInterface $revokedOn): void
+    public function revoke(string $authKey, int $userId, DateTimeInterface $revokedOn): void
     {
         $this->em->createQueryBuilder()
             ->update(UserAuthKeyEntity::class, 'uak')

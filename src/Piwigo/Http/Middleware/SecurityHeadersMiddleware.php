@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Http\Middleware;
 
+use Override;
 use Piwigo\Http\BaselineSecurityHeaders;
 use Piwigo\Http\SecurityHeaderContributor;
 use Psr\Http\Message\ResponseInterface;
@@ -21,7 +22,7 @@ final readonly class SecurityHeadersMiddleware implements MiddlewareInterface
         ]
     ) {}
 
-    #[\Override]
+    #[Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $response = $handler->handle($request);

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use LogicException;
 use Piwigo\Auth\CookieService;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Session\PwgSession;
 use Piwigo\Session\SessionService;
@@ -35,31 +38,31 @@ final class SessionBootstrap
     public static function register(): void
     {
 
-        if (\Piwigo\Bootstrap\RequestBootstrap::currentConfig()->sessionSaveHandler() === 'db'
-          and \Piwigo\Core\InstallationFlag::isActiveStatic()) {
+        if (RequestBootstrap::currentConfig()->sessionSaveHandler() === 'db'
+          and InstallationFlag::isActiveStatic()) {
             $sessionService = Kernel::container()->get(SessionService::class);
             if (! $sessionService instanceof SessionService) {
-                throw new \LogicException('Container returned an unexpected type for ' . SessionService::class);
+                throw new LogicException('Container returned an unexpected type for ' . SessionService::class);
             }
-            $currentLogger = Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
-            if (! $currentLogger instanceof \Piwigo\Core\CurrentLogger) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentLogger::class);
+            $currentLogger = Kernel::container()->get(CurrentLogger::class);
+            if (! $currentLogger instanceof CurrentLogger) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
             }
             session_set_save_handler(new PwgSession($sessionService, $currentLogger));
 
             if (function_exists('ini_set')) {
-                $session_use_cookies = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->sessionUseCookies();
+                $session_use_cookies = RequestBootstrap::currentConfig()->sessionUseCookies();
                 ini_set('session.use_cookies', $session_use_cookies);
 
-                $session_use_only_cookies = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->sessionUseOnlyCookies();
+                $session_use_only_cookies = RequestBootstrap::currentConfig()->sessionUseOnlyCookies();
                 ini_set('session.use_only_cookies', $session_use_only_cookies);
 
-                $session_use_trans_sid = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->sessionUseTransSid();
+                $session_use_trans_sid = RequestBootstrap::currentConfig()->sessionUseTransSid();
                 ini_set('session.use_trans_sid', intval($session_use_trans_sid));
                 ini_set('session.cookie_httponly', 1);
             }
 
-            $session_name = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->sessionName();
+            $session_name = RequestBootstrap::currentConfig()->sessionName();
             session_name($session_name);
             session_set_cookie_params(0, new CookieService()->cookiePath());
             register_shutdown_function(session_write_close(...));

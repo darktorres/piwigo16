@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use Piwigo\Config\CurrentConfig;
+use LogicException;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Session\PwgSession;
@@ -40,7 +45,7 @@ final class PwgSessionTest extends IntegrationTestCase
 
     private ?string $originalRemoteAddr = null;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -59,21 +64,21 @@ final class PwgSessionTest extends IntegrationTestCase
         $repo = EntityManagerFactory::build($conn)->getRepository(SessionEntity::class);
         self::assertInstanceOf(SessionRepository::class, $repo);
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $service = new SessionService($repo, $currentConfig);
 
-        $currentLogger = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
-        if (! $currentLogger instanceof \Piwigo\Core\CurrentLogger) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentLogger::class);
+        $currentLogger = Kernel::container()->get(CurrentLogger::class);
+        if (! $currentLogger instanceof CurrentLogger) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
 
         $this->pwgSession = new PwgSession($service, $currentLogger);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         if ($this->originalRemoteAddr === null) {

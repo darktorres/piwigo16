@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Admin\Image\ImageGd;
 use Piwigo\Admin\Image\ImageInterface;
 use Piwigo\Admin\Image\ImageProcessingException;
@@ -375,7 +377,7 @@ test('compose throws when the overlay uses a different image backend', function 
     imagejpeg($gdImg, $path);
     $img = new ImageGd($path);
 
-    $overlay = new PwgImage($path, new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\CurrentConfig(), 'gd');
+    $overlay = new PwgImage($path, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
     // Swap in a fake, non-ImageGd backend to force the mismatch --
     // ImageImagick/ImageExtImagick both need a real ext_imagick/imagick
     // setup this suite doesn't otherwise depend on, and this class's own
@@ -523,7 +525,7 @@ test('compose merges a same-backend overlay onto the base image', function (): v
     imagepng($overlayImg, $overlayPath);
 
     $img = new ImageGd($basePath);
-    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\CurrentConfig(), 'gd');
+    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
 
     expect($img->compose($overlay, 2, 2, 100))->toBeTrue();
     // Base image dimensions are untouched by composing a smaller overlay.

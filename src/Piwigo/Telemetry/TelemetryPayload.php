@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Telemetry;
 
+use DateTimeImmutable;
+
 /**
  * The complete anonymous "phone home" payload. `installId` is a random
  * value generated once per install (see TelemetryService::resolveInstallId())
@@ -15,7 +17,7 @@ final readonly class TelemetryPayload
 {
     public function __construct(
         public string $installId,
-        public \DateTimeImmutable $generatedAt,
+        public DateTimeImmutable $generatedAt,
         public EnvironmentInfo $environment,
         public DatabaseInfo $database,
         public GalleryStats $gallery,

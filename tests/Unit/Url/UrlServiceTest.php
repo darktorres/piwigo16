@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Url;
 
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\WsContext;
-use Piwigo\Html\HtmlService;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Url\RootPathOverride;
-use Piwigo\Url\UrlService;
 use ReflectionProperty;
 use RuntimeException;
 
@@ -47,7 +48,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     Kernel::reset();
 });
 
@@ -81,7 +82,7 @@ test('getActionUrl builds action.php with id/part, adding a bare download flag w
     // addUrlParams()'s own default separator is the HTML-safe '&amp;'
     // (outside a WS request context) -- see that method's own docblock
     // example.
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getActionUrl(42, 'e', false))->toBe('action.php?id=42&amp;part=e');
     expect($service->getActionUrl(42, 'e', true))->toBe('action.php?id=42&amp;part=e&amp;download');
@@ -89,34 +90,34 @@ test('getActionUrl builds action.php with id/part, adding a bare download flag w
 
 test('getGalleryHomeUrl returns a remote gallery_url unchanged', function (): void {
     CurrentConfig::current()->setGalleryUrl('https://elsewhere.example.test/gallery/');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getGalleryHomeUrl())->toBe('https://elsewhere.example.test/gallery/');
 });
 
 test('getGalleryHomeUrl prefixes a relative gallery_url with the root URL', function (): void {
     CurrentConfig::current()->setGalleryUrl('my-gallery/');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getGalleryHomeUrl())->toBe('my-gallery/');
 });
 
 test('getGalleryHomeUrl falls back to makeIndexUrl when gallery_url is unset', function (): void {
     CurrentConfig::current()->setGalleryUrl(null);
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getGalleryHomeUrl())->toBe($service->makeIndexUrl());
 });
 
 test('getRootUrl returns an empty string at the app\'s real root (no mount depth, no override)', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getRootUrl())->toBe('');
 });
 
 test('getRootUrl returns a ../ prefix per RequestMountDepth level when no override is active', function (): void {
     urlServiceTestWithMountDepth(1, function (): void {
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $service = UrlServiceTestFactory::build();
 
         expect($service->getRootUrl())->toBe('../');
     });
@@ -126,7 +127,7 @@ test('getRootUrl prefers RootPathOverride over RequestMountDepth', function (): 
     urlServiceTestWithMountDepth(1, function (): void {
         $rootPathOverride = new RootPathOverride();
         $rootPathOverride->push('/gallery/');
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build(null, $rootPathOverride);
+        $service = UrlServiceTestFactory::build(null, $rootPathOverride);
 
         try {
             expect($service->getRootUrl())->toBe('/gallery/');
@@ -137,114 +138,114 @@ test('getRootUrl prefers RootPathOverride over RequestMountDepth', function (): 
 });
 
 test('urlIsRemote is true for http and https URLs', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->urlIsRemote('http://example.test/x'))->toBeTrue()
         ->and($service->urlIsRemote('https://example.test/x'))->toBeTrue();
 });
 
 test('urlIsRemote is false for a relative path', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->urlIsRemote('/gallery/category/1'))->toBeFalse()
         ->and($service->urlIsRemote('category/1'))->toBeFalse();
 });
 
 test('embellishUrl collapses /./ segments', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->embellishUrl('/a/./b/./c'))->toBe('/a/b/c');
 });
 
 test('embellishUrl resolves /../ segments', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->embellishUrl('/a/b/../c'))->toBe('/a/c');
 });
 
 test('addUrlParams appends a query string to a URL with none', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->addUrlParams('/x', ['a' => 'b']))->toBe('/x?a=b');
 });
 
 test('addUrlParams appends with the given separator to a URL that already has a query string', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->addUrlParams('/x?cat_id=10', ['a' => 'b']))->toBe('/x?cat_id=10&amp;a=b');
 });
 
 test('addUrlParams returns the URL unchanged for empty params', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->addUrlParams('/x', []))->toBe('/x');
 });
 
 test('addUrlParams omits the value for a null param', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->addUrlParams('/x', ['download' => null]))->toBe('/x?download');
 });
 
 test('getQueryStringDiff returns empty string when QUERY_STRING is unset', function (): void {
     unset($_SERVER['QUERY_STRING']);
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getQueryStringDiff())->toBe('');
 });
 
 test('getQueryStringDiff removes rejected keys and keeps the rest', function (): void {
     $_SERVER['QUERY_STRING'] = 'a=1&b=2&c=3';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getQueryStringDiff(['b']))->toBe('?a=1&amp;c=3');
 });
 
 test('getQueryStringDiff can use a plain ampersand instead of the escaped form', function (): void {
     $_SERVER['QUERY_STRING'] = 'a=1&b=2';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getQueryStringDiff([], false))->toBe('?a=1&b=2');
 });
 
 test('makeSectionInUrl returns /categories when no category param is set', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->makeSectionInUrl(['section' => 'categories']))->toBe('/categories');
 });
 
 test('makeSectionInUrl returns an empty string for the none section', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->makeSectionInUrl(['section' => 'none']))->toBe('');
 });
 
 test('makeSectionInUrl falls through to a bare /section for an unrecognized section name', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->makeSectionInUrl(['section' => 'favorites']))->toBe('/favorites');
 });
 
 test('addWellKnownParamsInUrl appends /flat when the flat param is set', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->addWellKnownParamsInUrl('/x', ['flat' => true]))->toBe('/x/flat');
 });
 
 test('addWellKnownParamsInUrl appends /start-N when start is greater than zero', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->addWellKnownParamsInUrl('/x', ['start' => 20]))->toBe('/x/start-20');
 });
 
 test('addWellKnownParamsInUrl ignores a zero start', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->addWellKnownParamsInUrl('/x', ['start' => 0]))->toBe('/x');
 });
 
 test('parseWellKnownParamsUrl parses flat and start tokens', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
     $i = 0;
 
     $result = $service->parseWellKnownParamsUrl(['flat', 'start-40'], $i);
@@ -254,7 +255,7 @@ test('parseWellKnownParamsUrl parses flat and start tokens', function (): void {
 });
 
 test('parseWellKnownParamsUrl parses a chronology token', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
     $i = 0;
 
     $result = $service->parseWellKnownParamsUrl(['created-monthly-2026-07'], $i);
@@ -268,7 +269,7 @@ test('parseWellKnownParamsUrl parses a chronology token', function (): void {
 
 test('getAbsoluteRootUrl trusts the Host header when allowed_hosts is unconfigured', function (): void {
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
 });
@@ -277,7 +278,7 @@ test('getAbsoluteRootUrl uses gallery_url\'s host, ignoring the Host header enti
     CurrentConfig::current()->setUrlPort('none');
     CurrentConfig::current()->setGalleryUrl('https://canonical.example.test/gallery/');
     $_SERVER['HTTP_HOST'] = 'evil.test';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('http://canonical.example.test/piwigo/');
 });
@@ -285,7 +286,7 @@ test('getAbsoluteRootUrl uses gallery_url\'s host, ignoring the Host header enti
 test('getAbsoluteRootUrl keeps gallery_url\'s configured port', function (): void {
     CurrentConfig::current()->setUrlPort('none');
     CurrentConfig::current()->setGalleryUrl('https://canonical.example.test:8080/gallery/');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('http://canonical.example.test:8080/piwigo/');
 });
@@ -295,7 +296,7 @@ test('getAbsoluteRootUrl accepts a Host that matches the allowed_hosts list', fu
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
 
     KernelContainerOverride::with([DeploymentPolicy::class => new DeploymentPolicy(allowedHosts: ['gallery.example.test'])], function (): void {
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $service = UrlServiceTestFactory::build();
 
         expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
     });
@@ -306,7 +307,7 @@ test('getAbsoluteRootUrl [SEC-29] falls back to the first allowed host when Host
     $_SERVER['HTTP_HOST'] = 'evil.test';
 
     KernelContainerOverride::with([DeploymentPolicy::class => new DeploymentPolicy(allowedHosts: ['gallery.example.test', 'gallery-alt.example.test'])], function (): void {
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $service = UrlServiceTestFactory::build();
 
         expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
     });
@@ -318,7 +319,7 @@ test('getAbsoluteRootUrl [SEC-29] falls back for a forged X-Forwarded-Host too',
     $_SERVER['HTTP_X_FORWARDED_HOST'] = 'evil.test';
 
     KernelContainerOverride::with([DeploymentPolicy::class => new DeploymentPolicy(allowedHosts: ['gallery.example.test'])], function (): void {
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $service = UrlServiceTestFactory::build();
 
         expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
     });
@@ -334,7 +335,7 @@ test('getAbsoluteRootUrl [SEC-29] reflects a real DB-persisted gallery_url the w
     CurrentConfig::current()->setUrlPort('none');
     CurrentConfig::current()->setGalleryUrl('https://real-admin-configured.example.test/');
     $_SERVER['HTTP_HOST'] = 'evil.test';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('http://real-admin-configured.example.test/piwigo/');
 });
@@ -342,7 +343,7 @@ test('getAbsoluteRootUrl [SEC-29] reflects a real DB-persisted gallery_url the w
 test('getAbsoluteRootUrl treats X-Forwarded-Proto=https as HTTPS', function (): void {
     $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('https://gallery.example.test/piwigo/');
     // The real side effect the guard itself performs, not just its result.
@@ -352,7 +353,7 @@ test('getAbsoluteRootUrl treats X-Forwarded-Proto=https as HTTPS', function (): 
 test('getAbsoluteRootUrl detects HTTPS from $_SERVER[\'HTTPS\']=on', function (): void {
     $_SERVER['HTTPS'] = 'on';
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('https://gallery.example.test/piwigo/');
 });
@@ -360,7 +361,7 @@ test('getAbsoluteRootUrl detects HTTPS from $_SERVER[\'HTTPS\']=on', function ()
 test('getAbsoluteRootUrl detects HTTPS from $_SERVER[\'HTTPS\']=1', function (): void {
     $_SERVER['HTTPS'] = '1';
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('https://gallery.example.test/piwigo/');
 });
@@ -369,7 +370,7 @@ test('getAbsoluteRootUrl appends a non-standard auto-detected port', function ()
     CurrentConfig::current()->setUrlPort('auto');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $_SERVER['SERVER_PORT'] = '8080';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test:8080/piwigo/');
 });
@@ -378,7 +379,7 @@ test('getAbsoluteRootUrl omits the standard auto-detected port 80 for http', fun
     CurrentConfig::current()->setUrlPort('auto');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $_SERVER['SERVER_PORT'] = '80';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
 });
@@ -386,7 +387,7 @@ test('getAbsoluteRootUrl omits the standard auto-detected port 80 for http', fun
 test('getAbsoluteRootUrl appends an explicitly configured custom port', function (): void {
     CurrentConfig::current()->setUrlPort('9000');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test:9000/piwigo/');
 });
@@ -395,7 +396,7 @@ test('getAbsoluteRootUrl falls back to the Host header when gallery_url has no p
     CurrentConfig::current()->setUrlPort('none');
     CurrentConfig::current()->setGalleryUrl('not-a-real-url-at-all');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
 });
@@ -405,7 +406,7 @@ test('paramsForDuplication includes root_path when setMakeFullUrl\'s override is
     $rootPathOverride->push('/custom-root/');
 
     try {
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build(null, $rootPathOverride);
+        $service = UrlServiceTestFactory::build(null, $rootPathOverride);
 
         $params = $service->paramsForDuplication([], []);
 
@@ -424,7 +425,7 @@ test('makePictureUrl uses the id-file style, appending a slugified filename', fu
     CurrentConfig::current()->setPhpExtensionInUrls(false);
     CurrentConfig::current()->setQuestionMarkInUrls(false);
     CurrentConfig::current()->setPictureUrlStyle('id-file');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $url = $service->makePictureUrl(['image_id' => 42, 'image_file' => 'Summer Trip.jpg']);
 
@@ -438,7 +439,7 @@ test('makePictureUrl uses the file style directly when the filename does not sta
     CurrentConfig::current()->setPhpExtensionInUrls(false);
     CurrentConfig::current()->setQuestionMarkInUrls(false);
     CurrentConfig::current()->setPictureUrlStyle('file');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $url = $service->makePictureUrl(['image_id' => 42, 'image_file' => 'sunset.jpg']);
 
@@ -449,7 +450,7 @@ test('makePictureUrl falls through the file style to the bare id when the filena
     CurrentConfig::current()->setPhpExtensionInUrls(false);
     CurrentConfig::current()->setQuestionMarkInUrls(false);
     CurrentConfig::current()->setPictureUrlStyle('file');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     // '42-something.jpg' matches /^\d+(-|$)/ -- falls through (no break) to
     // the default arm, using the bare image_id instead of the filename.
@@ -461,7 +462,7 @@ test('makePictureUrl falls through the file style to the bare id when the filena
 test('getRootUrl treats an empty-string section rootPath the same as no rootPath at all', function (): void {
     urlServiceTestWithMountDepth(1, function (): void {
         urlServiceTestSectionContextRegistry()->set(new SectionContext(rootPath: ''));
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $service = UrlServiceTestFactory::build();
 
         expect($service->getRootUrl())->toBe('../');
     });
@@ -483,7 +484,7 @@ test('getRootUrl treats an empty-string section rootPath the same as no rootPath
 test('getAbsoluteRootUrl detects HTTPS from a case-insensitive $_SERVER[\'HTTPS\'] value', function (): void {
     $_SERVER['HTTPS'] = 'ON';
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('https://gallery.example.test/piwigo/');
 });
@@ -493,21 +494,21 @@ test('getAbsoluteRootUrl omits the standard auto-detected port 443 for https', f
     $_SERVER['HTTPS'] = 'on';
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $_SERVER['SERVER_PORT'] = '443';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('https://gallery.example.test/piwigo/');
 });
 
 test('getAbsoluteRootUrl trusts a forwarded host header when allowed_hosts is unconfigured', function (): void {
     $_SERVER['HTTP_X_FORWARDED_HOST'] = 'forwarded.example.test';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('http://forwarded.example.test/piwigo/');
 });
 
 test('getAbsoluteRootUrl falls back to an empty host segment when no host header, forwarded host, or gallery_url is present', function (): void {
     CurrentConfig::current()->setUrlPort('none');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('http:///piwigo/');
 });
@@ -523,7 +524,7 @@ test('getAbsoluteRootUrl omits the port segment entirely when the auto-detected 
     CurrentConfig::current()->setUrlPort('auto');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     unset($_SERVER['SERVER_PORT']);
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
 });
@@ -532,7 +533,7 @@ test('getAbsoluteRootUrl does not duplicate a port already present via the Host 
     CurrentConfig::current()->setUrlPort('auto');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test:8080';
     $_SERVER['SERVER_PORT'] = '8080';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test:8080/piwigo/');
 });
@@ -541,7 +542,7 @@ test('getAbsoluteRootUrl falls back to the Host header when gallery_url is an em
     CurrentConfig::current()->setUrlPort('none');
     CurrentConfig::current()->setGalleryUrl('');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
 });
@@ -567,7 +568,7 @@ test('getAbsoluteRootUrl falls back to the Host header when gallery_url has an e
     CurrentConfig::current()->setUrlPort('none');
     CurrentConfig::current()->setGalleryUrl('http:///x');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
 });
@@ -596,20 +597,20 @@ test('getAbsoluteRootUrl falls back to the Host header when gallery_url has an e
  */
 test('addUrlParams switches the default separator to a plain ampersand inside a WS request context', function (): void {
     KernelContainerOverride::with([WsContext::class => new WsContext(true)], function (): void {
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $service = UrlServiceTestFactory::build();
 
         expect($service->addUrlParams('/x', ['a' => 'b', 'c' => 'd']))->toBe('/x?a=b&c=d');
     });
 });
 
 test('addUrlParams appends an empty value for a non-scalar param', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->addUrlParams('/x', ['a' => ['nested']]))->toBe('/x?a=');
 });
 
 test('makeIndexUrl builds a real path when params add a section, keeping the php extension and question mark', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $url = $service->makeIndexUrl(['section' => 'categories']);
 
@@ -617,14 +618,14 @@ test('makeIndexUrl builds a real path when params add a section, keeping the php
 });
 
 test('makeIndexUrl falls back to the absolute root URL when no params add anything to the path', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->makeIndexUrl())->toBe($service->getAbsoluteRootUrl(false));
 });
 
 test('paramsForDuplication seeds params from the current section context', function (): void {
     urlServiceTestSectionContextRegistry()->set(new SectionContext(section: 'tags'));
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $params = $service->paramsForDuplication([], []);
 
@@ -633,7 +634,7 @@ test('paramsForDuplication seeds params from the current section context', funct
 
 test('paramsForDuplication removes listed keys and applies redefinitions', function (): void {
     urlServiceTestSectionContextRegistry()->set(new SectionContext(section: 'tags', start: 20));
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $params = $service->paramsForDuplication(['section' => 'categories'], ['start']);
 
@@ -677,7 +678,7 @@ test('makePictureUrl prefixes the root URL before the picture path segment', fun
         CurrentConfig::current()->setPhpExtensionInUrls(false);
         CurrentConfig::current()->setQuestionMarkInUrls(false);
         CurrentConfig::current()->setPictureUrlStyle('id-file');
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $service = UrlServiceTestFactory::build();
 
         $url = $service->makePictureUrl(['image_id' => 5]);
 
@@ -687,7 +688,7 @@ test('makePictureUrl prefixes the root URL before the picture path segment', fun
 
 test('makePictureUrl appends the php extension and question mark by default, preserving the picture prefix', function (): void {
     CurrentConfig::current()->setPictureUrlStyle('id-file');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $url = $service->makePictureUrl(['image_id' => 5]);
 
@@ -698,7 +699,7 @@ test('makePictureUrl in id-file style uses an empty id segment when image_id is 
     CurrentConfig::current()->setPhpExtensionInUrls(false);
     CurrentConfig::current()->setQuestionMarkInUrls(false);
     CurrentConfig::current()->setPictureUrlStyle('id-file');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $url = $service->makePictureUrl([]);
 
@@ -709,7 +710,7 @@ test('makePictureUrl in id-file style omits the filename suffix when image_file 
     CurrentConfig::current()->setPhpExtensionInUrls(false);
     CurrentConfig::current()->setQuestionMarkInUrls(false);
     CurrentConfig::current()->setPictureUrlStyle('id-file');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $url = $service->makePictureUrl(['image_id' => 5, 'image_file' => 123]);
 
@@ -720,7 +721,7 @@ test('makePictureUrl in file style falls through to the bare id when image_file 
     CurrentConfig::current()->setPhpExtensionInUrls(false);
     CurrentConfig::current()->setQuestionMarkInUrls(false);
     CurrentConfig::current()->setPictureUrlStyle('file');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $url = $service->makePictureUrl(['image_id' => 5, 'image_file' => 123]);
 
@@ -731,7 +732,7 @@ test('makePictureUrl in file style respects the ord(\'9\') boundary exactly (a l
     CurrentConfig::current()->setPhpExtensionInUrls(false);
     CurrentConfig::current()->setQuestionMarkInUrls(false);
     CurrentConfig::current()->setPictureUrlStyle('file');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     // '9-something' starts with '9' (ord 57, not > ord('9')) and matches
     // /^\d+(-|$)/ -- both operands of the guard are false, so this falls
@@ -746,7 +747,7 @@ test('makePictureUrl in file style uses the filename when it starts with digits 
     CurrentConfig::current()->setPhpExtensionInUrls(false);
     CurrentConfig::current()->setQuestionMarkInUrls(false);
     CurrentConfig::current()->setPictureUrlStyle('file');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     // '42abc' starts with a digit (first operand false) but does not match
     // /^\d+(-|$)/ since the digit run is followed by a letter, not '-' or
@@ -760,7 +761,7 @@ test('makePictureUrl uses an empty id segment in the default style branch when i
     CurrentConfig::current()->setPhpExtensionInUrls(false);
     CurrentConfig::current()->setQuestionMarkInUrls(false);
     CurrentConfig::current()->setPictureUrlStyle('unrecognized-style');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $url = $service->makePictureUrl([]);
 
@@ -771,7 +772,7 @@ test('makePictureUrl drops the flat param when no category is given (shorter url
     CurrentConfig::current()->setPhpExtensionInUrls(false);
     CurrentConfig::current()->setQuestionMarkInUrls(false);
     CurrentConfig::current()->setPictureUrlStyle('id-file');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $url = $service->makePictureUrl(['image_id' => 5, 'flat' => true]);
 
@@ -779,7 +780,7 @@ test('makePictureUrl drops the flat param when no category is given (shorter url
 });
 
 test('addWellKnownParamsInUrl appends /start-N for the boundary value start=1', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->addWellKnownParamsInUrl('/x', ['start' => 1]))->toBe('/x/start-1');
 });
@@ -788,13 +789,13 @@ test('addWellKnownParamsInUrl appends an empty start segment when start is a non
     // ['nested'] > 0 is true (PHP: an array always compares greater than an
     // int), so the isset()+>0 guard passes even though $start itself is not
     // scalar -- isolates the (string) cast's own is_scalar() fallback.
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->addWellKnownParamsInUrl('/x', ['start' => ['nested']]))->toBe('/x/start-');
 });
 
 test('makeSectionInUrl defaults a non-array category param to an empty array', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     set_error_handler(static fn (): bool => true);
     try {
@@ -807,7 +808,7 @@ test('makeSectionInUrl defaults a non-array category param to an empty array', f
 });
 
 test('makeSectionInUrl uses the category permalink directly when set', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl(['section' => 'categories', 'category' => ['id' => 7, 'name' => 'Vacation', 'permalink' => 'my-vacation']]);
 
@@ -816,7 +817,7 @@ test('makeSectionInUrl uses the category permalink directly when set', function 
 
 test('makeSectionInUrl appends the slugified name in id-name style', function (): void {
     CurrentConfig::current()->setCategoryUrlStyle('id-name');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl(['section' => 'categories', 'category' => ['id' => 7, 'name' => 'Vacation Photos', 'permalink' => null]]);
 
@@ -825,7 +826,7 @@ test('makeSectionInUrl appends the slugified name in id-name style', function ()
 
 test('makeSectionInUrl appends combined categories, defaulting a non-array entry gracefully', function (): void {
     CurrentConfig::current()->setCategoryUrlStyle('id-name');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl([
         'section' => 'categories',
@@ -844,7 +845,7 @@ test('makeSectionInUrl appends combined categories, defaulting a non-array entry
 
 test('makeSectionInUrl builds a tags section in the "id" style', function (): void {
     CurrentConfig::current()->setTagUrlStyle('id');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [['id' => 3, 'url_name' => 'nature'], ['id' => 5, 'url_name' => 'travel']]]);
 
@@ -853,7 +854,7 @@ test('makeSectionInUrl builds a tags section in the "id" style', function (): vo
 
 test('makeSectionInUrl builds a tags section in the "tag" style using url_name', function (): void {
     CurrentConfig::current()->setTagUrlStyle('tag');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [['id' => 3, 'url_name' => 'nature']]]);
 
@@ -862,7 +863,7 @@ test('makeSectionInUrl builds a tags section in the "tag" style using url_name',
 
 test('makeSectionInUrl falls through the "tag" style to id-name when url_name is absent', function (): void {
     CurrentConfig::current()->setTagUrlStyle('tag');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     // No url_name -- falls through (no break) to the default arm.
     $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [['id' => 3]]]);
@@ -872,7 +873,7 @@ test('makeSectionInUrl falls through the "tag" style to id-name when url_name is
 
 test('makeSectionInUrl builds a tags section in the default id-name style', function (): void {
     CurrentConfig::current()->setTagUrlStyle('id-tag');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [['id' => 3, 'url_name' => 'nature']]]);
 
@@ -881,7 +882,7 @@ test('makeSectionInUrl builds a tags section in the default id-name style', func
 
 test('makeSectionInUrl defaults a non-array tags entry gracefully', function (): void {
     CurrentConfig::current()->setTagUrlStyle('id-tag');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     // Same "reset to []" defaulting as the analogous combined_categories
     // entry above -- a non-array tag contributes its own '/' + '' (id)
@@ -892,21 +893,21 @@ test('makeSectionInUrl defaults a non-array tags entry gracefully', function ():
 });
 
 test('makeSectionInUrl builds a search section', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->makeSectionInUrl(['section' => 'search', 'search' => 'psk-20260101-abcdefghij']))
         ->toBe('/search/psk-20260101-abcdefghij');
 });
 
 test('makeSectionInUrl builds a list section from scalar ids only', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->makeSectionInUrl(['section' => 'list', 'list' => [12, 34, 'not-scalar' => ['x']]]))
         ->toBe('/list/12,34');
 });
 
 test('makeSectionInUrl infers the categories section from a bare category param when section is unset', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl(['category' => ['id' => 1, 'name' => 'Test', 'permalink' => 'test-perma']]);
 
@@ -915,7 +916,7 @@ test('makeSectionInUrl infers the categories section from a bare category param 
 
 test('makeSectionInUrl infers the tags section from a bare tags param when section is unset', function (): void {
     CurrentConfig::current()->setTagUrlStyle('id');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl(['tags' => [['id' => 3, 'url_name' => 'nature']]]);
 
@@ -923,7 +924,7 @@ test('makeSectionInUrl infers the tags section from a bare tags param when secti
 });
 
 test('makeSectionInUrl infers the list section from a bare list param when section is unset', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl(['list' => [1, 2, 3]]);
 
@@ -931,7 +932,7 @@ test('makeSectionInUrl infers the list section from a bare list param when secti
 });
 
 test('makeSectionInUrl infers the search section from a bare search param when section is unset', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl(['search' => 'hello']);
 
@@ -939,7 +940,7 @@ test('makeSectionInUrl infers the search section from a bare search param when s
 });
 
 test('makeSectionInUrl treats an explicit empty-string permalink the same as unset, falling back to the id', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl(['section' => 'categories', 'category' => ['id' => 10, 'name' => 'Test', 'permalink' => '']]);
 
@@ -948,7 +949,7 @@ test('makeSectionInUrl treats an explicit empty-string permalink the same as uns
 
 test('makeSectionInUrl falls back to an empty slugified name when the name key is absent in id-name style', function (): void {
     CurrentConfig::current()->setCategoryUrlStyle('id-name');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     // 'name' is absent (only 'permalink' is present, as null) -- triggers
     // the same "category name not set" E_USER_WARNING as the "non-array
@@ -964,7 +965,7 @@ test('makeSectionInUrl falls back to an empty slugified name when the name key i
 });
 
 test('makeSectionInUrl falls back to an empty permalink string when the category permalink is non-scalar', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl(['section' => 'categories', 'category' => ['id' => 1, 'name' => 'X', 'permalink' => ['a', 'b']]]);
 
@@ -972,7 +973,7 @@ test('makeSectionInUrl falls back to an empty permalink string when the category
 });
 
 test('makeSectionInUrl treats an explicit empty-string combined-category permalink like unset, using the id', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl([
         'section' => 'categories',
@@ -986,7 +987,7 @@ test('makeSectionInUrl treats an explicit empty-string combined-category permali
 });
 
 test('makeSectionInUrl falls back to an empty combined-category permalink string when non-scalar', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl([
         'section' => 'categories',
@@ -1001,7 +1002,7 @@ test('makeSectionInUrl falls back to an empty combined-category permalink string
 
 test('makeSectionInUrl appends an empty id segment for a tag missing its id, in "id" style', function (): void {
     CurrentConfig::current()->setTagUrlStyle('id');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [[]]]);
 
@@ -1010,7 +1011,7 @@ test('makeSectionInUrl appends an empty id segment for a tag missing its id, in 
 
 test('makeSectionInUrl falls through the "tag" style to default when url_name is present but non-scalar', function (): void {
     CurrentConfig::current()->setTagUrlStyle('tag');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     // url_name is set (non-null) but not scalar -- the "isset && is_scalar"
     // guard must require BOTH, not either: an OR would wrongly try to use
@@ -1022,7 +1023,7 @@ test('makeSectionInUrl falls through the "tag" style to default when url_name is
 
 test('makeSectionInUrl omits the tag name suffix in the default style when url_name is non-scalar', function (): void {
     CurrentConfig::current()->setTagUrlStyle('id-tag');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     // Reaches the default arm directly (not via the "tag" style fallthrough)
     // -- isolates its own "isset && is_scalar" guard on the suffix.
@@ -1032,7 +1033,7 @@ test('makeSectionInUrl omits the tag name suffix in the default style when url_n
 });
 
 test('makeSectionInUrl appends an empty search segment when no search param is present', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     $result = $service->makeSectionInUrl(['section' => 'search']);
 
@@ -1040,7 +1041,7 @@ test('makeSectionInUrl appends an empty search segment when no search param is p
 });
 
 test('parseSectionUrl recognizes the favorites/most_visited/best_rated/recent_pics/recent_cats tokens', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
     $redirect = new UrlServiceTestRedirectService();
 
     foreach (['favorites', 'most_visited', 'best_rated', 'recent_pics', 'recent_cats'] as $token) {
@@ -1053,7 +1054,7 @@ test('parseSectionUrl recognizes the favorites/most_visited/best_rated/recent_pi
 });
 
 test('parseSectionUrl parses a valid psk-formatted search token', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
     $i = 0;
 
     $page = $service->parseSectionUrl(['search', 'psk-20260101-abcdefghij'], $i, new UrlServiceTestRedirectService());
@@ -1064,7 +1065,7 @@ test('parseSectionUrl parses a valid psk-formatted search token', function (): v
 });
 
 test('parseSectionUrl falls back to a plain numeric search identifier', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
     $i = 0;
 
     $page = $service->parseSectionUrl(['search', '42'], $i, new UrlServiceTestRedirectService());
@@ -1073,7 +1074,7 @@ test('parseSectionUrl falls back to a plain numeric search identifier', function
 });
 
 test('parseSectionUrl rejects a search token with no usable identifier', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build(new UrlServiceTestHtmlRenderer());
+    $service = UrlServiceTestFactory::build(new UrlServiceTestHtmlRenderer());
     $i = 0;
 
     expect(fn () => $service->parseSectionUrl(['search', 'no-digits-here'], $i, new UrlServiceTestRedirectService()))
@@ -1081,7 +1082,7 @@ test('parseSectionUrl rejects a search token with no usable identifier', functio
 });
 
 test('parseSectionUrl defaults an empty list token to the dummy [-1] element', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
     $i = 0;
 
     $page = $service->parseSectionUrl(['list', ''], $i, new UrlServiceTestRedirectService());
@@ -1091,7 +1092,7 @@ test('parseSectionUrl defaults an empty list token to the dummy [-1] element', f
 });
 
 test('parseSectionUrl parses a comma-separated list of image ids', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
     $i = 0;
 
     $page = $service->parseSectionUrl(['list', '12,34,56'], $i, new UrlServiceTestRedirectService());
@@ -1101,7 +1102,7 @@ test('parseSectionUrl parses a comma-separated list of image ids', function (): 
 
 test('parseSectionUrl rejects a malformed list token', function (): void {
     $htmlRenderer = new UrlServiceTestHtmlRenderer();
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlRenderer);
+    $service = UrlServiceTestFactory::build($htmlRenderer);
     $i = 0;
 
     expect(fn () => $service->parseSectionUrl(['list', 'not-a-list'], $i, new UrlServiceTestRedirectService()))
@@ -1109,7 +1110,7 @@ test('parseSectionUrl rejects a malformed list token', function (): void {
 });
 
 test('parseWellKnownParamsUrl parses a chronology token with an explicit calendar view', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
     $i = 0;
 
     $result = $service->parseWellKnownParamsUrl(['created-monthly-calendar-2026-07'], $i);
@@ -1123,7 +1124,7 @@ test('parseWellKnownParamsUrl parses a chronology token with an explicit calenda
 });
 
 test('parseWellKnownParamsUrl parses a startcat token', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
     $i = 0;
 
     $result = $service->parseWellKnownParamsUrl(['startcat-15'], $i);
@@ -1133,7 +1134,7 @@ test('parseWellKnownParamsUrl parses a startcat token', function (): void {
 
 test('parseWellKnownParamsUrl rejects an unrecognized chronology style', function (): void {
     $htmlRenderer = new UrlServiceTestHtmlRenderer();
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlRenderer);
+    $service = UrlServiceTestFactory::build($htmlRenderer);
     $i = 0;
 
     expect(fn () => $service->parseWellKnownParamsUrl(['created-bogus'], $i))
@@ -1142,7 +1143,7 @@ test('parseWellKnownParamsUrl rejects an unrecognized chronology style', functio
 
 test('parseWellKnownParamsUrl rejects a non-numeric chronology date token', function (): void {
     $htmlRenderer = new UrlServiceTestHtmlRenderer();
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlRenderer);
+    $service = UrlServiceTestFactory::build($htmlRenderer);
     $i = 0;
 
     expect(fn () => $service->parseWellKnownParamsUrl(['created-monthly-not-a-number'], $i))
@@ -1151,7 +1152,7 @@ test('parseWellKnownParamsUrl rejects a non-numeric chronology date token', func
 
 test('getElementUrl embellishes a non-remote path with the root URL', function (): void {
     urlServiceTestWithMountDepth(1, function (): void {
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $service = UrlServiceTestFactory::build();
 
         expect($service->getElementUrl(['path' => 'galleries/2026/photo.jpg']))
             ->toBe('../galleries/2026/photo.jpg');
@@ -1159,20 +1160,20 @@ test('getElementUrl embellishes a non-remote path with the root URL', function (
 });
 
 test('getElementUrl leaves a remote path unchanged', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getElementUrl(['path' => 'https://cdn.example.test/photo.jpg']))
         ->toBe('https://cdn.example.test/photo.jpg');
 });
 
 test('getElementUrl coerces a non-string path to its string form', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getElementUrl(['path' => 123]))->toBe('123');
 });
 
 test('embellishUrl leaves a /../ segment unresolved when there is no preceding segment to collapse against', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->embellishUrl('a/../b'))->toBe('a/../b');
 });
@@ -1188,9 +1189,9 @@ test('getUserFavorites returns an empty array for a guest', function (): void {
     KernelContainerOverride::with(
         [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
         static function (): void {
-            \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\User::fromUserArray(['id' => 2, 'status' => 'guest']));
+            CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
-            $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+            $service = UrlServiceTestFactory::build();
 
             expect($service->getUserFavorites())->toBe([]);
         }
@@ -1207,7 +1208,7 @@ test('parseSectionUrl enters the categories section for a token starting with "c
     KernelContainerOverride::with(
         [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
         static function (): void {
-            $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+            $service = UrlServiceTestFactory::build();
             $i = 0;
 
             // A single token with nothing following it -- the while loop
@@ -1224,7 +1225,7 @@ test('parseSectionUrl enters the categories section for a token starting with "c
 });
 
 test('parseSectionUrl rejects a bare tags token with no tag identifiers', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build(new UrlServiceTestHtmlRenderer());
+    $service = UrlServiceTestFactory::build(new UrlServiceTestHtmlRenderer());
     $i = 0;
 
     // badRequest() throws before TagService is ever constructed, so this
@@ -1234,7 +1235,7 @@ test('parseSectionUrl rejects a bare tags token with no tag identifiers', functi
 });
 
 test('parseSectionUrl advances nextToken past both the list token and its trailing increment', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
     $i = 0;
 
     $service->parseSectionUrl(['list', '12'], $i, new UrlServiceTestRedirectService());
@@ -1243,7 +1244,7 @@ test('parseSectionUrl advances nextToken past both the list token and its traili
 });
 
 test('parseWellKnownParamsUrl parses a "posted-" chronology token', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
     $i = 0;
 
     $result = $service->parseWellKnownParamsUrl(['posted-monthly-2026-07'], $i);
@@ -1256,7 +1257,7 @@ test('parseWellKnownParamsUrl parses a "posted-" chronology token', function ():
 });
 
 test('parseWellKnownParamsUrl accepts a "weekly" chronology style', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
     $i = 0;
 
     $result = $service->parseWellKnownParamsUrl(['created-weekly-2026'], $i);
@@ -1269,7 +1270,7 @@ test('parseWellKnownParamsUrl accepts a "weekly" chronology style', function ():
 });
 
 test('parseWellKnownParamsUrl leaves chronology_date unset when nothing remains after the style token', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
     $i = 0;
 
     $result = $service->parseWellKnownParamsUrl(['created-monthly'], $i);
@@ -1281,7 +1282,7 @@ test('parseWellKnownParamsUrl leaves chronology_date unset when nothing remains 
 });
 
 test('parseWellKnownParamsUrl sets chronology_date from a single remaining token', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
     $i = 0;
 
     $result = $service->parseWellKnownParamsUrl(['created-monthly-2026'], $i);
@@ -1294,7 +1295,7 @@ test('parseWellKnownParamsUrl sets chronology_date from a single remaining token
 });
 
 test('parseWellKnownParamsUrl parses an explicit "list" chronology view', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
     $i = 0;
 
     $result = $service->parseWellKnownParamsUrl(['created-monthly-list-2026-07'], $i);
@@ -1309,14 +1310,14 @@ test('parseWellKnownParamsUrl parses an explicit "list" chronology view', functi
 
 test('getActionUrl prefixes action.php with a non-empty root URL', function (): void {
     urlServiceTestWithMountDepth(1, function (): void {
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $service = UrlServiceTestFactory::build();
 
         expect($service->getActionUrl(42, 'e', false))->toBe('../action.php?id=42&amp;part=e');
     });
 });
 
 test('getElementUrl returns an empty string for a non-scalar path', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getElementUrl(['path' => ['not', 'scalar']]))->toBe('');
 });
@@ -1324,7 +1325,7 @@ test('getElementUrl returns an empty string for a non-scalar path', function ():
 test('unsetMakeFullUrl pops the override pushed by setMakeFullUrl', function (): void {
     urlServiceTestWithMountDepth(1, function (): void {
         $_SERVER['HTTP_HOST'] = 'gallery.example.test';
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $service = UrlServiceTestFactory::build();
 
         // getAbsoluteRootUrl()'s own cookiePath() also reads RequestMountDepth
         // (it collapses a trailing '../' against the SCRIPT_NAME dirname), so
@@ -1341,20 +1342,20 @@ test('unsetMakeFullUrl pops the override pushed by setMakeFullUrl', function ():
 });
 
 test('embellishUrl leaves a leading /../ unresolved (the offset skips a match at position 0)', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->embellishUrl('/../b'))->toBe('/../b');
 });
 
 test('embellishUrl resolves a /../ immediately following a leading slash', function (): void {
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->embellishUrl('//../y'))->toBe('/y');
 });
 
 test('getGalleryHomeUrl falls back to makeIndexUrl for an empty-string gallery_url', function (): void {
     CurrentConfig::current()->setGalleryUrl('');
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getGalleryHomeUrl())->toBe($service->makeIndexUrl());
 });
@@ -1362,7 +1363,7 @@ test('getGalleryHomeUrl falls back to makeIndexUrl for an empty-string gallery_u
 test('getGalleryHomeUrl returns a root-relative gallery_url unchanged, ignoring a non-empty root URL', function (): void {
     urlServiceTestWithMountDepth(1, function (): void {
         CurrentConfig::current()->setGalleryUrl('/my-gallery');
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $service = UrlServiceTestFactory::build();
 
         expect($service->getGalleryHomeUrl())->toBe('/my-gallery');
     });
@@ -1371,7 +1372,7 @@ test('getGalleryHomeUrl returns a root-relative gallery_url unchanged, ignoring 
 test('getGalleryHomeUrl prefixes a relative gallery_url with a non-empty root URL', function (): void {
     urlServiceTestWithMountDepth(1, function (): void {
         CurrentConfig::current()->setGalleryUrl('my-gallery/');
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $service = UrlServiceTestFactory::build();
 
         expect($service->getGalleryHomeUrl())->toBe('../my-gallery/');
     });
@@ -1379,14 +1380,14 @@ test('getGalleryHomeUrl prefixes a relative gallery_url with a non-empty root UR
 
 test('getQueryStringDiff returns empty string for an explicitly empty QUERY_STRING', function (): void {
     $_SERVER['QUERY_STRING'] = '';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getQueryStringDiff())->toBe('');
 });
 
 test('getQueryStringDiff does not prefix a purely-numeric query key', function (): void {
     $_SERVER['QUERY_STRING'] = '0=foo&a=1';
-    $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+    $service = UrlServiceTestFactory::build();
 
     expect($service->getQueryStringDiff())->toBe('?0=foo&amp;a=1');
 });
@@ -1397,9 +1398,9 @@ test('getUserFavorites returns early for a guest without ever touching the datab
     KernelContainerOverride::with(
         [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
         static function (): void {
-            \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\User::fromUserArray(['id' => 2, 'status' => 'guest']));
+            CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
-            $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+            $service = UrlServiceTestFactory::build();
 
             expect($service->getUserFavorites())->toBe([]);
 

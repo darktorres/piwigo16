@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use LogicException;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
@@ -66,7 +67,7 @@ final class InstallBootstrap
         // here. See ErrorCollector::installIfConfigured()'s own docblock.
         $errorCollector = Kernel::container()->get(ErrorCollector::class);
         if (! $errorCollector instanceof ErrorCollector) {
-            throw new \LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
+            throw new LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
         }
         $errorCollector->installIfConfigured();
     }
@@ -75,11 +76,11 @@ final class InstallBootstrap
     {
         $configService = Kernel::container()->get(ConfigService::class);
         if (! $configService instanceof ConfigService) {
-            throw new \LogicException('Container returned an unexpected type for ' . ConfigService::class);
+            throw new LogicException('Container returned an unexpected type for ' . ConfigService::class);
         }
         $currentConfigService = Kernel::container()->get(CurrentConfigService::class);
         if (! $currentConfigService instanceof CurrentConfigService) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfigService::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfigService::class);
         }
         $currentConfigService->set($configService);
     }
@@ -98,7 +99,7 @@ final class InstallBootstrap
     {
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
         if (! $currentLogger instanceof CurrentLogger) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
 
         return $currentLogger;

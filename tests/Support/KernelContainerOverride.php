@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Support;
 
+use ReflectionProperty;
+use stdClass;
 use Piwigo\Core\Container;
 use Piwigo\Core\Kernel;
 
@@ -39,8 +41,8 @@ final class KernelContainerOverride
         Kernel::reset();
         $container = Container::build($definitions);
 
-        (new \ReflectionProperty(Kernel::class, 'container'))->setValue(null, $container);
-        (new \ReflectionProperty(Kernel::class, 'booted'))->setValue(null, true);
+        (new ReflectionProperty(Kernel::class, 'container'))->setValue(null, $container);
+        (new ReflectionProperty(Kernel::class, 'booted'))->setValue(null, true);
 
         try {
             return $fn();
@@ -54,6 +56,6 @@ final class KernelContainerOverride
      */
     public static function withWrongTypeFor(string $class, callable $fn): mixed
     {
-        return self::with([$class => new \stdClass()], $fn);
+        return self::with([$class => new stdClass()], $fn);
     }
 }

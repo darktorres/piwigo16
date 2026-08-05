@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Image\WatermarkParams;
+use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\SizingParams;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -91,7 +94,7 @@ function ctDerivativesPayload(array $overrides = []): array
  * that same mapping, just against raw mysqli rows instead of Doctrine
  * entities, since this file has no app-container access).
  *
- * @return array{d: array<string, \Piwigo\Image\DerivativeParams>, q: int, w: \Piwigo\Image\WatermarkParams, c: array<string, int>}
+ * @return array{d: array<string, DerivativeParams>, q: int, w: WatermarkParams, c: array<string, int>}
  */
 function ctDecodedDerivatives(): array
 {
@@ -102,7 +105,7 @@ function ctDecodedDerivatives(): array
 
     $watermarkJson = $settings['watermark_json'] ?? null;
     $watermarkDecoded = is_string($watermarkJson) ? json_decode($watermarkJson, true) : [];
-    $w = new \Piwigo\Image\WatermarkParams();
+    $w = new WatermarkParams();
     if (is_array($watermarkDecoded)) {
         $w->file = is_string($watermarkDecoded['file'] ?? null) ? $watermarkDecoded['file'] : $w->file;
         $minSize = $watermarkDecoded['min_size'] ?? null;
@@ -138,7 +141,7 @@ function ctDecodedDerivatives(): array
         $minHeight = $row['min_height'] ?? null;
         $minSize = $minWidth !== null && $minHeight !== null ? [ctIntFromMixed($minWidth, 0), ctIntFromMixed($minHeight, 0)] : null;
 
-        $params = new \Piwigo\Image\DerivativeParams(new \Piwigo\Image\SizingParams(
+        $params = new DerivativeParams(new SizingParams(
             [ctIntFromMixed($row['max_width'] ?? null, 0), ctIntFromMixed($row['max_height'] ?? null, 0)],
             ctFloatFromMixed($row['max_crop'] ?? null, 0.0),
             $minSize,
@@ -162,7 +165,7 @@ function ctDecodedDerivatives(): array
  * scope as the original blob-based version (which only ever wrote the
  * `derivatives` config key, never `disabled_derivatives`).
  *
- * @param array{d: array<string, \Piwigo\Image\DerivativeParams>, q: int, w: \Piwigo\Image\WatermarkParams, c: array<string, int>} $decoded
+ * @param array{d: array<string, DerivativeParams>, q: int, w: WatermarkParams, c: array<string, int>} $decoded
  */
 function ctSetDecodedDerivatives(array $decoded): void
 {
@@ -2182,7 +2185,7 @@ it('sizes tab: reconciles a min_size that drifted out of sync with an unchanged 
         // "direct DB fixture, not a mock of the class under test"
         // technique the watermark last_mod_time test above already uses.
         [$idealW, $idealH] = $decoded['d']['small']->sizing->ideal_size;
-        $decoded['d']['small']->sizing = new \Piwigo\Image\SizingParams(
+        $decoded['d']['small']->sizing = new SizingParams(
             [$idealW, $idealH],
             1.0,
             [$idealW - 76, $idealH - 57]

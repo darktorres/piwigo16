@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Request\TagsActionRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\Tag\GetTagAltNames;
 use Piwigo\Event\Tag\RenderTagName;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tag\TagService;
+use Piwigo\Template\CurrentTemplate;
 
 /**
  * Ported from admin/tags.php (page slug "tags").
@@ -23,10 +29,10 @@ final class TagsPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Tag\TagService $tagService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly TagService $tagService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function render(): void
@@ -48,8 +54,8 @@ final class TagsPageRenderer
 
         $tagService = $this->tagService;
 
-        if (Request\TagsActionRequest::fromGlobals()->isDeleteOrphans) {
-            new \Piwigo\Csrf\CsrfService()
+        if (TagsActionRequest::fromGlobals()->isDeleteOrphans) {
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $tagService->deleteOrphanTags();
@@ -64,7 +70,7 @@ final class TagsPageRenderer
         $template->assign(
             [
                 'F_ACTION' => $this->urlService->getRootUrl() . 'admin.php?page=tags',
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
             ]
         );
@@ -86,7 +92,7 @@ final class TagsPageRenderer
                 count($orphan_tag_names),
                 '<a
       class="icon-eye"
-      data-url="' . $this->urlService->getRootUrl() . 'admin.php?page=tags&amp;action=delete_orphans&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken() . '">'
+      data-url="' . $this->urlService->getRootUrl() . 'admin.php?page=tags&amp;action=delete_orphans&amp;pwg_token=' . new CsrfService()->getToken() . '">'
                 . $this->lang->t('Review') . '</a>'
             );
 

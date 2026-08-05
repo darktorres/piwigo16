@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Doctrine\Migrations\Version\Version;
+use Piwigo\Migrations\UpgradePathProbe\Version00000000000002;
 use Doctrine\DBAL\Connection;
 use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
 use Doctrine\Migrations\Configuration\Migration\ConfigurationArray;
@@ -45,7 +48,7 @@ final class MigrationUpgradePathTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -53,7 +56,7 @@ final class MigrationUpgradePathTest extends IntegrationTestCase
         $this->dropProbeTables();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->dropProbeTables();
@@ -130,7 +133,7 @@ final class MigrationUpgradePathTest extends IntegrationTestCase
 
         $executedAfterSecondRun = $dependencyFactory->getMetadataStorage()->getExecutedMigrations();
         self::assertCount(2, $executedAfterSecondRun);
-        self::assertTrue($executedAfterSecondRun->hasMigration(new \Doctrine\Migrations\Version\Version(Version00000000000001::class)));
-        self::assertTrue($executedAfterSecondRun->hasMigration(new \Doctrine\Migrations\Version\Version(\Piwigo\Migrations\UpgradePathProbe\Version00000000000002::class)));
+        self::assertTrue($executedAfterSecondRun->hasMigration(new Version(Version00000000000001::class)));
+        self::assertTrue($executedAfterSecondRun->hasMigration(new Version(Version00000000000002::class)));
     }
 }

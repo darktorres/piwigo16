@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Feed\FeedEntity;
+use DateTimeImmutable;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -15,7 +21,7 @@ final class FeedRepositoryTest extends IntegrationTestCase
 
     private FeedRepository $repo;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -27,18 +33,18 @@ final class FeedRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->repo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Feed\FeedEntity::class);
+        $this->repo = EntityManagerFactory::build(DbConnection::build())->getRepository(FeedEntity::class);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         DbConnection::build()->executeStatement(
@@ -83,7 +89,7 @@ final class FeedRepositoryTest extends IntegrationTestCase
     {
         $id = 'p17-test-' . bin2hex(random_bytes(20));
         $this->repo->insert($id, 1);
-        $lastCheck = new \DateTimeImmutable('2024-03-05 12:34:56');
+        $lastCheck = new DateTimeImmutable('2024-03-05 12:34:56');
 
         $this->repo->updateLastCheck($id, $lastCheck);
 
@@ -99,7 +105,7 @@ final class FeedRepositoryTest extends IntegrationTestCase
 
         // Should neither throw nor create a row -- findById() confirms the
         // id genuinely stays absent afterward.
-        $this->repo->updateLastCheck($unknownId, new \DateTimeImmutable('2024-03-05 12:34:56'));
+        $this->repo->updateLastCheck($unknownId, new DateTimeImmutable('2024-03-05 12:34:56'));
 
         self::assertNull($this->repo->findById($unknownId));
     }

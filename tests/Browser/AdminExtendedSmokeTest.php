@@ -15,7 +15,7 @@ it('admin photo editor page loads without errors', function (): void {
     $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Smoke Test Album ' . uniqid()]);
     $albumResult = $album['result'] ?? null;
     if (!is_array($albumResult) || !isset($albumResult['id']) || !is_numeric($albumResult['id'])) {
-        throw new \RuntimeException(
+        throw new RuntimeException(
             'pwg.categories.add did not return a numeric id: ' . var_export($album, true)
         );
     }
@@ -34,7 +34,7 @@ it('admin picture_formats and picture_coi pages load without errors', function (
     $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Smoke Test Album ' . uniqid()]);
     $albumResult = $album['result'] ?? null;
     if (!is_array($albumResult) || !isset($albumResult['id']) || !is_numeric($albumResult['id'])) {
-        throw new \RuntimeException(
+        throw new RuntimeException(
             'pwg.categories.add did not return a numeric id: ' . var_export($album, true)
         );
     }

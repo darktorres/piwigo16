@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use Piwigo\Cache\CachePools;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -33,7 +35,7 @@ final class WsAlternateFormatsTest extends ContractTestCase
 {
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -107,7 +109,7 @@ final class WsAlternateFormatsTest extends ContractTestCase
     public function test_empty_available_permission_levels_config_falls_back_to_the_default_set(): void
     {
         $this->upsertConfig('available_permission_levels', '[]');
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         try {
             // max($available_permission_levels) would throw a ValueError on
@@ -127,7 +129,7 @@ final class WsAlternateFormatsTest extends ContractTestCase
             self::assertSame(8, $byName['level']['maxValue']);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'available_permission_levels'");
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 }

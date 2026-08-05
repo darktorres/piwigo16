@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -50,7 +51,7 @@ function galDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function galDbConnect(): \mysqli|\PgSql\Connection
+function galDbConnect(): mysqli|Connection
 {
     return H::connect();
 }

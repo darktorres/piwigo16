@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Env;
+use Piwigo\Core\Paths;
+use Piwigo\Db\DbCredentials;
+
 // Readiness: can we reach the configured DB. Extend once P11 adds Redis to
 // the dependency graph. Deliberately doesn't go through
 // \Piwigo\Db\DbConnection::build() — that helper assumes the full request
@@ -14,13 +18,13 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$paths = \Piwigo\Core\Paths::fromRoot(dirname(__DIR__));
+$paths = Paths::fromRoot(dirname(__DIR__));
 
-\Piwigo\Core\Env::loadEnvFile($paths->root);
+Env::loadEnvFile($paths->root);
 
 header('Content-Type: text/plain');
 
-$credentials = \Piwigo\Db\DbCredentials::current();
+$credentials = DbCredentials::current();
 $host = $credentials->host;
 $socket = null;
 if (str_starts_with($host, '/')) {
@@ -33,7 +37,7 @@ $ready = false;
 try {
     $mysqli = new mysqli($host, $credentials->user, $credentials->password, '', $credentials->port, $socket);
     $ready = $mysqli->select_db($credentials->database);
-} catch (\mysqli_sql_exception) {
+} catch (mysqli_sql_exception) {
     $ready = false;
 }
 

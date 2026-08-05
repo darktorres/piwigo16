@@ -2,6 +2,17 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\RootPathOverride;
+use Smarty\Smarty;
+use Piwigo\Template\CssLoader;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Lang\Translator;
+use Piwigo\Config\CurrentConfigService;
+use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Core\AdminContext;
+use Piwigo\Tests\Unit\Template\TemplateInstanceTestFakeStatStreamWrapper;
+use Smarty\Extension\BCPluginsAdapter;
+use Piwigo\Template\Css;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
@@ -15,7 +26,6 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Event\CombinedCss;
 use Piwigo\Template\Event\CombinedScript;
 use Piwigo\Template\PwgTemplateAdapter;
-use Piwigo\Template\ScriptLoader;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 
@@ -25,11 +35,11 @@ use Piwigo\Users\CurrentUser;
  * (singleton/service-locator elimination campaign, Phase 6) -- a bare
  * RootPathOverride::push()/reset() static call no longer exists at all.
  */
-function template_instance_test_root_path_override(): \Piwigo\Url\RootPathOverride
+function template_instance_test_root_path_override(): RootPathOverride
 {
-    $rootPathOverride = Kernel::container()->get(\Piwigo\Url\RootPathOverride::class);
-    if (! $rootPathOverride instanceof \Piwigo\Url\RootPathOverride) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Url\RootPathOverride::class);
+    $rootPathOverride = Kernel::container()->get(RootPathOverride::class);
+    if (! $rootPathOverride instanceof RootPathOverride) {
+        throw new LogicException('Container returned an unexpected type for ' . RootPathOverride::class);
     }
 
     return $rootPathOverride;
@@ -38,10 +48,10 @@ function template_instance_test_root_path_override(): \Piwigo\Url\RootPathOverri
 /**
  * @return array<int|string, object>
  */
-function template_instance_test_smarty_pre_filters(\Smarty\Smarty $smarty): array
+function template_instance_test_smarty_pre_filters(Smarty $smarty): array
 {
     $property = new ReflectionProperty($smarty, 'BCPluginsAdapter');
-    /** @var \Smarty\Extension\BCPluginsAdapter $adapter */
+    /** @var BCPluginsAdapter $adapter */
     $adapter = $property->getValue($smarty);
 
     return $adapter->getPreFilters();
@@ -60,23 +70,23 @@ function template_instance_test_lowercase_prefilter(string $source, \Smarty\Temp
 /**
  * @return array<int|string, object>
  */
-function template_instance_test_smarty_post_filters(\Smarty\Smarty $smarty): array
+function template_instance_test_smarty_post_filters(Smarty $smarty): array
 {
     $property = new ReflectionProperty($smarty, 'BCPluginsAdapter');
-    /** @var \Smarty\Extension\BCPluginsAdapter $adapter */
+    /** @var BCPluginsAdapter $adapter */
     $adapter = $property->getValue($smarty);
 
     return $adapter->getPostFilters();
 }
 
 /**
- * @return array<string, \Piwigo\Template\Css>
+ * @return array<string, Css>
  */
-function template_instance_test_cssloader_registered(\Piwigo\Template\CssLoader $loader): array
+function template_instance_test_cssloader_registered(CssLoader $loader): array
 {
     $property = new ReflectionProperty($loader, 'registered_css');
 
-    /** @var array<string, \Piwigo\Template\Css> */
+    /** @var array<string, Css> */
     return $property->getValue($loader);
 }
 
@@ -233,7 +243,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     template_instance_test_rrmdir(is_string($this->root) ? $this->root : '');
     CurrentUser::current()->reset();
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     EventDispatcher::get()->reset();
     Kernel::reset();
 });
@@ -241,7 +251,7 @@ afterEach(function (): void {
 // --- constructor: Smarty engine base config -----------------------------
 
 test('constructor disables Smarty html escaping', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect($t->smarty->escape_html)->toBeFalse();
 });
@@ -249,7 +259,7 @@ test('constructor disables Smarty html escaping', function (): void {
 test('constructor lowers error_reporting to exclude E_NOTICE when template debugging is off', function (): void {
     CurrentConfig::current()->setDebugTemplate(false);
 
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect($t->smarty->error_reporting)->toBe(error_reporting() & ~E_NOTICE);
 });
@@ -257,7 +267,7 @@ test('constructor lowers error_reporting to exclude E_NOTICE when template debug
 test('constructor leaves error_reporting untouched when template debugging is on', function (): void {
     CurrentConfig::current()->setDebugTemplate(true);
 
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect($t->smarty->error_reporting)->toBeNull();
 });
@@ -265,7 +275,7 @@ test('constructor leaves error_reporting untouched when template debugging is on
 test('constructor casts compile_check to an int', function (): void {
     CurrentConfig::current()->setTemplateCompileCheck(true);
 
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect($t->smarty->compile_check)->toBe(1);
 });
@@ -274,12 +284,12 @@ test('constructor casts compile_check to an int', function (): void {
 
 test('constructor fatal-errors when the data directory cannot be made writable', function (): void {
     chmod(CurrentPaths::get()->root, 0o555);
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     CurrentConfig::current()->setDataLocation('data/');
 
     set_error_handler(static fn (): bool => true);
     try {
-        \Piwigo\Tests\Support\TemplateTestFactory::build();
+        TemplateTestFactory::build();
     } finally {
         restore_error_handler();
         chmod(CurrentPaths::get()->root, 0o755);
@@ -288,13 +298,13 @@ test('constructor fatal-errors when the data directory cannot be made writable',
 
 test('constructor requests no backtrace when reporting the data-dir-not-writable error', function (): void {
     chmod(CurrentPaths::get()->root, 0o555);
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     CurrentConfig::current()->setDataLocation('data/');
 
     $body = null;
     set_error_handler(static fn (): bool => true);
     try {
-        \Piwigo\Tests\Support\TemplateTestFactory::build();
+        TemplateTestFactory::build();
     } catch (ResponseReadyException $e) {
         $body = (string) $e->response()->getBody();
     } finally {
@@ -327,19 +337,19 @@ test('constructor loads admin.lang before rendering the data-dir-not-writable er
         "msgid \"\"\nmsgstr \"\"\n\"Content-Type: text/plain; charset=UTF-8\\n\"\n\"Language: en_UK\\n\"\n\nmsgid \"an error happened\"\nmsgstr \"CUSTOM-ADMIN-LANG-TITLE\"\n",
     );
     chmod(CurrentPaths::get()->root, 0o555);
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     CurrentConfig::current()->setDataLocation('data/');
 
     $body = null;
     set_error_handler(static fn (): bool => true);
     try {
-        \Piwigo\Tests\Support\TemplateTestFactory::build();
+        TemplateTestFactory::build();
     } catch (ResponseReadyException $e) {
         $body = (string) $e->response()->getBody();
     } finally {
         restore_error_handler();
         chmod(CurrentPaths::get()->root, 0o755);
-        \Piwigo\Lang\Translator::get()->reset();
+        Translator::get()->reset();
         Lang::current()->reset();
     }
 
@@ -352,8 +362,8 @@ test('constructor creates the configured data-location directory when data_dir_c
     CurrentConfig::current()->setDataDirChecked(null);
 
     try {
-        \Piwigo\Tests\Support\TemplateTestFactory::build();
-    } catch (\LogicException) {
+        TemplateTestFactory::build();
+    } catch (LogicException) {
         // CurrentConfigService isn't initialised in this Unit test -- by
         // the time confUpdateParam() reaches it and throws, the
         // mkgetdir()/is_writable() check above (what this test verifies)
@@ -370,18 +380,18 @@ test('constructor actually reaches CurrentConfigService::confUpdateParam() when 
     // straight out of the constructor. That only happens if the
     // confUpdateParam() call site is genuinely still reached; removing it
     // entirely would let construction finish without throwing anything.
-    \Piwigo\Config\CurrentConfigService::current()->reset();
+    CurrentConfigService::current()->reset();
     CurrentConfig::current()->setDataLocation('mydata3/');
     CurrentConfig::current()->setDataDirChecked(null);
 
-    expect(static fn (): Template => \Piwigo\Tests\Support\TemplateTestFactory::build())
-        ->toThrow(\LogicException::class, 'CurrentConfigService not initialised');
+    expect(static fn (): Template => TemplateTestFactory::build())
+        ->toThrow(LogicException::class, 'CurrentConfigService not initialised');
 });
 
 // --- constructor: compile dir / pwg assign / plugin registration -------
 
 test('constructor creates and sets the templates_c compile dir', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $expected = CurrentPaths::get()->root . 'data/templates_c';
 
@@ -390,19 +400,19 @@ test('constructor creates and sets the templates_c compile dir', function (): vo
 });
 
 test('constructor assigns the pwg template adapter', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect($t->get_template_vars('pwg'))->toBeInstanceOf(PwgTemplateAdapter::class);
 });
 
 test('constructor registers exactly one Smarty pre-filter (prefilter_white_space)', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect(template_instance_test_smarty_pre_filters($t->smarty))->toHaveCount(1);
 });
 
 test('constructor registers every expected Smarty plugin', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     /** @var array<string, array<string, mixed>> $registered */
     $registered = $t->smarty->registered_plugins;
@@ -424,7 +434,7 @@ test('constructor registers every expected Smarty plugin', function (): void {
 test('constructor registers the language postfilter only when cache-by-language is on', function (): void {
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
 
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect(template_instance_test_smarty_post_filters($t->smarty))->toHaveCount(1);
 });
@@ -432,7 +442,7 @@ test('constructor registers the language postfilter only when cache-by-language 
 test('constructor does not register the language postfilter when cache-by-language is off', function (): void {
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
 
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect(template_instance_test_smarty_post_filters($t->smarty))->toHaveCount(0);
 });
@@ -443,7 +453,7 @@ test('constructor resets Smarty template dir to empty before adding its own (roo
     // would append onto that default instead of replacing it, and
     // get_template_dir() (index 0) would still read back the untouched
     // Smarty default (cwd + '/templates/') instead of just cwd + '/'.
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect($t->get_template_dir())->toBe(getcwd() . '/');
 });
@@ -451,7 +461,7 @@ test('constructor resets Smarty template dir to empty before adding its own (roo
 test('constructor derives jquery_code and plupload_code from the lang code when not already set', function (): void {
     Lang::current()->setLangInfo(['code' => 'en-UK']);
 
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $expected = ['code' => 'en-UK', 'jquery_code' => 'en-UK', 'plupload_code' => 'en_UK'];
     expect(Lang::current()->langInfo())->toBe($expected)
@@ -467,7 +477,7 @@ test('constructor registers template-extension extents when not in admin context
         'second.tpl' => ['dup-handle', 'N/A', 'N/A'],
     ]);
 
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect($t->get_extent('orig.tpl', 'dup-handle'))->toBe(realpath(CurrentPaths::get()->root . '/template-extension/second.tpl'));
 });
@@ -478,7 +488,7 @@ test('constructor registers the local-css header prefilter for a themed template
     // AdminContext defaults to inactive -- beforeEach()'s own Kernel::boot()
     // already bound the default (false), no explicit setup needed
     // (singleton/service-locator elimination campaign, Phase 3).
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build('.', 'template-instance-test-theme-a');
+    $t = TemplateTestFactory::build('.', 'template-instance-test-theme-a');
 
     expect($t->external_filters)->toHaveKey('header');
 });
@@ -497,14 +507,14 @@ test('constructor does not register the local-css header prefilter for a themed 
     // fresh container, uninitialised) CurrentConfigService.
     $paths = CurrentPaths::get();
     $currentConfig = CurrentConfig::current();
-    \Piwigo\Tests\Support\KernelContainerOverride::with(
+    KernelContainerOverride::with(
         [
-            \Piwigo\Core\AdminContext::class => new \Piwigo\Core\AdminContext(true),
+            AdminContext::class => new AdminContext(true),
             Paths::class => $paths,
             CurrentConfig::class => $currentConfig,
         ],
         function (): void {
-            $t = \Piwigo\Tests\Support\TemplateTestFactory::build('.', 'template-instance-test-theme-b');
+            $t = TemplateTestFactory::build('.', 'template-instance-test-theme-b');
 
             expect($t->external_filters)->not->toHaveKey('header');
         }
@@ -516,7 +526,7 @@ test('constructor does not register the local-css header prefilter for a themed 
 test('set_theme loads themeconf from exactly root/theme, joined with a literal slash', function (): void {
     $root = rtrim(CurrentPaths::get()->root, '/');
     template_instance_test_write_themeconf($root . '/concat-theme', ['marker' => 'root-slash-theme']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->set_theme($root, 'concat-theme', 'template');
 
@@ -535,7 +545,7 @@ test('set_theme recognizes every whitelisted auth-page basename for the standard
             $_SERVER['SCRIPT_NAME'] = '/' . $basename . '.php';
             unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
-            $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+            $t = TemplateTestFactory::build();
             $t->set_theme($root, 'wl-theme', 'template');
 
             expect($t->get_themeconf('marker'))->toBe('swapped');
@@ -553,7 +563,7 @@ test('set_theme does not swap themes when the current page is not a whitelisted 
     $saved = template_instance_test_save_server_keys();
     $_SERVER['SCRIPT_NAME'] = '/index.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     try {
         $t->set_theme($root, 'not-auth-theme', 'template');
@@ -576,7 +586,7 @@ test('set_theme never swaps away from the "default" theme itself even on a white
     $saved = template_instance_test_save_server_keys();
     $_SERVER['SCRIPT_NAME'] = '/identification.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     try {
         $t->set_theme($root, 'default', 'template');
@@ -595,7 +605,7 @@ test('set_theme swaps themes when the theme itself opts into standard pages, eve
     $saved = template_instance_test_save_server_keys();
     $_SERVER['SCRIPT_NAME'] = '/identification.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     try {
         $t->set_theme($root, 'opt-in-theme', 'template');
@@ -614,7 +624,7 @@ test('set_theme does not swap themes when neither the theme nor the global confi
     $saved = template_instance_test_save_server_keys();
     $_SERVER['SCRIPT_NAME'] = '/identification.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     try {
         $t->set_theme($root, 'opt-out-theme', 'template');
@@ -629,7 +639,7 @@ test('set_theme recurses into a distinct parent theme', function (): void {
     $root = rtrim(CurrentPaths::get()->root, '/');
     template_instance_test_write_themeconf($root . '/child-theme', ['marker' => 'child', 'parent' => 'parent-theme']);
     template_instance_test_write_themeconf($root . '/parent-theme', ['marker' => 'parent']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->set_theme($root, 'child-theme', 'template');
 
@@ -645,7 +655,7 @@ test('set_theme recurses into a distinct parent theme', function (): void {
 test('set_theme does not recurse when a theme names itself as its own parent', function (): void {
     $root = rtrim(CurrentPaths::get()->root, '/');
     template_instance_test_write_themeconf($root . '/self-parent-theme', ['marker' => 'self', 'parent' => 'self-parent-theme']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->set_theme($root, 'self-parent-theme', 'template');
 
@@ -655,7 +665,7 @@ test('set_theme does not recurse when a theme names itself as its own parent', f
 test('set_theme records both the theme id and the load_css flag on the appended themes entry', function (): void {
     $root = rtrim(CurrentPaths::get()->root, '/');
     template_instance_test_write_themeconf($root . '/plain-theme', ['marker' => 'x']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->set_theme($root, 'plain-theme', 'template', false);
 
@@ -669,7 +679,7 @@ test('set_theme resolves local_head to a real file path when present and load_lo
     mkdir($root . '/lh-theme', 0o777, true);
     file_put_contents($root . '/lh-theme/local_head.tpl', 'x');
     template_instance_test_write_themeconf($root . '/lh-theme', ['marker' => 'x', 'local_head' => 'local_head.tpl']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->set_theme($root, 'lh-theme', 'template', true, true);
 
@@ -680,7 +690,7 @@ test('set_theme resolves local_head to a real file path when present and load_lo
 test('set_theme treats a local_head value of "0" as absent, same as every other in_array sentinel', function (): void {
     $root = rtrim(CurrentPaths::get()->root, '/');
     template_instance_test_write_themeconf($root . '/lh-zero-theme', ['marker' => 'x', 'local_head' => '0']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->set_theme($root, 'lh-zero-theme', 'template', true, true);
 
@@ -690,7 +700,7 @@ test('set_theme treats a local_head value of "0" as absent, same as every other 
 test('set_theme treats an empty-string local_head as absent', function (): void {
     $root = rtrim(CurrentPaths::get()->root, '/');
     template_instance_test_write_themeconf($root . '/lh-empty-theme', ['marker' => 'x', 'local_head' => '']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->set_theme($root, 'lh-empty-theme', 'template', true, true);
 
@@ -700,7 +710,7 @@ test('set_theme treats an empty-string local_head as absent', function (): void 
 test('set_theme defaults colorscheme to the given value when the theme does not already set one', function (): void {
     $root = rtrim(CurrentPaths::get()->root, '/');
     template_instance_test_write_themeconf($root . '/cs-theme', ['marker' => 'x']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->set_theme($root, 'cs-theme', 'template', true, true, 'custom-scheme');
 
@@ -710,7 +720,7 @@ test('set_theme defaults colorscheme to the given value when the theme does not 
 test('set_theme preserves an already-set colorscheme instead of overwriting it', function (): void {
     $root = rtrim(CurrentPaths::get()->root, '/');
     template_instance_test_write_themeconf($root . '/cs-theme2', ['marker' => 'x', 'colorscheme' => 'theme-defined']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->set_theme($root, 'cs-theme2', 'template', true, true, 'custom-scheme');
 
@@ -720,7 +730,7 @@ test('set_theme preserves an already-set colorscheme instead of overwriting it',
 test('set_theme merges themeconf directly into the flat "themeconf" template var, not nested under an index', function (): void {
     $root = rtrim(CurrentPaths::get()->root, '/');
     template_instance_test_write_themeconf($root . '/merge-theme', ['marker' => 'flat-merge-check']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->set_theme($root, 'merge-theme', 'template');
 
@@ -733,7 +743,7 @@ test('set_theme merges themeconf directly into the flat "themeconf" template var
 // --- set_template_dir ----------------------------------------------------
 
 test('set_template_dir does not recompute compile_id once already set', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $before = $t->smarty->compile_id;
 
     $t->set_template_dir(CurrentPaths::get()->root . '/some/other/dir');
@@ -745,7 +755,7 @@ test('set_template_dir salts compile_id using the resolved realpath when the dir
     // Default construction calls set_template_dir($root) with $root='.'
     // (the constructor's own default), not CurrentPaths -- '.' resolves
     // relative to the test runner's cwd, which is a real, existing dir.
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $expected = base_convert(hash('crc32b', '1' . realpath('.')), 16, 36);
 
@@ -754,7 +764,7 @@ test('set_template_dir salts compile_id using the resolved realpath when the dir
 
 test('set_template_dir salts compile_id with the raw dir string when realpath cannot resolve it', function (): void {
     $bogusDir = '/definitely/does/not/exist/' . bin2hex(random_bytes(4));
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build($bogusDir);
+    $t = TemplateTestFactory::build($bogusDir);
 
     $expected = base_convert(hash('crc32b', '1' . $bogusDir), 16, 36);
 
@@ -764,14 +774,14 @@ test('set_template_dir salts compile_id with the raw dir string when realpath ca
 // --- get_template_dir / get_themeconf / themeConf ----------------------
 
 test('get_template_dir returns an empty string when Smarty has no template dir set', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->smarty->setTemplateDir([]);
 
     expect($t->get_template_dir())->toBe('');
 });
 
 test('get_template_dir reads index 0 specifically, not any other index', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->smarty->setTemplateDir([]);
     $t->smarty->addTemplateDir('/first/dir');
     $t->smarty->addTemplateDir('/second/dir');
@@ -780,13 +790,13 @@ test('get_template_dir reads index 0 specifically, not any other index', functio
 });
 
 test('get_themeconf returns an empty string when no themeconf var has been assigned', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect($t->get_themeconf('anything'))->toBe('');
 });
 
 test('get_themeconf returns the raw (possibly non-string) value from an assigned themeconf array', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->smarty->assign('themeconf', ['label' => 'Dark', 'depth' => 3]);
 
     expect($t->get_themeconf('label'))->toBe('Dark')
@@ -795,7 +805,7 @@ test('get_themeconf returns the raw (possibly non-string) value from an assigned
 });
 
 test('themeConf narrows a non-string themeconf value down to an empty string', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->smarty->assign('themeconf', ['label' => 'Dark', 'depth' => 3]);
 
     expect($t->themeConf('label'))->toBe('Dark')
@@ -805,14 +815,14 @@ test('themeConf narrows a non-string themeconf value down to an empty string', f
 // --- set_filename / set_extent / set_extents / get_extent --------------
 
 test('set_filename delegates to set_filenames for a single handle', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect($t->set_filename('tail', 'footer.tpl'))->toBeTrue();
     expect($t->files['tail'])->toBe('footer.tpl');
 });
 
 test('set_filenames unsets an already-registered handle when its mapped filename is explicitly null', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->set_filename('tail', 'footer.tpl');
 
     $result = $t->set_filenames(['tail' => null]);
@@ -822,25 +832,25 @@ test('set_filenames unsets an already-registered handle when its mapped filename
 });
 
 test('set_extents returns false for a non-array argument', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect($t->set_extents('not-an-array'))->toBeFalse();
 });
 
 test('set_extents returns false when an array value has a non-string, non-int handle', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect($t->set_extents(['file.php' => [null, 'N/A', 'N/A']]))->toBeFalse();
 });
 
 test('set_extents returns false when a value is neither an array nor a string', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect($t->set_extents(['file.php' => 42]))->toBeFalse();
 });
 
 test('set_extent accepts the string-shorthand form and registers a real matching file', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $extDir = CurrentPaths::get()->root . '/ext/';
     mkdir($extDir, 0o777, true);
     file_put_contents($extDir . 'myfile.tpl', 'hello');
@@ -850,7 +860,7 @@ test('set_extent accepts the string-shorthand form and registers a real matching
 });
 
 test('set_extent overwrites an already-registered handle when overwrite is true (the default)', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $extDir = CurrentPaths::get()->root . '/ext/';
     mkdir($extDir, 0o777, true);
     file_put_contents($extDir . 'first.tpl', 'a');
@@ -863,7 +873,7 @@ test('set_extent overwrites an already-registered handle when overwrite is true 
 });
 
 test('set_extent registers a brand-new handle even when overwrite is false (nothing to protect yet)', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $extDir = CurrentPaths::get()->root . '/ext/';
     mkdir($extDir, 0o777, true);
     file_put_contents($extDir . 'first.tpl', 'a');
@@ -874,7 +884,7 @@ test('set_extent registers a brand-new handle even when overwrite is false (noth
 });
 
 test('set_extents (array form) registers a handle when handle/param/theme all read from their correct array indices', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $dir = CurrentPaths::get()->root . '/ext/';
     mkdir($dir, 0o777, true);
     file_put_contents($dir . 'file.tpl', 'x');
@@ -892,7 +902,7 @@ test('set_extents (array form) registers a handle when handle/param/theme all re
 });
 
 test('set_extents param match requires a literal "/" separator before the GET key substring', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $dir = CurrentPaths::get()->root . '/ext/';
     mkdir($dir, 0o777, true);
     file_put_contents($dir . 'file.tpl', 'x');
@@ -910,7 +920,7 @@ test('set_extents param match requires a literal "/" separator before the GET ke
 });
 
 test('set_extents param match requires the full param substring, not just any "/" in the GET keys', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $dir = CurrentPaths::get()->root . '/ext/';
     mkdir($dir, 0o777, true);
     file_put_contents($dir . 'file.tpl', 'x');
@@ -927,7 +937,7 @@ test('set_extents param match requires the full param substring, not just any "/
 });
 
 test('set_extents registers when theme matches the passed theme exactly, not only via the N/A escape hatch', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $dir = CurrentPaths::get()->root . '/ext/';
     mkdir($dir, 0o777, true);
     file_put_contents($dir . 'file.tpl', 'x');
@@ -939,7 +949,7 @@ test('set_extents registers when theme matches the passed theme exactly, not onl
 });
 
 test('set_extents does not register when theme matches neither the passed theme nor N/A', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $dir = CurrentPaths::get()->root . '/ext/';
     mkdir($dir, 0o777, true);
     file_put_contents($dir . 'file.tpl', 'x');
@@ -950,7 +960,7 @@ test('set_extents does not register when theme matches neither the passed theme 
 });
 
 test('get_extent returns the given filename unchanged when no extent is registered for the handle', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect($t->get_extent('plain.tpl', 'unregistered'))->toBe('plain.tpl');
 });
@@ -962,7 +972,7 @@ test('set_extents checks file_exists on the full dir+filename concatenation, not
     // file_exists() is true for directories too, making it impossible to
     // tell a ConcatRemoveRight mutation (file_exists($dir) alone) apart
     // from the real file_exists($dir . $filename).
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $dir = CurrentPaths::get()->root . '/pfx-';
     file_put_contents(CurrentPaths::get()->root . '/pfx-real.tpl', 'x');
 
@@ -978,9 +988,9 @@ test('set_extents does not register a handle when realpath fails despite file_ex
     // file_exists() true while realpath() on that same path stays
     // unconditionally false, isolating the `$real_path !== false` guard
     // from the file_exists() check just above it.
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $scheme = 'pwgtestextents' . bin2hex(random_bytes(4));
-    stream_wrapper_register($scheme, \Piwigo\Tests\Unit\Template\TemplateInstanceTestFakeStatStreamWrapper::class);
+    stream_wrapper_register($scheme, TemplateInstanceTestFakeStatStreamWrapper::class);
 
     try {
         $result = $t->set_extents(['fake.tpl' => ['myhandle', 'N/A', 'N/A']], $scheme . '://', true, 'N/A');
@@ -995,7 +1005,7 @@ test('set_extents does not register a handle when realpath fails despite file_ex
 // --- assign_var_from_handle / clear_assign --------------------------------
 
 test('assign_var_from_handle assigns the parsed handle output (returned, not echoed) and returns true', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $tplDir = CurrentPaths::get()->root . '/tpl/';
     mkdir($tplDir, 0o777, true);
     file_put_contents($tplDir . 'partial.tpl', 'Hello {$name}');
@@ -1010,7 +1020,7 @@ test('assign_var_from_handle assigns the parsed handle output (returned, not ech
 });
 
 test('clear_assign removes a previously assigned template variable', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->assign('foo', 'bar');
 
     $t->clear_assign('foo');
@@ -1029,7 +1039,7 @@ test('p flushes the output buffer, then appends a working Smarty debug console w
     // that method. See p()'s own updated call site for the minimal fix
     // (a throwaway 'string:' resource template instead of the bare engine).
     CurrentConfig::current()->setDebugTemplate(true);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->output = 'body-output';
 
     ob_start();
@@ -1043,7 +1053,7 @@ test('p flushes the output buffer, then appends a working Smarty debug console w
 
 test('p does not attempt to build a debug console when template debugging is off', function (): void {
     CurrentConfig::current()->setDebugTemplate(false);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->output = 'body-output';
 
     ob_start();
@@ -1063,7 +1073,7 @@ test('p passes full=true to display_debug so the console targets the shared __Sm
     // when $full is false -- debug.tpl renders it straight into
     // `window.open("", "console{$targetWindow}", ...)`.
     CurrentConfig::current()->setDebugTemplate(true);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->output = 'body-output';
 
     ob_start();
@@ -1076,7 +1086,7 @@ test('p passes full=true to display_debug so the console targets the shared __Sm
 // --- parse -----------------------------------------------------------------
 
 test('parse assigns ROOT_URL and ROOT_PATH before compiling', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $tplDir = CurrentPaths::get()->root . '/tpl/';
     mkdir($tplDir, 0o777, true);
     file_put_contents($tplDir . 'x.tpl', 'x');
@@ -1090,7 +1100,7 @@ test('parse assigns ROOT_URL and ROOT_PATH before compiling', function (): void 
 });
 
 test('parse registers external filters before compiling (so they run) and unregisters them again afterward', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $tplDir = CurrentPaths::get()->root . '/tpl/';
     mkdir($tplDir, 0o777, true);
     file_put_contents($tplDir . 'x.tpl', 'hello');
@@ -1107,7 +1117,7 @@ test('parse registers external filters before compiling (so they run) and unregi
 test('parse salts compile_id with the current lang code during compilation when cache-by-language is on', function (): void {
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
     Lang::current()->setLangInfo(['code' => 'fr_FR']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $tplDir = CurrentPaths::get()->root . '/tpl/';
     mkdir($tplDir, 0o777, true);
     file_put_contents($tplDir . 'x.tpl', 'x');
@@ -1134,7 +1144,7 @@ test('parse salts compile_id with the current lang code during compilation when 
 test('parse does not salt compile_id with a lang code when cache-by-language is off', function (): void {
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
     Lang::current()->setLangInfo(['code' => 'fr_FR']);
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $tplDir = CurrentPaths::get()->root . '/tpl/';
     mkdir($tplDir, 0o777, true);
     file_put_contents($tplDir . 'x.tpl', 'x');
@@ -1154,7 +1164,7 @@ test('parse does not salt compile_id with a lang code when cache-by-language is 
 // --- concat --------------------------------------------------------------
 
 test('concat appends to an existing string template variable', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->concat('greeting', 'Hello ');
     $t->concat('greeting', 'World');
 
@@ -1162,7 +1172,7 @@ test('concat appends to an existing string template variable', function (): void
 });
 
 test('concat treats a non-string existing value as an empty prefix', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->assign('counter', 42);
     $t->concat('counter', 'suffix');
 
@@ -1172,7 +1182,7 @@ test('concat treats a non-string existing value as an empty prefix', function ()
 // --- picture/index buttons ------------------------------------------------
 
 test('parse_picture_buttons assigns registered buttons sorted by rank', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->add_picture_button('<button-b>', 50);
     $t->add_picture_button('<button-a>', 10);
 
@@ -1182,7 +1192,7 @@ test('parse_picture_buttons assigns registered buttons sorted by rank', function
 });
 
 test('parse_picture_buttons does nothing when no button was ever registered', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->parse_picture_buttons();
 
@@ -1190,7 +1200,7 @@ test('parse_picture_buttons does nothing when no button was ever registered', fu
 });
 
 test('parse_index_buttons assigns registered buttons sorted by rank', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->add_index_button('<index-b>', 99);
     $t->add_index_button('<index-a>', 1);
 
@@ -1202,7 +1212,7 @@ test('parse_index_buttons assigns registered buttons sorted by rank', function (
 // --- prefilter/postfilter/outputfilter registration -----------------------
 
 test('set_prefilter registers callbacks under their weight, kept sorted ascending', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->set_prefilter('tail', 'strtoupper', 60);
     $t->set_prefilter('tail', 'strtolower', 10);
 
@@ -1211,14 +1221,14 @@ test('set_prefilter registers callbacks under their weight, kept sorted ascendin
 });
 
 test('set_postfilter registers a post-type filter entry', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->set_postfilter('tail', 'strtoupper', 30);
 
     expect($t->external_filters['tail'][30][0])->toBe(['post', 'strtoupper']);
 });
 
 test('set_postfilter keeps registered weights sorted ascending', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->set_postfilter('tail', 'strtoupper', 60);
     $t->set_postfilter('tail', 'strtolower', 10);
 
@@ -1226,14 +1236,14 @@ test('set_postfilter keeps registered weights sorted ascending', function (): vo
 });
 
 test('set_outputfilter registers an output-type filter entry', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->set_outputfilter('tail', 'strtoupper', 40);
 
     expect($t->external_filters['tail'][40][0])->toBe(['output', 'strtoupper']);
 });
 
 test('set_outputfilter keeps registered weights sorted ascending', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->set_outputfilter('tail', 'strtoupper', 60);
     $t->set_outputfilter('tail', 'strtolower', 10);
 
@@ -1241,7 +1251,7 @@ test('set_outputfilter keeps registered weights sorted ascending', function (): 
 });
 
 test('load_external_filters registers every filter with Smarty and salts the compile_id with its type+callback identity', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->set_prefilter('tail', 'strtoupper');
     $before = $t->smarty->compile_id;
 
@@ -1253,7 +1263,7 @@ test('load_external_filters registers every filter with Smarty and salts the com
 });
 
 test('load_external_filters accumulates the type+callback identity across multiple registered filters, not just the last one', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->set_prefilter('tail', 'strtoupper', 10);
     $t->set_prefilter('tail', 'strtolower', 20);
     $before = $t->smarty->compile_id;
@@ -1266,7 +1276,7 @@ test('load_external_filters accumulates the type+callback identity across multip
 });
 
 test('load_external_filters derives the callback_key from the debug type when the callback is neither array nor string', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->set_prefilter('tail', static fn (string $s): string => $s);
     $before = $t->smarty->compile_id;
 
@@ -1278,7 +1288,7 @@ test('load_external_filters derives the callback_key from the debug type when th
 });
 
 test('load_external_filters derives the callback_key from an [object, method] array callback, joining each element\'s own string (or debug-type fallback)', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     // A real, valid callable ([$t, 'get_extent']) -- Smarty's own
     // registerFilter() calls is_callable() and throws otherwise. The
     // object element (not a string) exercises array_map()'s
@@ -1295,7 +1305,7 @@ test('load_external_filters derives the callback_key from an [object, method] ar
 });
 
 test('load_external_filters is a no-op for a handle with no registered filters', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $before = $t->smarty->compile_id;
 
     $t->load_external_filters('untouched-handle');
@@ -1304,7 +1314,7 @@ test('load_external_filters is a no-op for a handle with no registered filters',
 });
 
 test('unload_external_filters unregisters every filter across every registered weight, not just one', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->set_prefilter('tail', 'template_instance_test_uppercase_prefilter', 10);
     $t->set_prefilter('tail', 'template_instance_test_lowercase_prefilter', 20);
     $t->load_external_filters('tail');
@@ -1318,7 +1328,7 @@ test('unload_external_filters unregisters every filter across every registered w
 // --- parse(): missing handle ------------------------------------------------
 
 test('parse fatal-errors for a handle with no registered filename', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     set_error_handler(static fn (): bool => true);
     try {
@@ -1343,7 +1353,7 @@ function templateInstanceTestErrorCollector(): ErrorCollector
 {
     $errorCollector = Kernel::container()->get(ErrorCollector::class);
     if (! $errorCollector instanceof ErrorCollector) {
-        throw new \LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
+        throw new LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
     }
 
     return $errorCollector;
@@ -1355,7 +1365,7 @@ test('func_combine_script trigger_errors when id is missing', function (): void 
     // HtmlService::fatalError()'s own docblock) and simply returns, no
     // exception thrown -- checked directly via drain() instead of a
     // throwaway set_error_handler().
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     templateInstanceTestErrorCollector()->drain();
 
     $t->func_combine_script([]);
@@ -1365,7 +1375,7 @@ test('func_combine_script trigger_errors when id is missing', function (): void 
 });
 
 test('func_combine_script requires id to be a string even when the key is set', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     templateInstanceTestErrorCollector()->drain();
 
     $t->func_combine_script(['id' => 42, 'path' => 'x.js']);
@@ -1375,7 +1385,7 @@ test('func_combine_script requires id to be a string even when the key is set', 
 });
 
 test('func_combine_script trigger_errors for an invalid load value', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     templateInstanceTestErrorCollector()->drain();
 
     $t->func_combine_script(['id' => 'x', 'load' => 'bogus']);
@@ -1385,7 +1395,7 @@ test('func_combine_script trigger_errors for an invalid load value', function ()
 });
 
 test('func_combine_script maps load="footer" to load_mode 1', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js', 'load' => 'footer']);
 
@@ -1393,7 +1403,7 @@ test('func_combine_script maps load="footer" to load_mode 1', function (): void 
 });
 
 test('func_combine_script maps load="async" to load_mode 2', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js', 'load' => 'async']);
 
@@ -1401,7 +1411,7 @@ test('func_combine_script maps load="async" to load_mode 2', function (): void {
 });
 
 test('func_combine_script defaults load_mode to 0 when no load param is given', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js']);
 
@@ -1409,7 +1419,7 @@ test('func_combine_script defaults load_mode to 0 when no load param is given', 
 });
 
 test('func_combine_script explodes a real comma-separated require string', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js', 'require' => 'a,b']);
 
@@ -1417,7 +1427,7 @@ test('func_combine_script explodes a real comma-separated require string', funct
 });
 
 test('func_combine_script casts a non-string scalar require to a string before exploding', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js', 'require' => 5]);
 
@@ -1425,7 +1435,7 @@ test('func_combine_script casts a non-string scalar require to a string before e
 });
 
 test('func_combine_script treats a missing require key as no requirements', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js']);
 
@@ -1433,7 +1443,7 @@ test('func_combine_script treats a missing require key as no requirements', func
 });
 
 test('func_combine_script treats require=0 (int) as no requirements', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js', 'require' => 0]);
 
@@ -1441,7 +1451,7 @@ test('func_combine_script treats require=0 (int) as no requirements', function (
 });
 
 test('func_combine_script treats require="0" (string) as no requirements', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js', 'require' => '0']);
 
@@ -1449,7 +1459,7 @@ test('func_combine_script treats require="0" (string) as no requirements', funct
 });
 
 test('func_combine_script treats require="" (empty string) as no requirements', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js', 'require' => '']);
 
@@ -1457,7 +1467,7 @@ test('func_combine_script treats require="" (empty string) as no requirements', 
 });
 
 test('func_combine_script treats require=false as no requirements', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js', 'require' => false]);
 
@@ -1465,7 +1475,7 @@ test('func_combine_script treats require=false as no requirements', function ():
 });
 
 test('func_combine_script treats a non-scalar require array as no requirements', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js', 'require' => [1, 2, 3]]);
 
@@ -1473,7 +1483,7 @@ test('func_combine_script treats a non-scalar require array as no requirements',
 });
 
 test('func_combine_script discards a non-string path', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 42]);
 
@@ -1481,7 +1491,7 @@ test('func_combine_script discards a non-string path', function (): void {
 });
 
 test('func_combine_script keeps a real string path', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js']);
 
@@ -1489,7 +1499,7 @@ test('func_combine_script keeps a real string path', function (): void {
 });
 
 test('func_combine_script defaults version to "0" when missing', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js']);
 
@@ -1497,7 +1507,7 @@ test('func_combine_script defaults version to "0" when missing', function (): vo
 });
 
 test('func_combine_script falls back to version "0" for a non-string version', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js', 'version' => 7]);
 
@@ -1505,7 +1515,7 @@ test('func_combine_script falls back to version "0" for a non-string version', f
 });
 
 test('func_combine_script keeps a real string version', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js', 'version' => '3.2']);
 
@@ -1513,7 +1523,7 @@ test('func_combine_script keeps a real string version', function (): void {
 });
 
 test('func_combine_script defaults is_template to false when the template param is missing', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js']);
 
@@ -1521,7 +1531,7 @@ test('func_combine_script defaults is_template to false when the template param 
 });
 
 test('func_combine_script sets is_template to true when the template param is truthy', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js', 'template' => true]);
 
@@ -1534,7 +1544,7 @@ test('func_combine_script casts a non-bool truthy template value to a real bool 
     // -- without func_combine_script()'s own (bool) cast, forwarding the
     // raw int 1 straight through would throw a TypeError instead of
     // quietly coercing, since strict_types disallows int->bool coercion.
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->func_combine_script(['id' => 'x', 'path' => 'x.js', 'template' => 1]);
 
@@ -1542,7 +1552,7 @@ test('func_combine_script casts a non-bool truthy template value to a real bool 
 });
 
 test('func_get_combined_scripts trigger_errors when load is missing', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     templateInstanceTestErrorCollector()->drain();
 
     // The fatal signal ($this->errorCollector->recordFatal(), no exception) falls
@@ -1569,7 +1579,7 @@ test('func_get_combined_scripts trigger_errors when load is missing', function (
 });
 
 test('func_get_combined_scripts returns the combined-scripts placeholder for the header load', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect($t->func_get_combined_scripts(['load' => 'header']))->toBe(Template::COMBINED_SCRIPTS_TAG);
 });
@@ -1580,7 +1590,7 @@ test('func_get_combined_scripts renders sync footer scripts from get_footer_scri
     // a string, so make_script_src() always appends a "?v..." suffix here.
     // Exact match (not toContain) so positional mutations (dropping or
     // reordering the surrounding markup) are distinguishable too.
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/sync.js', 'console.log(1);');
     $t->func_combine_script(['id' => 'sync-script', 'path' => 'sync.js', 'load' => 'footer']);
 
@@ -1590,7 +1600,7 @@ test('func_get_combined_scripts renders sync footer scripts from get_footer_scri
 });
 
 test('func_get_combined_scripts renders async footer scripts from get_footer_scripts()[1] via a dynamic script element', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/async.js', 'console.log(1);');
     $t->func_combine_script(['id' => 'async-script', 'path' => 'async.js', 'load' => 'async']);
 
@@ -1607,7 +1617,7 @@ test('func_get_combined_scripts renders async footer scripts from get_footer_scr
 });
 
 test('func_get_combined_scripts prefixes the root URL onto the script src, in the correct order', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/sync.js', 'console.log(1);');
     $t->func_combine_script(['id' => 'sync-script', 'path' => 'sync.js', 'load' => 'footer']);
     template_instance_test_root_path_override()->push('http://example.test/root/');
@@ -1621,7 +1631,7 @@ test('func_get_combined_scripts prefixes the root URL onto the script src, in th
 });
 
 test('func_get_combined_scripts omits the version query string entirely for a combined (version=false) script', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/a.js', 'console.log("a");');
     file_put_contents(CurrentPaths::get()->root . '/b.js', 'console.log("b");');
     $t->func_combine_script(['id' => 'a', 'path' => 'a.js', 'load' => 'footer']);
@@ -1634,7 +1644,7 @@ test('func_get_combined_scripts omits the version query string entirely for a co
 });
 
 test('make_script_src (via func_get_combined_scripts) uses a remote script\'s own path verbatim, with no root URL prefix or version suffix', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->func_combine_script(['id' => 'remote-script', 'path' => 'https://cdn.example.com/foo.js', 'load' => 'footer']);
 
     $result = $t->func_get_combined_scripts(['load' => 'footer']);
@@ -1643,7 +1653,7 @@ test('make_script_src (via func_get_combined_scripts) uses a remote script\'s ow
 });
 
 test('make_script_src (via func_get_combined_scripts) throws when a combined_script listener returns something other than a CombinedScript instance', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/sync.js', 'console.log(1);');
     $t->func_combine_script(['id' => 'sync-script', 'path' => 'sync.js', 'load' => 'footer']);
     EventDispatcher::get()->addEventHandler(CombinedScript::class, static fn (): int => 42);
@@ -1653,12 +1663,12 @@ test('make_script_src (via func_get_combined_scripts) throws when a combined_scr
     } finally {
         EventDispatcher::get()->reset();
     }
-})->throws(\Error::class, 'must return an instance of');
+})->throws(Error::class, 'must return an instance of');
 
 // --- block_footer_script ----------------------------------------------------
 
 test('block_footer_script registers an inline script once its own required script is already known', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->func_combine_script(['id' => 'foo', 'path' => 'foo.js']);
 
     $t->block_footer_script(['require' => 'foo'], 'console.log(1);');
@@ -1667,7 +1677,7 @@ test('block_footer_script registers an inline script once its own required scrip
 });
 
 test('block_footer_script does nothing on the opening-tag call (null content)', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->block_footer_script([], null);
 
@@ -1675,7 +1685,7 @@ test('block_footer_script does nothing on the opening-tag call (null content)', 
 });
 
 test('block_footer_script treats whitespace-only content as the opening-tag call (trims before checking emptiness)', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->block_footer_script([], "   \n");
 
@@ -1683,7 +1693,7 @@ test('block_footer_script treats whitespace-only content as the opening-tag call
 });
 
 test('block_footer_script treats a missing require key as no requirements', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->block_footer_script([], 'console.log(1);');
 
@@ -1691,7 +1701,7 @@ test('block_footer_script treats a missing require key as no requirements', func
 });
 
 test('block_footer_script treats every require sentinel value (0, "0", "", false, non-scalar array) as no requirements', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     foreach ([0, '0', '', false, [1, 2, 3]] as $sentinel) {
         $t->block_footer_script(['require' => $sentinel], 'console.log(1);');
@@ -1701,7 +1711,7 @@ test('block_footer_script treats every require sentinel value (0, "0", "", false
 });
 
 test('block_footer_script casts a non-string scalar require to a string before looking up the dependency', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->func_combine_script(['id' => '5', 'path' => '5.js']);
 
     $t->block_footer_script(['require' => 5], 'console.log(1);');
@@ -1710,7 +1720,7 @@ test('block_footer_script casts a non-string scalar require to a string before l
 });
 
 test('block_footer_script actually reads the require param (fatal-errors for an unknown required script)', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     set_error_handler(static fn (): bool => true);
     try {
@@ -1723,7 +1733,7 @@ test('block_footer_script actually reads the require param (fatal-errors for an 
 // --- func_combine_css / finalizeOutput (via fetchOutput) --------------------
 
 test('func_combine_css fatal-errors when path is missing', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     set_error_handler(static fn (): bool => true);
     try {
@@ -1734,7 +1744,7 @@ test('func_combine_css fatal-errors when path is missing', function (): void {
 })->throws(ResponseReadyException::class);
 
 test('func_combine_css fatal-errors for every path sentinel value (false, 0, "0", "", [])', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $caughtCount = 0;
     set_error_handler(static fn (): bool => true);
@@ -1754,7 +1764,7 @@ test('func_combine_css fatal-errors for every path sentinel value (false, 0, "0"
 });
 
 test('func_combine_css fatal-errors when path is a non-string, non-sentinel value', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     set_error_handler(static fn (): bool => true);
     try {
@@ -1765,7 +1775,7 @@ test('func_combine_css fatal-errors when path is a non-string, non-sentinel valu
 })->throws(ResponseReadyException::class);
 
 test('func_combine_css derives id from md5(path) when id is missing', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css']);
@@ -1774,7 +1784,7 @@ test('func_combine_css derives id from md5(path) when id is missing', function (
 });
 
 test('func_combine_css keeps a real string id when given', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css']);
@@ -1783,7 +1793,7 @@ test('func_combine_css keeps a real string id when given', function (): void {
 });
 
 test('func_combine_css falls back to md5(path) when id is a non-string value', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 42]);
@@ -1792,7 +1802,7 @@ test('func_combine_css falls back to md5(path) when id is a non-string value', f
 });
 
 test('func_combine_css defaults version to "0" when missing', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css']);
@@ -1801,7 +1811,7 @@ test('func_combine_css defaults version to "0" when missing', function (): void 
 });
 
 test('func_combine_css keeps version=false as-is', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css', 'version' => false]);
@@ -1810,7 +1820,7 @@ test('func_combine_css keeps version=false as-is', function (): void {
 });
 
 test('func_combine_css falls back to version "0" for a non-string, non-false version', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css', 'version' => 7]);
@@ -1819,7 +1829,7 @@ test('func_combine_css falls back to version "0" for a non-string, non-false ver
 });
 
 test('func_combine_css defaults order to 0 when missing', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css']);
@@ -1828,7 +1838,7 @@ test('func_combine_css defaults order to 0 when missing', function (): void {
 });
 
 test('func_combine_css casts a real numeric order to an int', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css', 'order' => '5']);
@@ -1844,7 +1854,7 @@ test('func_combine_css truncates a fractional numeric order string to an int', f
     // '5.7' * 1000 (no cast) would produce a float (5700.0); only a real
     // (int) cast first truncates to 5, giving 5*1000=5000 -- distinguishes
     // the cast from arithmetic auto-coercion, unlike a whole-number string.
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css', 'order' => '5.7']);
@@ -1853,7 +1863,7 @@ test('func_combine_css truncates a fractional numeric order string to an int', f
 });
 
 test('func_combine_css falls back to order 0 for a non-numeric order', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css', 'order' => 'not-numeric']);
@@ -1862,7 +1872,7 @@ test('func_combine_css falls back to order 0 for a non-numeric order', function 
 });
 
 test('func_combine_css sets is_template to true when the template param is truthy', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css', 'template' => true]);
@@ -1875,7 +1885,7 @@ test('func_combine_css casts a non-bool truthy template value to a real bool bef
     // untyped, so without func_combine_css()'s own (bool) cast the raw int
     // 1 would be stored as-is (int(1), not bool(true)) -- toBeTrue() is a
     // strict === true check, so it only passes when the cast really ran.
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css', 'template' => 1]);
@@ -1884,7 +1894,7 @@ test('func_combine_css casts a non-bool truthy template value to a real bool bef
 });
 
 test('func_combine_css defaults is_template to false when the template param is missing', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css']);
@@ -1893,7 +1903,7 @@ test('func_combine_css defaults is_template to false when the template param is 
 });
 
 test('finalizeOutput appends a version query string for a truthy combined_css version', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
     $t->func_combine_css(['path' => 'style.css', 'version' => '7']);
     $t->output = Template::COMBINED_CSS_TAG;
@@ -1904,17 +1914,17 @@ test('finalizeOutput appends a version query string for a truthy combined_css ve
 });
 
 test('finalizeOutput throws when a combined_css listener returns something other than a CombinedCss instance', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
     $t->func_combine_css(['path' => 'style.css', 'version' => '7']);
     $t->output = Template::COMBINED_CSS_TAG;
     EventDispatcher::get()->addEventHandler(CombinedCss::class, static fn (): int => 42);
 
     $t->fetchOutput();
-})->throws(\Error::class, 'must return an instance of');
+})->throws(Error::class, 'must return an instance of');
 
 test('finalizeOutput does not append a version query string when combined_css version is exactly false', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
     $t->func_combine_css(['path' => 'style.css', 'version' => false]);
     $t->output = Template::COMBINED_CSS_TAG;
@@ -1925,7 +1935,7 @@ test('finalizeOutput does not append a version query string when combined_css ve
 });
 
 test('finalizeOutput builds the combined-css href by prefixing the root URL onto the combi path', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
     template_instance_test_root_path_override()->push('http://example.test/root/');
     try {
@@ -1941,7 +1951,7 @@ test('finalizeOutput builds the combined-css href by prefixing the root URL onto
 });
 
 test('finalizeOutput clears the CSS loader so a second call does not re-emit already-flushed CSS', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
     $t->func_combine_css(['path' => 'style.css', 'version' => false]);
     $t->output = Template::COMBINED_CSS_TAG;
@@ -1955,7 +1965,7 @@ test('finalizeOutput clears the CSS loader so a second call does not re-emit alr
 });
 
 test('finalizeOutput does not reprocess the combined-scripts tag once did_head is already true', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->scriptLoader->get_head_scripts();
     $t->output = Template::COMBINED_SCRIPTS_TAG;
 
@@ -1965,7 +1975,7 @@ test('finalizeOutput does not reprocess the combined-scripts tag once did_head i
 });
 
 test('finalizeOutput injects head elements before </head> when the source contains that anchor', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->block_html_head([], null);
     $t->block_html_head([], '<meta a>');
     $t->output = "<head>\n</head>\nbody";
@@ -1976,7 +1986,7 @@ test('finalizeOutput injects head elements before </head> when the source contai
 });
 
 test('finalizeOutput injects the accumulated html_style before </head> even with no head elements registered', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->block_html_style([], null);
     $t->block_html_style([], 'body{color:red}');
     $t->output = "<head>\n</head>\nbody";
@@ -1987,7 +1997,7 @@ test('finalizeOutput injects the accumulated html_style before </head> even with
 });
 
 test('finalizeOutput does not touch </head> when no head elements or html_style were registered', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->output = "<head>\n</head>\nbody";
 
     $result = $t->fetchOutput();
@@ -1996,7 +2006,7 @@ test('finalizeOutput does not touch </head> when no head elements or html_style 
 });
 
 test('finalizeOutput does not inject head elements when the source has no </head> anchor', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->block_html_head([], null);
     $t->block_html_head([], '<meta a>');
     $t->output = 'no head tag here';
@@ -2007,7 +2017,7 @@ test('finalizeOutput does not inject head elements when the source has no </head
 });
 
 test('finalizeOutput resets html_style after injecting it, so a second call does not reapply it', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->block_html_style([], 'body{color:red}');
     $t->output = "<head>\n</head>\nfirst";
     $first = $t->fetchOutput();
@@ -2026,7 +2036,7 @@ test('finalizeOutput resets html_style after injecting it, so a second call does
 });
 
 test('finalizeOutput resets the output buffer to an empty string after flushing', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->output = 'hello';
 
     $t->fetchOutput();
@@ -2037,7 +2047,7 @@ test('finalizeOutput resets the output buffer to an empty string after flushing'
 // --- block_html_head / block_html_style --------------------------------------
 
 test('block_html_head trims whitespace-only content so it is treated as the opening-tag call', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $t->block_html_head([], "   \n");
 
@@ -2045,7 +2055,7 @@ test('block_html_head trims whitespace-only content so it is treated as the open
 });
 
 test('block_html_style trims whitespace-only content so it is treated as the opening-tag call', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->block_html_style([], "   \n");
     $t->output = "<head>\n</head>\nbody";
 
@@ -2055,7 +2065,7 @@ test('block_html_style trims whitespace-only content so it is treated as the ope
 });
 
 test('block_html_style accumulates multiple registrations rather than overwriting', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->block_html_style([], 'a{color:red}');
     $t->block_html_style([], 'b{color:blue}');
     $t->output = "<head>\n</head>\nbody";
@@ -2070,7 +2080,7 @@ test('block_html_style accumulates multiple registrations rather than overwritin
 test('prefilter_local_css injects a combine_css tag for a real theme-specific rules file', function (): void {
     mkdir(CurrentPaths::get()->root . '/local/css', 0o777, true);
     file_put_contents(CurrentPaths::get()->root . '/local/css/mytheme-rules.css', 'body{}');
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->smarty->assign('themes', [['id' => 'mytheme'], ['id' => 'no-such-theme'], 'not-an-array', ['no-id' => true]]);
 
     $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty);
@@ -2081,7 +2091,7 @@ test('prefilter_local_css injects a combine_css tag for a real theme-specific ru
 test('prefilter_local_css injects a combine_css tag for a real site-wide rules.css', function (): void {
     mkdir(CurrentPaths::get()->root . '/local/css', 0o777, true);
     file_put_contents(CurrentPaths::get()->root . '/local/css/rules.css', 'body{}');
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty);
 
@@ -2089,7 +2099,7 @@ test('prefilter_local_css injects a combine_css tag for a real site-wide rules.c
 });
 
 test('prefilter_local_css leaves the source untouched when no local css files exist', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty);
 
@@ -2099,7 +2109,7 @@ test('prefilter_local_css leaves the source untouched when no local css files ex
 test('prefilter_local_css continues past an invalid theme entry instead of stopping the whole loop', function (): void {
     mkdir(CurrentPaths::get()->root . '/local/css', 0o777, true);
     file_put_contents(CurrentPaths::get()->root . '/local/css/second-rules.css', 'body{}');
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $t->smarty->assign('themes', ['not-an-array', ['id' => 'second']]);
 
     $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty);
@@ -2110,13 +2120,13 @@ test('prefilter_local_css continues past an invalid theme entry instead of stopp
 // --- load_themeconf ----------------------------------------------------------
 
 test('load_themeconf returns an empty array for a theme directory that does not exist', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
 
     expect($t->load_themeconf(CurrentPaths::get()->root . '/no-such-theme-dir'))->toBe([]);
 });
 
 test('load_themeconf includes themeconf.inc.php, returns its $themeconf, and assigns its $theme_template_vars', function (): void {
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $dir = CurrentPaths::get()->root . '/theme-real';
     mkdir($dir, 0o777, true);
     file_put_contents(
@@ -2139,7 +2149,7 @@ test('load_themeconf caches per-directory: a second, different theme dir is not 
     // collapsing to the bare literal 'themeconf:'), which would make every
     // directory share one cache slot -- the second call below would then
     // wrongly return the first dir's already-cached themeconf.
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $dirA = CurrentPaths::get()->root . '/theme-a';
     $dirB = CurrentPaths::get()->root . '/theme-b';
     mkdir($dirA, 0o777, true);
@@ -2163,14 +2173,14 @@ test('load_themeconf caches under the exact "themeconf:" . $dir key shape, not a
     // variants, ProcessCache::has() would find one of these pre-seeded
     // entries and return its poisoned value instead of the real,
     // freshly-computed themeconf.
-    $t = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $t = TemplateTestFactory::build();
     $dir = CurrentPaths::get()->root . '/theme-format';
     mkdir($dir, 0o777, true);
     file_put_contents($dir . '/themeconf.inc.php', '<?php $themeconf = ["real" => true];');
     $realDir = (string) realpath($dir);
     $processCache = Kernel::container()->get(ProcessCache::class);
     if (! $processCache instanceof ProcessCache) {
-        throw new \LogicException('Container returned an unexpected type for ' . ProcessCache::class);
+        throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
     }
     $processCache->set($realDir, ['poisoned' => 'bare-dir-key']);
     $processCache->set($realDir . 'themeconf:', ['poisoned' => 'switched-key']);

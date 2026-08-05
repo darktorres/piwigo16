@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Db\AdvisorySessionLock;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Db\DbConnection;
 
@@ -25,7 +28,7 @@ final class UniqueExecLockTest extends IntegrationTestCase
 
     private string $token;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -40,7 +43,7 @@ final class UniqueExecLockTest extends IntegrationTestCase
         $this->token = 'test_lock_' . bin2hex(random_bytes(4));
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         UniqueExecLock::ends($this->token);
@@ -76,12 +79,12 @@ final class UniqueExecLockTest extends IntegrationTestCase
         $otherConn = DbConnection::build();
 
         try {
-            $acquiredByOther = \Piwigo\Db\AdvisorySessionLock::acquire($otherConn, $this->lockNameFor($this->token), 1);
+            $acquiredByOther = AdvisorySessionLock::acquire($otherConn, $this->lockNameFor($this->token), 1);
             self::assertTrue($acquiredByOther);
 
             self::assertFalse(UniqueExecLock::begins($this->token));
         } finally {
-            \Piwigo\Db\AdvisorySessionLock::release($otherConn, $this->lockNameFor($this->token));
+            AdvisorySessionLock::release($otherConn, $this->lockNameFor($this->token));
         }
     }
 
@@ -115,7 +118,7 @@ final class UniqueExecLockTest extends IntegrationTestCase
     {
         $otherConn = DbConnection::build();
 
-        $acquiredByOther = \Piwigo\Db\AdvisorySessionLock::acquire($otherConn, $this->lockNameFor($this->token), 1);
+        $acquiredByOther = AdvisorySessionLock::acquire($otherConn, $this->lockNameFor($this->token), 1);
         self::assertTrue($acquiredByOther, 'the other connection must genuinely hold the lock first');
         self::assertFalse(UniqueExecLock::begins($this->token), 'contended while the other connection is still open');
 
@@ -134,7 +137,7 @@ final class UniqueExecLockTest extends IntegrationTestCase
      */
     private function lockNameFor(string $tokenName): string
     {
-        $prefix = \Piwigo\Db\DbCredentials::current()->prefix;
+        $prefix = DbCredentials::current()->prefix;
 
         return 'piwigo_exec_' . sha1($prefix . ':unique_exec:' . $tokenName);
     }

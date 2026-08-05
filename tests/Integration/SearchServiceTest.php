@@ -4,6 +4,24 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
+    use Override;
+    use LogicException;
+    use RuntimeException;
+    use Piwigo\Core\FilterState;
+    use Piwigo\Core\Kernel;
+    use Piwigo\Core\ProcessCache;
+    use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Auth\AccessControl;
+    use Piwigo\Group\GroupEntity;
+    use Piwigo\Core\Lang;
+    use Piwigo\Lang\Translator;
+    use Piwigo\Tests\Support\HtmlServiceTestFactory;
+    use Piwigo\Core\CurrentLogger;
+    use Piwigo\Config\DeploymentPolicy;
+    use Piwigo\Cache\CachePools;
+    use Piwigo\Users\UserService;
+    use Exception;
+    use Error;
     use Doctrine\DBAL\Connection;
     use Piwigo\Bootstrap\RedirectService;
     use Piwigo\Category\CategoryRepository;
@@ -15,8 +33,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
     use Piwigo\Event\Search\QsearchGetScopes;
-    use Piwigo\Group\GroupRepository;
-    use Piwigo\Html\HtmlService;
     use Piwigo\Mail\MailService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
@@ -51,13 +67,13 @@ final class FatalSignalHtmlRenderer implements HtmlRenderingInterface
     /**
      * @param array<int, array<string, mixed>> $catInformations
      */
-    #[\Override]
+    #[Override]
     public function getCatDisplayName(array $catInformations, ?string $url = ''): string
     {
-        throw new \LogicException('not implemented in this fake');
+        throw new LogicException('not implemented in this fake');
     }
 
-    #[\Override]
+    #[Override]
     public function getCatDisplayNameCache(
         string $uppercats,
         ?string $url = '',
@@ -65,103 +81,103 @@ final class FatalSignalHtmlRenderer implements HtmlRenderingInterface
         ?string $linkClass = null,
         ?string $authKey = null,
     ): string {
-        throw new \LogicException('not implemented in this fake');
+        throw new LogicException('not implemented in this fake');
     }
 
     /**
      * @param array<string, mixed> $a
      * @param array<string, mixed> $b
      */
-    #[\Override]
+    #[Override]
     public function nameCompare(array $a, array $b): int
     {
-        throw new \LogicException('not implemented in this fake');
+        throw new LogicException('not implemented in this fake');
     }
 
     /**
      * @param array<string, mixed> $a
      * @param array<string, mixed> $b
      */
-    #[\Override]
+    #[Override]
     public function tagAlphaCompare(array $a, array $b): int
     {
-        throw new \LogicException('not implemented in this fake');
+        throw new LogicException('not implemented in this fake');
     }
 
-    #[\Override]
+    #[Override]
     public function accessDenied(RedirectServiceInterface $redirectService): never
     {
-        throw new \RuntimeException('accessDenied called');
+        throw new RuntimeException('accessDenied called');
     }
 
-    #[\Override]
+    #[Override]
     public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
     {
-        throw new \RuntimeException('badRequest: ' . $msg);
+        throw new RuntimeException('badRequest: ' . $msg);
     }
 
-    #[\Override]
+    #[Override]
     public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
     {
-        throw new \RuntimeException('pageNotFound: ' . ($msg ?? ''));
+        throw new RuntimeException('pageNotFound: ' . ($msg ?? ''));
     }
 
-    #[\Override]
+    #[Override]
     public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
     {
-        throw new \RuntimeException('fatalError: ' . $msg);
+        throw new RuntimeException('fatalError: ' . $msg);
     }
 
     /**
      * @param list<array<string, mixed>> $tags
      */
-    #[\Override]
+    #[Override]
     public function getTagsContentTitle(array $tags): string
     {
-        throw new \LogicException('not implemented in this fake');
+        throw new LogicException('not implemented in this fake');
     }
 
     /**
      * @param array<string, mixed>|null $category
      * @param list<array<string, mixed>> $combinedCategories
      */
-    #[\Override]
+    #[Override]
     public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string
     {
-        throw new \LogicException('not implemented in this fake');
+        throw new LogicException('not implemented in this fake');
     }
 
-    #[\Override]
+    #[Override]
     public function setStatusHeader(int $code, string $text = ''): void
     {
-        throw new \LogicException('not implemented in this fake');
+        throw new LogicException('not implemented in this fake');
     }
 
     /**
      * @param array<string, mixed> $info
      */
-    #[\Override]
+    #[Override]
     public function renderElementName(array $info): string
     {
-        throw new \LogicException('not implemented in this fake');
+        throw new LogicException('not implemented in this fake');
     }
 
     /**
      * @param array<string, mixed> $info
      */
-    #[\Override]
+    #[Override]
     public function renderElementDescription(array $info, string $param = ''): string
     {
-        throw new \LogicException('not implemented in this fake');
+        throw new LogicException('not implemented in this fake');
     }
 
     /**
      * @param array<string, mixed> $info
      */
-    #[\Override]
+    #[Override]
     public function getThumbnailTitle(array $info, string $title, string $comment = ''): string
     {
-        throw new \LogicException('not implemented in this fake');
+        throw new LogicException('not implemented in this fake');
     }
 }
 
@@ -218,11 +234,11 @@ final class SearchServiceTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    private function filterState(): \Piwigo\Core\FilterState
+    private function filterState(): FilterState
     {
-        $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
-        if (! $filterState instanceof \Piwigo\Core\FilterState) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        $filterState = Kernel::container()->get(FilterState::class);
+        if (! $filterState instanceof FilterState) {
+            throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
 
         return $filterState;
@@ -235,17 +251,17 @@ final class SearchServiceTest extends IntegrationTestCase
      * resolves the same shared instance so forget() here is actually
      * observed by $this->service internally.
      */
-    private function processCache(): \Piwigo\Core\ProcessCache
+    private function processCache(): ProcessCache
     {
-        $processCache = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
-        if (! $processCache instanceof \Piwigo\Core\ProcessCache) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ProcessCache::class);
+        $processCache = Kernel::container()->get(ProcessCache::class);
+        if (! $processCache instanceof ProcessCache) {
+            throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
         }
 
         return $processCache;
     }
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -257,19 +273,19 @@ final class SearchServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         // UserService's own ProcessCache usage (reached via this test's own
         // processCache() helper below) needs a real, booted container.
-        \Piwigo\Core\Kernel::boot();
+        Kernel::boot();
 
         $this->conn = DbConnection::build();
-        $this->repo = new SearchRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
+        $this->repo = new SearchRepository(EntityManagerFactory::build($this->conn));
 
         CurrentUser::current()->set(User::fromUserArray(self::realisticUserGlobal()));
         $currentConfig->setDefaultFiltersViews(null);
@@ -295,57 +311,57 @@ final class SearchServiceTest extends IntegrationTestCase
         $currentConfig->setRateEnabled(true);
 
         $this->service = new SearchService(
-            \Piwigo\Auth\AccessControl::current(),
+            AccessControl::current(),
             $this->repo,
-            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Users\CurrentUser::current(), $this->filterState()),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState()),
             new CategoryService(
-                \Piwigo\Core\Lang::current(),
-                new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()),
-                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Users\CurrentUser::current(), $this->filterState()),
-                \Piwigo\Config\CurrentConfig::current(),
-                new \Piwigo\PluginConfig\EventDispatcher(),
-                \Piwigo\Lang\Translator::get()
+                Lang::current(),
+                new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState()),
+                CurrentConfig::current(),
+                new EventDispatcher(),
+                Translator::get()
             ),
             $this->mailService(),
-            \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
-            new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()),
-            new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), \Piwigo\PluginConfig\EventDispatcher::get(),
-            \Piwigo\Users\CurrentUser::current(),
-            \Piwigo\Core\Lang::current(),
-            \Piwigo\Config\CurrentConfig::current(),
-            new \Piwigo\Core\CurrentLogger(),
-            new \Piwigo\Config\DeploymentPolicy(),
+            HtmlServiceTestFactory::build(),
+            new RedirectService(Lang::current(), $this->userService()),
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcher::get(),
+            CurrentUser::current(),
+            Lang::current(),
+            CurrentConfig::current(),
+            new CurrentLogger(),
+            new DeploymentPolicy(),
         );
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
-        \Piwigo\Cache\CachePools::searchResults()->clear();
-        \Piwigo\Core\Kernel::reset();
+        CachePools::searchResults()->clear();
+        Kernel::reset();
 
         parent::tearDown();
     }
 
-    private function userService(): \Piwigo\Users\UserService
+    private function userService(): UserService
     {
         // Kernel is already booted in setUp() above -- resolve the same
         // container-shared instance a real request would get, matching
         // RedirectService's own real production callers (singleton/
         // service-locator elimination campaign, Phase 6).
-        $userService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Users\UserService::class);
-        if (! $userService instanceof \Piwigo\Users\UserService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        $userService = Kernel::container()->get(UserService::class);
+        if (! $userService instanceof UserService) {
+            throw new LogicException('Container returned an unexpected type for ' . UserService::class);
         }
 
         return $userService;
     }
 
-    private function mailService(): \Piwigo\Mail\MailService
+    private function mailService(): MailService
     {
-        $mailer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Mail\MailService::class);
-        if (! $mailer instanceof \Piwigo\Mail\MailService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Mail\MailService::class);
+        $mailer = Kernel::container()->get(MailService::class);
+        if (! $mailer instanceof MailService) {
+            throw new LogicException('Container returned an unexpected type for ' . MailService::class);
         }
 
         return $mailer;
@@ -360,26 +376,26 @@ final class SearchServiceTest extends IntegrationTestCase
     private function makeService(SearchRepository $repo, HtmlRenderingInterface $htmlRenderer): SearchService
     {
         return new SearchService(
-            \Piwigo\Auth\AccessControl::current(),
+            AccessControl::current(),
             $repo,
-            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Users\CurrentUser::current(), $this->filterState()),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState()),
             new CategoryService(
-                \Piwigo\Core\Lang::current(),
-                new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()),
-                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Users\CurrentUser::current(), $this->filterState()),
-                \Piwigo\Config\CurrentConfig::current(),
-                new \Piwigo\PluginConfig\EventDispatcher(),
-                \Piwigo\Lang\Translator::get()
+                Lang::current(),
+                new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState()),
+                CurrentConfig::current(),
+                new EventDispatcher(),
+                Translator::get()
             ),
             $this->mailService(),
             $htmlRenderer,
-            new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()),
-            new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), \Piwigo\PluginConfig\EventDispatcher::get(),
-            \Piwigo\Users\CurrentUser::current(),
-            \Piwigo\Core\Lang::current(),
-            \Piwigo\Config\CurrentConfig::current(),
-            new \Piwigo\Core\CurrentLogger(),
-            new \Piwigo\Config\DeploymentPolicy(),
+            new RedirectService(Lang::current(), $this->userService()),
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcher::get(),
+            CurrentUser::current(),
+            Lang::current(),
+            CurrentConfig::current(),
+            new CurrentLogger(),
+            new DeploymentPolicy(),
         );
     }
 
@@ -506,7 +522,7 @@ final class SearchServiceTest extends IntegrationTestCase
         ini_set('pcre.backtrack_limit', '0');
 
         try {
-            $this->expectException(\Exception::class);
+            $this->expectException(Exception::class);
             $this->expectExceptionMessage('splitAllwords(): preg_split() failed');
 
             SearchService::splitAllwords('nature travel');
@@ -984,7 +1000,7 @@ final class SearchServiceTest extends IntegrationTestCase
         ini_set('pcre.backtrack_limit', '0');
 
         try {
-            $this->expectException(\Exception::class);
+            $this->expectException(Exception::class);
             $this->expectExceptionMessage('qsearchGetTextTokenSearchSql(): preg_split() failed');
 
             $this->service->qsearchGetTextTokenSearchSql(new QSingleToken('hello-world', 0, null), ['name']);
@@ -1383,7 +1399,7 @@ final class SearchServiceTest extends IntegrationTestCase
         $handler = static fn (): mixed => null;
         EventDispatcher::get()->addEventHandler(QsearchGetScopes::class, $handler);
 
-        $this->expectException(\Error::class);
+        $this->expectException(Error::class);
         $this->expectExceptionMessage('must return an instance of');
 
         try {
@@ -1477,7 +1493,7 @@ final class SearchServiceTest extends IntegrationTestCase
     {
         $service = $this->makeServiceWithRenderer(new FatalSignalHtmlRenderer());
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('fatalError: Invalid search identifier');
 
         $service->getValidatedSearchInfo('not-a-valid-identifier', null);
@@ -1489,7 +1505,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
         $service = $this->makeServiceWithRenderer(new FatalSignalHtmlRenderer());
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('fatalError: this search is not reachable with its id, need the search_uuid instead');
 
         $service->getValidatedSearchInfo((string) $id, null);
@@ -1499,7 +1515,7 @@ final class SearchServiceTest extends IntegrationTestCase
     {
         $service = $this->makeServiceWithRenderer(new FatalSignalHtmlRenderer());
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('badRequest: this search identifier does not exist');
 
         // getSearchIdPattern()'s own search_uuid regex requires exactly 10
@@ -1515,7 +1531,7 @@ final class SearchServiceTest extends IntegrationTestCase
     {
         $service = $this->makeServiceWithRenderer(new FatalSignalHtmlRenderer());
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('badRequest: this search identifier does not exist');
 
         $service->getSearchResults('psk-20260712-doesnotexist', null);
@@ -1547,7 +1563,7 @@ final class SearchServiceTest extends IntegrationTestCase
         $this->processCache()->forget('default_user');
 
         try {
-            $this->expectException(\LogicException::class);
+            $this->expectException(LogicException::class);
             $this->expectExceptionMessage('Inflector_zz does not implement InflectorInterface');
 
             $this->service->getQuickSearchResultsNoCache('nature', []);

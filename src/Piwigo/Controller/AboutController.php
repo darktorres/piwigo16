@@ -4,16 +4,29 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Location\LocBeginAbout;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Lang\Translator;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -44,21 +57,21 @@ final class AboutController implements ControllerInterface
         private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\FilterState $filterState,
-        private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
+        private readonly FilterState $filterState,
+        private readonly SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Html\HtmlService $htmlService,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly DeploymentPolicy $deploymentPolicy,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly HtmlService $htmlService,
         private readonly CurrentConfig $currentConfig,
-        private readonly \Piwigo\Lang\Translator $translator,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly Translator $translator,
+        private readonly CurrentLogger $currentLogger,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $this->accessControl->checkStatus(AccessLevel::Guest);
@@ -98,12 +111,12 @@ final class AboutController implements ControllerInterface
                 ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
         }
 
-        new \Piwigo\Page\PageHeaderRenderer()
+        new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->htmlService
             ->flushPageMessages();
         $template->parse('about', false);
-        $body = \Piwigo\Bootstrap\PageTail::renderToString();
+        $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

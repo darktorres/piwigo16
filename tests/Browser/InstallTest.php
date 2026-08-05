@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\Assert;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -82,7 +83,7 @@ it('completes a fresh install end-to-end', function (): void {
     $page = H::visitPwg($this, '/install.php');
 
     if (str_contains($page->content(), 'Congratulations') || !str_contains($page->content(), 'Installation')) {
-        \PHPUnit\Framework\Assert::markTestSkipped('Piwigo is already installed — remove local/.installed.test to exercise this flow.');
+        Assert::markTestSkipped('Piwigo is already installed — remove local/.installed.test to exercise this flow.');
     }
 
     H::assertNoServerErrors($page, 'install page initial render');

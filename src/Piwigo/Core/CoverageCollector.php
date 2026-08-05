@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use function pcov\clear;
+use function pcov\collect;
+use function pcov\start;
+use function pcov\stop;
+use function pcov\waiting;
+use const pcov\inclusive;
+
 /**
  * Dumps per-request pcov line coverage to disk when coverage-mode test runs
  * are in progress, so Contract/Browser tests (both driving the live Apache
@@ -34,18 +41,18 @@ final class CoverageCollector
             return;
         }
 
-        \pcov\start();
+        start();
 
         $dumpDir = $paths->data . 'coverage-raw/web/';
         register_shutdown_function(static function () use ($dumpDir): void {
-            \pcov\stop();
-            $waiting = \pcov\waiting();
+            stop();
+            $waiting = waiting();
             if ($waiting === []) {
                 return;
             }
 
-            $collected = \pcov\collect(\pcov\inclusive, $waiting);
-            \pcov\clear();
+            $collected = collect(inclusive, $waiting);
+            clear();
 
             FilesystemHelper::mkgetdir($dumpDir, FilesystemHelper::MKGETDIR_RECURSIVE);
             $tmp = $dumpDir . uniqid('cov_', true) . '.tmp';

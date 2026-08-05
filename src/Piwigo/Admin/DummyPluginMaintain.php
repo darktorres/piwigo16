@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Override;
+
 /**
  * used when a plugin uses the old procedural declaration of maintenance methods
  */
@@ -28,7 +30,7 @@ final class DummyPluginMaintain extends PluginMaintain
      *   contravariance rules fatal on narrowing an untyped parent param to a
      *   native type in the override (verified empirically)
      */
-    #[\Override]
+    #[Override]
     public function install($plugin_version, &$errors = []): mixed
     {
         // @phpstan-ignore function.impossibleType
@@ -44,7 +46,7 @@ final class DummyPluginMaintain extends PluginMaintain
      * @param string $plugin_version
      * @param array<int, string> $errors - see install()'s $errors docblock
      */
-    #[\Override]
+    #[Override]
     public function activate($plugin_version, &$errors = []): mixed
     {
         // @phpstan-ignore function.impossibleType
@@ -56,7 +58,7 @@ final class DummyPluginMaintain extends PluginMaintain
         return null;
     }
 
-    #[\Override]
+    #[Override]
     public function deactivate(): mixed
     {
         // @phpstan-ignore function.impossibleType
@@ -68,7 +70,7 @@ final class DummyPluginMaintain extends PluginMaintain
         return null;
     }
 
-    #[\Override]
+    #[Override]
     public function uninstall(): mixed
     {
         // @phpstan-ignore function.impossibleType
@@ -85,6 +87,6 @@ final class DummyPluginMaintain extends PluginMaintain
      * @param string $new_version
      * @param array<int, string> $errors - see install()'s $errors docblock
      */
-    #[\Override]
+    #[Override]
     public function update($old_version, $new_version, &$errors = []): void {}
 }

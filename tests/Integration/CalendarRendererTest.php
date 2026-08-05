@@ -4,6 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
+use Override;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Core\FilterState;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\RedirectServiceInterface;
+use LogicException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\CachePools;
 use Piwigo\Calendar\CalendarBase;
@@ -16,7 +25,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
-use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 
@@ -57,7 +65,7 @@ final class CalendarRendererTest extends IntegrationTestCase
 
     private HtmlService $htmlService;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -86,7 +94,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2025-01-25 00:00:00' WHERE id = 5");
 
         $this->urlService = new CalendarRendererTestFakeUrlService();
-        $this->htmlService = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
+        $this->htmlService = HtmlServiceTestFactory::build();
 
         // Matches CalendarServiceTest's own fixture shape/guaranteed-shape
         // rationale: getSqlConditionFandF()'s forbidden_images fallthrough
@@ -100,7 +108,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         ]));
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         // CurrentConfig::setDataLocation('data/') above only redirects
@@ -121,7 +129,7 @@ final class CalendarRendererTest extends IntegrationTestCase
 
     private function makeRenderer(): CalendarRenderer
     {
-        return new CalendarRenderer(Lang::current(), $this->htmlService, \Piwigo\Tests\Support\TemplateTestFactory::build(), $this->urlService, CurrentUser::current(), CurrentConfig::current(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Lang\Translator::get(), new \Piwigo\Core\FilterState(), \Piwigo\Image\ImageStdParams::current());
+        return new CalendarRenderer(Lang::current(), $this->htmlService, TemplateTestFactory::build(), $this->urlService, CurrentUser::current(), CurrentConfig::current(), EventDispatcher::get(), Translator::get(), new FilterState(), ImageStdParams::current());
     }
 
     /**
@@ -253,8 +261,8 @@ final class CalendarRendererTest extends IntegrationTestCase
      */
     public function test_render_groups_multiple_years_and_months_for_the_default_monthly_calendar_view(): void
     {
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
-        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Lang\Translator::get(), new \Piwigo\Core\FilterState(), \Piwigo\Image\ImageStdParams::current());
+        $template = TemplateTestFactory::build();
+        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current(), EventDispatcher::get(), Translator::get(), new FilterState(), ImageStdParams::current());
 
         $result = $renderer->render(
             section: 'items',
@@ -301,8 +309,8 @@ final class CalendarRendererTest extends IntegrationTestCase
      */
     public function test_render_normalizes_chronology_date_to_ints_and_next_prev_navigation_still_works(): void
     {
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
-        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Lang\Translator::get(), new \Piwigo\Core\FilterState(), \Piwigo\Image\ImageStdParams::current());
+        $template = TemplateTestFactory::build();
+        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current(), EventDispatcher::get(), Translator::get(), new FilterState(), ImageStdParams::current());
 
         $result = $renderer->render(
             section: 'items',
@@ -576,105 +584,105 @@ final class CalendarRendererTest extends IntegrationTestCase
  * Real fake for UrlServiceInterface -- see CalendarMonthlyTestFakeUrlService's
  * own docblock for the full rationale.
  */
-final class CalendarRendererTestFakeUrlService implements \Piwigo\Core\UrlServiceInterface
+final class CalendarRendererTestFakeUrlService implements UrlServiceInterface
 {
-    #[\Override]
+    #[Override]
     public function getRootUrl(): string
     {
         return '/fake-root/';
     }
 
-    #[\Override]
+    #[Override]
     public function getAbsoluteRootUrl(bool $withScheme = true): string
     {
         return 'https://fake.test/';
     }
 
-    #[\Override]
+    #[Override]
     public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string
     {
         return $url;
     }
 
-    #[\Override]
+    #[Override]
     public function makeIndexUrl(array $params = []): string
     {
         return '/fake-index?' . json_encode($params);
     }
 
-    #[\Override]
+    #[Override]
     public function duplicateIndexUrl(array $redefined = [], array $removed = []): string
     {
         return '/fake-index?' . json_encode($redefined) . '|removed=' . json_encode($removed);
     }
 
-    #[\Override]
+    #[Override]
     public function duplicatePictureUrl(array $redefined = [], array $removed = []): string
     {
         return '/fake-picture';
     }
 
-    #[\Override]
+    #[Override]
     public function makePictureUrl(array $params): string
     {
         return '/fake-picture';
     }
 
-    #[\Override]
-    public function parseSectionUrl(array $tokens, &$nextToken, \Piwigo\Core\RedirectServiceInterface $redirectService): array
+    #[Override]
+    public function parseSectionUrl(array $tokens, &$nextToken, RedirectServiceInterface $redirectService): array
     {
-        throw new \LogicException('not used by CalendarRenderer');
+        throw new LogicException('not used by CalendarRenderer');
     }
 
-    #[\Override]
+    #[Override]
     public function parseWellKnownParamsUrl(array $tokens, int &$i): array
     {
-        throw new \LogicException('not used by CalendarRenderer');
+        throw new LogicException('not used by CalendarRenderer');
     }
 
-    #[\Override]
+    #[Override]
     public function getActionUrl($id, $whatPart, bool $download): string
     {
-        throw new \LogicException('not used by CalendarRenderer');
+        throw new LogicException('not used by CalendarRenderer');
     }
 
-    #[\Override]
+    #[Override]
     public function getElementUrl(array $elementInfo): string
     {
-        throw new \LogicException('not used by CalendarRenderer');
+        throw new LogicException('not used by CalendarRenderer');
     }
 
-    #[\Override]
+    #[Override]
     public function setMakeFullUrl(): void {}
 
-    #[\Override]
+    #[Override]
     public function unsetMakeFullUrl(): void {}
 
-    #[\Override]
+    #[Override]
     public function embellishUrl(string $url): string
     {
         return $url;
     }
 
-    #[\Override]
+    #[Override]
     public function getGalleryHomeUrl(): string
     {
-        throw new \LogicException('not used by CalendarRenderer');
+        throw new LogicException('not used by CalendarRenderer');
     }
 
-    #[\Override]
+    #[Override]
     public function getQueryStringDiff(array $rejects = [], bool $escape = true): string
     {
-        throw new \LogicException('not used by CalendarRenderer');
+        throw new LogicException('not used by CalendarRenderer');
     }
 
-    #[\Override]
+    #[Override]
     public function urlIsRemote(string $url): bool
     {
         return false;
     }
 
-    #[\Override]
+    #[Override]
     public function getUserFavorites(): array
     {
         return [];

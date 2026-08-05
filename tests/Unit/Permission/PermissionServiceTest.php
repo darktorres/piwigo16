@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Core\Paths;
+use Piwigo\Permission\SqlCondition;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Category\CategoryRepository;
@@ -10,7 +15,6 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -32,14 +36,14 @@ function makePermissionService(): PermissionService
 
     $filterState = Kernel::container()->get(FilterState::class);
     if (! $filterState instanceof FilterState) {
-        throw new \LogicException('Container returned an unexpected type for ' . FilterState::class);
+        throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
     }
 
     return new PermissionService(
-        new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
-        \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-        new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\Config\CurrentConfig::current()),
-        \Piwigo\Users\CurrentUser::current(),
+        new PermissionRepository(EntityManagerFactory::build($conn)),
+        EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+        new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()),
+        CurrentUser::current(),
         $filterState,
     );
 }
@@ -55,7 +59,7 @@ function seedFilterState(bool $enabled, string $visibleCategories = '', string $
 {
     $filterState = Kernel::container()->get(FilterState::class);
     if (! $filterState instanceof FilterState) {
-        throw new \LogicException('Container returned an unexpected type for ' . FilterState::class);
+        throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
     }
 
     $filterState->set($enabled, $visibleCategories, $visibleImages);
@@ -64,7 +68,7 @@ function seedFilterState(bool $enabled, string $visibleCategories = '', string $
 function seedPermissionUser(string $forbiddenCategories = '', int $level = 0, string $imageAccessType = '', string $imageAccessList = ''): void
 {
     CurrentUser::current()->set(new User(
-        id: \Piwigo\Common\ValueObject\UserId::from(1),
+        id: UserId::from(1),
         username: 'torres',
         email: '',
         language: '',
@@ -96,7 +100,7 @@ function seedPermissionUser(string $forbiddenCategories = '', int $level = 0, st
 function seedPermissionUserRaw(array $rawAttributes): void
 {
     CurrentUser::current()->set(new User(
-        id: \Piwigo\Common\ValueObject\UserId::from(1),
+        id: UserId::from(1),
         username: 'torres',
         email: '',
         language: '',
@@ -113,13 +117,13 @@ beforeEach(function (): void {
     // campaign, Phase 8), and Lang's own Paths constructor collaborator
     // has no autowireable default -- a bare Kernel::boot() with no Paths
     // argument leaves it unresolvable in the container.
-    Kernel::boot(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     seedPermissionUser();
 });
 
 afterEach(function (): void {
     CurrentUser::current()->reset();
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     Lang::current()->reset();
     Translator::get()->reset();
     Kernel::reset();
@@ -258,7 +262,7 @@ test('every *Condition builder uses a distinct placeholder name, so combining se
 
     $criteria = $service->getPermissionCriteria();
 
-    $combined = \Piwigo\Permission\SqlCondition::combine(
+    $combined = SqlCondition::combine(
         'AND',
         $criteria->forbiddenCategoriesCondition('a'),
         $criteria->visibleCategoriesCondition('b'),

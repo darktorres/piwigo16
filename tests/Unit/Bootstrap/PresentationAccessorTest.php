@@ -26,7 +26,7 @@ use Piwigo\Url\UrlService;
  * template-dependent renderers in that other file.
  */
 afterEach(function (): void {
-    \Piwigo\Core\Kernel::reset();
+    Kernel::reset();
 });
 
 test('every accessor returns its real, correctly-typed instance from a real container, without throwing', function (): void {

@@ -6,11 +6,18 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
+use Piwigo\Admin\Request\UpdatesPwgRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\ContainerDetector;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
-use Piwigo\Template\Template;
+use Piwigo\Csrf\CsrfService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/updates_pwg.php (the "pwg" tab of the "updates" page
@@ -39,13 +46,13 @@ final class UpdatesPwgPageRenderer
         private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly CoreUpdateService $coreUpdateService,
         private readonly ExtensionUpdateChecker $extensionUpdateChecker,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
     ) {}
 
     public function render(): void
@@ -64,9 +71,9 @@ final class UpdatesPwgPageRenderer
         2 = upgrade on same branch
         3 = upgrade on different branch
         */
-        [$ct_env, $ct_build_version] = \Piwigo\Core\ContainerDetector::detect();
+        [$ct_env, $ct_build_version] = ContainerDetector::detect();
 
-        $updatesPwgRequest = Request\UpdatesPwgRequest::fromGlobals($ct_env, $this->inputValidator);
+        $updatesPwgRequest = UpdatesPwgRequest::fromGlobals($ct_env, $this->inputValidator);
         $step = $updatesPwgRequest->step;
         $upgrade_to = $updatesPwgRequest->upgradeTo;
 
@@ -111,7 +118,7 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
         if ($step === 2 and $this->accessControl->isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
-                new \Piwigo\Csrf\CsrfService()
+                new CsrfService()
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
                 $core_update_service->upgradeTo($updatesPwgRequest->upgradeToSubmitted, $step);
             }
@@ -122,7 +129,7 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
         if ($step === 3 and $this->accessControl->isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
-                new \Piwigo\Csrf\CsrfService()
+                new CsrfService()
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
                 $core_update_service->upgradeTo($updatesPwgRequest->upgradeToSubmitted, $step);
             }
@@ -156,7 +163,7 @@ final class UpdatesPwgPageRenderer
                 'STEP' => $step,
                 'PIWIGO_CURRENT_VERSION' => $this->pageState->updatedVersion ?? AppInfo::VERSION,
                 'UPGRADE_TO' => $upgrade_to,
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
             ]
         );

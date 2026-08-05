@@ -4,18 +4,38 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
+use Piwigo\Bootstrap\PageTail;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Request\IdentificationSubmitRequest;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\DbConnection;
 use Piwigo\Event\Location\LocBeginIdentification;
 use Piwigo\Event\Location\LocEndIdentification;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Lang\LangService;
+use Piwigo\Lang\Translator;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -45,24 +65,24 @@ final class IdentificationController implements ControllerInterface
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\FilterState $filterState,
-        private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
+        private readonly FilterState $filterState,
+        private readonly SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Users\UserService $userService,
-        private readonly \Piwigo\Auth\AuthService $authService,
-        private readonly \Piwigo\Html\HtmlService $htmlService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\Lang\Translator $translator,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly DeploymentPolicy $deploymentPolicy,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly UserService $userService,
+        private readonly AuthService $authService,
+        private readonly HtmlService $htmlService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly Translator $translator,
+        private readonly CurrentLogger $currentLogger,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         // Field-keyed, controller-local -- read by specific key
@@ -82,7 +102,7 @@ final class IdentificationController implements ControllerInterface
 
         unset($_SESSION['reset_password_code']);
 
-        $identificationSubmit = Request\IdentificationSubmitRequest::fromGlobals($this->inputValidator);
+        $identificationSubmit = IdentificationSubmitRequest::fromGlobals($this->inputValidator);
 
         $redirect_to = '';
         if ($identificationSubmit->getRedirect !== null) {
@@ -107,7 +127,7 @@ final class IdentificationController implements ControllerInterface
                 $username = $identificationSubmit->username;
                 $password = $identificationSubmit->password;
 
-                $conn = \Piwigo\Db\DbConnection::build();
+                $conn = DbConnection::build();
                 if ($this->currentConfig->insensitiveCaseLogon()) {
                     $username = $this->userService
                         ->searchCaseUsername($username);
@@ -192,7 +212,7 @@ final class IdentificationController implements ControllerInterface
                 $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
             }
-            if (! array_key_exists($lang_cookie, \Piwigo\Lang\LangService::getLanguages())) {
+            if (! array_key_exists($lang_cookie, LangService::getLanguages())) {
                 $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
             }
@@ -204,7 +224,7 @@ final class IdentificationController implements ControllerInterface
         }
 
         $language_options = [];
-        foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
+        foreach (LangService::getLanguages() as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
 
@@ -222,7 +242,7 @@ final class IdentificationController implements ControllerInterface
 
         $template->assign('HELP_LINK', $help_link);
 
-        new \Piwigo\Page\PageHeaderRenderer()
+        new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatchNotify(new LocEndIdentification());
         $this->htmlService
@@ -230,7 +250,7 @@ final class IdentificationController implements ControllerInterface
         $this->htmlService
             ->flushKeyedErrors($errors);
         $template->parse('identification', false);
-        $body = \Piwigo\Bootstrap\PageTail::renderToString();
+        $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

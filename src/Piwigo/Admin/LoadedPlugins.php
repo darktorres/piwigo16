@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use LogicException;
+
 /**
  * Holds the current request's loaded-plugins map -- Phase 2 global-residual
  * sweep, replacing the legacy `global $pwg_loaded_plugins;` bridge.
@@ -41,7 +43,7 @@ final class LoadedPlugins
     public function get(): array
     {
         if ($this->plugins === null) {
-            throw new \LogicException('LoadedPlugins not initialised -- call Piwigo\Admin\PluginLoader::loadPlugins() first.');
+            throw new LogicException('LoadedPlugins not initialised -- call Piwigo\Admin\PluginLoader::loadPlugins() first.');
         }
 
         return $this->plugins;

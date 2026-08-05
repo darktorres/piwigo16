@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Bootstrap\PageTail;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Event\Admin\GetPopupHelpContent;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -46,13 +53,13 @@ final class AdminPopuphelpController implements ControllerInterface
     public function __construct(
         private readonly Lang $lang,
         private readonly AccessControl $accessControl,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $this->accessControl->checkStatus(AccessLevel::Administrator);
@@ -86,7 +93,7 @@ final class AdminPopuphelpController implements ControllerInterface
                 ]
             );
 
-            new \Piwigo\Page\PageHeaderRenderer()
+            new PageHeaderRenderer()
                 ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         }
 
@@ -122,7 +129,7 @@ final class AdminPopuphelpController implements ControllerInterface
 
         $template->parse('popuphelp', false);
 
-        $body = \Piwigo\Bootstrap\PageTail::renderToString();
+        $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

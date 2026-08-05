@@ -4,11 +4,25 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Request\UserListFilterRequest;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ThemeCatalog;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
+use Piwigo\Group\GroupService;
+use Piwigo\Lang\LangService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
+use Piwigo\Users\UserStatus;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/user_list.php (page slug "user_list") -- add users and
@@ -18,11 +32,11 @@ use Piwigo\Users\UserService;
  */
 final class UserListPageRenderer
 {
-    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, \Piwigo\Group\GroupService $groupService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Validation\InputValidator $inputValidator): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, InputValidator $inputValidator): void
     {
         $template = $currentTemplate->get();
 
-        $userListFilter = Request\UserListFilterRequest::fromGlobals($inputValidator);
+        $userListFilter = UserListFilterRequest::fromGlobals($inputValidator);
 
         $coreTabs->setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
 
@@ -85,7 +99,7 @@ final class UserListPageRenderer
         $password_protected_users = [$guest_id];
 
         // an admin can't delete other admin/webmaster
-        if ($currentUser->get()->status === \Piwigo\Users\UserStatus::Admin) {
+        if ($currentUser->get()->status === UserStatus::Admin) {
             $admin_ids = array_map(strval(...), $userService->getAdminIds());
 
             $protected_users = array_merge($protected_users, $admin_ids);
@@ -97,7 +111,7 @@ final class UserListPageRenderer
             $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id]));
         }
 
-        $owner_username = $userService->getUsernameById(\Piwigo\Common\ValueObject\UserId::from($webmaster_id))->value ?? '';
+        $owner_username = $userService->getUsernameById(UserId::from($webmaster_id))->value ?? '';
 
         // protected_users/password_protected_users mix CurrentUser::get()->id, several $conf
         // ids (already normalized to int above) and $admin_ids (query2array
@@ -109,13 +123,13 @@ final class UserListPageRenderer
         $template->assign(
             [
                 'U_HISTORY' => $urlService->getRootUrl() . 'admin.php?page=history&filter_user_id=',
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
                 'NB_IMAGE_PAGE' => $default_user['nb_image_page'],
                 'RECENT_PERIOD' => $default_user['recent_period'],
-                'theme_options' => \Piwigo\Core\ThemeCatalog::getPwgThemes($eventDispatcher),
+                'theme_options' => ThemeCatalog::getPwgThemes($eventDispatcher),
                 'theme_selected' => $userService->getDefaultTheme(),
-                'language_options' => \Piwigo\Lang\LangService::getLanguages(),
+                'language_options' => LangService::getLanguages(),
                 'language_selected' => $userService->getDefaultLanguage(),
                 'association_options' => $groups,
                 'protected_users' => implode(',', array_unique($protected_users)),
@@ -138,7 +152,7 @@ final class UserListPageRenderer
 
         // Status options
         $label_of_status = [];
-        foreach (\Piwigo\Users\UserStatus::cases() as $userStatus) {
+        foreach (UserStatus::cases() as $userStatus) {
             $label_of_status[$userStatus->value] = $lang->t('user_status_' . $userStatus->value);
         }
 
@@ -155,7 +169,7 @@ final class UserListPageRenderer
         $pref_status_options = $label_of_status;
 
         // a simple "admin" can't set/remove statuses webmaster/admin
-        if ($currentUser->get()->status === \Piwigo\Users\UserStatus::Admin) {
+        if ($currentUser->get()->status === UserStatus::Admin) {
             unset($pref_status_options['webmaster']);
             unset($pref_status_options['admin']);
         }

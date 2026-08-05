@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Http;
 
+use InvalidArgumentException;
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Override;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface as SymfonyResponseInterface;
@@ -98,12 +102,12 @@ final readonly class HttpClientService implements ClientInterface
         /** @var HttpClientInterface|null */
         static $client = null;
         if ($client === null) {
-            $client = \Symfony\Component\HttpClient\HttpClient::create();
+            $client = HttpClient::create();
         }
         return $client;
     }
 
-    #[\Override]
+    #[Override]
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
         return $this->toPsrResponse($this->guardedRequest($request, []));
@@ -230,7 +234,7 @@ final readonly class HttpClientService implements ClientInterface
             'timeout' => 10,
         ];
 
-        $currentConfig = \Piwigo\Config\CurrentConfig::current();
+        $currentConfig = CurrentConfig::current();
         if ($currentConfig->useProxy() && $currentConfig->proxyServer() !== '') {
             $proxyServer = $currentConfig->proxyServer();
             $proxyUrl = $proxyServer;
@@ -247,7 +251,7 @@ final readonly class HttpClientService implements ClientInterface
             $status = $response->getStatusCode();
         } catch (ClientExceptionInterface) {
             return null;
-        } catch (\InvalidArgumentException) {
+        } catch (InvalidArgumentException) {
             // Real bug, found via a new Integration test that legitimately
             // calls UploadService::addUploadedFile() with no real HTTP host
             // configured (no `gallery_url`, no Host/X-Forwarded-Host

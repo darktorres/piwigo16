@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -16,7 +17,7 @@ function ratingUserDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function ratingUserDbConnect(): \mysqli|\PgSql\Connection
+function ratingUserDbConnect(): mysqli|Connection
 {
     return H::connect();
 }

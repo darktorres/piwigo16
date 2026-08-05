@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use LogicException;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -13,12 +19,8 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\TelemetrySenderInterface;
-use Piwigo\Html\HtmlService;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\ScriptLoader;
-use Piwigo\Template\Template;
-use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 
@@ -40,7 +42,7 @@ final class PageTailRendererTest extends IntegrationTestCase
 
     private PageTailRenderer $renderer;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -52,27 +54,27 @@ final class PageTailRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
         // footer.tpl's own {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
-        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
 
         CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest', 'username' => 'fixture_guest']));
 
         $_SESSION = [];
 
         $this->renderer = new PageTailRenderer(
-            \Piwigo\Auth\AccessControl::current(),
+            AccessControl::current(),
             new class implements TelemetrySenderInterface {
                 public function send(): void
                 {
@@ -81,15 +83,15 @@ final class PageTailRendererTest extends IntegrationTestCase
                     // only needs *a* TelemetrySenderInterface to construct.
                 }
             },
-            \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
-            new \Piwigo\PluginConfig\EventDispatcher(),
-            \Piwigo\Core\PageState::current(),
+            UrlServiceTestFactory::build(),
+            new EventDispatcher(),
+            PageState::current(),
             CurrentTemplate::current(),
-            \Piwigo\Config\CurrentConfig::current()
+            CurrentConfig::current()
         );
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         CurrentTemplate::current()->reset();

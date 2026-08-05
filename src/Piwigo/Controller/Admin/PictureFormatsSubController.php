@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\PictureFormatsPageRenderer;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -21,13 +26,13 @@ final class PictureFormatsSubController implements AdminSubControllerInterface
         private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly ImageStdParams $imageStdParams,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly InputValidator $inputValidator,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new PictureFormatsPageRenderer()

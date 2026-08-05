@@ -17,7 +17,7 @@ test('get throws when Kernel has not booted at all', function (): void {
     expect(CurrentPaths::isSet())->toBeFalse();
 
     expect(fn () => CurrentPaths::get())->toThrow(
-        \LogicException::class,
+        LogicException::class,
         'CurrentPaths not initialised -- call Piwigo\Core\Kernel::boot() first.',
     );
 });
@@ -29,7 +29,7 @@ test('get throws when Kernel has booted without a real Paths', function (): void
         expect(CurrentPaths::isSet())->toBeFalse();
 
         expect(fn () => CurrentPaths::get())->toThrow(
-            \LogicException::class,
+            LogicException::class,
             'CurrentPaths not initialised -- call Piwigo\Core\Kernel::boot() first.',
         );
     } finally {
@@ -56,5 +56,5 @@ test('isSet/get go back to the unbooted behavior after Kernel::reset()', functio
     Kernel::reset();
 
     expect(CurrentPaths::isSet())->toBeFalse();
-    expect(fn () => CurrentPaths::get())->toThrow(\LogicException::class);
+    expect(fn () => CurrentPaths::get())->toThrow(LogicException::class);
 });

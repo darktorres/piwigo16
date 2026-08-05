@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Image;
 
+use RuntimeException;
+use Exception;
+use Piwigo\PluginConfig\EventDispatcher;
+use Error;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Db\Tables;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\CurrentThemeConfProvider;
@@ -88,11 +96,11 @@ function srcImageTestRrmdir(string $dir): void
 }
 
 beforeEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
 });
 
 afterEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     Kernel::reset();
     srcImageTestSetThemeConfProvider(null);
 });
@@ -108,7 +116,7 @@ test('themeConf() throws a RuntimeException when no ThemeConfProviderInterface h
         'id' => 1,
         'path' => 'upload/2026/07/doc.pdf',
         'file' => 'doc.pdf',
-    ]))->toThrow(\RuntimeException::class, 'SrcImage: no theme-conf provider set (Template not constructed yet?)');
+    ]))->toThrow(RuntimeException::class, 'SrcImage: no theme-conf provider set (Template not constructed yet?)');
 });
 
 test('urlService() throws a RuntimeException when no UrlServiceInterface has been installed yet', function (): void {
@@ -127,7 +135,7 @@ test('urlService() throws a RuntimeException when no UrlServiceInterface has bee
     Kernel::reset();
 
     expect(fn () => $src->get_url())
-        ->toThrow(\RuntimeException::class, 'SrcImage: no URL service set (RequestBootstrap not run yet?)');
+        ->toThrow(RuntimeException::class, 'SrcImage: no URL service set (RequestBootstrap not run yet?)');
 });
 
 test('get_size() throws a RuntimeException carrying the untranslated message when dimensions are required but not provided and no HtmlRenderingInterface is installed', function (): void {
@@ -145,7 +153,7 @@ test('get_size() throws a RuntimeException carrying the untranslated message whe
     Kernel::reset();
 
     expect(fn () => $src->get_size())
-        ->toThrow(\RuntimeException::class, 'SrcImage dimensions required but not provided');
+        ->toThrow(RuntimeException::class, 'SrcImage dimensions required but not provided');
 });
 
 test('get_size() delegates the fatal message to the installed HtmlRenderingInterface instead of throwing RuntimeException directly', function (): void {
@@ -327,7 +335,7 @@ test('constructor falls back to the original path for a .svg with no icon, then 
             'id' => 1,
             'path' => 'upload/2026/07/vector.svg',
             'file' => 'vector.svg',
-        ]))->toThrow(\Exception::class, 'SrcImage: unable to read size of fallback icon upload/2026/07/vector.svg');
+        ]))->toThrow(Exception::class, 'SrcImage: unable to read size of fallback icon upload/2026/07/vector.svg');
     } finally {
         srcImageTestRrmdir($root);
     }
@@ -403,16 +411,16 @@ test('constructor throws when a get_mimetype_location handler returns something 
     srcImageTestMakePng($root . '/themes/default/icon/mimetypes/zzz.png', 16, 12);
 
     $handler = static fn (): int => 42;
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(GetMimetypeLocation::class, $handler);
+    EventDispatcher::get()->addEventHandler(GetMimetypeLocation::class, $handler);
 
     try {
         expect(fn () => new SrcImage([
             'id' => 1,
             'path' => 'upload/2026/07/file.zzz',
             'file' => 'file.zzz',
-        ]))->toThrow(\Error::class, 'must return an instance of');
+        ]))->toThrow(Error::class, 'must return an instance of');
     } finally {
-        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(GetMimetypeLocation::class, $handler);
+        EventDispatcher::get()->removeEventHandler(GetMimetypeLocation::class, $handler);
         srcImageTestRrmdir($root);
     }
 });
@@ -433,7 +441,7 @@ test('constructor throws when neither the per-extension icon nor the shared unkn
             'id' => 1,
             'path' => 'upload/2026/07/file.qqq',
             'file' => 'file.qqq',
-        ]))->toThrow(\Exception::class, 'SrcImage: unable to read size of fallback icon themes/default/icon/mimetypes/unknown.png');
+        ]))->toThrow(Exception::class, 'SrcImage: unable to read size of fallback icon themes/default/icon/mimetypes/unknown.png');
     } finally {
         srcImageTestRrmdir($root);
     }
@@ -573,7 +581,7 @@ test('get_url() throws when a get_src_image_url handler returns something other 
         // is untyped from PHPStan's perspective, and this test exercises
         // dispatchChange()'s own runtime enforcement, not a static one.
         $handler = static fn (): int => 42;
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(GetSrcImageUrl::class, $handler);
+        EventDispatcher::get()->addEventHandler(GetSrcImageUrl::class, $handler);
 
         try {
             $src = new SrcImage([
@@ -583,9 +591,9 @@ test('get_url() throws when a get_src_image_url handler returns something other 
             ]);
 
             expect(static fn () => $src->get_url())
-                ->toThrow(\Error::class, 'must return an instance of');
+                ->toThrow(Error::class, 'must return an instance of');
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(GetSrcImageUrl::class, $handler);
+            EventDispatcher::get()->removeEventHandler(GetSrcImageUrl::class, $handler);
         }
     });
 });
@@ -596,12 +604,12 @@ test('get_size() persists the real, correctly-ordered width/height back onto the
     // DISTINCT width/height (anti-transposition) and a real
     // ImageRepository persisting the call proves both arguments land in
     // their own correct column, not swapped or duplicated.
-    $conn = \Piwigo\Db\DbConnection::build();
-    $repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class);
+    $conn = DbConnection::build();
+    $repo = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class);
     expect($repo)->toBeInstanceOf(ImageRepository::class);
 
     $conn->createQueryBuilder()
-        ->insert(\Piwigo\Db\Tables::images())
+        ->insert(Tables::images())
         ->values(['file' => ':file', 'path' => ':path'])
         ->setParameter('file', 'update-dimensions.jpg')
         ->setParameter('path', 'upload/2026/07/update-dimensions.jpg')
@@ -632,10 +640,10 @@ test('get_size() persists the real, correctly-ordered width/height back onto the
             expect($src->get_size())->toBe([77, 55]);
         });
 
-        $row = $conn->fetchAssociative('SELECT width, height FROM ' . \Piwigo\Db\Tables::images() . " WHERE id = {$imageId}");
+        $row = $conn->fetchAssociative('SELECT width, height FROM ' . Tables::images() . " WHERE id = {$imageId}");
         expect($row)->toBe(['width' => 77, 'height' => 55]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
         srcImageTestRrmdir($root);
     }
 });

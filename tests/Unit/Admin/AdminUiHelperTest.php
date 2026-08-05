@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 

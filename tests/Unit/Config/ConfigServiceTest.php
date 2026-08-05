@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\DriverManager;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
@@ -40,7 +42,7 @@ use Piwigo\Db\EntityManagerFactory;
 // widening applies the same way through Reflection), confirmed live.
 function unconnectedConfigService(): ConfigService
 {
-    $connection = \Doctrine\DBAL\DriverManager::getConnection([
+    $connection = DriverManager::getConnection([
         'driver' => 'mysqli',
         'user' => '',
         'password' => '',
@@ -49,7 +51,7 @@ function unconnectedConfigService(): ConfigService
     ]);
     $repo = EntityManagerFactory::build($connection)->getRepository(ConfigEntry::class);
 
-    return new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current());
+    return new ConfigService($repo, new EventDispatcher(), CurrentConfig::current());
 }
 
 beforeEach(function (): void {

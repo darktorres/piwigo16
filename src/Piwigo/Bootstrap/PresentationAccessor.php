@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use LogicException;
 use Piwigo\Core\Kernel;
 use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailService;
@@ -37,7 +38,7 @@ final class PresentationAccessor
     {
         $service = Kernel::container()->get(HtmlService::class);
         if (! $service instanceof HtmlService) {
-            throw new \LogicException('Container returned an unexpected type for ' . HtmlService::class);
+            throw new LogicException('Container returned an unexpected type for ' . HtmlService::class);
         }
         return $service;
     }
@@ -46,7 +47,7 @@ final class PresentationAccessor
     {
         $service = Kernel::container()->get(MailService::class);
         if (! $service instanceof MailService) {
-            throw new \LogicException('Container returned an unexpected type for ' . MailService::class);
+            throw new LogicException('Container returned an unexpected type for ' . MailService::class);
         }
         return $service;
     }
@@ -55,7 +56,7 @@ final class PresentationAccessor
     {
         $service = Kernel::container()->get(UrlService::class);
         if (! $service instanceof UrlService) {
-            throw new \LogicException('Container returned an unexpected type for ' . UrlService::class);
+            throw new LogicException('Container returned an unexpected type for ' . UrlService::class);
         }
         return $service;
     }
@@ -64,7 +65,7 @@ final class PresentationAccessor
     {
         $service = Kernel::container()->get(NotificationByMailSender::class);
         if (! $service instanceof NotificationByMailSender) {
-            throw new \LogicException('Container returned an unexpected type for ' . NotificationByMailSender::class);
+            throw new LogicException('Container returned an unexpected type for ' . NotificationByMailSender::class);
         }
         return $service;
     }
@@ -73,7 +74,7 @@ final class PresentationAccessor
     {
         $service = Kernel::container()->get(PictureRateRenderer::class);
         if (! $service instanceof PictureRateRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . PictureRateRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . PictureRateRenderer::class);
         }
         return $service;
     }

@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Lang\Translator;
+use Piwigo\Common\ValueObject\UserId;
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Calendar\CalendarService;
 use Piwigo\Category\CategoryRepository;
@@ -12,7 +18,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Users\CurrentUser;
@@ -46,19 +51,19 @@ function makeCalendarService(): CalendarService
     $conn = DbConnection::build();
     $filterState = Kernel::container()->get(FilterState::class);
     if (! $filterState instanceof FilterState) {
-        throw new \LogicException('Container returned an unexpected type for ' . FilterState::class);
+        throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
     }
     $permissionService = new PermissionService(
-        new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
-        \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-        new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\Config\CurrentConfig::current()),
-        \Piwigo\Users\CurrentUser::current(),
+        new PermissionRepository(EntityManagerFactory::build($conn)),
+        EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+        new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()),
+        CurrentUser::current(),
         $filterState,
     );
 
     return new CalendarService(
         $permissionService,
-        new CategoryService(Lang::current(), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\Config\CurrentConfig::current()), $permissionService, \Piwigo\Config\CurrentConfig::current(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Lang\Translator::get()),
+        new CategoryService(Lang::current(), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()), $permissionService, CurrentConfig::current(), new EventDispatcher(), Translator::get()),
     );
 }
 
@@ -74,7 +79,7 @@ function seedCalendarFilterState(bool $enabled, string $visibleCategories = '', 
 {
     $filterState = Kernel::container()->get(FilterState::class);
     if (! $filterState instanceof FilterState) {
-        throw new \LogicException('Container returned an unexpected type for ' . FilterState::class);
+        throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
     }
 
     $filterState->set($enabled, $visibleCategories, $visibleImages);
@@ -91,7 +96,7 @@ beforeEach(function (): void {
     // beforeEach()'s Kernel::boot(Paths::fromRoot(...)) call.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     CurrentUser::current()->set(new User(
-        id: \Piwigo\Common\ValueObject\UserId::from(1),
+        id: UserId::from(1),
         username: '',
         email: '',
         language: '',
@@ -179,7 +184,7 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
     // here (see PermissionService::getSqlConditionFandF()'s own
     // visible_images/forbidden_images fallthrough case).
     CurrentUser::current()->set(new User(
-        id: \Piwigo\Common\ValueObject\UserId::from(1),
+        id: UserId::from(1),
         username: '',
         email: '',
         language: '',
@@ -207,7 +212,7 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
 
 test('buildInnerSql composes forbidden/visible categories and images into the WHERE clause', function (): void {
     CurrentUser::current()->set(new User(
-        id: \Piwigo\Common\ValueObject\UserId::from(1),
+        id: UserId::from(1),
         username: '',
         email: '',
         language: '',

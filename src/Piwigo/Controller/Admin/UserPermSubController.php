@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\UserPermPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -21,7 +22,7 @@ final class UserPermSubController implements AdminSubControllerInterface
         private readonly UserPermPageRenderer $userPermPageRenderer,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $this->userPermPageRenderer

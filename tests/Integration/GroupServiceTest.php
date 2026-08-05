@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Group\GroupEntity;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Users\CurrentUser;
+use InvalidArgumentException;
 use Doctrine\DBAL\Connection;
-use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Audit\AuditLogEntity;
-use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
@@ -56,7 +62,7 @@ final class GroupServiceTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -68,30 +74,30 @@ final class GroupServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class);
+        $this->repo = EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class);
         $auditRepo = EntityManagerFactory::build()->getRepository(AuditLogEntity::class);
-        $this->configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current());
-        $this->service = new GroupService($this->repo, new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new AuditService($auditRepo), $this->configService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), CurrentConfig::current());
+        $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
+        $this->service = new GroupService($this->repo, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), new AuditService($auditRepo), $this->configService, new EventDispatcher(), CurrentUser::current(), CurrentConfig::current());
 
         // Only addAccess()/duplicate()/merge() need this (see class docblock)
         // -- PermissionCacheInvalidator::invalidate() -> CurrentConfigService::current()->get()
         // would otherwise throw "not initialised" the moment any of their
         // real success paths run.
-        CurrentConfigService::current()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
+        CurrentConfigService::current()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new EventDispatcher(), CurrentConfig::current()));
     }
 
     public function test_create_rejects_an_already_used_name(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('This name is already used by another group.');
 
         $this->service->create('Editors', false);
@@ -99,7 +105,7 @@ final class GroupServiceTest extends IntegrationTestCase
 
     public function test_create_rejects_an_empty_name(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Name field must not be empty');
 
         $this->service->create('   ', false);
@@ -107,7 +113,7 @@ final class GroupServiceTest extends IntegrationTestCase
 
     public function test_duplicate_rejects_an_already_used_copy_name(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('This name is already used by another group.');
 
         $this->service->duplicate(GroupId::from(1), 'Editors');
@@ -115,7 +121,7 @@ final class GroupServiceTest extends IntegrationTestCase
 
     public function test_duplicate_rejects_a_missing_source_group(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('This group does not exist.');
 
         $this->service->duplicate(GroupId::from(999999), 'p18-test-' . bin2hex(random_bytes(4)));
@@ -123,7 +129,7 @@ final class GroupServiceTest extends IntegrationTestCase
 
     public function test_update_rejects_an_empty_name(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Name field must not be empty');
 
         $this->service->update(GroupId::from(1), ['name' => '   ']);
@@ -131,7 +137,7 @@ final class GroupServiceTest extends IntegrationTestCase
 
     public function test_update_rejects_a_missing_group(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('This group does not exist.');
 
         $this->service->update(GroupId::from(999999), ['name' => 'Anything']);
@@ -139,7 +145,7 @@ final class GroupServiceTest extends IntegrationTestCase
 
     public function test_update_rejects_an_already_used_name(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('This name is already used by another group.');
 
         $this->service->update(GroupId::from(1), ['name' => 'Reviewers']);

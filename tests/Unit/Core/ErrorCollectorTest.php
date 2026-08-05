@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ErrorCollector;
 
 /**
@@ -33,7 +36,7 @@ function seedCollected(ErrorCollector $errorCollector, array $entries): void
 test('reset actually clears isActive back to false, not leaving it true', function (): void {
     // install() is deliberately never called in this file (see the top
     // docblock), so isActive is set directly via reflection instead.
-    $errorCollector = new ErrorCollector(new \Piwigo\Config\DeploymentPolicy());
+    $errorCollector = new ErrorCollector(new DeploymentPolicy());
     $prop = new ReflectionProperty(ErrorCollector::class, 'active');
     $prop->setValue($errorCollector, true);
     expect($errorCollector->isActive())->toBeTrue();
@@ -44,18 +47,18 @@ test('reset actually clears isActive back to false, not leaving it true', functi
 });
 
 test('drain returns an empty array when nothing was collected', function (): void {
-    expect(new ErrorCollector(new \Piwigo\Config\DeploymentPolicy())->drain())->toBe([]);
+    expect(new ErrorCollector(new DeploymentPolicy())->drain())->toBe([]);
 });
 
 test('drain returns exactly what was collected', function (): void {
-    $errorCollector = new ErrorCollector(new \Piwigo\Config\DeploymentPolicy());
+    $errorCollector = new ErrorCollector(new DeploymentPolicy());
     seedCollected($errorCollector, ['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2']);
 
     expect($errorCollector->drain())->toBe(['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2']);
 });
 
 test('drain clears the buffer, unlike collected()', function (): void {
-    $errorCollector = new ErrorCollector(new \Piwigo\Config\DeploymentPolicy());
+    $errorCollector = new ErrorCollector(new DeploymentPolicy());
     seedCollected($errorCollector, ['[WARNING] foo in bar.php:1']);
 
     $errorCollector->drain();
@@ -64,7 +67,7 @@ test('drain clears the buffer, unlike collected()', function (): void {
 });
 
 test('a second drain after a first returns empty', function (): void {
-    $errorCollector = new ErrorCollector(new \Piwigo\Config\DeploymentPolicy());
+    $errorCollector = new ErrorCollector(new DeploymentPolicy());
     seedCollected($errorCollector, ['[WARNING] foo in bar.php:1']);
 
     $errorCollector->drain();
@@ -100,7 +103,7 @@ test('writeTestErrorsLog is a no-op when test mode is not active, never touching
     // testModeIsActive() guard were ever removed, the very next line
     // (CurrentPaths::get()->logs) would throw LogicException instead of
     // silently returning -- that would-be exception is the real assertion.
-    \Piwigo\Core\Kernel::reset();
+    Kernel::reset();
     $original = $_SERVER['HTTP_X_PIWIGO_ENV'] ?? null;
     unset($_SERVER['HTTP_X_PIWIGO_ENV']);
 
@@ -126,7 +129,7 @@ test('writeTestErrorsLog creates _data/logs/ when it does not exist yet, instead
     mkdir($root);
 
     try {
-        \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot($root));
+        Kernel::boot(Paths::fromRoot($root));
 
         $method = new ReflectionMethod(ErrorCollector::class, 'writeTestErrorsLog');
         // @ suppression alone doesn't stop PHPUnit's own ErrorHandler from
@@ -149,7 +152,7 @@ test('writeTestErrorsLog creates _data/logs/ when it does not exist yet, instead
             // ConcatSwitchSides (would reorder to "\n" . $entry).
             ->and(file_get_contents($logPath))->toBe("[WARNING] irrelevant in file.php:1\n");
     } finally {
-        \Piwigo\Core\Kernel::reset();
+        Kernel::reset();
         exec('rm -rf ' . escapeshellarg($root));
     }
 });
@@ -164,7 +167,7 @@ test('writeTestErrorsLog appends the entry directly when _data/logs/ already exi
     mkdir($root . '_data/logs', 0o777, true);
 
     try {
-        \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot($root));
+        Kernel::boot(Paths::fromRoot($root));
 
         $method = new ReflectionMethod(ErrorCollector::class, 'writeTestErrorsLog');
         $method->invoke(null, '[WARNING] first in file.php:1');
@@ -173,7 +176,7 @@ test('writeTestErrorsLog appends the entry directly when _data/logs/ already exi
         $logPath = $root . '_data/logs/test_errors.log';
         expect(file_get_contents($logPath))->toBe("[WARNING] first in file.php:1\n[NOTICE] second in file.php:2\n");
     } finally {
-        \Piwigo\Core\Kernel::reset();
+        Kernel::reset();
         exec('rm -rf ' . escapeshellarg($root));
     }
 });
@@ -331,7 +334,7 @@ test('flush records a synthetic entry for a genuine E_PARSE fatal (malformed req
 });
 
 test('flush returns immediately when nothing was collected', function (): void {
-    $errorCollector = new ErrorCollector(new \Piwigo\Config\DeploymentPolicy());
+    $errorCollector = new ErrorCollector(new DeploymentPolicy());
     seedCollected($errorCollector, []);
 
     $method = new ReflectionMethod(ErrorCollector::class, 'flush');
@@ -502,7 +505,7 @@ test('label falls back to the PHP code for a type matching none of the known cat
  * dead for the identical reason -- not chased further.
  */
 test('flush leaves a non-empty buffer untouched when headers are already sent', function (): void {
-    $errorCollector = new ErrorCollector(new \Piwigo\Config\DeploymentPolicy());
+    $errorCollector = new ErrorCollector(new DeploymentPolicy());
     $seeded = ['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2'];
     seedCollected($errorCollector, $seeded);
 

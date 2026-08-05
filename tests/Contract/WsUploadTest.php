@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use CURLFile;
+use Piwigo\Cache\CachePools;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -17,7 +20,7 @@ final class WsUploadTest extends ContractTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -25,7 +28,7 @@ final class WsUploadTest extends ContractTestCase
         $this->loginAsAdmin();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         if ($this->uploadedImageId !== null) {
@@ -71,7 +74,7 @@ final class WsUploadTest extends ContractTestCase
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
             curl_setopt($ch, CURLOPT_POSTFIELDS, array_merge(
-                ['method' => 'pwg.images.upload', 'file' => new \CURLFile($tmpFile, 'image/png', 'upload.png')],
+                ['method' => 'pwg.images.upload', 'file' => new CURLFile($tmpFile, 'image/png', 'upload.png')],
                 $fields
             ));
             curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
@@ -115,7 +118,7 @@ final class WsUploadTest extends ContractTestCase
                 'method'   => 'pwg.images.addSimple',
                 'category' => 1,
                 'name'     => 'Contract Test Upload ' . uniqid(),
-                'image'    => new \CURLFile($tmpFile, 'image/png', 'ct_upload.png'),
+                'image'    => new CURLFile($tmpFile, 'image/png', 'ct_upload.png'),
             ]);
             curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
             curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
@@ -166,7 +169,7 @@ final class WsUploadTest extends ContractTestCase
             self::assertNotFalse($tmpName);
             $tmpFile = $tmpName . '.png';
             file_put_contents($tmpFile, $fileContents ?? $this->pngBytes());
-            $postFields['image'] = new \CURLFile($tmpFile, 'image/png', 'addsimple.png');
+            $postFields['image'] = new CURLFile($tmpFile, 'image/png', 'addsimple.png');
         }
         $postFields['method'] = 'pwg.images.addSimple';
 
@@ -354,7 +357,7 @@ final class WsUploadTest extends ContractTestCase
             curl_setopt($ch, CURLOPT_POSTFIELDS, [
                 'method' => 'pwg.images.addSimple',
                 'category' => 1,
-                'image[]' => new \CURLFile($tmpFile, 'image/png', 'arraystyle.png'),
+                'image[]' => new CURLFile($tmpFile, 'image/png', 'arraystyle.png'),
             ]);
             curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
             curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
@@ -513,7 +516,7 @@ final class WsUploadTest extends ContractTestCase
                     // Deliberately NOT named 'file' -- $_FILES is non-empty
                     // but $_FILES['file'] doesn't exist, the exact
                     // condition the former die() guarded.
-                    'wrongfield' => new \CURLFile($tmpName, 'image/png', 'wrong-field.png'),
+                    'wrongfield' => new CURLFile($tmpName, 'image/png', 'wrong-field.png'),
                 ]);
                 curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
                 curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
@@ -635,7 +638,7 @@ final class WsUploadTest extends ContractTestCase
         $originalLoungeThreshold = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'lounge_activate_threshold'");
         $this->upsertConfig('lounge_active', 'false');
         $this->upsertConfig('lounge_activate_threshold', '999999999');
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         // update_mode's 'name' param is matched against the stored `file`
         // column (confirmed live: UploadService::addUploadedFile() does
@@ -682,7 +685,7 @@ final class WsUploadTest extends ContractTestCase
             } else {
                 $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'lounge_activate_threshold'");
             }
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
 
         self::assertSame('ok', $response['stat'], (string) json_encode($response));
@@ -711,7 +714,7 @@ final class WsUploadTest extends ContractTestCase
     public function test_upload_format_of_with_an_unauthorized_extension_returns_error(): void
     {
         $this->upsertConfig('enable_formats', 'true');
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         try {
             // CurrentConfig::formatExtensions()'s default doesn't include
@@ -727,14 +730,14 @@ final class WsUploadTest extends ContractTestCase
             self::assertSame(401, $response['err']);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'enable_formats'");
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 
     public function test_upload_format_of_adds_a_format_to_an_existing_photo(): void
     {
         $this->upsertConfig('enable_formats', 'true');
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         $formatId = null;
         try {
@@ -767,7 +770,7 @@ final class WsUploadTest extends ContractTestCase
                 ]);
             }
             $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'enable_formats'");
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 }

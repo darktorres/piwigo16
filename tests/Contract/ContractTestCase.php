@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use JsonSchema\Validator;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 
@@ -33,7 +36,7 @@ abstract class ContractTestCase extends IntegrationTestCase
 
     private string $cookieJar = '';
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         $this->setUpConnectionFromEnv();
@@ -51,7 +54,7 @@ abstract class ContractTestCase extends IntegrationTestCase
         $this->cookieJar = $tmp;
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         if ($this->cookieJar !== '' && file_exists($this->cookieJar)) {
@@ -261,12 +264,12 @@ abstract class ContractTestCase extends IntegrationTestCase
      */
     protected function upsertConfig(string $param, string $value): void
     {
-        $conn = \Piwigo\Db\DbConnection::build();
+        $conn = DbConnection::build();
         $onConflict = $this->dbDriver === 'pgsql'
             ? 'ON CONFLICT (param) DO UPDATE SET value = EXCLUDED.value'
             : 'ON DUPLICATE KEY UPDATE value = VALUES(value)';
         $conn->executeStatement(
-            'INSERT INTO ' . \Piwigo\Db\Tables::config() . " (param, value) VALUES (?, ?) {$onConflict}",
+            'INSERT INTO ' . Tables::config() . " (param, value) VALUES (?, ?) {$onConflict}",
             [$param, $value]
         );
     }

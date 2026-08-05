@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use RuntimeException;
+
 /**
  * Read-only feature-flag checks, backed by config/feature-flags.php.
  *
@@ -28,7 +30,7 @@ final class FeatureFlag
     {
         $flags = require $configPath ?? dirname(__DIR__, 3) . '/config/feature-flags.php';
         if (! is_array($flags)) {
-            throw new \RuntimeException('config/feature-flags.php must return an array of flag => bool.');
+            throw new RuntimeException('config/feature-flags.php must return an array of flag => bool.');
         }
 
         return ($flags[$flag] ?? false) === true;

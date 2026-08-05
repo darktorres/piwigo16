@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Bootstrap\RequestBootstrap;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -23,7 +25,7 @@ use Piwigo\Http\ResponseEmitter;
 
 // ----------------------------------------------------------- include
 $paths = Paths::fromRoot(dirname(__DIR__));
-\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths, isWs: true);
+RequestBootstrap::bootEntryPoint($paths, isWs: true);
 
 $response = RequestPipeline::handle(RequestFactory::fromGlobals());
 new ResponseEmitter()

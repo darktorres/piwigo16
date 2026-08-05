@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Gettext\Translation;
+
 // Verifies parity between .lang.php and .po files for every locale: every
 // string key present in the PHP source must also be present in the
 // generated PO file. Exits 0 on success, 1 on failure.
@@ -22,7 +24,7 @@ function read_po_keys(string $poFile): array
         ->loadFile($poFile);
     $keys = [];
     foreach ($translations->getTranslations() as $t) {
-        /** @var \Gettext\Translation $t Translations::getTranslations() has no generic @return annotation */
+        /** @var Translation $t Translations::getTranslations() has no generic @return annotation */
         $orig = $t->getOriginal();
         if ($orig !== '') {
             $keys[$orig] = true;

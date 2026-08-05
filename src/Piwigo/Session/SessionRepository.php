@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Session;
 
+use DateTimeImmutable;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Core\Env;
 
@@ -30,7 +31,7 @@ final class SessionRepository extends EntityRepository
         // reads the real system clock -- invisible to Env::now()'s
         // PIWIGO_TEST_NOW freeze, so every login during a fixture
         // regeneration wrote a fresh, non-reproducible expiration.
-        $expiration = \DateTimeImmutable::createFromInterface(Env::now());
+        $expiration = DateTimeImmutable::createFromInterface(Env::now());
 
         $em = $this->getEntityManager();
         $entity = $this->find($compositeId);
@@ -77,7 +78,7 @@ final class SessionRepository extends EntityRepository
      */
     public function gc(int $sessionLength): int
     {
-        $cutoff = \DateTimeImmutable::createFromInterface(Env::now())
+        $cutoff = DateTimeImmutable::createFromInterface(Env::now())
             ->modify('-' . $sessionLength . ' seconds');
 
         $em = $this->getEntityManager();

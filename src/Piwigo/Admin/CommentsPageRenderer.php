@@ -8,7 +8,9 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Template\Template;
+use Piwigo\Csrf\CsrfService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 
 /**
  * Ported from admin/comments.php (page slug "comments") -- pure page/
@@ -17,7 +19,7 @@ use Piwigo\Template\Template;
  */
 final class CommentsPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, EventDispatcher $eventDispatcher): void
     {
         $template = $currentTemplate->get();
 
@@ -30,7 +32,7 @@ final class CommentsPageRenderer
         $template->assign(
             [
                 'F_ACTION' => $urlService->getRootUrl() . 'admin.php?page=comments',
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
             ]
         );

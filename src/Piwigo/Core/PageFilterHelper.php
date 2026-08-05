@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Config\CurrentConfig;
+
 /**
  * P23 batch 8d: current-script/page-filter helpers relocated from
  * include/functions.inc.php -- no natural existing class home, stateless.
@@ -26,7 +28,7 @@ final class PageFilterHelper
                 // that guarantee (confirmed by the Integration test stub
                 // this method's real callers used to route through, before
                 // P23 batch 8d retargeted them here directly).
-                if (\Piwigo\Config\CurrentConfig::current()->phpExtensionInUrls() && StringHelper::getExtension($filename) !== 'php') {
+                if (CurrentConfig::current()->phpExtensionInUrls() && StringHelper::getExtension($filename) !== 'php') {
                     continue;
                 }
                 $basename = basename($filename, '.php');
@@ -46,7 +48,7 @@ final class PageFilterHelper
 
         $page_name = self::scriptBasename();
 
-        $filter_pages = \Piwigo\Config\CurrentConfig::current()->filterPages();
+        $filter_pages = CurrentConfig::current()->filterPages();
 
         $page_filters = $filter_pages[$page_name] ?? null;
         if (isset($page_filters[$valueName])) {

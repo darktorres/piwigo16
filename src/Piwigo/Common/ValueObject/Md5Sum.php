@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Common\ValueObject;
 
+use InvalidArgumentException;
+use Override;
+
 /**
  * 32-character lowercase hexadecimal MD5 digest.
  *
@@ -20,18 +23,18 @@ final readonly class Md5Sum implements StringVo
     ) {}
 
     /**
-     * @throws \InvalidArgumentException when $value is not 32 chars of lowercase hex.
+     * @throws InvalidArgumentException when $value is not 32 chars of lowercase hex.
      */
-    #[\Override]
+    #[Override]
     public static function from(string $value): self
     {
         if (preg_match(self::PATTERN, $value) !== 1) {
-            throw new \InvalidArgumentException("Md5Sum must be 32 lowercase hex characters, got '{$value}'");
+            throw new InvalidArgumentException("Md5Sum must be 32 lowercase hex characters, got '{$value}'");
         }
         return new self($value);
     }
 
-    #[\Override]
+    #[Override]
     public static function tryFrom(mixed $value): ?self
     {
         if (! is_string($value)) {
@@ -39,18 +42,18 @@ final readonly class Md5Sum implements StringVo
         }
         try {
             return self::from($value);
-        } catch (\InvalidArgumentException) {
+        } catch (InvalidArgumentException) {
             return null;
         }
     }
 
-    #[\Override]
+    #[Override]
     public function equals(StringVo $other): bool
     {
         return $other instanceof self && $other->value === $this->value;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return $this->value;

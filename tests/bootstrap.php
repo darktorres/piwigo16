@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Env;
+
 require __DIR__ . '/../vendor/autoload.php';
 
 // Every test-suite process runs in test mode: PHP_SAPI is 'cli' here, so
@@ -10,4 +12,4 @@ require __DIR__ . '/../vendor/autoload.php';
 // helper that reads getenv(PIWIGO_*)) read .env.test, never production .env.
 $_SERVER['HTTP_X_PIWIGO_ENV'] = 'test';
 
-\Piwigo\Core\Env::loadEnvFile(dirname(__DIR__));
+Env::loadEnvFile(dirname(__DIR__));

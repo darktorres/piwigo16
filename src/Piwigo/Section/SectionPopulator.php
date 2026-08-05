@@ -6,23 +6,37 @@ namespace Piwigo\Section;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Cache\CachePools;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\TagId;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageFilterHelper;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\RequestMountDepth;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Location\LocEndSectionInit;
 use Piwigo\Event\Template\RenderCategoryDescription;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchService;
+use Piwigo\Section\Request\FavoritesActionRequest;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
+use Psr\Cache\CacheItemInterface;
 
 /**
  * Ported from include/section_init.inc.php's own remaining body -- the
@@ -71,17 +85,17 @@ final readonly class SectionPopulator
         private UserService $userService,
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
-        private \Piwigo\Core\FilterState $filterState,
-        private \Piwigo\Core\CurrentLogger $currentLogger,
+        private FilterState $filterState,
+        private CurrentLogger $currentLogger,
         private SectionContextRegistry $sectionContextRegistry,
-        private \Piwigo\Core\RequestMountDepth $requestMountDepth,
+        private RequestMountDepth $requestMountDepth,
         private SessionService $sessionService,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private \Piwigo\Core\PageState $pageState,
-        private \Piwigo\Users\CurrentUser $currentUser,
-        private \Piwigo\Config\CurrentConfig $currentConfig,
-        private \Piwigo\Lang\Translator $translator,
-        private \Piwigo\Image\ImageStdParams $imageStdParams,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentConfig $currentConfig,
+        private Translator $translator,
+        private ImageStdParams $imageStdParams,
     ) {}
 
     public function populate(): void
@@ -137,7 +151,7 @@ final readonly class SectionPopulator
         if (! isset($page['section'])) {
             $page['section'] = 'categories';
 
-            switch (\Piwigo\Core\PageFilterHelper::scriptBasename()) {
+            switch (PageFilterHelper::scriptBasename()) {
                 case 'picture':
                     break;
                 case 'index':
@@ -164,7 +178,7 @@ final readonly class SectionPopulator
 
                 default:
                     trigger_error(
-                        'script_basename "' . \Piwigo\Core\PageFilterHelper::scriptBasename() . '" unknown',
+                        'script_basename "' . PageFilterHelper::scriptBasename() . '" unknown',
                         E_USER_WARNING
                     );
             }
@@ -182,7 +196,7 @@ final readonly class SectionPopulator
         $section = is_string($page['section']) ? $page['section'] : '';
 
         // access a picture only by id, file or id-file without given section
-        if (\Piwigo\Core\PageFilterHelper::scriptBasename() === 'picture' and $section === 'categories' and
+        if (PageFilterHelper::scriptBasename() === 'picture' and $section === 'categories' and
               ! isset($page['category']) and ! isset($page['chronology_field'])) {
             $page['flat'] = true;
         }
@@ -370,7 +384,7 @@ final readonly class SectionPopulator
                     } else {
                         $user = $this->currentUser->get();
                         $user_id_for_cache = $user->id->value;
-                        $cache_item = \Piwigo\Cache\CachePools::sectionImageIds()
+                        $cache_item = CachePools::sectionImageIds()
                             ->getItem('all_iids_' . $user_id_for_cache . '_' . md5($order_by));
                         unset($page['is_homepage']);
                         $where_sql = '1=1';
@@ -409,9 +423,9 @@ final readonly class SectionPopulator
                     // and `image_id` are equal per the JOIN condition.
                     $page['items'] = $this->repo->findSectionImageIds($where_sql, $forbidden, $order_by, array_merge($where_params, $forbidden_params), array_merge($where_types, $forbidden_types));
 
-                    if ($cache_item instanceof \Psr\Cache\CacheItemInterface) {
+                    if ($cache_item instanceof CacheItemInterface) {
                         $cache_item->set($page['items']);
-                        \Piwigo\Cache\CachePools::sectionImageIds()->save($cache_item);
+                        CachePools::sectionImageIds()->save($cache_item);
                     }
                 }
             }
@@ -515,7 +529,7 @@ final readonly class SectionPopulator
 
                 $current_user_id = $this->currentUser->get()
                     ->id;
-                if (Request\FavoritesActionRequest::fromGlobals()->removeAllFromFavorites) {
+                if (FavoritesActionRequest::fromGlobals()->removeAllFromFavorites) {
                     $this->userService->removeAllFavorites($current_user_id);
                     $this->redirectService->redirect($this->urlService->makeIndexUrl([
                         'section' => 'favorites',
@@ -730,7 +744,7 @@ final readonly class SectionPopulator
             $category_url_style = $this->currentConfig->categoryUrlStyle();
             $category_permalink = is_string($page_category['permalink'] ?? null) ? $page_category['permalink'] : null;
             $category_name = $page_category['name'];
-            $expected_cat_url_name = \Piwigo\Core\StringHelper::str2url($category_name);
+            $expected_cat_url_name = StringHelper::str2url($category_name);
 
             if (self::needsPermalinkRedirect($category_permalink, $category_url_style, $hit_by_cat_url_name, $hit_by_cat_permalink, $expected_cat_url_name)) {
                 $this->categoryService->checkRestrictions($page_category['id'], $this->htmlRenderer, $this->redirectService, $this->currentUser);
@@ -745,7 +759,7 @@ final readonly class SectionPopulator
                 // safe; the later, fully-populated call for the normal
                 // (non-redirect) path simply overwrites it afterward.
                 $this->sectionContextRegistry->set(self::buildSectionContext($page));
-                $redirect_url = \Piwigo\Core\PageFilterHelper::scriptBasename() === 'picture' ? $this->urlService->duplicatePictureUrl() : $this->urlService->duplicateIndexUrl();
+                $redirect_url = PageFilterHelper::scriptBasename() === 'picture' ? $this->urlService->duplicatePictureUrl() : $this->urlService->duplicateIndexUrl();
 
                 if (! headers_sent()) { // this is a permanent redirection
                     $this->htmlRenderer->setStatusHeader(301);

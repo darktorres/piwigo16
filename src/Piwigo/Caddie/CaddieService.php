@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Caddie;
 
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Users\CurrentUser;
 
 /**
  * P23 batch 8d: relocated from include/functions.inc.php's fill_caddie(),
@@ -20,12 +22,12 @@ final class CaddieService
      *
      * @param array<int, int> $elementsId
      */
-    public static function fillCurrentUserCaddie(array $elementsId, \Piwigo\Users\CurrentUser $currentUser): void
+    public static function fillCurrentUserCaddie(array $elementsId, CurrentUser $currentUser): void
     {
         $userId = $currentUser->get()
             ->id->value;
 
-        \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(CaddieEntity::class)
+        EntityManagerFactory::build(DbConnection::build())->getRepository(CaddieEntity::class)
             ->addElements($userId, $elementsId);
     }
 }

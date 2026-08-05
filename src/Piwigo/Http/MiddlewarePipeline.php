@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Http;
 
+use Override;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -23,7 +24,7 @@ final readonly class MiddlewarePipeline implements RequestHandlerInterface
         private RequestHandlerInterface $fallback,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         if ($this->middleware === []) {

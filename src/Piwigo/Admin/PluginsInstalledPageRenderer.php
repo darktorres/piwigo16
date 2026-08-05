@@ -9,13 +9,23 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Request\PluginsInstalledDisplayRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Bootstrap\RequestBootstrap;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Admin\GetAdminPluginMenuLinks;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PreferencesService;
 
 /**
  * Ported from admin/plugins_installed.php (the "installed" tab of the
@@ -51,7 +61,7 @@ final class PluginsInstalledPageRenderer
      * slug statically (it's the only class registered for the 'plugins'
      * slug in config/admin_pages.php).
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Users\PreferencesService $preferencesService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Users\CurrentUser $currentUser): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CurrentLogger $currentLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, PreferencesService $preferencesService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CurrentUser $currentUser): void
     {
         $template = $currentTemplate->get();
 
@@ -59,7 +69,7 @@ final class PluginsInstalledPageRenderer
             'plugins' => 'plugins_installed.tpl',
         ]);
 
-        $pluginsDisplay = Request\PluginsInstalledDisplayRequest::fromGlobals();
+        $pluginsDisplay = PluginsInstalledDisplayRequest::fromGlobals();
 
         // should we display details on plugins?
         if ($pluginsDisplay->showDetails !== null) {
@@ -73,11 +83,11 @@ final class PluginsInstalledPageRenderer
         }
 
         $base_url = $urlService->getRootUrl() . 'admin.php?page=' . $pageSlug;
-        $pwg_token = new \Piwigo\Csrf\CsrfService()
+        $pwg_token = new CsrfService()
             ->getToken();
 
         $conn = DbConnection::build();
-        $extension_repository = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
+        $extension_repository = new ExtensionRepository(EntityManagerFactory::build($conn));
         $pem_catalog = new PemCatalog(new ZipExtractor(), $currentLogger, $currentUser);
         // ExtensionScanner::scan()'s own declared return type is a generic
         // array<string, array<string, mixed>> dispatch shape by design (see
@@ -183,7 +193,7 @@ final class PluginsInstalledPageRenderer
                 'https://piwigo.org/ext',
             ];
             $fs_plugin_uri = is_string($fs_plugin['uri'] ?? null) ? $fs_plugin['uri'] : '';
-            $pem_url = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
+            $pem_url = RequestBootstrap::pemUrl();
             $visit_url = str_replace($url_to_replace, $pem_url, $fs_plugin_uri);
 
             $tpl_plugin = [

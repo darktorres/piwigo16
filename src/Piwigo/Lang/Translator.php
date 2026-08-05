@@ -8,7 +8,10 @@ use Gettext\Loader\PoLoader;
 use Gettext\Translation;
 use Gettext\Translations;
 use Gettext\Translator as GettextTranslator;
+use LogicException;
 use Piwigo\Cache\CachePools;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 
 /**
  * Piwigo translation service backed by gettext PO files.
@@ -60,7 +63,7 @@ final class Translator
     private array $mirror = [];
 
     public function __construct(
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentConfig $currentConfig,
     ) {
         $this->inner = new GettextTranslator();
     }
@@ -96,16 +99,16 @@ final class Translator
      */
     public static function get(): self
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $translator = \Piwigo\Core\Kernel::container()->get(self::class);
+        if (Kernel::isBooted()) {
+            $translator = Kernel::container()->get(self::class);
             if (! $translator instanceof self) {
-                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+                throw new LogicException('Container returned an unexpected type for ' . self::class);
             }
 
             return $translator;
         }
 
-        return self::$fallback ??= new self(new \Piwigo\Config\CurrentConfig());
+        return self::$fallback ??= new self(new CurrentConfig());
     }
 
     /**

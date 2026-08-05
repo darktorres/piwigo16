@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use Piwigo\Cache\CachePools;
+use CURLFile;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -47,7 +50,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -55,11 +58,11 @@ final class WsImagesUploadStartTest extends ContractTestCase
         $this->loginAsAdmin();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'enable_formats'");
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
         parent::tearDown();
     }
 
@@ -84,7 +87,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
     private function enableFormats(): void
     {
         $this->upsertConfig('enable_formats', 'true');
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
     }
 
     // ------------------------------------------------ buffer directory setup
@@ -151,7 +154,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
                 'method' => 'pwg.images.upload',
                 'pwg_token' => $this->pwgToken(),
                 'category' => 1,
-                'file[]' => new \CURLFile($tmpFile, 'image/png', 'array-style.png'),
+                'file[]' => new CURLFile($tmpFile, 'image/png', 'array-style.png'),
             ]);
             curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
             curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
@@ -207,7 +210,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
                 'method' => 'pwg.images.upload',
                 'pwg_token' => $this->pwgToken(),
                 'category' => 1,
-                'wrongfield' => new \CURLFile($tmpName, 'image/png', 'wrong-field.png'),
+                'wrongfield' => new CURLFile($tmpName, 'image/png', 'wrong-field.png'),
             ]);
             curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
             curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
@@ -335,7 +338,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
                     'category' => 1,
                     'name' => $filename,
                     'update_mode' => 'true',
-                    'file' => new \CURLFile($tmpFile, 'image/png', 'replacement.png'),
+                    'file' => new CURLFile($tmpFile, 'image/png', 'replacement.png'),
                 ]);
                 curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
                 curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);

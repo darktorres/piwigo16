@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\DbCredentials;
 
 // DBAL connections are lazy -- no socket opens until a query runs, so this
 // stays Unit-tier even though it exercises DbConnection::build() for real.

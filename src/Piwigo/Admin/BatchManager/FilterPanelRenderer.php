@@ -4,10 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\BatchManager;
 
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Admin\GetBatchManagerPrefilters;
+use Piwigo\Html\HtmlService;
+use Piwigo\Image\ImageEntity;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 
 /**
@@ -52,11 +60,11 @@ final class FilterPanelRenderer
         array $catElementsId,
         int $pageStart,
         UrlServiceInterface $urlService,
-        \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        \Piwigo\Core\PageState $pageState,
-        \Piwigo\Tag\TagService $tagService,
-        \Piwigo\Html\HtmlService $htmlService,
-        \Piwigo\Config\CurrentConfig $currentConfig,
+        EventDispatcher $eventDispatcher,
+        PageState $pageState,
+        TagService $tagService,
+        HtmlService $htmlService,
+        CurrentConfig $currentConfig,
     ): void {
         $conn = DbConnection::build();
 
@@ -124,7 +132,7 @@ final class FilterPanelRenderer
                 'selection' => $collection,
                 'all_elements' => $catElementsId,
                 'START' => $pageStart,
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
                 'U_DISPLAY' => $baseUrl . $urlService->getQueryStringDiff(['display']),
                 'F_ACTION' => $baseUrl . $urlService->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),
@@ -206,7 +214,7 @@ final class FilterPanelRenderer
             $cat_elements_id_for_sql = array_filter($catElementsId, is_scalar(...));
 
             $associated_categories = array_column(
-                \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+                EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
                     ->findVirtuallyAssociatedCategoryRows($cat_elements_id_for_sql),
                 'id',
                 'id'

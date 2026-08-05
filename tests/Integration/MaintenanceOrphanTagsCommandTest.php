@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Command\MaintenanceOrphanTagsCommand;
 use Piwigo\Config\CurrentConfig;
@@ -17,7 +22,7 @@ final class MaintenanceOrphanTagsCommandTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -29,9 +34,9 @@ final class MaintenanceOrphanTagsCommandTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -54,7 +59,7 @@ final class MaintenanceOrphanTagsCommandTest extends IntegrationTestCase
             ->executeStatement();
 
         try {
-            $command = new MaintenanceOrphanTagsCommand(new DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\Db\DbCredentials::current()));
+            $command = new MaintenanceOrphanTagsCommand(new DbMaintenanceRepository(EntityManagerFactory::build($conn), DbCredentials::current()));
             $tester = new CommandTester($command);
 
             $exitCode = $tester->execute([]);

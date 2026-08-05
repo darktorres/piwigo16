@@ -14,13 +14,17 @@ namespace Piwigo\Ws;
 use Piwigo\Comment\CommentApiCriteria;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Template\RenderCommentAuthor;
 use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\PluginConfig\EventDispatcher;
 
 /**
  * P23 batch 8e-2: relocated from include/ws_functions/pwg.comments.php.
@@ -32,9 +36,9 @@ final class PwgComments
     public function __construct(
         private readonly CommentService $commentService,
         private readonly Lang $lang,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Core\UrlServiceInterface $urlService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly CurrentConfig $currentConfig,
+        private readonly UrlServiceInterface $urlService,
+        private readonly EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -195,10 +199,10 @@ final class PwgComments
                     ->getRootUrl() . 'admin.php?page=photo-' . (is_scalar($row_image_id) ? (string) $row_image_id : ''),
                 'medium_url' => $medium,
                 'file' => $row['file'],
-                'image_date_available' => \Piwigo\Core\DateHelper::formatDate($comment_date_available, ['day_name', 'day', 'month', 'year', 'time']),
+                'image_date_available' => DateHelper::formatDate($comment_date_available, ['day_name', 'day', 'month', 'year', 'time']),
                 'author' => $authorEvent->commentAuthor,
                 'author_status' => is_numeric($row['author_id']) && $this->currentConfig->webmasterId() === (int) $row['author_id'] ? 'main_user' : $row['status'],
-                'date' => \Piwigo\Core\DateHelper::formatDate($comment_date, ['day_name', 'day', 'month', 'year', 'time']),
+                'date' => DateHelper::formatDate($comment_date, ['day_name', 'day', 'month', 'year', 'time']),
                 'content' => $contentEvent->commentContent,
                 'raw_content' => $row['content'],
                 'is_pending' => ! SqlDialect::getBoolean($row['validated']),

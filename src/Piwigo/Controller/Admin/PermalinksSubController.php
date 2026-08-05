@@ -4,15 +4,25 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryService;
+use Piwigo\Controller\Admin\Request\PermalinksRequest;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Permalink\OldPermalinkSortField;
 use Piwigo\Permalink\PermalinkRepository;
+use Piwigo\Permalink\PermalinkService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -55,15 +65,15 @@ final class PermalinksSubController implements AdminSubControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Permalink\PermalinkService $permalinkService,
-        private readonly \Piwigo\Category\CategoryService $categoryService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly PermalinkService $permalinkService,
+        private readonly CategoryService $categoryService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly InputValidator $inputValidator,
+        private readonly EventDispatcher $eventDispatcher,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $template = $this->currentTemplate->get();
@@ -71,12 +81,12 @@ final class PermalinksSubController implements AdminSubControllerInterface
         $htmlRenderer = $this->htmlRenderer;
         $conn = DbConnection::build();
 
-        $permalinksRequest = Request\PermalinksRequest::fromGlobals($this->inputValidator);
+        $permalinksRequest = PermalinksRequest::fromGlobals($this->inputValidator);
 
         $selected_cat = [];
         $post_cat_id = $permalinksRequest->catId;
         if ($permalinksRequest->isSetPermalink and $post_cat_id > 0) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($htmlRenderer, $this->redirectService);
             $permalink = $permalinksRequest->permalink;
             $permalink_service = $this->permalinkService;
@@ -87,7 +97,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
             }
             $selected_cat = [$post_cat_id];
         } elseif ($permalinksRequest->deletePermanentPresent) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($htmlRenderer, $this->redirectService);
             $this->permalinkService
                 ->deleteOldPermalinkByValue($permalinksRequest->deletePermanent);
@@ -115,7 +125,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
 
         $this->categoryService->displaySelectForPermalinks($selected_cat, 'categories', $htmlRenderer, $template);
 
-        $pwg_token = new \Piwigo\Csrf\CsrfService()
+        $pwg_token = new CsrfService()
             ->getToken();
 
         // --- generate display of active permalinks -----------------------------------
@@ -159,9 +169,9 @@ final class PermalinksSubController implements AdminSubControllerInterface
         );
 
         $url_del_base = $this->urlService->getRootUrl() . 'admin.php?page=permalinks';
-        $sortField = count($sort_by) > 0 ? \Piwigo\Permalink\OldPermalinkSortField::fromToken($sort_by[0]) : null;
+        $sortField = count($sort_by) > 0 ? OldPermalinkSortField::fromToken($sort_by[0]) : null;
         $deleted_permalinks = [];
-        foreach (new PermalinkRepository(\Piwigo\Db\EntityManagerFactory::build($conn))->findAllOrderedBy($sortField) as $permalinkRow) {
+        foreach (new PermalinkRepository(EntityManagerFactory::build($conn))->findAllOrderedBy($sortField) as $permalinkRow) {
             $row = $permalinkRow->toArray();
             $row['name'] = $htmlRenderer->getCatDisplayNameCache((string) $permalinkRow->catId);
             $row['U_DELETE'] =

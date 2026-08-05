@@ -4,21 +4,49 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Override;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Bootstrap\PageTail;
+use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Request\PasswordRequest;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocBeginPassword;
 use Piwigo\Event\Location\LocEndPassword;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Lang\LangService;
+use Piwigo\Lang\Translator;
+use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\User;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -46,26 +74,26 @@ final class PasswordController implements ControllerInterface
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\FilterState $filterState,
-        private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
+        private readonly FilterState $filterState,
+        private readonly SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly DeploymentPolicy $deploymentPolicy,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly ActivityService $activityService,
         private readonly UserService $userService,
         private readonly PasswordService $passwordService,
         private readonly AuthService $authService,
-        private readonly \Piwigo\Users\PreferencesService $preferencesService,
-        private readonly \Piwigo\Auth\ApiKeyService $apiKeyService,
-        private readonly \Piwigo\Html\HtmlService $htmlService,
-        private readonly \Piwigo\Mail\MailService $mailService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\Lang\Translator $translator,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly PreferencesService $preferencesService,
+        private readonly ApiKeyService $apiKeyService,
+        private readonly HtmlService $htmlService,
+        private readonly MailService $mailService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly Translator $translator,
+        private readonly CurrentLogger $currentLogger,
     ) {}
 
     /**
@@ -91,9 +119,9 @@ final class PasswordController implements ControllerInterface
 
     private ?string $username = null;
 
-    private Request\PasswordRequest $request;
+    private PasswordRequest $request;
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $template = $this->currentTemplate->get();
@@ -102,12 +130,12 @@ final class PasswordController implements ControllerInterface
 
         $this->eventDispatcher->dispatchNotify(new LocBeginPassword());
 
-        $this->request = Request\PasswordRequest::fromGlobals($this->inputValidator);
+        $this->request = PasswordRequest::fromGlobals($this->inputValidator);
         $action_param = $this->request->action;
 
         // ------------------------------------------------------- process form
         if ($this->request->isSubmitted) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlService, $this->redirectService);
 
             if ($action_param === 'lost') {
@@ -144,11 +172,11 @@ final class PasswordController implements ControllerInterface
             $user_id = $this->checkPasswordResetKey($key);
             if (is_int($user_id)) {
                 $conn = DbConnection::build();
-                $userdata = $this->userService->getUserData(\Piwigo\Common\ValueObject\UserId::from($user_id));
+                $userdata = $this->userService->getUserData(UserId::from($user_id));
                 $userdata_username = $userdata['username'] ?? null;
                 $this->username = is_string($userdata_username) ? $userdata_username : '';
                 $template->assign('key', $key);
-                $first_login = $this->authService->hasAlreadyLoggedIn($user_id, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class));
+                $first_login = $this->authService->hasAlreadyLoggedIn($user_id, EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class));
 
                 if ($this->action === null) {
                     $this->action = 'reset';
@@ -233,7 +261,7 @@ final class PasswordController implements ControllerInterface
                 'action' => $action,
                 'username' => $username ?? $this->currentUser->get()
                     ->username,
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
             ]
         );
@@ -250,7 +278,7 @@ final class PasswordController implements ControllerInterface
         // pages
         $cookie_lang = $_COOKIE['lang'] ?? null;
         if (is_string($cookie_lang) and $this->currentUser->get()->language !== $cookie_lang) {
-            if (! array_key_exists($cookie_lang, \Piwigo\Lang\LangService::getLanguages())) {
+            if (! array_key_exists($cookie_lang, LangService::getLanguages())) {
                 $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
@@ -262,7 +290,7 @@ final class PasswordController implements ControllerInterface
         }
 
         $language_options = [];
-        foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
+        foreach (LangService::getLanguages() as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
 
@@ -280,7 +308,7 @@ final class PasswordController implements ControllerInterface
 
         $template->assign('HELP_LINK', $help_link);
 
-        new \Piwigo\Page\PageHeaderRenderer()
+        new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatchNotify(new LocEndPassword());
         $this->htmlService
@@ -288,7 +316,7 @@ final class PasswordController implements ControllerInterface
         $this->htmlService
             ->flushKeyedErrors($formErrors);
         $template->parse('password', false);
-        $body = \Piwigo\Bootstrap\PageTail::renderToString();
+        $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }
@@ -314,11 +342,11 @@ final class PasswordController implements ControllerInterface
         $conn = DbConnection::build();
 
         // retrievies user by email is not try by username
-        $emailOrNull = \Piwigo\Common\ValueObject\Email::tryFrom($username_or_email);
+        $emailOrNull = Email::tryFrom($username_or_email);
         $user_id_raw = $emailOrNull === null ? null : $this->userService->getUserIdByEmail($emailOrNull);
 
         if ($user_id_raw === null) {
-            $usernameOrNull = \Piwigo\Common\ValueObject\Username::tryFrom($username_or_email);
+            $usernameOrNull = Username::tryFrom($username_or_email);
             $user_id_raw = $usernameOrNull === null ? null : $this->userService->getUserId($usernameOrNull);
         }
 
@@ -329,7 +357,7 @@ final class PasswordController implements ControllerInterface
         if ($user_id_raw !== null) {
             $user_id = $user_id_raw;
         } else {
-            $user_id = \Piwigo\Common\ValueObject\UserId::from($this->currentConfig->guestId());
+            $user_id = UserId::from($this->currentConfig->guestId());
         }
 
         $userdata = $this->userService->getUserData($user_id);
@@ -447,13 +475,13 @@ final class PasswordController implements ControllerInterface
                 // lockout account for 1hour
                 if ($has_valid_user_id) {
                     $saveCurrentUser = $this->currentUser->get();
-                    $target_user_data = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from((int) $user_id_raw));
+                    $target_user_data = $this->userService->buildUser(UserId::from((int) $user_id_raw));
                     // PreferencesService writes onto CurrentUser::get()->id
                     // (Legacy Coupling Retirement Track A batch A3), so the
                     // identity must switch here too, or the preference
                     // would land on the ORIGINAL requester instead of the
                     // locked-out target user.
-                    $this->currentUser->set(\Piwigo\Users\User::fromUserArray($target_user_data));
+                    $this->currentUser->set(User::fromUserArray($target_user_data));
                     $this->preferencesService
                         ->updateParam('reset_password_forbidden_until', time() + 60 * 60);
                     $this->currentUser->set($saveCurrentUser);
@@ -492,14 +520,14 @@ final class PasswordController implements ControllerInterface
             $this->errors['password_form_error'] = $this->lang->t('Invalid verification code');
             return false;
         }
-        $user_id = \Piwigo\Common\ValueObject\UserId::from((int) $user_id_raw);
+        $user_id = UserId::from((int) $user_id_raw);
 
         $saveCurrentUser = $this->currentUser->get();
         $target_user_data = $this->userService->buildUser($user_id);
         // Same CurrentUser identity-switch requirement as the lockout branch
         // above -- PreferencesService::deleteParam() writes onto
         // CurrentUser::get()->id.
-        $this->currentUser->set(\Piwigo\Users\User::fromUserArray($target_user_data));
+        $this->currentUser->set(User::fromUserArray($target_user_data));
         $this->preferencesService
             ->deleteParam('reset_password_forbidden_until');
 
@@ -593,7 +621,7 @@ final class PasswordController implements ControllerInterface
         $conn = DbConnection::build();
 
         $this->userService->updateAccountFields(
-            \Piwigo\Common\ValueObject\UserId::from($user_id),
+            UserId::from($user_id),
             null,
             $this->passwordService->hash($new_password),
             null,

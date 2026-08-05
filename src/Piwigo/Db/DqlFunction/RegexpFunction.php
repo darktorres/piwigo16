@@ -10,6 +10,7 @@ use Doctrine\ORM\Query\AST\Node;
 use Doctrine\ORM\Query\Parser;
 use Doctrine\ORM\Query\SqlWalker;
 use Doctrine\ORM\Query\TokenType;
+use Override;
 
 /**
  * Custom DQL function: "REGEXP" "(" StringPrimary "," StringPrimary ")",
@@ -39,7 +40,7 @@ final class RegexpFunction extends FunctionNode
 
     private Node $pattern;
 
-    #[\Override]
+    #[Override]
     public function getSql(SqlWalker $sqlWalker): string
     {
         $platform = $sqlWalker->getConnection()
@@ -49,7 +50,7 @@ final class RegexpFunction extends FunctionNode
         return $sqlWalker->walkStringPrimary($this->column) . ' ' . $operator . ' ' . $sqlWalker->walkStringPrimary($this->pattern);
     }
 
-    #[\Override]
+    #[Override]
     public function parse(Parser $parser): void
     {
         $parser->match(TokenType::T_IDENTIFIER);

@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use LogicException;
+use Piwigo\Core\Kernel;
+
 /**
  * Container-shared instance holding the current request's page-rendering
  * `Template` instance -- Legacy Coupling Retirement Track A, replacing the
@@ -41,10 +44,10 @@ final class CurrentTemplate
 
     public static function current(): self
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $instance = \Piwigo\Core\Kernel::container()->get(self::class);
+        if (Kernel::isBooted()) {
+            $instance = Kernel::container()->get(self::class);
             if (! $instance instanceof self) {
-                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+                throw new LogicException('Container returned an unexpected type for ' . self::class);
             }
 
             return $instance;
@@ -56,7 +59,7 @@ final class CurrentTemplate
     public function get(): Template
     {
         if (! $this->template instanceof Template) {
-            throw new \LogicException('CurrentTemplate not initialised -- call Piwigo\Bootstrap\RequestBootstrap::finalize() first.');
+            throw new LogicException('CurrentTemplate not initialised -- call Piwigo\Bootstrap\RequestBootstrap::finalize() first.');
         }
 
         return $this->template;

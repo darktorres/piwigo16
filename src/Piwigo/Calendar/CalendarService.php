@@ -7,7 +7,6 @@ namespace Piwigo\Calendar;
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Category\CategoryService;
 use Piwigo\Db\Tables;
-use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 

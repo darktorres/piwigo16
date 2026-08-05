@@ -38,6 +38,7 @@ use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Core\TemplateInterface;
@@ -75,6 +76,7 @@ use Piwigo\Site\SiteRepository;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\UserRepository;
@@ -86,6 +88,7 @@ use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\Cache\Psr16Cache;
 use function DI\factory;
+use function DI\get;
 
 // DI\autowire() is the default -- a service with only typed class-reference
 // constructor params needs no entry here at all; PHP-DI resolves it via
@@ -108,7 +111,7 @@ return [
     // inject MailerInterface instead of depending on the concrete class
     // directly, per deptrac.yaml's ruleset. See src/Piwigo/Core/
     // MailerInterface.php's own docblock.
-    MailerInterface::class => \DI\get(MailService::class),
+    MailerInterface::class => get(MailService::class),
 
     // Interface binding (P23 batch 8d) -- Piwigo\Activity\ActivityService is
     // L2bExtendedDomain; Users\UserService/Group\GroupService/Auth\AuthService
@@ -116,7 +119,7 @@ return [
     // of depending on the concrete class directly, per deptrac.yaml's
     // ruleset. See src/Piwigo/Core/ActivityLoggerInterface.php's own
     // docblock.
-    ActivityLoggerInterface::class => \DI\get(ActivityService::class),
+    ActivityLoggerInterface::class => get(ActivityService::class),
 
     // Interface binding (Legacy Coupling Retirement: DI+DBAL migration
     // Phase 1a) -- Piwigo\Comment\CommentRepository is L2bExtendedDomain;
@@ -124,7 +127,7 @@ return [
     // CommentCounterInterface instead of depending on the concrete class
     // directly, per deptrac.yaml's ruleset. See src/Piwigo/Core/
     // CommentCounterInterface.php's own docblock.
-    CommentCounterInterface::class => \DI\get(CommentRepository::class),
+    CommentCounterInterface::class => get(CommentRepository::class),
 
     // Interface binding (P23 batch 8d) -- Piwigo\Core\Lang::load() is a
     // static L1Infrastructure method that needs the DB-configured default
@@ -134,14 +137,14 @@ return [
     // from include/common.inc.php (legacy code, not container-managed) --
     // see src/Piwigo/Core/DefaultLanguageProviderInterface.php's own
     // docblock for why a static method can't just constructor-inject this.
-    DefaultLanguageProviderInterface::class => \DI\get(UserService::class),
+    DefaultLanguageProviderInterface::class => get(UserService::class),
 
     // Interface binding (P23 batch 8f-1) -- Piwigo\Filter\FilterService is
     // L2bExtendedDomain; Category\CategoryService (L2aCoreDomain)
     // constructor-injects FilterUpdaterInterface instead of depending on
     // the concrete class directly, per deptrac.yaml's ruleset. See
     // src/Piwigo/Core/FilterUpdaterInterface.php's own docblock.
-    FilterUpdaterInterface::class => \DI\get(FilterService::class),
+    FilterUpdaterInterface::class => get(FilterService::class),
 
     // Interface binding (P23 batch 8f-3) -- Piwigo\Html\HtmlService is
     // L3Presentation; real L1Infrastructure/L2aCoreDomain/L2bExtendedDomain
@@ -149,7 +152,7 @@ return [
     // of depending on the concrete class directly, per deptrac.yaml's
     // ruleset. See src/Piwigo/Core/HtmlRenderingInterface.php's own
     // docblock.
-    HtmlRenderingInterface::class => \DI\get(HtmlService::class),
+    HtmlRenderingInterface::class => get(HtmlService::class),
 
     // Interface binding (Legacy Coupling Retirement Phase 4b) --
     // Piwigo\Bootstrap\RedirectService is L4Integration (its real body
@@ -158,7 +161,7 @@ return [
     // or method-inject RedirectServiceInterface instead of depending on
     // the concrete class directly, per deptrac.yaml's ruleset. See
     // src/Piwigo/Core/RedirectServiceInterface.php's own docblock.
-    RedirectServiceInterface::class => \DI\get(RedirectService::class),
+    RedirectServiceInterface::class => get(RedirectService::class),
 
     // Interface binding (Legacy Coupling Retirement Phase 4c) --
     // Piwigo\Url\UrlService is L2bExtendedDomain; real callers span every
@@ -166,7 +169,7 @@ return [
     // instead of depending on the concrete class directly, per
     // deptrac.yaml's ruleset. See src/Piwigo/Core/UrlServiceInterface.php's
     // own docblock.
-    UrlServiceInterface::class => \DI\get(UrlService::class),
+    UrlServiceInterface::class => get(UrlService::class),
 
     // Abstract-class binding (singleton/service-locator elimination
     // campaign, Phase 0 pilot) -- Piwigo\Cache\PersistentCache is abstract,
@@ -176,14 +179,14 @@ return [
     // value never actually varied per request (always PersistentFileCache),
     // so there was nothing genuinely request-scoped to hold in a shared
     // mutable instance -- an ordinary binding is enough.
-    PersistentCache::class => \DI\get(PersistentFileCache::class),
+    PersistentCache::class => get(PersistentFileCache::class),
 
     // Interface binding (P23 batch 8f-4) -- Piwigo\Admin\PiwigoInfosSender
     // is L4Integration; Piwigo\Page\PageTailRenderer (L3Presentation)
     // constructor-injects TelemetrySenderInterface instead of depending on
     // the concrete class directly, per deptrac.yaml's ruleset. See
     // src/Piwigo/Core/TelemetrySenderInterface.php's own docblock.
-    TelemetrySenderInterface::class => \DI\get(PiwigoInfosSender::class),
+    TelemetrySenderInterface::class => get(PiwigoInfosSender::class),
 
     // Interface binding (Legacy Coupling Retirement Track A) --
     // Piwigo\Template\Template is L3Presentation; a handful of
@@ -194,7 +197,7 @@ return [
     // per-request (runtime theme/path parameters) -- see
     // src/Piwigo/Core/TemplateInterface.php's own docblock and
     // Piwigo\Template\CurrentTemplate.
-    TemplateInterface::class => factory(static fn (): Template => \Piwigo\Template\CurrentTemplate::current()->get()),
+    TemplateInterface::class => factory(static fn (): Template => CurrentTemplate::current()->get()),
 
     // Interface binding (P23 batch 8f-4) -- Piwigo\Users\UserRepository
     // provides the webmaster mail address; Piwigo\Mail\MailService takes
@@ -209,7 +212,7 @@ return [
     // path/theme strings, never container-managed) -- SrcImage::themeConf()
     // reaches it via Piwigo\Template\CurrentTemplate::current()->get()
     // instead (singleton/service-locator elimination campaign, Phase 6).
-    WebmasterMailProviderInterface::class => \DI\get(UserRepository::class),
+    WebmasterMailProviderInterface::class => get(UserRepository::class),
 
     // Unresolvable string param (the routes file path) -- Router::fromFile()
     // needs a path autowire can't provide.
@@ -240,7 +243,7 @@ return [
     // real Paths is passed); shared/memoized for the container's lifetime
     // like every other autowired service, matching the former per-request
     // memo exactly.
-    DeploymentPolicy::class => factory(static fn (\Piwigo\Core\Paths $paths): DeploymentPolicy => DeploymentPolicy::load($paths)),
+    DeploymentPolicy::class => factory(static fn (Paths $paths): DeploymentPolicy => DeploymentPolicy::load($paths)),
 
     // Factory binding (singleton/service-locator elimination campaign,
     // Phase 4) -- replaces ImageStdParams's former self-managed static
@@ -300,7 +303,7 @@ return [
     CacheInterface::class => factory(static function (ContainerInterface $c): CacheInterface {
         $pool = $c->get(CacheItemPoolInterface::class);
         if (! $pool instanceof CacheItemPoolInterface) {
-            throw new \LogicException('Container returned an unexpected type for ' . CacheItemPoolInterface::class);
+            throw new LogicException('Container returned an unexpected type for ' . CacheItemPoolInterface::class);
         }
 
         return new Psr16Cache($pool);

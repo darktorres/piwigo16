@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
@@ -34,7 +35,7 @@ use Piwigo\Http\ResponseReadyException;
  */
 final class RequestBootstrapConfigureTest extends IntegrationTestCase
 {
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         unset($_SERVER['PATH_INFO']);

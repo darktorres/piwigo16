@@ -6,13 +6,21 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Request\ThemesStandardPagesSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Storage\StorageRegistry;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
 
 /**
  * Ported from admin/themes_standard_pages.php -- configures the "standard
@@ -51,10 +59,10 @@ final class ThemesStandardPagesPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly StorageRegistry $storageRegistry,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void
@@ -90,10 +98,10 @@ final class ThemesStandardPagesPageRenderer
             'teal',
         ];
 
-        $stdPagesSubmit = Request\ThemesStandardPagesSubmitRequest::fromGlobals($std_pgs_logo_options, $std_pgs_skin_options);
+        $stdPagesSubmit = ThemesStandardPagesSubmitRequest::fromGlobals($std_pgs_logo_options, $std_pgs_skin_options);
 
         if ($stdPagesSubmit->isSubmitted and $this->accessControl->isWebmaster()) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->configService->confUpdateParam('use_standard_pages', $stdPagesSubmit->useStandardPages, true);
@@ -132,11 +140,11 @@ final class ThemesStandardPagesPageRenderer
                     ]
                 );
             } else {
-                $upload_dir = \Piwigo\Core\CurrentPaths::get()->siteLocal . 'logo';
-                if (\Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
+                $upload_dir = CurrentPaths::get()->siteLocal . 'logo';
+                if (FilesystemHelper::mkgetdir($upload_dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
                     $pathinfo = pathinfo($stdPagesSubmit->logoName);
 
-                    $logo_filename = \Piwigo\Core\StringHelper::str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];
+                    $logo_filename = StringHelper::str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];
 
                     // Disk-relative path (relative to the 'local' disk's own
                     // root, e.g. 'logo/mylogo.png') -- stored in config so
@@ -225,7 +233,7 @@ final class ThemesStandardPagesPageRenderer
                 'is_standard_pages_used' => $is_standard_pages_used,
                 'standard_pages_used_by' => $standard_pages_used_by,
                 'std_pgs_selected_logo_path' => $std_pgs_selected_logo_path,
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
             ]
         );

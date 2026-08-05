@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\PluginConfig\EventDispatcher;
+use RuntimeException;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -25,7 +30,7 @@ final class ConfigServiceTest extends IntegrationTestCase
 
     private ConfigService $service;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -37,15 +42,15 @@ final class ConfigServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->service = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), $currentConfig);
+        $this->service = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig);
     }
 
     public function test_loadConfFromDb_merges_every_row_with_json_decoding(): void
@@ -77,7 +82,7 @@ final class ConfigServiceTest extends IntegrationTestCase
 
     public function test_loadConfFromDb_throws_when_param_not_found_and_dieIfNotFound_is_true(): void
     {
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->service->loadConfFromDb('this_param_does_not_exist_anywhere');
     }
 
@@ -127,9 +132,9 @@ final class ConfigServiceTest extends IntegrationTestCase
         // A second bulk load still returns the stale cached snapshot --
         // proves allRowsFromCacheOrDb() is actually caching, not
         // re-querying every time.
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -139,9 +144,9 @@ final class ConfigServiceTest extends IntegrationTestCase
         // A real ConfigService write clears the cache; the next bulk load
         // picks up the fresh value.
         $this->service->confUpdateParam('gallery_title', 'Fresh After Invalidation');
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();

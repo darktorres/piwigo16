@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Cache;
 
+use Piwigo\Config\CurrentConfigService;
+
 /**
  * Gap-closure Stage 4i (docs/plan/gap-closure-p0-p23.md): replaces
  * `UserCacheInvalidator` now that `piwigo_user_cache`/
@@ -38,6 +40,6 @@ final class PermissionCacheInvalidator
     {
         CachePools::permissions()->clear();
         CachePools::effectivePermissions()->clear();
-        \Piwigo\Config\CurrentConfigService::current()->get()->confDeleteParam('count_orphans');
+        CurrentConfigService::current()->get()->confDeleteParam('count_orphans');
     }
 }

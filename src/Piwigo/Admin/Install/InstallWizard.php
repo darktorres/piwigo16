@@ -13,7 +13,8 @@ namespace Piwigo\Admin\Install;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\Migrations\Tools\Console\Command\MigrateCommand;
-use Piwigo\Activity\ActivityRepository;
+use LogicException;
+use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
@@ -21,19 +22,37 @@ use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\PluginMigrationEntity;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Install\Request\InstallWizardRequest;
+use Piwigo\Auth\AuthRepository;
+use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
+use Piwigo\Auth\PasswordRepository;
+use Piwigo\Auth\PasswordService;
+use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Bootstrap\CoreDomainAccessor;
+use Piwigo\Bootstrap\ExtendedDomainAccessor;
+use Piwigo\Bootstrap\InfrastructureAccessor;
+use Piwigo\Bootstrap\InstallBootstrap;
+use Piwigo\Bootstrap\PresentationAccessor;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\CurrentConfigService;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Core\VersionHelper;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
@@ -41,15 +60,23 @@ use Piwigo\Db\DbInfo;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\MigrationDependencyFactory;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Http\HttpClientService;
-use Piwigo\Mail\MailService;
+use Piwigo\Http\ResponseFactory;
+use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\PwgSession;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
+use RuntimeException;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
@@ -146,7 +173,7 @@ final class InstallWizard
 
     private Template $template;
 
-    private Request\InstallWizardRequest $request;
+    private InstallWizardRequest $request;
 
     private int $step = 1;
 
@@ -177,9 +204,9 @@ final class InstallWizard
         private readonly string $prefixeTable,
         private readonly Paths $paths,
         private readonly DbCredentials $dbCredentials,
-        private readonly \Piwigo\Config\CurrentConfigService $currentConfigService,
+        private readonly CurrentConfigService $currentConfigService,
         private readonly CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly InputValidator $inputValidator,
         private readonly AdminContext $adminContext,
         private readonly EventDispatcher $eventDispatcher,
         private readonly PageState $pageState,
@@ -188,7 +215,7 @@ final class InstallWizard
     ) {
         $conf_data_location = LegacyFileConf::read()['data_location'] ?? null;
         if (! is_string($conf_data_location)) {
-            throw new \LogicException("Invalid \$conf['data_location'] configuration: expected a string.");
+            throw new LogicException("Invalid \$conf['data_location'] configuration: expected a string.");
         }
         $this->confDataLocation = $conf_data_location;
 
@@ -204,7 +231,7 @@ final class InstallWizard
     public function boot(): void
     {
         // download database config file if exists
-        $this->request = Request\InstallWizardRequest::fromGlobals($this->inputValidator);
+        $this->request = InstallWizardRequest::fromGlobals($this->inputValidator);
 
         $dl_param = $this->request->dl;
         if ($dl_param !== null && file_exists($this->paths->root . $this->confDataLocation . 'pwg_' . $dl_param)) {
@@ -228,7 +255,7 @@ final class InstallWizard
             if ($fileContent === false) {
                 $fileContent = '';
             }
-            $response = \Piwigo\Http\ResponseFactory::raw($fileContent, [
+            $response = ResponseFactory::raw($fileContent, [
                 'Cache-Control' => 'no-cache, must-revalidate',
                 'Pragma' => 'no-cache',
                 'Content-Disposition' => 'attachment; filename="database.inc.php"',
@@ -237,7 +264,7 @@ final class InstallWizard
             ]);
             unlink($filename);
 
-            throw new \Piwigo\Http\ResponseReadyException($response);
+            throw new ResponseReadyException($response);
         }
 
         // Obtain various vars
@@ -278,7 +305,7 @@ final class InstallWizard
         // above, not before, for the same stale-credentials reason
         // InstallBootstrap::activateConfigService()'s own docblock
         // documents.
-        \Piwigo\Bootstrap\InstallBootstrap::activateConfigService();
+        InstallBootstrap::activateConfigService();
 
         // Same reasoning again, different dependency: this request never
         // goes through RequestBootstrap::bootEntryPoint()/bootConfigOnly()
@@ -292,7 +319,7 @@ final class InstallWizard
         // attachGlobals() is exactly the safe guest default this no-boot
         // path needs (idempotent; a later real CurrentUser::set() in
         // render() is never clobbered by this).
-        \Piwigo\Users\CurrentUser::current()->attachGlobals();
+        CurrentUser::current()->attachGlobals();
 
         // Same no-boot gap, third dependency: CurrentLogger. Originally found
         // live one step later than CurrentUser (render()'s
@@ -306,7 +333,7 @@ final class InstallWizard
         // as RequestBootstrap::connect()'s (the normal request pipeline's
         // own site) -- no DB access needed, just Config/DbCredentials reads
         // already valid this early (the DB password was just seeded above).
-        \Piwigo\Bootstrap\InstallBootstrap::currentLogger()->set(new Logger([
+        InstallBootstrap::currentLogger()->set(new Logger([
             'directory' => $this->paths->root . $this->currentConfig->dataLocation() . $this->currentConfig->logDir(),
             'severity' => $this->currentConfig->logLevel(),
             'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $this->dbCredentials->password) . '.txt',
@@ -321,7 +348,7 @@ final class InstallWizard
         $this->dblayer = $this->request->dbdriver;
         $requiredExtension = $this->dblayer === 'pgsql' ? 'pgsql' : 'mysqli';
         if (! extension_loaded($requiredExtension)) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            PresentationAccessor::htmlService()
                 ->fatalError('PHP extension "' . $requiredExtension . '" is not loaded');
         }
 
@@ -334,12 +361,12 @@ final class InstallWizard
 
         // Is Piwigo already installed ?
         if (file_exists($this->paths->siteLocal . Env::testModeInstalledStamp())) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            PresentationAccessor::htmlService()
                 ->fatalError('Piwigo is already installed');
         }
 
         $this->fsLanguages = new ExtensionScanner()
-            ->scan(ExtensionType::Language, \Piwigo\Bootstrap\PresentationAccessor::urlService(), $this->lang, 'utf-8');
+            ->scan(ExtensionType::Language, PresentationAccessor::urlService(), $this->lang, 'utf-8');
 
         if ($this->request->languageParam !== null) {
             $language = $this->request->languageParam;
@@ -379,7 +406,7 @@ final class InstallWizard
 
         // --------------------------------------------- template initialization
         $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths->root . 'themes/admin', 'clear');
-        \Piwigo\Template\CurrentTemplate::current()->set($template);
+        CurrentTemplate::current()->set($template);
         $template->set_filenames([
             'install' => 'install.tpl',
         ]);
@@ -405,7 +432,7 @@ final class InstallWizard
     private function userService(?Connection $conn = null): UserService
     {
         $conn ??= DbConnection::build();
-        return new UserService($this->lang, new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\PluginConfig\EventDispatcher::get(), $this->currentConfig), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn, new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class), $this->currentConfig), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\DeploymentPolicy::current(), \Piwigo\Users\CurrentUser::current(), $this->currentConfig, new \Piwigo\Core\InstallationFlag(), new \Piwigo\Core\ProcessCache());
+        return new UserService($this->lang, new UserRepository(EntityManagerFactory::build($conn), EventDispatcher::get(), $this->currentConfig), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), PresentationAccessor::mailService(), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $conn, new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), EventDispatcher::get(), DeploymentPolicy::current(), CurrentUser::current(), $this->currentConfig, new InstallationFlag(), new ProcessCache());
     }
 
     /**
@@ -418,9 +445,9 @@ final class InstallWizard
      * helper takes the already-available Connection as a parameter"
      * shape as userService() above.
      */
-    private function passwordService(Connection $conn): \Piwigo\Auth\PasswordService
+    private function passwordService(Connection $conn): PasswordService
     {
-        return new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Config\DeploymentPolicy::current());
+        return new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), DeploymentPolicy::current());
     }
 
     /**
@@ -484,7 +511,7 @@ final class InstallWizard
         // built this successfully.
         $conn = $this->conn;
         if (! $conn instanceof Connection) {
-            throw new \LogicException('performInstall() called before a successful analyzeForm() connection.');
+            throw new LogicException('performInstall() called before a successful analyzeForm() connection.');
         }
 
         $this->step = 2;
@@ -558,7 +585,7 @@ define(\'DB_COLLATE\', \'\');
             // writing the configuration file
             if (! (bool) ($fp = @fopen($this->configFile, 'w'))) {
                 // make sure nobody can list files of _data directory
-                \Piwigo\Core\FilesystemHelper::secureDirectory($this->paths->root . $this->confDataLocation);
+                FilesystemHelper::secureDirectory($this->paths->root . $this->confDataLocation);
 
                 $tmp_filename = md5(uniqid((string) time()));
                 $fh = @fopen($this->paths->root . $this->confDataLocation . 'pwg_' . $tmp_filename, 'w');
@@ -615,7 +642,7 @@ define(\'DB_COLLATE\', \'\');
         $migrateExitCode = new MigrateCommand($dependencyFactory)
             ->run($migrateInput, $migrateOutput);
         if ($migrateExitCode !== 0) {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 'Schema migration failed (migrations:migrate exit code ' . $migrateExitCode . '): ' . $migrateOutput->fetch()
             );
         }
@@ -659,21 +686,21 @@ define(\'DB_COLLATE\', \'\');
         // PasswordRepository/userService() calls further down this same
         // method) -- matches this call's own pre-existing "fresh
         // connection" shape, just extended to the new repository too.
-        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        $urlService = PresentationAccessor::urlService();
         $languageActivationConn = DbConnection::build();
         new ExtensionLifecycle(
             $this->lang,
-            new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($languageActivationConn)),
-            new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InstallBootstrap::currentLogger(), \Piwigo\Users\CurrentUser::current()),
+            new ExtensionRepository(EntityManagerFactory::build($languageActivationConn)),
+            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), CurrentUser::current()),
             $urlService,
             $configService,
-            \Piwigo\Db\EntityManagerFactory::build($languageActivationConn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
-            \Piwigo\Bootstrap\CoreDomainAccessor::userService(),
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
+            EntityManagerFactory::build($languageActivationConn)->getRepository(PluginMigrationEntity::class),
+            ExtendedDomainAccessor::activityService(),
+            CoreDomainAccessor::userService(),
+            PresentationAccessor::htmlService(),
             $this->currentConfig,
-            \Piwigo\Bootstrap\InfrastructureAccessor::wsContext(),
-            \Piwigo\Bootstrap\CoreDomainAccessor::accessControl(),
+            InfrastructureAccessor::wsContext(),
+            CoreDomainAccessor::accessControl(),
         )->performAction(ExtensionType::Language, 'activate', $this->language, $this->fsLanguages[$this->language] ?? null);
 
         // fill CurrentConfig::$data from the freshly-seeded config table
@@ -717,7 +744,7 @@ define(\'DB_COLLATE\', \'\');
             ->resyncIdentitySequence(Tables::users());
 
         $this->userService($conn)
-            ->createUserInfos([\Piwigo\Common\ValueObject\UserId::from(1), \Piwigo\Common\ValueObject\UserId::from(2)], [
+            ->createUserInfos([UserId::from(1), UserId::from(2)], [
                 'language' => $this->language,
             ]);
     }
@@ -768,10 +795,10 @@ define(\'DB_COLLATE\', \'\');
             // successfully with this same connection.
             $conn = $this->conn;
             if (! $conn instanceof Connection) {
-                throw new \LogicException('render() reached step 2 before a successful analyzeForm() connection.');
+                throw new LogicException('render() reached step 2 before a successful analyzeForm() connection.');
             }
 
-            new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class))
+            new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class))
                 ->record('system', ActivitySystem::Core, 'install', [
                     'version' => AppInfo::VERSION,
                 ]);
@@ -789,7 +816,7 @@ define(\'DB_COLLATE\', \'\');
             // define()d and this block ran unconditionally in the original,
             // without SessionBootstrap::register()'s
             // session_save_handler === 'db' guard)
-            session_set_save_handler(new PwgSession(new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class), $this->currentConfig), \Piwigo\Bootstrap\InstallBootstrap::currentLogger()));
+            session_set_save_handler(new PwgSession(new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), InstallBootstrap::currentLogger()));
             if (function_exists('ini_set')) {
                 ini_set('session.use_cookies', $this->currentConfig->sessionUseCookies());
                 ini_set('session.use_only_cookies', $this->currentConfig->sessionUseOnlyCookies());
@@ -801,7 +828,7 @@ define(\'DB_COLLATE\', \'\');
             register_shutdown_function(session_write_close(...));
 
             $user = $this->userService($conn)
-                ->buildUser(\Piwigo\Common\ValueObject\UserId::from(1));
+                ->buildUser(UserId::from(1));
             // build_user() returns array<string, mixed>; the 'id' key we just set
             // to the literal user id 1 doesn't retain that literal type through
             // the return, so narrow to what log_user() actually accepts.
@@ -826,9 +853,9 @@ define(\'DB_COLLATE\', \'\');
             // calling it, not after. $user (built just above, same array
             // shape UserBootstrap::initialize() uses) is already the right
             // data; this mirrors that method's own two calls verbatim.
-            \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\User::fromUserArray($user));
-            \Piwigo\Users\CurrentUser::current()->markRealUserResolved();
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->passwordService($conn), new \Piwigo\Auth\CookieService(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class), new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class), $this->currentConfig), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), $this->currentConfig)
+            CurrentUser::current()->set(User::fromUserArray($user));
+            CurrentUser::current()->markRealUserResolved();
+            new AuthService(new AuthRepository(EntityManagerFactory::build($conn)), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $this->passwordService($conn), new CookieService(), EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), EventDispatcher::get(), PageState::current(), CurrentUser::current(), $this->currentConfig)
                 ->logUser($login_user_id, false);
             $_SESSION['connected_with'] = 'pwg_ui';
 
@@ -836,7 +863,7 @@ define(\'DB_COLLATE\', \'\');
             // whatever getuserdata() already populated it with.
             $preferences = $user['preferences'] ?? null;
             $preferences = is_array($preferences) ? $preferences : [];
-            $preferences['show_whats_new_' . \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)] = false;
+            $preferences['show_whats_new_' . VersionHelper::getBranchFromVersion(AppInfo::VERSION)] = false;
             $user['preferences'] = $preferences;
 
             // newsletter subscription
@@ -862,9 +889,9 @@ define(\'DB_COLLATE\', \'\');
             // raw global $user bridge this comment used to reference was
             // fully retired once every consumer -- including this one --
             // moved onto CurrentUser.)
-            \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\User::fromUserArray($user));
+            CurrentUser::current()->set(User::fromUserArray($user));
 
-            new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\PluginConfig\EventDispatcher::get(), $this->currentConfig), \Piwigo\Users\CurrentUser::current())
+            new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), EventDispatcher::get(), $this->currentConfig), CurrentUser::current())
                 ->save();
 
             // email notification
@@ -875,7 +902,7 @@ define(\'DB_COLLATE\', \'\');
                     $this->lang->buildArgs('', ''),
                     $this->lang->buildArgs('Here are your connection settings', ''),
                     $this->lang->buildArgs('', ''),
-                    $this->lang->buildArgs('Link: %s', \Piwigo\Bootstrap\PresentationAccessor::urlService()->getAbsoluteRootUrl()),
+                    $this->lang->buildArgs('Link: %s', PresentationAccessor::urlService()->getAbsoluteRootUrl()),
                     $this->lang->buildArgs('Username: %s', $this->adminName),
                     $this->lang->buildArgs('Password: ********** (no copy by email)', ''),
                     $this->lang->buildArgs('Email: %s', $this->adminMail),
@@ -883,7 +910,7 @@ define(\'DB_COLLATE\', \'\');
                     $this->lang->buildArgs('Don\'t hesitate to consult our forums for any help: %s', AppInfo::URL),
                 ];
 
-                \Piwigo\Bootstrap\PresentationAccessor::mailService()
+                PresentationAccessor::mailService()
                     ->mail(
                         $this->adminMail,
                         [

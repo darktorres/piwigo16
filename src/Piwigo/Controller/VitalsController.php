@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use JsonException;
+use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Http\ControllerInterface;
@@ -35,7 +37,7 @@ final readonly class VitalsController implements ControllerInterface
         private LoggerInterface $logger,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $this->accessControl->checkStatus(AccessLevel::Guest);
@@ -59,7 +61,7 @@ final readonly class VitalsController implements ControllerInterface
 
         try {
             $data = json_decode($rawBody, true, flags: JSON_THROW_ON_ERROR);
-        } catch (\JsonException) {
+        } catch (JsonException) {
             return null;
         }
 

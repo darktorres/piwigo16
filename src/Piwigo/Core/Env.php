@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use DateTime;
 use Piwigo\Common\ValueObject\IpAddress;
 use Symfony\Component\Dotenv\Dotenv;
 
@@ -84,16 +85,16 @@ final class Env
      * time_since()-based relative-time text (and similar "since" widgets) render
      * deterministically in tests without a full mockable-clock/DI layer.
      */
-    public static function now(): \DateTime
+    public static function now(): DateTime
     {
         if (self::testModeIsActive()) {
             $frozen = getenv('PIWIGO_TEST_NOW');
             if ($frozen !== false && $frozen !== '') {
-                return new \DateTime($frozen);
+                return new DateTime($frozen);
             }
         }
 
-        return new \DateTime();
+        return new DateTime();
     }
 
     /**

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Feed;
 
+use DateTimeImmutable;
+
 /**
  * Pure date-conversion and RSS 2.0 rendering helpers for feed.php. Injects
  * nothing -- no cross-domain calls at all, matching Url\UrlService/
@@ -58,7 +60,7 @@ final class FeedHelper
         $feed .= '    <title>' . htmlspecialchars($channel_title) . "</title>\n";
         $feed .= '    <link>' . htmlspecialchars($channel_link) . "</link>\n";
         $feed .= "    <description></description>\n";
-        $feed .= '    <lastBuildDate>' . new \DateTimeImmutable()->format(\DATE_RFC2822) . "</lastBuildDate>\n";
+        $feed .= '    <lastBuildDate>' . new DateTimeImmutable()->format(\DATE_RFC2822) . "</lastBuildDate>\n";
 
         foreach ($items as $item) {
             $item_title = $item['title'] ?? '';
@@ -77,7 +79,7 @@ final class FeedHelper
                 $feed .= '      <author>' . htmlspecialchars($item_author) . "</author>\n";
             }
             if ($item_date !== '') {
-                $feed .= '      <pubDate>' . new \DateTimeImmutable($item_date)->format(\DATE_RFC2822) . "</pubDate>\n";
+                $feed .= '      <pubDate>' . new DateTimeImmutable($item_date)->format(\DATE_RFC2822) . "</pubDate>\n";
             }
             $feed .= '      <guid isPermaLink="false">' . htmlspecialchars($item_guid !== '' ? $item_guid : $item_link) . "</guid>\n";
             $feed .= "    </item>\n";

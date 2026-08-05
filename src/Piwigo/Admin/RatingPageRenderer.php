@@ -4,25 +4,34 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Request\RatingRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PaginationService;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Rate\RateEntity;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/rating.php (page slug "rating").
  */
 final class RatingPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Validation\InputValidator $inputValidator, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CategoryService $categoryService, InputValidator $inputValidator, EventDispatcher $eventDispatcher): void
     {
         $template = $currentTemplate->get();
 
         $accessControl->checkStatus(AccessLevel::Administrator);
 
-        $ratingRequest = Request\RatingRequest::fromGlobals($inputValidator);
+        $ratingRequest = RatingRequest::fromGlobals($inputValidator);
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('rating');
@@ -55,7 +64,7 @@ final class RatingPageRenderer
             $exclude_filter_user = false;
         }
 
-        $rate_repository = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Rate\RateEntity::class);
+        $rate_repository = EntityManagerFactory::build($conn)->getRepository(RateEntity::class);
 
         $usernames_by_id = $rate_repository->findUsernamesById();
         $users = [];
@@ -70,7 +79,7 @@ final class RatingPageRenderer
 
         $template->assign(
             [
-                'navbar' => new \Piwigo\Core\PaginationService($currentConfig)
+                'navbar' => new PaginationService($currentConfig)
                     ->createNavigationBar($urlService->getRootUrl() . 'admin.php' . $urlService->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page),
                 'F_ACTION' => $urlService->getRootUrl() . 'admin.php',
                 'DISPLAY' => $elements_per_page,

@@ -171,7 +171,7 @@ test('str2DateTime treats an explicitly-empty format the same as no format at al
     $date = DateHelper::str2DateTime('2024-06-15', '');
 
     expect($date)->not->toBeFalse();
-    assert($date instanceof \DateTime);
+    assert($date instanceof DateTime);
     expect($date->format('Y-m-d'))->toBe('2024-06-15');
 });
 
@@ -182,7 +182,7 @@ test('str2DateTime string-casts a numeric original before formatting with an exp
     $date = DateHelper::str2DateTime(20240615, '!Ymd');
 
     expect($date)->not->toBeFalse();
-    assert($date instanceof \DateTime);
+    assert($date instanceof DateTime);
     expect($date->format('Y-m-d'))->toBe('2024-06-15');
 });
 
@@ -194,7 +194,7 @@ test('str2DateTime resets unspecified time fields to midnight via the "!" format
     $date = DateHelper::str2DateTime('2024-06-15', 'Y-m-d');
 
     expect($date)->not->toBeFalse();
-    assert($date instanceof \DateTime);
+    assert($date instanceof DateTime);
     expect($date->format('H:i:s'))->toBe('00:00:00');
 });
 
@@ -226,7 +226,7 @@ test('str2DateTime treats a pure-digit int original with no format as a Unix tim
     $date = DateHelper::str2DateTime(1718409600);
 
     expect($date)->not->toBeFalse();
-    assert($date instanceof \DateTime);
+    assert($date instanceof DateTime);
     expect($date->format('Y-m-d H:i:s'))->toBe('2024-06-15 00:00:00');
 });
 
@@ -243,7 +243,7 @@ test('str2DateTime defaults hour/minute/second to exactly 0 when only year/month
     $date = DateHelper::str2DateTime('2024-06-15');
 
     expect($date)->not->toBeFalse();
-    assert($date instanceof \DateTime);
+    assert($date instanceof DateTime);
     expect($date->format('H:i:s'))->toBe('00:00:00');
 });
 
@@ -254,7 +254,7 @@ test('str2DateTime keeps a real hour token, not overwriting it with the default 
     $date = DateHelper::str2DateTime('2024-06-15 14');
 
     expect($date)->not->toBeFalse();
-    assert($date instanceof \DateTime);
+    assert($date instanceof DateTime);
     expect($date->format('H:i:s'))->toBe('14:00:00');
 });
 
@@ -265,7 +265,7 @@ test('str2DateTime keeps a real minute token, not overwriting it with the defaul
     $date = DateHelper::str2DateTime('2024-06-15 14:30');
 
     expect($date)->not->toBeFalse();
-    assert($date instanceof \DateTime);
+    assert($date instanceof DateTime);
     expect($date->format('H:i:s'))->toBe('14:30:00');
 });
 
@@ -278,7 +278,7 @@ test('str2DateTime keeps a real, non-zero second token, not overwriting it or re
     $date = DateHelper::str2DateTime('2024-06-15 14:30:45');
 
     expect($date)->not->toBeFalse();
-    assert($date instanceof \DateTime);
+    assert($date instanceof DateTime);
     expect($date->format('H:i:s'))->toBe('14:30:45');
 });
 

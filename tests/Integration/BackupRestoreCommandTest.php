@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
 use Piwigo\Backup\BackupService;
 use Piwigo\Command\BackupRestoreCommand;
 use Symfony\Component\Console\Command\Command;
@@ -28,7 +29,7 @@ final class BackupRestoreCommandTest extends IntegrationTestCase
 
     private string $scratchDb = '';
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -43,7 +44,7 @@ final class BackupRestoreCommandTest extends IntegrationTestCase
         $this->scratchDb = $this->dbName . '_backup_restore_command_test';
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->dropDatabase($this->scratchDb);

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Notification\Projection;
 
+use Piwigo\Users\UserStatus;
+
 /**
  * Typed row shape for
  * {@see \Piwigo\Notification\NotificationByMailRepository::findUserNotifications()}
@@ -58,7 +60,7 @@ final readonly class UserMailNotification
             // Phase 5 Item 21: see \Piwigo\Auth\Projection\AuthUser::fromRow()'s
             // own comment -- `ui.status` array-hydrates as a UserStatus
             // instance now, not a raw string.
-            status: ($row['status'] ?? null) instanceof \Piwigo\Users\UserStatus ? $row['status']->value : null,
+            status: ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : null,
         );
     }
 

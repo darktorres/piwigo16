@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag\Projection;
 
+use InvalidArgumentException;
 use Piwigo\Common\ValueObject\TagId;
 
 /**
@@ -26,7 +27,7 @@ final readonly class TagBrief
     {
         $id = TagId::tryFrom($row['id'] ?? null);
         if ($id === null) {
-            throw new \InvalidArgumentException(sprintf('Expected a positive tag id, got %s', get_debug_type($row['id'] ?? null)));
+            throw new InvalidArgumentException(sprintf('Expected a positive tag id, got %s', get_debug_type($row['id'] ?? null)));
         }
 
         return new self(

@@ -4,6 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration\Admin;
 
+use Override;
+use LogicException;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Users\UserService;
+use Piwigo\Core\WsContext;
+use Piwigo\Core\Lang;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\ConfigLoader;
@@ -15,12 +26,9 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
-use Piwigo\Core\Paths;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\Template;
 use Piwigo\Tests\Integration\IntegrationTestCase;
-use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 
@@ -56,15 +64,15 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
 
     private string $fixtureRoot;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
         $this->setUpConnectionFromEnv();
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -84,33 +92,33 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
 
         EventDispatcher::get()->reset();
 
-        $this->configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current());
+        $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
         // Template::__construct()'s own data_dir_checked first-time-setup
         // flow reaches CurrentConfigService::current()->get() -- same wiring every
         // other Integration test constructing a real Template directly
         // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
         CurrentConfigService::current()->set($this->configService);
-        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
-        $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $urlService = UrlServiceTestFactory::build();
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
         if (! $currentLogger instanceof CurrentLogger) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
         $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-        $activityService = Kernel::container()->get(\Piwigo\Activity\ActivityService::class);
-        if (! $activityService instanceof \Piwigo\Activity\ActivityService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Activity\ActivityService::class);
+        $activityService = Kernel::container()->get(ActivityService::class);
+        if (! $activityService instanceof ActivityService) {
+            throw new LogicException('Container returned an unexpected type for ' . ActivityService::class);
         }
-        $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
-        if (! $userService instanceof \Piwigo\Users\UserService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        $userService = Kernel::container()->get(UserService::class);
+        if (! $userService instanceof UserService) {
+            throw new LogicException('Container returned an unexpected type for ' . UserService::class);
         }
-        $wsContext = Kernel::container()->get(\Piwigo\Core\WsContext::class);
-        if (! $wsContext instanceof \Piwigo\Core\WsContext) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\WsContext::class);
+        $wsContext = Kernel::container()->get(WsContext::class);
+        if (! $wsContext instanceof WsContext) {
+            throw new LogicException('Container returned an unexpected type for ' . WsContext::class);
         }
-        $this->renderer = new ThemesInstalledPageRenderer(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), new RedirectService(\Piwigo\Core\Lang::current(), $userService), $urlService, $this->configService, $currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), $activityService, $userService, \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), CurrentConfig::current(), $wsContext, \Piwigo\Users\CurrentUser::current());
+        $this->renderer = new ThemesInstalledPageRenderer(Lang::current(), AccessControl::current(), new RedirectService(Lang::current(), $userService), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageState::current(), CurrentTemplate::current(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfig::current(), $wsContext, CurrentUser::current());
 
         $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);
@@ -119,13 +127,13 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         $_GET = [];
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $_GET = [];
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         CurrentTemplate::current()->reset();

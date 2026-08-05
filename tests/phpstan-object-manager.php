@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Env;
+use Piwigo\Db\EntityManagerFactory;
+
 // phpstan-doctrine's objectManagerLoader -- gives the DQL/QueryBuilder
 // result-type inference a real EntityManager to read entity metadata from.
 // Building the EntityManager itself is lazy (EntityManagerFactory::build()/
@@ -13,6 +16,6 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 $_SERVER['HTTP_X_PIWIGO_ENV'] = 'test';
-\Piwigo\Core\Env::loadEnvFile(dirname(__DIR__));
+Env::loadEnvFile(dirname(__DIR__));
 
-return \Piwigo\Db\EntityManagerFactory::build();
+return EntityManagerFactory::build();

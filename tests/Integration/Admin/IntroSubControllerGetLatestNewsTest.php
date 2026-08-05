@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Lang;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\IntroSubController;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
@@ -23,10 +25,10 @@ use Piwigo\Core\Paths;
  */
 function intronewsCachePath(): string
 {
-    $langCode = \Piwigo\Core\Lang::current()->langInfo()['code'] ?? null;
+    $langCode = Lang::current()->langInfo()['code'] ?? null;
     $langCode = is_string($langCode) ? $langCode : '';
 
-    return CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->dataLocation()
+    return CurrentPaths::get()->root . CurrentConfig::current()->dataLocation()
         . 'cache/piwigo_latest_news-' . $langCode . '.cache.php';
 }
 
@@ -34,7 +36,7 @@ function intronewsInvoke(): mixed
 {
     $method = new ReflectionMethod(IntroSubController::class, 'getLatestNews');
 
-    return $method->invoke(null, \Piwigo\Core\Lang::current(), \Piwigo\Config\CurrentConfig::current());
+    return $method->invoke(null, Lang::current(), CurrentConfig::current());
 }
 
 beforeEach(function (): void {

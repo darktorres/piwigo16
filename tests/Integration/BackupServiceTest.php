@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use RuntimeException;
+use PharData;
+use ReflectionMethod;
+use InvalidArgumentException;
+use Phar;
 use Piwigo\Backup\BackupService;
 use Piwigo\Core\ShutdownHandler;
 use Piwigo\Db\DbCredentials;
@@ -32,7 +38,7 @@ final class BackupServiceTest extends IntegrationTestCase
 
     private string $archivePath = '';
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -47,7 +53,7 @@ final class BackupServiceTest extends IntegrationTestCase
         $this->scratchDb = $this->dbName . '_backup_service_test';
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         // install() is never called by this test file, so no real SIGTERM
@@ -113,7 +119,7 @@ final class BackupServiceTest extends IntegrationTestCase
         $service = new BackupService();
 
         try {
-            $this->expectException(\RuntimeException::class);
+            $this->expectException(RuntimeException::class);
             $service->restore($badArchive, $this->scratchDb);
         } finally {
             unlink($badArchive);
@@ -158,7 +164,7 @@ final class BackupServiceTest extends IntegrationTestCase
         mkdir($extractDir);
 
         try {
-            new \PharData($this->archivePath)->extractTo($extractDir);
+            new PharData($this->archivePath)->extractTo($extractDir);
 
             self::assertFileExists($extractDir . '/config.inc.php');
             self::assertSame(
@@ -201,7 +207,7 @@ final class BackupServiceTest extends IntegrationTestCase
         $this->archivePath = $service->create();
         self::assertFileExists($this->archivePath);
 
-        $runAll = new \ReflectionMethod(ShutdownHandler::class, 'runAll');
+        $runAll = new ReflectionMethod(ShutdownHandler::class, 'runAll');
         $runAll->invoke(null);
 
         // Reaching this line means the already-registered closure ran
@@ -227,7 +233,7 @@ final class BackupServiceTest extends IntegrationTestCase
 
         try {
             $service->restore($badArchive, $this->scratchDb);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             $threw = $e;
         } finally {
             unlink($badArchive);
@@ -242,7 +248,7 @@ final class BackupServiceTest extends IntegrationTestCase
         // whole test method's total count, not just what follows the call.
         // If runAll() below were to throw, the test would fail with an
         // uncaught exception regardless -- no separate assertion needed.
-        $runAll = new \ReflectionMethod(ShutdownHandler::class, 'runAll');
+        $runAll = new ReflectionMethod(ShutdownHandler::class, 'runAll');
         $runAll->invoke(null);
 
         // Reaching this line means the already-registered closure ran
@@ -260,7 +266,7 @@ final class BackupServiceTest extends IntegrationTestCase
 
         try {
             $service->restore($missingPath, $this->scratchDb);
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             $threw = $e;
         }
 
@@ -287,7 +293,7 @@ final class BackupServiceTest extends IntegrationTestCase
 
         try {
             $service->restore($archivePath, $this->scratchDb);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             $threw = $e;
         } finally {
             unlink($archivePath);
@@ -308,7 +314,7 @@ final class BackupServiceTest extends IntegrationTestCase
 
         try {
             $service->restore($archivePath, $this->scratchDb);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             $threw = $e;
         } finally {
             unlink($archivePath);
@@ -332,7 +338,7 @@ final class BackupServiceTest extends IntegrationTestCase
 
         try {
             $service->restore($archivePath, $this->scratchDb);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             $threw = $e;
         } finally {
             unlink($archivePath);
@@ -363,14 +369,14 @@ final class BackupServiceTest extends IntegrationTestCase
         chmod($dumpPath, 0000);
 
         $service = new BackupService();
-        $method = new \ReflectionMethod(BackupService::class, 'restoreDatabase');
+        $method = new ReflectionMethod(BackupService::class, 'restoreDatabase');
 
         set_error_handler(static fn (): bool => true, E_WARNING);
 
         $threw = null;
         try {
             $method->invoke($service, DbCredentials::fromEnv(), $this->scratchDb, $dumpPath);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             $threw = $e;
         } finally {
             restore_error_handler();
@@ -397,12 +403,12 @@ final class BackupServiceTest extends IntegrationTestCase
         $missingDb = $this->dbName . '_does_not_exist_' . bin2hex(random_bytes(4));
 
         $service = new BackupService();
-        $method = new \ReflectionMethod(BackupService::class, 'restoreDatabase');
+        $method = new ReflectionMethod(BackupService::class, 'restoreDatabase');
 
         $threw = null;
         try {
             $method->invoke($service, DbCredentials::fromEnv(), $missingDb, $dumpPath);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             $threw = $e;
         } finally {
             unlink($dumpPath);
@@ -435,7 +441,7 @@ final class BackupServiceTest extends IntegrationTestCase
         file_put_contents($root . '/nested/inner.txt', 'b');
 
         $service = new BackupService();
-        $method = new \ReflectionMethod(BackupService::class, 'removeDir');
+        $method = new ReflectionMethod(BackupService::class, 'removeDir');
         $method->invoke($service, $root);
 
         self::assertDirectoryDoesNotExist($root);
@@ -459,7 +465,7 @@ final class BackupServiceTest extends IntegrationTestCase
         chmod($dir, 0000);
 
         $service = new BackupService();
-        $method = new \ReflectionMethod(BackupService::class, 'removeDir');
+        $method = new ReflectionMethod(BackupService::class, 'removeDir');
 
         set_error_handler(static fn (): bool => true, E_WARNING);
 
@@ -499,11 +505,11 @@ final class BackupServiceTest extends IntegrationTestCase
         }
 
         $tarPath = sys_get_temp_dir() . '/piwigo-backup-test-' . bin2hex(random_bytes(8)) . '.tar';
-        $tar = new \PharData($tarPath);
+        $tar = new PharData($tarPath);
         foreach (array_keys($files) as $name) {
             $tar->addFile($srcDir . '/' . $name, $name);
         }
-        $tar->compress(\Phar::GZ);
+        $tar->compress(Phar::GZ);
         unset($tar);
         unlink($tarPath);
 

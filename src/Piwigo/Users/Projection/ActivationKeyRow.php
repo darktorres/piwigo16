@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Users\Projection;
 
+use InvalidArgumentException;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
@@ -30,7 +31,7 @@ final readonly class ActivationKeyRow
     {
         $userId = UserId::tryFrom($row['user_id'] ?? null);
         if ($userId === null) {
-            throw new \InvalidArgumentException('ActivationKeyRow::fromRow(): missing or invalid user_id');
+            throw new InvalidArgumentException('ActivationKeyRow::fromRow(): missing or invalid user_id');
         }
 
         return new self(

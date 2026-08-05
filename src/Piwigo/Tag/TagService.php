@@ -4,21 +4,32 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
+use LogicException;
+use Piwigo\Cache\CachePools;
 use Piwigo\Common\ValueObject\TagId;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Tag\DeleteTags;
 use Piwigo\Event\Tag\GetTagAltNames;
 use Piwigo\Event\Tag\GetTagNameLikeWhere;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Tag\RenderTagUrl;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Image\ImageService;
+use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionService;
 use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\Projection\TagBrief;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Tag domain business logic. Constructor-injects TagRepository and
@@ -57,11 +68,11 @@ final readonly class TagService
         private TagRepository $repo,
         private PermissionService $permissionService,
         private ActivityLoggerInterface $activityLogger,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private \Piwigo\Users\CurrentUser $currentUser,
-        private \Piwigo\Config\CurrentConfig $currentConfig,
-        private \Piwigo\Core\CurrentLogger $currentLogger,
-        private \Piwigo\Session\SessionService $sessionService,
+        private EventDispatcher $eventDispatcher,
+        private CurrentUser $currentUser,
+        private CurrentConfig $currentConfig,
+        private CurrentLogger $currentLogger,
+        private SessionService $sessionService,
     ) {
         $this->tagIdFromTagNameCache = new TagIdCache();
     }
@@ -81,7 +92,7 @@ final readonly class TagService
      */
     private function newImageService(): ImageService
     {
-        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityLogger, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator());
+        return new ImageService($this->lang, EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), $this->activityLogger, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator());
     }
 
     /**
@@ -91,11 +102,11 @@ final readonly class TagService
      * above (singleton/service-locator elimination campaign, Phase 11
      * sub-phase 11G).
      */
-    private function translator(): \Piwigo\Lang\Translator
+    private function translator(): Translator
     {
-        $translator = \Piwigo\Core\Kernel::container()->get(\Piwigo\Lang\Translator::class);
-        if (! $translator instanceof \Piwigo\Lang\Translator) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Lang\Translator::class);
+        $translator = Kernel::container()->get(Translator::class);
+        if (! $translator instanceof Translator) {
+            throw new LogicException('Container returned an unexpected type for ' . Translator::class);
         }
 
         return $translator;
@@ -257,7 +268,7 @@ final readonly class TagService
             // pool is fetched inline here rather than constructor-injected
             // (same reasoning as CachePools::config()'s own inline use in
             // ConfigService).
-            $pool = \Piwigo\Cache\CachePools::tagCloud();
+            $pool = CachePools::tagCloud();
             $item = $pool->getItem('counts_' . $this->currentUser->get()->id->value);
             $cached = $item->isHit() ? $item->get() : null;
             $tagCounters = is_array($cached) ? array_map(

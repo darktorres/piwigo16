@@ -7,8 +7,13 @@ namespace Piwigo\History;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\PageState;
 use Piwigo\Event\Picture\PwgLogAllowed;
 use Piwigo\Event\Picture\PwgLogUpdateLastVisit;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Users\CurrentUser;
 
 /**
  * History domain business logic: page-view search/filtering, the
@@ -51,11 +56,11 @@ final readonly class HistoryService
         private AccessControl $accessControl,
         private HistoryRepository $repo,
         private ConfigService $configService,
-        private \Piwigo\Core\CurrentLogger $currentLogger,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private \Piwigo\Core\PageState $pageState,
-        private \Piwigo\Users\CurrentUser $currentUser,
-        private \Piwigo\Config\CurrentConfig $currentConfig,
+        private CurrentLogger $currentLogger,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**

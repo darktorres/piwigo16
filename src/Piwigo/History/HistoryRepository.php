@@ -7,12 +7,16 @@ namespace Piwigo\History;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query;
+use Override;
 use Piwigo\Auth\LastVisitLookupInterface;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
 use Piwigo\Db\Tables;
 use Piwigo\History\Projection\HistorySummaryCount;
 use Piwigo\History\Projection\HistorySummaryCursor;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Users\UserInfoEntity;
 
 /**
  * Persistence layer for the history domain: `history` (one row per public
@@ -71,7 +75,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
      * already `ORDER BY id DESC LIMIT 1` -- so at most one iteration ever
      * ran; a single-row fetch is behaviorally identical.
      */
-    #[\Override]
+    #[Override]
     public function findLastVisit(int $userId): ?string
     {
         $row = $this->getEntityManager()
@@ -83,7 +87,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             ->setMaxResults(1)
             ->setParameter('userId', $userId)
             ->getQuery()
-            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
         if (! is_array($row)) {
             return null;
@@ -740,9 +744,9 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
         // saveLastVisitFromHistory()'s own docblock for why) -- DQL
         // supports this identically to the original DBAL form.
         $em = $this->getEntityManager();
-        $em->createQuery('UPDATE ' . \Piwigo\Users\UserInfoEntity::class . ' ui SET ui.lastVisit = :now, ui.lastmodified = ui.lastmodified WHERE ui.userId = :userId')
+        $em->createQuery('UPDATE ' . UserInfoEntity::class . ' ui SET ui.lastVisit = :now, ui.lastmodified = ui.lastmodified WHERE ui.userId = :userId')
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
-            ->setParameter('userId', \Piwigo\Common\ValueObject\UserId::from($userId))
+            ->setParameter('userId', UserId::from($userId))
             ->execute();
         $em->clear();
     }

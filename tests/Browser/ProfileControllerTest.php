@@ -57,7 +57,7 @@ function profileEnsureDefaultThemeRegistered(): void
     $db = H::connect();
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $upsertSql = $db instanceof \mysqli
+    $upsertSql = $db instanceof mysqli
         ? "INSERT INTO %sthemes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON DUPLICATE KEY UPDATE name = 'Default'"
         : "INSERT INTO %sthemes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON CONFLICT (id) DO UPDATE SET name = 'Default'";
     H::dbQuery($db, sprintf($upsertSql, $prefix));
@@ -572,7 +572,7 @@ function profileSetUserLanguage(string $language): void
     // MySQL's own multi-table UPDATE...INNER JOIN...SET syntax has no
     // Postgres equivalent -- UPDATE...SET...FROM...WHERE is the real
     // portable form, confirmed live against this exact join shape.
-    $sql = $db instanceof \mysqli
+    $sql = $db instanceof mysqli
         ? "UPDATE {$prefix}user_infos ui INNER JOIN {$prefix}users u ON u.id = ui.user_id SET ui.language = '{$escapedLanguage}' WHERE u.username = '{$escapedUsername}'"
         : "UPDATE {$prefix}user_infos ui SET language = '{$escapedLanguage}' FROM {$prefix}users u WHERE u.id = ui.user_id AND u.username = '{$escapedUsername}'";
     H::dbQuery($db, $sql);
@@ -593,7 +593,7 @@ it('switches the interface language via a valid, different lang cookie and persi
     // `array_key_exists($cookie_lang, LangService::getLanguages())` guard
     // would always fail and this couldn't reach the real switch path at
     // all.
-    $upsertSql = $db instanceof \mysqli
+    $upsertSql = $db instanceof mysqli
         ? "INSERT INTO %slanguages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON DUPLICATE KEY UPDATE name = VALUES(name)"
         : "INSERT INTO %slanguages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name";
     H::dbQuery($db, sprintf($upsertSql, $prefix));
@@ -659,7 +659,7 @@ function profileSetImageSettings(int $nbImagePage, int $recentPeriod): void
     // Same MySQL-only UPDATE...INNER JOIN...SET syntax as
     // profileSetUserLanguage() above -- UPDATE...SET...FROM...WHERE is
     // the real Postgres equivalent.
-    $sql = $db instanceof \mysqli
+    $sql = $db instanceof mysqli
         ? "UPDATE {$prefix}user_infos ui INNER JOIN {$prefix}users u ON u.id = ui.user_id SET ui.nb_image_page = {$nbImagePage}, ui.recent_period = {$recentPeriod} WHERE u.username = '{$escapedUsername}'"
         : "UPDATE {$prefix}user_infos ui SET nb_image_page = {$nbImagePage}, recent_period = {$recentPeriod} FROM {$prefix}users u WHERE u.id = ui.user_id AND u.username = '{$escapedUsername}'";
     H::dbQuery($db, $sql);

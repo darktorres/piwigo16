@@ -4,11 +4,27 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use LogicException;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\PiwigoInfosSender;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\PageState;
 use Piwigo\Core\UniqueExecLock;
+use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Mail\MailService;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\UserService;
 
 /**
  * The page-footer orchestration of the deleted include/page_tail.php (P23
@@ -44,7 +60,7 @@ final class PageTail
         // (L4) is the one place the concrete L4 implementation gets
         // constructed. Legacy Coupling Retirement Phase 4c: UrlServiceInterface
         // is wired the same way, see PageTailRenderer's own docblock.
-        new PageTailRenderer(\Piwigo\Auth\AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig()), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
+        new PageTailRenderer(AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig()), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
             ->render(self::pageState()->requestStart);
     }
 
@@ -58,7 +74,7 @@ final class PageTail
     {
         self::checkForUpdates();
 
-        return new PageTailRenderer(\Piwigo\Auth\AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig()), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
+        return new PageTailRenderer(AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig()), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
             ->renderToString(self::pageState()->requestStart);
     }
 
@@ -68,11 +84,11 @@ final class PageTail
      * resolving `Kernel::container()` directly (singleton/service-locator
      * elimination campaign, Phase 2).
      */
-    private static function currentLogger(): \Piwigo\Core\CurrentLogger
+    private static function currentLogger(): CurrentLogger
     {
-        $currentLogger = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
-        if (! $currentLogger instanceof \Piwigo\Core\CurrentLogger) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentLogger::class);
+        $currentLogger = Kernel::container()->get(CurrentLogger::class);
+        if (! $currentLogger instanceof CurrentLogger) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
 
         return $currentLogger;
@@ -84,11 +100,11 @@ final class PageTail
      * from here rather than resolving `Kernel::container()` directly
      * (singleton/service-locator elimination campaign, Phase 4).
      */
-    private static function imageStdParams(): \Piwigo\Image\ImageStdParams
+    private static function imageStdParams(): ImageStdParams
     {
-        $imageStdParams = \Piwigo\Core\Kernel::container()->get(\Piwigo\Image\ImageStdParams::class);
-        if (! $imageStdParams instanceof \Piwigo\Image\ImageStdParams) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Image\ImageStdParams::class);
+        $imageStdParams = Kernel::container()->get(ImageStdParams::class);
+        if (! $imageStdParams instanceof ImageStdParams) {
+            throw new LogicException('Container returned an unexpected type for ' . ImageStdParams::class);
         }
 
         return $imageStdParams;
@@ -101,11 +117,11 @@ final class PageTail
      * rather than resolving `Kernel::container()` directly (singleton/
      * service-locator elimination campaign, Phase 4).
      */
-    private static function pageState(): \Piwigo\Core\PageState
+    private static function pageState(): PageState
     {
-        $pageState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\PageState::class);
-        if (! $pageState instanceof \Piwigo\Core\PageState) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\PageState::class);
+        $pageState = Kernel::container()->get(PageState::class);
+        if (! $pageState instanceof PageState) {
+            throw new LogicException('Container returned an unexpected type for ' . PageState::class);
         }
 
         return $pageState;
@@ -117,31 +133,31 @@ final class PageTail
      * `Bootstrap/`'s own manual-construction call sites (singleton/
      * service-locator elimination campaign, Phase 5).
      */
-    private static function currentTemplate(): \Piwigo\Template\CurrentTemplate
+    private static function currentTemplate(): CurrentTemplate
     {
-        $currentTemplate = \Piwigo\Core\Kernel::container()->get(\Piwigo\Template\CurrentTemplate::class);
-        if (! $currentTemplate instanceof \Piwigo\Template\CurrentTemplate) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Template\CurrentTemplate::class);
+        $currentTemplate = Kernel::container()->get(CurrentTemplate::class);
+        if (! $currentTemplate instanceof CurrentTemplate) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentTemplate::class);
         }
 
         return $currentTemplate;
     }
 
-    private static function currentConfigService(): \Piwigo\Config\CurrentConfigService
+    private static function currentConfigService(): CurrentConfigService
     {
-        $currentConfigService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfigService::class);
-        if (! $currentConfigService instanceof \Piwigo\Config\CurrentConfigService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfigService::class);
+        $currentConfigService = Kernel::container()->get(CurrentConfigService::class);
+        if (! $currentConfigService instanceof CurrentConfigService) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfigService::class);
         }
 
         return $currentConfigService;
     }
 
-    private static function urlService(): \Piwigo\Core\UrlServiceInterface
+    private static function urlService(): UrlServiceInterface
     {
-        $urlService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\UrlServiceInterface::class);
-        if (! $urlService instanceof \Piwigo\Core\UrlServiceInterface) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\UrlServiceInterface::class);
+        $urlService = Kernel::container()->get(UrlServiceInterface::class);
+        if (! $urlService instanceof UrlServiceInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
         }
 
         return $urlService;
@@ -154,51 +170,51 @@ final class PageTail
      * construction call sites (singleton/service-locator elimination
      * campaign, Phase 6).
      */
-    private static function activityService(): \Piwigo\Activity\ActivityService
+    private static function activityService(): ActivityService
     {
-        $activityService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Activity\ActivityService::class);
-        if (! $activityService instanceof \Piwigo\Activity\ActivityService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Activity\ActivityService::class);
+        $activityService = Kernel::container()->get(ActivityService::class);
+        if (! $activityService instanceof ActivityService) {
+            throw new LogicException('Container returned an unexpected type for ' . ActivityService::class);
         }
 
         return $activityService;
     }
 
-    private static function installationStats(): \Piwigo\Admin\InstallationStats
+    private static function installationStats(): InstallationStats
     {
-        $installationStats = \Piwigo\Core\Kernel::container()->get(\Piwigo\Admin\InstallationStats::class);
-        if (! $installationStats instanceof \Piwigo\Admin\InstallationStats) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Admin\InstallationStats::class);
+        $installationStats = Kernel::container()->get(InstallationStats::class);
+        if (! $installationStats instanceof InstallationStats) {
+            throw new LogicException('Container returned an unexpected type for ' . InstallationStats::class);
         }
 
         return $installationStats;
     }
 
-    private static function userService(): \Piwigo\Users\UserService
+    private static function userService(): UserService
     {
-        $userService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Users\UserService::class);
-        if (! $userService instanceof \Piwigo\Users\UserService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        $userService = Kernel::container()->get(UserService::class);
+        if (! $userService instanceof UserService) {
+            throw new LogicException('Container returned an unexpected type for ' . UserService::class);
         }
 
         return $userService;
     }
 
-    private static function imageService(): \Piwigo\Image\ImageService
+    private static function imageService(): ImageService
     {
-        $imageService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Image\ImageService::class);
-        if (! $imageService instanceof \Piwigo\Image\ImageService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Image\ImageService::class);
+        $imageService = Kernel::container()->get(ImageService::class);
+        if (! $imageService instanceof ImageService) {
+            throw new LogicException('Container returned an unexpected type for ' . ImageService::class);
         }
 
         return $imageService;
     }
 
-    private static function mailService(): \Piwigo\Mail\MailService
+    private static function mailService(): MailService
     {
-        $mailService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Mail\MailService::class);
-        if (! $mailService instanceof \Piwigo\Mail\MailService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Mail\MailService::class);
+        $mailService = Kernel::container()->get(MailService::class);
+        if (! $mailService instanceof MailService) {
+            throw new LogicException('Container returned an unexpected type for ' . MailService::class);
         }
 
         return $mailService;
@@ -207,11 +223,11 @@ final class PageTail
     private static function checkForUpdates(): void
     {
         // ----------------------------------------------- update notification
-        $update_notify_check_period = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->updateNotifyCheckPeriod();
+        $update_notify_check_period = RequestBootstrap::currentConfig()->updateNotifyCheckPeriod();
         if ($update_notify_check_period > 0) {
             $check_for_updates = false;
 
-            $update_notify_last_check = \Piwigo\Bootstrap\RequestBootstrap::currentConfig()->updateNotifyLastCheck() ?? null;
+            $update_notify_last_check = RequestBootstrap::currentConfig()->updateNotifyLastCheck() ?? null;
             $update_notify_last_check = is_string($update_notify_last_check) ? $update_notify_last_check : null;
 
             if ($update_notify_last_check !== null) {
@@ -225,7 +241,7 @@ final class PageTail
             if ($check_for_updates) {
                 $exec_id = UniqueExecLock::begins('check_for_updates');
                 if ($exec_id !== false) {
-                    new CoreUpdateService(RequestBootstrap::lang(), new ZipExtractor(), new RedirectService(RequestBootstrap::lang(), self::userService()), self::urlService(), self::currentConfigService()->get(), \Piwigo\Core\CurrentPaths::get(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService(), RequestBootstrap::currentConfig())
+                    new CoreUpdateService(RequestBootstrap::lang(), new ZipExtractor(), new RedirectService(RequestBootstrap::lang(), self::userService()), self::urlService(), self::currentConfigService()->get(), CurrentPaths::get(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService(), RequestBootstrap::currentConfig())
                         ->notifyPiwigoNewVersions();
 
                     UniqueExecLock::ends('check_for_updates');

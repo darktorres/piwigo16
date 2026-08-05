@@ -13,6 +13,7 @@ use Doctrine\ORM\Query\AST\Node;
 use Doctrine\ORM\Query\Parser;
 use Doctrine\ORM\Query\SqlWalker;
 use Doctrine\ORM\Query\TokenType;
+use Override;
 
 /**
  * Custom DQL function: "DATE_FORMAT_YEAR_MONTH" "(" StringPrimary ")" --
@@ -40,7 +41,7 @@ final class DateFormatYearMonthFunction extends FunctionNode
 {
     private Node $date;
 
-    #[\Override]
+    #[Override]
     public function getSql(SqlWalker $sqlWalker): string
     {
         $platform = $sqlWalker->getConnection()
@@ -62,7 +63,7 @@ final class DateFormatYearMonthFunction extends FunctionNode
         throw NotSupported::new(self::class . '::getSql() for ' . $platform::class);
     }
 
-    #[\Override]
+    #[Override]
     public function parse(Parser $parser): void
     {
         $parser->match(TokenType::T_IDENTIFIER);

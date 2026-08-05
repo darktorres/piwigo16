@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -59,7 +60,7 @@ test('fromUserArray falls back to Guest for an unrecognized status value', funct
 
 test('withLanguage returns a new immutable instance, original is untouched', function (): void {
     $original = new User(
-        id: \Piwigo\Common\ValueObject\UserId::from(1),
+        id: UserId::from(1),
         username: 'bob',
         email: '',
         language: 'en_UK',
@@ -77,7 +78,7 @@ test('withLanguage returns a new immutable instance, original is untouched', fun
 
 test('withUsername returns a new immutable instance', function (): void {
     $original = new User(
-        id: \Piwigo\Common\ValueObject\UserId::from(1),
+        id: UserId::from(1),
         username: 'bob',
         email: '',
         language: 'en_UK',
@@ -94,7 +95,7 @@ test('withUsername returns a new immutable instance', function (): void {
 
 test('withLevel returns a new immutable instance and syncs rawAttributes', function (): void {
     $original = new User(
-        id: \Piwigo\Common\ValueObject\UserId::from(1),
+        id: UserId::from(1),
         username: 'bob',
         email: '',
         language: 'en_UK',
@@ -116,7 +117,7 @@ test('withLevel returns a new immutable instance and syncs rawAttributes', funct
 
 test('withEnabledHigh returns a new immutable instance and syncs rawAttributes', function (): void {
     $original = new User(
-        id: \Piwigo\Common\ValueObject\UserId::from(1),
+        id: UserId::from(1),
         username: 'bob',
         email: '',
         language: 'en_UK',
@@ -136,7 +137,7 @@ test('withEnabledHigh returns a new immutable instance and syncs rawAttributes',
 
 test('withRawAttribute adds a key without disturbing the rest of the array', function (): void {
     $original = new User(
-        id: \Piwigo\Common\ValueObject\UserId::from(1),
+        id: UserId::from(1),
         username: 'bob',
         email: '',
         language: 'en_UK',

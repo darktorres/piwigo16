@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use LogicException;
 use Piwigo\Admin\AlbumNotificationPageRenderer;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\BatchManagerUnitPageRenderer;
@@ -58,7 +59,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(CategoryAdminService::class);
         if (! $service instanceof CategoryAdminService) {
-            throw new \LogicException('Container returned an unexpected type for ' . CategoryAdminService::class);
+            throw new LogicException('Container returned an unexpected type for ' . CategoryAdminService::class);
         }
         return $service;
     }
@@ -67,7 +68,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(DbMaintenanceRepository::class);
         if (! $service instanceof DbMaintenanceRepository) {
-            throw new \LogicException('Container returned an unexpected type for ' . DbMaintenanceRepository::class);
+            throw new LogicException('Container returned an unexpected type for ' . DbMaintenanceRepository::class);
         }
         return $service;
     }
@@ -76,7 +77,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(FilterResolver::class);
         if (! $service instanceof FilterResolver) {
-            throw new \LogicException('Container returned an unexpected type for ' . FilterResolver::class);
+            throw new LogicException('Container returned an unexpected type for ' . FilterResolver::class);
         }
         return $service;
     }
@@ -85,7 +86,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(UserPermPageRenderer::class);
         if (! $service instanceof UserPermPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . UserPermPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . UserPermPageRenderer::class);
         }
         return $service;
     }
@@ -94,7 +95,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(UpdatesPwgPageRenderer::class);
         if (! $service instanceof UpdatesPwgPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . UpdatesPwgPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . UpdatesPwgPageRenderer::class);
         }
         return $service;
     }
@@ -103,7 +104,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(ThemesNewPageRenderer::class);
         if (! $service instanceof ThemesNewPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . ThemesNewPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . ThemesNewPageRenderer::class);
         }
         return $service;
     }
@@ -112,7 +113,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(ThemesInstalledPageRenderer::class);
         if (! $service instanceof ThemesInstalledPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . ThemesInstalledPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . ThemesInstalledPageRenderer::class);
         }
         return $service;
     }
@@ -121,7 +122,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(TagsPageRenderer::class);
         if (! $service instanceof TagsPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . TagsPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . TagsPageRenderer::class);
         }
         return $service;
     }
@@ -130,7 +131,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(PluginsNewPageRenderer::class);
         if (! $service instanceof PluginsNewPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . PluginsNewPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . PluginsNewPageRenderer::class);
         }
         return $service;
     }
@@ -139,7 +140,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(PictureModifyPageRenderer::class);
         if (! $service instanceof PictureModifyPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . PictureModifyPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . PictureModifyPageRenderer::class);
         }
         return $service;
     }
@@ -148,7 +149,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(PhotosAddDirectPageRenderer::class);
         if (! $service instanceof PhotosAddDirectPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . PhotosAddDirectPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . PhotosAddDirectPageRenderer::class);
         }
         return $service;
     }
@@ -157,7 +158,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(MaintenanceEnvPageRenderer::class);
         if (! $service instanceof MaintenanceEnvPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . MaintenanceEnvPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . MaintenanceEnvPageRenderer::class);
         }
         return $service;
     }
@@ -166,7 +167,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(MaintenanceActionsPageRenderer::class);
         if (! $service instanceof MaintenanceActionsPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . MaintenanceActionsPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . MaintenanceActionsPageRenderer::class);
         }
         return $service;
     }
@@ -175,7 +176,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(LanguagesNewPageRenderer::class);
         if (! $service instanceof LanguagesNewPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . LanguagesNewPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . LanguagesNewPageRenderer::class);
         }
         return $service;
     }
@@ -184,7 +185,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(LanguagesInstalledPageRenderer::class);
         if (! $service instanceof LanguagesInstalledPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . LanguagesInstalledPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . LanguagesInstalledPageRenderer::class);
         }
         return $service;
     }
@@ -193,7 +194,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(GroupListPageRenderer::class);
         if (! $service instanceof GroupListPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . GroupListPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . GroupListPageRenderer::class);
         }
         return $service;
     }
@@ -202,7 +203,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(ElementSetRanksPageRenderer::class);
         if (! $service instanceof ElementSetRanksPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . ElementSetRanksPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . ElementSetRanksPageRenderer::class);
         }
         return $service;
     }
@@ -211,7 +212,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(CatPermPageRenderer::class);
         if (! $service instanceof CatPermPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . CatPermPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . CatPermPageRenderer::class);
         }
         return $service;
     }
@@ -220,7 +221,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(CatOptionsPageRenderer::class);
         if (! $service instanceof CatOptionsPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . CatOptionsPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . CatOptionsPageRenderer::class);
         }
         return $service;
     }
@@ -229,7 +230,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(CatListPageRenderer::class);
         if (! $service instanceof CatListPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . CatListPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . CatListPageRenderer::class);
         }
         return $service;
     }
@@ -238,7 +239,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(BatchManagerUnitPageRenderer::class);
         if (! $service instanceof BatchManagerUnitPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . BatchManagerUnitPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . BatchManagerUnitPageRenderer::class);
         }
         return $service;
     }
@@ -247,7 +248,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(AlbumNotificationPageRenderer::class);
         if (! $service instanceof AlbumNotificationPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . AlbumNotificationPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . AlbumNotificationPageRenderer::class);
         }
         return $service;
     }
@@ -256,7 +257,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(ThemesStandardPagesPageRenderer::class);
         if (! $service instanceof ThemesStandardPagesPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . ThemesStandardPagesPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . ThemesStandardPagesPageRenderer::class);
         }
         return $service;
     }
@@ -265,7 +266,7 @@ final class AdminAccessor
     {
         $service = Kernel::container()->get(PictureCoiPageRenderer::class);
         if (! $service instanceof PictureCoiPageRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . PictureCoiPageRenderer::class);
+            throw new LogicException('Container returned an unexpected type for ' . PictureCoiPageRenderer::class);
         }
         return $service;
     }

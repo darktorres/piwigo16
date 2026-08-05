@@ -7,6 +7,7 @@ namespace Piwigo\Migrations;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
+use Override;
 use Piwigo\Db\DbCredentials;
 
 /**
@@ -26,13 +27,13 @@ use Piwigo\Db\DbCredentials;
  */
 final class Version20260804122302 extends AbstractMigration
 {
-    #[\Override]
+    #[Override]
     public function getDescription(): string
     {
         return 'Baseline bootstrap: admin/system domain (config, activity, history, and 13 more)';
     }
 
-    #[\Override]
+    #[Override]
     public function up(Schema $schema): void
     {
         if ($this->platform instanceof PostgreSQLPlatform) {
@@ -44,7 +45,7 @@ final class Version20260804122302 extends AbstractMigration
         $this->upMysql();
     }
 
-    #[\Override]
+    #[Override]
     public function down(Schema $schema): void
     {
         $this->throwIrreversibleMigrationException(

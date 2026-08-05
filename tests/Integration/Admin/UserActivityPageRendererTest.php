@@ -4,6 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration\Admin;
 
+use Override;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use LogicException;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Users\UserService;
+use Piwigo\Image\ImageService;
+use Piwigo\Category\CategoryService;
+use Piwigo\Group\GroupService;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Validation\InputValidator;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\UserActivityPageRenderer;
@@ -12,14 +24,12 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Html\HtmlService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\Template;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -64,7 +74,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
     /** @var list<array<string, mixed>> */
     private array $deletedActivityRows = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -73,7 +83,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         Kernel::boot();
 
         $this->conn = DbConnection::build();
-        $this->urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        $this->urlService = UrlServiceTestFactory::build();
 
         // Real admin identity without a real login -- see this file's own
         // docblock for why a genuine loginAsAdmin() can't be used here.
@@ -91,7 +101,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         EventDispatcher::get()->reset();
         $coreTabs = Kernel::container()->get(CoreTabs::class);
         if (! $coreTabs instanceof CoreTabs) {
-            throw new \LogicException('Container returned an unexpected type for ' . CoreTabs::class);
+            throw new LogicException('Container returned an unexpected type for ' . CoreTabs::class);
         }
         $this->coreTabs = $coreTabs;
         EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, $this->coreTabs->addCoreTabs(...));
@@ -101,13 +111,13 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         // flow reaches CurrentConfigService::current()->get() -- same wiring every
         // other Integration test constructing a real Template directly
         // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
-        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $_GET = [];
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         if ($this->deletedActivityRows !== []) {
@@ -136,42 +146,42 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . " WHERE object != 'system'");
 
-        $activityService = Kernel::container()->get(\Piwigo\Activity\ActivityService::class);
-        if (! $activityService instanceof \Piwigo\Activity\ActivityService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Activity\ActivityService::class);
+        $activityService = Kernel::container()->get(ActivityService::class);
+        if (! $activityService instanceof ActivityService) {
+            throw new LogicException('Container returned an unexpected type for ' . ActivityService::class);
         }
 
-        $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
-        if (! $userService instanceof \Piwigo\Users\UserService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        $userService = Kernel::container()->get(UserService::class);
+        if (! $userService instanceof UserService) {
+            throw new LogicException('Container returned an unexpected type for ' . UserService::class);
         }
 
-        $imageService = Kernel::container()->get(\Piwigo\Image\ImageService::class);
-        if (! $imageService instanceof \Piwigo\Image\ImageService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Image\ImageService::class);
+        $imageService = Kernel::container()->get(ImageService::class);
+        if (! $imageService instanceof ImageService) {
+            throw new LogicException('Container returned an unexpected type for ' . ImageService::class);
         }
 
-        $categoryService = Kernel::container()->get(\Piwigo\Category\CategoryService::class);
-        if (! $categoryService instanceof \Piwigo\Category\CategoryService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Category\CategoryService::class);
+        $categoryService = Kernel::container()->get(CategoryService::class);
+        if (! $categoryService instanceof CategoryService) {
+            throw new LogicException('Container returned an unexpected type for ' . CategoryService::class);
         }
 
-        $groupService = Kernel::container()->get(\Piwigo\Group\GroupService::class);
-        if (! $groupService instanceof \Piwigo\Group\GroupService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Group\GroupService::class);
+        $groupService = Kernel::container()->get(GroupService::class);
+        if (! $groupService instanceof GroupService) {
+            throw new LogicException('Container returned an unexpected type for ' . GroupService::class);
         }
 
-        $htmlService = Kernel::container()->get(\Piwigo\Html\HtmlService::class);
-        if (! $htmlService instanceof \Piwigo\Html\HtmlService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Html\HtmlService::class);
+        $htmlService = Kernel::container()->get(HtmlService::class);
+        if (! $htmlService instanceof HtmlService) {
+            throw new LogicException('Container returned an unexpected type for ' . HtmlService::class);
         }
 
-        $currentConfig = Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
 
-        new UserActivityPageRenderer()->render(Lang::current(), \Piwigo\Auth\AccessControl::current(), $this->urlService, $this->coreTabs, CurrentTemplate::current(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new \Piwigo\Validation\InputValidator(), EventDispatcher::get());
+        new UserActivityPageRenderer()->render(Lang::current(), AccessControl::current(), $this->urlService, $this->coreTabs, CurrentTemplate::current(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcher::get());
 
         $template = CurrentTemplate::current()->get();
         self::assertSame([], $template->get_template_vars('ulist'));

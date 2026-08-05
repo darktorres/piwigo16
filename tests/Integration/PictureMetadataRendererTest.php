@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use LogicException;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Session\SessionService;
+use Piwigo\Core\FilterState;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Kernel;
@@ -17,7 +23,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Image\SrcImage;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\Template;
 
 /**
  * The Unit sibling (tests/Unit/Picture/PictureMetadataRendererTest.php)
@@ -38,22 +43,22 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
     private CurrentLogger $currentLogger;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), $currentConfig));
-        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig));
+        CurrentTemplate::current()->set(TemplateTestFactory::build());
 
         $this->scratchDir = dirname(__DIR__, 2) . '/_data/picture-metadata-renderer-test-scratch';
         @mkdir($this->scratchDir, 0o777, true);
@@ -63,7 +68,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $files = glob($this->scratchDir . '/*');
@@ -190,7 +195,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane Photographer', 'ImageDescription' => 'A test photo']))
         );
 
-        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), $currentConfig, \Piwigo\Users\CurrentUser::current(), \Piwigo\Session\SessionService::get(), new \Piwigo\Core\FilterState());
+        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUser::current(), SessionService::get(), new FilterState());
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -231,7 +236,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp1ExifSegment([]))
         );
 
-        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), $currentConfig, \Piwigo\Users\CurrentUser::current(), \Piwigo\Session\SessionService::get(), new \Piwigo\Core\FilterState());
+        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUser::current(), SessionService::get(), new FilterState());
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -251,7 +256,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-empty.jpg';
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane'])));
 
-        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), $currentConfig, \Piwigo\Users\CurrentUser::current(), \Piwigo\Session\SessionService::get(), new \Piwigo\Core\FilterState());
+        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUser::current(), SessionService::get(), new FilterState());
 
         self::assertNull(CurrentTemplate::current()->get()->get_template_vars('metadata'));
     }
@@ -280,7 +285,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp13IptcSegment([[5, 'Sunset Over The Bay'], [80, 'Jane Photographer']]))
         );
 
-        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), $currentConfig, \Piwigo\Users\CurrentUser::current(), \Piwigo\Session\SessionService::get(), new \Piwigo\Core\FilterState());
+        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUser::current(), SessionService::get(), new FilterState());
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -310,7 +315,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         );
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $combined);
 
-        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), $currentConfig, \Piwigo\Users\CurrentUser::current(), \Piwigo\Session\SessionService::get(), new \Piwigo\Core\FilterState());
+        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUser::current(), SessionService::get(), new FilterState());
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);

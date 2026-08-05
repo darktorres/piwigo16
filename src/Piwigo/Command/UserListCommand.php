@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Command;
 
+use Override;
 use Piwigo\Db\DbCredentials;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -33,7 +34,7 @@ use Symfony\Component\Process\Process;
 #[AsCommand(name: 'user:list', description: 'List registered users (id, username, email, status, registered)')]
 final class UserListCommand extends Command
 {
-    #[\Override]
+    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $credentials = DbCredentials::fromEnv();

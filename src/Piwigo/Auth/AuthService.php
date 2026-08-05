@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use DateTimeImmutable;
+use Exception;
 use Piwigo\Auth\Event\FinalizeLogin;
+use Piwigo\Auth\Projection\AuthUser;
+use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\PageFilterHelper;
+use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\User\LoginFailure;
 use Piwigo\Event\User\LoginFailureBeforeLogUser;
@@ -16,7 +24,10 @@ use Piwigo\Event\User\LoginSuccess;
 use Piwigo\Event\User\TryLogUser;
 use Piwigo\Event\User\UserLogin;
 use Piwigo\Event\User\UserLogout;
+use Piwigo\Lang\LangService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Login/logout session lifecycle: remember-me auto-login, session
@@ -61,10 +72,10 @@ final readonly class AuthService
         private CookieService $cookieService,
         private UserFailedLoginRepository $failedLoginRepo,
         private SessionService $sessionService,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private \Piwigo\Core\PageState $pageState,
-        private \Piwigo\Users\CurrentUser $currentUser,
-        private \Piwigo\Config\CurrentConfig $currentConfig,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -154,7 +165,7 @@ final readonly class AuthService
             if (! is_string($lang_cookie)) {
                 $this->htmlRenderer->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
             }
-            if (! array_key_exists($lang_cookie, \Piwigo\Lang\LangService::getLanguages())) {
+            if (! array_key_exists($lang_cookie, LangService::getLanguages())) {
                 $this->htmlRenderer->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
             }
 
@@ -243,7 +254,7 @@ final readonly class AuthService
                         // defines the authentication context (UI, API,
                         // etc). Auto-login via remember-me may miss this,
                         // so we set it to 'pwg_ui' for UI logins (not API).
-                        if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws') {
+                        if (PageFilterHelper::scriptBasename() !== 'ws') {
                             $_SESSION['connected_with'] = 'pwg_ui';
                         }
                         $this->logUser($cookie[0], true);
@@ -336,7 +347,7 @@ final readonly class AuthService
         // see IpAddress's own docblock for why this is a plain -> (not
         // ?->) before the ?? -- the null-coalescing already handles a null
         // left-hand side safely.
-        $ip = \Piwigo\Common\ValueObject\IpAddress::fromRemoteAddr()->value ?? '';
+        $ip = IpAddress::fromRemoteAddr()->value ?? '';
         $now = Env::now();
         $nowFormatted = $now->format('Y-m-d H:i:s');
         $windowStart = (clone $now)->modify('-' . $this->currentConfig->loginLockoutWindowMinutes() . ' minutes')->format('Y-m-d H:i:s');
@@ -458,7 +469,7 @@ final readonly class AuthService
      * docblock) -- narrows to a real int for UserFailedLoginRepository, or
      * null when there's no resolved user to attribute the attempt to.
      */
-    private function resolveUserId(?\Piwigo\Auth\Projection\AuthUser $user): ?int
+    private function resolveUserId(?AuthUser $user): ?int
     {
         return $user !== null && is_numeric($user->id) ? (int) $user->id : null;
     }
@@ -468,7 +479,7 @@ final readonly class AuthService
      *
      * @since 16
      */
-    public function findUserByUsernameOrEmail(string $usernameOrEmail): ?\Piwigo\Auth\Projection\AuthUser
+    public function findUserByUsernameOrEmail(string $usernameOrEmail): ?AuthUser
     {
         return $this->repo->findByUsernameOrEmail($usernameOrEmail);
     }
@@ -581,8 +592,8 @@ final readonly class AuthService
             // calendar-day (not 24h-period) difference, sign-aware; matched
             // here via two date-only DateTimeImmutable instances rather
             // than a raw timestamp subtraction.
-            $expiredOnDateOnly = new \DateTimeImmutable(substr($key->expiredOn, 0, 10));
-            $nowDateOnly = new \DateTimeImmutable($now->format('Y-m-d'));
+            $expiredOnDateOnly = new DateTimeImmutable(substr($key->expiredOn, 0, 10));
+            $nowDateOnly = new DateTimeImmutable($now->format('Y-m-d'));
             $days_left = (int) $nowDateOnly->diff($expiredOnDateOnly)
                 ->format('%r%a');
             $fortyEightHoursAgo = (clone $now)->modify('-48 hours');
@@ -726,9 +737,9 @@ final readonly class AuthService
 
         $validation_timestamp = strtotime('now -' . $duration . ' second');
         if ($validation_timestamp === false) {
-            throw new \Exception('generatePasswordLink(): strtotime() failed for duration ' . $duration);
+            throw new Exception('generatePasswordLink(): strtotime() failed for duration ' . $duration);
         }
-        $time_validation = \Piwigo\Core\DateHelper::timeSince($validation_timestamp, 'second', null, false);
+        $time_validation = DateHelper::timeSince($validation_timestamp, 'second', null, false);
 
         return [
             'time_validation' => $time_validation,

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\Assert;
 use Piwigo\Admin\Request\PictureCoiRequest;
 use Piwigo\Validation\InputValidator;
 
@@ -51,7 +52,7 @@ test('fromArrays computes a 4-char coi code when l is a non-empty string', funct
         'b' => '1',
     ], new InputValidator());
 
-    \PHPUnit\Framework\Assert::assertIsString($request->coi);
+    Assert::assertIsString($request->coi);
     expect($request->coi)->toBeString()
         ->and(strlen($request->coi))->toBe(4);
 });

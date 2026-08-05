@@ -4,30 +4,45 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
+use Exception;
+use LogicException;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\CachePools;
 use Piwigo\Common\Dto\PaginatedResult;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Env;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ProcessCache;
+use Piwigo\Core\RecentIconResolver;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Album\CreateVirtualCategory;
 use Piwigo\Event\Album\DeleteCategories;
 use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
 use Piwigo\Event\Site\DeleteSite;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 
 /**
@@ -60,8 +75,8 @@ final readonly class CategoryService
         private Lang $lang,
         private CategoryRepository $repo,
         private PermissionService $permissionService,
-        private \Piwigo\Config\CurrentConfig $currentConfig,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private CurrentConfig $currentConfig,
+        private EventDispatcher $eventDispatcher,
         private Translator $translator,
     ) {}
 
@@ -74,11 +89,11 @@ final readonly class CategoryService
      * own identical accessControl() helper (singleton/service-locator
      * elimination campaign, Phase 11 sub-phase 11G).
      */
-    private function accessControl(): \Piwigo\Auth\AccessControl
+    private function accessControl(): AccessControl
     {
-        $accessControl = \Piwigo\Core\Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
-        if (! $accessControl instanceof \Piwigo\Auth\AccessControl) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Auth\AccessControl::class);
+        $accessControl = Kernel::container()->get(AccessControl::class);
+        if (! $accessControl instanceof AccessControl) {
+            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
 
         return $accessControl;
@@ -96,18 +111,18 @@ final readonly class CategoryService
      * ProcessCache::getStatic()/setStatic()'s own identical pre-boot
      * fallback.
      */
-    private function processCache(): \Piwigo\Core\ProcessCache
+    private function processCache(): ProcessCache
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $processCache = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
-            if (! $processCache instanceof \Piwigo\Core\ProcessCache) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ProcessCache::class);
+        if (Kernel::isBooted()) {
+            $processCache = Kernel::container()->get(ProcessCache::class);
+            if (! $processCache instanceof ProcessCache) {
+                throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
             }
 
             return $processCache;
         }
 
-        return new \Piwigo\Core\ProcessCache();
+        return new ProcessCache();
     }
 
     /**
@@ -126,14 +141,14 @@ final readonly class CategoryService
      * {@see moveCategories()}, {@see createVirtualCategory()}) take it as
      * an explicit parameter, matching this method's own shape.
      */
-    private function imageService(ActivityLoggerInterface $activityLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): ImageService
+    private function imageService(ActivityLoggerInterface $activityLogger, SessionService $sessionService, EventDispatcher $eventDispatcher): ImageService
     {
-        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $activityLogger, $sessionService, $eventDispatcher, $this->currentConfig, $this->translator);
+        return new ImageService($this->lang, EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), $activityLogger, $sessionService, $eventDispatcher, $this->currentConfig, $this->translator);
     }
 
     private function userRepository(): UserRepository
     {
-        return new UserRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig);
+        return new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig);
     }
 
     /**
@@ -184,7 +199,7 @@ final readonly class CategoryService
      * `if (!isset($user['last_photo_date'])) return '0=1';` -- nothing is
      * ever "recent" without it, not merely half of the LEAST() comparison.
      */
-    public static function isRecentCategory(?string $dateLast, int $recentPeriod, ?string $lastPhotoDate, \DateTimeImmutable $now): bool
+    public static function isRecentCategory(?string $dateLast, int $recentPeriod, ?string $lastPhotoDate, DateTimeImmutable $now): bool
     {
         if ($lastPhotoDate === null || $lastPhotoDate === '' || $dateLast === null || $dateLast === '') {
             return false;
@@ -192,11 +207,11 @@ final readonly class CategoryService
 
         $thresholdFromToday = $now->setTime(0, 0, 0)
             ->modify('-' . $recentPeriod . ' days');
-        $thresholdFromLastPhoto = new \DateTimeImmutable($lastPhotoDate)
+        $thresholdFromLastPhoto = new DateTimeImmutable($lastPhotoDate)
             ->modify('-1 day');
         $threshold = $thresholdFromToday < $thresholdFromLastPhoto ? $thresholdFromToday : $thresholdFromLastPhoto;
 
-        return new \DateTimeImmutable($dateLast) >= $threshold;
+        return new DateTimeImmutable($dateLast) >= $threshold;
     }
 
     /**
@@ -400,7 +415,7 @@ final readonly class CategoryService
                     // matches that established in-method precedent rather
                     // than needing an explicit Lang param plumbed through
                     // every real caller of this static utility.
-                    $displayText .= ' ' . \Piwigo\Core\Lang::current()->t('in this album');
+                    $displayText .= ' ' . Lang::current()->t('in this album');
                 }
             } else {
                 $displayText .= ' ' . Translator::get()->plural('in %d sub-album', 'in %d sub-albums', $catCountCategories);
@@ -660,7 +675,7 @@ final readonly class CategoryService
      * Is the category accessible to the connected user? If the user is not
      * authorized to see this category, the script exits.
      */
-    public function checkRestrictions(int $categoryId, HtmlRenderingInterface $htmlRenderer, RedirectServiceInterface $redirectService, \Piwigo\Users\CurrentUser $currentUser): void
+    public function checkRestrictions(int $categoryId, HtmlRenderingInterface $htmlRenderer, RedirectServiceInterface $redirectService, CurrentUser $currentUser): void
     {
         // $filter['visible_categories'] and $filter['visible_images']
         // are not used because it's not necessary (filter <> restriction)
@@ -725,7 +740,7 @@ final readonly class CategoryService
      * @param array<string, mixed>|null $category
      * @return array{menu: array<int, array<string, mixed>>, categoryCountCategories: ?int}
      */
-    public function getCategoriesMenu(?array $category, FilterUpdaterInterface $filterUpdater, UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Users\CurrentUser $currentUser): array
+    public function getCategoriesMenu(?array $category, FilterUpdaterInterface $filterUpdater, UrlServiceInterface $urlService, FilterState $filterState, CurrentUser $currentUser): array
     {
         $user = $currentUser->get();
 
@@ -793,7 +808,7 @@ final readonly class CategoryService
             if ($this->currentConfig->indexNewIcon()) {
                 $maxDateLast = $row['max_date_last'] ?? null;
                 $recentPeriodForIcon = is_numeric($user->rawAttributes['recent_period'] ?? null) ? (int) $user->rawAttributes['recent_period'] : 0;
-                $row['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon(is_string($maxDateLast) ? $maxDateLast : '', $recentPeriodForIcon, $this->processCache(), $this->lang, $childDateLast);
+                $row['icon_ts'] = RecentIconResolver::getIcon(is_string($maxDateLast) ? $maxDateLast : '', $recentPeriodForIcon, $this->processCache(), $this->lang, $childDateLast);
             }
             $cats[] = $row;
             $categoryPageId = $categoryPage['id'] ?? null;
@@ -1054,7 +1069,7 @@ final readonly class CategoryService
      * first regardless, so this stays synchronous rather than a fire-
      * and-forget notification.
      */
-    public function deleteSite(int $id, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function deleteSite(int $id, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService, EventDispatcher $eventDispatcher): void
     {
         $categoryIds = $this->repo->findCategoryIdsBySite($id);
         $this->deleteCategories($categoryIds, $activityLogger, $urlService, $sessionService, $eventDispatcher);
@@ -1075,7 +1090,7 @@ final readonly class CategoryService
      *    - delete_orphans: delete photos that are no longer linked to any category
      *    - force_delete: delete photos even if they are linked to another category
      */
-    public function deleteCategories(array $ids, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, string $photoDeletionMode = 'no_delete'): void
+    public function deleteCategories(array $ids, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService, EventDispatcher $eventDispatcher, string $photoDeletionMode = 'no_delete'): void
     {
         if (count($ids) === 0) {
             return;
@@ -1624,9 +1639,9 @@ final readonly class CategoryService
      */
     public function getCategoryRepresentantProperties(int|string $imageId, UrlServiceInterface $urlService, ?string $size = null): array
     {
-        $row = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class)->findById($imageId);
+        $row = EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class)->findById($imageId);
         if ($row === null) {
-            throw new \Exception("getCategoryRepresentantProperties(): image {$imageId} does not exist (stale representative_picture_id?)");
+            throw new Exception("getCategoryRepresentantProperties(): image {$imageId} does not exist (stale representative_picture_id?)");
         }
         // DerivativeImage::thumb_url()/url() take array<string, mixed>|SrcImage
         // by design -- confirmed cross-domain-generic in the Image module's
@@ -1770,7 +1785,7 @@ final readonly class CategoryService
      * @param array<int, int> $categoryIds
      * @param int $newParent (-1 for root)
      */
-    public function moveCategories(array $categoryIds, ActivityLoggerInterface $activityLogger, \Piwigo\Core\PageState $pageState, int $newParent = -1): void
+    public function moveCategories(array $categoryIds, ActivityLoggerInterface $activityLogger, PageState $pageState, int $newParent = -1): void
     {
         if (count($categoryIds) === 0) {
             return;
@@ -1845,7 +1860,7 @@ final readonly class CategoryService
      *   values are validated internally (is_bool()/==), not trusted from callers
      * @return array{error: string}|array{info: string, id: int|string}
      */
-    public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, \Piwigo\Users\CurrentUser $currentUser, int|string|null $parentId = null, array $options = []): array
+    public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, CurrentUser $currentUser, int|string|null $parentId = null, array $options = []): array
     {
 
         // is the given category name only containing blank spaces ?
@@ -1971,7 +1986,7 @@ final readonly class CategoryService
             $currentUserId = $currentUser->get()
                 ->id->value;
             $adminIds = array_map(
-                static fn (\Piwigo\Common\ValueObject\UserId $id): int => $id->value,
+                static fn (UserId $id): int => $id->value,
                 $this->userRepository()
                     ->findAdminIds()
             );
@@ -1994,7 +2009,7 @@ final readonly class CategoryService
      * Note : if the user is not authorized to see this category, category jump
      * will be replaced by admin cat_modify page
      */
-    public function catAdminAccess(int $categoryId, \Piwigo\Users\CurrentUser $currentUser): bool
+    public function catAdminAccess(int $categoryId, CurrentUser $currentUser): bool
     {
         // $filter['visible_categories'] and $filter['visible_images']
         // are not used because it's not necessary (filter <> restriction)

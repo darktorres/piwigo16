@@ -5,18 +5,29 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use DateInterval;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Request\PluginsNewRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Bootstrap\RequestBootstrap;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\DateHelper;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\VersionHelper;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Ported from admin/plugins_new.php (the "new" tab of the "plugins" page
@@ -36,14 +47,14 @@ final class PluginsNewPageRenderer
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly CurrentLogger $currentLogger,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly ActivityService $activityService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly CurrentUser $currentUser,
     ) {}
 
     /**
@@ -75,14 +86,14 @@ final class PluginsNewPageRenderer
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser);
         $extension_scanner = new ExtensionScanner();
 
-        $pluginsNewRequest = Request\PluginsNewRequest::fromGlobals();
+        $pluginsNewRequest = PluginsNewRequest::fromGlobals();
 
         // ------------------------------------------------------automatic installation
         if ($pluginsNewRequest->revision !== null and $pluginsNewRequest->extension !== null) {
             if (! $this->accessControl->isWebmaster()) {
                 $this->pageState->addError($this->lang->t('Webmaster status is required.'));
             } else {
-                new \Piwigo\Csrf\CsrfService()
+                new CsrfService()
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
                 $extraction = $pem_catalog->extractArchive(ExtensionType::Plugin, 'install', $pluginsNewRequest->revision, $pluginsNewRequest->extension);
@@ -154,7 +165,7 @@ final class PluginsNewPageRenderer
         // If the current version in known, give the current and last version's compatible plugins
         $beta_test = $pluginsNewRequest->betaTest;
 
-        $pem_base_url = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
+        $pem_base_url = RequestBootstrap::pemUrl();
 
         $fs_plugin_ids = [];
         foreach ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService, $this->lang) as $fs_plugin) {
@@ -202,7 +213,7 @@ final class PluginsNewPageRenderer
                 $url_auto_install = htmlentities($base_url)
                   . '&amp;revision=' . $revision_id
                   . '&amp;extension=' . $extension_id
-                  . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken()
+                  . '&amp;pwg_token=' . new CsrfService()->getToken()
                 ;
 
                 // get the age of the last revision in days
@@ -227,7 +238,7 @@ final class PluginsNewPageRenderer
                     $compatible_with_versions = $plugin['compatible_with_versions'] ?? null;
                     if (is_array($compatible_with_versions)) {
                         foreach ($compatible_with_versions as $vers) {
-                            if (is_string($vers) and \Piwigo\Core\VersionHelper::getBranchFromVersion($vers) === \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)) {
+                            if (is_string($vers) and VersionHelper::getBranchFromVersion($vers) === VersionHelper::getBranchFromVersion(AppInfo::VERSION)) {
                                 $has_compatible_version = true;
                             }
                         }
@@ -255,7 +266,7 @@ final class PluginsNewPageRenderer
                     'BIG_DESC' => $ext_desc,
                     'VERSION' => $plugin['revision_name'],
                     'REVISION_DATE' => preg_replace('/[^0-9]/', '', (string) strtotime($revision_date_str)),
-                    'REVISION_FORMATED_DATE' => \Piwigo\Core\DateHelper::formatDate($revision_date_str, ['day', 'month', 'year']) . ', ' . \Piwigo\Core\DateHelper::timeSince($revision_date_str, 'day'),
+                    'REVISION_FORMATED_DATE' => DateHelper::formatDate($revision_date_str, ['day', 'month', 'year']) . ', ' . DateHelper::timeSince($revision_date_str, 'day'),
                     'AUTHOR' => $plugin['author_name'],
                     'DOWNLOADS' => $plugin['extension_nb_downloads'],
                     'URL_INSTALL' => $url_auto_install,

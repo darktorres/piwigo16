@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\TagsPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -19,7 +20,7 @@ final class TagsSubController implements AdminSubControllerInterface
         private readonly TagsPageRenderer $tagsPageRenderer,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $this->tagsPageRenderer

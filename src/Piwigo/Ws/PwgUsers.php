@@ -11,10 +11,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Piwigo\Activity\ActivityEntity;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
@@ -25,9 +27,12 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\User\WsUsersGetList;
 use Piwigo\Group\GroupService;
+use Piwigo\History\HistoryEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
@@ -38,6 +43,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserListCriteria;
 use Piwigo\Users\UserService;
+use Piwigo\Users\UserStatus;
 
 /**
  * P23 batch 8e-6: relocated from include/ws_functions/pwg.users.php.
@@ -162,8 +168,8 @@ final class PwgUsers
         $status = null;
         if (isset($params['status']) && $params['status'] !== []) {
             $matchedStatus = array_intersect($params['status'], array_map(
-                static fn (\Piwigo\Users\UserStatus $userStatus): string => $userStatus->value,
-                \Piwigo\Users\UserStatus::cases()
+                static fn (UserStatus $userStatus): string => $userStatus->value,
+                UserStatus::cases()
             ));
             if (count($matchedStatus) > 0) {
                 $status = array_values($matchedStatus);
@@ -331,7 +337,7 @@ final class PwgUsers
                     $users[$cur_user_id]['last_visit'] = $last_visit;
 
                     if (! SqlDialect::getBoolean($cur_user['last_visit_from_history']) and in_array($last_visit, [null, ''], true)) {
-                        $lastVisitLookup = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\History\HistoryEntity::class);
+                        $lastVisitLookup = EntityManagerFactory::build(DbConnection::build())->getRepository(HistoryEntity::class);
                         $last_visit = $this->authService->getUserLastVisitFromHistory($cur_user_id, $lastVisitLookup, true);
                         $users[$cur_user_id]['last_visit'] = $last_visit;
                     }
@@ -502,7 +508,7 @@ final class PwgUsers
         ];
 
         // an admin can't delete other admin/webmaster
-        if ($currentUser->status === \Piwigo\Users\UserStatus::Admin) {
+        if ($currentUser->status === UserStatus::Admin) {
             $protected_users = array_merge($protected_users, $this->userService->getAdminIds());
         }
 
@@ -519,7 +525,7 @@ final class PwgUsers
 
         $user_service = $this->userService;
         foreach ($params['user_id'] as $user_id) {
-            $user_service->deleteUser(\Piwigo\Common\ValueObject\UserId::from($user_id));
+            $user_service->deleteUser(UserId::from($user_id));
             $counter++;
         }
 
@@ -829,7 +835,7 @@ final class PwgUsers
             return new PwgError(403, 'Invalid security token');
         }
 
-        $lost_user_id = \Piwigo\Common\ValueObject\UserId::from($params['user_id']);
+        $lost_user_id = UserId::from($params['user_id']);
 
         // check if user exist
         if ($this->userService->getUsername($lost_user_id) === null) {
@@ -848,12 +854,12 @@ final class PwgUsers
         }
 
         // Only webmaster can perform this action for another webmaster
-        if ($this->currentUser->get()->status === \Piwigo\Users\UserStatus::Admin && $user_lost_status === 'webmaster') {
+        if ($this->currentUser->get()->status === UserStatus::Admin && $user_lost_status === 'webmaster') {
             return new PwgError(403, 'You cannot perform this action');
         }
 
-        $conn = \Piwigo\Db\DbConnection::build();
-        $first_login = $this->authService->hasAlreadyLoggedIn($params['user_id'], \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class));
+        $conn = DbConnection::build();
+        $first_login = $this->authService->hasAlreadyLoggedIn($params['user_id'], EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class));
         $send_by_mail_response = null;
         $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : $this->userService->getDefaultLanguage();
         $lang_to_use = $first_login ? $this->userService->getDefaultLanguage() : $user_lost_language;
@@ -916,7 +922,7 @@ final class PwgUsers
             return new PwgError(403, 'Invalid security token');
         }
 
-        $new_main_user_id = \Piwigo\Common\ValueObject\UserId::from($params['user_id']);
+        $new_main_user_id = UserId::from($params['user_id']);
 
         // checl if user exist
         if ($this->userService->getUsername($new_main_user_id) === null) {

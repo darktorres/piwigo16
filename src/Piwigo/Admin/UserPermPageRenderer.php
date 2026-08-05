@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Request\UserPermSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/user_perm.php (page slug "user_perm"). Its raw
@@ -27,12 +34,12 @@ final class UserPermPageRenderer
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly PermissionService $permissionService,
         private readonly CategoryService $categoryService,
-        private readonly \Piwigo\Users\UserService $userService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly UserService $userService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly InputValidator $inputValidator,
     ) {}
 
     public function render(): void
@@ -46,10 +53,10 @@ final class UserPermPageRenderer
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        $userPermSubmit = Request\UserPermSubmitRequest::fromGlobals($this->inputValidator);
+        $userPermSubmit = UserPermSubmitRequest::fromGlobals($this->inputValidator);
 
         if ($userPermSubmit->isSubmitted) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($htmlRenderer, $this->redirectService);
         }
 
@@ -85,7 +92,7 @@ final class UserPermPageRenderer
                 'TITLE' => $this->lang->t(
                     'Manage permissions for user "%s"',
                     $this->userService
-                        ->getUsername(\Piwigo\Common\ValueObject\UserId::from($user_id))->value ?? ''
+                        ->getUsername(UserId::from($user_id))->value ?? ''
                 ),
                 'L_CAT_OPTIONS_TRUE' => $this->lang->t('Authorized'),
                 'L_CAT_OPTIONS_FALSE' => $this->lang->t('Forbidden'),
@@ -133,7 +140,7 @@ final class UserPermPageRenderer
 
         $categoryService->displaySelectPrivateExcluding([...$authorized_ids, ...$group_authorized], 'category_option_false', $htmlRenderer, $template);
 
-        $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
+        $template->assign('PWG_TOKEN', new CsrfService()->getToken());
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'user_perm');

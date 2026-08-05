@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
+use Piwigo\Auth\PwgTOTP;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -87,7 +89,7 @@ it('shows "Invalid key" and hides the form for a malformed reset key', function 
     $page->assertMissing('input[name="use_new_pwd"]');
 });
 
-function passwordDbConnect(): \mysqli|\PgSql\Connection
+function passwordDbConnect(): mysqli|Connection
 {
     return H::connect();
 }
@@ -137,7 +139,7 @@ function passwordInsertResetUser(string $status = 'normal'): array
 
     // DATE_ADD() is MySQL-only -- Postgres's own date arithmetic is
     // `NOW() + INTERVAL '1 hour'`.
-    $expiryExpr = $db instanceof \mysqli ? 'DATE_ADD(NOW(), INTERVAL 1 HOUR)' : "NOW() + INTERVAL '1 hour'";
+    $expiryExpr = $db instanceof mysqli ? 'DATE_ADD(NOW(), INTERVAL 1 HOUR)' : "NOW() + INTERVAL '1 hour'";
     H::dbQuery($db, sprintf(
         "INSERT INTO %suser_infos (user_id, status, activation_key, activation_key_expire) VALUES (%d, '%s', '%s', {$expiryExpr})",
         $prefix,
@@ -177,7 +179,7 @@ function passwordInsertEmptyActivationKeyUser(): int
     ));
     $userId = H::dbInsertId($db);
 
-    $expiryExpr = $db instanceof \mysqli ? 'DATE_ADD(NOW(), INTERVAL 1 HOUR)' : "NOW() + INTERVAL '1 hour'";
+    $expiryExpr = $db instanceof mysqli ? 'DATE_ADD(NOW(), INTERVAL 1 HOUR)' : "NOW() + INTERVAL '1 hour'";
     H::dbQuery($db, sprintf(
         "INSERT INTO %suser_infos (user_id, status, activation_key, activation_key_expire) VALUES (%d, 'normal', '', {$expiryExpr})",
         $prefix,
@@ -368,7 +370,7 @@ function passwordComputeValidCode(string $secret): string
     $durationRaw = H::configValue('password_reset_code_duration');
     $duration = $durationRaw !== null && is_numeric($durationRaw) ? (int) $durationRaw : 300;
 
-    return \Piwigo\Auth\PwgTOTP::generateCode($secret, min($duration, 900));
+    return PwgTOTP::generateCode($secret, min($duration, 900));
 }
 
 /** @return array{password: string}|null */
@@ -751,7 +753,7 @@ it('fatal-errors on a hacking-attempt invalid lang cookie', function (): void {
 it('switches to a valid, different lang cookie and shows the French translation', function (): void {
     $db = passwordDbConnect();
     $prefix = passwordDbPrefix();
-    $upsertSql = $db instanceof \mysqli
+    $upsertSql = $db instanceof mysqli
         ? "INSERT INTO %slanguages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON DUPLICATE KEY UPDATE name = VALUES(name)"
         : "INSERT INTO %slanguages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name";
     H::dbQuery($db, sprintf($upsertSql, $prefix));

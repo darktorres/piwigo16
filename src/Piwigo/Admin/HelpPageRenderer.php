@@ -4,24 +4,29 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Request\HelpSectionRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Location\LocEndHelp;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Ported from admin/help.php (page slug "help").
  */
 final class HelpPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate): void
     {
         $template = $currentTemplate->get();
 
         $accessControl->checkStatus(AccessLevel::Administrator);
 
-        $selected = Request\HelpSectionRequest::fromGlobals()->section;
+        $selected = HelpSectionRequest::fromGlobals()->section;
 
         // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
         // bug -- nothing had ever called CoreTabs::setContext() with

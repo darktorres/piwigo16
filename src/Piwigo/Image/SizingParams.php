@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use LogicException;
+
 /**
  * Paramaters for derivative scaling and cropping.
  * Instance of this class contained by DerivativeParams class.
@@ -94,7 +96,7 @@ final class SizingParams
             // own constructor docblock) -- guaranteed non-null here.
             $minSize = $this->min_size;
             if ($minSize === null) {
-                throw new \LogicException('SizingParams::compute(): min_size must not be null when max_crop > 0');
+                throw new LogicException('SizingParams::compute(): min_size must not be null when max_crop > 0');
             }
 
             $ratio_w = $destCrop->width() / (float) $this->ideal_size[0];

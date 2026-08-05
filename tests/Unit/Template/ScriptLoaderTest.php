@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ErrorCollector;
+use Piwigo\Http\ResponseReadyException;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -464,7 +466,7 @@ test('get_footer_scripts runs check_load_dep when the head has not been written 
         expect(scriptLoaderRegistered($loader)['precedent']->load_mode)->toBe(1);
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
     }
 });
 
@@ -493,7 +495,7 @@ test('get_footer_scripts skips check_load_dep when the head was already written 
         expect(scriptLoaderRegistered($loader)['precedent']->load_mode)->toBe(2);
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
     }
 });
 
@@ -525,7 +527,7 @@ test('get_footer_scripts marks did_footer, which then makes add_inline warn', fu
         expect($caught)->toBe('Attempt to add inline script but the footer has been written');
     } finally {
         rmdir($root);
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
         Kernel::reset();
     }
 });
@@ -554,7 +556,7 @@ test('get_footer_scripts separates sync (load_mode=1) and async (load_mode=2) sc
             ->and($async[0]->id)->toBe('async-script');
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
     }
 });
 
@@ -581,7 +583,7 @@ test('get_footer_scripts excludes scripts already claimed by get_head_scripts', 
             ->and($sync[0]->id)->toBe('footer-script');
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
     }
 });
 
@@ -605,7 +607,7 @@ test('get_head_scripts runs check_load_dep before sorting, downgrading an async 
 
         expect(scriptLoaderRegistered($loader)['precedent']->load_mode)->toBe(1);
     } finally {
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
     }
 });
 
@@ -640,7 +642,7 @@ test('get_head_scripts computes and uses each script\'s topological order to sor
         expect($basePos)->toBeLessThan($dependentPos);
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
     }
 });
 
@@ -675,7 +677,7 @@ test('cmp_by_mode_and_order sorts a remote script before a same-mode, same-order
             ->and(array_map(fn ($s) => $s->id, $headB))->toBe(['remote-script', 'local-script']);
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
     }
 });
 
@@ -701,7 +703,7 @@ test('get_head_scripts collects every mode=0 script up to (not including) the fi
             ->and($head[0]->id)->toBe('head-script');
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
     }
 });
 
@@ -780,7 +782,7 @@ test('get_footer_scripts sorts within the same load_mode by topological order to
             ->and($sync[1]->id)->toBe('dependent');
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
     }
 });
 
@@ -809,7 +811,7 @@ test('get_footer_scripts excludes mode=0 scripts even when get_head_scripts was 
             ->and($sync[0]->id)->toBe('footer-script');
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
     }
 });
 
@@ -845,7 +847,7 @@ test('check_load_dep converges over multiple passes for a 3-level async dependen
         expect($registered['b']->load_mode)->toBe(1)
             ->and($registered['c']->load_mode)->toBe(1);
     } finally {
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
     }
 });
 
@@ -1030,21 +1032,21 @@ test('compute_script_topological_order fatal-errors exactly one level past the r
     // Phase 3). A real Paths is required too: ErrorCollector's container
     // factory now needs a DeploymentPolicy, whose own factory needs Paths
     // to autowire (Phase 4).
-    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     CurrentUser::current()->attachGlobals();
-    $errorCollector = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ErrorCollector::class);
-    if (! $errorCollector instanceof \Piwigo\Core\ErrorCollector) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ErrorCollector::class);
+    $errorCollector = Kernel::container()->get(ErrorCollector::class);
+    if (! $errorCollector instanceof ErrorCollector) {
+        throw new LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
     }
     $errorCollector->drain();
     $caught = null;
     try {
         scriptLoaderTopologicalOrder($loader, 'a5');
-    } catch (\Piwigo\Http\ResponseReadyException) {
+    } catch (ResponseReadyException) {
         $collected = $errorCollector->drain();
         $caught = $collected === [] ? null : preg_replace('/^\[ERROR\] /', '', $collected[0]);
     } finally {
-        \Piwigo\Core\Kernel::reset();
+        Kernel::reset();
     }
 
     // fatalError()'s own $showTrace=true default appends a backtrace
@@ -1138,7 +1140,7 @@ test('check_load_dep needs a second pass to cascade an unconditional downgrade t
 
         expect(scriptLoaderRegistered($loader)['bottom']->load_mode)->toBe(0);
     } finally {
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
     }
 });
 
@@ -1176,7 +1178,7 @@ test('check_load_dep needs a further pass unlocked by the async branch\'s own ch
 
         expect(scriptLoaderRegistered($loader)['n1']->load_mode)->toBe(0);
     } finally {
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
     }
 });
 

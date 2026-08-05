@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Psr\Cache\CacheItemPoolInterface;
 use Piwigo\Cache\CacheFactory;
 use Symfony\Component\Cache\Adapter\ApcuAdapter;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -80,7 +81,7 @@ test('the PIWIGO_CACHE_ADAPTER env var is honored for redis, not silently defaul
     // actually read.
     putenv('PIWIGO_CACHE_ADAPTER=redis');
 
-    expect(static fn (): \Psr\Cache\CacheItemPoolInterface => CacheFactory::create())
+    expect(static fn (): CacheItemPoolInterface => CacheFactory::create())
         ->toThrow(CacheException::class, 'Cannot find the "redis" extension');
 });
 
@@ -110,23 +111,23 @@ test('an explicit apcu request succeeds if available, else fails loudly', functi
     if (ApcuAdapter::isSupported()) {
         expect(CacheFactory::create('apcu'))->toBeInstanceOf(ApcuAdapter::class);
     } else {
-        expect(static fn (): \Psr\Cache\CacheItemPoolInterface => CacheFactory::create('apcu'))->toThrow(RuntimeException::class);
+        expect(static fn (): CacheItemPoolInterface => CacheFactory::create('apcu'))->toThrow(RuntimeException::class);
     }
 });
 
 test('an unknown adapter name throws', function (): void {
-    expect(static fn (): \Psr\Cache\CacheItemPoolInterface => CacheFactory::create('bogus'))->toThrow(InvalidArgumentException::class);
+    expect(static fn (): CacheItemPoolInterface => CacheFactory::create('bogus'))->toThrow(InvalidArgumentException::class);
 });
 
 test('an explicit redis request honors PIWIGO_REDIS_DSN but fails loudly without ext-redis/relay/predis', function (): void {
     putenv('PIWIGO_REDIS_DSN=redis://cachehost:6380');
 
-    expect(static fn (): \Psr\Cache\CacheItemPoolInterface => CacheFactory::create('redis'))
+    expect(static fn (): CacheItemPoolInterface => CacheFactory::create('redis'))
         ->toThrow(CacheException::class, 'Cannot find the "redis" extension');
 });
 
 test('an explicit redis request defaults to redis://localhost:6379 when PIWIGO_REDIS_DSN is unset', function (): void {
-    expect(static fn (): \Psr\Cache\CacheItemPoolInterface => CacheFactory::create('redis'))
+    expect(static fn (): CacheItemPoolInterface => CacheFactory::create('redis'))
         ->toThrow(CacheException::class, 'Cannot find the "redis" extension');
 });
 
@@ -139,6 +140,6 @@ test('an explicit redis request also defaults to redis://localhost:6379 when PIW
     // mistaken for the same failure as the "unset" case above.
     putenv('PIWIGO_REDIS_DSN=');
 
-    expect(static fn (): \Psr\Cache\CacheItemPoolInterface => CacheFactory::create('redis'))
+    expect(static fn (): CacheItemPoolInterface => CacheFactory::create('redis'))
         ->toThrow(CacheException::class, 'Cannot find the "redis" extension');
 });

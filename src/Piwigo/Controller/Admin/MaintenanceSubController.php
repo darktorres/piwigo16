@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\MaintenanceActionsPageRenderer;
@@ -11,9 +12,17 @@ use Piwigo\Admin\MaintenanceEnvPageRenderer;
 use Piwigo\Admin\MaintenanceSysPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Request\MaintenanceDispatchRequest;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -63,17 +72,17 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly MaintenanceEnvPageRenderer $maintenanceEnvPageRenderer,
         private readonly MaintenanceActionsPageRenderer $maintenanceActionsPageRenderer,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly EventDispatcher $eventDispatcher,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $template = $this->currentTemplate->get();
@@ -84,10 +93,10 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         // docblock).
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
-        $maintenanceDispatch = Request\MaintenanceDispatchRequest::fromGlobals($this->inputValidator);
+        $maintenanceDispatch = MaintenanceDispatchRequest::fromGlobals($this->inputValidator);
 
         if ($maintenanceDispatch->requiresCsrfCheck) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 

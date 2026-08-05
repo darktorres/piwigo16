@@ -4,14 +4,29 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Request\AlbumNotificationSubmitRequest;
+use Piwigo\Auth\AuthService;
+use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\Template\RenderCategoryName;
+use Piwigo\Group\GroupService;
+use Piwigo\Group\Projection\Group;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
-use Piwigo\Template\Template;
+use Piwigo\Mail\MailService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/album_notification.php (the "notification" tab of the
@@ -29,17 +44,17 @@ final class AlbumNotificationPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly Translator $translator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Image\ImageService $imageService,
-        private readonly \Piwigo\Users\UserService $userService,
-        private readonly \Piwigo\Auth\AuthService $authService,
-        private readonly \Piwigo\Group\GroupService $groupService,
-        private readonly \Piwigo\Category\CategoryService $categoryService,
-        private readonly \Piwigo\Html\HtmlService $htmlService,
-        private readonly \Piwigo\Mail\MailService $mailService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly ImageService $imageService,
+        private readonly UserService $userService,
+        private readonly AuthService $authService,
+        private readonly GroupService $groupService,
+        private readonly CategoryService $categoryService,
+        private readonly HtmlService $htmlService,
+        private readonly MailService $mailService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
     ) {}
 
     /**
@@ -75,10 +90,10 @@ final class AlbumNotificationPageRenderer
         // +-------------------------------------------------------------------+
 
         // info by email to an access granted group of category informations
-        $albumNotificationSubmit = Request\AlbumNotificationSubmitRequest::fromGlobals($this->inputValidator);
+        $albumNotificationSubmit = AlbumNotificationSubmitRequest::fromGlobals($this->inputValidator);
 
         if ($albumNotificationSubmit->isSubmitted) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlService, $this->redirectService);
             $this->urlService->setMakeFullUrl();
 
@@ -208,7 +223,7 @@ final class AlbumNotificationPageRenderer
                 $this->mailService
                     ->mailGroup($group_id, $args, $tpl);
 
-                $group_name = $this->groupService->getName(\Piwigo\Common\ValueObject\GroupId::from($group_id));
+                $group_name = $this->groupService->getName(GroupId::from($group_id));
 
                 $template->assign(
                     [
@@ -242,7 +257,7 @@ final class AlbumNotificationPageRenderer
                         )
                 ),
                 'F_ACTION' => $admin_album_base_url . '-notification',
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
             ]
         );
@@ -257,7 +272,7 @@ final class AlbumNotificationPageRenderer
             assert($auth_key_since !== false);
             $template->assign(
                 'auth_key_duration',
-                \Piwigo\Core\DateHelper::timeSince($auth_key_since, 'second', null, false)
+                DateHelper::timeSince($auth_key_since, 'second', null, false)
             );
         }
 
@@ -266,7 +281,7 @@ final class AlbumNotificationPageRenderer
         // +-------------------------------------------------------------------+
 
         $all_group_ids = array_map(
-            static fn (\Piwigo\Group\Projection\Group $group): int => $group->id->value,
+            static fn (Group $group): int => $group->id->value,
             $this->groupService->getAllBasic()
         );
         // group_ids stays [] (rather than undefined) when the gallery has no

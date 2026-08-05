@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use LogicException;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Bootstrap\RequestPipeline;
@@ -42,7 +44,7 @@ use Piwigo\Tests\Support\KernelContainerOverride;
  */
 final class RequestPipelineTest extends TestCase
 {
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         Kernel::reset();
@@ -68,7 +70,7 @@ final class RequestPipelineTest extends TestCase
 
     public function test_handle_throws_when_the_container_returns_an_unexpected_type_for_a_middleware(): void
     {
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage(
             "Container returned an unexpected type for '" . ExceptionHandlerMiddleware::class . "'."
         );

@@ -4,28 +4,36 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Request\PictureFormatsImageIdRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/picture_formats.php (page slug "picture_formats").
  */
 final class PictureFormatsPageRenderer
 {
-    public function render(\Piwigo\Core\Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer, \Piwigo\Validation\InputValidator $inputValidator): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator): void
     {
         $template = $currentTemplate->get();
 
         $accessControl->checkStatus(AccessLevel::Administrator);
 
-        $image_id = Request\PictureFormatsImageIdRequest::fromGlobals($inputValidator)->imageId;
+        $image_id = PictureFormatsImageIdRequest::fromGlobals($inputValidator)->imageId;
 
         $conn = DbConnection::build();
-        $imageRow = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+        $imageRow = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
             ->findById($image_id);
         if ($imageRow === null) {
             $htmlRenderer
@@ -34,7 +42,7 @@ final class PictureFormatsPageRenderer
         $image = $imageRow->toArray();
 
         $formats = [];
-        foreach (\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)->findFormatsForImage($image_id) as $formatRow) {
+        foreach (EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)->findFormatsForImage($image_id) as $formatRow) {
             $format = $formatRow->toArray();
             $format['download_url'] = 'action.php?format=' . $formatRow->formatId . '&amp;download';
 
@@ -55,7 +63,7 @@ final class PictureFormatsPageRenderer
             'ADD_FORMATS_URL' => $urlService->getRootUrl() . 'admin.php?page=photos_add&formats=' . $image_id,
             'IMG_SQUARE_SRC' => DerivativeImage::url($imageStdParams->get_by_type(ImageStdParams::SQUARE), $image),
             'FORMATS' => $formats,
-            'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+            'PWG_TOKEN' => new CsrfService()
                 ->getToken(),
         ]);
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Group\Projection;
 
+use InvalidArgumentException;
 use Piwigo\Common\ValueObject\GroupId;
 
 /**
@@ -43,7 +44,7 @@ final readonly class Group
 
     /**
      * @param array<string, mixed> $row a {@see \Piwigo\Group\GroupRepository::findAllBasic()} row
-     * @throws \InvalidArgumentException when $row['id'] is missing or not a valid positive id
+     * @throws InvalidArgumentException when $row['id'] is missing or not a valid positive id
      */
     public static function fromRow(array $row): self
     {

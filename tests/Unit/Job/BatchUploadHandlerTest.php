@@ -2,17 +2,24 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\ConfigService;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Metadata\MetadataService;
+use Piwigo\Image\ImageService;
+use Piwigo\Core\WsContext;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\PluginConfig\EventDispatcher;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
-use Piwigo\Html\HtmlService;
 use Piwigo\Job\BatchUploadJob;
 use Piwigo\Job\Handler\BatchUploadHandler;
 use Piwigo\Storage\StorageRegistry;
-use Piwigo\Url\UrlService;
 
 /**
  * BatchUploadHandler::__invoke() is a 1-line delegate to
@@ -42,7 +49,7 @@ function batch_upload_handler_test_current_logger(): CurrentLogger
 {
     $currentLogger = Kernel::container()->get(CurrentLogger::class);
     if (! $currentLogger instanceof CurrentLogger) {
-        throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
+        throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
     }
 
     return $currentLogger;
@@ -52,7 +59,7 @@ function batch_upload_handler_test_storage_registry(): StorageRegistry
 {
     $storageRegistry = Kernel::container()->get(StorageRegistry::class);
     if (! $storageRegistry instanceof StorageRegistry) {
-        throw new \LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
+        throw new LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
     }
 
     return $storageRegistry;
@@ -62,7 +69,7 @@ function batch_upload_handler_test_entity_manager(): EntityManagerInterface
 {
     $entityManager = Kernel::container()->get(EntityManagerInterface::class);
     if (! $entityManager instanceof EntityManagerInterface) {
-        throw new \LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
+        throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
     }
 
     return $entityManager;
@@ -73,41 +80,41 @@ function batch_upload_handler_test_entity_manager(): EntityManagerInterface
  * so UploadService's own confUpdateParam() call (the only real reader of
  * this dependency) never runs, per this file's own docblock above.
  */
-function batch_upload_handler_test_config_service(): \Piwigo\Config\ConfigService
+function batch_upload_handler_test_config_service(): ConfigService
 {
-    $configService = Kernel::container()->get(\Piwigo\Config\ConfigService::class);
-    if (! $configService instanceof \Piwigo\Config\ConfigService) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\ConfigService::class);
+    $configService = Kernel::container()->get(ConfigService::class);
+    if (! $configService instanceof ConfigService) {
+        throw new LogicException('Container returned an unexpected type for ' . ConfigService::class);
     }
 
     return $configService;
 }
 
-function batch_upload_handler_test_activity_service(): \Piwigo\Activity\ActivityService
+function batch_upload_handler_test_activity_service(): ActivityService
 {
-    $activityService = Kernel::container()->get(\Piwigo\Activity\ActivityService::class);
-    if (! $activityService instanceof \Piwigo\Activity\ActivityService) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Activity\ActivityService::class);
+    $activityService = Kernel::container()->get(ActivityService::class);
+    if (! $activityService instanceof ActivityService) {
+        throw new LogicException('Container returned an unexpected type for ' . ActivityService::class);
     }
 
     return $activityService;
 }
 
-function batch_upload_handler_test_metadata_service(): \Piwigo\Metadata\MetadataService
+function batch_upload_handler_test_metadata_service(): MetadataService
 {
-    $metadataService = Kernel::container()->get(\Piwigo\Metadata\MetadataService::class);
-    if (! $metadataService instanceof \Piwigo\Metadata\MetadataService) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Metadata\MetadataService::class);
+    $metadataService = Kernel::container()->get(MetadataService::class);
+    if (! $metadataService instanceof MetadataService) {
+        throw new LogicException('Container returned an unexpected type for ' . MetadataService::class);
     }
 
     return $metadataService;
 }
 
-function batch_upload_handler_test_image_service(): \Piwigo\Image\ImageService
+function batch_upload_handler_test_image_service(): ImageService
 {
-    $imageService = Kernel::container()->get(\Piwigo\Image\ImageService::class);
-    if (! $imageService instanceof \Piwigo\Image\ImageService) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Image\ImageService::class);
+    $imageService = Kernel::container()->get(ImageService::class);
+    if (! $imageService instanceof ImageService) {
+        throw new LogicException('Container returned an unexpected type for ' . ImageService::class);
     }
 
     return $imageService;
@@ -117,27 +124,27 @@ function batch_upload_handler_test_current_config(): CurrentConfig
 {
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
     if (! $currentConfig instanceof CurrentConfig) {
-        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
 
     return $currentConfig;
 }
 
-function batch_upload_handler_test_ws_context(): \Piwigo\Core\WsContext
+function batch_upload_handler_test_ws_context(): WsContext
 {
-    $wsContext = Kernel::container()->get(\Piwigo\Core\WsContext::class);
-    if (! $wsContext instanceof \Piwigo\Core\WsContext) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\WsContext::class);
+    $wsContext = Kernel::container()->get(WsContext::class);
+    if (! $wsContext instanceof WsContext) {
+        throw new LogicException('Container returned an unexpected type for ' . WsContext::class);
     }
 
     return $wsContext;
 }
 
-function batch_upload_handler_test_current_user(): \Piwigo\Users\CurrentUser
+function batch_upload_handler_test_current_user(): CurrentUser
 {
-    $currentUser = Kernel::container()->get(\Piwigo\Users\CurrentUser::class);
-    if (! $currentUser instanceof \Piwigo\Users\CurrentUser) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\CurrentUser::class);
+    $currentUser = Kernel::container()->get(CurrentUser::class);
+    if (! $currentUser instanceof CurrentUser) {
+        throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
     }
 
     return $currentUser;
@@ -156,7 +163,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     Kernel::reset();
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
 });
 
 test('__invoke returns the existing image id and deletes the newly uploaded file when its md5sum already exists (duplicate detection)', function (): void {
@@ -171,7 +178,7 @@ test('__invoke returns the existing image id and deletes the newly uploaded file
         $sourceFilepath = sys_get_temp_dir() . '/piwigo-batch-upload-handler-test-' . bin2hex(random_bytes(8)) . '.jpg';
         file_put_contents($sourceFilepath, 'duplicate-upload-bytes');
 
-        $handler = new BatchUploadHandler(\Piwigo\Core\Lang::current(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), \Piwigo\PluginConfig\EventDispatcher::get(), batch_upload_handler_test_config_service(), batch_upload_handler_test_entity_manager(), batch_upload_handler_test_activity_service(), batch_upload_handler_test_metadata_service(), batch_upload_handler_test_image_service(), batch_upload_handler_test_current_config(), batch_upload_handler_test_ws_context(), batch_upload_handler_test_current_user());
+        $handler = new BatchUploadHandler(Lang::current(), UrlServiceTestFactory::build(), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), EventDispatcher::get(), batch_upload_handler_test_config_service(), batch_upload_handler_test_entity_manager(), batch_upload_handler_test_activity_service(), batch_upload_handler_test_metadata_service(), batch_upload_handler_test_image_service(), batch_upload_handler_test_current_config(), batch_upload_handler_test_ws_context(), batch_upload_handler_test_current_user());
 
         $imageId = $handler(new BatchUploadJob(
             sourceFilepath: $sourceFilepath,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Mail;
 
+use Override;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\Exception\TransportException;
@@ -49,13 +50,13 @@ final class BoundedSendmailTransport extends AbstractTransport
         parent::__construct($dispatcher, $logger);
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return 'native://default (bounded)';
     }
 
-    #[\Override]
+    #[Override]
     protected function doSend(SentMessage $message): void
     {
         $binaryAndFlags = preg_split('/\s+/', trim($this->sendmailPath));

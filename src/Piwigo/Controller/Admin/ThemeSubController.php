@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Request\ThemeIdRequest;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -30,15 +34,15 @@ final class ThemeSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly Lang $lang,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly InputValidator $inputValidator,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
-        $theme = Request\ThemeIdRequest::fromGlobals($this->inputValidator)->themeId;
+        $theme = ThemeIdRequest::fromGlobals($this->inputValidator)->themeId;
 
         $fs_themes = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $this->urlService, $this->lang);

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Metadata\Projection;
 
+use Piwigo\Image\ImageEntity;
+
 /**
  * Typed row shape shared by
  * {@see \Piwigo\Metadata\MetadataRepository::findImagesByIds()} and
@@ -36,7 +38,7 @@ final readonly class MetadataImage
      * `$representativeExt` are already typed, so no defensive casting is
      * needed here the way `fromRow()`'s own untyped raw-array input required.
      */
-    public static function fromEntity(\Piwigo\Image\ImageEntity $entity): self
+    public static function fromEntity(ImageEntity $entity): self
     {
         return new self(
             id: $entity->id ?? 0,

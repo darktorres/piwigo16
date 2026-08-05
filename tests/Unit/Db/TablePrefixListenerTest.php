@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Piwigo\Db\DbCredentials;
@@ -23,7 +24,7 @@ test('loadClassMetadata prefixes a bare table name', function (): void {
 
     $metadata = new ClassMetadata('Piwigo\\Tests\\Fixtures\\FakeEntity');
     $metadata->setPrimaryTable(['name' => 'sessions']);
-    $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(\Doctrine\ORM\EntityManagerInterface::class));
+    $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(EntityManagerInterface::class));
 
     new TablePrefixListener($credentials)->loadClassMetadata($args);
 
@@ -45,7 +46,7 @@ test('loadClassMetadata leaves the table name untouched when the configured pref
 
     $metadata = new ClassMetadata('Piwigo\\Tests\\Fixtures\\FakeEntity');
     $metadata->setPrimaryTable(['name' => 'sessions']);
-    $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(\Doctrine\ORM\EntityManagerInterface::class));
+    $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(EntityManagerInterface::class));
 
     new TablePrefixListener($credentials)->loadClassMetadata($args);
 
@@ -57,7 +58,7 @@ test('loadClassMetadata leaves an already-prefixed table name untouched (idempot
 
     $metadata = new ClassMetadata('Piwigo\\Tests\\Fixtures\\FakeEntity');
     $metadata->setPrimaryTable(['name' => 'piwigo_sessions']);
-    $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(\Doctrine\ORM\EntityManagerInterface::class));
+    $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(EntityManagerInterface::class));
 
     new TablePrefixListener($credentials)->loadClassMetadata($args);
 
@@ -69,7 +70,7 @@ test('loadClassMetadata applies a custom, non-default prefix', function (): void
 
     $metadata = new ClassMetadata('Piwigo\\Tests\\Fixtures\\FakeEntity');
     $metadata->setPrimaryTable(['name' => 'sessions']);
-    $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(\Doctrine\ORM\EntityManagerInterface::class));
+    $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(EntityManagerInterface::class));
 
     new TablePrefixListener($credentials)->loadClassMetadata($args);
 

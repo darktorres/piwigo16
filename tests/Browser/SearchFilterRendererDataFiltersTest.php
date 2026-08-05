@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
+use Piwigo\Cache\CachePools;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -33,7 +35,7 @@ function searchFilterDataDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function searchFilterDataDb(): \mysqli|\PgSql\Connection
+function searchFilterDataDb(): mysqli|Connection
 {
     return H::connect();
 }
@@ -500,7 +502,7 @@ it('serves the height-rows cache pool across a cache-miss then cache-hit load wh
     // make this test's own "1st load" a stale cache hit that predates the
     // photo uploaded below. Confirmed live: this test passes in isolation
     // but flakes in the full suite without this clear.
-    \Piwigo\Cache\CachePools::searchResults()->clear();
+    CachePools::searchResults()->clear();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -560,7 +562,7 @@ it('serves the width-rows cache pool across a cache-miss then cache-hit load whe
     // keyed only by user id, so a nearby earlier width search by the same
     // admin user can serve this test a stale, pre-upload cache hit on its
     // own "1st load" within the pool's 30s TTL.
-    \Piwigo\Cache\CachePools::searchResults()->clear();
+    CachePools::searchResults()->clear();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -629,7 +631,7 @@ it('serves the ratios cache pool across a cache-miss then cache-hit load when ra
     // keyed only by user id, so a nearby earlier ratios search by the same
     // admin user can serve this test a stale, pre-upload cache hit on its
     // own "1st load" within the pool's 30s TTL.
-    \Piwigo\Cache\CachePools::searchResults()->clear();
+    CachePools::searchResults()->clear();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -753,7 +755,7 @@ it('assigns the un-narrowed FILETYPES extension counts when filetypes is the onl
     // keyed only by user id, so a nearby earlier filetypes search by the
     // same admin user can serve this test a stale, pre-upload cache hit
     // within the pool's 30s TTL.
-    \Piwigo\Cache\CachePools::searchResults()->clear();
+    CachePools::searchResults()->clear();
 
     try {
         $page = H::loginAsAdmin($this);

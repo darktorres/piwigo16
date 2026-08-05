@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Category\CategoryService;
+use Piwigo\Group\GroupService;
+use Piwigo\History\HistoryService;
+use Piwigo\Image\ImageService;
+use Piwigo\Rate\RateService;
+use Piwigo\Tag\TagService;
+use Piwigo\Users\UserService;
+
 /**
  * Ported from admin/include/functions.php's get_pwg_general_statitics()/
  * get_installation_date() (P23 batch 8d). Lives under Admin\, not a
@@ -15,13 +23,13 @@ namespace Piwigo\Admin;
 final class InstallationStats
 {
     public function __construct(
-        private \Piwigo\Rate\RateService $rateService,
-        private \Piwigo\History\HistoryService $historyService,
-        private \Piwigo\Image\ImageService $imageService,
-        private \Piwigo\Category\CategoryService $categoryService,
-        private \Piwigo\Tag\TagService $tagService,
-        private \Piwigo\Users\UserService $userService,
-        private \Piwigo\Group\GroupService $groupService,
+        private RateService $rateService,
+        private HistoryService $historyService,
+        private ImageService $imageService,
+        private CategoryService $categoryService,
+        private TagService $tagService,
+        private UserService $userService,
+        private GroupService $groupService,
     ) {}
 
     /**

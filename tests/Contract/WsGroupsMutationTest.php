@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+
 /**
  * Ws\PwgGroups::delete()'s own `if ($deleted_groups === false) { return
  * new PwgError(500, 'There is no group to delete'); }` branch is NOT
@@ -22,14 +24,14 @@ final class WsGroupsMutationTest extends ContractTestCase
 {
     private ?int $groupId = null;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
         $this->loginAsAdmin();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         if ($this->groupId !== null) {

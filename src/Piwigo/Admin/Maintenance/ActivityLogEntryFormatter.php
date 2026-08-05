@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Maintenance;
 
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
 
 /**
@@ -336,7 +337,7 @@ final class ActivityLogEntryFormatter
             'action' => $action,
             'user_id' => $row->performedBy,
             'username' => $row->username,
-            'date' => \Piwigo\Core\DateHelper::formatDate($date),
+            'date' => DateHelper::formatDate($date),
             'hour' => $hour,
             'detail' => $detail,
         ];

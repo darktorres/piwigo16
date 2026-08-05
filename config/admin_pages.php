@@ -2,50 +2,88 @@
 
 declare(strict_types=1);
 
+use Piwigo\Controller\Admin\AdminSubControllerInterface;
+use Piwigo\Controller\Admin\AlbumsSubController;
+use Piwigo\Controller\Admin\AlbumSubController;
+use Piwigo\Controller\Admin\BatchManagerSubController;
+use Piwigo\Controller\Admin\CatListSubController;
+use Piwigo\Controller\Admin\CatOptionsSubController;
+use Piwigo\Controller\Admin\CommentsSubController;
+use Piwigo\Controller\Admin\ConfigurationSubController;
+use Piwigo\Controller\Admin\ExtendForTemplatesSubController;
+use Piwigo\Controller\Admin\GroupListSubController;
+use Piwigo\Controller\Admin\GroupPermSubController;
+use Piwigo\Controller\Admin\HelpSubController;
+use Piwigo\Controller\Admin\HistorySubController;
+use Piwigo\Controller\Admin\IntroSubController;
+use Piwigo\Controller\Admin\LanguagesSubController;
+use Piwigo\Controller\Admin\MaintenanceSubController;
+use Piwigo\Controller\Admin\MenubarSubController;
+use Piwigo\Controller\Admin\NotificationByMailSubController;
+use Piwigo\Controller\Admin\PermalinksSubController;
+use Piwigo\Controller\Admin\PhotosAddSubController;
+use Piwigo\Controller\Admin\PhotoSubController;
+use Piwigo\Controller\Admin\PictureCoiSubController;
+use Piwigo\Controller\Admin\PictureFormatsSubController;
+use Piwigo\Controller\Admin\PluginsSubController;
+use Piwigo\Controller\Admin\PluginSubController;
+use Piwigo\Controller\Admin\RatingSubController;
+use Piwigo\Controller\Admin\RatingUserSubController;
+use Piwigo\Controller\Admin\SiteManagerSubController;
+use Piwigo\Controller\Admin\SiteUpdateSubController;
+use Piwigo\Controller\Admin\StatsSubController;
+use Piwigo\Controller\Admin\TagsSubController;
+use Piwigo\Controller\Admin\ThemesStandardPagesSubController;
+use Piwigo\Controller\Admin\ThemesSubController;
+use Piwigo\Controller\Admin\ThemeSubController;
+use Piwigo\Controller\Admin\UpdatesSubController;
+use Piwigo\Controller\Admin\UserActivitySubController;
+use Piwigo\Controller\Admin\UserListSubController;
+use Piwigo\Controller\Admin\UserPermSubController;
+
 // Maps an admin.php `?page=` slug to the AdminSubControllerInterface class
 // that handles it. This map is the complete admin page registry: admin.php
 // falls back to 'intro' for any slug not listed here, and
 // Piwigo\Bootstrap\AdminDispatcher treats an unmapped slug reaching it as
 // a programming error (the legacy `include admin/<slug>.php` fallback was
 // removed in P23 batch 9, once batch 6 had migrated every page).
-
-/** @var array<string, class-string<\Piwigo\Controller\Admin\AdminSubControllerInterface>> */
+/** @var array<string, class-string<AdminSubControllerInterface>> */
 return [
-    'photos_add' => \Piwigo\Controller\Admin\PhotosAddSubController::class,
-    'album' => \Piwigo\Controller\Admin\AlbumSubController::class,
-    'albums' => \Piwigo\Controller\Admin\AlbumsSubController::class,
-    'cat_list' => \Piwigo\Controller\Admin\CatListSubController::class,
-    'cat_options' => \Piwigo\Controller\Admin\CatOptionsSubController::class,
-    'group_list' => \Piwigo\Controller\Admin\GroupListSubController::class,
-    'group_perm' => \Piwigo\Controller\Admin\GroupPermSubController::class,
-    'user_list' => \Piwigo\Controller\Admin\UserListSubController::class,
-    'user_perm' => \Piwigo\Controller\Admin\UserPermSubController::class,
-    'user_activity' => \Piwigo\Controller\Admin\UserActivitySubController::class,
-    'configuration' => \Piwigo\Controller\Admin\ConfigurationSubController::class,
-    'extend_for_templates' => \Piwigo\Controller\Admin\ExtendForTemplatesSubController::class,
-    'menubar' => \Piwigo\Controller\Admin\MenubarSubController::class,
-    'permalinks' => \Piwigo\Controller\Admin\PermalinksSubController::class,
-    'picture_formats' => \Piwigo\Controller\Admin\PictureFormatsSubController::class,
-    'picture_coi' => \Piwigo\Controller\Admin\PictureCoiSubController::class,
-    'site_manager' => \Piwigo\Controller\Admin\SiteManagerSubController::class,
-    'site_update' => \Piwigo\Controller\Admin\SiteUpdateSubController::class,
-    'themes_standard_pages' => \Piwigo\Controller\Admin\ThemesStandardPagesSubController::class,
-    'plugin' => \Piwigo\Controller\Admin\PluginSubController::class,
-    'plugins' => \Piwigo\Controller\Admin\PluginsSubController::class,
-    'theme' => \Piwigo\Controller\Admin\ThemeSubController::class,
-    'themes' => \Piwigo\Controller\Admin\ThemesSubController::class,
-    'languages' => \Piwigo\Controller\Admin\LanguagesSubController::class,
-    'updates' => \Piwigo\Controller\Admin\UpdatesSubController::class,
-    'batch_manager' => \Piwigo\Controller\Admin\BatchManagerSubController::class,
-    'history' => \Piwigo\Controller\Admin\HistorySubController::class,
-    'maintenance' => \Piwigo\Controller\Admin\MaintenanceSubController::class,
-    'intro' => \Piwigo\Controller\Admin\IntroSubController::class,
-    'comments' => \Piwigo\Controller\Admin\CommentsSubController::class,
-    'help' => \Piwigo\Controller\Admin\HelpSubController::class,
-    'rating' => \Piwigo\Controller\Admin\RatingSubController::class,
-    'rating_user' => \Piwigo\Controller\Admin\RatingUserSubController::class,
-    'tags' => \Piwigo\Controller\Admin\TagsSubController::class,
-    'photo' => \Piwigo\Controller\Admin\PhotoSubController::class,
-    'stats' => \Piwigo\Controller\Admin\StatsSubController::class,
-    'notification_by_mail' => \Piwigo\Controller\Admin\NotificationByMailSubController::class,
+    'photos_add' => PhotosAddSubController::class,
+    'album' => AlbumSubController::class,
+    'albums' => AlbumsSubController::class,
+    'cat_list' => CatListSubController::class,
+    'cat_options' => CatOptionsSubController::class,
+    'group_list' => GroupListSubController::class,
+    'group_perm' => GroupPermSubController::class,
+    'user_list' => UserListSubController::class,
+    'user_perm' => UserPermSubController::class,
+    'user_activity' => UserActivitySubController::class,
+    'configuration' => ConfigurationSubController::class,
+    'extend_for_templates' => ExtendForTemplatesSubController::class,
+    'menubar' => MenubarSubController::class,
+    'permalinks' => PermalinksSubController::class,
+    'picture_formats' => PictureFormatsSubController::class,
+    'picture_coi' => PictureCoiSubController::class,
+    'site_manager' => SiteManagerSubController::class,
+    'site_update' => SiteUpdateSubController::class,
+    'themes_standard_pages' => ThemesStandardPagesSubController::class,
+    'plugin' => PluginSubController::class,
+    'plugins' => PluginsSubController::class,
+    'theme' => ThemeSubController::class,
+    'themes' => ThemesSubController::class,
+    'languages' => LanguagesSubController::class,
+    'updates' => UpdatesSubController::class,
+    'batch_manager' => BatchManagerSubController::class,
+    'history' => HistorySubController::class,
+    'maintenance' => MaintenanceSubController::class,
+    'intro' => IntroSubController::class,
+    'comments' => CommentsSubController::class,
+    'help' => HelpSubController::class,
+    'rating' => RatingSubController::class,
+    'rating_user' => RatingUserSubController::class,
+    'tags' => TagsSubController::class,
+    'photo' => PhotoSubController::class,
+    'stats' => StatsSubController::class,
+    'notification_by_mail' => NotificationByMailSubController::class,
 ];

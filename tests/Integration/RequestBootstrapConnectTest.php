@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Bootstrap\InfrastructureAccessor;
 use Doctrine\DBAL\Connection;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigLoader;
@@ -70,7 +72,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
      */
     private array $originalDbEnv = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -105,12 +107,12 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
         // config state before each real connect() call -- connect() itself
         // always resolves its own ConfigService from the container (see
         // its own body), never this instance.
-        $this->configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current());
+        $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
 
         unset($_REQUEST['method']);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         DbCredentials::current()->seed($this->originalDbEnv);
@@ -263,7 +265,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
         // just written -- the version-differs branch never triggers, and
         // the DB is never restamped. See
         // feedback_entitymanagerfactory_not_memoized_needs_accessor.
-        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+        InfrastructureAccessor::entityManager()->clear();
 
         try {
             RequestBootstrap::connect();

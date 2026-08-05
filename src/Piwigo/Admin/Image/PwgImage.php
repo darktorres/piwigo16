@@ -11,7 +11,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
+use Exception;
+use Imagick;
+use LogicException;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\StringHelper;
+use Piwigo\Core\TimingHelper;
 use Piwigo\Event\Lifecycle\LoadImageLibrary;
+use Piwigo\PluginConfig\EventDispatcher;
 
 /**
  * Unknown methods are forwarded to $this->image (an ImageInterface
@@ -50,9 +58,9 @@ final class PwgImage
 
     public function __construct(
         public string $source_filepath,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
-        \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentLogger $currentLogger,
+        EventDispatcher $eventDispatcher,
+        private readonly CurrentConfig $currentConfig,
         ?string $library = null
     ) {
 
@@ -62,7 +70,7 @@ final class PwgImage
             return; // A plugin may have load its own library
         }
 
-        $extension = strtolower(\Piwigo\Core\StringHelper::getExtension($this->source_filepath));
+        $extension = strtolower(StringHelper::getExtension($this->source_filepath));
 
         $picture_ext = $this->currentConfig->pictureExtensions();
         if (! in_array($extension, $picture_ext, true)) {
@@ -77,7 +85,7 @@ final class PwgImage
             'ext_imagick' => new ImageExtImagick($this->source_filepath, $this->currentLogger, $this->currentConfig),
             'imagick' => new ImageImagick($this->source_filepath),
             'gd' => new ImageGd($this->source_filepath),
-            default => throw new \Exception("PwgImage: unknown image library '{$this->library}'"),
+            default => throw new Exception("PwgImage: unknown image library '{$this->library}'"),
         };
     }
 
@@ -107,7 +115,7 @@ final class PwgImage
     private function getImage(): ImageInterface
     {
         if (! $this->image instanceof ImageInterface) {
-            throw new \LogicException('PwgImage: no image library instantiated');
+            throw new LogicException('PwgImage: no image library instantiated');
         }
         return $this->image;
     }
@@ -118,7 +126,7 @@ final class PwgImage
      */
     public function pwg_resize(string $destination_filepath, int $max_width, int $max_height, int $quality, bool $automatic_rotation = true, bool $strip_metadata = false, bool $crop = false, bool $follow_orientation = true): array
     {
-        $starttime = \Piwigo\Core\TimingHelper::getMoment();
+        $starttime = TimingHelper::getMoment();
         $image = $this->getImage();
 
         // width/height
@@ -251,13 +259,13 @@ final class PwgImage
 
         $fp = fopen($source_filepath, 'rb');
         if (! (bool) $fp) {
-            throw new \Exception("webp_info(): fopen({$source_filepath}): Failed");
+            throw new Exception("webp_info(): fopen({$source_filepath}): Failed");
         }
         $buf = fread($fp, 25);
         fclose($fp);
 
         if ($buf === false) {
-            throw new \Exception("webp_info(): fread({$source_filepath}): Failed");
+            throw new Exception("webp_info(): fread({$source_filepath}): Failed");
         }
 
         switch (true) {
@@ -265,7 +273,7 @@ final class PwgImage
             case ! str_starts_with($buf, 'RIFF'):
             case substr($buf, 8, 4) !== 'WEBP':
             case substr($buf, 12, 3) !== 'VP8':
-                throw new \Exception('webp_info(): not a valid webp image');
+                throw new Exception('webp_info(): not a valid webp image');
             case $buf[15] === ' ':
                 // Simple File Format (Lossy)
                 return [
@@ -291,7 +299,7 @@ final class PwgImage
                 ];
 
             default:
-                throw new \Exception('webp_info(): could not detect webp type');
+                throw new Exception('webp_info(): could not detect webp type');
         }
     }
 
@@ -348,7 +356,7 @@ final class PwgImage
             90 => 1,
             180 => 2,
             270 => 3,
-            default => throw new \Exception("get_rotation_code_from_angle(): unexpected rotation angle {$rotation_angle}"),
+            default => throw new Exception("get_rotation_code_from_angle(): unexpected rotation angle {$rotation_angle}"),
         };
     }
 
@@ -365,7 +373,7 @@ final class PwgImage
             1 => 90,
             2 => 180,
             3 => 270,
-            default => throw new \Exception("get_rotation_angle_from_code(): unexpected rotation code {$rotation_code}"),
+            default => throw new Exception("get_rotation_angle_from_code(): unexpected rotation code {$rotation_code}"),
         };
     }
 
@@ -411,7 +419,7 @@ final class PwgImage
             'width' => $width,
             'height' => $height,
             'size' => (string) floor($destination_filesize / 1024) . ' KB',
-            'time' => ((bool) $time) ? number_format((\Piwigo\Core\TimingHelper::getMoment() - $time) * 1000.0, 2, '.', ' ') . ' ms' : null,
+            'time' => ((bool) $time) ? number_format((TimingHelper::getMoment() - $time) * 1000.0, 2, '.', ' ') . ' ms' : null,
             'library' => $this->library,
         ];
     }
@@ -437,7 +445,7 @@ final class PwgImage
             // get_graphics_library() for the same constraint. Same
             // transitional shim already used by every Ws/ static-dispatch
             // caller for exactly this "no instance in scope" shape.
-            $imagick_dir = \Piwigo\Config\CurrentConfig::current()->extImagickDir();
+            $imagick_dir = CurrentConfig::current()->extImagickDir();
             // check if magick is in path
             // [SEC-16] escapeshellarg() quotes the dir prefix; the adjacent
             // quoted+unquoted shell tokens still concatenate into one word
@@ -458,7 +466,7 @@ final class PwgImage
 
         // Static method, no instance available for real constructor
         // injection -- see get_ext_imagick_command()'s own comment above.
-        $imagick_dir = \Piwigo\Config\CurrentConfig::current()->extImagickDir();
+        $imagick_dir = CurrentConfig::current()->extImagickDir();
         // [SEC-16] see the escapeshellarg() note above.
         $returnarray = [];
         @exec(escapeshellarg($imagick_dir) . self::get_ext_imagick_command() . ' -version', $returnarray);
@@ -482,7 +490,7 @@ final class PwgImage
         if ($library === null) {
             // Static method, no instance available for real constructor
             // injection -- see get_ext_imagick_command()'s own comment above.
-            $conf_library = \Piwigo\Config\CurrentConfig::current()->graphicsLibrary();
+            $conf_library = CurrentConfig::current()->graphicsLibrary();
             $library = $conf_library;
         }
 
@@ -529,7 +537,7 @@ final class PwgImage
             case 'ext_imagick':
                 // Static method, no instance available for real constructor
                 // injection -- see get_ext_imagick_command()'s own comment above.
-                $ext_imagick_dir = \Piwigo\Config\CurrentConfig::current()->extImagickDir();
+                $ext_imagick_dir = CurrentConfig::current()->extImagickDir();
                 $returnarray = [];
                 exec($ext_imagick_dir . self::get_ext_imagick_command() . ' -version', $returnarray);
                 if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0] ?? '', $match)) {
@@ -538,7 +546,7 @@ final class PwgImage
                 break;
 
             case 'imagick':
-                $version = \Imagick::getVersion();
+                $version = Imagick::getVersion();
                 if ((bool) preg_match('/ImageMagick \d+\.\d+\.\d+-?\d*/', $version['versionString'], $match)) {
                     $library .= '/' . $match[0];
                 }

@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Maintenance;
 
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
+use Piwigo\Image\ImageService;
+use Piwigo\Template\CurrentTemplate;
 
 /**
  * Ported from admin/include/functions.php's fs_quick_check()/
@@ -42,10 +46,10 @@ final class FilesystemIntegrityChecker
 {
     public function __construct(
         private readonly Lang $lang,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Config\CurrentConfigService $currentConfigService,
-        private readonly \Piwigo\Image\ImageService $imageService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly CurrentConfigService $currentConfigService,
+        private readonly ImageService $imageService,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**

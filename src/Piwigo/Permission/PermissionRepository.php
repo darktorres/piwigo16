@@ -20,6 +20,7 @@ use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
+use UnexpectedValueException;
 
 /**
  * Persistence layer for the permission domain's forbidden-categories
@@ -314,7 +315,7 @@ final readonly class PermissionRepository
     public function countAccessibleImages(string $structuralForbidden, string $imageAccessType, string $imageAccessList): string
     {
         if (! in_array($imageAccessType, ['IN', 'NOT IN'], true)) {
-            throw new \UnexpectedValueException('Unexpected image_access_type: ' . $imageAccessType);
+            throw new UnexpectedValueException('Unexpected image_access_type: ' . $imageAccessType);
         }
 
         $total = $this->em->createQueryBuilder()

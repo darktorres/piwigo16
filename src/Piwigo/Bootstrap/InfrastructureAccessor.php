@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Bootstrap;
 
 use Doctrine\ORM\EntityManagerInterface;
+use LogicException;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\WsContext;
@@ -43,7 +44,7 @@ final class InfrastructureAccessor
     {
         $em = Kernel::container()->get(EntityManagerInterface::class);
         if (! $em instanceof EntityManagerInterface) {
-            throw new \LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
+            throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
         }
         return $em;
     }
@@ -59,7 +60,7 @@ final class InfrastructureAccessor
     {
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
         if (! $currentLogger instanceof CurrentLogger) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
         return $currentLogger;
     }
@@ -74,7 +75,7 @@ final class InfrastructureAccessor
     {
         $storageRegistry = Kernel::container()->get(StorageRegistry::class);
         if (! $storageRegistry instanceof StorageRegistry) {
-            throw new \LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
+            throw new LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
         }
         return $storageRegistry;
     }
@@ -90,7 +91,7 @@ final class InfrastructureAccessor
     {
         $wsContext = Kernel::container()->get(WsContext::class);
         if (! $wsContext instanceof WsContext) {
-            throw new \LogicException('Container returned an unexpected type for ' . WsContext::class);
+            throw new LogicException('Container returned an unexpected type for ' . WsContext::class);
         }
         return $wsContext;
     }

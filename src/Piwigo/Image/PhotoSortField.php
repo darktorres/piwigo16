@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Piwigo\Db\DbCredentials;
 use Piwigo\Db\SqlDialect;
 
 /**
@@ -137,7 +138,7 @@ enum PhotoSortField
             self::DateCreation => 'date_creation',
             self::DateAvailable => 'date_available',
             self::Random => SqlDialect::randomFunction() . '()',
-            self::Rank => \Piwigo\Db\DbCredentials::fromEnv()->driver === 'pgsql' ? '"rank"' : '`rank`',
+            self::Rank => DbCredentials::fromEnv()->driver === 'pgsql' ? '"rank"' : '`rank`',
         };
     }
 

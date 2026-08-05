@@ -4,11 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use DateTimeImmutable;
 use Piwigo\Cache\CachePools;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Lang;
+use Piwigo\Core\PaginationService;
+use Piwigo\Core\ProcessCache;
+use Piwigo\Core\RecentIconResolver;
 use Piwigo\Core\TemplateInterface;
+use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Location\LocBeginIndexCategoryThumbnails;
 use Piwigo\Event\Location\LocEndIndexCategoryThumbnails;
@@ -20,6 +29,8 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Users\CurrentUser;
 use Psr\Cache\CacheItemPoolInterface;
 
 /**
@@ -65,13 +76,13 @@ final readonly class CategoryCatsRenderer
         private PermissionService $permissionService,
         private ImageRepository $imageRepo,
         private UrlServiceInterface $urlService,
-        private \Piwigo\Core\CurrentLogger $currentLogger,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private \Piwigo\Image\ImageStdParams $imageStdParams,
-        private \Piwigo\Users\CurrentUser $currentUser,
-        private \Piwigo\Config\CurrentConfig $currentConfig,
-        private \Piwigo\Core\Lang $lang,
-        private \Piwigo\Core\ProcessCache $processCache,
+        private CurrentLogger $currentLogger,
+        private EventDispatcher $eventDispatcher,
+        private ImageStdParams $imageStdParams,
+        private CurrentUser $currentUser,
+        private CurrentConfig $currentConfig,
+        private Lang $lang,
+        private ProcessCache $processCache,
     ) {}
 
     /**
@@ -105,7 +116,7 @@ final readonly class CategoryCatsRenderer
         if ($isRecentCats) {
             $recentPeriod = is_numeric($user->rawAttributes['recent_period'] ?? null) ? (int) $user->rawAttributes['recent_period'] : 0;
             $lastPhotoDate = is_string($user->rawAttributes['last_photo_date'] ?? null) ? $user->rawAttributes['last_photo_date'] : null;
-            $now = \DateTimeImmutable::createFromMutable(Env::now());
+            $now = DateTimeImmutable::createFromMutable(Env::now());
 
             $filtered = array_filter($tree, static function (array $row) use ($recentPeriod, $lastPhotoDate, $now): bool {
                 $countImages = $row['count_images'];
@@ -390,7 +401,7 @@ final readonly class CategoryCatsRenderer
                     $categoryIsChildDateLast = $category['is_child_date_last'];
                     $categoryIsChildDateLast = is_bool($categoryIsChildDateLast) ? $categoryIsChildDateLast : false;
                     $recentPeriodForIcon = is_numeric($user->rawAttributes['recent_period'] ?? null) ? (int) $user->rawAttributes['recent_period'] : 0;
-                    $tplVar['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon($categoryMaxDateLast, $recentPeriodForIcon, $this->processCache, $this->lang, $categoryIsChildDateLast);
+                    $tplVar['icon_ts'] = RecentIconResolver::getIcon($categoryMaxDateLast, $recentPeriodForIcon, $this->processCache, $this->lang, $categoryIsChildDateLast);
                 }
 
                 if ($this->currentConfig->displayFromto()) {
@@ -402,7 +413,7 @@ final readonly class CategoryCatsRenderer
                         $to = is_string($to) ? $to : '';
 
                         if (is_string($from) && $from !== '') {
-                            $tplVar['INFO_DATES'] = \Piwigo\Core\DateHelper::formatFromto($from, $to);
+                            $tplVar['INFO_DATES'] = DateHelper::formatFromto($from, $to);
                         }
                     }
                 }
@@ -435,14 +446,14 @@ final readonly class CategoryCatsRenderer
                 // it's bridged via the documented transitional shim rather
                 // than expanding this batch's scope into a full, unrelated
                 // conversion of this file.
-                $catsNavigationBar = new \Piwigo\Core\PaginationService($this->currentConfig)
+                $catsNavigationBar = new PaginationService($this->currentConfig)
                     ->createNavigationBar($this->urlService->duplicateIndexUrl([], ['startcat']), $totalCategories, $startcat, $nbCategoriesPage, true, 'startcat');
             }
 
             $template->assign('cats_navbar', $catsNavigationBar);
         }
 
-        \Piwigo\Core\TimingHelper::debug('end CategoryCatsRenderer::render()');
+        TimingHelper::debug('end CategoryCatsRenderer::render()');
     }
 
     private function getCachedRepresentative(CacheItemPoolInterface $pool, int $userId, int $catId): ?string

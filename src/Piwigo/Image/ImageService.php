@@ -4,22 +4,37 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use LogicException;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Dto\PaginatedResult;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Logger;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Album\EmptyLounge;
 use Piwigo\Event\Picture\BeginDeleteElements;
 use Piwigo\Event\Picture\DeleteElements;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Image\Request\EmptyLoungeRequest;
+use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Pure computation ported from `include/functions_picture.inc.php` --
@@ -50,9 +65,9 @@ final readonly class ImageService
         private ImageRepository $repo,
         private ActivityLoggerInterface $activityLogger,
         private SessionService $sessionService,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private \Piwigo\Config\CurrentConfig $currentConfig,
-        private \Piwigo\Lang\Translator $translator,
+        private EventDispatcher $eventDispatcher,
+        private CurrentConfig $currentConfig,
+        private Translator $translator,
     ) {}
 
     /**
@@ -71,18 +86,18 @@ final readonly class ImageService
      * reasoning as every other collaborator built this way in a plain
      * Unit test (see PiwigoInfosSenderTest.php).
      */
-    private function currentUser(): \Piwigo\Users\CurrentUser
+    private function currentUser(): CurrentUser
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $currentUser = \Piwigo\Core\Kernel::container()->get(\Piwigo\Users\CurrentUser::class);
-            if (! $currentUser instanceof \Piwigo\Users\CurrentUser) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\CurrentUser::class);
+        if (Kernel::isBooted()) {
+            $currentUser = Kernel::container()->get(CurrentUser::class);
+            if (! $currentUser instanceof CurrentUser) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
             }
 
             return $currentUser;
         }
 
-        return new \Piwigo\Users\CurrentUser($this->currentConfig);
+        return new CurrentUser($this->currentConfig);
     }
 
     /**
@@ -90,18 +105,18 @@ final readonly class ImageService
      * uninitialised instance, matching `FilterState`'s own former
      * `isInitializedStatic()` shim's identical pre-boot fallback.
      */
-    private function filterState(): \Piwigo\Core\FilterState
+    private function filterState(): FilterState
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
-            if (! $filterState instanceof \Piwigo\Core\FilterState) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        if (Kernel::isBooted()) {
+            $filterState = Kernel::container()->get(FilterState::class);
+            if (! $filterState instanceof FilterState) {
+                throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
             }
 
             return $filterState;
         }
 
-        return new \Piwigo\Core\FilterState();
+        return new FilterState();
     }
 
     /**
@@ -115,19 +130,19 @@ final readonly class ImageService
      * hasn't run, matching CurrentLogger::getStatic()'s own identical
      * pre-boot fallback.
      */
-    private function logger(): \Piwigo\Core\Logger
+    private function logger(): Logger
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $currentLogger = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
-            if (! $currentLogger instanceof \Piwigo\Core\CurrentLogger) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentLogger::class);
+        if (Kernel::isBooted()) {
+            $currentLogger = Kernel::container()->get(CurrentLogger::class);
+            if (! $currentLogger instanceof CurrentLogger) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
             }
 
             return $currentLogger->get();
         }
 
-        return new \Piwigo\Core\Logger([
-            'severity' => \Piwigo\Core\Logger::OFF,
+        return new Logger([
+            'severity' => Logger::OFF,
         ]);
     }
 
@@ -137,8 +152,8 @@ final readonly class ImageService
 
         return new CategoryService(
             $this->lang,
-            new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig),
-            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser(), $this->filterState()),
+            new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser(), $this->filterState()),
             $this->currentConfig,
             $this->eventDispatcher,
             $this->translator
@@ -204,7 +219,7 @@ final readonly class ImageService
             if ((bool) preg_match_all('/([a-z]+)-(true|false)/', (string) $encodeParams, $matches)) {
                 $matchCount = count($matches[1]);
                 for ($i = 0; $i < $matchCount; $i++) {
-                    $result[$matches[1][$i]] = \Piwigo\Db\SqlDialect::getBoolean($matches[2][$i]);
+                    $result[$matches[1][$i]] = SqlDialect::getBoolean($matches[2][$i]);
                 }
             }
         }
@@ -229,7 +244,7 @@ final readonly class ImageService
         // $params' keys are always string: correctSlideshowParams() and
         // getDefaultSlideshowParams() both declare array<string, mixed>.
         foreach ($params as $name => $value) {
-            $value = \Piwigo\Db\SqlDialect::booleanToString($value);
+            $value = SqlDialect::booleanToString($value);
             if (! is_scalar($value)) {
                 continue;
             }
@@ -423,12 +438,12 @@ final readonly class ImageService
             [$runningExecId, $runningExecStartTime] = explode('-', $emptyLoungeRunning);
             if (time() - (int) $runningExecStartTime > 60) {
                 $logger->debug(__FUNCTION__ . ', exec=' . $runningExecId . ', timeout stopped by another call to the function');
-                \Piwigo\Config\CurrentConfigService::current()->get()->confDeleteParam('empty_lounge_running');
+                CurrentConfigService::current()->get()->confDeleteParam('empty_lounge_running');
             }
         }
 
         $execId = $this->sessionService->generateKey(4);
-        $requestMethod = Request\EmptyLoungeRequest::fromGlobals()->requestMethod;
+        $requestMethod = EmptyLoungeRequest::fromGlobals()->requestMethod;
         $apiSuffix = $requestMethod !== null ? ' (API:' . $requestMethod . ')' : '';
         $logger->debug(__FUNCTION__ . $apiSuffix . ', exec=' . $execId . ', begins');
 
@@ -473,7 +488,7 @@ final readonly class ImageService
             PermissionCacheInvalidator::invalidate();
         }
 
-        \Piwigo\Config\CurrentConfigService::current()->get()->confDeleteParam('empty_lounge_running');
+        CurrentConfigService::current()->get()->confDeleteParam('empty_lounge_running');
 
         $logger->debug(__FUNCTION__ . ', exec=' . $execId . ', ends');
 
@@ -636,7 +651,7 @@ final readonly class ImageService
             // we don't care about the list of image_ids, we only care about the number
             // of orphans, so let's use a faster method than calling count(getOrphans())
             $counter = $this->repo->countAllImages() - $this->repo->countImagesInCategories();
-            \Piwigo\Config\CurrentConfigService::current()->get()->confUpdateParam('count_orphans', $counter, updateGlobal: true);
+            CurrentConfigService::current()->get()->confUpdateParam('count_orphans', $counter, updateGlobal: true);
         }
 
         return $this->currentConfig->countOrphans() ?? 0;

@@ -4,16 +4,28 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Request\SiteManagerRequest;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Album\GetAdminsSiteLinks;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Site\SiteEntity;
+use Piwigo\Template\CurrentTemplate;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -57,16 +69,16 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Category\CategoryService $categoryService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly ActivityService $activityService,
+        private readonly CategoryService $categoryService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $template = $this->currentTemplate->get();
@@ -76,10 +88,10 @@ final class SiteManagerSubController implements AdminSubControllerInterface
                 ->fatalError('synchronization is disabled');
         }
 
-        $siteManagerRequest = Request\SiteManagerRequest::fromGlobals();
+        $siteManagerRequest = SiteManagerRequest::fromGlobals();
 
         if ($siteManagerRequest->requiresCsrfCheck) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
@@ -126,7 +138,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             }
 
             // site must not exists
-            $site_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class);
+            $site_repo = EntityManagerFactory::build($conn)->getRepository(SiteEntity::class);
             if ($site_repo->countByUrl($url) > 0) {
                 $this->pageState->addError($this->lang->t('This site already exists') . ' [' . $url . ']');
             }
@@ -147,7 +159,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
         if ($siteManagerRequest->action !== null and $siteManagerRequest->siteId !== null) {
             $site_id = $siteManagerRequest->siteId;
-            $galleries_url = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class)
+            $galleries_url = EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)
                 ->findGalleriesUrlById($site_id);
             switch ($siteManagerRequest->action) {
                 case 'delete':
@@ -162,16 +174,16 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         $template->assign(
             [
                 'F_ACTION' => $this->urlService->getRootUrl() . 'admin.php' . $this->urlService->getQueryStringDiff(['action', 'site', 'pwg_token']),
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
                 'ADMIN_PAGE_TITLE' => $this->lang->t('Synchronize'),
             ]
         );
 
-        $sites_detail = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class)
+        $sites_detail = EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)
             ->findCategoryAndImageCountsBySite();
 
-        foreach (\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class)->findAllSites() as $row) {
+        foreach (EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)->findAllSites() as $row) {
             $id = (string) $row->id;
             $id_int = $row->id;
             $galleries_url = $row->galleriesUrl;
@@ -179,7 +191,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             $base_url = $this->urlService->getRootUrl() . 'admin.php';
             $base_url .= '?page=site_manager';
             $base_url .= '&amp;site=' . $id;
-            $base_url .= '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken();
+            $base_url .= '&amp;pwg_token=' . new CsrfService()->getToken();
             $base_url .= '&amp;action=';
 
             $update_url = $this->urlService->getRootUrl() . 'admin.php';

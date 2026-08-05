@@ -13,12 +13,15 @@ namespace Piwigo\Ws;
 
 use Closure;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
+use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\WsError;
 use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
 use Piwigo\Event\Ws\SendResponse;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\Event\WsAddMethods;
 use Piwigo\Ws\Event\WsInvokeAllowed;
@@ -50,7 +53,7 @@ final class PwgServer
     public $_methods = [];
 
     public function __construct(
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly EventDispatcher $eventDispatcher,
         private readonly AccessControl $accessControl,
         private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
         private readonly CurrentConfig $currentConfig,
@@ -102,7 +105,7 @@ final class PwgServer
     public function run(): void
     {
         if (! $this->_responseEncoder instanceof PwgResponseEncoder) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            PresentationAccessor::htmlService()
                 ->setStatusHeader(400);
             @header('Content-Type: text/plain');
             echo 'Cannot process your request. Unknown response format.
@@ -143,7 +146,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         $contentType = $this->responseEncoder()
             ->getContentType();
 
-        @header('Content-Type: ' . $contentType . '; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
+        @header('Content-Type: ' . $contentType . '; charset=' . CharsetHelper::getPwgCharset());
         print_r($encodedResponse);
         $this->eventDispatcher->dispatchNotify(new SendResponse($encodedResponse));
     }

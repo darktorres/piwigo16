@@ -11,10 +11,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
+use Override;
+use Stringable;
+
 /**
  * Represents an expression of several words or sub expressions to be searched.
  */
-class QMultiToken implements \Stringable
+class QMultiToken implements Stringable
 {
     public bool $is_single = false;
 
@@ -25,7 +28,7 @@ class QMultiToken implements \Stringable
      */
     public $tokens = []; // the actual array of QSingleToken or QMultiToken
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         $s = '';

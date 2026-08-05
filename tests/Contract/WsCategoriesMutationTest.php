@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -20,7 +21,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     /** @var list<int> */
     private array $imageIdsToDelete = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,7 +29,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $this->loginAsAdmin();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         if ($this->categoryId !== null) {

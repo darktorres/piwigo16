@@ -4,6 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Common\ValueObject\UserId;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
@@ -11,12 +20,10 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Html\HtmlService;
 use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
@@ -39,7 +46,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
     private PictureRateRenderer $renderer;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -51,9 +58,9 @@ final class PictureRateRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -61,9 +68,9 @@ final class PictureRateRendererTest extends IntegrationTestCase
         $currentConfig->setRateEnabled(true);
 
         $this->conn = DbConnection::build();
-        $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class);
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
-        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
+        $this->repo = EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class);
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
+        CurrentTemplate::current()->set(TemplateTestFactory::build());
 
         // The fixture itself seeds rate rows for element_id=1 (real
         // sample data) -- each test inserts its own rows for the exact
@@ -74,10 +81,10 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // regardless of run order.
         $this->conn->executeStatement('DELETE FROM ' . Tables::rate() . ' WHERE element_id = 1');
 
-        $this->renderer = new PictureRateRenderer(\Piwigo\Auth\AccessControl::current(), $this->repo, \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current());
+        $this->renderer = new PictureRateRenderer(AccessControl::current(), $this->repo, CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current());
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         CurrentTemplate::current()->reset();
@@ -101,7 +108,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
     private function urlService(): UrlService
     {
-        return \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        return UrlServiceTestFactory::build();
     }
 
     public function test_render_computes_the_rate_summary_and_the_current_classic_users_own_rate(): void
@@ -110,7 +117,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         $this->conn->executeStatement("INSERT INTO " . Tables::rate() . " (user_id, element_id, anonymous_id, rate) VALUES (1, 1, '', 5), (3, 1, '', 3), (4, 1, '', 4)");
 
         CurrentUser::current()->set(new User(
-            id: \Piwigo\Common\ValueObject\UserId::from(3),
+            id: UserId::from(3),
             username: 'fixture_user_3',
             email: '',
             language: '',
@@ -134,9 +141,9 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
     public function test_render_computes_the_current_anonymous_guests_own_rate_from_the_trimmed_ip(): void
     {
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->setRateAnonymous(true);
         $currentConfig->setGuestId(2);
@@ -147,7 +154,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         $this->conn->executeStatement("INSERT INTO " . Tables::rate() . " (user_id, element_id, anonymous_id, rate) VALUES (2, 1, '203.0.113', 5)");
 
         CurrentUser::current()->set(new User(
-            id: \Piwigo\Common\ValueObject\UserId::from(2),
+            id: UserId::from(2),
             username: 'guest',
             email: '',
             language: '',
@@ -169,9 +176,9 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
     public function test_render_leaves_user_rate_null_when_the_summary_has_no_votes_yet(): void
     {
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->setRateAnonymous(true);
         // rating_score=0.0 is still a real, non-null score (the `!== null`

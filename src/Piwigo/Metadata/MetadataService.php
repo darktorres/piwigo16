@@ -4,14 +4,32 @@ declare(strict_types=1);
 
 namespace Piwigo\Metadata;
 
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CharsetHelper;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\StringHelper;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Picture\CleanIptcValue;
 use Piwigo\Event\Picture\FormatExifData;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Image\ImagePathHelper;
+use Piwigo\Metadata\Projection\MetadataImage;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
+use Piwigo\Users\CurrentUser;
+use RuntimeException;
+use SimpleXMLElement;
 
 /**
  * Pure computation ported from `admin/include/functions_metadata.php`
@@ -33,12 +51,12 @@ final readonly class MetadataService
     public function __construct(
         private Lang $lang,
         private MetadataRepository $repo,
-        private \Piwigo\Core\CurrentLogger $currentLogger,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private \Piwigo\Config\CurrentConfig $currentConfig,
-        private \Piwigo\Users\CurrentUser $currentUser,
-        private \Piwigo\Session\SessionService $sessionService,
-        private \Piwigo\Core\FilterState $filterState,
+        private CurrentLogger $currentLogger,
+        private EventDispatcher $eventDispatcher,
+        private CurrentConfig $currentConfig,
+        private CurrentUser $currentUser,
+        private SessionService $sessionService,
+        private FilterState $filterState,
     ) {}
 
     /**
@@ -103,7 +121,7 @@ final readonly class MetadataService
             $value = $this->eventDispatcher->dispatchChange(new CleanIptcValue($value))
                 ->value;
 
-            $qual = \Piwigo\Core\StringHelper::qualifyUtf8($value);
+            $qual = StringHelper::qualifyUtf8($value);
             if ($qual !== 0) { // has non-ascii chars
                 if ($qual > 0) {
                     $inputEncoding = 'utf-8';
@@ -118,7 +136,7 @@ final readonly class MetadataService
                     }
                 }
 
-                $convertedValue = \Piwigo\Core\CharsetHelper::convertCharset($value, $inputEncoding, \Piwigo\Core\CharsetHelper::getPwgCharset());
+                $convertedValue = CharsetHelper::convertCharset($value, $inputEncoding, CharsetHelper::getPwgCharset());
                 // convert_charset() can fail (iconv()/mb_convert_encoding()
                 // returning false on malformed input) -- keep the
                 // unconverted value rather than propagating false.
@@ -146,7 +164,7 @@ final readonly class MetadataService
         $result = [];
 
         if (! function_exists('exif_read_data')) {
-            throw new \RuntimeException('Exif extension not available, admin should disable exif use');
+            throw new RuntimeException('Exif extension not available, admin should disable exif use');
         }
 
         // exif_read_data() only ever supports JPEG/TIFF (per its own docs)
@@ -421,7 +439,7 @@ final readonly class MetadataService
 
             $representativeExt = $infos['representative_ext'];
             $representativeExt = is_string($representativeExt) ? $representativeExt : '';
-            $file = \Piwigo\Image\ImagePathHelper::originalToRepresentative($file, $representativeExt);
+            $file = ImagePathHelper::originalToRepresentative($file, $representativeExt);
         }
 
         if (function_exists('mime_content_type')) {
@@ -497,7 +515,7 @@ final readonly class MetadataService
         // malformed input (or a mangled post-DOCTYPE-strip remnant) is an
         // expected outcome here, not a bug to suppress after the fact.
         $previousUseInternalErrors = libxml_use_internal_errors(true);
-        $svg = simplexml_load_string($xml, \SimpleXMLElement::class, LIBXML_NONET);
+        $svg = simplexml_load_string($xml, SimpleXMLElement::class, LIBXML_NONET);
         libxml_clear_errors();
         libxml_use_internal_errors($previousUseInternalErrors);
         if ($svg === false) {
@@ -552,7 +570,7 @@ final readonly class MetadataService
         // one-method-only TagService dependency, avoiding touching every
         // existing `new MetadataService(...)` call site for zero benefit.
         $tagConn = DbConnection::build();
-        $tagService = new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn), $this->currentConfig), $this->currentUser, $this->filterState), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger, $this->sessionService);
+        $tagService = new TagService($this->lang, EntityManagerFactory::build($tagConn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($tagConn)), EntityManagerFactory::build($tagConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($tagConn), $this->currentConfig), $this->currentUser, $this->filterState), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger, $this->sessionService);
 
         foreach ($this->repo->findImagesByIds($ids) as $row) {
             $data = $this->getSyncMetadata($row->toArray());
@@ -618,7 +636,7 @@ final readonly class MetadataService
         // boundary, rather than widening their own dynamic shape to also
         // understand a real MetadataImage object.
         return array_map(
-            static fn (\Piwigo\Metadata\Projection\MetadataImage $image): array => $image->toArray(),
+            static fn (MetadataImage $image): array => $image->toArray(),
             $this->repo->findImagesByStorageCategoryIds($catIds, $onlyNew)
         );
     }

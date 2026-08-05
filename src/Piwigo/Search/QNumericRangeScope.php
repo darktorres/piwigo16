@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
+use Override;
+
 final class QNumericRangeScope extends QSearchScope
 {
     /**
@@ -25,7 +27,7 @@ final class QNumericRangeScope extends QSearchScope
         parent::__construct($id, $aliases, $nullable, false);
     }
 
-    #[\Override]
+    #[Override]
     public function parse(QSingleToken $token): bool
     {
         $str = $token->term;
@@ -95,7 +97,7 @@ final class QNumericRangeScope extends QSearchScope
         return true;
     }
 
-    #[\Override]
+    #[Override]
     public function get_sql(string $field, QSingleToken $token): string
     {
         // QSingleToken::$scope_data's own declared type already covers this

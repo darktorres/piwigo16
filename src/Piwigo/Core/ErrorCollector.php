@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Config\DeploymentPolicy;
+
 /**
  * Redirects PHP errors/warnings/deprecations away from the response body and
  * into HTTP response headers instead (X-PHP-Error-N), visible in DevTools ->
@@ -45,7 +47,7 @@ final class ErrorCollector
     private array $collected = [];
 
     public function __construct(
-        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private readonly DeploymentPolicy $deploymentPolicy,
     ) {}
 
     public function install(): void

@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Core\PageState;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Core\AppInfo;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
@@ -30,7 +36,7 @@ use Piwigo\Lang\Translator;
 // used throughout the campaign's own test fallout fixes.
 function checkIntegrityAddAnomalyTestLang(): Lang
 {
-    return new Lang(new Translator(new \Piwigo\Config\CurrentConfig()), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 function checkIntegrityAddAnomalyNew(): CheckIntegrity
@@ -38,7 +44,7 @@ function checkIntegrityAddAnomalyNew(): CheckIntegrity
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
     expect($repo)->toBeInstanceOf(IntegrityIgnoredAnomalyRepository::class);
 
-    return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(\Piwigo\Config\CurrentConfig::current()), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current());
+    return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(CurrentConfig::current()), EventDispatcher::get(), PageState::current(), CurrentTemplate::current());
 }
 
 test('add_anomaly records a new anomaly with is_callable computed from a real function name', function (): void {
@@ -107,7 +113,7 @@ test('get_htlm_links_more_info formats a forum + wiki link pair from the fixed p
 
     expect($result)->toBe(sprintf(
         'Go to %s or %s for more informations',
-        '<a href="' . \Piwigo\Core\AppInfo::URL . '/forum" onclick="window.open(this.href, \'\'); return false;">the forum</a>',
-        '<a href="' . \Piwigo\Core\AppInfo::URL . '/doc" onclick="window.open(this.href, \'\'); return false;">the wiki</a>'
+        '<a href="' . AppInfo::URL . '/forum" onclick="window.open(this.href, \'\'); return false;">the forum</a>',
+        '<a href="' . AppInfo::URL . '/doc" onclick="window.open(this.href, \'\'); return false;">the wiki</a>'
     ));
 });

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Config\CurrentConfig;
+use RuntimeException;
+
 /**
  * P23 batch 8d: relocated from include/functions.inc.php, unchanged logic.
  *
@@ -73,7 +76,7 @@ final class FilesystemHelper
                 $htmlRenderer->fatalError($msg);
             }
         }
-        throw new \RuntimeException($msg);
+        throw new RuntimeException($msg);
     }
 
     /**
@@ -122,7 +125,7 @@ final class FilesystemHelper
                 $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
             }
             $umask = umask(0);
-            $chmod_value = \Piwigo\Config\CurrentConfig::current()->chmodValue();
+            $chmod_value = CurrentConfig::current()->chmodValue();
             // Checking the nearest existing ancestor's write access before
             // calling mkdir() avoids a PHP-level warning on the deterministic
             // permission-denied case; a concurrent creation of the same
@@ -183,7 +186,7 @@ final class FilesystemHelper
         $dirs = [];
         $path = rtrim($path, '/');
 
-        $sync_exclude_folders = \Piwigo\Config\CurrentConfig::current()->syncExcludeFolders();
+        $sync_exclude_folders = CurrentConfig::current()->syncExcludeFolders();
 
         $exclude_folders = array_merge(
             $sync_exclude_folders,

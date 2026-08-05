@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use Piwigo\Cache\CachePools;
+use CURLFile;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -51,7 +54,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
     /** @var list<int> */
     private array $categoryIdsToDelete = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -59,7 +62,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         $this->loginAsAdmin();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         foreach ($this->imageIdsToDelete as $imageId) {
@@ -75,7 +78,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
             ]);
         }
         $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'uniqueness_mode'");
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
         parent::tearDown();
     }
 
@@ -100,7 +103,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
             self::assertNotFalse($tmpName);
             $tmpFile = $tmpName . '.png';
             file_put_contents($tmpFile, $fileContents ?? $this->pngBytes());
-            $fields[$fileField] = new \CURLFile($tmpFile, 'image/png', 'gaps.png');
+            $fields[$fileField] = new CURLFile($tmpFile, 'image/png', 'gaps.png');
         }
         $fields['method'] = $method;
 
@@ -150,7 +153,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
     public function test_add_in_filename_uniqueness_mode_rejects_a_known_filename(): void
     {
         $this->upsertConfig('uniqueness_mode', '"filename"');
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         $response = $this->callWsAllowingServerError('pwg.images.add', [
             'original_sum' => md5($this->pngBytes() . uniqid()),

@@ -4,14 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Group;
 
+use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Exception\ConstraintViolationException;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
+use LogicException;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
+use Piwigo\Db\Tables;
 use Piwigo\Group\Projection\Group;
+use Piwigo\Users\UserEntity;
 
 /**
  * Persistence layer for the group domain: `groups`, `user_group` (group
@@ -158,8 +164,8 @@ final class GroupRepository extends EntityRepository
             ->getConnection()
             ->createQueryBuilder()
             ->select('g.*', 'COUNT(ug.user_id) AS nb_users')
-            ->from(\Piwigo\Db\Tables::groups(), 'g')
-            ->leftJoin('g', \Piwigo\Db\Tables::userGroup(), 'ug', 'ug.group_id = g.id')
+            ->from(Tables::groups(), 'g')
+            ->leftJoin('g', Tables::userGroup(), 'ug', 'ug.group_id = g.id')
             ->groupBy('g.id')
             ->orderBy($order)
             ->setMaxResults($perPage)
@@ -262,7 +268,7 @@ final class GroupRepository extends EntityRepository
         // lastmodified set explicitly rather than left to the schema's own
         // DEFAULT CURRENT_TIMESTAMP, which reads the real DB-server clock --
         // invisible to Env::now()'s PIWIGO_TEST_NOW freeze.
-        $entity = new GroupEntity($name, $isDefault, \DateTimeImmutable::createFromInterface(Env::now()));
+        $entity = new GroupEntity($name, $isDefault, DateTimeImmutable::createFromInterface(Env::now()));
 
         $em = $this->getEntityManager();
         $em->persist($entity);
@@ -331,8 +337,8 @@ final class GroupRepository extends EntityRepository
         $names = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('u.username')
-            ->from(\Piwigo\Users\UserEntity::class, 'u')
-            ->innerJoin(UserGroupEntity::class, 'ug', \Doctrine\ORM\Query\Expr\Join::WITH, 'u.id = ug.userId')
+            ->from(UserEntity::class, 'u')
+            ->innerJoin(UserGroupEntity::class, 'ug', Join::WITH, 'u.id = ug.userId')
             ->where('ug.groupId = :groupId')
             ->setParameter('groupId', $groupId)
             ->getQuery()
@@ -379,7 +385,7 @@ final class GroupRepository extends EntityRepository
     {
         $conn = $this->getEntityManager()
             ->getConnection();
-        $userGroupTable = \Piwigo\Db\Tables::userGroup();
+        $userGroupTable = Tables::userGroup();
         foreach ($userIds as $userId) {
             try {
                 $conn->insert(
@@ -389,8 +395,8 @@ final class GroupRepository extends EntityRepository
                         'user_id' => $userId->value,
                     ],
                     [
-                        'group_id' => \Doctrine\DBAL\ParameterType::INTEGER,
-                        'user_id' => \Doctrine\DBAL\ParameterType::INTEGER,
+                        'group_id' => ParameterType::INTEGER,
+                        'user_id' => ParameterType::INTEGER,
                     ],
                 );
             } catch (ConstraintViolationException) {
@@ -579,7 +585,7 @@ final class GroupRepository extends EntityRepository
             ->createQueryBuilder()
             ->select('ga.catId')
             ->from(UserGroupEntity::class, 'ug')
-            ->innerJoin(GroupAccessEntity::class, 'ga', \Doctrine\ORM\Query\Expr\Join::WITH, 'ug.groupId = ga.groupId')
+            ->innerJoin(GroupAccessEntity::class, 'ga', Join::WITH, 'ug.groupId = ga.groupId')
             ->where('ug.userId = :userId')
             ->setParameter('userId', $userId)
             ->getQuery()
@@ -593,7 +599,7 @@ final class GroupRepository extends EntityRepository
             // statically, so this narrows explicitly rather than casting a
             // value that could never actually be a raw int here.
             if (! $row['catId'] instanceof CategoryId) {
-                throw new \LogicException('Expected DQL hydration to produce a CategoryId for ga.catId.');
+                throw new LogicException('Expected DQL hydration to produce a CategoryId for ga.catId.');
             }
 
             return $row['catId'];

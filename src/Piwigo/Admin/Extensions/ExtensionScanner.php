@@ -4,10 +4,28 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
+use Piwigo\Admin\PluginLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CharsetHelper;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Html\HtmlService;
+use Piwigo\Lang\Translator;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserStatus;
 
 /**
  * Filesystem scan for installable extensions, replacing get_fs_plugins()/
@@ -73,15 +91,15 @@ final class ExtensionScanner
             // them, so bare/throwaway instances are harmless here --
             // same reasoning this file's own docblock already gives for
             // staying boot-free.
-            @uasort($found, new \Piwigo\Html\HtmlService(
-                new \Piwigo\Config\CurrentConfig(),
-                new \Piwigo\PluginConfig\EventDispatcher(),
-                new \Piwigo\Core\ProcessCache(),
-                new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy()),
-                new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
-                new \Piwigo\Template\CurrentTemplate(),
-                new \Piwigo\Core\PageState(),
-                new \Piwigo\Lang\Translator(new \Piwigo\Config\CurrentConfig()),
+            @uasort($found, new HtmlService(
+                new CurrentConfig(),
+                new EventDispatcher(),
+                new ProcessCache(),
+                new ErrorCollector(new DeploymentPolicy()),
+                new CurrentUser(new CurrentConfig()),
+                new CurrentTemplate(),
+                new PageState(),
+                new Translator(new CurrentConfig()),
             )->nameCompare(...));
         }
 
@@ -93,7 +111,7 @@ final class ExtensionScanner
      */
     private function scanPlugin(Lang $lang, string $pluginId): ?array
     {
-        $path = \Piwigo\Admin\PluginLoader::pluginsPath() . $pluginId;
+        $path = PluginLoader::pluginsPath() . $pluginId;
         if (! is_dir($path) || is_link($path) || ! file_exists($path . '/main.inc.php')) {
             return null;
         }
@@ -136,7 +154,7 @@ final class ExtensionScanner
         }
         if ((bool) preg_match('/Has Settings:\s*([Tt]rue|[Ww]ebmaster)/', $data, $val)) {
             if (strtolower($val[1]) === 'webmaster') {
-                if (\Piwigo\Users\CurrentUser::current()->get()->status === \Piwigo\Users\UserStatus::Webmaster) {
+                if (CurrentUser::current()->get()->status === UserStatus::Webmaster) {
                     $plugin['hasSettings'] = true;
                 }
             } else {
@@ -243,9 +261,9 @@ final class ExtensionScanner
         if (file_exists($screenshotPath)) {
             $theme['screenshot'] = $screenshotPath;
         } else {
-            $adminTheme = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Users\CurrentUser::current())->getParam('admin_theme', \Piwigo\Config\CurrentConfig::current()->adminTheme());
+            $adminTheme = new PreferencesService(new UserRepository(EntityManagerFactory::build(DbConnection::build()), EventDispatcher::get(), CurrentConfig::current()), CurrentUser::current())->getParam('admin_theme', CurrentConfig::current()->adminTheme());
             $theme['screenshot'] = $urlService->getRootUrl() . 'themes/admin/'
-                . (is_string($adminTheme) ? $adminTheme : \Piwigo\Config\CurrentConfig::current()->adminTheme())
+                . (is_string($adminTheme) ? $adminTheme : CurrentConfig::current()->adminTheme())
                 . '/images/missing_screenshot.png';
         }
 
@@ -303,12 +321,12 @@ final class ExtensionScanner
      */
     private function scanLanguage(string $languageId, ?string $targetCharset): ?array
     {
-        $path = \Piwigo\Core\CurrentPaths::get()->root . 'language/' . $languageId;
+        $path = CurrentPaths::get()->root . 'language/' . $languageId;
         if (! is_dir($path) || is_link($path) || ! file_exists($path . '/common.po')) {
             return null;
         }
 
-        $targetCharset = strtolower($targetCharset ?? \Piwigo\Core\CharsetHelper::getPwgCharset());
+        $targetCharset = strtolower($targetCharset ?? CharsetHelper::getPwgCharset());
 
         $language = [
             'name' => $languageId,
@@ -325,7 +343,7 @@ final class ExtensionScanner
 
         if ((bool) preg_match('/"X-Piwigo-Language-Name:\s*(.+?)\\\\n"/', $data, $val)) {
             $language['name'] = trim($val[1]);
-            $converted = \Piwigo\Core\CharsetHelper::convertCharset($language['name'], 'utf-8', $targetCharset);
+            $converted = CharsetHelper::convertCharset($language['name'], 'utf-8', $targetCharset);
             if ($converted !== false) {
                 $language['name'] = $converted;
             }
@@ -339,7 +357,7 @@ final class ExtensionScanner
         // Restore it (same fix as the old languages::get_fs_languages()).
         if ((bool) preg_match('/"X-Piwigo-Country:\s*(.+?)\\\\n"/', $data, $val)) {
             $country = trim($val[1]);
-            $convertedCountry = \Piwigo\Core\CharsetHelper::convertCharset($country, 'utf-8', $targetCharset);
+            $convertedCountry = CharsetHelper::convertCharset($country, 'utf-8', $targetCharset);
             if ($convertedCountry !== false) {
                 $country = $convertedCountry;
             }

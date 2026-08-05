@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Common\ValueObject;
 
+use InvalidArgumentException;
+use Stringable;
+
 /**
  * Shared contract for positive-int row-identifier value objects.
  *
@@ -13,10 +16,10 @@ namespace Piwigo\Common\ValueObject;
  * holds `ImageId`, not `NumericId`, so passing a `UserId` where an `ImageId`
  * was expected stays a compile-time error.
  */
-interface NumericId extends \Stringable
+interface NumericId extends Stringable
 {
     /**
-     * @throws \InvalidArgumentException when $value is not positive
+     * @throws InvalidArgumentException when $value is not positive
      */
     public static function from(int $value): static;
 

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
@@ -38,7 +40,7 @@ function imageRepositoryTestRepo(): ImageRepository
  * RELEASE_LOCK() are server-wide, not connection-local, so they
  * serialize both files' tests against each other for real.
  */
-function imageRepositoryTestAcquireEmptyLoungeDbLock(\Doctrine\DBAL\Connection $conn): void
+function imageRepositoryTestAcquireEmptyLoungeDbLock(Connection $conn): void
 {
     $acquired = $conn->fetchOne("SELECT GET_LOCK('piwigo17-unit-tests-empty_lounge_running', 10)");
     if (! is_numeric($acquired) || (int) $acquired !== 1) {
@@ -46,7 +48,7 @@ function imageRepositoryTestAcquireEmptyLoungeDbLock(\Doctrine\DBAL\Connection $
     }
 }
 
-function imageRepositoryTestReleaseEmptyLoungeDbLock(\Doctrine\DBAL\Connection $conn): void
+function imageRepositoryTestReleaseEmptyLoungeDbLock(Connection $conn): void
 {
     $conn->executeStatement("SELECT RELEASE_LOCK('piwigo17-unit-tests-empty_lounge_running')");
 }
@@ -175,7 +177,7 @@ test('findLoungeRows returns image_id/category_id as real ints, ordered by categ
         ]);
     } finally {
         $conn->createQueryBuilder()->delete(Tables::lounge())->where('image_id IN (:ids)')
-            ->setParameter('ids', [$imageA, $imageB], \Doctrine\DBAL\ArrayParameterType::INTEGER)
+            ->setParameter('ids', [$imageA, $imageB], ArrayParameterType::INTEGER)
             ->executeStatement();
         imageRepositoryTestDeleteImage($imageA);
         imageRepositoryTestDeleteImage($imageB);
@@ -199,12 +201,12 @@ test('deleteLoungeUpTo removes only rows at or below the given image id', functi
 
         $remaining = $conn->createQueryBuilder()->select('image_id')->from(Tables::lounge())
             ->where('image_id IN (:ids)')
-            ->setParameter('ids', [$imageA, $imageB], \Doctrine\DBAL\ArrayParameterType::INTEGER)
+            ->setParameter('ids', [$imageA, $imageB], ArrayParameterType::INTEGER)
             ->fetchFirstColumn();
         expect($remaining)->toBe([$imageB]);
     } finally {
         $conn->createQueryBuilder()->delete(Tables::lounge())->where('image_id IN (:ids)')
-            ->setParameter('ids', [$imageA, $imageB], \Doctrine\DBAL\ArrayParameterType::INTEGER)
+            ->setParameter('ids', [$imageA, $imageB], ArrayParameterType::INTEGER)
             ->executeStatement();
         imageRepositoryTestDeleteImage($imageA);
         imageRepositoryTestDeleteImage($imageB);

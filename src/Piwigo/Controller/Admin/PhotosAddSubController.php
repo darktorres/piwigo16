@@ -5,14 +5,24 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\PhotosAddApplicationsPageRenderer;
 use Piwigo\Admin\PhotosAddDirectPageRenderer;
 use Piwigo\Admin\PhotosAddFtpPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
+use Piwigo\Core\WsContext;
+use Piwigo\Image\ImageService;
+use Piwigo\Metadata\MetadataService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -34,22 +44,22 @@ final class PhotosAddSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly Lang $lang,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Config\ConfigService $configService,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly ConfigService $configService,
         private readonly EntityManagerInterface $entityManager,
         private readonly PhotosAddDirectPageRenderer $photosAddDirectPageRenderer,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Metadata\MetadataService $metadataService,
-        private readonly \Piwigo\Image\ImageService $imageService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Core\WsContext $wsContext,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly ActivityService $activityService,
+        private readonly MetadataService $metadataService,
+        private readonly ImageService $imageService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly WsContext $wsContext,
+        private readonly CurrentUser $currentUser,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $template = $this->currentTemplate->get();

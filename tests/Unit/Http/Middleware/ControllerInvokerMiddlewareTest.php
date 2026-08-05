@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Routing\RouteMatchStatus;
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Http\ControllerInterface;
@@ -122,7 +123,7 @@ test('returns 404 when the route matched but somehow has no handler', function (
     // TypeError instead.
     $ref = new ReflectionClass(RouteResult::class);
     $result = $ref->newInstanceWithoutConstructor();
-    $ref->getProperty('status')->setValue($result, \Piwigo\Routing\RouteMatchStatus::Found);
+    $ref->getProperty('status')->setValue($result, RouteMatchStatus::Found);
     $ref->getProperty('handler')->setValue($result, null);
     $ref->getProperty('args')->setValue($result, []);
 

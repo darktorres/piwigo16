@@ -4,6 +4,22 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Override;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\ProcessCache;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\Logger;
+use Piwigo\Core\FilterState;
+use Piwigo\Cache\CachePools;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\PageState;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Env;
+use mysqli;
+use mysqli_result;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Events;
@@ -62,7 +78,7 @@ abstract class IntegrationTestCase extends TestCase
      * distinct from Kernel::container()'s own, so clearing the container's
      * doesn't reach it.
      */
-    protected ?\Doctrine\ORM\EntityManagerInterface $configEntityManager = null;
+    protected ?EntityManagerInterface $configEntityManager = null;
 
     /**
      * Piwigo\Users\UserService::getDefaultUserInfo() memoizes its DB read
@@ -80,7 +96,7 @@ abstract class IntegrationTestCase extends TestCase
      * so resetting here guarantees each test starts with a fresh
      * memoization slot.
      */
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -118,15 +134,15 @@ abstract class IntegrationTestCase extends TestCase
         // that construct their SUT directly but reach a container-resolved
         // CurrentLogger/FilterState somewhere in that SUT's own dependency
         // chain (e.g. via a Bootstrap\*Accessor).
-        if (! \Piwigo\Core\Kernel::isBooted()) {
-            \Piwigo\Core\Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
+        if (! Kernel::isBooted()) {
+            Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
         }
         // ProcessCache is a container-shared instance now (singleton/
         // service-locator elimination campaign, Phase 1), not a static
         // facade -- always resolve+reset now that the boot decision above
         // guarantees a container exists.
-        $processCache = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
-        if ($processCache instanceof \Piwigo\Core\ProcessCache) {
+        $processCache = Kernel::container()->get(ProcessCache::class);
+        if ($processCache instanceof ProcessCache) {
             $processCache->reset();
         }
         // Piwigo\Users\CurrentUser (Legacy Coupling Retirement Track A batch
@@ -136,8 +152,8 @@ abstract class IntegrationTestCase extends TestCase
         // a fresh guest baseline here -- idempotent, so a subclass's own
         // setUp() calling CurrentUser::set() with a specific fixture user
         // right after parent::setUp() simply overwrites it.
-        $currentUser = \Piwigo\Core\Kernel::container()->get(\Piwigo\Users\CurrentUser::class);
-        if ($currentUser instanceof \Piwigo\Users\CurrentUser) {
+        $currentUser = Kernel::container()->get(CurrentUser::class);
+        if ($currentUser instanceof CurrentUser) {
             $currentUser->attachGlobals();
         }
         // Piwigo\Core\CurrentLogger (singleton/service-locator elimination
@@ -149,9 +165,9 @@ abstract class IntegrationTestCase extends TestCase
         // immediate no-op (Logger::log() checks severity() >= $level, and
         // OFF is -1, below every real level), so this never touches the
         // filesystem.
-        $currentLogger = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
-        if ($currentLogger instanceof \Piwigo\Core\CurrentLogger) {
-            $currentLogger->set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+        $currentLogger = Kernel::container()->get(CurrentLogger::class);
+        if ($currentLogger instanceof CurrentLogger) {
+            $currentLogger->set(new Logger(['severity' => Logger::OFF]));
         }
         // Piwigo\Core\FilterState (singleton/service-locator elimination
         // campaign, Phase 2: container-shared instance) -- a disabled-
@@ -160,8 +176,8 @@ abstract class IntegrationTestCase extends TestCase
         // isEnabled()/visibleCategories()/etc. A subclass's own setUp()
         // calling ->set() with real filter values right after
         // parent::setUp() simply overwrites it.
-        $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
-        if ($filterState instanceof \Piwigo\Core\FilterState) {
+        $filterState = Kernel::container()->get(FilterState::class);
+        if ($filterState instanceof FilterState) {
             $filterState->set(false);
         }
         // Truncate rather than delete -- Piwigo\Core\ErrorCollector appends
@@ -183,38 +199,38 @@ abstract class IntegrationTestCase extends TestCase
         // writing config via raw SQL (bypassing ConfigService, so
         // confUpdateParam()'s own clear() never fires) would otherwise
         // leak a stale cached row into whichever test runs next.
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $currentUser = \Piwigo\Core\Kernel::container()->get(\Piwigo\Users\CurrentUser::class);
-            if ($currentUser instanceof \Piwigo\Users\CurrentUser) {
+        if (Kernel::isBooted()) {
+            $currentUser = Kernel::container()->get(CurrentUser::class);
+            if ($currentUser instanceof CurrentUser) {
                 $currentUser->reset();
             }
-            $processCache = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
-            if ($processCache instanceof \Piwigo\Core\ProcessCache) {
+            $processCache = Kernel::container()->get(ProcessCache::class);
+            if ($processCache instanceof ProcessCache) {
                 $processCache->reset();
             }
-            $currentLogger = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
-            if ($currentLogger instanceof \Piwigo\Core\CurrentLogger) {
+            $currentLogger = Kernel::container()->get(CurrentLogger::class);
+            if ($currentLogger instanceof CurrentLogger) {
                 $currentLogger->reset();
             }
         }
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
         // Harmless even for test classes that never call
         // buildConfigRepository()/wire CurrentConfigService::current()->set() at
         // all -- reset() on an already-unset registry is a no-op.
-        \Piwigo\Config\CurrentConfigService::current()->reset();
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $pageState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\PageState::class);
-            if ($pageState instanceof \Piwigo\Core\PageState) {
+        CurrentConfigService::current()->reset();
+        if (Kernel::isBooted()) {
+            $pageState = Kernel::container()->get(PageState::class);
+            if ($pageState instanceof PageState) {
                 $pageState->reset();
             }
-            $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
-            if ($filterState instanceof \Piwigo\Core\FilterState) {
+            $filterState = Kernel::container()->get(FilterState::class);
+            if ($filterState instanceof FilterState) {
                 $filterState->reset();
             }
         }
@@ -222,9 +238,9 @@ abstract class IntegrationTestCase extends TestCase
         // service-locator elimination campaign, Phase 1), not a static
         // facade -- most subclasses never call Kernel::boot() at all, so
         // only resolve+reset when a container genuinely exists.
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $installationFlag = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\InstallationFlag::class);
-            if ($installationFlag instanceof \Piwigo\Core\InstallationFlag) {
+        if (Kernel::isBooted()) {
+            $installationFlag = Kernel::container()->get(InstallationFlag::class);
+            if ($installationFlag instanceof InstallationFlag) {
                 $installationFlag->reset();
             }
         }
@@ -234,7 +250,7 @@ abstract class IntegrationTestCase extends TestCase
         // has, so this is what returns the next test to a clean, unbooted
         // baseline -- safe even when a subclass's own tearDown() already
         // called Kernel::reset() itself (idempotent).
-        \Piwigo\Core\Kernel::reset();
+        Kernel::reset();
         // A test that exercises a real login/install-completion flow (e.g.
         // AuthService's own session_start()) leaves PHP's native session
         // machinery genuinely active -- PHPUnit/Pest run every Integration
@@ -412,7 +428,7 @@ abstract class IntegrationTestCase extends TestCase
         // filesystem-backed cache (see setUp()'s own comment) would keep
         // serving whatever config rows it cached before this fixture
         // replaced them.
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         // `piwigo_sites` id=1's own `galleries_url` is committed in the
         // fixture as an absolute filesystem path (Piwigo\Core\Paths::$root
@@ -621,7 +637,7 @@ abstract class IntegrationTestCase extends TestCase
 
     protected function markTestInstalled(): void
     {
-        $stamp = dirname(__DIR__, 2) . '/local/' . \Piwigo\Core\Env::testModeInstalledStamp();
+        $stamp = dirname(__DIR__, 2) . '/local/' . Env::testModeInstalledStamp();
         // The stamp is often already present, created by install.php running
         // as the webserver user (e.g. www-data) — only the file's existence
         // matters (common.inc.php gates on file_exists(), not mtime), so
@@ -633,15 +649,15 @@ abstract class IntegrationTestCase extends TestCase
 
     protected function removeTestStamp(): void
     {
-        $stamp = dirname(__DIR__, 2) . '/local/' . \Piwigo\Core\Env::testModeInstalledStamp();
+        $stamp = dirname(__DIR__, 2) . '/local/' . Env::testModeInstalledStamp();
         if (file_exists($stamp)) {
             unlink($stamp);
         }
     }
 
-    protected function newMysqli(string $dbName): \mysqli
+    protected function newMysqli(string $dbName): mysqli
     {
-        return new \mysqli($this->dbHost, $this->dbUser, $this->dbPass, $dbName);
+        return new mysqli($this->dbHost, $this->dbUser, $this->dbPass, $dbName);
     }
 
     /**
@@ -761,7 +777,7 @@ abstract class IntegrationTestCase extends TestCase
 
         $db = $this->newMysqli($dbName);
         $result = $db->query($sql);
-        self::assertInstanceOf(\mysqli_result::class, $result);
+        self::assertInstanceOf(mysqli_result::class, $result);
         $row = $result->fetch_row();
         $db->close();
         if (! is_array($row)) {

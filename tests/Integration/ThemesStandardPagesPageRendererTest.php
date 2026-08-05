@@ -4,6 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use LogicException;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Users\UserService;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Users\CurrentUser;
+use RuntimeException;
+use Piwigo\Db\DbConnection;
 use Piwigo\Admin\ThemesStandardPagesPageRenderer;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\ConfigLoader;
@@ -18,9 +30,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\ScriptLoader;
-use Piwigo\Template\Template;
-use Piwigo\Url\UrlService;
 
 /**
  * See ThemesStandardPagesPageRendererTest's own docblock below for why
@@ -186,15 +195,15 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
      */
     private array $fixtureRootsToClean = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
         $this->setUpConnectionFromEnv();
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -207,7 +216,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // setUp().
         Lang::current()->load('admin.lang');
 
-        $this->configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current());
+        $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
         CurrentConfigService::current()->set($this->configService);
 
         // themes_standard_pages.tpl's own {combine_script}/{footer_script}
@@ -218,7 +227,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // for the same defensive reason PageTailRendererTest's own setUp()
         // sets it: real RequestBootstrap-only wiring this isolated test
         // never boots otherwise.
-        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $this->renderer = $this->makeRenderer();
 
@@ -226,7 +235,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         $_FILES = [];
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $_POST = [];
@@ -251,7 +260,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    private function userService(): \Piwigo\Users\UserService
+    private function userService(): UserService
     {
         // Kernel is already booted by this point (either parent::setUp()'s
         // own default boot, or overrideSiteLocal()'s throwaway-fixture
@@ -259,9 +268,9 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // request would get, matching RedirectService's own real
         // production callers (singleton/service-locator elimination
         // campaign, Phase 6).
-        $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
-        if (! $userService instanceof \Piwigo\Users\UserService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        $userService = Kernel::container()->get(UserService::class);
+        if (! $userService instanceof UserService) {
+            throw new LogicException('Container returned an unexpected type for ' . UserService::class);
         }
 
         return $userService;
@@ -280,15 +289,15 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // campaign, Phase 2).
         return new ThemesStandardPagesPageRenderer(
             Lang::current(),
-            \Piwigo\Auth\AccessControl::current(),
+            AccessControl::current(),
             new RedirectService(Lang::current(), $this->userService()),
-            \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
+            UrlServiceTestFactory::build(),
             $this->configService,
             StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php'),
-            \Piwigo\Core\PageState::current(),
+            PageState::current(),
             CurrentTemplate::current(),
-            \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
-            \Piwigo\Config\CurrentConfig::current(),
+            HtmlServiceTestFactory::build(),
+            CurrentConfig::current(),
         );
     }
 
@@ -321,7 +330,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // 5) -- without reseeding here, AccessControl::isWebmaster() (read
         // by this renderer) throws "not initialised" against this fresh,
         // unseeded container.
-        \Piwigo\Users\CurrentUser::current()->attachGlobals();
+        CurrentUser::current()->attachGlobals();
         // Same reasoning again -- Kernel::reset() also discards the
         // container-shared CurrentConfigService instance setUp()'s own
         // set() call populated; without reseeding here, Template's own
@@ -335,7 +344,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // setUp()'s own set() call populated; without reseeding here,
         // this renderer's own $this->currentTemplate->get() throws "not
         // initialised" against this fresh, unseeded container.
-        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
         $this->renderer = $this->makeRenderer();
     }
 
@@ -343,7 +352,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
     {
         $image = imagecreatetruecolor(4, 4);
         if ($image === false) {
-            throw new \RuntimeException('imagecreatetruecolor failed');
+            throw new RuntimeException('imagecreatetruecolor failed');
         }
         ob_start();
         imagepng($image);
@@ -446,7 +455,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
 
     private function rawConfigValue(string $param): ?string
     {
-        $value = \Piwigo\Db\DbConnection::build()->fetchOne(
+        $value = DbConnection::build()->fetchOne(
             'SELECT value FROM ' . Tables::config() . " WHERE param = '{$param}'"
         );
         if ($value === false) {
@@ -469,9 +478,9 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // this isn't simply "every scanned theme gets pushed".
         $this->writeFixtureTheme($themesFixtureRoot, 'std-pages-no', 'Plain Theme', null);
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->setThemesDir(rtrim($themesFixtureRoot, '/') . '/themes');
 

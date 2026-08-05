@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Session;
 
+use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -27,6 +28,6 @@ final class SessionEntity
         #[ORM\Column(type: 'text')]
         public string $data,
         #[ORM\Column(type: 'datetime_immutable', nullable: true)]
-        public ?\DateTimeImmutable $expiration = null,
+        public ?DateTimeImmutable $expiration = null,
     ) {}
 }

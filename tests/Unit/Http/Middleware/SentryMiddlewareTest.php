@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use function Sentry\init;
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Http\Middleware\SentryMiddleware;
@@ -64,7 +65,7 @@ test('wraps the request in a transaction without altering the response when the 
     // default_integrations across a multi-file suite proved sensitive to
     // PHPUnit's own risky-test handler-stack tracking; this sidesteps it
     // rather than chasing exact restore-call parity across files.
-    \Sentry\init(['dsn' => 'https://fake@fake.ingest.sentry.io/1', 'default_integrations' => false]);
+    init(['dsn' => 'https://fake@fake.ingest.sentry.io/1', 'default_integrations' => false]);
 
     $response = new SentryMiddleware()->process(new ServerRequest('GET', '/'), sentryMiddlewarePassthroughHandler());
 
@@ -103,7 +104,7 @@ test('sends exactly one correctly-named, correctly-tagged transaction event when
             return new Result(ResultStatus::success());
         }
     };
-    \Sentry\init([
+    init([
         'dsn' => 'https://fake@fake.ingest.sentry.io/1',
         'default_integrations' => false,
         'traces_sample_rate' => 1.0,
@@ -124,7 +125,7 @@ test('makes the transaction the active span visible to the downstream handler', 
     // just the inner $scope->setSpan($transaction) call, leaving an
     // empty closure). Both leave the current scope's span null while the
     // downstream handler runs, instead of the real transaction.
-    \Sentry\init(['dsn' => 'https://fake@fake.ingest.sentry.io/1', 'default_integrations' => false, 'traces_sample_rate' => 1.0]);
+    init(['dsn' => 'https://fake@fake.ingest.sentry.io/1', 'default_integrations' => false, 'traces_sample_rate' => 1.0]);
 
     $handler = new class implements RequestHandlerInterface {
         public mixed $capturedSpan = 'not-set';

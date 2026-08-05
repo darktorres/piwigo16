@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
+use ReflectionMethod;
+use Piwigo\Db\DbCredentials;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
@@ -31,7 +37,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
 
     private ConfigRepository $configRepo;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -43,9 +49,9 @@ final class TelemetryServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -53,10 +59,10 @@ final class TelemetryServiceTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->configRepo = $this->buildConfigRepo($this->conn);
-        $this->service = new TelemetryService(\Piwigo\Db\EntityManagerFactory::build($this->conn), $this->configRepo);
+        $this->service = new TelemetryService(EntityManagerFactory::build($this->conn), $this->configRepo);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->configRepo->deleteByParam('telemetry_install_id');
@@ -98,7 +104,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
         self::assertIsString($encoded);
         $this->configRepo->upsert('telemetry_install_id', $encoded);
 
-        $service = new TelemetryService(\Piwigo\Db\EntityManagerFactory::build($this->conn), $this->buildConfigRepo(DbConnection::build()));
+        $service = new TelemetryService(EntityManagerFactory::build($this->conn), $this->buildConfigRepo(DbConnection::build()));
 
         self::assertSame('deadbeefdeadbeefdeadbeefdeadbeef', $service->resolveInstallId());
     }
@@ -167,7 +173,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
         $em->method('getConnection')->willReturn($conn);
 
         $service = new TelemetryService($em, $this->configRepo);
-        $method = new \ReflectionMethod(TelemetryService::class, 'detectDriverLabel');
+        $method = new ReflectionMethod(TelemetryService::class, 'detectDriverLabel');
 
         self::assertSame('mariadb', $method->invoke($service));
     }
@@ -180,7 +186,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
         $em->method('getConnection')->willReturn($conn);
 
         $service = new TelemetryService($em, $this->configRepo);
-        $method = new \ReflectionMethod(TelemetryService::class, 'detectDriverLabel');
+        $method = new ReflectionMethod(TelemetryService::class, 'detectDriverLabel');
 
         self::assertSame('pgsql', $method->invoke($service));
     }
@@ -193,7 +199,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
         $em->method('getConnection')->willReturn($conn);
 
         $service = new TelemetryService($em, $this->configRepo);
-        $method = new \ReflectionMethod(TelemetryService::class, 'detectDriverLabel');
+        $method = new ReflectionMethod(TelemetryService::class, 'detectDriverLabel');
 
         self::assertSame('unknown', $method->invoke($service));
     }
@@ -210,7 +216,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
         $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 2) . '/src/Piwigo'], isDevMode: true);
         $ormConfig->enableNativeLazyObjects(true);
         $em = new EntityManager($conn, $ormConfig);
-        $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(\Piwigo\Db\DbCredentials::current()));
+        $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentials::current()));
 
         $repo = $em->getRepository(ConfigEntry::class);
         self::assertInstanceOf(ConfigRepository::class, $repo);

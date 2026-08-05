@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Piwigo\Cache\CachePools;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
@@ -32,7 +33,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 
 /** @return array<int, array{id: string, date_available: ?string}> */
-function feedAllImageDates(\mysqli|\PgSql\Connection $db, string $prefix): array
+function feedAllImageDates(mysqli|Connection $db, string $prefix): array
 {
     $fetchedRows = H::dbFetchAll($db, sprintf('SELECT id, date_available FROM %simages', $prefix));
 
@@ -45,7 +46,7 @@ function feedAllImageDates(\mysqli|\PgSql\Connection $db, string $prefix): array
     return $rows;
 }
 
-function feedDbConnect(): \mysqli|\PgSql\Connection
+function feedDbConnect(): mysqli|Connection
 {
     return H::connect();
 }
@@ -213,7 +214,7 @@ it('serves a well-formed RSS2 XML feed with the real Content-Type header and exa
 
         $xml = simplexml_load_string($result['body']);
         if ($xml === false) {
-            throw new \RuntimeException('feed body is not well-formed XML: ' . $result['body']);
+            throw new RuntimeException('feed body is not well-formed XML: ' . $result['body']);
         }
 
         expect($xml->getName())->toBe('rss');
@@ -300,7 +301,7 @@ it('switches the current user to a personal feed\'s real owner when fetched anon
     expect($result['status'])->toBe(200);
     $xml = simplexml_load_string($result['body']);
     if ($xml === false) {
-        throw new \RuntimeException('feed body is not well-formed XML: ' . $result['body']);
+        throw new RuntimeException('feed body is not well-formed XML: ' . $result['body']);
     }
     // rss_title's " (as <username>)" suffix reflects the feed OWNER
     // (fixture_admin), not the anonymous requester's own guest identity.
@@ -326,7 +327,7 @@ it('resets an authenticated session back to guest identity for the generic (toke
         expect($result['status'])->toBe(200);
         $xml = simplexml_load_string($result['body']);
         if ($xml === false) {
-            throw new \RuntimeException('feed body is not well-formed XML: ' . $result['body']);
+            throw new RuntimeException('feed body is not well-formed XML: ' . $result['body']);
         }
         // Same guest-identity title suffix the anonymous test above
         // asserts -- proving the admin session got reset for this
@@ -355,7 +356,7 @@ it('touches last_check via the periodic-refresh path (not real news) when image_
 
     $rowBefore = feedUserFeedRow($feedId);
     if ($rowBefore === null) {
-        throw new \RuntimeException('expected a real user_feed row for feed id ' . $feedId);
+        throw new RuntimeException('expected a real user_feed row for feed id ' . $feedId);
     }
     expect($rowBefore['lastCheck'])->toBeNull();
 
@@ -364,7 +365,7 @@ it('touches last_check via the periodic-refresh path (not real news) when image_
 
     $rowAfter = feedUserFeedRow($feedId);
     if ($rowAfter === null) {
-        throw new \RuntimeException('expected a real user_feed row for feed id ' . $feedId);
+        throw new RuntimeException('expected a real user_feed row for feed id ' . $feedId);
     }
     expect($rowAfter['lastCheck'])->not->toBeNull();
 });

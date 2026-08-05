@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use CURLFile;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -45,7 +47,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
     /** @var list<int> image ids created by a test, deleted in tearDown if not already removed. */
     private array $createdImageIds = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -53,7 +55,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         $this->loginAsAdmin();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         foreach ($this->createdImageIds as $id) {
@@ -184,7 +186,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
             curl_setopt($ch, CURLOPT_POSTFIELDS, array_merge(
-                ['method' => 'pwg.images.uploadAsync', 'file' => new \CURLFile($tmpFile, 'image/png', 'chunk.png')],
+                ['method' => 'pwg.images.uploadAsync', 'file' => new CURLFile($tmpFile, 'image/png', 'chunk.png')],
                 $fields
             ));
             curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);

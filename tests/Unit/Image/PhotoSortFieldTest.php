@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Db\DbCredentials;
 use Piwigo\Image\PhotoSortField;
 
 /**
@@ -41,7 +42,7 @@ test('column returns the real column or function name for every field', function
     // (no Connection available in this plain enum method -- see
     // column()'s own docblock) -- driver-aware here so this test passes
     // regardless of which platform .env.test currently points at.
-    $pgsql = Piwigo\Db\DbCredentials::fromEnv()->driver === 'pgsql';
+    $pgsql = DbCredentials::fromEnv()->driver === 'pgsql';
 
     expect(PhotoSortField::Id->column())->toBe('id')
         ->and(PhotoSortField::File->column())->toBe('file')

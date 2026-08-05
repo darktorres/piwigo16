@@ -5,6 +5,7 @@ declare(strict_types=1);
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentPaths;
 
 /**
  * Named-disk configuration for StorageRegistry.
@@ -22,7 +23,7 @@ use Piwigo\Config\CurrentConfig;
  * 'local' is the effective (potentially PIWIGO_LOCAL_DIR-overridden)
  * site-local directory -- Paths::$siteLocal, not the always-'local/' Paths::$local.
  */
-$paths = \Piwigo\Core\CurrentPaths::get();
+$paths = CurrentPaths::get();
 
 return [
     // User photo uploads: upload/YYYY/MM/DD/

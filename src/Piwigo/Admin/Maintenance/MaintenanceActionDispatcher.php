@@ -4,21 +4,37 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Maintenance;
 
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
+use Piwigo\Admin\Maintenance\Request\DerivativesTypeRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeCacheService;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
+use Piwigo\Lang\Translator;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Rate\RateService;
 use Piwigo\Session\SessionService;
+use Piwigo\Site\SiteEntity;
+use Piwigo\Tag\TagService;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\FileCombiner;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Consolidates the ~18-case maintenance action switch that was previously
@@ -60,20 +76,20 @@ final class MaintenanceActionDispatcher
         private readonly ConfigService $configService,
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\Lang\Translator $translator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly Translator $translator,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly DbMaintenanceRepository $dbMaintenanceRepository,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Rate\RateService $rateService,
+        private readonly ActivityService $activityService,
+        private readonly RateService $rateService,
         private readonly CategoryService $categoryService,
-        private readonly \Piwigo\Tag\TagService $tagService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly TagService $tagService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly Lang $lang,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly ?PersistentCache $persistentCache = null,
     ) {}
 
     public function dispatch(string $action): void
@@ -128,7 +144,7 @@ final class MaintenanceActionDispatcher
 
                 $this->filesystemIntegrityChecker->imagesIntegrity();
                 $this->categoryService
-                    ->updatePath(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Site\SiteEntity::class));
+                    ->updatePath(EntityManagerFactory::build(DbConnection::build())->getRepository(SiteEntity::class));
                 $this->rateService
                     ->updateRatingScore();
                 PermissionCacheInvalidator::invalidate();
@@ -182,7 +198,7 @@ final class MaintenanceActionDispatcher
 
             case 'c13y':
 
-                $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
+                $integrityRepo = EntityManagerFactory::build($conn)->getRepository(IntegrityIgnoredAnomalyEntity::class);
                 $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
                 $c13y->maintenance();
                 $this->pageState->addInfo(sprintf('%s : %s', $this->lang->t('Reinitialize check integrity'), $this->lang->t('action successfully performed.')));
@@ -190,7 +206,7 @@ final class MaintenanceActionDispatcher
 
             case 'empty_lounge':
 
-                $rows = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator)
+                $rows = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator)
                     ->emptyLounge();
                 $this->pageState->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
                 break;
@@ -206,7 +222,7 @@ final class MaintenanceActionDispatcher
                 $this->currentTemplate->get()
                     ->delete_compiled_templates();
                 FileCombiner::clear_combined_files($this->currentConfig);
-                if (! $this->persistentCache instanceof \Piwigo\Cache\PersistentCache) {
+                if (! $this->persistentCache instanceof PersistentCache) {
                     $this->htmlRenderer
                         ->fatalError('persistent cache not initialized');
                 }
@@ -216,7 +232,7 @@ final class MaintenanceActionDispatcher
 
             case 'derivatives':
 
-                $types_str = Request\DerivativesTypeRequest::fromGlobals($this->inputValidator)->typesStr;
+                $types_str = DerivativesTypeRequest::fromGlobals($this->inputValidator)->typesStr;
                 if ($types_str === 'all') {
                     new DerivativeCacheService($this->currentConfig)
                         ->clearDerivativeCache($types_str);

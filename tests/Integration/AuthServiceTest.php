@@ -8,6 +8,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
+    use Piwigo\Auth\UserFailedLoginRepository;
+    use Override;
+    use Piwigo\Core\Kernel;
+    use LogicException;
+    use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Auth\UserFailedLoginEntity;
+    use Piwigo\Activity\ActivityService;
+    use Piwigo\Activity\ActivityEntity;
+    use Piwigo\Tests\Support\HtmlServiceTestFactory;
+    use Piwigo\Config\DeploymentPolicy;
+    use Piwigo\Core\PageState;
+    use Piwigo\Mail\MailService;
+    use Piwigo\Core\Lang;
+    use Piwigo\Tests\Support\UrlServiceTestFactory;
     use Doctrine\DBAL\Connection;
     use Piwigo\Auth\ApiKeyRepository;
     use Piwigo\Auth\ApiKeyService;
@@ -23,12 +37,10 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
     use Piwigo\Event\User\TryLogUser;
-    use Piwigo\Html\HtmlService;
     use Piwigo\Http\ResponseReadyException;
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
-    use Piwigo\Url\UrlService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;
@@ -91,9 +103,9 @@ namespace Piwigo\Tests\Integration {
 
         private Connection $conn;
 
-        private \Piwigo\Auth\UserFailedLoginRepository $failedLoginRepo;
+        private UserFailedLoginRepository $failedLoginRepo;
 
-        #[\Override]
+        #[Override]
         protected function setUp(): void
         {
             parent::setUp();
@@ -105,9 +117,9 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
-            $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-            if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+            $currentConfig = Kernel::container()->get(CurrentConfig::class);
+            if (! $currentConfig instanceof CurrentConfig) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
             }
             $currentConfig->reset();
             ConfigLoader::applyDefaults();
@@ -117,20 +129,20 @@ namespace Piwigo\Tests\Integration {
 
             $this->conn = DbConnection::build();
 
-            $this->failedLoginRepo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class);
+            $this->failedLoginRepo = EntityManagerFactory::build(DbConnection::build())->getRepository(UserFailedLoginEntity::class);
 
             $this->service = new AuthService(
-                new AuthRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
-                new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)),
-                \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
-                new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), new \Piwigo\Config\DeploymentPolicy()),
+                new AuthRepository(EntityManagerFactory::build(DbConnection::build())),
+                new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)),
+                HtmlServiceTestFactory::build(),
+                new PasswordService(new PasswordRepository(EntityManagerFactory::build(DbConnection::build())), new DeploymentPolicy()),
                 new CookieService(),
                 $this->failedLoginRepo,
-                new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
+                new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()),
                 EventDispatcher::get(),
-                \Piwigo\Core\PageState::current(),
-                \Piwigo\Users\CurrentUser::current(),
-                \Piwigo\Config\CurrentConfig::current(),
+                PageState::current(),
+                CurrentUser::current(),
+                CurrentConfig::current(),
             );
         }
 
@@ -213,7 +225,7 @@ namespace Piwigo\Tests\Integration {
             // Fixture user 4 (power_user) -- see this suite's own
             // fixture-shape memory notes; no login-activity rows exist for
             // it in the fixture, so countLoginActivity() === 0.
-            self::assertTrue($this->service->hasAlreadyLoggedIn(4, \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)));
+            self::assertTrue($this->service->hasAlreadyLoggedIn(4, EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)));
         }
 
         public function test_log_user_treats_a_non_string_lang_cookie_as_a_hacking_attempt(): void
@@ -675,16 +687,16 @@ namespace Piwigo\Tests\Integration {
 
         public function test_auth_key_login_rejects_an_api_key_with_the_wrong_secret(): void
         {
-            $mailer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Mail\MailService::class);
-            self::assertInstanceOf(\Piwigo\Mail\MailService::class, $mailer);
+            $mailer = Kernel::container()->get(MailService::class);
+            self::assertInstanceOf(MailService::class, $mailer);
             $apiKeyService = new ApiKeyService(
-                \Piwigo\Core\Lang::current(),
+                Lang::current(),
                 $mailer,
-                new ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
-                new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new \Piwigo\Config\DeploymentPolicy()),
-                \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
-                new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
-                \Piwigo\Config\CurrentConfig::current(),
+                new ApiKeyRepository(EntityManagerFactory::build($this->conn)),
+                new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
+                UrlServiceTestFactory::build(),
+                new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()),
+                CurrentConfig::current(),
             );
             $created = $apiKeyService->create(4, 30, 'Wrong Secret Test Key');
 
@@ -702,16 +714,16 @@ namespace Piwigo\Tests\Integration {
 
         public function test_auth_key_login_rejects_a_revoked_api_key(): void
         {
-            $mailer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Mail\MailService::class);
-            self::assertInstanceOf(\Piwigo\Mail\MailService::class, $mailer);
+            $mailer = Kernel::container()->get(MailService::class);
+            self::assertInstanceOf(MailService::class, $mailer);
             $apiKeyService = new ApiKeyService(
-                \Piwigo\Core\Lang::current(),
+                Lang::current(),
                 $mailer,
-                new ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
-                new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new \Piwigo\Config\DeploymentPolicy()),
-                \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
-                new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
-                \Piwigo\Config\CurrentConfig::current(),
+                new ApiKeyRepository(EntityManagerFactory::build($this->conn)),
+                new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
+                UrlServiceTestFactory::build(),
+                new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()),
+                CurrentConfig::current(),
             );
             $created = $apiKeyService->create(4, 30, 'Revoked Test Key');
             $revoked = $apiKeyService->revoke(4, $created['auth_key']);
@@ -734,7 +746,7 @@ namespace Piwigo\Tests\Integration {
         public function test_generate_password_link_computes_the_reset_link_when_not_the_first_login(): void
         {
             try {
-                $result = $this->service->generatePasswordLink(4, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), false);
+                $result = $this->service->generatePasswordLink(4, UrlServiceTestFactory::build(), false);
 
                 self::assertStringContainsString('password.php?key=', $result['password_link']);
             } finally {
@@ -764,7 +776,7 @@ namespace Piwigo\Tests\Integration {
                 // test_pwg_login_locks_out_the_username_after_max_attempts_even_with_the_correct_password().)
                 self::assertFalse($this->pwgLoginResult(false, 'power_user', 'anything', false));
 
-                $result = $this->service->generatePasswordLink(4, \Piwigo\Tests\Support\UrlServiceTestFactory::build(), false);
+                $result = $this->service->generatePasswordLink(4, UrlServiceTestFactory::build(), false);
 
                 self::assertStringContainsString('password.php?key=', $result['password_link']);
             } finally {

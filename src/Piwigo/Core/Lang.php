@@ -6,6 +6,8 @@ namespace Piwigo\Core;
 
 use Gettext\Headers;
 use Gettext\Loader\PoLoader;
+use Gettext\Translations;
+use LogicException;
 use Piwigo\Lang\Translator;
 
 /**
@@ -130,9 +132,9 @@ final class Lang
      */
     public static function current(): self
     {
-        $instance = \Piwigo\Core\Kernel::container()->get(self::class);
+        $instance = Kernel::container()->get(self::class);
         if (! $instance instanceof self) {
-            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+            throw new LogicException('Container returned an unexpected type for ' . self::class);
         }
 
         return $instance;
@@ -440,7 +442,7 @@ final class Lang
         $lang_info = $this->langInfo;
 
         $translations = $this->translator->load($selected_language, $po_file);
-        $load_lang_info = $translations instanceof \Gettext\Translations ? $this->poHeadersToLangInfo($translations->getHeaders()) : [];
+        $load_lang_info = $translations instanceof Translations ? $this->poHeadersToLangInfo($translations->getHeaders()) : [];
 
         if (isset($options['force_fallback']) && is_string($options['force_fallback'])
           && $options['force_fallback'] !== $selected_language) {

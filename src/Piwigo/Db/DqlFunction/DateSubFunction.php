@@ -12,6 +12,7 @@ use Doctrine\ORM\Query\Parser;
 use Doctrine\ORM\Query\QueryException;
 use Doctrine\ORM\Query\SqlWalker;
 use Doctrine\ORM\Query\TokenType;
+use Override;
 
 /**
  * Custom DQL function: "DATE_SUB" "(" ArithmeticPrimary "," ArithmeticPrimary
@@ -63,7 +64,7 @@ final class DateSubFunction extends FunctionNode
 
     private string $unit;
 
-    #[\Override]
+    #[Override]
     public function getSql(SqlWalker $sqlWalker): string
     {
         $unit = $this->unit;
@@ -95,7 +96,7 @@ final class DateSubFunction extends FunctionNode
         };
     }
 
-    #[\Override]
+    #[Override]
     public function parse(Parser $parser): void
     {
         $parser->match(TokenType::T_IDENTIFIER);

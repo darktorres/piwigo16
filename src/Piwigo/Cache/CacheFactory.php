@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Cache;
 
+use InvalidArgumentException;
 use Psr\Cache\CacheItemPoolInterface;
+use RuntimeException;
 use Symfony\Component\Cache\Adapter\ApcuAdapter;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
@@ -41,7 +43,7 @@ final class CacheFactory
             'apcu' => self::buildApcu($namespace, $defaultLifetime),
             'redis' => self::buildRedis($namespace, $defaultLifetime),
             'filesystem' => self::buildFilesystem($namespace, $defaultLifetime),
-            default => throw new \InvalidArgumentException(
+            default => throw new InvalidArgumentException(
                 "Unknown cache adapter '{$resolved}'. Expected apcu, redis, or filesystem."
             ),
         };
@@ -57,7 +59,7 @@ final class CacheFactory
     private static function buildApcu(string $namespace, int $defaultLifetime): CacheItemPoolInterface
     {
         if (! ApcuAdapter::isSupported()) {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 'APCu extension is not available. Install/enable ext-apcu or choose a different PIWIGO_CACHE_ADAPTER.'
             );
         }

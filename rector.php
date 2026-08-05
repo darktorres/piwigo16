@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Rector\CodingStyle\Rector\Stmt\RemoveUselessAliasInUseStatementRector;
 use Rector\Config\RectorConfig;
 use Rector\TypeDeclaration\Rector\ClassMethod\ReturnTypeFromStrictConstantReturnRector;
 
@@ -36,6 +37,15 @@ return RectorConfig::configure()
             __DIR__ . '/src/Piwigo/Admin/ThemeMaintain.php',
         ],
     ])
-    ->withPhpSets(php85: true)
-    ->withPreparedSets(typeDeclarations: true, instanceOf: true)
+    // ->withPhpSets(php85: true)
+    // ->withPreparedSets(typeDeclarations: true, instanceOf: true)
+    // withImportNames() alone gives Rector nothing to actually process --
+    // it's a post-processing pass, not a standalone rule, so at least one
+    // real rule must be registered for it to run at all. This one is a
+    // genuine no-op here (confirmed: zero `use X\Y as Y;` matches anywhere
+    // in src/Piwigo, config, public, tests), so it registers a rule
+    // without pulling in the broader php85/typeDeclarations/instanceOf
+    // rule sets above.
+    ->withRules([RemoveUselessAliasInUseStatementRector::class])
+    ->withImportNames()
     ->withParallel(timeoutSeconds: 300);

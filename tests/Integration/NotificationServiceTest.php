@@ -8,6 +8,16 @@ declare(strict_types=1);
 // CurrentUser instead.
 namespace Piwigo\Tests\Integration {
 
+    use Override;
+    use Piwigo\Core\Kernel;
+    use LogicException;
+    use Piwigo\Core\FilterState;
+    use Piwigo\Core\Lang;
+    use Piwigo\Auth\AccessControl;
+    use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Group\GroupEntity;
+    use Piwigo\Tests\Support\HtmlServiceTestFactory;
+    use Piwigo\Tests\Support\UrlServiceTestFactory;
     use Doctrine\DBAL\Connection;
     use Piwigo\Cache\CachePools;
     use Piwigo\Category\CategoryRepository;
@@ -15,14 +25,11 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
-    use Piwigo\Group\GroupRepository;
-    use Piwigo\Html\HtmlService;
     use Piwigo\Lang\Translator;
     use Piwigo\Notification\NotificationRepository;
     use Piwigo\Notification\NotificationService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
-    use Piwigo\Url\UrlService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;
@@ -38,7 +45,7 @@ final class NotificationServiceTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -51,9 +58,9 @@ final class NotificationServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -89,24 +96,24 @@ final class NotificationServiceTest extends IntegrationTestCase
             'image_access_list' => '',
         ]));
 
-        $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
-        if (! $filterState instanceof \Piwigo\Core\FilterState) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        $filterState = Kernel::container()->get(FilterState::class);
+        if (! $filterState instanceof FilterState) {
+            throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
 
         $this->service = new NotificationService(
-            \Piwigo\Core\Lang::current(),
-            \Piwigo\Auth\AccessControl::current(),
-            new NotificationRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
-            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig), \Piwigo\Users\CurrentUser::current(), $filterState),
-            \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
-            \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
-            new Translator(\Piwigo\Config\CurrentConfig::current()),
-            \Piwigo\Users\CurrentUser::current(),
+            Lang::current(),
+            AccessControl::current(),
+            new NotificationRepository(EntityManagerFactory::build($this->conn)),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState),
+            HtmlServiceTestFactory::build(),
+            UrlServiceTestFactory::build(),
+            new Translator(CurrentConfig::current()),
+            CurrentUser::current(),
         );
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         CachePools::notifications()->clear();

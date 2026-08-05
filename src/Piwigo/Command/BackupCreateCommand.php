@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Command;
 
+use Override;
 use Piwigo\Backup\BackupService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Throwable;
 
 #[AsCommand(name: 'backup:create', description: 'Dump the database and galleries/ to a timestamped archive in _data/backups/')]
 final class BackupCreateCommand extends Command
@@ -19,12 +21,12 @@ final class BackupCreateCommand extends Command
         parent::__construct();
     }
 
-    #[\Override]
+    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
             $archivePath = $this->backupService->create();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $output->writeln("<error>Backup failed: {$e->getMessage()}</error>");
 
             return Command::FAILURE;

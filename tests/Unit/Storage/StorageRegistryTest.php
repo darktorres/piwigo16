@@ -21,7 +21,7 @@ test('get round-trips a write and read on a real local disk', function (): void 
     mkdir($dir);
 
     $registry = new StorageRegistry([
-        'scratch' => static fn (): \League\Flysystem\Filesystem => new Filesystem(new LocalFilesystemAdapter($dir)),
+        'scratch' => static fn (): Filesystem => new Filesystem(new LocalFilesystemAdapter($dir)),
     ]);
 
     $registry->get('scratch')->write('hello.txt', 'world');
@@ -38,7 +38,7 @@ test('get lazily initializes a disk only once, reusing the same instance', funct
     $callCount = 0;
 
     $registry = new StorageRegistry([
-        'scratch' => static function () use ($dir, &$callCount): \League\Flysystem\Filesystem {
+        'scratch' => static function () use ($dir, &$callCount): Filesystem {
             $callCount++;
 
             return new Filesystem(new LocalFilesystemAdapter($dir));

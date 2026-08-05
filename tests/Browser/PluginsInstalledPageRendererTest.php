@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -158,7 +159,7 @@ function pluginsInstalledRemoveFixturePlugin(string $pluginId): void
     }
 }
 
-function pluginsInstalledDb(): \mysqli|\PgSql\Connection
+function pluginsInstalledDb(): mysqli|Connection
 {
     return H::connect();
 }

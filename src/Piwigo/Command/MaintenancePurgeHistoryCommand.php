@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Command;
 
+use Override;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -26,7 +27,7 @@ final class MaintenancePurgeHistoryCommand extends Command
         parent::__construct();
     }
 
-    #[\Override]
+    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->repo->purgeHistoryDetail();

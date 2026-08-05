@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialectExecutor;
@@ -20,7 +22,7 @@ final class SqlDialectExecutorTest extends IntegrationTestCase
 
     private SqlDialectExecutor $executor;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -52,7 +54,7 @@ final class SqlDialectExecutorTest extends IntegrationTestCase
         // itself is entirely server-side ADDDATE(NOW(), ...) arithmetic.
         $dbNow = $this->conn->fetchOne('SELECT NOW()');
         self::assertIsString($dbNow);
-        $expected = new \DateTimeImmutable($dbNow . ' +1 day');
+        $expected = new DateTimeImmutable($dbNow . ' +1 day');
 
         $result = $this->executor->fetchTomorrow();
 
@@ -68,7 +70,7 @@ final class SqlDialectExecutorTest extends IntegrationTestCase
 
         self::assertSame([1, 7, 30], array_keys($result));
         foreach ([1, 7, 30] as $days) {
-            $expected = new \DateTimeImmutable($dbNow . " +{$days} days");
+            $expected = new DateTimeImmutable($dbNow . " +{$days} days");
             $value = $result[$days];
             self::assertIsString($value);
             self::assertSame($expected->format('Y-m-d'), substr($value, 0, 10));

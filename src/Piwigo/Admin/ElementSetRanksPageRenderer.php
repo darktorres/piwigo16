@@ -5,15 +5,24 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Request\ElementSetRanksRequest;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
 
 /**
  * Ported from admin/element_set_ranks.php (the "sort_order" tab of the
@@ -47,12 +56,12 @@ final class ElementSetRanksPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ErrorCollector $errorCollector,
-        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly ImageStdParams $imageStdParams,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly CategoryAdminService $categoryAdminService,
-        private readonly \Piwigo\Image\ImageService $imageService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly ImageService $imageService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void
@@ -81,7 +90,7 @@ final class ElementSetRanksPageRenderer
             'rank ASC' => $this->lang->t('Manual sort order'),
         ];
 
-        $elementSetRanksRequest = Request\ElementSetRanksRequest::fromGlobals();
+        $elementSetRanksRequest = ElementSetRanksRequest::fromGlobals();
 
         if (! $elementSetRanksRequest->isCatIdValid) {
             // Used to be trigger_error(..., E_USER_ERROR) -- deprecated as
@@ -102,7 +111,7 @@ final class ElementSetRanksPageRenderer
         $image_order_choice = $elementSetRanksRequest->imageOrderChoice;
 
         if ($elementSetRanksRequest->isSubmitted) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             if ($elementSetRanksRequest->rankOfImage !== []) {
@@ -152,7 +161,7 @@ final class ElementSetRanksPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php';
 
-        $category = new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig)
+        $category = new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig)
             ->findById($category_id);
         if ($category === null) {
             $htmlRenderer->pageNotFound($this->redirectService, 'Requested album does not exist');
@@ -174,7 +183,7 @@ final class ElementSetRanksPageRenderer
             [
                 'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
                 'F_ACTION' => $base_url . $this->urlService->getQueryStringDiff([]),
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
             ]
         );
@@ -183,7 +192,7 @@ final class ElementSetRanksPageRenderer
         // |                              thumbnails                           |
         // +-------------------------------------------------------------------+
 
-        $thumbnail_rows = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+        $thumbnail_rows = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
             ->findThumbnailRowsForCategoryOrderedByRank($category_id);
         if (count($thumbnail_rows) > 0) {
             // template thumbnail initialization
@@ -195,7 +204,7 @@ final class ElementSetRanksPageRenderer
                 if (! in_array($row['name'], [null, false, 0, '0', '', []], true)) {
                     $thumbnail_name = $row['name'];
                 } else {
-                    $file_wo_ext = is_string($row['file']) ? \Piwigo\Core\StringHelper::getFilenameWoExtension($row['file']) : '';
+                    $file_wo_ext = is_string($row['file']) ? StringHelper::getFilenameWoExtension($row['file']) : '';
                     $thumbnail_name = str_replace('_', ' ', $file_wo_ext);
                 }
                 $current_rank++;

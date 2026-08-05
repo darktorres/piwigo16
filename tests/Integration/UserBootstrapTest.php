@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Users\UserService;
+use LogicException;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Core\PageState;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
@@ -28,7 +38,6 @@ use Piwigo\Event\User\TryLogUser;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
-use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -79,7 +88,7 @@ final class UserBootstrapTest extends IntegrationTestCase
     /** @var array<array-key, mixed> */
     private array $requestSnapshot = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -94,7 +103,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot();
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
 
         $this->conn = DbConnection::build();
 
@@ -110,7 +119,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         }
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $_SERVER = $this->serverSnapshot;
@@ -125,15 +134,15 @@ final class UserBootstrapTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    private function userService(): \Piwigo\Users\UserService
+    private function userService(): UserService
     {
         // Kernel::boot() already ran in setUp() -- resolve the same
         // container-shared instance a real request would get, matching
         // RedirectService's own real production callers (singleton/
         // service-locator elimination campaign, Phase 6).
-        $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
-        if (! $userService instanceof \Piwigo\Users\UserService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        $userService = Kernel::container()->get(UserService::class);
+        if (! $userService instanceof UserService) {
+            throw new LogicException('Container returned an unexpected type for ' . UserService::class);
         }
 
         return $userService;
@@ -145,7 +154,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         // exit() and is deliberately left uncovered here (see this class's
         // own docblock) -- never actually read, so a fresh, never-set()
         // instance is fine.
-        return new UserBootstrap(\Piwigo\Auth\AccessControl::current(), new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
+        return new UserBootstrap(AccessControl::current(), new RedirectService(Lang::current(), $this->userService()), UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
     }
 
     public function test_initialize_auto_registers_a_new_local_account_for_an_unknown_apache_remote_user(): void
@@ -202,13 +211,13 @@ final class UserBootstrapTest extends IntegrationTestCase
         // key never resolves to a real user.
         $this->bootstrap()->initialize();
 
-        self::assertSame(\Piwigo\Config\CurrentConfig::current()->guestId(), CurrentUser::current()->get()->id->value);
+        self::assertSame(CurrentConfig::current()->guestId(), CurrentUser::current()->get()->id->value);
     }
 
     public function test_initialize_logs_in_via_ws_uploadAsync_and_marks_the_session_connected_with(): void
     {
         $plainPassword = 'upload-async-pass-' . bin2hex(random_bytes(4));
-        $hash = (new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new DeploymentPolicy()))->hash($plainPassword);
+        $hash = (new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()))->hash($plainPassword);
         $username = 'upload_async_user_' . bin2hex(random_bytes(4));
         $this->conn->executeStatement(
             'INSERT INTO piwigo_users (username, password, mail_address) VALUES (?, ?, NULL)',
@@ -223,15 +232,15 @@ final class UserBootstrapTest extends IntegrationTestCase
         EventDispatcher::get()->addTypedHandler(TryLogUser::class, new AuthService(
             new AuthRepository(EntityManagerFactory::build($this->conn)),
             new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
-            \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
-            new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
+            HtmlServiceTestFactory::build(),
+            new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
             new CookieService(),
-            EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
-            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
+            EntityManagerFactory::build($this->conn)->getRepository(UserFailedLoginEntity::class),
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()),
             EventDispatcher::get(),
-            \Piwigo\Core\PageState::current(),
-            \Piwigo\Users\CurrentUser::current(),
-            \Piwigo\Config\CurrentConfig::current(),
+            PageState::current(),
+            CurrentUser::current(),
+            CurrentConfig::current(),
         )->pwgLogin(...));
 
         $_SERVER = [];

@@ -8,10 +8,12 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
+use Override;
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
 use Piwigo\Auth\LoginActivityLookupInterface;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Core\ActivitySystem;
 use Piwigo\Users\UserEntity;
 
 /**
@@ -33,7 +35,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      * {@see \Piwigo\Auth\LoginActivityLookupInterface} instead, wired to
      * this class at the composition root.
      */
-    #[\Override]
+    #[Override]
     public function countLoginActivity(int $userId): int
     {
         $value = $this->getEntityManager()
@@ -501,7 +503,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             ->andWhere('a.objectId = :activitySystemCore')
             ->andWhere("a.action IN ('update', 'autoupdate')")
             ->orderBy('a.activityId', 'ASC')
-            ->setParameter('activitySystemCore', \Piwigo\Core\ActivitySystem::Core, ParameterType::INTEGER)
+            ->setParameter('activitySystemCore', ActivitySystem::Core, ParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Lang;
 
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Db\EntityManagerFactory;
@@ -78,7 +79,7 @@ final readonly class LangService
 
         $languages = [];
         foreach ($repo->findAllRows() as $row) {
-            if (is_dir(\Piwigo\Core\CurrentPaths::get()->root . 'language/' . $row['id'])) {
+            if (is_dir(CurrentPaths::get()->root . 'language/' . $row['id'])) {
                 $languages[$row['id']] = $row['name'];
             }
         }

@@ -11,11 +11,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
+use LogicException;
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
+use Piwigo\Admin\Integrity\Request\C13yTreatmentRequest;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Lang\Translator;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 
 final class CheckIntegrity
 {
@@ -60,9 +66,9 @@ final class CheckIntegrity
         private readonly Lang $lang,
         private readonly IntegrityIgnoredAnomalyRepository $repo,
         private readonly Translator $translator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
     ) {
         $this->ignore_list = [];
         $this->retrieve_list = [];
@@ -96,7 +102,7 @@ final class CheckIntegrity
         }
 
         // Treatments
-        $c13yTreatment = Request\C13yTreatmentRequest::fromGlobals();
+        $c13yTreatment = C13yTreatmentRequest::fromGlobals();
         if ($c13yTreatment->mode === 'correction') {
             $c13y_selection = $c13yTreatment->selection;
             $corrected_count = 0;
@@ -218,7 +224,7 @@ final class CheckIntegrity
                     if ($c13y['ignored']) {
                         $c13y_display['show_ignore_msg'] = true;
                     } else {
-                        throw new \LogicException('$c13y[\'ignored\'] cannot be false');
+                        throw new LogicException('$c13y[\'ignored\'] cannot be false');
                     }
                 } else {
                     if (! in_array($c13y['correction_fct'] ?? null, [null, false, 0, '0', '', []], true)) {
@@ -307,7 +313,7 @@ final class CheckIntegrity
         $this->repo->syncForVersion(
             AppInfo::VERSION,
             $conf_ignore_list,
-            \Piwigo\Core\Env::now()->format('Y-m-d H:i:s'),
+            Env::now()->format('Y-m-d H:i:s'),
         );
     }
 

@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
+use LogicException;
+
 /**
  * A search scope applies to a single token and restricts the search to a subset of searchable fields.
  */
@@ -48,6 +50,6 @@ class QSearchScope
      */
     public function get_sql(string $field, QSingleToken $token): string
     {
-        throw new \LogicException(static::class . ' does not support get_sql()');
+        throw new LogicException(static::class . ' does not support get_sql()');
     }
 }

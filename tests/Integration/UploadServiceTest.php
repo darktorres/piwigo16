@@ -4,6 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Metadata\MetadataService;
+use Piwigo\Image\ImageService;
+use Piwigo\Core\WsContext;
+use LogicException;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Url\RootPathOverride;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Core\CurrentThemeConfProvider;
+use RuntimeException;
+use InvalidArgumentException;
+use Piwigo\Core\Lang;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
@@ -40,7 +54,7 @@ use Piwigo\Users\CurrentUser;
  */
 final class UploadServiceTestThemeConfProvider implements ThemeConfProviderInterface
 {
-    #[\Override]
+    #[Override]
     public function themeConf(string $key): string
     {
         return $key === 'mime_icon_dir' ? 'mimeicons/' : '';
@@ -136,17 +150,17 @@ final class UploadServiceTest extends IntegrationTestCase
 
     private ConfigService $configService;
 
-    private \Doctrine\ORM\EntityManagerInterface $entityManager;
+    private EntityManagerInterface $entityManager;
 
-    private \Piwigo\Activity\ActivityService $activityService;
+    private ActivityService $activityService;
 
-    private \Piwigo\Metadata\MetadataService $metadataService;
+    private MetadataService $metadataService;
 
-    private \Piwigo\Image\ImageService $imageService;
+    private ImageService $imageService;
 
     private CurrentConfig $currentConfig;
 
-    private \Piwigo\Core\WsContext $wsContext;
+    private WsContext $wsContext;
 
     private CurrentUser $currentUser;
 
@@ -155,7 +169,7 @@ final class UploadServiceTest extends IntegrationTestCase
     /** @var list<int> */
     private array $imageIdsToDelete = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -167,9 +181,9 @@ final class UploadServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -195,38 +209,38 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
         if (! $currentLogger instanceof CurrentLogger) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
         $currentLogger->set(new Logger(['severity' => Logger::OFF]));
         $this->currentLogger = $currentLogger;
 
-        $entityManager = Kernel::container()->get(\Doctrine\ORM\EntityManagerInterface::class);
-        if (! $entityManager instanceof \Doctrine\ORM\EntityManagerInterface) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Doctrine\ORM\EntityManagerInterface::class);
+        $entityManager = Kernel::container()->get(EntityManagerInterface::class);
+        if (! $entityManager instanceof EntityManagerInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
         }
         $this->entityManager = $entityManager;
 
-        $activityService = Kernel::container()->get(\Piwigo\Activity\ActivityService::class);
-        if (! $activityService instanceof \Piwigo\Activity\ActivityService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Activity\ActivityService::class);
+        $activityService = Kernel::container()->get(ActivityService::class);
+        if (! $activityService instanceof ActivityService) {
+            throw new LogicException('Container returned an unexpected type for ' . ActivityService::class);
         }
         $this->activityService = $activityService;
 
-        $metadataService = Kernel::container()->get(\Piwigo\Metadata\MetadataService::class);
-        if (! $metadataService instanceof \Piwigo\Metadata\MetadataService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Metadata\MetadataService::class);
+        $metadataService = Kernel::container()->get(MetadataService::class);
+        if (! $metadataService instanceof MetadataService) {
+            throw new LogicException('Container returned an unexpected type for ' . MetadataService::class);
         }
         $this->metadataService = $metadataService;
 
-        $imageService = Kernel::container()->get(\Piwigo\Image\ImageService::class);
-        if (! $imageService instanceof \Piwigo\Image\ImageService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Image\ImageService::class);
+        $imageService = Kernel::container()->get(ImageService::class);
+        if (! $imageService instanceof ImageService) {
+            throw new LogicException('Container returned an unexpected type for ' . ImageService::class);
         }
         $this->imageService = $imageService;
 
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $this->currentConfig = $currentConfig;
 
@@ -238,14 +252,14 @@ final class UploadServiceTest extends IntegrationTestCase
         // against this fresh, unseeded container.
         $currentUser = Kernel::container()->get(CurrentUser::class);
         if (! $currentUser instanceof CurrentUser) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentUser::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
         }
         $currentUser->attachGlobals();
         $this->currentUser = $currentUser;
 
-        $wsContext = Kernel::container()->get(\Piwigo\Core\WsContext::class);
-        if (! $wsContext instanceof \Piwigo\Core\WsContext) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\WsContext::class);
+        $wsContext = Kernel::container()->get(WsContext::class);
+        if (! $wsContext instanceof WsContext) {
+            throw new LogicException('Container returned an unexpected type for ' . WsContext::class);
         }
         $this->wsContext = $wsContext;
 
@@ -253,7 +267,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         // Deliberately not followed by $configService->loadConfFromDb() --
         // see this class's own docblock.
-        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current());
+        $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
         CurrentConfigService::current()->set($configService);
         $this->configService = $configService;
         // Needed for DerivativeImage::url()'s own ImageStdParams::
@@ -273,7 +287,7 @@ final class UploadServiceTest extends IntegrationTestCase
         CurrentConfig::current()->setLoungeActive(false);
         CurrentConfig::current()->setLoungeActivateThreshold(1_000_000);
 
-        $htmlService = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
+        $htmlService = HtmlServiceTestFactory::build();
         // RootPathOverride must be the one real, container-shared instance
         // (singleton/service-locator elimination campaign, Phase 6) --
         // addUploadedFileAddToCategories()'s own $urlService->setMakeFullUrl()
@@ -282,11 +296,11 @@ final class UploadServiceTest extends IntegrationTestCase
         // container-resolved), which use a *different* UrlService object
         // than this one unless both share the same RootPathOverride. See
         // that class's own docblock.
-        $rootPathOverride = Kernel::container()->get(\Piwigo\Url\RootPathOverride::class);
-        if (! $rootPathOverride instanceof \Piwigo\Url\RootPathOverride) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Url\RootPathOverride::class);
+        $rootPathOverride = Kernel::container()->get(RootPathOverride::class);
+        if (! $rootPathOverride instanceof RootPathOverride) {
+            throw new LogicException('Container returned an unexpected type for ' . RootPathOverride::class);
         }
-        $this->urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlService, $rootPathOverride);
+        $this->urlService = UrlServiceTestFactory::build($htmlService, $rootPathOverride);
         // See UploadServiceTestThemeConfProvider's own docblock -- harmless
         // for every test but the finfo-fallback one, which only reaches
         // SrcImage's real theme lookup when the stored extension isn't a
@@ -294,9 +308,9 @@ final class UploadServiceTest extends IntegrationTestCase
         // Piwigo\Core\CurrentThemeConfProvider (Phase 6), not
         // SrcImage::setThemeConfProvider() (deleted) -- see that wrapper's
         // own docblock for why it's independent of CurrentTemplate.
-        $currentThemeConfProvider = Kernel::container()->get(\Piwigo\Core\CurrentThemeConfProvider::class);
-        if (! $currentThemeConfProvider instanceof \Piwigo\Core\CurrentThemeConfProvider) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentThemeConfProvider::class);
+        $currentThemeConfProvider = Kernel::container()->get(CurrentThemeConfProvider::class);
+        if (! $currentThemeConfProvider instanceof CurrentThemeConfProvider) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentThemeConfProvider::class);
         }
         $currentThemeConfProvider->set(new UploadServiceTestThemeConfProvider());
 
@@ -309,14 +323,14 @@ final class UploadServiceTest extends IntegrationTestCase
         // StorageRegistry::class from this container before this point.
         $storageRegistry = Kernel::container()->get(StorageRegistry::class);
         if (! $storageRegistry instanceof StorageRegistry) {
-            throw new \LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
+            throw new LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
         }
         $this->storageRegistry = $storageRegistry;
 
         $this->imageIdsToDelete = [];
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         if ($this->imageIdsToDelete !== []) {
@@ -368,11 +382,11 @@ final class UploadServiceTest extends IntegrationTestCase
         assert($width >= 1 && $height >= 1);
         $img = imagecreatetruecolor($width, $height);
         if ($img === false) {
-            throw new \RuntimeException('imagecreatetruecolor failed');
+            throw new RuntimeException('imagecreatetruecolor failed');
         }
         $color = imagecolorallocate($img, random_int(0, 255), random_int(0, 255), random_int(0, 255));
         if ($color === false) {
-            throw new \RuntimeException('imagecolorallocate failed');
+            throw new RuntimeException('imagecolorallocate failed');
         }
         imagefill($img, 0, 0, $color);
 
@@ -381,11 +395,11 @@ final class UploadServiceTest extends IntegrationTestCase
             'jpeg' => imagejpeg($img, $path),
             'gif' => imagegif($img, $path),
             'webp' => imagewebp($img, $path),
-            default => throw new \InvalidArgumentException("unsupported format {$format}"),
+            default => throw new InvalidArgumentException("unsupported format {$format}"),
         };
 
         if (! $ok) {
-            throw new \RuntimeException("failed to write a {$format} image to {$path}");
+            throw new RuntimeException("failed to write a {$format} image to {$path}");
         }
     }
 
@@ -433,7 +447,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $expectedMd5 = md5_file($source);
         self::assertIsString($expectedMd5);
 
-        $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'holiday.png');
+        $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'holiday.png');
         $id = $imageId;
         self::assertGreaterThan(0, $id);
         $this->imageIdsToDelete[] = $id;
@@ -467,7 +481,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
 
-        $result = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile(
+        $result = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile(
             $source,
             $this->urlService,
             'dup.jpg',
@@ -503,7 +517,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function test_addUploadedFile_updates_an_existing_photo_in_place(): void
     {
-        $service = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser);
+        $service = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser);
 
         $firstSource = $this->marker . '/first.png';
         $this->makeImage($firstSource, 'png', 40, 30);
@@ -552,7 +566,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'orphan.png', image_id: 999_999);
+            new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'orphan.png', image_id: 999_999);
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -570,7 +584,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_updates_the_level_when_given_on_the_update_branch(): void
     {
-        $service = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser);
+        $service = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser);
 
         $first = $this->marker . '/lvl-first.png';
         $this->makeImage($first, 'png', 20, 20);
@@ -596,7 +610,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_dispatches_the_correct_extension_for_each_raster_image_type(): void
     {
-        $service = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser);
+        $service = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser);
         $cases = [
             'png' => 'png',
             'jpeg' => 'jpg',
@@ -643,7 +657,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/archive.zip';
         file_put_contents($source, "PK\x03\x04" . str_repeat('x', 32));
 
-        $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'archive.zip');
+        $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'archive.zip');
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
@@ -680,7 +694,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/big.jpg';
         $this->makeImage($source, 'jpeg', 200, 150);
 
-        $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'big.jpg');
+        $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'big.jpg');
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
@@ -728,7 +742,7 @@ final class UploadServiceTest extends IntegrationTestCase
                 self::markTestSkipped('ImageMagick convert failed to build a PDF fixture: ' . implode("\n", $out));
             }
 
-            $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($pdf, $this->urlService, 'document.pdf');
+            $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($pdf, $this->urlService, 'document.pdf');
             $id = $imageId;
             $this->imageIdsToDelete[] = $id;
 
@@ -755,7 +769,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'fake.png');
+            new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'fake.png');
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -787,7 +801,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'payload.exe');
+            new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'payload.exe');
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -811,7 +825,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'notes.txt');
+            new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'notes.txt');
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -839,7 +853,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/threshold.png';
         $this->makeImage($source, 'png', 10, 8);
 
-        $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'threshold.png');
+        $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'threshold.png');
         $this->imageIdsToDelete[] = $imageId;
 
         // addUploadedFileAddToCategories()'s own COUNT(*) check (running
@@ -856,7 +870,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/associate.png';
         $this->makeImage($source, 'png', 10, 8);
 
-        $imageId = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'associate.png', categories: [1]);
+        $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)->addUploadedFile($source, $this->urlService, 'associate.png', categories: [1]);
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
@@ -912,7 +926,7 @@ final class UploadServiceTest extends IntegrationTestCase
         CurrentConfig::current()->setFormatExtensions(['tif']);
 
         try {
-            $service = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser);
+            $service = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser);
             $source = $this->marker . '/orphan-format.tif';
             file_put_contents($source, 'not a real tiff, just needs bytes on disk');
 
@@ -947,7 +961,7 @@ final class UploadServiceTest extends IntegrationTestCase
         CurrentConfig::current()->setFormatExtensions(['tif']);
 
         try {
-            $service = new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser);
+            $service = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser);
 
             $sourceV1 = $this->marker . '/format-v1.tif';
             file_put_contents($sourceV1, str_repeat('a', 128));

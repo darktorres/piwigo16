@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -26,7 +27,7 @@ function albumSubDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function albumSubDb(): \mysqli|\PgSql\Connection
+function albumSubDb(): mysqli|Connection
 {
     return H::connect();
 }

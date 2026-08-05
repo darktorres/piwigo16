@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use RuntimeException;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
@@ -27,88 +32,88 @@ final class UrlServiceParseSectionUrlTestHtmlRenderer implements HtmlRenderingIn
 {
     public ?string $lastMessage = null;
 
-    #[\Override]
+    #[Override]
     public function getCatDisplayName(array $catInformations, ?string $url = ''): string
     {
         return '';
     }
 
-    #[\Override]
+    #[Override]
     public function getCatDisplayNameCache(string $uppercats, ?string $url = '', bool $singleLink = false, ?string $linkClass = null, ?string $authKey = null): string
     {
         return '';
     }
 
-    #[\Override]
+    #[Override]
     public function nameCompare(array $a, array $b): int
     {
         return 0;
     }
 
-    #[\Override]
+    #[Override]
     public function tagAlphaCompare(array $a, array $b): int
     {
         return 0;
     }
 
-    #[\Override]
+    #[Override]
     public function accessDenied(RedirectServiceInterface $redirectService): never
     {
-        throw new \RuntimeException('accessDenied');
+        throw new RuntimeException('accessDenied');
     }
 
-    #[\Override]
+    #[Override]
     public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
     {
         $this->lastMessage = $msg;
 
-        throw new \RuntimeException('badRequest: ' . $msg);
+        throw new RuntimeException('badRequest: ' . $msg);
     }
 
-    #[\Override]
+    #[Override]
     public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
     {
         $this->lastMessage = $msg;
 
-        throw new \RuntimeException('pageNotFound: ' . ($msg ?? ''));
+        throw new RuntimeException('pageNotFound: ' . ($msg ?? ''));
     }
 
-    #[\Override]
+    #[Override]
     public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
     {
         $this->lastMessage = $msg;
 
-        throw new \RuntimeException('fatalError: ' . $msg);
+        throw new RuntimeException('fatalError: ' . $msg);
     }
 
-    #[\Override]
+    #[Override]
     public function getTagsContentTitle(array $tags): string
     {
         return '';
     }
 
-    #[\Override]
+    #[Override]
     public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string
     {
         return '';
     }
 
-    #[\Override]
+    #[Override]
     public function setStatusHeader(int $code, string $text = ''): void {}
 
-    #[\Override]
+    #[Override]
     public function renderElementName(array $info): string
     {
         return '';
     }
 
-    #[\Override]
+    #[Override]
     public function renderElementDescription(array $info, string $param = ''): string
     {
         return '';
     }
 
-    #[\Override]
+    #[Override]
     public function getThumbnailTitle(array $info, string $title, string $comment = ''): string
     {
         return '';
@@ -117,22 +122,22 @@ final class UrlServiceParseSectionUrlTestHtmlRenderer implements HtmlRenderingIn
 
 final class UrlServiceParseSectionUrlTestRedirectService implements RedirectServiceInterface
 {
-    #[\Override]
+    #[Override]
     public function redirectHttp(string $url, int $status = 302): never
     {
-        throw new \RuntimeException('unexpected redirectHttp() call');
+        throw new RuntimeException('unexpected redirectHttp() call');
     }
 
-    #[\Override]
+    #[Override]
     public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
     {
-        throw new \RuntimeException('unexpected redirectHtml() call');
+        throw new RuntimeException('unexpected redirectHtml() call');
     }
 
-    #[\Override]
+    #[Override]
     public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
     {
-        throw new \RuntimeException('unexpected redirect() call');
+        throw new RuntimeException('unexpected redirect() call');
     }
 }
 
@@ -165,7 +170,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -177,9 +182,9 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -188,7 +193,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET permalink = NULL WHERE id IN (1, 2)');
@@ -197,7 +202,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
 
     private function service(): UrlService
     {
-        return \Piwigo\Tests\Support\UrlServiceTestFactory::build(new UrlServiceParseSectionUrlTestHtmlRenderer());
+        return UrlServiceTestFactory::build(new UrlServiceParseSectionUrlTestHtmlRenderer());
     }
 
     private function redirect(): UrlServiceParseSectionUrlTestRedirectService
@@ -219,13 +224,13 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
     public function test_parse_section_url_page_not_founds_for_a_nonexistent_category_id(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlRenderer);
+        $service = UrlServiceTestFactory::build($htmlRenderer);
         $i = 0;
 
         try {
             $service->parseSectionUrl(['category', '999999'], $i, $this->redirect());
             self::fail('Expected a RuntimeException from pageNotFound()');
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             self::assertSame('Requested album does not exist', $htmlRenderer->lastMessage);
         }
     }
@@ -250,13 +255,13 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
     public function test_parse_section_url_page_not_founds_for_a_nonexistent_combined_category(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlRenderer);
+        $service = UrlServiceTestFactory::build($htmlRenderer);
         $i = 0;
 
         try {
             $service->parseSectionUrl(['category', '1', '999999'], $i, $this->redirect());
             self::fail('Expected a RuntimeException from pageNotFound()');
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             self::assertSame('Requested album does not exist', $htmlRenderer->lastMessage);
         }
     }
@@ -326,13 +331,13 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
     public function test_parse_section_url_page_not_founds_for_an_unresolvable_permalink(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlRenderer);
+        $service = UrlServiceTestFactory::build($htmlRenderer);
         $i = 0;
 
         try {
             $service->parseSectionUrl(['category', 'no-such-permalink-anywhere'], $i, $this->redirect());
             self::fail('Expected a RuntimeException from pageNotFound()');
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             self::assertSame('Permalink for album not found', $htmlRenderer->lastMessage);
         }
     }
@@ -373,13 +378,13 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
     public function test_parse_section_url_page_not_founds_when_no_tag_matches(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlRenderer);
+        $service = UrlServiceTestFactory::build($htmlRenderer);
         $i = 0;
 
         try {
             $service->parseSectionUrl(['tags', '999999'], $i, $this->redirect());
             self::fail('Expected a RuntimeException from pageNotFound()');
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             self::assertSame('Requested tag does not exist', $htmlRenderer->lastMessage);
         }
     }
@@ -387,7 +392,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
     public function test_parse_section_url_rejects_a_tags_token_with_no_ids_or_names(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
-        $service = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlRenderer);
+        $service = UrlServiceTestFactory::build($htmlRenderer);
         $i = 0;
 
         try {
@@ -395,7 +400,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
             // token-scan loop breaks before collecting any id/name at all.
             $service->parseSectionUrl(['tags', 'start-0'], $i, $this->redirect());
             self::fail('Expected a RuntimeException from badRequest()');
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             self::assertSame('at least one tag required', $htmlRenderer->lastMessage);
         }
     }

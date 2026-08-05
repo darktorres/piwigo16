@@ -4,19 +4,41 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Override;
+use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AuthService;
+use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Bootstrap\PageTail;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Request\RegisterSubmitRequest;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Location\LocBeginRegister;
 use Piwigo\Event\Location\LocEndRegister;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Lang\LangService;
+use Piwigo\Lang\Translator;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -36,24 +58,24 @@ final class RegisterController implements ControllerInterface
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\FilterState $filterState,
-        private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
+        private readonly FilterState $filterState,
+        private readonly SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Users\UserService $userService,
-        private readonly \Piwigo\Audit\AuditService $auditService,
-        private readonly \Piwigo\Auth\AuthService $authService,
-        private readonly \Piwigo\Html\HtmlService $htmlService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Lang\Translator $translator,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly DeploymentPolicy $deploymentPolicy,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly UserService $userService,
+        private readonly AuditService $auditService,
+        private readonly AuthService $authService,
+        private readonly HtmlService $htmlService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly Translator $translator,
+        private readonly CurrentLogger $currentLogger,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         // Field-keyed, controller-local -- read by specific key
@@ -84,10 +106,10 @@ final class RegisterController implements ControllerInterface
 
         $this->eventDispatcher->dispatchNotify(new LocBeginRegister());
 
-        $registerSubmit = Request\RegisterSubmitRequest::fromGlobals();
+        $registerSubmit = RegisterSubmitRequest::fromGlobals();
 
         if ($registerSubmit->isSubmitted) {
-            if (! new \Piwigo\Auth\EphemeralKeyService($this->currentConfig)->verify($registerSubmit->key)) {
+            if (! new EphemeralKeyService($this->currentConfig)->verify($registerSubmit->key)) {
                 $status = 403;
                 $errors['register_page_error'] = $this->lang->t('Invalid/expired form key');
             }
@@ -159,7 +181,7 @@ final class RegisterController implements ControllerInterface
 
                 if (count($errors) === 0) {
                     // email notification
-                    if ($registerSubmit->sendPasswordByMail and \Piwigo\Validation\InputValidator::checkEmailFormat($post_mail_address)) {
+                    if ($registerSubmit->sendPasswordByMail and InputValidator::checkEmailFormat($post_mail_address)) {
                         if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
                             $_SESSION['page_infos'] = [];
                         }
@@ -180,8 +202,8 @@ final class RegisterController implements ControllerInterface
                         // the 'login' row logUser() itself records internally,
                         // which is why this must run BEFORE calling it, not
                         // after -- to performed_by=NULL instead of their own new id.
-                        $this->currentUser->set(\Piwigo\Users\User::fromUserArray(
-                            $userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($new_user_id))
+                        $this->currentUser->set(User::fromUserArray(
+                            $userService->buildUser(UserId::from($new_user_id))
                         ));
                         $this->currentUser->markRealUserResolved();
                         $this->authService
@@ -190,10 +212,10 @@ final class RegisterController implements ControllerInterface
                     $this->redirectService->redirect($this->urlService->makeIndexUrl());
                 }
             }
-            $registration_post_key = new \Piwigo\Auth\EphemeralKeyService($this->currentConfig)
+            $registration_post_key = new EphemeralKeyService($this->currentConfig)
                 ->generate(2);
         } else {
-            $registration_post_key = new \Piwigo\Auth\EphemeralKeyService($this->currentConfig)
+            $registration_post_key = new EphemeralKeyService($this->currentConfig)
                 ->generate(6);
         }
 
@@ -238,7 +260,7 @@ final class RegisterController implements ControllerInterface
                 $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
             }
-            if (! array_key_exists($lang_cookie, \Piwigo\Lang\LangService::getLanguages())) {
+            if (! array_key_exists($lang_cookie, LangService::getLanguages())) {
                 $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
             }
@@ -250,7 +272,7 @@ final class RegisterController implements ControllerInterface
         }
 
         $language_options = [];
-        foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
+        foreach (LangService::getLanguages() as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
 
@@ -268,7 +290,7 @@ final class RegisterController implements ControllerInterface
 
         $template->assign('HELP_LINK', $help_link);
 
-        new \Piwigo\Page\PageHeaderRenderer()
+        new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatchNotify(new LocEndRegister());
         $this->htmlService
@@ -276,7 +298,7 @@ final class RegisterController implements ControllerInterface
         $this->htmlService
             ->flushKeyedErrors($errors);
         $template->parse('register');
-        $body = \Piwigo\Bootstrap\PageTail::renderToString();
+        $body = PageTail::renderToString();
 
         return ResponseFactory::html($body, $status);
     }

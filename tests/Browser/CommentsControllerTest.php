@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
+use Piwigo\Core\StringHelper;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -24,7 +26,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * else the shared dev DB currently contains.
  */
 
-function commentsDbConnect(): \mysqli|\PgSql\Connection
+function commentsDbConnect(): mysqli|Connection
 {
     return H::connect();
 }
@@ -47,8 +49,8 @@ function commentsInsert(int $imageId, string $author, string $content, bool $val
     // expression is of type integer"), confirmed live. Matches
     // RegenerateFixtureTest's own $sqlTrue/$sqlFalse convention for the
     // identical column.
-    $sqlTrue = $db instanceof \mysqli ? '1' : 'true';
-    $sqlFalse = $db instanceof \mysqli ? '0' : 'false';
+    $sqlTrue = $db instanceof mysqli ? '1' : 'true';
+    $sqlFalse = $db instanceof mysqli ? '0' : 'false';
     H::dbQuery($db, sprintf(
         "INSERT INTO %scomments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date, email) VALUES (%d, NOW(), '%s', '127.0.0.8', %s, '%s', %s, %s, %s)",
         $prefix,
@@ -520,7 +522,7 @@ it('falls back to the filename-derived name when a photo has no explicit name', 
     if (is_string($realName) && $realName !== '') {
         throw new RuntimeException('this test requires an empty images.name to exercise the fallback, got: ' . var_export($realName, true));
     }
-    $expectedAlt = \Piwigo\Core\StringHelper::getNameFromFile((string) $row['file']);
+    $expectedAlt = StringHelper::getNameFromFile((string) $row['file']);
 
     $author = 'browser-comments-noname-' . uniqid();
     commentsInsert($imageId, $author, 'Comment on an unnamed photo.', true);

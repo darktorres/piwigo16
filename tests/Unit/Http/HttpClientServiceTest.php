@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Piwigo\Config\CurrentConfig;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Piwigo\Http\HttpClientNetworkException;
 use Piwigo\Http\HttpClientService;
@@ -9,7 +12,7 @@ use Piwigo\Http\HttpClientSsrfException;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
-function makeHttpRequest(string $method, string $uri): Psr\Http\Message\RequestInterface
+function makeHttpRequest(string $method, string $uri): RequestInterface
 {
     return new Psr17Factory()->createRequest($method, $uri);
 }
@@ -89,7 +92,7 @@ test('sendRequest rejects a non-https scheme before contacting the transport', f
     });
     $service = new HttpClientService($client);
 
-    expect(fn (): \Psr\Http\Message\ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'http://example.test/')))
+    expect(fn (): ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'http://example.test/')))
         ->toThrow(HttpClientSsrfException::class, 'Only https:// URLs are allowed: http://example.test/');
     expect($calls)->toBe(0);
 });
@@ -97,7 +100,7 @@ test('sendRequest rejects a non-https scheme before contacting the transport', f
 test('sendRequest rejects a malformed URL missing scheme/host, with the URL embedded in the message', function (): void {
     $service = new HttpClientService(new MockHttpClient());
 
-    expect(fn (): \Psr\Http\Message\ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'not-a-url')))
+    expect(fn (): ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'not-a-url')))
         ->toThrow(HttpClientSsrfException::class, 'Malformed URL: not-a-url');
 });
 
@@ -117,28 +120,28 @@ test('sendRequest rejects a URL that parse_url() itself cannot parse at all, rea
     ]));
     $service = new HttpClientService($client);
 
-    expect(fn (): \Psr\Http\Message\ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/start')))
+    expect(fn (): ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/start')))
         ->toThrow(HttpClientSsrfException::class, 'Malformed URL: https:///');
 });
 
 test('sendRequest rejects a loopback IP host, with the URL embedded in the message', function (): void {
     $service = new HttpClientService(new MockHttpClient());
 
-    expect(fn (): \Psr\Http\Message\ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://127.0.0.1/')))
+    expect(fn (): ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://127.0.0.1/')))
         ->toThrow(HttpClientSsrfException::class, 'Target host resolves to a private/reserved IP range: https://127.0.0.1/');
 });
 
 test('sendRequest rejects the link-local cloud metadata IP', function (): void {
     $service = new HttpClientService(new MockHttpClient());
 
-    expect(fn (): \Psr\Http\Message\ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://169.254.169.254/latest/meta-data/')))
+    expect(fn (): ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://169.254.169.254/latest/meta-data/')))
         ->toThrow(HttpClientSsrfException::class);
 });
 
 test('sendRequest rejects a private RFC1918 IP host, with the URL embedded in the message', function (): void {
     $service = new HttpClientService(new MockHttpClient());
 
-    expect(fn (): \Psr\Http\Message\ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://10.0.0.5/')))
+    expect(fn (): ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://10.0.0.5/')))
         ->toThrow(HttpClientSsrfException::class, 'Target host resolves to a private/reserved IP range: https://10.0.0.5/');
 });
 
@@ -199,7 +202,7 @@ test('sendRequest throws when a redirect target is a private IP', function (): v
     ]));
     $service = new HttpClientService($client);
 
-    expect(fn (): \Psr\Http\Message\ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/start')))
+    expect(fn (): ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/start')))
         ->toThrow(HttpClientSsrfException::class);
 });
 
@@ -326,7 +329,7 @@ test('sendRequest wraps a transport failure as HttpClientNetworkException', func
     $client = new MockHttpClient(new MockResponse('', ['error' => 'Connection refused']));
     $service = new HttpClientService($client);
 
-    expect(fn (): \Psr\Http\Message\ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/down')))
+    expect(fn (): ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/down')))
         ->toThrow(HttpClientNetworkException::class);
 });
 
@@ -839,9 +842,9 @@ test('guardedFetch() actually routes through the configured proxy and embeds Bas
     $originalHost = $_SERVER['HTTP_HOST'] ?? null;
     $_SERVER['HTTP_HOST'] = 'my-self-host.test';
 
-    \Piwigo\Config\CurrentConfig::current()->setUseProxy(true);
-    \Piwigo\Config\CurrentConfig::current()->setProxyServer('http://127.0.0.1:' . $port);
-    \Piwigo\Config\CurrentConfig::current()->setProxyAuth('theuser:thepass');
+    CurrentConfig::current()->setUseProxy(true);
+    CurrentConfig::current()->setProxyServer('http://127.0.0.1:' . $port);
+    CurrentConfig::current()->setProxyAuth('theuser:thepass');
 
     try {
         $result = HttpClientService::fetch('http://my-self-host.test/i.php?x=1');
@@ -860,7 +863,7 @@ test('guardedFetch() actually routes through the configured proxy and embeds Bas
         } else {
             $_SERVER['HTTP_HOST'] = $originalHost;
         }
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
         httpClientServiceTestStopLocalServer($proc);
         unlink($docRoot . '/router.php');
         rmdir($docRoot);
@@ -885,8 +888,8 @@ test('guardedFetch() does not route through the proxy at all when useProxy is fa
     $originalHost = $_SERVER['HTTP_HOST'] ?? null;
     $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $targetPort;
 
-    \Piwigo\Config\CurrentConfig::current()->setUseProxy(false);
-    \Piwigo\Config\CurrentConfig::current()->setProxyServer('http://127.0.0.1:' . $proxyPort);
+    CurrentConfig::current()->setUseProxy(false);
+    CurrentConfig::current()->setProxyServer('http://127.0.0.1:' . $proxyPort);
 
     try {
         $result = HttpClientService::fetch('http://127.0.0.1:' . $targetPort . '/direct.php');
@@ -898,7 +901,7 @@ test('guardedFetch() does not route through the proxy at all when useProxy is fa
         } else {
             $_SERVER['HTTP_HOST'] = $originalHost;
         }
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
         httpClientServiceTestStopLocalServer($targetProc);
         httpClientServiceTestStopLocalServer($proxyProc);
         unlink($docRoot . '/direct.php');
@@ -926,9 +929,9 @@ test('guardedFetch() does not embed Basic-auth credentials into the proxy URL wh
     $originalHost = $_SERVER['HTTP_HOST'] ?? null;
     $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $targetPort;
 
-    \Piwigo\Config\CurrentConfig::current()->setUseProxy(true);
-    \Piwigo\Config\CurrentConfig::current()->setProxyServer('http://127.0.0.1:' . $proxyPort);
-    \Piwigo\Config\CurrentConfig::current()->setProxyAuth('');
+    CurrentConfig::current()->setUseProxy(true);
+    CurrentConfig::current()->setProxyServer('http://127.0.0.1:' . $proxyPort);
+    CurrentConfig::current()->setProxyAuth('');
 
     try {
         $result = HttpClientService::fetch('http://127.0.0.1:' . $targetPort . '/direct.php');
@@ -944,7 +947,7 @@ test('guardedFetch() does not embed Basic-auth credentials into the proxy URL wh
         } else {
             $_SERVER['HTTP_HOST'] = $originalHost;
         }
-        \Piwigo\Config\CurrentConfig::current()->reset();
+        CurrentConfig::current()->reset();
         httpClientServiceTestStopLocalServer($targetProc);
         httpClientServiceTestStopLocalServer($proxyProc);
         unlink($docRoot . '/direct.php');

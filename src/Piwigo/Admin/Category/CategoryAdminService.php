@@ -6,13 +6,15 @@ namespace Piwigo\Admin\Category;
 
 use Piwigo\Category\CategoryRefDateAggregate;
 use Piwigo\Category\CategoryRefDateField;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Admin-side category WRITE operations -- deliberately separate from
@@ -45,14 +47,14 @@ final class CategoryAdminService
 {
     public function __construct(
         private CategoryService $categoryService,
-        private \Piwigo\Permission\PermissionService $permissionService,
-        private \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private PermissionService $permissionService,
+        private HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     /**
      * @param array{commentable?: bool, visible?: bool, status?: string, comment?: string, inherit?: bool} $options
      */
-    public function createVirtualCategory(string $name, ActivityLoggerInterface $activityLogger, \Piwigo\Users\CurrentUser $currentUser, ?int $parentId = null, array $options = []): CreateCategoryResult
+    public function createVirtualCategory(string $name, ActivityLoggerInterface $activityLogger, CurrentUser $currentUser, ?int $parentId = null, array $options = []): CreateCategoryResult
     {
         /** @var array{error?: string, info?: string, id?: int|string} $result */
         $result = $this->categoryService->createVirtualCategory($name, $activityLogger, $currentUser, $parentId, $options);
@@ -151,7 +153,7 @@ final class CategoryAdminService
      *
      * @param list<int> $catIds
      */
-    public function setCategoryOption(array $catIds, string $section, bool $value, \Piwigo\Core\ActivityLoggerInterface $activityLogger): void
+    public function setCategoryOption(array $catIds, string $section, bool $value, ActivityLoggerInterface $activityLogger): void
     {
         if ($catIds === []) {
             return;
@@ -207,7 +209,7 @@ final class CategoryAdminService
         }
 
         $conn = DbConnection::build();
-        $permissionRepository = new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
+        $permissionRepository = new PermissionRepository(EntityManagerFactory::build($conn));
 
         // groups
         $groupsGranted = $this->categoryService->getAccessGroupIds($catId);

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use LogicException;
+use Psr\Container\ContainerExceptionInterface;
+
 /**
  * `Paths` is a plain, already-container-bound immutable value (see its own
  * docblock and `Piwigo\Core\Container`'s own conditional `Paths::class =>
@@ -37,7 +40,7 @@ final class CurrentPaths
     public static function get(): Paths
     {
         if (! Kernel::isBooted()) {
-            throw new \LogicException('CurrentPaths not initialised -- call Piwigo\Core\Kernel::boot() first.');
+            throw new LogicException('CurrentPaths not initialised -- call Piwigo\Core\Kernel::boot() first.');
         }
 
         // NOT has() (PSR-11) -- confirmed live: PHP-DI's has() returns true
@@ -53,12 +56,12 @@ final class CurrentPaths
         // here and converted into this method's own clear message instead.
         try {
             $paths = Kernel::container()->get(Paths::class);
-        } catch (\Psr\Container\ContainerExceptionInterface) {
-            throw new \LogicException('CurrentPaths not initialised -- call Piwigo\Core\Kernel::boot() first.');
+        } catch (ContainerExceptionInterface) {
+            throw new LogicException('CurrentPaths not initialised -- call Piwigo\Core\Kernel::boot() first.');
         }
 
         if (! $paths instanceof Paths) {
-            throw new \LogicException('Container returned an unexpected type for ' . Paths::class);
+            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
         }
 
         return $paths;
@@ -83,7 +86,7 @@ final class CurrentPaths
         // attempt, catching PHP-DI's own exception when nothing was bound.
         try {
             return Kernel::container()->get(Paths::class) instanceof Paths;
-        } catch (\Psr\Container\ContainerExceptionInterface) {
+        } catch (ContainerExceptionInterface) {
             return false;
         }
     }

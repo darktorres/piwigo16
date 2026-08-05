@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use LogicException;
+use Override;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Users\CurrentUser;
+use Throwable;
 
 /**
  * Current-request access-level checks: status/ACCESS_* introspection,
@@ -41,8 +47,8 @@ final class AccessControl
     public function __construct(
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly RedirectServiceInterface $redirectService,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -61,9 +67,9 @@ final class AccessControl
      */
     public static function current(): self
     {
-        $instance = \Piwigo\Core\Kernel::container()->get(self::class);
+        $instance = Kernel::container()->get(self::class);
         if (! $instance instanceof self) {
-            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+            throw new LogicException('Container returned an unexpected type for ' . self::class);
         }
 
         return $instance;
@@ -100,7 +106,7 @@ final class AccessControl
     {
         try {
             return self::current();
-        } catch (\Throwable) {
+        } catch (Throwable) {
             if (self::$cachingFallback instanceof self) {
                 return self::$cachingFallback;
             }
@@ -108,18 +114,18 @@ final class AccessControl
             // A guest CurrentUser, not an unset one -- get() throws on an
             // unset instance exactly like AccessControl::current() does,
             // which would just move this same problem one level down.
-            $guestUser = new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig());
+            $guestUser = new CurrentUser(new CurrentConfig());
             $guestUser->attachGlobals();
 
             return self::$cachingFallback = new self(
                 new class() implements HtmlRenderingInterface {
-                    #[\Override]
+                    #[Override]
                     public function getCatDisplayName(array $catInformations, ?string $url = ''): string
                     {
-                        throw new \LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
                     }
 
-                    #[\Override]
+                    #[Override]
                     public function getCatDisplayNameCache(
                         string $uppercats,
                         ?string $url = '',
@@ -127,102 +133,102 @@ final class AccessControl
                         ?string $linkClass = null,
                         ?string $authKey = null,
                     ): string {
-                        throw new \LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
                     }
 
-                    #[\Override]
+                    #[Override]
                     public function nameCompare(array $a, array $b): int
                     {
-                        throw new \LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
                     }
 
-                    #[\Override]
+                    #[Override]
                     public function tagAlphaCompare(array $a, array $b): int
                     {
-                        throw new \LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
                     }
 
-                    #[\Override]
+                    #[Override]
                     public function accessDenied(RedirectServiceInterface $redirectService): never
                     {
-                        throw new \LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
                     }
 
-                    #[\Override]
+                    #[Override]
                     public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
                     {
-                        throw new \LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
                     }
 
-                    #[\Override]
+                    #[Override]
                     public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
                     {
-                        throw new \LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
                     }
 
-                    #[\Override]
+                    #[Override]
                     public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
                     {
-                        throw new \LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
                     }
 
-                    #[\Override]
+                    #[Override]
                     public function getTagsContentTitle(array $tags): string
                     {
-                        throw new \LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
                     }
 
-                    #[\Override]
+                    #[Override]
                     public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string
                     {
-                        throw new \LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
                     }
 
-                    #[\Override]
+                    #[Override]
                     public function setStatusHeader(int $code, string $text = ''): void
                     {
-                        throw new \LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
                     }
 
-                    #[\Override]
+                    #[Override]
                     public function renderElementName(array $info): string
                     {
-                        throw new \LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
                     }
 
-                    #[\Override]
+                    #[Override]
                     public function renderElementDescription(array $info, string $param = ''): string
                     {
-                        throw new \LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
                     }
 
-                    #[\Override]
+                    #[Override]
                     public function getThumbnailTitle(array $info, string $title, string $comment = ''): string
                     {
-                        throw new \LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
                     }
                 },
                 new class() implements RedirectServiceInterface {
-                    #[\Override]
+                    #[Override]
                     public function redirectHttp(string $url, int $status = 302): never
                     {
-                        throw new \LogicException('currentForCaching() fallback: redirectService is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: redirectService is never used by isAdmin()');
                     }
 
-                    #[\Override]
+                    #[Override]
                     public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
                     {
-                        throw new \LogicException('currentForCaching() fallback: redirectService is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: redirectService is never used by isAdmin()');
                     }
 
-                    #[\Override]
+                    #[Override]
                     public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
                     {
-                        throw new \LogicException('currentForCaching() fallback: redirectService is never used by isAdmin()');
+                        throw new LogicException('currentForCaching() fallback: redirectService is never used by isAdmin()');
                     }
                 },
                 $guestUser,
-                \Piwigo\Config\CurrentConfig::current(),
+                CurrentConfig::current(),
             );
         }
     }

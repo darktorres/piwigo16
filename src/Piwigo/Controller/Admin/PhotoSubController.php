@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\PictureCoiPageRenderer;
@@ -11,10 +12,18 @@ use Piwigo\Admin\PictureFormatsPageRenderer;
 use Piwigo\Admin\PictureModifyPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Request\PhotoDispatchRequest;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -46,18 +55,18 @@ final class PhotoSubController implements AdminSubControllerInterface
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
-        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly ImageStdParams $imageStdParams,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly PictureModifyPageRenderer $pictureModifyPageRenderer,
         private readonly PictureCoiPageRenderer $pictureCoiPageRenderer,
-        private readonly \Piwigo\Image\ImageService $imageService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly ImageService $imageService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly EventDispatcher $eventDispatcher,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         // Phase 2 global-residual sweep: $page is a local scratch array
@@ -70,7 +79,7 @@ final class PhotoSubController implements AdminSubControllerInterface
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        $photoDispatch = Request\PhotoDispatchRequest::fromGlobals(self::KNOWN_TABS, $this->inputValidator);
+        $photoDispatch = PhotoDispatchRequest::fromGlobals(self::KNOWN_TABS, $this->inputValidator);
         $get_image_id = $photoDispatch->imageId;
 
         $adminPhotoBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $get_image_id;

@@ -4,12 +4,22 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use LogicException;
+use Override;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\AdminContext;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Event\Lifecycle\LoadingLang;
+use Piwigo\Http\ResponseFactory;
+use Piwigo\Http\ResponseReadyException;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -64,7 +74,7 @@ final class RedirectService implements RedirectServiceInterface
     {
         $currentUser = Kernel::container()->get(CurrentUser::class);
         if (! $currentUser instanceof CurrentUser) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentUser::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
         }
         return $currentUser;
     }
@@ -73,7 +83,7 @@ final class RedirectService implements RedirectServiceInterface
     {
         $currentTemplate = Kernel::container()->get(CurrentTemplate::class);
         if (! $currentTemplate instanceof CurrentTemplate) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentTemplate::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentTemplate::class);
         }
         return $currentTemplate;
     }
@@ -82,7 +92,7 @@ final class RedirectService implements RedirectServiceInterface
     {
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         return $currentConfig;
     }
@@ -95,51 +105,51 @@ final class RedirectService implements RedirectServiceInterface
      * own `new Template(...)` construction sites are the only real
      * consumer.
      */
-    private static function adminContext(): \Piwigo\Core\AdminContext
+    private static function adminContext(): AdminContext
     {
-        $adminContext = Kernel::container()->get(\Piwigo\Core\AdminContext::class);
-        if (! $adminContext instanceof \Piwigo\Core\AdminContext) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\AdminContext::class);
+        $adminContext = Kernel::container()->get(AdminContext::class);
+        if (! $adminContext instanceof AdminContext) {
+            throw new LogicException('Container returned an unexpected type for ' . AdminContext::class);
         }
         return $adminContext;
     }
 
-    private static function errorCollector(): \Piwigo\Core\ErrorCollector
+    private static function errorCollector(): ErrorCollector
     {
-        $errorCollector = Kernel::container()->get(\Piwigo\Core\ErrorCollector::class);
-        if (! $errorCollector instanceof \Piwigo\Core\ErrorCollector) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ErrorCollector::class);
+        $errorCollector = Kernel::container()->get(ErrorCollector::class);
+        if (! $errorCollector instanceof ErrorCollector) {
+            throw new LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
         }
         return $errorCollector;
     }
 
-    private static function processCache(): \Piwigo\Core\ProcessCache
+    private static function processCache(): ProcessCache
     {
-        $processCache = Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
-        if (! $processCache instanceof \Piwigo\Core\ProcessCache) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ProcessCache::class);
+        $processCache = Kernel::container()->get(ProcessCache::class);
+        if (! $processCache instanceof ProcessCache) {
+            throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
         }
         return $processCache;
     }
 
-    private static function currentConfigService(): \Piwigo\Config\CurrentConfigService
+    private static function currentConfigService(): CurrentConfigService
     {
-        $currentConfigService = Kernel::container()->get(\Piwigo\Config\CurrentConfigService::class);
-        if (! $currentConfigService instanceof \Piwigo\Config\CurrentConfigService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfigService::class);
+        $currentConfigService = Kernel::container()->get(CurrentConfigService::class);
+        if (! $currentConfigService instanceof CurrentConfigService) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfigService::class);
         }
         return $currentConfigService;
     }
 
-    #[\Override]
+    #[Override]
     public function redirectHttp(string $url, int $status = 302): never
     {
         // default url is on html format
         $url = html_entity_decode($url);
-        throw new \Piwigo\Http\ResponseReadyException(\Piwigo\Http\ResponseFactory::redirect($url, $status));
+        throw new ResponseReadyException(ResponseFactory::redirect($url, $status));
     }
 
-    #[\Override]
+    #[Override]
     public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
     {
         // $template/lang_info are genuinely not always set here: this method
@@ -159,7 +169,7 @@ final class RedirectService implements RedirectServiceInterface
         if (! $this->lang->isLangInfoInitialized() || ! isset($template)) {
             $paths = CurrentPaths::get();
             $guest_id = self::currentConfig()->guestId();
-            $user = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
+            $user = $this->userService->buildUser(UserId::from($guest_id));
             self::currentUser()->set(User::fromUserArray($user));
             $this->lang->load('common.lang');
             EventDispatcher::get()->dispatchNotify(new LoadingLang());
@@ -167,10 +177,10 @@ final class RedirectService implements RedirectServiceInterface
                 'no_fallback' => true,
                 'local' => true,
             ]);
-            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), \Piwigo\Core\PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), $paths->root . 'themes', $this->userService->getDefaultTheme());
+            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), $paths->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         } elseif (self::adminContext()->isActive()) {
-            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), \Piwigo\Core\PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get()->root . 'themes', $this->userService->getDefaultTheme());
+            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get()->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         }
 
@@ -196,7 +206,7 @@ final class RedirectService implements RedirectServiceInterface
 
         $refresh_str = (string) $refresh_time;
         new PageHeaderRenderer()
-            ->render($title, \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), self::currentTemplate(), self::currentConfig(), $refresh_str, $url_link);
+            ->render($title, EventDispatcher::get(), PageState::current(), self::currentTemplate(), self::currentConfig(), $refresh_str, $url_link);
 
         $template->set_filenames([
             'redirect' => 'redirect.tpl',
@@ -206,10 +216,10 @@ final class RedirectService implements RedirectServiceInterface
         $template->parse('redirect');
 
         $body = PageTail::renderToString();
-        throw new \Piwigo\Http\ResponseReadyException(\Piwigo\Http\ResponseFactory::html($body, $status));
+        throw new ResponseReadyException(ResponseFactory::html($body, $status));
     }
 
-    #[\Override]
+    #[Override]
     public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
     {
         // with RefeshTime <> 0, only html must be used

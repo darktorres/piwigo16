@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use LogicException;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\RequestMountDepth;
+
 /**
  * Piwigo's own "pwg_*" cookie storage -- distinct from the session cookie,
  * used for auto-login and small persisted UI preferences.
@@ -28,10 +32,10 @@ final class CookieService
      */
     private function requestMountDepth(): int
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $requestMountDepth = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\RequestMountDepth::class);
-            if (! $requestMountDepth instanceof \Piwigo\Core\RequestMountDepth) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\RequestMountDepth::class);
+        if (Kernel::isBooted()) {
+            $requestMountDepth = Kernel::container()->get(RequestMountDepth::class);
+            if (! $requestMountDepth instanceof RequestMountDepth) {
+                throw new LogicException('Container returned an unexpected type for ' . RequestMountDepth::class);
             }
 
             return $requestMountDepth->current();

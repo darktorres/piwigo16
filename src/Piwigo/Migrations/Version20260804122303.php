@@ -7,6 +7,7 @@ namespace Piwigo\Migrations;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
+use Override;
 use Piwigo\Db\DbCredentials;
 
 /**
@@ -80,13 +81,13 @@ final class Version20260804122303 extends AbstractMigration
         ];
     }
 
-    #[\Override]
+    #[Override]
     public function getDescription(): string
     {
         return 'Baseline bootstrap: every FK constraint across all 39 tables';
     }
 
-    #[\Override]
+    #[Override]
     public function up(Schema $schema): void
     {
         $prefix = DbCredentials::fromEnv()->prefix;
@@ -113,7 +114,7 @@ final class Version20260804122303 extends AbstractMigration
         }
     }
 
-    #[\Override]
+    #[Override]
     public function down(Schema $schema): void
     {
         $this->throwIrreversibleMigrationException(

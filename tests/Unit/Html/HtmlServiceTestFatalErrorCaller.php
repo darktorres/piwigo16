@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Html;
 
+use LogicException;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Html\HtmlService;
@@ -41,7 +42,7 @@ final class HtmlServiceTestFatalErrorCaller
     {
         $errorCollector = Kernel::container()->get(ErrorCollector::class);
         if (! $errorCollector instanceof ErrorCollector) {
-            throw new \LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
+            throw new LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
         }
 
         return $errorCollector;

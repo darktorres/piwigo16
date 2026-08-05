@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Override;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Config\CurrentConfig;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\ApiKeyRepository;
 use Piwigo\Auth\ApiKeyService;
@@ -12,11 +19,9 @@ use Piwigo\Auth\PasswordService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
-use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
-use Piwigo\Url\UrlService;
 
 /**
  * ApiKeyService::getAvailable() -- the only real caller is
@@ -36,11 +41,11 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    private \Doctrine\ORM\EntityManagerInterface $em;
+    private EntityManagerInterface $em;
 
     private int $userId;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -58,22 +63,22 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
         $this->userId = (int) $userId;
 
         $this->em = EntityManagerFactory::build($this->conn);
-        $mailer = \Piwigo\Core\Kernel::container()->get(MailService::class);
+        $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
         $this->service = new ApiKeyService(
-            \Piwigo\Core\Lang::current(),
+            Lang::current(),
             $mailer,
             new ApiKeyRepository($this->em),
-            new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new \Piwigo\Config\DeploymentPolicy()),
-            \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
-            new SessionService($this->em->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),
-            \Piwigo\Config\CurrentConfig::current(),
+            new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
+            UrlServiceTestFactory::build(),
+            new SessionService($this->em->getRepository(SessionEntity::class),CurrentConfig::current()),
+            CurrentConfig::current(),
         );
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);

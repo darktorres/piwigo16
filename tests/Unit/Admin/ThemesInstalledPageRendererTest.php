@@ -2,6 +2,23 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\Logger;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Users\UserService;
+use Piwigo\Mail\MailService;
+use Piwigo\Users\UserRepository;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Session\SessionService;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\PemCatalog;
@@ -13,7 +30,6 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -21,7 +37,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Url\UrlService;
 
 /**
  * ThemesInstalledPageRenderer::render() itself needs a real DB connection,
@@ -238,18 +253,18 @@ function themesInstalledLifecycle(): ExtensionLifecycle
     $pluginMigrationRepo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
     expect($pluginMigrationRepo)->toBeInstanceOf(PluginMigrationRepository::class);
 
-    $currentLogger = new \Piwigo\Core\CurrentLogger();
-    $currentLogger->set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+    $currentLogger = new CurrentLogger();
+    $currentLogger->set(new Logger(['severity' => Logger::OFF]));
 
-    $activityRepo = EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class);
+    $activityRepo = EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class);
 
     $wsContext = Kernel::container()->get(WsContext::class);
     $accessControl = Kernel::container()->get(AccessControl::class);
     if (! $wsContext instanceof WsContext || ! $accessControl instanceof AccessControl) {
-        throw new \LogicException('Container returned an unexpected type');
+        throw new LogicException('Container returned an unexpected type');
     }
 
-    return new ExtensionLifecycle(Lang::current(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, new \Piwigo\Users\CurrentUser(new CurrentConfig())), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new \Piwigo\Activity\ActivityService($activityRepo), themesInstalledLifecycleUserService(), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), new CurrentConfig(), $wsContext, $accessControl);
+    return new ExtensionLifecycle(Lang::current(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, new CurrentUser(new CurrentConfig())), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), new CurrentConfig(), $wsContext, $accessControl);
 }
 
 /**
@@ -257,29 +272,29 @@ function themesInstalledLifecycle(): ExtensionLifecycle
  * themesInstalledLifecycle() itself -- ExtensionLifecycle's
  * missingParentTheme()/getChildrenThemes() never touch UserService.
  */
-function themesInstalledLifecycleUserService(): \Piwigo\Users\UserService
+function themesInstalledLifecycleUserService(): UserService
 {
     $conn = DbConnection::build();
-    $mailer = Kernel::container()->get(\Piwigo\Mail\MailService::class);
-    if (! $mailer instanceof \Piwigo\Mail\MailService) {
-        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Mail\MailService::class);
+    $mailer = Kernel::container()->get(MailService::class);
+    if (! $mailer instanceof MailService) {
+        throw new LogicException('Container returned an unexpected type for ' . MailService::class);
     }
 
-    return new \Piwigo\Users\UserService(
+    return new UserService(
         Lang::current(),
-        new \Piwigo\Users\UserRepository(EntityManagerFactory::build($conn), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\CurrentConfig()),
-        EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
+        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
+        EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
         $mailer,
-        new \Piwigo\Activity\ActivityService(EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
-        \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
+        new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
+        HtmlServiceTestFactory::build(),
         $conn,
-        new \Piwigo\Session\SessionService(EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class), new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\PluginConfig\EventDispatcher(),
-        new \Piwigo\Config\DeploymentPolicy(),
-        new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\Config\CurrentConfig(),
-        new \Piwigo\Core\InstallationFlag(),
-        new \Piwigo\Core\ProcessCache(),
+        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
+        new EventDispatcher(),
+        new DeploymentPolicy(),
+        new CurrentUser(new CurrentConfig()),
+        new CurrentConfig(),
+        new InstallationFlag(),
+        new ProcessCache(),
     );
 }
 
@@ -308,7 +323,7 @@ function writeThemesInstalledFixtureTheme(string $fixtureRoot, string $id, array
 $themesInstalledFixtureRoot = null;
 
 beforeEach(function () use (&$themesInstalledFixtureRoot): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     $themesInstalledFixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-page-renderer-test-' . bin2hex(random_bytes(4)) . '/';
     mkdir($themesInstalledFixtureRoot . 'themes', 0o777, true);
     Kernel::boot(Paths::fromRoot($themesInstalledFixtureRoot));
@@ -316,7 +331,7 @@ beforeEach(function () use (&$themesInstalledFixtureRoot): void {
 });
 
 afterEach(function () use (&$themesInstalledFixtureRoot): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     Kernel::reset();
     if (is_string($themesInstalledFixtureRoot) && is_dir($themesInstalledFixtureRoot)) {
         FilesystemHelper::deltree($themesInstalledFixtureRoot);

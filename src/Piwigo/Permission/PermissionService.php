@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Permission;
 
+use LogicException;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\FilterState;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Users\CurrentUser;
+use UnexpectedValueException;
 
 /**
  * Forbidden-categories computation. Constructor-injects
@@ -30,8 +37,8 @@ final readonly class PermissionService
         private PermissionRepository $repo,
         private GroupRepository $groupRepo,
         private CategoryRepository $categoryRepo,
-        private \Piwigo\Users\CurrentUser $currentUser,
-        private \Piwigo\Core\FilterState $filterState,
+        private CurrentUser $currentUser,
+        private FilterState $filterState,
     ) {}
 
     /**
@@ -44,11 +51,11 @@ final readonly class PermissionService
      * accessControl() helper (singleton/service-locator elimination
      * campaign, Phase 11 sub-phase 11G).
      */
-    private function accessControl(): \Piwigo\Auth\AccessControl
+    private function accessControl(): AccessControl
     {
-        $accessControl = \Piwigo\Core\Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
-        if (! $accessControl instanceof \Piwigo\Auth\AccessControl) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Auth\AccessControl::class);
+        $accessControl = Kernel::container()->get(AccessControl::class);
+        if (! $accessControl instanceof AccessControl) {
+            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
 
         return $accessControl;
@@ -79,7 +86,7 @@ final readonly class PermissionService
     public static function getPrivacyLevelOptions(): array
     {
 
-        $available_permission_levels = \Piwigo\Config\CurrentConfig::current()->availablePermissionLevels();
+        $available_permission_levels = CurrentConfig::current()->availablePermissionLevels();
 
         $options = [];
         $label = '';
@@ -186,7 +193,7 @@ final readonly class PermissionService
         $imageAccessIsAllowlist = null;
         if ($forbiddenImagesApplies && $userImageAccessList !== '' && $userImageAccessType !== '') {
             if (! in_array($userImageAccessType, ['IN', 'NOT IN'], true)) {
-                throw new \UnexpectedValueException('Unexpected image_access_type: ' . $userImageAccessType);
+                throw new UnexpectedValueException('Unexpected image_access_type: ' . $userImageAccessType);
             }
 
             $imageAccessIds = self::csvToIntList($userImageAccessList);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Http\Middleware;
 
+use Override;
 use Piwigo\Session\Session;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -32,7 +33,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 final class SessionMiddleware implements MiddlewareInterface
 {
-    #[\Override]
+    #[Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {

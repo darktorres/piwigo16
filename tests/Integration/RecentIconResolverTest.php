@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use LogicException;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ProcessCache;
@@ -24,7 +26,7 @@ final class RecentIconResolverTest extends IntegrationTestCase
 
     private Lang $lang;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -43,19 +45,19 @@ final class RecentIconResolverTest extends IntegrationTestCase
         Kernel::boot();
         $processCache = Kernel::container()->get(ProcessCache::class);
         if (! $processCache instanceof ProcessCache) {
-            throw new \LogicException('Container returned an unexpected type for ' . ProcessCache::class);
+            throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
         }
         $processCache->reset();
         $this->processCache = $processCache;
 
         $lang = Kernel::container()->get(Lang::class);
         if (! $lang instanceof Lang) {
-            throw new \LogicException('Container returned an unexpected type for ' . Lang::class);
+            throw new LogicException('Container returned an unexpected type for ' . Lang::class);
         }
         $this->lang = $lang;
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         Kernel::reset();

@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
+use LogicException;
+use Piwigo\Core\AppInfo;
+use Piwigo\Core\Env;
+use Piwigo\Core\Kernel;
+use ReflectionClass;
+use ReflectionProperty;
+
 /**
  * Typed facade over Piwigo's runtime configuration (P13, retyped in full
  * during Config generic-accessor removal). Every real config key is a
@@ -62,10 +69,10 @@ final class CurrentConfig
      */
     public static function current(): self
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $instance = \Piwigo\Core\Kernel::container()->get(self::class);
+        if (Kernel::isBooted()) {
+            $instance = Kernel::container()->get(self::class);
             if (! $instance instanceof self) {
-                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+                throw new LogicException('Container returned an unexpected type for ' . self::class);
             }
 
             return $instance;
@@ -3110,7 +3117,7 @@ final class CurrentConfig
     /**
      * Base URL the "send Piwigo infos" telemetry ping is posted to.
      */
-    private string $sendPiwigoInfosUpdateUrl = \Piwigo\Core\AppInfo::URL;
+    private string $sendPiwigoInfosUpdateUrl = AppInfo::URL;
 
     public function sendPiwigoInfosUpdateUrl(): string
     {
@@ -4320,7 +4327,7 @@ final class CurrentConfig
         // Env::testModeIsActive() also covers a real Apache-served
         // Browser-test request (loopback + header), so this doesn't
         // narrow that side at all -- it only widens the CLI side to match.
-        if (\Piwigo\Core\Env::testModeIsActive()) {
+        if (Env::testModeIsActive()) {
             return $this->chmodValue ?? 0777;
         }
 
@@ -5207,8 +5214,8 @@ final class CurrentConfig
     private function all(): array
     {
         $out = [];
-        $reflection = new \ReflectionClass($this);
-        foreach ($reflection->getProperties(\ReflectionProperty::IS_PRIVATE) as $property) {
+        $reflection = new ReflectionClass($this);
+        foreach ($reflection->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
             // Excludes $fallback (the current() shim's own static memo, not
             // a real config key) -- IS_PRIVATE alone matches static
             // properties too, isStatic() is the only way to tell them apart.
@@ -5269,8 +5276,8 @@ final class CurrentConfig
      */
     public function reset(): void
     {
-        $reflection = new \ReflectionClass($this);
-        foreach ($reflection->getProperties(\ReflectionProperty::IS_PRIVATE) as $property) {
+        $reflection = new ReflectionClass($this);
+        foreach ($reflection->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
             // Excludes $fallback -- same reasoning as all()'s own guard above.
             if ($property->isStatic()) {
                 continue;

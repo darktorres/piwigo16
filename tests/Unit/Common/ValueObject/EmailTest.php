@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
+use Override;
+use InvalidArgumentException;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
@@ -11,26 +13,26 @@ use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
 /** @extends StringVoContract<Email> */
 final class EmailTest extends StringVoContract
 {
-    #[\Override]
+    #[Override]
     protected static function voClass(): string
     {
         return Email::class;
     }
 
-    #[\Override]
+    #[Override]
     protected static function validSample(): string
     {
         return 'user@example.com';
     }
 
-    #[\Override]
+    #[Override]
     protected static function otherVoClass(): string
     {
         return Username::class;
     }
 
     /** @return iterable<string, array{string}> */
-    #[\Override]
+    #[Override]
     public static function invalidSamples(): iterable
     {
         yield 'empty'                => [''];
@@ -65,7 +67,7 @@ final class EmailTest extends StringVoContract
         // the real MAX_LENGTH/value rather than some mutated fragment.
         $tooLong = str_repeat('a', 256);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Email exceeds 255 chars: '{$tooLong}'");
         Email::from($tooLong);
     }
@@ -82,7 +84,7 @@ final class EmailTest extends StringVoContract
         $atBoundary = str_repeat('a', 250) . '@x.io';
         self::assertSame(255, strlen($atBoundary));
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Invalid email address: '{$atBoundary}'");
         Email::from($atBoundary);
     }

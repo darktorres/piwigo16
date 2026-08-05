@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
+use Override;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\RedirectServiceInterface;
+use LogicException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Calendar\CalendarBase;
 use Piwigo\Calendar\CalendarMonthly;
@@ -20,7 +27,6 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\SqlCondition;
-use Piwigo\Template\Template;
 
 /**
  * Covers CalendarBase's own shared logic (initialize()/get_date_where()'s
@@ -71,7 +77,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
     private CalendarMonthlyTestFakeUrlService $urlService;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -102,12 +108,12 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
         $this->urlService = new CalendarMonthlyTestFakeUrlService();
 
-        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current());
+        $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
         $configService->loadConfFromDb();
         ImageStdParams::current()->load_from_db();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         Lang::current()->reset();
@@ -117,7 +123,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
     private function makeCalendar(): CalendarMonthly
     {
-        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
+        $calendar = new CalendarMonthly(Lang::current(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
         $calendar->chronology_field = 'posted';
         $calendar->initialize($this->makeScope('id IN (1,2,3,4,5)'));
 
@@ -179,12 +185,12 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
     public function test_initialize_selects_date_available_for_posted_and_date_creation_for_created(): void
     {
-        $posted = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
+        $posted = new CalendarMonthly(Lang::current(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
         $posted->chronology_field = 'posted';
         $posted->initialize($this->makeScope());
         self::assertSame('date_available', $posted->date_field);
 
-        $created = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
+        $created = new CalendarMonthly(Lang::current(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
         $created->chronology_field = 'created';
         $created->initialize($this->makeScope());
         self::assertSame('date_creation', $created->date_field);
@@ -285,7 +291,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [];
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
 
         $ret = $calendar->generate_category_content($template);
 
@@ -322,7 +328,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2024];
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
 
         $ret = $calendar->generate_category_content($template);
 
@@ -369,7 +375,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2024, 3];
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
 
         $ret = $calendar->generate_category_content($template);
 
@@ -455,7 +461,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $withStrings = $this->makeCalendar();
         $withStrings->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $withStrings->chronology_date = ['2024', '3'];
-        $templateStrings = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $templateStrings = TemplateTestFactory::build();
         $withStrings->generate_category_content($templateStrings);
 
         $navStrings = $this->digArray($templateStrings->get_template_vars('chronology_navigation_bars'), [0]);
@@ -465,7 +471,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $withInts = $this->makeCalendar();
         $withInts->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $withInts->chronology_date = [2024, 3];
-        $templateInts = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $templateInts = TemplateTestFactory::build();
         $withInts->generate_category_content($templateInts);
 
         $navInts = $this->digArray($templateInts->get_template_vars('chronology_navigation_bars'), [0]);
@@ -486,7 +492,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $yearLevel = $this->makeCalendar();
         $yearLevel->chronology_view = CalendarBase::CAL_VIEW_LIST;
         $yearLevel->chronology_date = [];
-        $yearTemplate = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $yearTemplate = TemplateTestFactory::build();
         self::assertFalse($yearLevel->generate_category_content($yearTemplate));
         $yearNav = $yearTemplate->get_template_vars('chronology_navigation_bars');
         self::assertSame(2024, $this->dig($yearNav, [0, 'items', 0, 'LABEL']));
@@ -496,7 +502,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $monthLevel = $this->makeCalendar();
         $monthLevel->chronology_view = CalendarBase::CAL_VIEW_LIST;
         $monthLevel->chronology_date = [2024];
-        $monthTemplate = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $monthTemplate = TemplateTestFactory::build();
         self::assertFalse($monthLevel->generate_category_content($monthTemplate));
         $monthNav = $monthTemplate->get_template_vars('chronology_navigation_bars');
         self::assertSame(3, $this->dig($monthNav, [0, 'items', 0, 'LABEL']));
@@ -515,7 +521,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $dayLevel = $this->makeCalendar();
         $dayLevel->chronology_view = CalendarBase::CAL_VIEW_LIST;
         $dayLevel->chronology_date = [2024, 3];
-        $dayTemplate = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $dayTemplate = TemplateTestFactory::build();
         self::assertFalse($dayLevel->generate_category_content($dayTemplate));
         $dayItems = $this->digArray($dayTemplate->get_template_vars('chronology_navigation_bars'), [0, 'items']);
         self::assertCount(31, $dayItems);
@@ -555,7 +561,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_created_field_uses_date_creation_and_returns_an_empty_calendar_for_zero_matching_rows(): void
     {
-        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
+        $calendar = new CalendarMonthly(Lang::current(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
         $calendar->chronology_field = 'created';
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [];
@@ -563,7 +569,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
         self::assertSame('date_creation', $calendar->date_field);
 
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
         $ret = $calendar->generate_category_content($template);
 
         self::assertTrue($ret);
@@ -591,13 +597,13 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_build_nav_bar_auto_narrows_chronology_date_and_skips_the_bar_for_a_single_value(): void
     {
-        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
+        $calendar = new CalendarMonthly(Lang::current(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
         $calendar->chronology_field = 'posted';
         $calendar->chronology_view = CalendarBase::CAL_VIEW_LIST;
         $calendar->chronology_date = [2025];
         $calendar->initialize($this->makeScope('id IN (4,5)'));
 
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
         $ret = $calendar->generate_category_content($template);
 
         self::assertFalse($ret);
@@ -664,7 +670,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_view = CalendarBase::CAL_VIEW_LIST;
         $calendar->chronology_date = [2024, 'any'];
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 
@@ -691,7 +697,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2024, 'any'];
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 
@@ -724,7 +730,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [1999, 6];
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 
@@ -747,12 +753,12 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_build_global_calendar_bails_out_to_year_view_when_only_one_year_exists(): void
     {
-        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
+        $calendar = new CalendarMonthly(Lang::current(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
         $calendar->chronology_field = 'posted';
         $calendar->initialize($this->makeScope('id IN (1,2,3)'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [];
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 
@@ -766,12 +772,12 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_build_year_calendar_bails_out_to_month_view_when_only_one_month_exists(): void
     {
-        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
+        $calendar = new CalendarMonthly(Lang::current(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
         $calendar->chronology_field = 'posted';
         $calendar->initialize($this->makeScope('id IN (4,5)'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2025];
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 
@@ -790,12 +796,12 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-09-15 00:00:00' WHERE id = 1");
 
         try {
-            $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
+            $calendar = new CalendarMonthly(Lang::current(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
             $calendar->chronology_field = 'posted';
             $calendar->initialize($this->makeScope('id = 1'));
             $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
             $calendar->chronology_date = [2024, 9];
-            $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+            $template = TemplateTestFactory::build();
 
             $calendar->generate_category_content($template);
 
@@ -817,12 +823,12 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_build_month_calendar_pads_trailing_days_to_complete_the_final_week(): void
     {
-        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
+        $calendar = new CalendarMonthly(Lang::current(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
         $calendar->chronology_field = 'posted';
         $calendar->initialize($this->makeScope('id = 3'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2024, 7];
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 
@@ -844,12 +850,12 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         // layout). image 3 is fixture-dated 2024-07-04, the same
         // fixture row and month this file's own setUp() already
         // establishes.
-        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
+        $calendar = new CalendarMonthly(Lang::current(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
         $calendar->chronology_field = 'posted';
         $calendar->initialize($this->makeScope('id = 3'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2024, 7];
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 
@@ -884,36 +890,36 @@ final class CalendarMonthlyTest extends IntegrationTestCase
  * was called with, so assertions below verify the actual chronology_date/
  * removed-keys values CalendarMonthly's own grouping logic computed.
  */
-final class CalendarMonthlyTestFakeUrlService implements \Piwigo\Core\UrlServiceInterface
+final class CalendarMonthlyTestFakeUrlService implements UrlServiceInterface
 {
     /** @var list<array{redefined: array<string, mixed>, removed: array<int, string>}> */
     public array $calls = [];
 
-    #[\Override]
+    #[Override]
     public function getRootUrl(): string
     {
         return '/fake-root/';
     }
 
-    #[\Override]
+    #[Override]
     public function getAbsoluteRootUrl(bool $withScheme = true): string
     {
         return 'https://fake.test/';
     }
 
-    #[\Override]
+    #[Override]
     public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string
     {
         return $url;
     }
 
-    #[\Override]
+    #[Override]
     public function makeIndexUrl(array $params = []): string
     {
         return '/fake-index?' . json_encode($params);
     }
 
-    #[\Override]
+    #[Override]
     public function duplicateIndexUrl(array $redefined = [], array $removed = []): string
     {
         $this->calls[] = ['redefined' => $redefined, 'removed' => $removed];
@@ -921,73 +927,73 @@ final class CalendarMonthlyTestFakeUrlService implements \Piwigo\Core\UrlService
         return '/fake-index?' . json_encode($redefined) . '|removed=' . json_encode($removed);
     }
 
-    #[\Override]
+    #[Override]
     public function duplicatePictureUrl(array $redefined = [], array $removed = []): string
     {
         return '/fake-picture';
     }
 
-    #[\Override]
+    #[Override]
     public function makePictureUrl(array $params): string
     {
         return '/fake-picture';
     }
 
-    #[\Override]
-    public function parseSectionUrl(array $tokens, &$nextToken, \Piwigo\Core\RedirectServiceInterface $redirectService): array
+    #[Override]
+    public function parseSectionUrl(array $tokens, &$nextToken, RedirectServiceInterface $redirectService): array
     {
-        throw new \LogicException('not used by CalendarMonthly');
+        throw new LogicException('not used by CalendarMonthly');
     }
 
-    #[\Override]
+    #[Override]
     public function parseWellKnownParamsUrl(array $tokens, int &$i): array
     {
-        throw new \LogicException('not used by CalendarMonthly');
+        throw new LogicException('not used by CalendarMonthly');
     }
 
-    #[\Override]
+    #[Override]
     public function getActionUrl($id, $whatPart, bool $download): string
     {
-        throw new \LogicException('not used by CalendarMonthly');
+        throw new LogicException('not used by CalendarMonthly');
     }
 
-    #[\Override]
+    #[Override]
     public function getElementUrl(array $elementInfo): string
     {
-        throw new \LogicException('not used by CalendarMonthly');
+        throw new LogicException('not used by CalendarMonthly');
     }
 
-    #[\Override]
+    #[Override]
     public function setMakeFullUrl(): void {}
 
-    #[\Override]
+    #[Override]
     public function unsetMakeFullUrl(): void {}
 
-    #[\Override]
+    #[Override]
     public function embellishUrl(string $url): string
     {
         return $url;
     }
 
-    #[\Override]
+    #[Override]
     public function getGalleryHomeUrl(): string
     {
-        throw new \LogicException('not used by CalendarMonthly');
+        throw new LogicException('not used by CalendarMonthly');
     }
 
-    #[\Override]
+    #[Override]
     public function getQueryStringDiff(array $rejects = [], bool $escape = true): string
     {
-        throw new \LogicException('not used by CalendarMonthly');
+        throw new LogicException('not used by CalendarMonthly');
     }
 
-    #[\Override]
+    #[Override]
     public function urlIsRemote(string $url): bool
     {
         return false;
     }
 
-    #[\Override]
+    #[Override]
     public function getUserFavorites(): array
     {
         return [];

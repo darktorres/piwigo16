@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\Assert;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
@@ -46,7 +47,7 @@ function nbm_sender_with_timeout_inputs(string $maxExecutionTime, float $percent
     // construction below.
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
     if (! $currentConfig instanceof CurrentConfig) {
-        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
     $currentConfig->setNbmMaxTreatmentTimeoutPercent($percent);
     $currentConfig->setNbmTreatmentTimeoutDefault($timeoutDefault);
@@ -57,14 +58,14 @@ function nbm_sender_with_timeout_inputs(string $maxExecutionTime, float $percent
 function nbm_sendmail_timeout(NotificationByMailSender $sender): float
 {
     $value = new ReflectionProperty($sender, 'sendmailTimeout')->getValue($sender);
-    PHPUnit\Framework\Assert::assertIsFloat($value);
+    Assert::assertIsFloat($value);
 
     return $value;
 }
 
 afterEach(function (): void {
     Kernel::reset();
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     ini_set('max_execution_time', '0');
 });
 

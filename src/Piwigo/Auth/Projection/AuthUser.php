@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Auth\Projection;
 
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Users\UserStatus;
 
 /**
  * Typed row shape for
@@ -60,7 +61,7 @@ final readonly class AuthUser
             // UserStatus instance for it, not a raw string (confirmed live;
             // AbstractHydrator::buildEnum() runs for any scalar select of
             // an enumType-mapped field, not just full-entity selects).
-            status: ($row['status'] ?? null) instanceof \Piwigo\Users\UserStatus ? $row['status']->value : 'normal',
+            status: ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : 'normal',
         );
     }
 

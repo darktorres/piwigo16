@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -42,7 +43,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * not a reachable branch.
  */
 
-function pictureDbConnect(): \mysqli|\PgSql\Connection
+function pictureDbConnect(): mysqli|Connection
 {
     return H::connect();
 }
@@ -89,8 +90,8 @@ function pictureInsertComment(int $imageId, string $author, string $content, boo
 {
     $db = pictureDbConnect();
     $prefix = pictureDbPrefix();
-    $sqlTrue = $db instanceof \mysqli ? '1' : 'true';
-    $sqlFalse = $db instanceof \mysqli ? '0' : 'false';
+    $sqlTrue = $db instanceof mysqli ? '1' : 'true';
+    $sqlFalse = $db instanceof mysqli ? '0' : 'false';
     H::dbQuery($db, sprintf(
         "INSERT INTO %scomments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date) VALUES (%d, NOW(), '%s', '127.0.0.9', %s, '%s', %s, %s)",
         $prefix,
@@ -293,7 +294,7 @@ it('lets an admin delete and validate comments directly from picture.php\'s own 
 
     $beforeRow = pictureCommentRow($toValidateId);
     if ($beforeRow === null) {
-        throw new \RuntimeException('expected a real comment row for id ' . $toValidateId);
+        throw new RuntimeException('expected a real comment row for id ' . $toValidateId);
     }
     expect($beforeRow['validated'])->toBe(0);
 
@@ -309,7 +310,7 @@ it('lets an admin delete and validate comments directly from picture.php\'s own 
     );
     $row = pictureCommentRow($toValidateId);
     if ($row === null) {
-        throw new \RuntimeException('expected a real comment row for id ' . $toValidateId);
+        throw new RuntimeException('expected a real comment row for id ' . $toValidateId);
     }
     expect($row['validated'])->toBe(1);
 });

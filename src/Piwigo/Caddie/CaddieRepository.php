@@ -9,6 +9,7 @@ use Doctrine\DBAL\Exception\ConstraintViolationException;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -151,7 +152,7 @@ final class CaddieRepository extends EntityRepository
             return;
         }
 
-        new \Piwigo\Db\BatchWriter($em->getConnection())
+        new BatchWriter($em->getConnection())
             ->massInsert(Tables::caddie(), array_keys($inserts[0]), $inserts);
     }
 

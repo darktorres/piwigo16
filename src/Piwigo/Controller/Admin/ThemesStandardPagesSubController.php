@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\ThemesStandardPagesPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -22,7 +23,7 @@ final class ThemesStandardPagesSubController implements AdminSubControllerInterf
         private readonly ThemesStandardPagesPageRenderer $themesStandardPagesPageRenderer,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $this->themesStandardPagesPageRenderer

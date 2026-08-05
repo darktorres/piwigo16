@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Exception;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 
@@ -83,14 +84,14 @@ final class DerivativeCacheService
         $path = $infos['path'];
         $representativeExt = $infos['representative_ext'] ?? null;
         if ($representativeExt !== null && $representativeExt !== '') {
-            $path = \Piwigo\Image\ImagePathHelper::originalToRepresentative($path, $representativeExt);
+            $path = ImagePathHelper::originalToRepresentative($path, $representativeExt);
         }
         if (substr_compare($path, '../', 0, 3) === 0) {
             $path = substr($path, 3);
         }
         $dot = strrpos($path, '.');
         if ($dot === false) {
-            throw new \Exception("deleteElementDerivatives(): path '{$path}' has no extension");
+            throw new Exception("deleteElementDerivatives(): path '{$path}' has no extension");
         }
         if ($type === 'all') {
             $pattern = '-*';

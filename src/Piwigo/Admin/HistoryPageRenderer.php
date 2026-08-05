@@ -4,13 +4,22 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Request\HistoryFilterRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\CookieService;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\History\HistoryImageType;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\UserRepository;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/history.php (page slug "history") -- displays the
@@ -49,14 +58,14 @@ final class HistoryPageRenderer
      * regardless, so there was never a real bridge here even in
      * principle.
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Validation\InputValidator $inputValidator): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, InputValidator $inputValidator): void
     {
         $template = $currentTemplate->get();
         $conn = DbConnection::build();
 
         $types = array_merge(['none'], array_map(
-            static fn (\Piwigo\History\HistoryImageType $type): string => $type->value,
-            \Piwigo\History\HistoryImageType::cases()
+            static fn (HistoryImageType $type): string => $type->value,
+            HistoryImageType::cases()
         ));
 
         $display_thumbnails = [
@@ -67,7 +76,7 @@ final class HistoryPageRenderer
 
         $accessControl->checkStatus(AccessLevel::Administrator);
 
-        $historyFilter = Request\HistoryFilterRequest::fromGlobals($inputValidator);
+        $historyFilter = HistoryFilterRequest::fromGlobals($inputValidator);
 
         $template->set_filename('history', 'history.tpl');
 
@@ -110,8 +119,8 @@ final class HistoryPageRenderer
         }
 
         if ($form_param['user_id'] !== -1) {
-            $form_param_user_id = \Piwigo\Common\ValueObject\UserId::tryFrom($form_param['user_id']);
-            $form_param_username = $form_param_user_id === null ? null : (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $eventDispatcher, $currentConfig))
+            $form_param_user_id = UserId::tryFrom($form_param['user_id']);
+            $form_param_username = $form_param_user_id === null ? null : (new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, $currentConfig))
                 ->findUsernameById($form_param_user_id);
             $form_param['user_name'] = $form_param_username?->value;
             $form_param['user_id'] = $form_param['user_name'] === null ? -1 : $form_param['user_id'];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Common\ValueObject\Contract;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Common\ValueObject\StringVo;
@@ -51,7 +52,7 @@ abstract class StringVoContract extends TestCase
     public function testFromRejects(string $invalid): void
     {
         $class = static::voClass();
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $class::from($invalid);
     }
 

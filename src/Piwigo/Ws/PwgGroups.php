@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use InvalidArgumentException;
+use Piwigo\Audit\AuditService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
@@ -19,7 +20,10 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupService;
+use Piwigo\Users\CurrentUser;
 
 /**
  * P23 batch 8e-3: relocated from include/ws_functions/pwg.groups.php.
@@ -30,8 +34,8 @@ final class PwgGroups
 {
     public function __construct(
         private readonly GroupService $groupService,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Audit\AuditService $auditService,
+        private readonly CurrentUser $currentUser,
+        private readonly AuditService $auditService,
     ) {}
 
     /**
@@ -52,7 +56,7 @@ final class PwgGroups
             return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter order');
         }
 
-        $groups = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class)
+        $groups = EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class)
             ->findWithMemberCounts(
                 array_values(array_map(GroupId::from(...), $params['group_id'] ?? [])),
                 isset($params['name']) && $params['name'] !== '' ? $params['name'] : null,

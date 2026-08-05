@@ -4,23 +4,36 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Request\NotificationByMailRequest;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\DateHelper;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Lifecycle\NbmEventHandlerAdded;
 use Piwigo\Event\Mail\NbmRenderGlobalCustomizeMailContent;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\NotificationByMailSender;
+use Piwigo\Notification\NotificationByMailService;
+use Piwigo\Notification\UserMailNotificationEntity;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -94,15 +107,15 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
         private readonly Translator $translator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Mail\NotificationByMailSender $notificationByMailSender,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly NotificationByMailSender $notificationByMailSender,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $template = $this->currentTemplate->get();
@@ -111,7 +124,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
         $nbmSender = $this->notificationByMailSender;
 
-        $notificationByMailRequest = Request\NotificationByMailRequest::fromGlobals($this->inputValidator);
+        $notificationByMailRequest = NotificationByMailRequest::fromGlobals($this->inputValidator);
         $page_mode = $notificationByMailRequest->pageMode;
         $post = $notificationByMailRequest->post;
 
@@ -150,7 +163,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
 
         if ($post !== []) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($htmlRenderer, $this->redirectService);
         }
 
@@ -234,7 +247,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
         $template->assign(
             [
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
                 'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=notification_by_mail',
                 'F_ACTION' => $base_url . $this->urlService->getQueryStringDiff([]),
@@ -368,7 +381,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                     assert($auth_key_since !== false);
                     $template->assign(
                         'auth_key_duration',
-                        \Piwigo\Core\DateHelper::timeSince($auth_key_since, 'second', null, false)
+                        DateHelper::timeSince($auth_key_since, 'second', null, false)
                     );
                 }
 
@@ -399,13 +412,13 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 $post_count = count($post[$post_keyname]);
                 $treated_count = count($check_key_treated);
                 if ($treated_count !== 0) {
-                    $time_refresh = (int) ceil((\Piwigo\Core\TimingHelper::getMoment() - $nbmSender->startTime()) * (float) $post_count / (float) $treated_count);
+                    $time_refresh = (int) ceil((TimingHelper::getMoment() - $nbmSender->startTime()) * (float) $post_count / (float) $treated_count);
                 } else {
                     $time_refresh = 0;
                 }
                 $post[$post_keyname] = array_diff(array_filter($post[$post_keyname], is_string(...)), $check_key_treated);
 
-                \Piwigo\Core\PageState::current()->addError(Translator::get()->plural(
+                PageState::current()->addError(Translator::get()->plural(
                     'Execution time is out, treatment must be continue [Estimated time: %d second].',
                     'Execution time is out, treatment must be continue [Estimated time: %d seconds].',
                     $time_refresh
@@ -433,7 +446,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
     /**
      * Inserting News users
      */
-    private static function insertNewDataUserMailNotification(Lang $lang, NotificationByMailSender $nbmSender, RedirectServiceInterface $redirectService, UrlServiceInterface $urlService, SessionService $sessionService, \Piwigo\Config\CurrentConfig $currentConfig): void
+    private static function insertNewDataUserMailNotification(Lang $lang, NotificationByMailSender $nbmSender, RedirectServiceInterface $redirectService, UrlServiceInterface $urlService, SessionService $sessionService, CurrentConfig $currentConfig): void
     {
         // Recomputed rather than threaded from handle()'s own CoreTabs
         // value: this is the method's only real call site, and it already
@@ -442,7 +455,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         $base_url = $urlService->getRootUrl() . 'admin.php';
 
         $conn = DbConnection::build();
-        $notificationByMailService = new \Piwigo\Notification\NotificationByMailService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Notification\UserMailNotificationEntity::class), $sessionService);
+        $notificationByMailService = new NotificationByMailService(EntityManagerFactory::build($conn)->getRepository(UserMailNotificationEntity::class), $sessionService);
 
         // Set null mail_address empty
         $notificationByMailService->nullifyBlankEmails();
@@ -470,7 +483,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
                 $nbm_username = $nbm_user['username'];
                 $nbm_username = is_scalar($nbm_username) ? (string) $nbm_username : '';
-                \Piwigo\Core\PageState::current()->addInfo($lang->t(
+                PageState::current()->addInfo($lang->t(
                     'User %s [%s] added.',
                     stripslashes($nbm_username),
                     $nbm_user['mail_address']

@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Auth\AuthService;
+use Symfony\Component\Mime\Email;
+use Symfony\Component\Mailer\Mailer;
+use Piwigo\Mail\BoundedSendmailTransport;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
@@ -34,7 +37,7 @@ use Piwigo\Users\User;
 function mail_service_test_build(
     ?WebmasterMailProviderInterface $webmasterMailProvider = null,
     ?MailRecipientRepositoryInterface $mailRecipientRepo = null,
-    ?\Piwigo\Auth\AuthService $authService = null,
+    ?AuthService $authService = null,
 ): MailService {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
 
@@ -53,7 +56,7 @@ function mail_service_test_build(
         || ! $translator instanceof Translator || ! $eventDispatcher instanceof EventDispatcher
         || ! $currentUser instanceof CurrentUser || ! $urlService instanceof UrlServiceInterface
     ) {
-        throw new \LogicException('Container returned an unexpected type');
+        throw new LogicException('Container returned an unexpected type');
     }
 
     return new MailService(
@@ -83,7 +86,7 @@ function mail_service_test_build(
 function mail_service_with_fake_webmaster(): MailService
 {
     return mail_service_test_build(new class implements WebmasterMailProviderInterface {
-        #[\Override]
+        #[Override]
         public function getWebmasterMailAddress(): string
         {
             return 'webmaster@example.test';
@@ -105,7 +108,7 @@ function mail_service_with_fake_webmaster(): MailService
  * @param string|array<int|string, mixed> $to
  * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
  * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl
- * @return array{return: bool, to: mixed, args: array<array-key, mixed>, email: \Symfony\Component\Mime\Email}
+ * @return array{return: bool, to: mixed, args: array<array-key, mixed>, email: Email}
  */
 function mail_service_capture_send(MailService $service, string|array $to, array $args = [], array $tpl = []): array
 {
@@ -130,7 +133,7 @@ function mail_service_capture_send(MailService $service, string|array $to, array
         EventDispatcher::get()->removeEventHandler(BeforeSendMail::class, $eventHandler);
     }
 
-    if (! is_array($capturedArgs) || ! $capturedEmail instanceof \Symfony\Component\Mime\Email) {
+    if (! is_array($capturedArgs) || ! $capturedEmail instanceof Email) {
         throw new RuntimeException('expected the before_send_mail handler to have captured a real args array and Email');
     }
 
@@ -225,7 +228,7 @@ function mail_service_rrmdir(string $dir): void
 }
 
 afterEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     // Lang is a real, container-shared instance now (singleton/service-
     // locator elimination campaign, Phase 8) with no pre-boot memoized
     // fallback (see Lang::current()'s own docblock) -- unlike
@@ -243,7 +246,7 @@ afterEach(function (): void {
     // PermissionServiceTest's own English-fallback assertions whenever it
     // ran later in the same process (composer test's own default,
     // non---parallel mode).
-    \Piwigo\Lang\Translator::get()->reset();
+    Translator::get()->reset();
     // Every Kernel::boot() call in this file (mail_service_capture_send()'s
     // own, plus several tests' direct calls) was never matched by a reset
     // -- Kernel stayed booted (with whichever root the last call used) for
@@ -720,7 +723,7 @@ test('generateResetPasswordMail throws when a render_lost_password_mail_content 
 
     try {
         expect(fn () => $service->generateResetPasswordMail('jane', 'https://example.test/x', 'My Gallery', '2 hours'))
-            ->toThrow(\Error::class, 'must return an instance of');
+            ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcher::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
     }
@@ -836,7 +839,7 @@ test('generateSuccessResetPasswordMail assembles the exact HTML content, in orde
     // window generateSuccessResetPasswordMail() itself uses: getRootUrl()
     // returns a bare relative path outside it.
     $urlService = Kernel::container()->get(UrlServiceInterface::class);
-    if (! $urlService instanceof \Piwigo\Core\UrlServiceInterface) {
+    if (! $urlService instanceof UrlServiceInterface) {
         throw new RuntimeException('expected UrlServiceInterface::class to resolve to a UrlServiceInterface');
     }
     $urlService->setMakeFullUrl();
@@ -1627,7 +1630,7 @@ test('switchLangTo replays every plugin language file already loaded this reques
 
         $service->switchLangTo('de_DE');
 
-        expect(\Piwigo\Lang\Translator::get()->translate('MailServiceTestPluginMarker'))->toBe('Deutscher Marker');
+        expect(Translator::get()->translate('MailServiceTestPluginMarker'))->toBe('Deutscher Marker');
     } finally {
         mail_service_rrmdir($dir);
     }
@@ -1636,19 +1639,19 @@ test('switchLangTo replays every plugin language file already loaded this reques
 test('buildMailer wraps native://default in the bounded sendmail transport, but leaves any other DSN to Symfony\'s own Transport::fromDsn', function (): void {
     $service = mail_service_test_build();
     $buildMailer = new ReflectionMethod($service, 'buildMailer');
-    $transportProperty = new ReflectionProperty(\Symfony\Component\Mailer\Mailer::class, 'transport');
+    $transportProperty = new ReflectionProperty(Mailer::class, 'transport');
 
     $nativeMailer = $buildMailer->invoke($service, 'native://default');
-    if (! $nativeMailer instanceof \Symfony\Component\Mailer\Mailer) {
+    if (! $nativeMailer instanceof Mailer) {
         throw new RuntimeException('expected buildMailer() to return a Mailer');
     }
-    expect($transportProperty->getValue($nativeMailer))->toBeInstanceOf(\Piwigo\Mail\BoundedSendmailTransport::class);
+    expect($transportProperty->getValue($nativeMailer))->toBeInstanceOf(BoundedSendmailTransport::class);
 
     $smtpMailer = $buildMailer->invoke($service, 'smtp://127.0.0.1:2525');
-    if (! $smtpMailer instanceof \Symfony\Component\Mailer\Mailer) {
+    if (! $smtpMailer instanceof Mailer) {
         throw new RuntimeException('expected buildMailer() to return a Mailer');
     }
-    expect($transportProperty->getValue($smtpMailer))->not->toBeInstanceOf(\Piwigo\Mail\BoundedSendmailTransport::class);
+    expect($transportProperty->getValue($smtpMailer))->not->toBeInstanceOf(BoundedSendmailTransport::class);
 });
 
 // moveCssToBody's own early `$content === ''` return (line 1027-1029) is

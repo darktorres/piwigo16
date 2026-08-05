@@ -4,8 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Mail;
 
+use Piwigo\Auth\AuthService;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\BatchWriter;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Mail\NbmRenderGlobalCustomizeMailContent;
 use Piwigo\Lang\Translator;
@@ -13,7 +23,12 @@ use Piwigo\Notification\Event\NbmRenderUserCustomizeMailContent;
 use Piwigo\Notification\NotificationByMailService;
 use Piwigo\Notification\NotificationService;
 use Piwigo\Notification\Projection\UserMailNotification;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Template;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 /**
  * Ported from admin/include/functions_notification_by_mail.inc.php (P23
@@ -70,7 +85,7 @@ final class NotificationByMailSender
 
     private bool $isSendmailTimeout = false;
 
-    private ?\Piwigo\Users\User $saveCurrentUser = null;
+    private ?User $saveCurrentUser = null;
 
     private bool $isToSendMail = false;
 
@@ -96,20 +111,20 @@ final class NotificationByMailSender
         private readonly Lang $lang,
         private readonly NotificationByMailService $notificationByMailService,
         private readonly NotificationService $notificationService,
-        private readonly \Piwigo\Db\BatchWriter $batchWriter,
-        private readonly \Piwigo\Users\UserService $userService,
-        private readonly \Piwigo\Auth\AuthService $authService,
+        private readonly BatchWriter $batchWriter,
+        private readonly UserService $userService,
+        private readonly AuthService $authService,
         private readonly UrlServiceInterface $urlService,
         private readonly Translator $translator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
         private readonly MailService $mailer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentConfig $currentConfig,
     ) {
         $nbmMaxTreatmentTimeoutPercent = $this->currentConfig->nbmMaxTreatmentTimeoutPercent();
 
-        $this->startTime = \Piwigo\Core\TimingHelper::getMoment();
+        $this->startTime = TimingHelper::getMoment();
         $this->sendmailTimeout = (float) intval(ini_get('max_execution_time')) * $nbmMaxTreatmentTimeoutPercent;
 
         if ($this->sendmailTimeout <= 0) {
@@ -133,7 +148,7 @@ final class NotificationByMailSender
 
     public function checkSendmailTimeout(): bool
     {
-        $isTimeout = (\Piwigo\Core\TimingHelper::getMoment() - $this->startTime) > $this->sendmailTimeout;
+        $isTimeout = (TimingHelper::getMoment() - $this->startTime) > $this->sendmailTimeout;
         $this->isSendmailTimeout = $isTimeout;
 
         return $isTimeout;
@@ -166,7 +181,7 @@ final class NotificationByMailSender
 
         if ($isToSendMail) {
             $this->emailFormat = $this->mailer
-                ->getStrEmailFormat(\Piwigo\Db\SqlDialect::getBoolean($this->currentConfig->nbmSendHtmlMail()));
+                ->getStrEmailFormat(SqlDialect::getBoolean($this->currentConfig->nbmSendHtmlMail()));
 
             // \Piwigo\Config\CurrentConfig::nbmSendMailAs() is admin-submitted free text (see
             // NotificationByMailSubController), always a string when set.
@@ -177,7 +192,7 @@ final class NotificationByMailSender
                     ->getMailSenderName();
             $this->sendAsName = $sendAsName;
 
-            $sendAsMailAddress = (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->getWebmasterMailAddress();
+            $sendAsMailAddress = (new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->getWebmasterMailAddress();
             $this->sendAsMailAddress = $sendAsMailAddress;
 
             $this->sendAsMailFormatted = $this->mailer
@@ -192,7 +207,7 @@ final class NotificationByMailSender
 
     public function endUsersEnv(): void
     {
-        if ($this->saveCurrentUser instanceof \Piwigo\Users\User) {
+        if ($this->saveCurrentUser instanceof User) {
             $this->currentUser->set($this->saveCurrentUser);
         }
         $this->mailer
@@ -215,8 +230,8 @@ final class NotificationByMailSender
 
     public function setUserOnEnv(UserMailNotification $nbmUser, bool $isActionSend): void
     {
-        $user = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($nbmUser->userId));
-        $this->currentUser->set(\Piwigo\Users\User::fromUserArray($user));
+        $user = $this->userService->buildUser(UserId::from($nbmUser->userId));
+        $this->currentUser->set(User::fromUserArray($user));
 
         $currentUserLanguage = $this->currentUser->get()
             ->language;
@@ -343,7 +358,7 @@ final class NotificationByMailSender
 
         if (count($checkKeyList) !== 0) {
             $updates = [];
-            $enabledValue = \Piwigo\Db\SqlDialect::booleanToInt($isSubscribe);
+            $enabledValue = SqlDialect::booleanToInt($isSubscribe);
             $dataUsers = $this->getUserNotifications('subscribe', $checkKeyList, ! $isSubscribe);
 
             // Prepare message after change language
@@ -475,7 +490,7 @@ final class NotificationByMailSender
             // reasoning: invisible to PIWIGO_TEST_NOW, so a fixture-dated
             // 'last_send' comparison would silently use two different
             // clocks otherwise.
-            $dbnow = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
+            $dbnow = Env::now()->format('Y-m-d H:i:s');
 
             $isActionSend = ($action === 'send');
 

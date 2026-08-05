@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\DbCredentials;
+use Doctrine\DBAL\Schema\Name\OptionallyQualifiedName;
+use Doctrine\DBAL\Schema\Name\UnqualifiedName;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Config\CurrentConfig;
@@ -27,7 +34,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -39,16 +46,16 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Db\DbCredentials::current());
+        $this->repo = new DbMaintenanceRepository(EntityManagerFactory::build($this->conn), DbCredentials::current());
     }
 
     public function test_purge_history_detail_deletes_every_row(): void
@@ -331,12 +338,12 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
      */
     public function test_repair_optimize_all_tables_introspection_matches_raw_show_tables_and_create_table(): void
     {
-        $prefix = \Piwigo\Db\DbCredentials::current()->prefix;
+        $prefix = DbCredentials::current()->prefix;
         $schemaManager = $this->conn->createSchemaManager();
 
         $introspectedTableNames = array_values(array_filter(
             array_map(
-                static fn (\Doctrine\DBAL\Schema\Name\OptionallyQualifiedName $name): string => $name->getUnqualifiedName()->getValue(),
+                static fn (OptionallyQualifiedName $name): string => $name->getUnqualifiedName()->getValue(),
                 $schemaManager->introspectTableNames(),
             ),
             static fn (string $name): bool => str_starts_with($name, $prefix),
@@ -362,10 +369,10 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
 
         foreach ($introspectedTableNames as $tableName) {
             $primaryKey = $schemaManager->introspectTablePrimaryKeyConstraint(
-                \Doctrine\DBAL\Schema\Name\OptionallyQualifiedName::unquoted($tableName)
+                OptionallyQualifiedName::unquoted($tableName)
             );
             $introspectedPkColumns = $primaryKey === null ? [] : array_map(
-                static fn (\Doctrine\DBAL\Schema\Name\UnqualifiedName $column): string => $column->getIdentifier()->getValue(),
+                static fn (UnqualifiedName $column): string => $column->getIdentifier()->getValue(),
                 $primaryKey->getColumnNames(),
             );
 

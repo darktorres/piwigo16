@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
 use Piwigo\Admin\Install\LegacyFileConf;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
@@ -22,7 +22,7 @@ final class LegacyFileConfTest extends IntegrationTestCase
 {
     private string $tempRoot;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -37,7 +37,7 @@ final class LegacyFileConfTest extends IntegrationTestCase
         mkdir($this->tempRoot . 'sitelocal/config', 0777, true);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->removeDirectory($this->tempRoot);

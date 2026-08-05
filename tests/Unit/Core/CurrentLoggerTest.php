@@ -22,7 +22,7 @@ test('get throws when no Logger has been set yet', function (): void {
     expect($currentLogger->isInitialized())->toBeFalse();
 
     expect(fn () => $currentLogger->get())->toThrow(
-        \LogicException::class,
+        LogicException::class,
         'CurrentLogger not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect() or Piwigo\Controller\ImageDerivativeController::__invoke() first.',
     );
 });
@@ -45,7 +45,7 @@ test('reset clears the instance back to uninitialized', function (): void {
     $currentLogger->reset();
 
     expect($currentLogger->isInitialized())->toBeFalse();
-    expect(fn () => $currentLogger->get())->toThrow(\LogicException::class);
+    expect(fn () => $currentLogger->get())->toThrow(LogicException::class);
 });
 
 test('getStatic falls back to a no-op OFF Logger when Kernel has not booted', function (): void {
@@ -60,7 +60,7 @@ test('getStatic delegates to the container-shared instance once Kernel has boote
     Kernel::boot();
     $currentLogger = Kernel::container()->get(CurrentLogger::class);
     if (! $currentLogger instanceof CurrentLogger) {
-        throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
+        throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
     }
     $logger = new Logger(['severity' => Logger::OFF]);
     $currentLogger->set($logger);

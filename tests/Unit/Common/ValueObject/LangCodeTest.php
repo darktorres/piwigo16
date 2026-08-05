@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
+use Override;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
@@ -11,26 +12,26 @@ use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
 /** @extends StringVoContract<LangCode> */
 final class LangCodeTest extends StringVoContract
 {
-    #[\Override]
+    #[Override]
     protected static function voClass(): string
     {
         return LangCode::class;
     }
 
-    #[\Override]
+    #[Override]
     protected static function validSample(): string
     {
         return 'en_US';
     }
 
-    #[\Override]
+    #[Override]
     protected static function otherVoClass(): string
     {
         return Username::class;
     }
 
     /** @return iterable<string, array{string}> */
-    #[\Override]
+    #[Override]
     public static function invalidSamples(): iterable
     {
         yield 'lowercase region'  => ['en_us'];

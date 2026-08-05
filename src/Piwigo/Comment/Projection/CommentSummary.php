@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Comment\Projection;
 
+use InvalidArgumentException;
 use Piwigo\Common\ValueObject\CommentId;
 
 /**
@@ -36,7 +37,7 @@ final readonly class CommentSummary
     {
         $id = CommentId::tryFrom($row['id'] ?? null);
         if ($id === null) {
-            throw new \InvalidArgumentException(sprintf('Expected a positive comment id, got %s', get_debug_type($row['id'] ?? null)));
+            throw new InvalidArgumentException(sprintf('Expected a positive comment id, got %s', get_debug_type($row['id'] ?? null)));
         }
 
         return new self(

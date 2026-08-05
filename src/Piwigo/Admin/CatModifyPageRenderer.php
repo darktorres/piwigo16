@@ -4,13 +4,26 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Exception;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\DateHelper;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Location\LocBeginCatModify;
 use Piwigo\Event\Location\LocEndCatModify;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Template\Template;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Site\SiteEntity;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Ported from admin/cat_modify.php (the "properties" tab of the "album"
@@ -43,7 +56,7 @@ final class CatModifyPageRenderer
      *
      * @param array<string, mixed> $category
      */
-    public function render(Lang $lang, UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, array $category, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, ActivityService $activityService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
@@ -201,14 +214,14 @@ final class CatModifyPageRenderer
                 $info_title = $lang->t(
                     'This album contains %d photos, added on %s.',
                     $image_count,
-                    \Piwigo\Core\DateHelper::formatDate($min_date)
+                    DateHelper::formatDate($min_date)
                 );
             } else {
                 $info_title = $lang->t(
                     'This album contains %d photos, added between %s and %s.',
                     $image_count,
-                    \Piwigo\Core\DateHelper::formatDate($min_date),
-                    \Piwigo\Core\DateHelper::formatDate($max_date)
+                    DateHelper::formatDate($min_date),
+                    DateHelper::formatDate($max_date)
                 );
             }
 
@@ -234,8 +247,8 @@ final class CatModifyPageRenderer
         if ($occured_on !== null) {
             $template->assign(
                 [
-                    'INFO_CREATION_SINCE' => \Piwigo\Core\DateHelper::timeSince($occured_on, 'day', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
-                    'INFO_CREATION' => \Piwigo\Core\DateHelper::formatDate($occured_on, ['day', 'month', 'year']),
+                    'INFO_CREATION_SINCE' => DateHelper::timeSince($occured_on, 'day', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
+                    'INFO_CREATION' => DateHelper::formatDate($occured_on, ['day', 'month', 'year']),
                 ]
             );
         }
@@ -259,8 +272,8 @@ final class CatModifyPageRenderer
         $template->assign(
             [
                 'INFO_ID' => $lang->t('Numeric identifier : %d', $category_id),
-                'INFO_LAST_MODIFIED_SINCE' => \Piwigo\Core\DateHelper::timeSince($category_lastmodified ?? '', 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
-                'INFO_LAST_MODIFIED' => \Piwigo\Core\DateHelper::formatDate($category_lastmodified ?? false, ['day', 'month', 'year']),
+                'INFO_LAST_MODIFIED_SINCE' => DateHelper::timeSince($category_lastmodified ?? '', 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
+                'INFO_LAST_MODIFIED' => DateHelper::formatDate($category_lastmodified ?? false, ['day', 'month', 'year']),
                 'INFO_IMAGES_RECURSIVE' => $lang->t(
                     '%d including sub-albums',
                     $category['nb_images_recursive']
@@ -339,7 +352,7 @@ final class CatModifyPageRenderer
             $template->assign('parent_category', $category_id_uppercat === '' ? [] : [$category_id_uppercat]);
         }
 
-        $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
+        $template->assign('PWG_TOKEN', new CsrfService()->getToken());
 
         $eventDispatcher->dispatchNotify(new LocEndCatModify());
 
@@ -354,7 +367,7 @@ final class CatModifyPageRenderer
      * Piwigo files and this category has 22 for identifier
      * getCompleteDir(22) returns "./galleries/pets/rex/1_year_old/"
      */
-    private function getCompleteDir(int|string $category_id, \Piwigo\Category\CategoryService $categoryService): string
+    private function getCompleteDir(int|string $category_id, CategoryService $categoryService): string
     {
         return $this->getSiteUrl($category_id, $categoryService) . $this->getLocalDir($category_id, $categoryService);
     }
@@ -365,7 +378,7 @@ final class CatModifyPageRenderer
      * Piwigo files and this category has 22 for identifier
      * getLocalDir(22) returns "pets/rex/1_year_old/"
      */
-    private function getLocalDir(int|string $category_id, \Piwigo\Category\CategoryService $categoryService): string
+    private function getLocalDir(int|string $category_id, CategoryService $categoryService): string
     {
         $local_dir = '';
 
@@ -375,7 +388,7 @@ final class CatModifyPageRenderer
         // altogether, so this always takes the DB-lookup path now.
         $uppercats = $categoryService->getCategoryUppercatsById((int) $category_id);
         if ($uppercats === null) {
-            throw new \Exception(__FUNCTION__ . "(): category #{$category_id} not found");
+            throw new Exception(__FUNCTION__ . "(): category #{$category_id} not found");
         }
 
         $upper_array = explode(',', $uppercats);
@@ -395,12 +408,12 @@ final class CatModifyPageRenderer
      * retrieving the site url : "http://domain.com/gallery/" or
      * simply "./galleries/"
      */
-    private function getSiteUrl(int|string $category_id, \Piwigo\Category\CategoryService $categoryService): string
+    private function getSiteUrl(int|string $category_id, CategoryService $categoryService): string
     {
-        $siteGalleriesUrlLookup = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Site\SiteEntity::class);
+        $siteGalleriesUrlLookup = EntityManagerFactory::build(DbConnection::build())->getRepository(SiteEntity::class);
         $galleries_url = $categoryService->getGalleriesUrlForCategory($category_id, $siteGalleriesUrlLookup);
         if ($galleries_url === null) {
-            throw new \Exception(__FUNCTION__ . "(): category #{$category_id} not found");
+            throw new Exception(__FUNCTION__ . "(): category #{$category_id} not found");
         }
 
         return $galleries_url;

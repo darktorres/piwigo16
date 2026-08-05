@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\History\HistoryEntity;
+use Piwigo\History\Projection\HistorySummaryCount;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
@@ -35,7 +41,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -47,16 +53,16 @@ final class HistoryRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\History\HistoryEntity::class);
+        $this->repo = EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class);
     }
 
     public function test_find_last_summary_with_history_id_to_returns_null_when_empty(): void
@@ -142,7 +148,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
             $rows = $this->repo->findSummaryRowsForHierarchy(2026, 7, 12, 3);
 
             $keys = array_map(
-                static fn (\Piwigo\History\Projection\HistorySummaryCount $r): string => $r->year . '-' . ($r->month ?? 'x') . '-' . ($r->day ?? 'x') . '-' . ($r->hour ?? 'x'),
+                static fn (HistorySummaryCount $r): string => $r->year . '-' . ($r->month ?? 'x') . '-' . ($r->day ?? 'x') . '-' . ($r->hour ?? 'x'),
                 $rows
             );
             sort($keys);

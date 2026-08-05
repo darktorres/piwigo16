@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Override;
+
 /**
  * used when a theme uses the old procedural declaration of maintenance methods
  */
@@ -28,7 +30,7 @@ final class DummyThemeMaintain extends ThemeMaintain
      *   contravariance rules fatal on narrowing an untyped parent param to a
      *   native type in the override (verified empirically)
      */
-    #[\Override]
+    #[Override]
     public function activate($theme_version, &$errors = []): mixed
     {
         // @phpstan-ignore function.impossibleType
@@ -40,7 +42,7 @@ final class DummyThemeMaintain extends ThemeMaintain
         return null;
     }
 
-    #[\Override]
+    #[Override]
     public function deactivate(): mixed
     {
         // @phpstan-ignore function.impossibleType
@@ -52,7 +54,7 @@ final class DummyThemeMaintain extends ThemeMaintain
         return null;
     }
 
-    #[\Override]
+    #[Override]
     public function delete(): mixed
     {
         // @phpstan-ignore function.impossibleType

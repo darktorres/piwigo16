@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Config\CurrentConfig;
 
 /**
  * Short-lived, time-windowed keys sent back with a form (e.g. a signed
@@ -26,7 +27,7 @@ use Piwigo\Common\ValueObject\IpAddress;
 final class EphemeralKeyService
 {
     public function __construct(
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**

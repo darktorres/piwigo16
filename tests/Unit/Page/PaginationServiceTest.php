@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\Assert;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\PaginationService;
 
@@ -29,11 +30,11 @@ test('createNavigationBar computes the current page and total page count', funct
     $navbar = $service->createNavigationBar('index.php', 100, 40, 20);
 
     $currentPage = $navbar['CURRENT_PAGE'] ?? null;
-    \PHPUnit\Framework\Assert::assertIsFloat($currentPage);
+    Assert::assertIsFloat($currentPage);
     expect($currentPage)->toBe(3.0);
 
     $nbPage = $navbar['NB_PAGE'] ?? null;
-    \PHPUnit\Framework\Assert::assertIsInt($nbPage);
+    Assert::assertIsInt($nbPage);
     expect($nbPage)->toBe(5);
 });
 
@@ -68,7 +69,7 @@ test('createNavigationBar clamps a negative start to zero', function (): void {
     $navbar = $service->createNavigationBar('index.php', 100, -5, 20);
 
     $currentPage = $navbar['CURRENT_PAGE'] ?? null;
-    \PHPUnit\Framework\Assert::assertIsFloat($currentPage);
+    Assert::assertIsFloat($currentPage);
     expect($currentPage)->toBe(1.0);
 });
 
@@ -96,7 +97,7 @@ test('createNavigationBar clamps a start of exactly -1, one below the real bound
     $navbar = $service->createNavigationBar('index.php', 100, -1, 20);
 
     $currentPage = $navbar['CURRENT_PAGE'] ?? null;
-    \PHPUnit\Framework\Assert::assertIsFloat($currentPage);
+    Assert::assertIsFloat($currentPage);
     expect($currentPage)->toBe(1.0);
 });
 
@@ -159,7 +160,7 @@ test('createNavigationBar accepts numeric strings for nbElement and start', func
     $navbar = $service->createNavigationBar('index.php', '100', '40', 20);
 
     $currentPage = $navbar['CURRENT_PAGE'] ?? null;
-    \PHPUnit\Framework\Assert::assertIsFloat($currentPage);
+    Assert::assertIsFloat($currentPage);
     expect($currentPage)->toBe(3.0);
 });
 
@@ -170,7 +171,7 @@ test('createNavigationBar builds clean-url-style page links when requested', fun
     $navbar = $service->createNavigationBar('index.php/category/1', 100, 40, 20, true);
 
     $urlNext = $navbar['URL_NEXT'] ?? null;
-    \PHPUnit\Framework\Assert::assertIsString($urlNext);
+    Assert::assertIsString($urlNext);
     expect($urlNext)->toBe('index.php/category/1/start-60');
 });
 
@@ -181,7 +182,7 @@ test('createNavigationBar builds query-string-style page links by default', func
     $navbar = $service->createNavigationBar('index.php', 100, 40, 20);
 
     $urlNext = $navbar['URL_NEXT'] ?? null;
-    \PHPUnit\Framework\Assert::assertIsString($urlNext);
+    Assert::assertIsString($urlNext);
     expect($urlNext)->toBe('index.php?start=60');
 });
 
@@ -192,7 +193,7 @@ test('createNavigationBar respects a custom param name', function (): void {
     $navbar = $service->createNavigationBar('index.php', 100, 40, 20, false, 'offset');
 
     $urlNext = $navbar['URL_NEXT'] ?? null;
-    \PHPUnit\Framework\Assert::assertIsString($urlNext);
+    Assert::assertIsString($urlNext);
     expect($urlNext)->toBe('index.php?offset=60');
 });
 

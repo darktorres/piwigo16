@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Piwigo\Core\Env;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
@@ -30,7 +31,7 @@ function introDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function introDbConnect(): \mysqli|\PgSql\Connection
+function introDbConnect(): mysqli|Connection
 {
     return H::connect();
 }
@@ -65,7 +66,7 @@ function introSetCategoryVisible(int $categoryId, bool $visible): void
     // categories.visible is a genuine boolean column on Postgres -- a
     // bare 0/1 literal is valid MySQL tinyint(1) input but Postgres
     // rejects it outright.
-    $sqlValue = $db instanceof \mysqli ? ($visible ? '1' : '0') : ($visible ? 'true' : 'false');
+    $sqlValue = $db instanceof mysqli ? ($visible ? '1' : '0') : ($visible ? 'true' : 'false');
     H::dbQuery($db, sprintf(
         'UPDATE %scategories SET visible = %s WHERE id = %d',
         introDbPrefix(),
@@ -548,7 +549,7 @@ it('shows the newsletter subscription promo panel for an account old enough with
     // JSON_SET()/JSON_OBJECT() are MySQL-only -- Postgres's own
     // jsonb_set() takes a `{key}` path array (not a `$.key` string) and
     // an already-jsonb new value, verified live.
-    $preferencesExpr = $db instanceof \mysqli
+    $preferencesExpr = $db instanceof mysqli
         ? "JSON_SET(COALESCE(preferences, JSON_OBJECT()), '\$.show_newsletter_subscription', TRUE)"
         : "jsonb_set(COALESCE(preferences, '{}'::jsonb), '{show_newsletter_subscription}', 'true'::jsonb)";
     H::dbQuery($db, "UPDATE {$prefix}user_infos SET preferences = {$preferencesExpr} WHERE user_id = 1");

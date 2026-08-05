@@ -2,6 +2,23 @@
 
 declare(strict_types=1);
 
+use Piwigo\Activity\ActivityService;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Users\UserService;
+use Piwigo\Users\UserRepository;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Session\SessionService;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Core\ProcessCache;
+use Piwigo\Mail\MailService;
+use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Bootstrap\RedirectService;
@@ -13,7 +30,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Lang\Translator;
-use Piwigo\Url\UrlService;
 
 // Only containerVersionCompare() is covered here -- checkPiwigoUpgrade()/
 // getPiwigoNewVersions()/notifyPiwigoNewVersions()/upgradeTo() all talk to
@@ -28,33 +44,33 @@ use Piwigo\Url\UrlService;
 // never opens a real connection until a query runs), so constructing a
 // real ConfigRepository/ConfigService here is safe without a reachable
 // test DB.
-function core_update_service_test_activity_service(): \Piwigo\Activity\ActivityService
+function core_update_service_test_activity_service(): ActivityService
 {
-    return new \Piwigo\Activity\ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class));
+    return new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class));
 }
 
 // Never actually queried either -- same "type-satisfying instance is
 // enough" reasoning as $repo/$configService above; containerVersionCompare()
 // never touches the injected UserService.
-function core_update_service_test_user_service(): \Piwigo\Users\UserService
+function core_update_service_test_user_service(): UserService
 {
     $conn = DbConnection::build();
 
-    return new \Piwigo\Users\UserService(
+    return new UserService(
         core_update_service_test_lang(),
-        new \Piwigo\Users\UserRepository(EntityManagerFactory::build($conn), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\CurrentConfig()),
-        EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
+        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
+        EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
         core_update_service_test_mail_service(),
         core_update_service_test_activity_service(),
-        \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
+        HtmlServiceTestFactory::build(),
         $conn,
-        new \Piwigo\Session\SessionService(EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class), new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\PluginConfig\EventDispatcher(),
-        new \Piwigo\Config\DeploymentPolicy(),
-        new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\Config\CurrentConfig(),
-        new \Piwigo\Core\InstallationFlag(),
-        new \Piwigo\Core\ProcessCache(),
+        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
+        new EventDispatcher(),
+        new DeploymentPolicy(),
+        new CurrentUser(new CurrentConfig()),
+        new CurrentConfig(),
+        new InstallationFlag(),
+        new ProcessCache(),
     );
 }
 
@@ -65,7 +81,7 @@ function core_update_service_test_user_service(): \Piwigo\Users\UserService
 // is enough" reasoning as $activityService/$userService above.
 function core_update_service_test_lang(): Lang
 {
-    return new Lang(new Translator(new \Piwigo\Config\CurrentConfig()), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+    return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
 /**
@@ -74,19 +90,19 @@ function core_update_service_test_lang(): Lang
  * __construct() shim collaborator (singleton/service-locator elimination
  * campaign, Phase 11 sub-phase 11E) built bare, DB-free.
  */
-function core_update_service_test_mail_service(): \Piwigo\Mail\MailService
+function core_update_service_test_mail_service(): MailService
 {
-    return new \Piwigo\Mail\MailService(
+    return new MailService(
         core_update_service_test_lang(),
-        new \Piwigo\Config\CurrentConfig(),
-        new \Piwigo\Config\DeploymentPolicy(),
-        new \Piwigo\Core\PageState(),
+        new CurrentConfig(),
+        new DeploymentPolicy(),
+        new PageState(),
         Paths::fromRoot(sys_get_temp_dir()),
-        new \Piwigo\Session\SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Session\SessionEntity::class), new \Piwigo\Config\CurrentConfig()),
-        new Translator(new \Piwigo\Config\CurrentConfig()),
-        new \Piwigo\PluginConfig\EventDispatcher(),
-        new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
-        \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
+        new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), new CurrentConfig()),
+        new Translator(new CurrentConfig()),
+        new EventDispatcher(),
+        new CurrentUser(new CurrentConfig()),
+        UrlServiceTestFactory::build(),
     );
 }
 
@@ -94,7 +110,7 @@ function core_update_service(): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service()), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), Paths::fromRoot(dirname(__DIR__, 4)), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), \Piwigo\Config\CurrentConfig::current());
+    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service()), UrlServiceTestFactory::build(), new ConfigService($repo, new EventDispatcher(), CurrentConfig::current()), Paths::fromRoot(dirname(__DIR__, 4)), PageState::current(), CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfig::current());
 }
 
 test('containerVersionCompare orders by semantic version first', function (): void {
@@ -143,7 +159,7 @@ function core_update_service_at(string $root): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service()), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), Paths::fromRoot($root), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), \Piwigo\Config\CurrentConfig::current());
+    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service()), UrlServiceTestFactory::build(), new ConfigService($repo, new EventDispatcher(), CurrentConfig::current()), Paths::fromRoot($root), PageState::current(), CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfig::current());
 }
 
 function core_update_service_step_is(int|string $step, int $target): bool

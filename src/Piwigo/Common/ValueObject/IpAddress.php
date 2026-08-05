@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Common\ValueObject;
 
+use InvalidArgumentException;
+use Override;
+
 /**
  * Client IP address (IPv4 or IPv6), validated with
  * `filter_var(FILTER_VALIDATE_IP)`.
@@ -30,19 +33,19 @@ final readonly class IpAddress implements StringVo
     ) {}
 
     /**
-     * @throws \InvalidArgumentException when $value is not a valid IPv4 or IPv6 address
+     * @throws InvalidArgumentException when $value is not a valid IPv4 or IPv6 address
      */
-    #[\Override]
+    #[Override]
     public static function from(string $value): self
     {
         $filtered = filter_var($value, FILTER_VALIDATE_IP);
         if ($filtered === false) {
-            throw new \InvalidArgumentException("Invalid IP address: '{$value}'");
+            throw new InvalidArgumentException("Invalid IP address: '{$value}'");
         }
         return new self($filtered);
     }
 
-    #[\Override]
+    #[Override]
     public static function tryFrom(mixed $value): ?self
     {
         if (! is_string($value)) {
@@ -50,7 +53,7 @@ final readonly class IpAddress implements StringVo
         }
         try {
             return self::from($value);
-        } catch (\InvalidArgumentException) {
+        } catch (InvalidArgumentException) {
             return null;
         }
     }
@@ -66,13 +69,13 @@ final readonly class IpAddress implements StringVo
         return is_string($value) ? self::tryFrom($value) : null;
     }
 
-    #[\Override]
+    #[Override]
     public function equals(StringVo $other): bool
     {
         return $other instanceof self && $other->value === $this->value;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return $this->value;

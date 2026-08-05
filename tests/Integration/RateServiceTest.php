@@ -12,6 +12,12 @@ declare(strict_types=1);
 // matching the old PHPWG_ROOT_PATH='.' default with no setup needed here).
 namespace Piwigo\Tests\Integration {
 
+    use Override;
+    use Piwigo\Core\Kernel;
+    use LogicException;
+    use Piwigo\Auth\AccessControl;
+    use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Rate\RateEntity;
     use Doctrine\DBAL\Connection;
     use Piwigo\Auth\CookieService;
     use Piwigo\Config\CurrentConfig;
@@ -20,7 +26,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\Tables;
     use Piwigo\Event\Picture\UpdateRatingScore;
     use Piwigo\PluginConfig\EventDispatcher;
-    use Piwigo\Rate\RateRepository;
     use Piwigo\Rate\RateService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Users\User;
@@ -33,7 +38,7 @@ namespace Piwigo\Tests\Integration {
 
         private Connection $conn;
 
-        #[\Override]
+        #[Override]
         protected function setUp(): void
         {
             parent::setUp();
@@ -45,9 +50,9 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
-            $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-            if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+            $currentConfig = Kernel::container()->get(CurrentConfig::class);
+            if (! $currentConfig instanceof CurrentConfig) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
             }
             $currentConfig->reset();
             ConfigLoader::applyDefaults();
@@ -62,7 +67,7 @@ namespace Piwigo\Tests\Integration {
             unset($_COOKIE['pwg_anonymous_rater']);
 
             $this->conn = DbConnection::build();
-            $this->service = new RateService(\Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Rate\RateEntity::class), new CookieService(), EventDispatcher::get(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
+            $this->service = new RateService(AccessControl::current(), EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class), new CookieService(), EventDispatcher::get(), CurrentUser::current(), CurrentConfig::current());
         }
 
         public function test_rate_returns_false_for_a_null_rate(): void
@@ -72,9 +77,9 @@ namespace Piwigo\Tests\Integration {
 
         public function test_rate_returns_false_when_rating_is_disabled(): void
         {
-            $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-            if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+            $currentConfig = Kernel::container()->get(CurrentConfig::class);
+            if (! $currentConfig instanceof CurrentConfig) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
             }
             $currentConfig->setRateEnabled(false);
 
@@ -93,9 +98,9 @@ namespace Piwigo\Tests\Integration {
 
         public function test_rate_returns_false_for_an_anonymous_user_when_rate_anonymous_is_disabled(): void
         {
-            $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-            if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+            $currentConfig = Kernel::container()->get(CurrentConfig::class);
+            if (! $currentConfig instanceof CurrentConfig) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
             }
             $currentConfig->setRateAnonymous(false);
             CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));

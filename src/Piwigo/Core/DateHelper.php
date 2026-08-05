@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use DateInterval;
+use DateTime;
+use IntlDateFormatter;
 use Piwigo\Lang\Translator;
 
 /**
@@ -12,7 +15,7 @@ use Piwigo\Lang\Translator;
  */
 final class DateHelper
 {
-    public static function dateDiff(\DateTime $date1, \DateTime $date2): \DateInterval
+    public static function dateDiff(DateTime $date1, DateTime $date2): DateInterval
     {
         return $date1->diff($date2);
     }
@@ -20,7 +23,7 @@ final class DateHelper
     /**
      * converts a value into a DateTime object
      *
-     * @param int|string|\DateTime|false $original timestamp, datetime
+     * @param int|string|DateTime|false $original timestamp, datetime
      *   string, or an already-converted DateTime (returned as-is; some
      *   callers pass the same value through this method repeatedly) --
      *   false/empty short-circuits to the false/''/0/'0' check below, so
@@ -28,22 +31,22 @@ final class DateHelper
      *   straight through
      * @param string|null $format input format respecting date() syntax
      */
-    public static function str2DateTime(int|string|\DateTime|false $original, ?string $format = null): \DateTime|false
+    public static function str2DateTime(int|string|DateTime|false $original, ?string $format = null): DateTime|false
     {
         if ($original === false || $original === '' || $original === 0 || $original === '0') {
             return false;
         }
 
-        if ($original instanceof \DateTime) {
+        if ($original instanceof DateTime) {
             return $original;
         }
 
         if ($format !== null && $format !== '') {// from known date format
-            return \DateTime::createFromFormat('!' . $format, (string) $original); // ! char to reset fields to UNIX epoch
+            return DateTime::createFromFormat('!' . $format, (string) $original); // ! char to reset fields to UNIX epoch
         } else {
             $t = trim((string) $original, '0123456789');
             if ($t === '') { // from timestamp
-                return new \DateTime('@' . $original);
+                return new DateTime('@' . $original);
             } else { // from unknown date format (assuming something like Y-m-d H:i:s)
                 $ymdhms = [];
                 $tok = strtok((string) $original, '- :/');
@@ -65,7 +68,7 @@ final class DateHelper
                     $ymdhms[5] = 0;
                 }
 
-                $date = new \DateTime();
+                $date = new DateTime();
                 $date->setDate((int) $ymdhms[0], (int) $ymdhms[1], (int) $ymdhms[2]);
                 $date->setTime((int) $ymdhms[3], (int) $ymdhms[4], (int) $ymdhms[5]);
                 return $date;
@@ -76,13 +79,13 @@ final class DateHelper
     /**
      * returns a formatted and localized date for display (LEGACY use formatDate)
      *
-     * @param int|string|\DateTime|false $original timestamp, datetime string, or
+     * @param int|string|DateTime|false $original timestamp, datetime string, or
      *   an already-converted DateTime/false -- same as formatDate(), since this
      *   re-derives via the same permissive str2DateTime()
      * @param string[]|null $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
      * @param string|null $format input format respecting date() syntax
      */
-    public static function formatDateLegacy(int|string|\DateTime|false $original, ?array $show = null, ?string $format = null): string
+    public static function formatDateLegacy(int|string|DateTime|false $original, ?array $show = null, ?string $format = null): string
     {
         $date = self::str2DateTime($original, $format);
 
@@ -124,7 +127,7 @@ final class DateHelper
     /**
      * returns a formatted and localized date for display
      *
-     * @param int|string|\DateTime|false $original timestamp, datetime string, or
+     * @param int|string|DateTime|false $original timestamp, datetime string, or
      *   an already-converted DateTime/false -- formatFromto() passes
      *   str2DateTime()'s own return type straight through; both are handled
      *   gracefully (DateTime passes through str2DateTime() as-is, false/empty
@@ -134,7 +137,7 @@ final class DateHelper
      * @param string|null $format input format respecting date() syntax
      * @since 16
      */
-    public static function formatDate(int|string|\DateTime|false $original, ?array $show = null, ?string $format = null): string
+    public static function formatDate(int|string|DateTime|false $original, ?array $show = null, ?string $format = null): string
     {
         $date = self::str2DateTime($original, $format);
 
@@ -151,14 +154,14 @@ final class DateHelper
           and in_array('year', $show, true)
           and in_array('month', $show, true)
         ) {
-            $timeType = in_array('time', $show, true) ? \IntlDateFormatter::MEDIUM : \IntlDateFormatter::NONE;
-            $dateType = \IntlDateFormatter::FULL;
+            $timeType = in_array('time', $show, true) ? IntlDateFormatter::MEDIUM : IntlDateFormatter::NONE;
+            $dateType = IntlDateFormatter::FULL;
 
             if (! in_array('day_name', $show, true)) {
-                $dateType = \IntlDateFormatter::LONG;
+                $dateType = IntlDateFormatter::LONG;
             }
 
-            $fmt = new \IntlDateFormatter(Lang::current()->currentUserLanguage() ?? AppInfo::DEFAULT_LANGUAGE, $dateType, $timeType);
+            $fmt = new IntlDateFormatter(Lang::current()->currentUserLanguage() ?? AppInfo::DEFAULT_LANGUAGE, $dateType, $timeType);
             $formatted = $fmt->format($date);
             if ($formatted !== false) {
                 return $formatted;
@@ -310,14 +313,14 @@ final class DateHelper
     {
         // first we check the full date+time
         $format = 'Y-m-d H:i:s';
-        $date = \DateTime::createFromFormat($format, $datetime);
+        $date = DateTime::createFromFormat($format, $datetime);
         if ((bool) $date and $date->format($format) === $datetime) {
             return true;
         }
 
         // in case it fails, let's check with only date and no time
         $format = 'Y-m-d';
-        $date = \DateTime::createFromFormat($format, $datetime);
+        $date = DateTime::createFromFormat($format, $datetime);
         if ((bool) $date and $date->format($format) === $datetime) {
             return true;
         }

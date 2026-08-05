@@ -5,23 +5,39 @@ declare(strict_types=1);
 namespace Piwigo\Url;
 
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\CookieService;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\RequestMountDepth;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 
 /**
  * URL building/parsing for the gallery's own routes (index/picture/action
@@ -86,11 +102,11 @@ final class UrlService implements UrlServiceInterface
      * (singleton/service-locator elimination campaign, Phase 11 sub-phase
      * 11E).
      */
-    private function accessControl(): \Piwigo\Auth\AccessControl
+    private function accessControl(): AccessControl
     {
-        $accessControl = \Piwigo\Core\Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
-        if (! $accessControl instanceof \Piwigo\Auth\AccessControl) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Auth\AccessControl::class);
+        $accessControl = Kernel::container()->get(AccessControl::class);
+        if (! $accessControl instanceof AccessControl) {
+            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
 
         return $accessControl;
@@ -105,11 +121,11 @@ final class UrlService implements UrlServiceInterface
      * same low-blast-radius reasoning as accessControl() above (singleton/
      * service-locator elimination campaign, Phase 11 sub-phase 11G).
      */
-    private function currentLogger(): \Piwigo\Core\CurrentLogger
+    private function currentLogger(): CurrentLogger
     {
-        $currentLogger = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
-        if (! $currentLogger instanceof \Piwigo\Core\CurrentLogger) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentLogger::class);
+        $currentLogger = Kernel::container()->get(CurrentLogger::class);
+        if (! $currentLogger instanceof CurrentLogger) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
 
         return $currentLogger;
@@ -118,11 +134,11 @@ final class UrlService implements UrlServiceInterface
     /**
      * Same reasoning as currentLogger() above.
      */
-    private function sessionService(): \Piwigo\Session\SessionService
+    private function sessionService(): SessionService
     {
-        $sessionService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Session\SessionService::class);
-        if (! $sessionService instanceof \Piwigo\Session\SessionService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Session\SessionService::class);
+        $sessionService = Kernel::container()->get(SessionService::class);
+        if (! $sessionService instanceof SessionService) {
+            throw new LogicException('Container returned an unexpected type for ' . SessionService::class);
         }
 
         return $sessionService;
@@ -132,11 +148,11 @@ final class UrlService implements UrlServiceInterface
      * Same reasoning as currentLogger()/sessionService() above -- used only
      * inside the one `new CategoryService(...)` construction below.
      */
-    private function translator(): \Piwigo\Lang\Translator
+    private function translator(): Translator
     {
-        $translator = \Piwigo\Core\Kernel::container()->get(\Piwigo\Lang\Translator::class);
-        if (! $translator instanceof \Piwigo\Lang\Translator) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Lang\Translator::class);
+        $translator = Kernel::container()->get(Translator::class);
+        if (! $translator instanceof Translator) {
+            throw new LogicException('Container returned an unexpected type for ' . Translator::class);
         }
 
         return $translator;
@@ -150,25 +166,25 @@ final class UrlService implements UrlServiceInterface
      * `FilterState`'s own former `isInitializedStatic()` shim's identical
      * pre-boot fallback.
      */
-    private function filterState(): \Piwigo\Core\FilterState
+    private function filterState(): FilterState
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
-            if (! $filterState instanceof \Piwigo\Core\FilterState) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        if (Kernel::isBooted()) {
+            $filterState = Kernel::container()->get(FilterState::class);
+            if (! $filterState instanceof FilterState) {
+                throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
             }
 
             return $filterState;
         }
 
-        return new \Piwigo\Core\FilterState();
+        return new FilterState();
     }
 
     /**
      * Returns a prefix for each url link on displayed page and returns an
      * empty string for current path.
      */
-    #[\Override]
+    #[Override]
     public function getRootUrl(): string
     {
         // Legacy Coupling Retirement Track A batch A5.2e: root_path comes
@@ -196,7 +212,7 @@ final class UrlService implements UrlServiceInterface
      *
      * @param bool $withScheme if false - does not add http://toto.com
      */
-    #[\Override]
+    #[Override]
     public function getAbsoluteRootUrl(bool $withScheme = true): string
     {
         // Support X-Forwarded-Proto header for HTTPS detection in PHP
@@ -317,7 +333,7 @@ final class UrlService implements UrlServiceInterface
      *
      * @param array<int|string, mixed> $params
      */
-    #[\Override]
+    #[Override]
     public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string
     {
         if ($params !== []) {
@@ -348,7 +364,7 @@ final class UrlService implements UrlServiceInterface
      *
      * @param array<string, mixed> $params
      */
-    #[\Override]
+    #[Override]
     public function makeIndexUrl(array $params = []): string
     {
         $url = $this->getRootUrl() . 'index';
@@ -384,7 +400,7 @@ final class UrlService implements UrlServiceInterface
      * @param array<string, mixed> $redefined keys
      * @param array<int, string> $removed keys
      */
-    #[\Override]
+    #[Override]
     public function duplicateIndexUrl(array $redefined = [], array $removed = []): string
     {
         return $this->makeIndexUrl(
@@ -434,7 +450,7 @@ final class UrlService implements UrlServiceInterface
      * @param array<string, mixed> $redefined keys
      * @param array<int, string> $removed keys
      */
-    #[\Override]
+    #[Override]
     public function duplicatePictureUrl(array $redefined = [], array $removed = []): string
     {
         return $this->makePictureUrl(
@@ -447,7 +463,7 @@ final class UrlService implements UrlServiceInterface
      *
      * @param array<string, mixed> $params
      */
-    #[\Override]
+    #[Override]
     public function makePictureUrl(array $params): string
     {
         $url = $this->getRootUrl() . 'picture';
@@ -464,13 +480,13 @@ final class UrlService implements UrlServiceInterface
             case 'id-file':
                 $url .= is_scalar($image_id) ? (string) $image_id : '';
                 if (isset($params['image_file']) and is_string($params['image_file'])) {
-                    $url .= '-' . \Piwigo\Core\StringHelper::str2url(\Piwigo\Core\StringHelper::getFilenameWoExtension($params['image_file']));
+                    $url .= '-' . StringHelper::str2url(StringHelper::getFilenameWoExtension($params['image_file']));
                 }
 
                 break;
             case 'file':
                 if (isset($params['image_file']) and is_string($params['image_file'])) {
-                    $fname_wo_ext = \Piwigo\Core\StringHelper::getFilenameWoExtension($params['image_file']);
+                    $fname_wo_ext = StringHelper::getFilenameWoExtension($params['image_file']);
                     if (ord($fname_wo_ext[0]) > ord('9') or ! (bool) preg_match('/^\d+(-|$)/', $fname_wo_ext)) {
                         $url .= $fname_wo_ext;
 
@@ -585,7 +601,7 @@ final class UrlService implements UrlServiceInterface
                         $section_string .= is_scalar($category_id) ? (string) $category_id : '';
                         if ($this->currentConfig->categoryUrlStyle() === 'id-name') {
                             $category_name = $category_info['name'] ?? null;
-                            $section_string .= '-' . \Piwigo\Core\StringHelper::str2url(is_string($category_name) ? $category_name : '');
+                            $section_string .= '-' . StringHelper::str2url(is_string($category_name) ? $category_name : '');
                         }
                     } else {
                         $category_permalink = $category_info['permalink'];
@@ -605,7 +621,7 @@ final class UrlService implements UrlServiceInterface
                                 $section_string .= is_scalar($combined_id) ? (string) $combined_id : '';
                                 if ($this->currentConfig->categoryUrlStyle() === 'id-name') {
                                     $combined_name = $category['name'] ?? null;
-                                    $section_string .= '-' . \Piwigo\Core\StringHelper::str2url(is_string($combined_name) ? $combined_name : '');
+                                    $section_string .= '-' . StringHelper::str2url(is_string($combined_name) ? $combined_name : '');
                                 }
                             } else {
                                 $combined_permalink = $category['permalink'];
@@ -693,7 +709,7 @@ final class UrlService implements UrlServiceInterface
      *   to resolve (unknown permalink, missing tag, ...)
      * @return array<string, mixed>
      */
-    #[\Override]
+    #[Override]
     public function parseSectionUrl(array $tokens, &$nextToken, RedirectServiceInterface $redirectService): array
     {
         $page = [];
@@ -713,8 +729,8 @@ final class UrlService implements UrlServiceInterface
             $categoryConn = DbConnection::build();
             $categoryService = new CategoryService(
                 $this->lang,
-                new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig),
-                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig), $this->currentUser, $this->filterState()),
+                new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($categoryConn)), EntityManagerFactory::build($categoryConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig), $this->currentUser, $this->filterState()),
                 $this->currentConfig,
                 $this->eventDispatcher,
                 $this->translator()
@@ -845,7 +861,7 @@ final class UrlService implements UrlServiceInterface
             }
 
             $tagConn = DbConnection::build();
-            $page['tags'] = new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn), $this->currentConfig), $this->currentUser, $this->filterState()), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), $this->sessionService())
+            $page['tags'] = new TagService($this->lang, EntityManagerFactory::build($tagConn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($tagConn)), EntityManagerFactory::build($tagConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($tagConn), $this->currentConfig), $this->currentUser, $this->filterState()), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), $this->sessionService())
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
                 $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
@@ -911,7 +927,7 @@ final class UrlService implements UrlServiceInterface
      * @param string[] $tokens
      * @return array{flat?: true, chronology_field?: string, chronology_style?: string, chronology_view?: string, chronology_date?: list<string>, start?: string, startcat?: string}
      */
-    #[\Override]
+    #[Override]
     public function parseWellKnownParamsUrl(array $tokens, int &$i): array
     {
         $page = [];
@@ -962,7 +978,7 @@ final class UrlService implements UrlServiceInterface
      * @param int|string $id image id
      * @param string $whatPart one of 'e' (element), 'r' (representative)
      */
-    #[\Override]
+    #[Override]
     public function getActionUrl($id, $whatPart, bool $download): string
     {
         $params = [
@@ -980,7 +996,7 @@ final class UrlService implements UrlServiceInterface
      * @param array<string, mixed> $elementInfo containing element information
      * from db; only 'path' is actually read
      */
-    #[\Override]
+    #[Override]
     public function getElementUrl(array $elementInfo): string
     {
         $path = $elementInfo['path'] ?? null;
@@ -1003,7 +1019,7 @@ final class UrlService implements UrlServiceInterface
     /**
      * Indicate to build url with full path.
      */
-    #[\Override]
+    #[Override]
     public function setMakeFullUrl(): void
     {
         $this->rootPathOverride->push($this->getAbsoluteRootUrl());
@@ -1012,7 +1028,7 @@ final class UrlService implements UrlServiceInterface
     /**
      * Restore old parameter to build url with full path.
      */
-    #[\Override]
+    #[Override]
     public function unsetMakeFullUrl(): void
     {
         $this->rootPathOverride->pop();
@@ -1021,7 +1037,7 @@ final class UrlService implements UrlServiceInterface
     /**
      * Embellish the url argument.
      */
-    #[\Override]
+    #[Override]
     public function embellishUrl(string $url): string
     {
         $url = str_replace('/./', '/', $url);
@@ -1040,7 +1056,7 @@ final class UrlService implements UrlServiceInterface
     /**
      * Returns the 'home page' of this gallery.
      */
-    #[\Override]
+    #[Override]
     public function getGalleryHomeUrl(): string
     {
         $gallery_url = $this->currentConfig->galleryUrl() ?? null;
@@ -1061,7 +1077,7 @@ final class UrlService implements UrlServiceInterface
      * @param string[] $rejects
      * @param bool $escape escape *&* to *&amp;*
      */
-    #[\Override]
+    #[Override]
     public function getQueryStringDiff(array $rejects = [], bool $escape = true): string
     {
         $query_string = $_SERVER['QUERY_STRING'] ?? null;
@@ -1079,7 +1095,7 @@ final class UrlService implements UrlServiceInterface
     /**
      * Returns true if the url is absolute (begins with http).
      */
-    #[\Override]
+    #[Override]
     public function urlIsRemote(string $url): bool
     {
         return str_starts_with($url, 'http://')
@@ -1094,7 +1110,7 @@ final class UrlService implements UrlServiceInterface
      *
      * @return array<int, int>
      */
-    #[\Override]
+    #[Override]
     public function getUserFavorites(): array
     {
         if ($this->accessControl()->isAGuest()) {
@@ -1104,7 +1120,7 @@ final class UrlService implements UrlServiceInterface
         $currentUserId = $this->currentUser->get()
             ->id;
 
-        $imageIds = (new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn ??= DbConnection::build()), $this->eventDispatcher, $this->currentConfig))
+        $imageIds = (new UserRepository(EntityManagerFactory::build($this->conn ??= DbConnection::build()), $this->eventDispatcher, $this->currentConfig))
             ->findFavoriteImageIds($currentUserId);
 
         $favorites = [];

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
+use Override;
+use InvalidArgumentException;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
@@ -11,26 +13,26 @@ use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
 /** @extends StringVoContract<Permalink> */
 final class PermalinkTest extends StringVoContract
 {
-    #[\Override]
+    #[Override]
     protected static function voClass(): string
     {
         return Permalink::class;
     }
 
-    #[\Override]
+    #[Override]
     protected static function validSample(): string
     {
         return 'events/2024-summer';
     }
 
-    #[\Override]
+    #[Override]
     protected static function otherVoClass(): string
     {
         return Username::class;
     }
 
     /** @return iterable<string, array{string}> */
-    #[\Override]
+    #[Override]
     public static function invalidSamples(): iterable
     {
         yield 'empty'                => [''];
@@ -58,7 +60,7 @@ final class PermalinkTest extends StringVoContract
         // fails the very next check (the charset pattern requires at
         // least one char), so a mutated `$value === ''` would still
         // throw, just with the *other* message.
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Permalink must not be empty');
         Permalink::from('');
     }
@@ -79,7 +81,7 @@ final class PermalinkTest extends StringVoContract
         // prefix/suffix/limit or swapping operand order) is caught.
         $tooLong = str_repeat('a', 65);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Permalink exceeds 64 chars: '{$tooLong}'");
         Permalink::from($tooLong);
     }

@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Core\Lang;
+use Piwigo\Lang\Translator;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -32,7 +38,7 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
 
     private PwgTemplateAdapter $adapter;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -50,15 +56,15 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
 
         $conn = DbConnection::build();
         $repo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        $configService = new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current());
+        $configService = new ConfigService($repo, new EventDispatcher(), CurrentConfig::current());
         CurrentConfigService::current()->set($configService);
         $configService->loadConfFromDb();
-        \Piwigo\Image\ImageStdParams::current()->load_from_db();
+        ImageStdParams::current()->load_from_db();
 
-        $this->adapter = new PwgTemplateAdapter(\Piwigo\Core\Lang::current(), \Piwigo\Lang\Translator::get(), \Piwigo\Config\CurrentConfig::current());
+        $this->adapter = new PwgTemplateAdapter(Lang::current(), Translator::get(), CurrentConfig::current());
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         Kernel::reset();

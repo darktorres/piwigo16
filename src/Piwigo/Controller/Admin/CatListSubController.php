@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\CatListPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -24,7 +25,7 @@ final class CatListSubController implements AdminSubControllerInterface
         private readonly CatListPageRenderer $catListPageRenderer,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $this->catListPageRenderer

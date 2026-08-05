@@ -6,19 +6,36 @@ namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Override;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Bootstrap\PageTail;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Caddie\CaddieService;
 use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Request\PictureRequest;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\DateHelper;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\MailerInterface;
+use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocBeginPicture;
 use Piwigo\Event\Location\LocEndPicture;
 use Piwigo\Event\Picture\AllowIncrementElementHitCount;
@@ -26,25 +43,38 @@ use Piwigo\Event\Picture\GetElementMetadataAvailable;
 use Piwigo\Event\Picture\PicturePicturesData;
 use Piwigo\Event\Picture\RenderElementContent;
 use Piwigo\Event\Picture\RenderElementDescription;
+use Piwigo\History\HistoryService;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImagePathHelper;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\ImageFormat;
 use Piwigo\Image\SrcImage;
+use Piwigo\Lang\Translator;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Picture\PictureRateRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Rate\RateService;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Section\SectionPopulator;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
 
 /**
  * Replaces picture.php -- the single-photo detail page, largest and most
@@ -93,40 +123,40 @@ final class PictureController implements ControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
-        private readonly \Piwigo\Core\FilterState $filterState,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly FilterState $filterState,
+        private readonly CurrentLogger $currentLogger,
         private readonly SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
-        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Core\MailerInterface $mailer,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly DeploymentPolicy $deploymentPolicy,
+        private readonly ImageStdParams $imageStdParams,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly MailerInterface $mailer,
         private readonly EntityManagerInterface $entityManager,
-        private readonly \Piwigo\Section\SectionPopulator $sectionPopulator,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Rate\RateService $rateService,
-        private readonly \Piwigo\History\HistoryService $historyService,
+        private readonly SectionPopulator $sectionPopulator,
+        private readonly ActivityService $activityService,
+        private readonly RateService $rateService,
+        private readonly HistoryService $historyService,
         private readonly PermissionService $permissionService,
         private readonly CategoryService $categoryService,
         private readonly TagService $tagService,
         private readonly UserService $userService,
         private readonly ImageService $imageService,
-        private readonly \Piwigo\Html\HtmlService $htmlService,
+        private readonly HtmlService $htmlService,
         private readonly PictureRateRenderer $pictureRateRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\Lang\Translator $translator,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly Translator $translator,
     ) {}
 
     private function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
     {
-        return new CommentService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->accessControl);
+        return new CommentService($this->lang, EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->accessControl);
     }
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         // A single connection for the whole request -- mirrors the
@@ -146,7 +176,7 @@ final class PictureController implements ControllerInterface
         // guard, not dead code, since the type itself is nullable.
         $section_context = $this->sectionContextRegistry->current();
         if (! $section_context instanceof SectionContext) {
-            throw new \RuntimeException('SectionContextRegistry::current() is null after SectionPopulator::populate()');
+            throw new RuntimeException('SectionContextRegistry::current() is null after SectionPopulator::populate()');
         }
 
         $this->userService->saveEditContext($section_context->sectionUrl, $section_context->imageId);
@@ -282,7 +312,7 @@ final class PictureController implements ControllerInterface
             }
         }
 
-        $pictureRequest = Request\PictureRequest::fromGlobals($this->inputValidator);
+        $pictureRequest = PictureRequest::fromGlobals($this->inputValidator);
         // Mutated below (the edit_comment case's own successful-submission
         // path) to reflect the original's unset($_POST['content']) --
         // read again much further down to decide whether to increment the
@@ -414,7 +444,7 @@ final class PictureController implements ControllerInterface
                     // no break
                 case 'add_to_caddie':
 
-                    \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie([$image_id], $this->currentUser);
+                    CaddieService::fillCurrentUserCaddie([$image_id], $this->currentUser);
                     $this->redirectService->redirect($url_self);
 
                     // no break
@@ -443,7 +473,7 @@ final class PictureController implements ControllerInterface
                         // $_POST values are always strings (or arrays) --
                         // never a real PHP int/float/bool.
                         if ($pictureRequest->content !== null && $pictureRequest->content !== '' && $pictureRequest->content !== '0') {
-                            new \Piwigo\Csrf\CsrfService()
+                            new CsrfService()
                                 ->checkOrFail($this->htmlService, $this->redirectService);
                             $comment_action = $commentService->updateComment(
                                 [
@@ -494,7 +524,7 @@ final class PictureController implements ControllerInterface
 
                 case 'delete_comment':
 
-                    new \Piwigo\Csrf\CsrfService()
+                    new CsrfService()
                         ->checkOrFail($this->htmlService, $this->redirectService);
 
                     $commentService = $this->commentService($conn, $this->urlService);
@@ -518,7 +548,7 @@ final class PictureController implements ControllerInterface
                     // no break
                 case 'validate_comment':
 
-                    new \Piwigo\Csrf\CsrfService()
+                    new CsrfService()
                         ->checkOrFail($this->htmlService, $this->redirectService);
 
                     $commentService = $this->commentService($conn, $this->urlService);
@@ -575,7 +605,7 @@ final class PictureController implements ControllerInterface
 
         // don't increment if adding a comment
         if ($this->eventDispatcher->dispatchChange(new AllowIncrementElementHitCount($inc_hit_count, $image_id))->incHitCount) {
-            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+            EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
                 ->incrementVisitCounter($image_id);
         }
 
@@ -601,7 +631,7 @@ final class PictureController implements ControllerInterface
             $ids[] = (string) $last_item;
         }
 
-        foreach (\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)->findByIds($ids) as $imageRow) {
+        foreach (EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)->findByIds($ids) as $imageRow) {
             $row = $imageRow->toArray();
             if ($previous_item !== null and $imageRow->id === (int) $previous_item) {
                 $i = 'previous';
@@ -618,11 +648,11 @@ final class PictureController implements ControllerInterface
             $row['src_image'] = new SrcImage($row);
             $row['derivatives'] = DerivativeImage::get_all($row['src_image']);
 
-            $row['path_ext'] = strtolower(\Piwigo\Core\StringHelper::getExtension($row['path']));
-            $row['file_ext'] = strtolower(\Piwigo\Core\StringHelper::getExtension($row['file']));
+            $row['path_ext'] = strtolower(StringHelper::getExtension($row['path']));
+            $row['file_ext'] = strtolower(StringHelper::getExtension($row['file']));
 
             if ($i === 'current') {
-                $row['element_path'] = \Piwigo\Image\ImagePathHelper::getElementPath($row, $urlService);
+                $row['element_path'] = ImagePathHelper::getElementPath($row, $urlService);
 
                 $row_id = $row['id'];
 
@@ -806,8 +836,8 @@ final class PictureController implements ControllerInterface
                 $picture_id = $picture['current']['id'];
                 $picture_id = is_numeric($picture_id) ? (int) $picture_id : 0;
                 $formats = array_map(
-                    static fn (\Piwigo\Image\Projection\ImageFormat $format): array => $format->toArray(),
-                    \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+                    static fn (ImageFormat $format): array => $format->toArray(),
+                    EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
                         ->findFormatsForImage($picture_id)
                 );
 
@@ -817,7 +847,7 @@ final class PictureController implements ControllerInterface
                     $formats,
                     [
                         'download_url' => $download_url,
-                        'ext' => \Piwigo\Core\StringHelper::getExtension($picture['current']['file']),
+                        'ext' => StringHelper::getExtension($picture['current']['file']),
                         'filesize' => $picture['current']['filesize'],
                     ]
                 );
@@ -1021,7 +1051,7 @@ final class PictureController implements ControllerInterface
         // creation date
         $date_creation = $picture['current']['date_creation'] ?? null;
         if (is_string($date_creation) && $date_creation !== '' && $date_creation !== '0') {
-            $val = \Piwigo\Core\DateHelper::formatDate($date_creation);
+            $val = DateHelper::formatDate($date_creation);
             $url = $urlService->makeIndexUrl(
                 [
                     'chronology_field' => 'created',
@@ -1035,7 +1065,7 @@ final class PictureController implements ControllerInterface
         }
 
         // date of availability
-        $val = \Piwigo\Core\DateHelper::formatDate($picture['current']['date_available']);
+        $val = DateHelper::formatDate($picture['current']['date_available']);
         $url = $urlService->makeIndexUrl(
             [
                 'chronology_field' => 'posted',
@@ -1149,7 +1179,7 @@ final class PictureController implements ControllerInterface
             }
         }
 
-        if (in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($picture['current']['file'])), ['pdf'], true)) {
+        if (in_array(strtolower(StringHelper::getExtension($picture['current']['file'])), ['pdf'], true)) {
             $pdf_viewer_filesize_threshold = $this->currentConfig->pdfViewerFilesizeThreshold();
             $template->assign(
                 [
@@ -1170,7 +1200,7 @@ final class PictureController implements ControllerInterface
                     // returning false (never a real page count) on every
                     // live request; confirmed live via a real PDF upload.
                     'PDF_NB_PAGES' => $this->imageService
-                        ->countPdfPages(\Piwigo\Core\CurrentPaths::get()->root . $picture['current']['path']),
+                        ->countPdfPages(CurrentPaths::get()->root . $picture['current']['path']),
                 ]
             );
         }
@@ -1234,7 +1264,7 @@ final class PictureController implements ControllerInterface
         // the deleted include/page_header.php seam applied.
         $refresh_str = isset($refresh) && is_numeric($refresh) ? (string) $refresh : null;
         /** @var string|null $url_link */
-        new \Piwigo\Page\PageHeaderRenderer()
+        new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig, $refresh_str, $url_link ?? null);
         $this->eventDispatcher->dispatchNotify(new LocEndPicture());
         $this->htmlService
@@ -1256,7 +1286,7 @@ final class PictureController implements ControllerInterface
                 tagIds: $section_context->tagIds,
             );
 
-        $body = \Piwigo\Bootstrap\PageTail::renderToString();
+        $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

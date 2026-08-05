@@ -4,6 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Comment\CommentEntity;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Core\CurrentPaths;
+use mysqli;
+use Piwigo\Auth\AccessControl;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Bootstrap\PresentationAccessor;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Mail\MailService;
+use Piwigo\Common\ValueObject\UserId;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentRepository;
@@ -14,13 +28,11 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
@@ -45,7 +57,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -57,9 +69,9 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -74,7 +86,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         Lang::current()->load('common.lang');
 
         $this->conn = DbConnection::build();
-        $this->commentRepo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class);
+        $this->commentRepo = EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class);
 
         // dataDirChecked() defaults to null after applyDefaults(), which
         // would make Template's constructor reach for CurrentConfigService
@@ -87,29 +99,29 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         // Smarty's template_dir at the real themes/default/template/
         // directory that file lives in (same root shape every real
         // Template() call site uses, e.g. RequestBootstrap.php:568).
-        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(\Piwigo\Core\CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
         session_id('fixed-test-session-id'); // CsrfService::getToken() needs a session id, not a running session.
         unset($_POST['content']);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         CurrentTemplate::current()->reset();
         CurrentUser::current()->reset();
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         unset($_POST['content']);
         parent::tearDown();
     }
 
-    #[\Override]
+    #[Override]
     public static function tearDownAfterClass(): void
     {
-        if (($GLOBALS['mysqli'] ?? null) instanceof \mysqli) {
+        if (($GLOBALS['mysqli'] ?? null) instanceof mysqli) {
             $GLOBALS['mysqli']->close();
         }
         unset($GLOBALS['mysqli']);
@@ -125,7 +137,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $this->seedUser($ownerId, UserStatus::Normal);
         CurrentConfig::current()->setUserCanEditComment(true);
 
-        $this->renderer()->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), $commentIdB, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), $this->mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService());
+        $this->renderer()->render(Lang::current(), AccessControl::current(), $commentIdB, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
 
         $rows = $this->renderedComments();
         $rowA = $this->findRenderedRow($rows, $commentIdA);
@@ -170,7 +182,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['content'] = 'A guest comment attempt.';
 
         try {
-            $this->renderer()->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), $this->mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService());
+            $this->renderer()->render(Lang::current(), AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
             self::fail('Expected a ResponseReadyException');
         } catch (ResponseReadyException $e) {
             self::assertSame(200, $e->response()->getStatusCode());
@@ -186,7 +198,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['content'] = 'Spam attempt on a non-commentable picture.';
 
         try {
-            $this->renderer()->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, $imageId, 0, $this->urlService(), [['commentable' => false]], '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), $this->mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService());
+            $this->renderer()->render(Lang::current(), AccessControl::current(), null, $imageId, 0, $this->urlService(), [['commentable' => false]], '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
             self::fail('Expected a ResponseReadyException');
         } catch (ResponseReadyException $e) {
             self::assertSame(403, $e->response()->getStatusCode());
@@ -208,10 +220,10 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         CurrentConfig::current()->setEmailAdminOnCommentValidation(false);
         $imageId = 3;
         $_POST['content'] = 'A moderated comment.';
-        $_POST['key'] = new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current())->generate(0, (string) $imageId);
+        $_POST['key'] = new EphemeralKeyService(CurrentConfig::current())->generate(0, (string) $imageId);
 
         try {
-            $this->renderer()->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), $this->mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService());
+            $this->renderer()->render(Lang::current(), AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame(
                 [
@@ -237,10 +249,10 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         CurrentConfig::current()->setAntiFloodTime(0);
         $imageId = 3;
         $_POST['content'] = 'A validated comment.';
-        $_POST['key'] = new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current())->generate(0, (string) $imageId);
+        $_POST['key'] = new EphemeralKeyService(CurrentConfig::current())->generate(0, (string) $imageId);
 
         try {
-            $this->renderer()->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), $this->mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService());
+            $this->renderer()->render(Lang::current(), AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame(['Your comment has been registered'], PageState::current()->infos);
         } finally {
@@ -265,7 +277,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['key'] = 'totally-invalid-key';
 
         try {
-            $this->renderer()->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), $this->mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService());
+            $this->renderer()->render(Lang::current(), AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame(
                 ['Your comment has NOT been registered because it did not pass the validation rules'],
@@ -294,9 +306,9 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_GET['comments_order'] = 'desc';
 
         try {
-            $this->renderer()->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), $this->mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService());
+            $this->renderer()->render(Lang::current(), AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
 
-            self::assertSame('desc', \Piwigo\Session\SessionService::get()->getSessionVar('comments_order'));
+            self::assertSame('desc', SessionService::get()->getSessionVar('comments_order'));
             // The nav link toggles to the opposite of whatever order is now
             // active ('desc' -> offers 'ASC').
             $orderUrl = CurrentTemplate::current()->get()->get_template_vars('COMMENTS_ORDER_URL');
@@ -304,7 +316,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertStringContainsString('comments_order=ASC', $orderUrl);
         } finally {
             unset($_GET['comments_order']);
-            \Piwigo\Session\SessionService::get()->unsetSessionVar('comments_order');
+            SessionService::get()->unsetSessionVar('comments_order');
         }
     }
 
@@ -373,7 +385,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
      */
     private function renderComments(int $imageId): array
     {
-        $this->renderer()->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), $this->mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService());
+        $this->renderer()->render(Lang::current(), AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
 
         return $this->renderedComments();
     }
@@ -385,19 +397,19 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     private function urlService(): UrlService
     {
-        return \Piwigo\Tests\Support\UrlServiceTestFactory::build();
+        return UrlServiceTestFactory::build();
     }
 
     private function sessionService(): SessionService
     {
-        return new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current());
+        return new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current());
     }
 
-    private function mailService(): \Piwigo\Mail\MailService
+    private function mailService(): MailService
     {
-        $mailer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Mail\MailService::class);
-        if (! $mailer instanceof \Piwigo\Mail\MailService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Mail\MailService::class);
+        $mailer = Kernel::container()->get(MailService::class);
+        if (! $mailer instanceof MailService) {
+            throw new LogicException('Container returned an unexpected type for ' . MailService::class);
         }
 
         return $mailer;
@@ -414,7 +426,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
     private function seedUser(int $id, UserStatus $status): void
     {
         CurrentUser::current()->set(new User(
-            id: \Piwigo\Common\ValueObject\UserId::from($id),
+            id: UserId::from($id),
             username: 'fixture_user_' . $id,
             email: '',
             language: '',

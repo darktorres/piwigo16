@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Section;
 
+use PHPUnit\Framework\TestCase;
 use Piwigo\Section\SectionPopulator;
 
 /**
@@ -15,7 +16,7 @@ use Piwigo\Section\SectionPopulator;
  * (SectionPopulator::populate()) -- passed in directly here rather than
  * recomputed, since str2url() isn't available to the Unit suite.
  */
-final class SectionPopulatorNeedsPermalinkRedirectTest extends \PHPUnit\Framework\TestCase
+final class SectionPopulatorNeedsPermalinkRedirectTest extends TestCase
 {
     public function test_no_permalink_id_name_style_matching_url_name_does_not_redirect(): void
     {

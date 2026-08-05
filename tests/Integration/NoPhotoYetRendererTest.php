@@ -11,6 +11,26 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Users\UserService;
+use Piwigo\Mail\MailService;
+use Piwigo\Core\Lang;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\ProcessCache;
+use Piwigo\Bootstrap\PresentationAccessor;
+use Piwigo\Core\InstallationFlag;
+use mysqli;
+use Piwigo\Http\ResponseReadyException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\CurrentConfig;
@@ -21,11 +41,9 @@ use Piwigo\Core\AdminContext;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Html\HtmlService;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
-use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 
@@ -86,7 +104,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -98,25 +116,25 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
-        $userService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Users\UserService::class);
-        if (! $userService instanceof \Piwigo\Users\UserService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
+        $userService = Kernel::container()->get(UserService::class);
+        if (! $userService instanceof UserService) {
+            throw new LogicException('Container returned an unexpected type for ' . UserService::class);
         }
-        $mailer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Mail\MailService::class);
-        if (! $mailer instanceof \Piwigo\Mail\MailService) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Mail\MailService::class);
+        $mailer = Kernel::container()->get(MailService::class);
+        if (! $mailer instanceof MailService) {
+            throw new LogicException('Container returned an unexpected type for ' . MailService::class);
         }
-        $this->renderer = new NoPhotoYetRenderer(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Image\ImageEntity::class), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), new RedirectService(\Piwigo\Core\Lang::current(), $userService), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), $mailer, \Piwigo\Config\CurrentConfig::current(), new \Piwigo\Core\PageState(), new \Piwigo\Core\ErrorCollector(new \Piwigo\Config\DeploymentPolicy()), new \Piwigo\Core\ProcessCache(), CurrentConfigService::current(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new \Piwigo\Core\InstallationFlag());
+        $this->renderer = new NoPhotoYetRenderer(Lang::current(), AccessControl::current(), EntityManagerFactory::build($this->conn)->getRepository(ImageEntity::class), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()), new RedirectService(Lang::current(), $userService), UrlServiceTestFactory::build(), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), new EventDispatcher(), new DeploymentPolicy(), CurrentUser::current(), CurrentTemplate::current(), $mailer, CurrentConfig::current(), new PageState(), new ErrorCollector(new DeploymentPolicy()), new ProcessCache(), CurrentConfigService::current(), PresentationAccessor::htmlService(), new InstallationFlag());
 
         // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
         // isAdmin() directly (real class methods), which read
@@ -126,7 +144,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         unset($_SESSION['no_photo_yet']);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         unset($_SESSION['no_photo_yet']);
@@ -140,7 +158,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    #[\Override]
+    #[Override]
     public static function tearDownAfterClass(): void
     {
         // Close the legacy global mysqli handle setUp() opened: the rest of
@@ -148,7 +166,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         // invariant that no legacy connection exists (see e.g.
         // SectionInitializerTest's header) -- leaking it flips later files'
         // MysqliDb-reachable branches from dead to live.
-        if (($GLOBALS['mysqli'] ?? null) instanceof \mysqli) {
+        if (($GLOBALS['mysqli'] ?? null) instanceof mysqli) {
             $GLOBALS['mysqli']->close();
         }
         unset($GLOBALS['mysqli']);
@@ -237,7 +255,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
             try {
                 $this->renderer->render();
                 self::fail('Expected RedirectServiceInterface::redirect() to throw ResponseReadyException');
-            } catch (\Piwigo\Http\ResponseReadyException) {
+            } catch (ResponseReadyException) {
                 // redirect() is `never`-typed -- this catchable exception is
                 // its real non-exit() implementation.
             }
@@ -260,7 +278,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
             try {
                 $this->renderer->render();
                 self::fail('Expected RedirectServiceInterface::redirect() to throw ResponseReadyException');
-            } catch (\Piwigo\Http\ResponseReadyException) {
+            } catch (ResponseReadyException) {
             }
         } finally {
             $this->conn->rollBack();

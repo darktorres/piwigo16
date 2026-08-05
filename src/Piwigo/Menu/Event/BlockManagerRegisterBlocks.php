@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Menu\Event;
 
+use Piwigo\Menu\BlockManager;
+
 /**
  * Typed event for the legacy `blockmanager_register_blocks` filter
  * (notify). Carries a real `Piwigo\Menu\BlockManager` instance -- lives
@@ -13,6 +15,6 @@ namespace Piwigo\Menu\Event;
 final readonly class BlockManagerRegisterBlocks
 {
     public function __construct(
-        public \Piwigo\Menu\BlockManager $menu,
+        public BlockManager $menu,
     ) {}
 }

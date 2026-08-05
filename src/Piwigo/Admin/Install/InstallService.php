@@ -12,16 +12,29 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Exception;
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\PluginMigrationEntity;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Bootstrap\CoreDomainAccessor;
+use Piwigo\Bootstrap\ExtendedDomainAccessor;
+use Piwigo\Bootstrap\InfrastructureAccessor;
+use Piwigo\Bootstrap\InstallBootstrap;
+use Piwigo\Bootstrap\PresentationAccessor;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbInfo;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\SqlDialect;
+use Piwigo\Users\CurrentUser;
 use RuntimeException;
 
 /**
@@ -77,24 +90,24 @@ final class InstallService
      */
     public static function activateCoreThemes(): void
     {
-        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        $urlService = PresentationAccessor::urlService();
         $conn = DbConnection::build();
         $lifecycle = new ExtensionLifecycle(
-            \Piwigo\Core\Lang::current(),
-            new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
-            new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InstallBootstrap::currentLogger(), \Piwigo\Users\CurrentUser::current()),
+            Lang::current(),
+            new ExtensionRepository(EntityManagerFactory::build($conn)),
+            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), CurrentUser::current()),
             $urlService,
             CurrentConfigService::current()->get(),
-            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
-            \Piwigo\Bootstrap\CoreDomainAccessor::userService(),
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-            \Piwigo\Config\CurrentConfig::current(),
-            \Piwigo\Bootstrap\InfrastructureAccessor::wsContext(),
-            \Piwigo\Bootstrap\CoreDomainAccessor::accessControl(),
+            EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class),
+            ExtendedDomainAccessor::activityService(),
+            CoreDomainAccessor::userService(),
+            PresentationAccessor::htmlService(),
+            CurrentConfig::current(),
+            InfrastructureAccessor::wsContext(),
+            CoreDomainAccessor::accessControl(),
         );
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $urlService, \Piwigo\Core\Lang::current());
+            ->scan(ExtensionType::Theme, $urlService, Lang::current());
         foreach ($fs_themes as $theme_id => $fs_theme) {
             if (in_array($theme_id, [AppInfo::DEFAULT_TEMPLATE], true)) {
                 $lifecycle->performAction(ExtensionType::Theme, 'activate', $theme_id, $fs_theme);
@@ -110,7 +123,7 @@ final class InstallService
         // No core plugins are auto-activated at install time (empty list,
         // matching the original's own empty in_array() haystack).
         new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, \Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\Core\Lang::current());
+            ->scan(ExtensionType::Plugin, PresentationAccessor::urlService(), Lang::current());
     }
 
     /**
@@ -131,7 +144,7 @@ final class InstallService
             $conn = DbConnection::build();
             $conn->getNativeConnection();
 
-            $version = new \Piwigo\Db\DbInfo($conn)
+            $version = new DbInfo($conn)
                 ->version();
 
             // pgsql support pass: real bug found live -- this ran
@@ -143,21 +156,21 @@ final class InstallService
             // version() output isn't a bare X.Y.Z the way MySQL's is
             // either, so its own check needs the leading numeric version
             // extracted first.
-            if ($conn->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform) {
+            if ($conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
                 if (preg_match('/PostgreSQL (\d+(?:\.\d+)*)/', $version, $matches) !== 1) {
                     throw new Exception('could not determine your PostgreSQL version from "' . $version . '"');
                 }
 
-                if (version_compare($matches[1], \Piwigo\Db\SqlDialect::REQUIRED_POSTGRES_VERSION, '<')) {
-                    throw new Exception(sprintf('your PostgreSQL version is too old, you have "%s" and you need at least "%s"', $matches[1], \Piwigo\Db\SqlDialect::REQUIRED_POSTGRES_VERSION));
+                if (version_compare($matches[1], SqlDialect::REQUIRED_POSTGRES_VERSION, '<')) {
+                    throw new Exception(sprintf('your PostgreSQL version is too old, you have "%s" and you need at least "%s"', $matches[1], SqlDialect::REQUIRED_POSTGRES_VERSION));
                 }
-            } elseif (version_compare($version, \Piwigo\Db\SqlDialect::REQUIRED_MYSQL_VERSION, '<')) {
-                throw new Exception(sprintf('your MySQL version is too old, you have "%s" and you need at least "%s"', $version, \Piwigo\Db\SqlDialect::REQUIRED_MYSQL_VERSION));
+            } elseif (version_compare($version, SqlDialect::REQUIRED_MYSQL_VERSION, '<')) {
+                throw new Exception(sprintf('your MySQL version is too old, you have "%s" and you need at least "%s"', $version, SqlDialect::REQUIRED_MYSQL_VERSION));
             }
 
             return $conn;
         } catch (Exception $e) {
-            $errors[] = \Piwigo\Core\Lang::current()->t($e->getMessage());
+            $errors[] = Lang::current()->t($e->getMessage());
 
             return null;
         }

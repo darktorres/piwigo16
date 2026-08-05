@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
+use Override;
+use InvalidArgumentException;
 use Piwigo\Common\ValueObject\AbsPath;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
@@ -11,26 +13,26 @@ use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
 /** @extends StringVoContract<AbsPath> */
 final class AbsPathTest extends StringVoContract
 {
-    #[\Override]
+    #[Override]
     protected static function voClass(): string
     {
         return AbsPath::class;
     }
 
-    #[\Override]
+    #[Override]
     protected static function validSample(): string
     {
         return '/var/www/piwigo/upload/2024';
     }
 
-    #[\Override]
+    #[Override]
     protected static function otherVoClass(): string
     {
         return Username::class;
     }
 
     /** @return iterable<string, array{string}> */
-    #[\Override]
+    #[Override]
     public static function invalidSamples(): iterable
     {
         yield 'empty'         => [''];
@@ -49,7 +51,7 @@ final class AbsPathTest extends StringVoContract
         // placeholder) would still throw, just with the *other* message.
         // Pinning the exact message proves the dedicated empty check is
         // what actually fired.
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('AbsPath must not be empty');
         AbsPath::from('');
     }

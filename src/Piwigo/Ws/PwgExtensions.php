@@ -12,19 +12,31 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use LogicException;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\PluginMigrationEntity;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
+use Piwigo\Users\UserService;
 
 /**
  * P23 batch 8e-2: relocated from include/ws_functions/pwg.extensions.php.
@@ -36,17 +48,17 @@ final class PwgExtensions
 {
     public function __construct(
         private readonly Lang $lang,
-        private readonly \Piwigo\Core\UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly UrlServiceInterface $urlService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly AccessControl $accessControl,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Config\ConfigService $configService,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
-        private readonly \Piwigo\Users\UserService $userService,
-        private readonly \Piwigo\Admin\Extensions\ExtensionUpdateChecker $extensionUpdateChecker,
-        private readonly \Piwigo\Admin\Extensions\CoreUpdateService $coreUpdateService,
-        private readonly \Piwigo\Core\RedirectServiceInterface $redirectService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly ConfigService $configService,
+        private readonly ActivityService $activityService,
+        private readonly UserService $userService,
+        private readonly ExtensionUpdateChecker $extensionUpdateChecker,
+        private readonly CoreUpdateService $coreUpdateService,
+        private readonly RedirectServiceInterface $redirectService,
         private readonly PemCatalog $pemCatalog,
         private readonly WsContext $wsContext,
     ) {}
@@ -74,7 +86,7 @@ final class PwgExtensions
         $fs_plugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService, $this->lang);
         uasort($fs_plugins, $this->htmlRenderer->nameCompare(...));
-        $db_plugins_by_id = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()))->findAll(ExtensionType::Plugin);
+        $db_plugins_by_id = new ExtensionRepository(EntityManagerFactory::build(DbConnection::build()))->findAll(ExtensionType::Plugin);
         $plugin_list = [];
 
         foreach ($fs_plugins as $plugin_id => $fs_plugin) {
@@ -134,11 +146,11 @@ final class PwgExtensions
         $conn = DbConnection::build();
         $lifecycle = new ExtensionLifecycle(
             $this->lang,
-            new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
+            new ExtensionRepository(EntityManagerFactory::build($conn)),
             $this->pemCatalog,
             $urlService,
             $this->configService,
-            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
+            EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class),
             $this->activityService,
             $this->userService,
             $this->htmlRenderer,
@@ -189,11 +201,11 @@ final class PwgExtensions
         $conn = DbConnection::build();
         $lifecycle = new ExtensionLifecycle(
             $this->lang,
-            new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
+            new ExtensionRepository(EntityManagerFactory::build($conn)),
             $this->pemCatalog,
             $urlService,
             $this->configService,
-            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
+            EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class),
             $this->activityService,
             $this->userService,
             $this->htmlRenderer,
@@ -259,9 +271,9 @@ final class PwgExtensions
         $urlService = $this->urlService;
         $scanner = new ExtensionScanner();
         $conn = DbConnection::build();
-        $repo = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
+        $repo = new ExtensionRepository(EntityManagerFactory::build($conn));
         $pemCatalog = $this->pemCatalog;
-        $pluginMigrationRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
+        $pluginMigrationRepo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
         $lifecycle = new ExtensionLifecycle($this->lang, $repo, $pemCatalog, $urlService, $this->configService, $pluginMigrationRepo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl);
 
         if ($type === ExtensionType::Plugin) {

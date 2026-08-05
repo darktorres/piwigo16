@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Piwigo\Db\BatchWriter;
 
@@ -21,7 +22,7 @@ use Piwigo\Db\BatchWriter;
  * a gap the mocked-away happy-path call sites elsewhere in the app never
  * reach with more than one SET field at a time.
  */
-function batchWriterTestMemoryConnection(): \Doctrine\DBAL\Connection
+function batchWriterTestMemoryConnection(): Connection
 {
     $conn = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
     $conn->executeStatement('CREATE TABLE t (id INTEGER PRIMARY KEY, a TEXT, b TEXT)');

@@ -2,6 +2,17 @@
 
 declare(strict_types=1);
 
+use Piwigo\Permission\ImageVisibilityChecker;
+use Piwigo\Db\DbConnection;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Image\DerivativeParams;
+use Piwigo\Http\ResponseReadyException;
+use Piwigo\Core\Paths;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\ImageDerivativeController;
 use Piwigo\Core\CurrentLogger;
@@ -24,13 +35,13 @@ use Piwigo\Image\ImageStdParams;
 // derivativeUrlPath()/parseCustomParams()/ierror() via direct reflection),
 // so a real-but-never-queried instance (lazy DBAL, same reasoning as this
 // suite's own $currentLogger throwaways) satisfies the constructor only.
-function imageDerivativeControllerTestImageVisibilityChecker(): \Piwigo\Permission\ImageVisibilityChecker
+function imageDerivativeControllerTestImageVisibilityChecker(): ImageVisibilityChecker
 {
-    $conn = \Piwigo\Db\DbConnection::build();
+    $conn = DbConnection::build();
 
-    return new \Piwigo\Permission\ImageVisibilityChecker(
-        new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
-        new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
+    return new ImageVisibilityChecker(
+        new PermissionRepository(EntityManagerFactory::build($conn)),
+        new CurrentUser(new CurrentConfig()),
     );
 }
 
@@ -107,22 +118,22 @@ test('derivativeUrlPath prefixes the app-mount-relative i.php URL, unaware of th
 /**
  * @param array<int, string|null> $tokens
  */
-function callParseCustomParams(ImageDerivativeController $controller, array $tokens): \Piwigo\Image\DerivativeParams
+function callParseCustomParams(ImageDerivativeController $controller, array $tokens): DerivativeParams
 {
     $method = new ReflectionMethod($controller, 'parseCustomParams');
 
-    /** @var \Piwigo\Image\DerivativeParams */
+    /** @var DerivativeParams */
     return $method->invoke($controller, $tokens);
 }
 
 /**
  * @param array<int, string|null> $tokens
  */
-function callIerrorFor400(ImageDerivativeController $controller, array $tokens): \Piwigo\Http\ResponseReadyException
+function callIerrorFor400(ImageDerivativeController $controller, array $tokens): ResponseReadyException
 {
     try {
         callParseCustomParams($controller, $tokens);
-    } catch (\Piwigo\Http\ResponseReadyException $e) {
+    } catch (ResponseReadyException $e) {
         return $e;
     }
     throw new RuntimeException('parseCustomParams() did not throw for: ' . json_encode($tokens));
@@ -137,7 +148,7 @@ test('parseCustomParams() rejects a genuinely empty token array', function (): v
     // difference either way.
     $currentLogger = new CurrentLogger();
     $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Image\ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new CurrentConfig());
+    $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
 
     $exception = callIerrorFor400($controller, []);
 
@@ -157,7 +168,7 @@ test('parseCustomParams() parses a single bare "s"-prefixed size token', functio
     // index 0 for 's100x100', falling through to the else branch, which
     // then 400s on the resulting empty $tokens -- success vs. a thrown
     // exception is directly observable either way).
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Image\ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new CurrentConfig());
+    $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), new CurrentLogger(), new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
 
     $params = callParseCustomParams($controller, ['s100x100']);
 
@@ -171,7 +182,7 @@ test('parseCustomParams() parses a single bare "e"-prefixed exact-crop token', f
     // way the 's' test above kills line 513's: $token[-1]/$token[1]
     // for 'e50x50' both miss the 'e' at index 0, falling through to the
     // else branch and 400ing instead of succeeding.
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Image\ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new CurrentConfig());
+    $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), new CurrentLogger(), new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
 
     $params = callParseCustomParams($controller, ['e50x50']);
 
@@ -193,7 +204,7 @@ test('parseCustomParams() rejects a plain size token with no crop/min-size token
     // throws the *identical* ResponseReadyException(400, 'Sizing arr').
     $currentLogger = new CurrentLogger();
     $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Image\ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new CurrentConfig());
+    $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
 
     $exception = callIerrorFor400($controller, ['100x100', 'a']);
 
@@ -209,12 +220,12 @@ test('parseCustomParams() accepts a size+crop+min-size token triple, exactly at 
     // SmallerToGreaterOrEqual, SmallerToSmallerOrEqual, and
     // IncrementInteger mutants -- each would wrongly 400 this exact
     // input instead of succeeding.
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Image\ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new CurrentConfig());
+    $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), new CurrentLogger(), new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
 
     $params = callParseCustomParams($controller, ['100x100', 'n', '50x50']);
 
     expect($params->sizing->ideal_size)->toBe([100, 100])
-        ->and($params->sizing->max_crop)->toBe(\Piwigo\Image\DerivativeUrlCodec::charToFraction('n'))
+        ->and($params->sizing->max_crop)->toBe(DerivativeUrlCodec::charToFraction('n'))
         ->and($params->sizing->min_size)->toBe([50, 50]);
 });
 
@@ -225,7 +236,7 @@ test('parseCustomParams() takes the min-size token from the front of the remaini
     // instead) -- with only exactly 2 remaining tokens (the test
     // above), shift and pop are indistinguishable (only one real
     // candidate either way).
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Image\ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new CurrentConfig());
+    $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), new CurrentLogger(), new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
 
     $params = callParseCustomParams($controller, ['100x100', 'n', '50x50', 'ignored-extra']);
 
@@ -235,12 +246,12 @@ test('parseCustomParams() takes the min-size token from the front of the remaini
 /**
  * @param array<string, string> $extraHeaders
  */
-function callIerror(ImageDerivativeController $controller, string $msg, int $code, array $extraHeaders = []): \Piwigo\Http\ResponseReadyException
+function callIerror(ImageDerivativeController $controller, string $msg, int $code, array $extraHeaders = []): ResponseReadyException
 {
     $method = new ReflectionMethod($controller, 'ierror');
     try {
         $method->invoke($controller, $msg, $code, $extraHeaders);
-    } catch (\Piwigo\Http\ResponseReadyException $e) {
+    } catch (ResponseReadyException $e) {
         return $e;
     }
     throw new RuntimeException('ierror() did not throw');
@@ -271,7 +282,7 @@ test('ierror() builds a real redirect response for a 301 code, decoding entities
     $originalRequestUri = $_SERVER['REQUEST_URI'] ?? null;
     $_SERVER['REQUEST_URI'] = '/i.php/upload/2026/08/01/bar-th.jpg';
 
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Image\ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new CurrentConfig());
+    $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
 
     $exception = callIerror(
         $controller,
@@ -308,7 +319,7 @@ test('ierror() builds a real redirect response for a 302 code too', function ():
     // literal alone is mutated).
     $currentLogger = new CurrentLogger();
     $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Image\ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new CurrentConfig());
+    $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
 
     $exception = callIerror($controller, 'https://example.test/target-302', 302);
 
@@ -339,7 +350,7 @@ test('ierror() logs the exact code+message concatenation and the real request UR
     $originalRequestUri = $_SERVER['REQUEST_URI'] ?? null;
     $_SERVER['REQUEST_URI'] = '/i.php/upload/2026/08/01/foo-th.jpg';
 
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Image\ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new CurrentConfig());
+    $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
     $exception = callIerror($controller, 'Db file path not found', 404);
 
     $contents = file_get_contents($dir . '/ierror.txt');
@@ -363,7 +374,7 @@ test('parseCustomParams() 400s its own "impossible" null-token guard when invoke
     $currentLogger = new CurrentLogger();
     $currentLogger->set(new Logger(['severity' => Logger::OFF]));
 
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Image\ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), \Piwigo\Tests\Support\UrlServiceTestFactory::build(), new CurrentConfig());
+    $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
     $method = new ReflectionMethod(ImageDerivativeController::class, 'parseCustomParams');
 
     $exception = null;
@@ -373,12 +384,12 @@ test('parseCustomParams() 400s its own "impossible" null-token guard when invoke
         // slot stands in for what only a non-HTTP caller could ever
         // produce.
         $method->invoke($controller, ['150x100', 'a', null]);
-    } catch (\Piwigo\Http\ResponseReadyException $e) {
+    } catch (ResponseReadyException $e) {
         $exception = $e;
     }
 
-    expect($exception)->toBeInstanceOf(\Piwigo\Http\ResponseReadyException::class);
-    if (! $exception instanceof \Piwigo\Http\ResponseReadyException) {
+    expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+    if (! $exception instanceof ResponseReadyException) {
         return; // unreachable -- the assertion above already failed the test otherwise.
     }
     $response = $exception->response();

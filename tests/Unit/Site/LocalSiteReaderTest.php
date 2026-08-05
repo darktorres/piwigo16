@@ -71,7 +71,7 @@ use Piwigo\Site\LocalSiteReader;
 function requireCurrentConfig(mixed $currentConfig): CurrentConfig
 {
     if (! $currentConfig instanceof CurrentConfig) {
-        throw new \RuntimeException('currentConfig not initialized -- beforeEach() must run first');
+        throw new RuntimeException('currentConfig not initialized -- beforeEach() must run first');
     }
 
     return $currentConfig;

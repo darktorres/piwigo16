@@ -7,6 +7,7 @@ namespace Piwigo\Db;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use RuntimeException;
 use Symfony\Component\Process\Process;
 
 /**
@@ -83,7 +84,7 @@ final readonly class SchemaDumpService
             return 'pgsql';
         }
 
-        throw new \RuntimeException('schema:dump only supports MySQL/MariaDB and PostgreSQL connections, got ' . $platform::class);
+        throw new RuntimeException('schema:dump only supports MySQL/MariaDB and PostgreSQL connections, got ' . $platform::class);
     }
 
     /**
@@ -127,7 +128,7 @@ final readonly class SchemaDumpService
         $process->run();
 
         if (! $process->isSuccessful()) {
-            throw new \RuntimeException('mysqldump failed: ' . $process->getErrorOutput());
+            throw new RuntimeException('mysqldump failed: ' . $process->getErrorOutput());
         }
 
         return $process->getOutput();
@@ -154,7 +155,7 @@ final readonly class SchemaDumpService
         $process->run();
 
         if (! $process->isSuccessful()) {
-            throw new \RuntimeException('pg_dump failed: ' . $process->getErrorOutput());
+            throw new RuntimeException('pg_dump failed: ' . $process->getErrorOutput());
         }
 
         return $process->getOutput();

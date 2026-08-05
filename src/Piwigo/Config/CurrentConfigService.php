@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
+use LogicException;
+use Piwigo\Core\Kernel;
+
 /**
  * Container-shared instance holding the current request's `ConfigService`
  * reference -- singleton/service-locator elimination campaign, Phase 5.
@@ -52,10 +55,10 @@ final class CurrentConfigService
 
     public static function current(): self
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $instance = \Piwigo\Core\Kernel::container()->get(self::class);
+        if (Kernel::isBooted()) {
+            $instance = Kernel::container()->get(self::class);
             if (! $instance instanceof self) {
-                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+                throw new LogicException('Container returned an unexpected type for ' . self::class);
             }
 
             return $instance;
@@ -67,7 +70,7 @@ final class CurrentConfigService
     public function get(): ConfigService
     {
         if (! $this->configService instanceof ConfigService) {
-            throw new \LogicException('CurrentConfigService not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect()/CliBootstrap::run()/InstallBootstrap::activateConfigService() first.');
+            throw new LogicException('CurrentConfigService not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect()/CliBootstrap::run()/InstallBootstrap::activateConfigService() first.');
         }
 
         return $this->configService;

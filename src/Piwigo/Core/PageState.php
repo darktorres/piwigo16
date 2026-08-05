@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use LogicException;
+
 /**
  * Typed reader/writer for the per-request page state.
  *
@@ -215,10 +217,10 @@ final class PageState
      */
     public static function current(): self
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $instance = \Piwigo\Core\Kernel::container()->get(self::class);
+        if (Kernel::isBooted()) {
+            $instance = Kernel::container()->get(self::class);
             if (! $instance instanceof self) {
-                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+                throw new LogicException('Container returned an unexpected type for ' . self::class);
             }
             return $instance;
         }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Http;
 
 use Psr\Http\Message\ResponseInterface;
+use RuntimeException;
 
 /**
  * Workstream C3: carries a fully-built ResponseInterface up the call
@@ -35,7 +36,7 @@ use Psr\Http\Message\ResponseInterface;
  * pipeline used to leave SentryMiddleware's performance transaction
  * unfinished and silently skip the Server-Timing header, always.
  */
-final class ResponseReadyException extends \RuntimeException
+final class ResponseReadyException extends RuntimeException
 {
     public function __construct(
         private readonly ResponseInterface $response,

@@ -13,11 +13,16 @@ namespace Piwigo\Admin\Integrity;
 
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\SqlDialect;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\UserService;
 
@@ -26,10 +31,10 @@ final class C13yInternal
     public function __construct(
         private readonly Lang $lang,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Core\PageState $pageState,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
         private readonly UserService $userService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -226,19 +231,19 @@ final class C13yInternal
                     if (isset($name)) {
                         $name_ok = false;
                         while (! $name_ok) {
-                            $name_ok = ($this->userService->getUserId(\Piwigo\Common\ValueObject\Username::from($name)) === null);
+                            $name_ok = ($this->userService->getUserId(Username::from($name)) === null);
                             if (! $name_ok) {
                                 $name .= $this->sessionService->generateKey(1);
                             }
                         }
 
                         $this->userService->insertUserRow(
-                            \Piwigo\Common\ValueObject\UserId::from($id),
+                            UserId::from($id),
                             addslashes($name),
                             $password,
                         );
 
-                        $this->userService->createUserInfos([\Piwigo\Common\ValueObject\UserId::from($id)]);
+                        $this->userService->createUserInfos([UserId::from($id)]);
 
                         $this->pageState->addInfo(sprintf($this->lang->t('User "%s" created with "%s" like password'), $name, $password ?? ''));
 
@@ -255,9 +260,9 @@ final class C13yInternal
                     }
 
                     if (isset($status)) {
-                        $this->userService->updateStatusForUsers([\Piwigo\Common\ValueObject\UserId::from($id)], $status);
+                        $this->userService->updateStatusForUsers([UserId::from($id)], $status);
 
-                        $updated_username = $this->userService->getUsername(\Piwigo\Common\ValueObject\UserId::from($id));
+                        $updated_username = $this->userService->getUsername(UserId::from($id));
                         $this->pageState->addInfo(sprintf($this->lang->t('Status of user "%s" updated'), $updated_username === null ? '' : $updated_username->value));
 
                         $result = true;

@@ -9,6 +9,7 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 
 /**
@@ -182,7 +183,7 @@ final class AdminUiHelper
             '_hash' => md5($urlService->getAbsoluteRootUrl()),
         ];
 
-        $dbInfo = new \Piwigo\Db\DbInfo(DbConnection::build());
+        $dbInfo = new DbInfo(DbConnection::build());
         foreach ($requested as $item) {
             $keys[$item] = $dbInfo->getTableFingerprint($tables[$item]);
         }

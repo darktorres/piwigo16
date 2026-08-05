@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -21,7 +22,7 @@ final class WsImagesMutationTest extends ContractTestCase
     /** @var list<int> throwaway image ids inserted by a test, deleted in tearDown if a test didn't already remove them. */
     private array $throwawayImageIds = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -29,7 +30,7 @@ final class WsImagesMutationTest extends ContractTestCase
         $this->loginAsAdmin();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         foreach ($this->throwawayImageIds as $id) {

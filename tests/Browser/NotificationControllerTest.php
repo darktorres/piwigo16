@@ -56,7 +56,7 @@ it('creates a real per-user feed subscription row with no last_check yet', funct
 
     $row = userFeedRow($feedId);
     if ($row === null) {
-        throw new \RuntimeException('expected a real user_feed row for feed id ' . $feedId);
+        throw new RuntimeException('expected a real user_feed row for feed id ' . $feedId);
     }
     expect($row['userId'])->toBe(1); // fixture_admin's real user id
     expect($row['lastCheck'])->toBeNull();
@@ -72,7 +72,7 @@ it('updates last_check once the feed is actually fetched', function (): void {
 
     $rowBefore = userFeedRow($feedId);
     if ($rowBefore === null) {
-        throw new \RuntimeException('expected a real user_feed row for feed id ' . $feedId);
+        throw new RuntimeException('expected a real user_feed row for feed id ' . $feedId);
     }
     expect($rowBefore['lastCheck'])->toBeNull();
 
@@ -81,7 +81,7 @@ it('updates last_check once the feed is actually fetched', function (): void {
 
     $rowAfter = userFeedRow($feedId);
     if ($rowAfter === null) {
-        throw new \RuntimeException('expected a real user_feed row for feed id ' . $feedId);
+        throw new RuntimeException('expected a real user_feed row for feed id ' . $feedId);
     }
     expect($rowAfter['lastCheck'])->not->toBeNull();
 });
@@ -100,7 +100,7 @@ it('gives a guest visitor a bare feed.php URL (no query string) for the image-on
 
     $row = userFeedRow($feedId);
     if ($row === null) {
-        throw new \RuntimeException('expected a real user_feed row for feed id ' . $feedId);
+        throw new RuntimeException('expected a real user_feed row for feed id ' . $feedId);
     }
     // Config::guestId()'s real user id, not the fixture admin's.
     expect($row['userId'])->not->toBe(1);

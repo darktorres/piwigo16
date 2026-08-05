@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\ExtendForTemplatesPageRenderer;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Template\CurrentTemplate;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -31,13 +36,13 @@ final class ExtendForTemplatesSubController implements AdminSubControllerInterfa
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Category\CategoryService $categoryService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly PageState $pageState,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly CategoryService $categoryService,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new ExtendForTemplatesPageRenderer()

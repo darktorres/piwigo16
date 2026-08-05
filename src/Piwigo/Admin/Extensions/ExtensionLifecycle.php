@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
+use LogicException;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\DummyPluginMaintain;
 use Piwigo\Admin\DummyThemeMaintain;
+use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Admin\ThemeMaintain;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
@@ -78,7 +83,7 @@ final readonly class ExtensionLifecycle
         private PluginMigrationRepository $pluginMigrationRepo,
         private ActivityService $activityService,
         private UserService $userService,
-        private \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
         private WsContext $wsContext,
         private AccessControl $accessControl,
@@ -140,7 +145,7 @@ final readonly class ExtensionLifecycle
 
                 if ($errors === []) {
                     $this->repo->insertPlugin($id, $fsVersion);
-                    $this->pluginMigrationRepo->record($id, $fsVersion, \Piwigo\Core\Env::now()->format('Y-m-d H:i:s'));
+                    $this->pluginMigrationRepo->record($id, $fsVersion, Env::now()->format('Y-m-d H:i:s'));
                 } else {
                     $activityDetails['result'] = 'error';
                 }
@@ -150,7 +155,7 @@ final readonly class ExtensionLifecycle
                 $previousVersion = $this->stringOrDefault($fsEntry['version'] ?? null, '0');
                 $activityDetails['from_version'] = $previousVersion;
                 if (! isset($options['revision'])) {
-                    throw new \LogicException("performPluginAction('update'): missing 'revision' option");
+                    throw new LogicException("performPluginAction('update'): missing 'revision' option");
                 }
 
                 // $errors[0] deliberately holds the raw extraction status
@@ -177,7 +182,7 @@ final readonly class ExtensionLifecycle
 
                     if ($newVersion !== 'auto') {
                         $this->repo->updateVersion(ExtensionType::Plugin, $id, $newVersion);
-                        $this->pluginMigrationRepo->record($id, $newVersion, \Piwigo\Core\Env::now()->format('Y-m-d H:i:s'));
+                        $this->pluginMigrationRepo->record($id, $newVersion, Env::now()->format('Y-m-d H:i:s'));
                     }
                 } else {
                     $activityDetails['result'] = 'error';
@@ -260,7 +265,7 @@ final readonly class ExtensionLifecycle
                 }
                 $activityDetails['fs_version'] = $fsEntry['version'] ?? null;
 
-                FilesystemHelper::deltree(\Piwigo\Admin\PluginLoader::pluginsPath() . $id, \Piwigo\Admin\PluginLoader::pluginsPath() . 'trash');
+                FilesystemHelper::deltree(PluginLoader::pluginsPath() . $id, PluginLoader::pluginsPath() . 'trash');
                 break;
         }
 
@@ -423,7 +428,7 @@ final readonly class ExtensionLifecycle
 
                 $this->repo->reassignUsersFromLanguage($id, $this->userService->getDefaultLanguage());
 
-                $languagesDir = \Piwigo\Core\CurrentPaths::get()->root . 'language/';
+                $languagesDir = CurrentPaths::get()->root . 'language/';
                 FilesystemHelper::deltree($languagesDir . $id, $languagesDir . 'trash');
                 break;
 
@@ -503,7 +508,7 @@ final readonly class ExtensionLifecycle
 
     private function buildPluginMaintain(string $pluginId): PluginMaintain
     {
-        $fileToInclude = \Piwigo\Admin\PluginLoader::pluginsPath() . $pluginId . '/maintain';
+        $fileToInclude = PluginLoader::pluginsPath() . $pluginId . '/maintain';
         // piwigo-videojs and piwigo-openstreetmap have a "-" in their
         // folder name (=plugin_id); a class name can't have a "-".
         $classname = str_replace('-', '_', $pluginId . '_maintain');
@@ -512,7 +517,7 @@ final readonly class ExtensionLifecycle
             include_once $fileToInclude . '.class.php';
             $maintain = new $classname($pluginId, $this->wsContext, $this->accessControl);
             if (! $maintain instanceof PluginMaintain) {
-                throw new \LogicException("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
+                throw new LogicException("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
             }
 
             return $maintain;
@@ -523,7 +528,7 @@ final readonly class ExtensionLifecycle
             if (class_exists($classname)) {
                 $maintain = new $classname($pluginId, $this->wsContext, $this->accessControl);
                 if (! $maintain instanceof PluginMaintain) {
-                    throw new \LogicException("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
+                    throw new LogicException("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
                 }
 
                 return $maintain;
@@ -543,7 +548,7 @@ final readonly class ExtensionLifecycle
             if (class_exists($classname)) {
                 $maintain = new $classname($themeId);
                 if (! $maintain instanceof ThemeMaintain) {
-                    throw new \LogicException("buildThemeMaintain(): {$classname} does not extend ThemeMaintain");
+                    throw new LogicException("buildThemeMaintain(): {$classname} does not extend ThemeMaintain");
                 }
 
                 return $maintain;

@@ -11,7 +11,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use LogicException;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\PluginConfig\EventDispatcher;
+use RuntimeException;
 
 final class ScriptLoader
 {
@@ -70,11 +78,11 @@ final class ScriptLoader
      * campaign, Phase 11 sub-phase 11F's own future closure), so no new
      * exception is needed here (Phase 11 sub-phase 11E).
      */
-    private function htmlRenderer(): \Piwigo\Core\HtmlRenderingInterface
+    private function htmlRenderer(): HtmlRenderingInterface
     {
-        $htmlRenderer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\HtmlRenderingInterface::class);
-        if (! $htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\HtmlRenderingInterface::class);
+        $htmlRenderer = Kernel::container()->get(HtmlRenderingInterface::class);
+        if (! $htmlRenderer instanceof HtmlRenderingInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . HtmlRenderingInterface::class);
         }
 
         return $htmlRenderer;
@@ -93,12 +101,12 @@ final class ScriptLoader
      */
     private static function urlService(): UrlServiceInterface
     {
-        if (! \Piwigo\Core\Kernel::isBooted()) {
-            throw new \RuntimeException('ScriptLoader: no URL service set (RequestBootstrap not run yet?)');
+        if (! Kernel::isBooted()) {
+            throw new RuntimeException('ScriptLoader: no URL service set (RequestBootstrap not run yet?)');
         }
-        $urlService = \Piwigo\Core\Kernel::container()->get(UrlServiceInterface::class);
+        $urlService = Kernel::container()->get(UrlServiceInterface::class);
         if (! $urlService instanceof UrlServiceInterface) {
-            throw new \RuntimeException('ScriptLoader: no URL service set (RequestBootstrap not run yet?)');
+            throw new RuntimeException('ScriptLoader: no URL service set (RequestBootstrap not run yet?)');
         }
 
         return $urlService;
@@ -110,14 +118,14 @@ final class ScriptLoader
      * no `$this` to inject through (singleton/service-locator elimination
      * campaign, Phase 11 sub-phase 11F).
      */
-    private static function eventDispatcher(): \Piwigo\PluginConfig\EventDispatcher
+    private static function eventDispatcher(): EventDispatcher
     {
-        if (! \Piwigo\Core\Kernel::isBooted()) {
-            throw new \RuntimeException('ScriptLoader: no EventDispatcher set (RequestBootstrap not run yet?)');
+        if (! Kernel::isBooted()) {
+            throw new RuntimeException('ScriptLoader: no EventDispatcher set (RequestBootstrap not run yet?)');
         }
-        $eventDispatcher = \Piwigo\Core\Kernel::container()->get(\Piwigo\PluginConfig\EventDispatcher::class);
-        if (! $eventDispatcher instanceof \Piwigo\PluginConfig\EventDispatcher) {
-            throw new \RuntimeException('ScriptLoader: no EventDispatcher set (RequestBootstrap not run yet?)');
+        $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
+        if (! $eventDispatcher instanceof EventDispatcher) {
+            throw new RuntimeException('ScriptLoader: no EventDispatcher set (RequestBootstrap not run yet?)');
         }
 
         return $eventDispatcher;
@@ -128,12 +136,12 @@ final class ScriptLoader
      */
     private static function currentTemplate(): CurrentTemplate
     {
-        if (! \Piwigo\Core\Kernel::isBooted()) {
-            throw new \RuntimeException('ScriptLoader: no CurrentTemplate set (RequestBootstrap not run yet?)');
+        if (! Kernel::isBooted()) {
+            throw new RuntimeException('ScriptLoader: no CurrentTemplate set (RequestBootstrap not run yet?)');
         }
-        $currentTemplate = \Piwigo\Core\Kernel::container()->get(CurrentTemplate::class);
+        $currentTemplate = Kernel::container()->get(CurrentTemplate::class);
         if (! $currentTemplate instanceof CurrentTemplate) {
-            throw new \RuntimeException('ScriptLoader: no CurrentTemplate set (RequestBootstrap not run yet?)');
+            throw new RuntimeException('ScriptLoader: no CurrentTemplate set (RequestBootstrap not run yet?)');
         }
 
         return $currentTemplate;
@@ -142,14 +150,14 @@ final class ScriptLoader
     /**
      * Same reasoning as eventDispatcher() above.
      */
-    private static function currentConfig(): \Piwigo\Config\CurrentConfig
+    private static function currentConfig(): CurrentConfig
     {
-        if (! \Piwigo\Core\Kernel::isBooted()) {
-            throw new \RuntimeException('ScriptLoader: no CurrentConfig set (RequestBootstrap not run yet?)');
+        if (! Kernel::isBooted()) {
+            throw new RuntimeException('ScriptLoader: no CurrentConfig set (RequestBootstrap not run yet?)');
         }
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \RuntimeException('ScriptLoader: no CurrentConfig set (RequestBootstrap not run yet?)');
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new RuntimeException('ScriptLoader: no CurrentConfig set (RequestBootstrap not run yet?)');
         }
 
         return $currentConfig;
@@ -319,7 +327,7 @@ final class ScriptLoader
      */
     private static function do_combine(array $scripts, int $load_mode): array
     {
-        $combiner = new FileCombiner(\Piwigo\Auth\AccessControl::currentForCaching(), 'js', self::urlService(), \Piwigo\Core\CurrentPaths::get(), self::eventDispatcher(), self::currentTemplate(), self::currentConfig(), $scripts);
+        $combiner = new FileCombiner(AccessControl::currentForCaching(), 'js', self::urlService(), CurrentPaths::get(), self::eventDispatcher(), self::currentTemplate(), self::currentConfig(), $scripts);
         return $combiner->combine();
     }
 

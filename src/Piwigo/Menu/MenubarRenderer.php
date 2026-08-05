@@ -4,18 +4,34 @@ declare(strict_types=1);
 
 namespace Piwigo\Menu;
 
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Filter\FilterService;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Builds the main menubar's blocks. Injects nothing on its own
@@ -60,7 +76,7 @@ final class MenubarRenderer
      * write to, this method returns that value instead; every caller but
      * GalleryController ignores it.
      */
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, \Piwigo\Config\DeploymentPolicy $deploymentPolicy, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, Translator $translator, \Piwigo\Core\CurrentLogger $currentLogger): ?int
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, FilterState $filterState, SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, DeploymentPolicy $deploymentPolicy, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, Translator $translator, CurrentLogger $currentLogger): ?int
     {
         $template = $currentTemplate->get();
         $section_context = $sectionContextRegistry->current();
@@ -68,9 +84,9 @@ final class MenubarRenderer
         $conn = DbConnection::build();
         // Built once, reused below -- was the same PermissionService recipe
         // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
-        $permissionService = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $currentConfig), $currentUser, $filterState);
-        $tagService = new TagService($lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Tag\TagEntity::class), $permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger, $sessionService);
-        $categoryService = new CategoryService($lang, new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator);
+        $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, $filterState);
+        $tagService = new TagService($lang, EntityManagerFactory::build($conn)->getRepository(TagEntity::class), $permissionService, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger, $sessionService);
+        $categoryService = new CategoryService($lang, new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator);
 
         $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate, $currentConfig);
 
@@ -124,7 +140,7 @@ final class MenubarRenderer
         // -------------------------------------------------------------- categories
         $block = $menu->get_block('mbCategories');
         // ------------------------------------------------------------------------ filter
-        if ($currentConfig->menubarFilterIcon() and ! self::emptyValue($currentConfig->filterPages()) and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
+        if ($currentConfig->menubarFilterIcon() and ! self::emptyValue($currentConfig->filterPages()) and (bool) PageFilterHelper::getFilterPageValue('used')) {
             if ($filterState->isEnabled()) {
                 $template->assign(
                     'U_STOP_FILTER',
@@ -201,7 +217,7 @@ final class MenubarRenderer
 
         // ------------------------------------------------------------------------ tags
         $block = $menu->get_block('mbTags');
-        if ($block !== null and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'picture') {
+        if ($block !== null and PageFilterHelper::scriptBasename() !== 'picture') {
             $block->data = [];
             $tags = $tagService->getAvailableTags();
             usort($tags, $tagService->tagsCounterCompare(...));
@@ -332,7 +348,7 @@ final class MenubarRenderer
                       'TITLE' => $lang->t('display last user comments'),
                       'NAME' => $lang->t('Comments'),
                       'URL' => $urlService->getRootUrl() . 'comments.php',
-                      'COUNTER' => \Piwigo\Comment\CommentService::getNbAvailableComments(),
+                      'COUNTER' => CommentService::getNbAvailableComments(),
                   ];
             }
 

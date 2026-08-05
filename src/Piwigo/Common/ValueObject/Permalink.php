@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Common\ValueObject;
 
+use InvalidArgumentException;
+use Override;
+
 /**
  * Category permalink slug — URL-safe identifier stored in
  * `categories.permalink` (VARCHAR 64, utf8mb4_bin, UNIQUE).
@@ -31,43 +34,43 @@ final readonly class Permalink implements StringVo
     ) {}
 
     /**
-     * @throws \InvalidArgumentException when $value violates any of the documented constraints.
+     * @throws InvalidArgumentException when $value violates any of the documented constraints.
      */
-    #[\Override]
+    #[Override]
     public static function from(string $value): self
     {
         if ($value === '') {
-            throw new \InvalidArgumentException('Permalink must not be empty');
+            throw new InvalidArgumentException('Permalink must not be empty');
         }
         if (strlen($value) > self::MAX_LENGTH) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Permalink exceeds ' . self::MAX_LENGTH . " chars: '{$value}'",
             );
         }
         if (preg_match(self::CHARSET_PATTERN, $value) !== 1) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 "Permalink must contain only [a-zA-Z0-9_/-]: '{$value}'",
             );
         }
         if (str_starts_with($value, '/') || str_ends_with($value, '/')) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 "Permalink must not start or end with '/': '{$value}'",
             );
         }
         if (str_contains($value, '//')) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 "Permalink must not contain consecutive '/': '{$value}'",
             );
         }
         if (preg_match(self::NUMERIC_PATTERN, $value) === 1) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 "Permalink must not be numeric or start with `<digits>-`: '{$value}'",
             );
         }
         return new self($value);
     }
 
-    #[\Override]
+    #[Override]
     public static function tryFrom(mixed $value): ?self
     {
         if (! is_string($value)) {
@@ -75,18 +78,18 @@ final readonly class Permalink implements StringVo
         }
         try {
             return self::from($value);
-        } catch (\InvalidArgumentException) {
+        } catch (InvalidArgumentException) {
             return null;
         }
     }
 
-    #[\Override]
+    #[Override]
     public function equals(StringVo $other): bool
     {
         return $other instanceof self && $other->value === $this->value;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return $this->value;

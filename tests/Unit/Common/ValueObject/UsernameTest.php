@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
+use Override;
+use InvalidArgumentException;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
@@ -11,26 +13,26 @@ use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
 /** @extends StringVoContract<Username> */
 final class UsernameTest extends StringVoContract
 {
-    #[\Override]
+    #[Override]
     protected static function voClass(): string
     {
         return Username::class;
     }
 
-    #[\Override]
+    #[Override]
     protected static function validSample(): string
     {
         return 'admin';
     }
 
-    #[\Override]
+    #[Override]
     protected static function otherVoClass(): string
     {
         return ThemeId::class;
     }
 
     /** @return iterable<string, array{string}> */
-    #[\Override]
+    #[Override]
     public static function invalidSamples(): iterable
     {
         yield 'empty'              => [''];
@@ -67,7 +69,7 @@ final class UsernameTest extends StringVoContract
         // prefix/suffix/limit or swapping operand order) is caught.
         $tooLong = str_repeat('a', 101);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Username exceeds 100 chars: '{$tooLong}'");
         Username::from($tooLong);
     }

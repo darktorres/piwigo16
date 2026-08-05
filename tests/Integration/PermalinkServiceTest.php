@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Core\Lang;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\PageState;
@@ -20,7 +25,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
 
     private PermalinkRepository $repo;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -32,22 +37,22 @@ final class PermalinkServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         PageState::current()->reset();
 
-        $this->repo = new PermalinkRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()));
-        $this->service = new PermalinkService(\Piwigo\Core\Lang::current(), $this->repo, new ProcessCache(), PageState::current());
+        $this->repo = new PermalinkRepository(EntityManagerFactory::build(DbConnection::build()));
+        $this->service = new PermalinkService(Lang::current(), $this->repo, new ProcessCache(), PageState::current());
 
         $this->repo->clearCategoryPermalink(1);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->repo->clearCategoryPermalink(1);

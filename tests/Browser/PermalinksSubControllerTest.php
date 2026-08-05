@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -27,7 +28,7 @@ function permalinksDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function permalinksDb(): \mysqli|\PgSql\Connection
+function permalinksDb(): mysqli|Connection
 {
     return H::connect();
 }
@@ -41,7 +42,7 @@ function permalinksDb(): \mysqli|\PgSql\Connection
  * the value narrowing stays even though the query-level null narrowing is
  * now handled inside dbFetchAssoc() itself.
  */
-function permalinksCategoryPermalink(\mysqli|\PgSql\Connection $db, string $prefix, int $catId): ?string
+function permalinksCategoryPermalink(mysqli|Connection $db, string $prefix, int $catId): ?string
 {
     $row = H::dbFetchAssoc($db, sprintf('SELECT permalink FROM %scategories WHERE id = %d', $prefix, $catId));
 
@@ -53,7 +54,7 @@ function permalinksCategoryPermalink(\mysqli|\PgSql\Connection $db, string $pref
  * (that table's own PRIMARY KEY), or null if no such row exists -- same
  * narrowing rationale as permalinksCategoryPermalink() above.
  */
-function permalinksOldPermalinkCatId(\mysqli|\PgSql\Connection $db, string $prefix, string $permalink): ?int
+function permalinksOldPermalinkCatId(mysqli|Connection $db, string $prefix, string $permalink): ?int
 {
     $row = H::dbFetchAssoc($db, sprintf(
         "SELECT cat_id FROM %sold_permalinks WHERE permalink = '%s'",

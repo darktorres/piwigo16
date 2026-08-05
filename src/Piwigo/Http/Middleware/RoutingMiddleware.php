@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Http\Middleware;
 
+use Override;
 use Piwigo\Routing\Router;
 use Piwigo\Routing\RouteResult;
 use Psr\Http\Message\ResponseInterface;
@@ -17,7 +18,7 @@ final readonly class RoutingMiddleware implements MiddlewareInterface
         private Router $router
     ) {}
 
-    #[\Override]
+    #[Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $result = $this->router->dispatch($request);

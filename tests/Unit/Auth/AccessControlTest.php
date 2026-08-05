@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Auth;
 
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Core\AccessLevel;
+use Throwable;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -37,7 +40,7 @@ function seedAccessControlUser(UserStatus $status, int $id = 1): CurrentUser
 {
     $currentUser = new CurrentUser(new CurrentConfig());
     $currentUser->set(new User(
-        id: \Piwigo\Common\ValueObject\UserId::from($id),
+        id: UserId::from($id),
         username: '',
         email: '',
         language: '',
@@ -111,17 +114,17 @@ test('a guest without guest_access configured is below Guest level, and generic 
     $accessControl = accessControlTestMake(UserStatus::Normal, currentConfig: $currentConfig);
 
     $currentConfig->setGuestAccess(false);
-    expect($accessControl->isAuthorizeStatus(\Piwigo\Core\AccessLevel::Guest, 'guest'))->toBeFalse();
+    expect($accessControl->isAuthorizeStatus(AccessLevel::Guest, 'guest'))->toBeFalse();
 
     $currentConfig->setGuestAccess(true);
-    expect($accessControl->isAuthorizeStatus(\Piwigo\Core\AccessLevel::Guest, 'guest'))->toBeTrue();
+    expect($accessControl->isAuthorizeStatus(AccessLevel::Guest, 'guest'))->toBeTrue();
 
-    expect($accessControl->isAuthorizeStatus(\Piwigo\Core\AccessLevel::Guest, 'generic'))->toBeTrue()
-        ->and($accessControl->isAuthorizeStatus(\Piwigo\Core\AccessLevel::Classic, 'generic'))->toBeFalse();
+    expect($accessControl->isAuthorizeStatus(AccessLevel::Guest, 'generic'))->toBeTrue()
+        ->and($accessControl->isAuthorizeStatus(AccessLevel::Classic, 'generic'))->toBeFalse();
 });
 
 test('checkStatus does nothing when the current user meets the required access level', function (): void {
-    accessControlTestMake(UserStatus::Admin)->checkStatus(\Piwigo\Core\AccessLevel::Classic);
+    accessControlTestMake(UserStatus::Admin)->checkStatus(AccessLevel::Classic);
 
     expect(true)->toBeTrue();
 });
@@ -141,8 +144,8 @@ test('checkStatus calls the installed HtmlRenderingInterface accessDenied() befo
 
     $thrown = null;
     try {
-        $accessControl->checkStatus(\Piwigo\Core\AccessLevel::Classic);
-    } catch (\Throwable $e) {
+        $accessControl->checkStatus(AccessLevel::Classic);
+    } catch (Throwable $e) {
         $thrown = $e;
     }
 

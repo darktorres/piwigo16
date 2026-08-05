@@ -33,14 +33,14 @@ function generate_derivative_handler_test_current_config(): CurrentConfig
 {
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
     if (! $currentConfig instanceof CurrentConfig) {
-        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
 
     return $currentConfig;
 }
 
 beforeEach(function (): void {
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     $root = sys_get_temp_dir() . '/piwigo-generate-derivative-handler-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
@@ -51,7 +51,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     generate_derivative_handler_test_rrmdir(CurrentPaths::get()->root);
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     Kernel::reset();
 });
 

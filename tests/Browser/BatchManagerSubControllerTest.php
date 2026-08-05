@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PgSql\Connection;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
@@ -31,7 +32,7 @@ function bmDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-function bmDbConnect(): \mysqli|\PgSql\Connection
+function bmDbConnect(): mysqli|Connection
 {
     return H::connect();
 }
@@ -53,7 +54,7 @@ function bmInsertCaddie(int $userId, int $imageId): void
     // ON CONFLICT DO NOTHING is the real Postgres equivalent, no
     // conflict target needed since (user_id, element_id) is the table's
     // only PK/unique constraint.
-    $insertSql = $db instanceof \mysqli
+    $insertSql = $db instanceof mysqli
         ? 'INSERT INTO %scaddie (user_id, element_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE user_id = user_id'
         : 'INSERT INTO %scaddie (user_id, element_id) VALUES (%d, %d) ON CONFLICT DO NOTHING';
     H::dbQuery($db, sprintf(

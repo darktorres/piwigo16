@@ -5,23 +5,42 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
+use Piwigo\Admin\Request\BatchManagerUnitRequest;
+use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Core\PaginationService;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocBeginElementSetUnit;
 use Piwigo\Event\Location\LocEndElementSetUnit;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Lang\Translator;
+use Piwigo\Permission\ForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
-use Piwigo\Template\Template;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/batch_manager_unit.php (the "unit" mode tab of the
@@ -67,24 +86,24 @@ final class BatchManagerUnitPageRenderer
         private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\ProcessCache $processCache,
+        private readonly ProcessCache $processCache,
         private readonly LoadedPlugins $loadedPlugins,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
-        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly ActivityService $activityService,
         private readonly TagService $tagService,
         private readonly PermissionService $permissionService,
         private readonly CategoryService $categoryService,
         private readonly ImageService $imageService,
-        private readonly \Piwigo\Users\UserService $userService,
-        private readonly \Piwigo\Html\HtmlService $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\Lang\Translator $translator,
+        private readonly UserService $userService,
+        private readonly HtmlService $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly Translator $translator,
     ) {}
 
     /**
@@ -105,10 +124,10 @@ final class BatchManagerUnitPageRenderer
         // |                        unit mode form submission                      |
         // +-------------------------------------------------------------------+
 
-        $batchManagerUnitRequest = Request\BatchManagerUnitRequest::fromGlobals($this->inputValidator);
+        $batchManagerUnitRequest = BatchManagerUnitRequest::fromGlobals($this->inputValidator);
 
         if ($batchManagerUnitRequest->isSubmitted) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($htmlRenderer, $this->redirectService);
             $collection = explode(',', $batchManagerUnitRequest->elementIds);
 
@@ -220,9 +239,9 @@ final class BatchManagerUnitPageRenderer
             [
 
                 'U_ELEMENTS_PAGE' => $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
-                'level_options' => \Piwigo\Permission\PermissionService::getPrivacyLevelOptions(),
+                'level_options' => PermissionService::getPrivacyLevelOptions(),
                 'ADMIN_PAGE_TITLE' => $this->lang->t('Batch Manager'),
-                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                'PWG_TOKEN' => new CsrfService()
                     ->getToken(),
             ]
         );
@@ -255,7 +274,7 @@ final class BatchManagerUnitPageRenderer
         if (count($cat_elements_id) > 0) {
             $page_nb_images = $nb_images;
 
-            $nav_bar = new \Piwigo\Core\PaginationService($this->currentConfig)
+            $nav_bar = new PaginationService($this->currentConfig)
                 ->createNavigationBar($base_url . $this->urlService->getQueryStringDiff(['start']), count($cat_elements_id), $page_start, $page_nb_images);
             $template->assign([
                 'navbar' => $nav_bar,
@@ -315,7 +334,7 @@ final class BatchManagerUnitPageRenderer
             }
 
             $tagService = $this->tagService;
-            $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
+            $imageService = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
 
             foreach ($images as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this
@@ -342,7 +361,7 @@ final class BatchManagerUnitPageRenderer
 
                 $row_file = is_string($row['file']) ? $row['file'] : '';
                 $legend = $htmlRenderer->renderElementName($row);
-                if ($legend !== \Piwigo\Core\StringHelper::getNameFromFile($row_file)) {
+                if ($legend !== StringHelper::getNameFromFile($row_file)) {
                     $legend .= ' (' . $row_file . ')';
                 }
                 $row_path = is_scalar($row['path']) ? (string) $row['path'] : '';
@@ -406,7 +425,7 @@ final class BatchManagerUnitPageRenderer
                     ),
                     explode(
                         ',',
-                        new \Piwigo\Permission\ForbiddenCategoriesCache($this->permissionService, \Piwigo\Cache\CachePools::permissions())
+                        new ForbiddenCategoriesCache($this->permissionService, CachePools::permissions())
                             ->getForUser($user->id->value, $user->status->value)
                     )
                 );
@@ -479,10 +498,10 @@ final class BatchManagerUnitPageRenderer
                             'DIMENSIONS' => $row_width . 'x' . $row_height . ' px',
                             'FORMAT' => ($row_width >= $row_height) ? 1 : 0, // 0:horizontal, 1:vertical
                             'FILESIZE' => $this->lang->t('%.2f MB', $row_filesize / 1024.0),
-                            'REGISTRATION_DATE' => \Piwigo\Core\DateHelper::formatDate($row_date_available),
+                            'REGISTRATION_DATE' => DateHelper::formatDate($row_date_available),
                             'EXT' => $this->lang->t('%s file type', end($extTab)),
-                            'POST_DATE' => $this->lang->t('Added on %s', \Piwigo\Core\DateHelper::formatDate($row_date_available, ['day', 'month', 'year'])),
-                            'AGE' => $this->lang->t(ucfirst(\Piwigo\Core\DateHelper::timeSince($row_date_available, 'year'))),
+                            'POST_DATE' => $this->lang->t('Added on %s', DateHelper::formatDate($row_date_available, ['day', 'month', 'year'])),
+                            'AGE' => $this->lang->t(ucfirst(DateHelper::timeSince($row_date_available, 'year'))),
                             'ADDED_BY' => $this->lang->t('Added by %s', $row_added_by !== null ? ($added_by_username_of[$row_added_by] ?? $this->lang->t('N/A')) : $this->lang->t('N/A')),
                             'STATS' => $this->lang->t('Visited %d times', $row['hit']),
                             'FILE' => $this->lang->t('%s', $row['file']),
@@ -490,10 +509,10 @@ final class BatchManagerUnitPageRenderer
                             'related_category_ids' => json_encode($related_category_ids),
                             'U_JUMPTO' => (isset($url_img) and $user->level >= $media['image']['level']) ? $url_img : null,
                             'tag_selection' => $tag_selection,
-                            'U_DOWNLOAD' => 'action.php?id=' . $row_id_str . '&amp;part=e&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken() . '&amp;download',
+                            'U_DOWNLOAD' => 'action.php?id=' . $row_id_str . '&amp;part=e&amp;pwg_token=' . new CsrfService()->getToken() . '&amp;download',
                             'U_HISTORY' => $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $row_id_str,
                             'U_ACTIVITY' => $this->urlService->getRootUrl() . 'admin.php?page=user_activity&photo=' . $row_id_str,
-                            'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
+                            'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new CsrfService()->getToken(),
                             'U_SYNC' => $admin_url_start . '&amp;sync_metadata=1',
                             'PATH' => $row['path'],
                             'level_options_selected' => [$selected_level],

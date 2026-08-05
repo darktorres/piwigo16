@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use LogicException;
+use stdClass;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ErrorCollector;
@@ -63,7 +66,7 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
      */
     private ?ErrorCollector $errorCollectorUnderTest = null;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -93,7 +96,7 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
         unset($_SERVER['PATH_INFO']);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         DbCredentials::current()->seed($this->originalDbEnv);
@@ -131,7 +134,7 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
     {
         $paths = Paths::fromRoot(dirname(__DIR__, 2));
 
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage('Container returned an unexpected type for ' . ConfigService::class);
 
         // KernelContainerOverride::with()'s own finally already guarantees
@@ -145,7 +148,7 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
         // booted is already forced true by the override.
         KernelContainerOverride::with(
             [
-                ConfigService::class => new \stdClass(),
+                ConfigService::class => new stdClass(),
                 Paths::class => $paths,
             ],
             function () use ($paths): void {

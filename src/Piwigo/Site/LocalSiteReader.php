@@ -11,10 +11,22 @@ declare(strict_types=1);
 
 namespace Piwigo\Site;
 
+use LogicException;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\FilterState;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
+use Piwigo\Core\StringHelper;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
+use Piwigo\Users\CurrentUser;
 
 // provides data for site synchronization from the local file system
 final class LocalSiteReader
@@ -31,7 +43,7 @@ final class LocalSiteReader
 
     public function __construct(
         public string $site_url,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly CurrentConfig $currentConfig,
         private readonly ?MetadataService $metadataService = null,
     ) {
         // Legacy Coupling Retirement Track A batch A4: was memoized on the
@@ -50,7 +62,7 @@ final class LocalSiteReader
     private function metadataService(): MetadataService
     {
         return $this->metadataService
-            ?? new MetadataService($this->lang(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), new \Piwigo\Core\CurrentLogger(), $this->eventDispatcher(), $this->currentConfig, new \Piwigo\Users\CurrentUser($this->currentConfig), $this->sessionService(), new \Piwigo\Core\FilterState());
+            ?? new MetadataService($this->lang(), new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), new CurrentLogger(), $this->eventDispatcher(), $this->currentConfig, new CurrentUser($this->currentConfig), $this->sessionService(), new FilterState());
     }
 
     /**
@@ -60,11 +72,11 @@ final class LocalSiteReader
      * callers construct with just a site URL" simplicity (singleton/
      * service-locator elimination campaign, Phase 11 sub-phase 11G).
      */
-    private function lang(): \Piwigo\Core\Lang
+    private function lang(): Lang
     {
-        $lang = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\Lang::class);
-        if (! $lang instanceof \Piwigo\Core\Lang) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\Lang::class);
+        $lang = Kernel::container()->get(Lang::class);
+        if (! $lang instanceof Lang) {
+            throw new LogicException('Container returned an unexpected type for ' . Lang::class);
         }
 
         return $lang;
@@ -76,36 +88,36 @@ final class LocalSiteReader
      * identical pre-boot fallback (unlike lang()/Lang::current(), which
      * has no safe default and always throws).
      */
-    private function eventDispatcher(): \Piwigo\PluginConfig\EventDispatcher
+    private function eventDispatcher(): EventDispatcher
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $eventDispatcher = \Piwigo\Core\Kernel::container()->get(\Piwigo\PluginConfig\EventDispatcher::class);
-            if (! $eventDispatcher instanceof \Piwigo\PluginConfig\EventDispatcher) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\PluginConfig\EventDispatcher::class);
+        if (Kernel::isBooted()) {
+            $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
+            if (! $eventDispatcher instanceof EventDispatcher) {
+                throw new LogicException('Container returned an unexpected type for ' . EventDispatcher::class);
             }
 
             return $eventDispatcher;
         }
 
-        return new \Piwigo\PluginConfig\EventDispatcher();
+        return new EventDispatcher();
     }
 
     /**
      * Same reasoning as eventDispatcher() above -- SessionService::get()
      * has its own identical pre-boot fallback too.
      */
-    private function sessionService(): \Piwigo\Session\SessionService
+    private function sessionService(): SessionService
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $sessionService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Session\SessionService::class);
-            if (! $sessionService instanceof \Piwigo\Session\SessionService) {
-                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Session\SessionService::class);
+        if (Kernel::isBooted()) {
+            $sessionService = Kernel::container()->get(SessionService::class);
+            if (! $sessionService instanceof SessionService) {
+                throw new LogicException('Container returned an unexpected type for ' . SessionService::class);
             }
 
             return $sessionService;
         }
 
-        return new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Session\SessionEntity::class), new \Piwigo\Config\CurrentConfig());
+        return new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), new CurrentConfig());
     }
 
     /**
@@ -152,8 +164,8 @@ final class LocalSiteReader
                 }
 
                 if (is_file($path . '/' . $node)) {
-                    $extension = strtolower(\Piwigo\Core\StringHelper::getExtension($node));
-                    $filename_wo_ext = \Piwigo\Core\StringHelper::getFilenameWoExtension($node);
+                    $extension = strtolower(StringHelper::getExtension($node));
+                    $filename_wo_ext = StringHelper::getFilenameWoExtension($node);
 
                     if (isset($flip_file_ext[$extension])) {
                         $representative_ext = null;
@@ -206,12 +218,12 @@ final class LocalSiteReader
         $data = [];
 
         $filename = basename($file);
-        $extension = \Piwigo\Core\StringHelper::getExtension($filename);
+        $extension = StringHelper::getExtension($filename);
 
         $representative_ext = null;
         if (! isset($this->flip_picture_ext[$extension])) {
             $dirname = dirname($file);
-            $filename_wo_ext = \Piwigo\Core\StringHelper::getFilenameWoExtension($filename);
+            $filename_wo_ext = StringHelper::getFilenameWoExtension($filename);
             $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
         }
 

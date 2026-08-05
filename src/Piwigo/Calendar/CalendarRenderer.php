@@ -11,14 +11,27 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Piwigo\Cache\CachePools;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\TemplateInterface;
+use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Users\CurrentUser;
+use Psr\Cache\CacheItemInterface;
 
 /**
  * P23 batch 8c: ported from `initialize_calendar()`
@@ -49,12 +62,12 @@ final readonly class CalendarRenderer
         private HtmlRenderingInterface $htmlRenderer,
         private TemplateInterface $template,
         private UrlServiceInterface $urlService,
-        private \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private \Piwigo\Lang\Translator $translator,
-        private \Piwigo\Core\FilterState $filterState,
-        private \Piwigo\Image\ImageStdParams $imageStdParams,
+        private CurrentUser $currentUser,
+        private readonly CurrentConfig $currentConfig,
+        private EventDispatcher $eventDispatcher,
+        private Translator $translator,
+        private FilterState $filterState,
+        private ImageStdParams $imageStdParams,
     ) {}
 
     /**
@@ -79,10 +92,10 @@ final readonly class CalendarRenderer
 
         // ------------------ initialize the condition on items to take into account ---
         $conn = DbConnection::build();
-        $permissionService = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser, $this->filterState);
+        $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser, $this->filterState);
         $calendarService = new CalendarService(
             $permissionService,
-            new CategoryService($this->lang, new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, $this->translator)
+            new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, $this->translator)
         );
 
         if ($section === 'categories') { // we will regenerate the items by including subcats elements
@@ -109,7 +122,7 @@ final readonly class CalendarRenderer
         }
 
         // -------------------------------------- initialize the calendar parameters ---
-        \Piwigo\Core\TimingHelper::debug('start initialize_calendar');
+        TimingHelper::debug('start initialize_calendar');
 
         $fields = [
             // Created
@@ -148,7 +161,7 @@ final readonly class CalendarRenderer
         $cal_style = $chronology_style;
         $classname = $styles[$cal_style]['classname'];
 
-        $calendar = new $classname($this->lang, new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), $this->urlService, $this->currentConfig, $this->imageStdParams);
+        $calendar = new $classname($this->lang, new CalendarRepository(EntityManagerFactory::build($conn)), $this->urlService, $this->currentConfig, $this->imageStdParams);
         $calendar->chronology_field = $chronologyField;
 
         // Retrieve view
@@ -204,7 +217,7 @@ final readonly class CalendarRenderer
 
         $comment = '';
         $must_show_list = true; // true until calendar generates its own display
-        if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'picture') { // basename without file extention
+        if (PageFilterHelper::scriptBasename() !== 'picture') { // basename without file extention
             if ($calendar->generate_category_content($template)) {
                 $items = [];
                 $must_show_list = false;
@@ -288,7 +301,7 @@ final readonly class CalendarRenderer
                     or ($page_chronology_date[0] === 'any' && count($page_chronology_date) === 1))
             ) {
                 $user = $this->currentUser->get();
-                $cache_item = \Piwigo\Cache\CachePools::calendarNav()
+                $cache_item = CachePools::calendarNav()
                     ->getItem('nav_' . $user->id->value . '_' . md5($calendar->date_field . $order_by));
             }
 
@@ -299,7 +312,7 @@ final readonly class CalendarRenderer
                 /** @var list<int> $cached_items */
                 $items = $cached_items;
             } else {
-                $items = new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($conn))
+                $items = new CalendarRepository(EntityManagerFactory::build($conn))
                     ->findImageIds(
                         $calendar->scope->rawSqlFromWhere,
                         $calendar->get_date_where(),
@@ -307,13 +320,13 @@ final readonly class CalendarRenderer
                         $calendar->scope,
                         $calendar->get_date_where(forDql: true)
                     );
-                if ($cache_item instanceof \Psr\Cache\CacheItemInterface) {
+                if ($cache_item instanceof CacheItemInterface) {
                     $cache_item->set($items);
-                    \Piwigo\Cache\CachePools::calendarNav()->save($cache_item);
+                    CachePools::calendarNav()->save($cache_item);
                 }
             }
         }
-        \Piwigo\Core\TimingHelper::debug('end initialize_calendar');
+        TimingHelper::debug('end initialize_calendar');
 
         return new CalendarRenderResult($items, $comment, $page_chronology_date, $chronology_style, $chronology_view);
     }

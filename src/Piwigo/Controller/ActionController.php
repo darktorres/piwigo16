@@ -4,17 +4,30 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Request\ActionRequest;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\LocActionBeforeHttpHeaders;
 use Piwigo\History\HistoryService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImagePathHelper;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -58,23 +71,23 @@ final class ActionController implements ControllerInterface
     public function __construct(
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly CurrentUser $currentUser,
         private readonly HistoryService $historyService,
-        private readonly \Piwigo\Permission\PermissionService $permissionService,
-        private readonly \Piwigo\Image\ImageService $imageService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly PermissionService $permissionService,
+        private readonly ImageService $imageService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $this->accessControl->checkStatus(AccessLevel::Guest);
 
         $conn = DbConnection::build();
 
-        $actionRequest = Request\ActionRequest::fromGlobals($this->currentConfig->isFormatsEnabled(), $this->inputValidator);
+        $actionRequest = ActionRequest::fromGlobals($this->currentConfig->isFormatsEnabled(), $this->inputValidator);
 
         $format = null;
         if ($actionRequest->formatRequested) {
@@ -82,7 +95,7 @@ final class ActionController implements ControllerInterface
                 return $this->doError(400, 'Invalid request - format');
             }
 
-            $format = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+            $format = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
                 ->findFormatById($actionRequest->formatId);
 
             if ($format === null) {
@@ -100,7 +113,7 @@ final class ActionController implements ControllerInterface
             $get_part = $actionRequest->part;
         }
 
-        $elementImage = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+        $elementImage = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
             ->findById($image_id);
         if ($elementImage === null) {
             return $this->doError(404, 'Requested id not found');
@@ -112,7 +125,7 @@ final class ActionController implements ControllerInterface
 
         // special download action for admins
         $is_admin_download = false;
-        if ($this->accessControl->isAdmin() and $actionRequest->pwgToken === new \Piwigo\Csrf\CsrfService()->getToken()) {
+        if ($this->accessControl->isAdmin() and $actionRequest->pwgToken === new CsrfService()->getToken()) {
             $is_admin_download = true;
             $this->currentUser->set($this->currentUser->get()->withEnabledHigh(true));
         }
@@ -143,7 +156,7 @@ final class ActionController implements ControllerInterface
                         return $this->doError(401, 'Access denied e');
                     }
                 }
-                $file = \Piwigo\Image\ImagePathHelper::getElementPath($element_info, $this->urlService);
+                $file = ImagePathHelper::getElementPath($element_info, $this->urlService);
                 break;
             case 'r':
                 $representative_ext = $element_info['representative_ext'] ?? null;
@@ -154,16 +167,16 @@ final class ActionController implements ControllerInterface
                 if (! is_string($representative_ext) || $representative_ext === '' || $representative_ext === '0') {
                     return $this->doError(404, 'Requested file not found');
                 }
-                $file = \Piwigo\Image\ImagePathHelper::originalToRepresentative(\Piwigo\Image\ImagePathHelper::getElementPath($element_info, $this->urlService), $representative_ext);
+                $file = ImagePathHelper::originalToRepresentative(ImagePathHelper::getElementPath($element_info, $this->urlService), $representative_ext);
                 break;
             case 'f':
                 if ($format_row === null) {
                     return $this->doError(400, 'Invalid request - format');
                 }
                 $format_ext = $format_row->ext;
-                $file = \Piwigo\Image\ImagePathHelper::originalToFormat(\Piwigo\Image\ImagePathHelper::getElementPath($element_info, $this->urlService), $format_ext);
+                $file = ImagePathHelper::originalToFormat(ImagePathHelper::getElementPath($element_info, $this->urlService), $format_ext);
                 $original_file = $element_info['file'];
-                $element_info['file'] = \Piwigo\Core\StringHelper::getFilenameWoExtension($original_file) . '.' . $format_ext;
+                $element_info['file'] = StringHelper::getFilenameWoExtension($original_file) . '.' . $format_ext;
                 break;
         }
 
@@ -225,7 +238,7 @@ final class ActionController implements ControllerInterface
         }
 
         if ($ctype === null) { // give it a guess
-            $ctype = $this->guessMimeType(\Piwigo\Core\StringHelper::getExtension($file));
+            $ctype = $this->guessMimeType(StringHelper::getExtension($file));
         }
 
         $http_headers['Content-Type'] = $ctype;

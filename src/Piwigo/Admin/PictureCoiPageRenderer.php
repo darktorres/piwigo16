@@ -4,15 +4,22 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Request\PictureCoiRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeUrlCodec;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/picture_coi.php (page slug "picture_coi").
@@ -22,11 +29,11 @@ final class PictureCoiPageRenderer
     public function __construct(
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
-        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly ImageStdParams $imageStdParams,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
     ) {}
 
     public function render(): void
@@ -38,15 +45,15 @@ final class PictureCoiPageRenderer
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        $pictureCoiRequest = Request\PictureCoiRequest::fromGlobals($this->inputValidator);
+        $pictureCoiRequest = PictureCoiRequest::fromGlobals($this->inputValidator);
         $image_id = $pictureCoiRequest->imageId;
 
         if ($pictureCoiRequest->isSubmitted) {
-            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+            EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
                 ->updateCoi($image_id, $pictureCoiRequest->coi);
         }
 
-        $image = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+        $image = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
             ->findById($image_id);
         if ($image === null) {
             $htmlRenderer->pageNotFound($this->redirectService, 'Requested photo does not exist');

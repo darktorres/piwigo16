@@ -46,7 +46,7 @@ final class Container
     {
         $builder = new ContainerBuilder();
         $builder->addDefinitions(dirname(__DIR__, 3) . '/config/container.php');
-        if ($paths instanceof \Piwigo\Core\Paths) {
+        if ($paths instanceof Paths) {
             $builder->addDefinitions([
                 Paths::class => $paths,
             ]);

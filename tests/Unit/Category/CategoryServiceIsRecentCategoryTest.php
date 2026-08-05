@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Category;
 
+use PHPUnit\Framework\TestCase;
+use DateTimeImmutable;
 use Piwigo\Category\CategoryService;
 
 /**
@@ -20,7 +22,7 @@ use Piwigo\Category\CategoryService;
  * up identical either way regardless of which operand's copy gets
  * assigned. Not worth chasing.
  */
-final class CategoryServiceIsRecentCategoryTest extends \PHPUnit\Framework\TestCase
+final class CategoryServiceIsRecentCategoryTest extends TestCase
 {
     private const string NOW = '2026-08-01 00:00:00';
 
@@ -32,7 +34,7 @@ final class CategoryServiceIsRecentCategoryTest extends \PHPUnit\Framework\TestC
             self::NOW,
             7,
             null,
-            new \DateTimeImmutable(self::NOW)
+            new DateTimeImmutable(self::NOW)
         ));
     }
 
@@ -42,7 +44,7 @@ final class CategoryServiceIsRecentCategoryTest extends \PHPUnit\Framework\TestC
             null,
             7,
             self::NOW,
-            new \DateTimeImmutable(self::NOW)
+            new DateTimeImmutable(self::NOW)
         ));
     }
 
@@ -51,7 +53,7 @@ final class CategoryServiceIsRecentCategoryTest extends \PHPUnit\Framework\TestC
         // last_photo_date 2 days ago -> thresholdFromLastPhoto = 3 days ago.
         // recentPeriod=7 -> thresholdFromToday = 7 days ago. LEAST() picks
         // the earlier (smaller) of the two -- 7 days ago wins here.
-        $now = new \DateTimeImmutable(self::NOW);
+        $now = new DateTimeImmutable(self::NOW);
         $lastPhotoDate = '2026-07-30 00:00:00'; // 2 days before NOW
 
         self::assertTrue(CategoryService::isRecentCategory(
@@ -74,7 +76,7 @@ final class CategoryServiceIsRecentCategoryTest extends \PHPUnit\Framework\TestC
         // ago, earlier than the naive 7-day threshold -- LEAST() picks it,
         // so recent_cats still shows the gallery's actual last activity
         // instead of coming back empty.
-        $now = new \DateTimeImmutable(self::NOW);
+        $now = new DateTimeImmutable(self::NOW);
         $lastPhotoDate = '2026-06-02 00:00:00'; // 60 days before NOW
 
         self::assertTrue(CategoryService::isRecentCategory(
@@ -93,7 +95,7 @@ final class CategoryServiceIsRecentCategoryTest extends \PHPUnit\Framework\TestC
 
     public function test_boundary_date_last_exactly_at_the_threshold_counts_as_recent(): void
     {
-        $now = new \DateTimeImmutable(self::NOW);
+        $now = new DateTimeImmutable(self::NOW);
 
         self::assertTrue(CategoryService::isRecentCategory(
             '2026-07-25 00:00:00', // exactly NOW - 7 days

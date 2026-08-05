@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use LogicException;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
@@ -11,6 +12,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ShutdownHandler;
 use Piwigo\Users\CurrentUser;
+use RuntimeException;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -95,22 +97,22 @@ final class CliBootstrap
         $container = Kernel::container();
         $currentUser = $container->get(CurrentUser::class);
         if (! $currentUser instanceof CurrentUser) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentUser::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
         }
         $currentUser->attachGlobals();
         $configService = $container->get(ConfigService::class);
         if (! $configService instanceof ConfigService) {
-            throw new \LogicException('Container returned an unexpected type for ' . ConfigService::class);
+            throw new LogicException('Container returned an unexpected type for ' . ConfigService::class);
         }
         $currentConfigService = $container->get(CurrentConfigService::class);
         if (! $currentConfigService instanceof CurrentConfigService) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfigService::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfigService::class);
         }
         $currentConfigService->set($configService);
 
         $commandClasses = require $commandsFile ?? dirname(__DIR__, 3) . '/config/commands.php';
         if (! is_array($commandClasses)) {
-            throw new \RuntimeException('config/commands.php must return an array of Command class-strings.');
+            throw new RuntimeException('config/commands.php must return an array of Command class-strings.');
         }
 
         $application = new Application('piwigo');
@@ -118,12 +120,12 @@ final class CliBootstrap
 
         foreach ($commandClasses as $commandClass) {
             if (! is_string($commandClass)) {
-                throw new \RuntimeException('config/commands.php entries must be class-strings.');
+                throw new RuntimeException('config/commands.php entries must be class-strings.');
             }
 
             $command = $container->get($commandClass);
             if (! $command instanceof Command) {
-                throw new \LogicException(
+                throw new LogicException(
                     "config/commands.php entry {$commandClass} did not resolve to a Symfony Console Command."
                 );
             }

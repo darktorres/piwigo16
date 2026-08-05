@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use LogicException;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Kernel;
 
 /**
  * Container-shared instance holding the authenticated-user-for-this-request
@@ -55,10 +57,10 @@ final class CurrentUser
 
     public static function current(): self
     {
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            $instance = \Piwigo\Core\Kernel::container()->get(self::class);
+        if (Kernel::isBooted()) {
+            $instance = Kernel::container()->get(self::class);
             if (! $instance instanceof self) {
-                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+                throw new LogicException('Container returned an unexpected type for ' . self::class);
             }
 
             return $instance;
@@ -93,7 +95,7 @@ final class CurrentUser
     public function get(): User
     {
         if (! $this->user instanceof User) {
-            throw new \LogicException('CurrentUser not initialised -- call Kernel::boot() first.');
+            throw new LogicException('CurrentUser not initialised -- call Kernel::boot() first.');
         }
 
         return $this->user;

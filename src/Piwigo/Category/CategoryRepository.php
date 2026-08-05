@@ -6,6 +6,7 @@ namespace Piwigo\Category;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
@@ -22,6 +23,7 @@ use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\PhotoSortField;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 
@@ -624,7 +626,7 @@ final class CategoryRepository
             return null;
         }
 
-        return \Piwigo\Image\PhotoSortField::resolveDqlOrderBy($this->currentConfig->orderBy(), $imageAlias, $imageCategoryAlias);
+        return PhotoSortField::resolveDqlOrderBy($this->currentConfig->orderBy(), $imageAlias, $imageCategoryAlias);
     }
 
     /**
@@ -2179,7 +2181,7 @@ final class CategoryRepository
             $qb->where('c.representativePictureId IS NOT NULL');
         } else {
             $qb->distinct()
-                ->innerJoin(ImageCategoryEntity::class, 'ic', \Doctrine\ORM\Query\Expr\Join::WITH, 'ic.categoryId = c.id')
+                ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.categoryId = c.id')
                 ->where('c.representativePictureId IS NULL');
         }
 
@@ -2206,7 +2208,7 @@ final class CategoryRepository
     {
         $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
-            ->innerJoin(UserAccessEntity::class, 'ua', \Doctrine\ORM\Query\Expr\Join::WITH, 'ua.catId = c.id')
+            ->innerJoin(UserAccessEntity::class, 'ua', Join::WITH, 'ua.catId = c.id')
             ->where('c.status = :status')
             ->andWhere('ua.userId = :userId')
             ->setParameter('status', 'private')
@@ -2255,7 +2257,7 @@ final class CategoryRepository
     {
         return self::narrowIdNameUppercatsRankRows($this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
-            ->innerJoin(GroupAccessEntity::class, 'ga', \Doctrine\ORM\Query\Expr\Join::WITH, 'ga.catId = c.id')
+            ->innerJoin(GroupAccessEntity::class, 'ga', Join::WITH, 'ga.catId = c.id')
             ->where('c.status = :status')
             ->andWhere('ga.groupId = :groupId')
             ->setParameter('status', 'private')
@@ -2900,7 +2902,7 @@ final class CategoryRepository
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
                 ->select('c.id')
-                ->innerJoin(GroupAccessEntity::class, 'ga', \Doctrine\ORM\Query\Expr\Join::WITH, 'ga.catId = c.id')
+                ->innerJoin(GroupAccessEntity::class, 'ga', Join::WITH, 'ga.catId = c.id')
                 ->where('c.status = :status')
                 ->andWhere('ga.groupId = :groupId')
                 ->setParameter('status', 'private')
@@ -2937,8 +2939,8 @@ final class CategoryRepository
             ->select('c.id AS cat_id', 'c.uppercats', 'c.globalRank AS global_rank')
             ->distinct()
             ->from(UserGroupEntity::class, 'ug')
-            ->innerJoin(GroupAccessEntity::class, 'ga', \Doctrine\ORM\Query\Expr\Join::WITH, 'ug.groupId = ga.groupId')
-            ->innerJoin(CategoryEntity::class, 'c', \Doctrine\ORM\Query\Expr\Join::WITH, 'c.id = ga.catId')
+            ->innerJoin(GroupAccessEntity::class, 'ga', Join::WITH, 'ug.groupId = ga.groupId')
+            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'c.id = ga.catId')
             ->where('ug.userId = :userId')
             ->setParameter('userId', UserId::from($userId))
             ->getQuery()
@@ -2978,7 +2980,7 @@ final class CategoryRepository
     {
         $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id')
-            ->innerJoin(UserAccessEntity::class, 'ua', \Doctrine\ORM\Query\Expr\Join::WITH, 'ua.catId = c.id')
+            ->innerJoin(UserAccessEntity::class, 'ua', Join::WITH, 'ua.catId = c.id')
             ->where('c.status = :status')
             ->andWhere('ua.userId = :userId')
             ->setParameter('status', 'private')
@@ -3289,7 +3291,7 @@ final class CategoryRepository
             ->createQueryBuilder()
             ->select('i.dateAvailable AS date_available')
             ->from(ImageCategoryEntity::class, 'ic')
-            ->innerJoin(ImageEntity::class, 'i', \Doctrine\ORM\Query\Expr\Join::WITH, 'i.id = ic.imageId')
+            ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'i.id = ic.imageId')
             ->where('ic.categoryId = :categoryId')
             ->setParameter('categoryId', CategoryId::from($categoryId))
             ->getQuery()
@@ -3606,7 +3608,7 @@ final class CategoryRepository
             $platform = $this->em
                 ->getConnection()
                 ->getDatabasePlatform();
-            $regexOperator = $platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform ? '~' : $platform->getRegexpExpression();
+            $regexOperator = $platform instanceof PostgreSQLPlatform ? '~' : $platform->getRegexpExpression();
 
             return new SqlCondition('uppercats ' . $regexOperator . ' :catUppercatsLike', [
                 'catUppercatsLike' => '(^|,)' . $catId . '(,|$)',
@@ -3670,7 +3672,7 @@ final class CategoryRepository
             // `visible` is a genuine boolean column -- a bare `1` literal
             // is valid MySQL tinyint(1) input but Postgres rejects it
             // outright against a real boolean column.
-            $visibleLiteral = $conn->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform ? 'true' : '1';
+            $visibleLiteral = $conn->getDatabasePlatform() instanceof PostgreSQLPlatform ? 'true' : '1';
             $conditions[] = new SqlCondition("status = 'public' AND visible = {$visibleLiteral}");
         }
 

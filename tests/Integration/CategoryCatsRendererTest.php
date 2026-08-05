@@ -4,10 +4,22 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use LogicException;
+use Piwigo\Core\FilterState;
+use Piwigo\Core\Lang;
+use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Url\RootPathOverride;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Core\Logger;
+use Piwigo\Core\ProcessCache;
+use Piwigo\Core\DateHelper;
+use Error;
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\CachePools;
 use Piwigo\Category\CategoryCatsRenderer;
-use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
@@ -30,7 +42,6 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Template;
-use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 
@@ -47,7 +58,7 @@ final class CategoryCatsRendererFakeFilterUpdater implements FilterUpdaterInterf
     /** @var list<int> */
     public array $forceCountImagesZeroFor = [];
 
-    #[\Override]
+    #[Override]
     public function updateCatsWithFilteredData(array &$cats): void
     {
         foreach ($cats as $idx => $cat) {
@@ -66,7 +77,7 @@ final class CategoryCatsRendererFakeFilterUpdater implements FilterUpdaterInterf
  */
 final class CategoryCatsRendererFakeActivityLogger implements ActivityLoggerInterface
 {
-    #[\Override]
+    #[Override]
     public function record(string $object, int|string|array $objectId, string $action, array $details = []): void {}
 }
 
@@ -108,7 +119,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -120,9 +131,9 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -135,7 +146,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
 
-        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current());
+        $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
         $configService->loadConfFromDb();
         ImageStdParams::current()->load_from_db();
 
@@ -152,43 +163,43 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $imageRepo = $em->getRepository(ImageEntity::class);
         self::assertInstanceOf(ImageRepository::class, $imageRepo);
 
-        $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
-        if (! $filterState instanceof \Piwigo\Core\FilterState) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        $filterState = Kernel::container()->get(FilterState::class);
+        if (! $filterState instanceof FilterState) {
+            throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
 
         $permissionService = new PermissionService(
             new PermissionRepository($em),
             $em->getRepository(GroupEntity::class),
             $categoryRepo,
-            \Piwigo\Users\CurrentUser::current(),
+            CurrentUser::current(),
             $filterState
         );
-        $this->categoryService = new CategoryService(\Piwigo\Core\Lang::current(), $categoryRepo, $permissionService, \Piwigo\Config\CurrentConfig::current(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Lang\Translator::get());
+        $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $permissionService, CurrentConfig::current(), new EventDispatcher(), Translator::get());
 
-        $htmlService = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
+        $htmlService = HtmlServiceTestFactory::build();
         // mainpage_categories.tpl's own {assign var=derivative
         // value=$pwg->derivative(...)} constructs a real DerivativeImage per
         // category thumbnail, whose get_url() now resolves UrlServiceInterface
         // live from the container (singleton/service-locator elimination
         // campaign, Phase 6) -- $urlService below must share the same
         // container-shared RootPathOverride, see that class's own docblock.
-        $rootPathOverride = Kernel::container()->get(\Piwigo\Url\RootPathOverride::class);
-        if (! $rootPathOverride instanceof \Piwigo\Url\RootPathOverride) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Url\RootPathOverride::class);
+        $rootPathOverride = Kernel::container()->get(RootPathOverride::class);
+        if (! $rootPathOverride instanceof RootPathOverride) {
+            throw new LogicException('Container returned an unexpected type for ' . RootPathOverride::class);
         }
-        $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlService, $rootPathOverride);
+        $urlService = UrlServiceTestFactory::build($htmlService, $rootPathOverride);
 
         $this->filterUpdater = new CategoryCatsRendererFakeFilterUpdater();
 
-        $this->template = \Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default');
+        $this->template = TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default');
 
         $currentLogger = new CurrentLogger();
-        $currentLogger->set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+        $currentLogger->set(new Logger(['severity' => Logger::OFF]));
 
-        $processCache = Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
-        if (! $processCache instanceof \Piwigo\Core\ProcessCache) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ProcessCache::class);
+        $processCache = Kernel::container()->get(ProcessCache::class);
+        if (! $processCache instanceof ProcessCache) {
+            throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
         }
 
         $this->renderer = new CategoryCatsRenderer(
@@ -203,14 +214,14 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $currentLogger,
             EventDispatcher::get(),
             ImageStdParams::current(),
-            \Piwigo\Users\CurrentUser::current(),
-            \Piwigo\Config\CurrentConfig::current(),
-            \Piwigo\Core\Lang::current(),
+            CurrentUser::current(),
+            CurrentConfig::current(),
+            Lang::current(),
             $processCache,
         );
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public'");
@@ -256,7 +267,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
     public function test_render_recent_cats_excludes_a_category_with_zero_images(): void
     {
         $this->seedUser();
-        $result = $this->categoryService->createVirtualCategory('Empty Recent Test', new CategoryCatsRendererFakeActivityLogger(), \Piwigo\Users\CurrentUser::current());
+        $result = $this->categoryService->createVirtualCategory('Empty Recent Test', new CategoryCatsRendererFakeActivityLogger(), CurrentUser::current());
         $newIdRaw = $result['id'] ?? null;
         self::assertTrue(is_numeric($newIdRaw));
         $newId = (int) $newIdRaw;
@@ -283,7 +294,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // count_images > 0 -- unlike createVirtualCategory()'s own
         // zero-image "Empty Recent Test" sibling above (which never gets
         // anywhere near findFullCategoriesByIds() at all).
-        $result = $this->categoryService->createVirtualCategory('Toctou Probe Album', new CategoryCatsRendererFakeActivityLogger(), \Piwigo\Users\CurrentUser::current());
+        $result = $this->categoryService->createVirtualCategory('Toctou Probe Album', new CategoryCatsRendererFakeActivityLogger(), CurrentUser::current());
         $newIdRaw = $result['id'] ?? null;
         self::assertTrue(is_numeric($newIdRaw));
         $newId = (int) $newIdRaw;
@@ -340,9 +351,9 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
     public function test_render_picks_a_random_representative_when_allow_random_representative_is_enabled(): void
     {
         $this->seedUser();
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->setAllowRandomRepresentative(true);
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id = 2');
@@ -400,9 +411,9 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
     public function test_render_shows_the_date_range_when_display_fromto_is_enabled(): void
     {
         $this->seedUser();
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->setDisplayFromto(true);
         // Only image 1's date_creation is set -- the other 2 direct images
@@ -413,7 +424,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         try {
             $this->renderer->render('', null, 0);
 
-            $expected = \Piwigo\Core\DateHelper::formatFromto('2021-03-10 08:00:00', '2021-03-10 08:00:00');
+            $expected = DateHelper::formatFromto('2021-03-10 08:00:00', '2021-03-10 08:00:00');
             $html = $this->renderedCategoriesHtml();
             self::assertStringContainsString($expected, $html);
         } finally {
@@ -486,7 +497,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->seedUser();
         EventDispatcher::get()->addEventHandler(RenderCategoryName::class, static fn (): int => 42);
 
-        $this->expectException(\Error::class);
+        $this->expectException(Error::class);
         $this->expectExceptionMessage('must return an instance of');
 
         try {

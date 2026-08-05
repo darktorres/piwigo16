@@ -6,7 +6,6 @@ use Nyholm\Psr7\ServerRequest;
 use Piwigo\Bootstrap\AdminDispatcher;
 use Piwigo\Controller\Admin\AdminSubControllerInterface;
 use Piwigo\Controller\Admin\PhotosAddSubController;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -54,7 +53,7 @@ test('dispatch throws when a mapped page resolves to a class that does not imple
     // its own to survive that rebuild.
     KernelContainerOverride::with(
         [
-            PhotosAddSubController::class => new \stdClass(),
+            PhotosAddSubController::class => new stdClass(),
             Paths::class => Paths::fromRoot(dirname(__DIR__, 3)),
         ],
         static function (): void {

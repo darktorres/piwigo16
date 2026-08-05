@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Request;
 
+use Piwigo\Core\ValidationPattern;
 use Piwigo\Validation\InputValidator;
 
 /**
@@ -57,7 +58,7 @@ final readonly class AlbumNotificationSubmitRequest
         // gap, same redundancy as the `group` sentinel array below.
         if ($who === 'users' and is_array($post_users) and count($post_users) > 0) {
             $inputValidator
-                ->validate('users', $post, true, \Piwigo\Core\ValidationPattern::ID);
+                ->validate('users', $post, true, ValidationPattern::ID);
 
             foreach ($post_users as $post_user_id) {
                 if (is_string($post_user_id)) {
@@ -79,7 +80,7 @@ final readonly class AlbumNotificationSubmitRequest
         // either way. `who === 'group'` is the only real gate here.
         if ($who === 'group' and ! in_array($group, [null, false, 0, '0', '', []], true)) {
             $inputValidator
-                ->validate('group', $post, false, \Piwigo\Core\ValidationPattern::ID);
+                ->validate('group', $post, false, ValidationPattern::ID);
         }
 
         return new self(

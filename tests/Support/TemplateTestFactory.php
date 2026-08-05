@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Support;
 
+use Throwable;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\DeploymentPolicy;
@@ -71,7 +72,7 @@ final class TemplateTestFactory
 
         try {
             $instance = Kernel::container()->get($class);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // Some callers boot Kernel with no real Paths (e.g.
             // ContainerSmokeTest.php's own "Kernel booted with no real
             // Paths" scenario) -- Lang-adjacent entries fail to resolve

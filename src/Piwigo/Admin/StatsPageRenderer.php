@@ -9,9 +9,14 @@ use DateTime;
 use InvalidArgumentException;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\History\HistoryService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Ported from admin/stats.php (page slug "stats") -- a sibling top-level
@@ -35,7 +40,7 @@ final class StatsPageRenderer
      * shared 'history' tabsheet group (see HistoryPageRenderer, its
      * sibling in that same group).
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\History\HistoryService $historyService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, HistoryService $historyService, EventDispatcher $eventDispatcher): void
     {
         $template = $currentTemplate->get();
 
@@ -147,7 +152,7 @@ final class StatsPageRenderer
      *
      * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
      */
-    private static function getLast(\Piwigo\History\HistoryService $historyService, int $last_number = 60, string $type = 'year'): array
+    private static function getLast(HistoryService $historyService, int $last_number = 60, string $type = 'year'): array
     {
         return $historyService->getLastByType($type, $last_number);
     }
@@ -156,7 +161,7 @@ final class StatsPageRenderer
      * @param int|'all' $last
      * @return float[]|int[]
      */
-    private static function getMonthOfLastYears(\Piwigo\History\HistoryService $historyService, $last = 'all'): array
+    private static function getMonthOfLastYears(HistoryService $historyService, $last = 'all'): array
     {
         if ($last !== 'all') {
             $date = new DateTime();
@@ -183,7 +188,7 @@ final class StatsPageRenderer
     /**
      * @return array{month?: list<array<int|string, float|int>>, avg: ?float}
      */
-    private static function getMonthStats(\Piwigo\History\HistoryService $historyService): array
+    private static function getMonthStats(HistoryService $historyService): array
     {
         $result = [];
         $date = new DateTime();
@@ -253,12 +258,12 @@ final class StatsPageRenderer
         $limit = count($data);
         $result = [];
 
-        if (! $firstDate instanceof \DateTime) {
+        if (! $firstDate instanceof DateTime) {
             $date = self::getDateObject($data[count($data) - 1]);
         } else {
             $date = $firstDate;
         }
-        if (! $lastDate instanceof \DateTime) {
+        if (! $lastDate instanceof DateTime) {
             $date_end = self::getDateObject($data[0]);
         } else {
             $date_end = $lastDate;

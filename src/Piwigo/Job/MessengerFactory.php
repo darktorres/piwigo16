@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Job;
 
+use Closure;
 use Doctrine\DBAL\Connection as DbalConnection;
 use Doctrine\Persistence\ConnectionRegistry;
+use Override;
+use Piwigo\Core\CurrentPaths;
 use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
+use RuntimeException;
 use Symfony\Component\Messenger\Bridge\Doctrine\Transport\DoctrineTransportFactory;
 use Symfony\Component\Messenger\Handler\HandlersLocator;
 use Symfony\Component\Messenger\MessageBus;
@@ -29,24 +34,14 @@ use Symfony\Component\Messenger\Transport\TransportInterface;
 final class MessengerFactory
 {
     /**
-     * @return array{
-     *     transport_table: string,
-     *     transport_queue: string,
-     *     routing: array<class-string, string>,
-     *     handlers: array<class-string, \Closure(): callable>,
-     * }
+     * @return array{transport_table: string, transport_queue: string, routing: array<class-string, string>, handlers: array<class-string, Closure():callable>}
      */
     public static function config(): array
     {
         /**
-         * @var array{
-         *     transport_table: string,
-         *     transport_queue: string,
-         *     routing: array<class-string, string>,
-         *     handlers: array<class-string, \Closure(): callable>,
-         * }
+         * @var array{transport_table: string, transport_queue: string, routing: array<class-string, string>, handlers: array<class-string, Closure():callable>}
          */
-        return require \Piwigo\Core\CurrentPaths::get()->root . 'config/messenger.php';
+        return require CurrentPaths::get()->root . 'config/messenger.php';
     }
 
     /**
@@ -72,14 +67,14 @@ final class MessengerFactory
                 private DbalConnection $connection,
             ) {}
 
-            #[\Override]
+            #[Override]
             public function getDefaultConnectionName(): string
             {
                 return 'default';
             }
 
-            #[\Override]
-            public function getConnection(?string $name = null): \Doctrine\DBAL\Connection
+            #[Override]
+            public function getConnection(?string $name = null): DbalConnection
             {
                 return $this->connection;
             }
@@ -87,7 +82,7 @@ final class MessengerFactory
             /**
              * @return array<string, object>
              */
-            #[\Override]
+            #[Override]
             public function getConnections(): array
             {
                 return [
@@ -98,7 +93,7 @@ final class MessengerFactory
             /**
              * @return array<string, string>
              */
-            #[\Override]
+            #[Override]
             public function getConnectionNames(): array
             {
                 return [
@@ -154,29 +149,29 @@ final class MessengerFactory
      * PHP-DI-bound service, matching PSR-11 ContainerInterface::get()'s own
      * `mixed` return below (a real interface override, not a design choice).
      *
-     * @param array<string, \Closure(): mixed> $factories
+     * @param array<string, Closure> $factories
      */
     private static function containerOf(array $factories): ContainerInterface
     {
         return new readonly class($factories) implements ContainerInterface {
             /**
-             * @param array<string, \Closure(): mixed> $factories
+             * @param array<string, Closure> $factories
              */
             public function __construct(
                 private array $factories,
             ) {}
 
-            #[\Override]
+            #[Override]
             public function get(string $id): mixed
             {
                 if (! isset($this->factories[$id])) {
-                    throw new class('Service "' . $id . '" not found.') extends \RuntimeException implements \Psr\Container\NotFoundExceptionInterface {};
+                    throw new class('Service "' . $id . '" not found.') extends RuntimeException implements NotFoundExceptionInterface {};
                 }
 
                 return ($this->factories[$id])();
             }
 
-            #[\Override]
+            #[Override]
             public function has(string $id): bool
             {
                 return isset($this->factories[$id]);

@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Core\Kernel;
+use LogicException;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Site\SiteEntity;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -15,7 +21,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
 
     private SiteRepository $repo;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -27,18 +33,18 @@ final class SiteRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->repo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Site\SiteEntity::class);
+        $this->repo = EntityManagerFactory::build(DbConnection::build())->getRepository(SiteEntity::class);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         // delete()'s own test cleans up its own row directly (it IS the
@@ -118,7 +124,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         // L2aCoreDomain, Site is L2bExtendedDomain -- deleted the same
         // commit this method was added).
         self::assertSame(
-            [1 => \Piwigo\Core\CurrentPaths::get()->root . 'galleries/'],
+            [1 => CurrentPaths::get()->root . 'galleries/'],
             $this->repo->findAllGalleriesUrls()
         );
     }
@@ -141,7 +147,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
 
         try {
             self::assertSame(
-                \Piwigo\Core\CurrentPaths::get()->root . 'galleries/',
+                CurrentPaths::get()->root . 'galleries/',
                 $this->repo->findGalleriesUrlForCategory(1)
             );
         } finally {
@@ -159,7 +165,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         // (Piwigo\Core\Paths::$root . 'galleries/'), not a portable literal
         // './galleries/' -- machine-specific, so computed here the same way
         // install itself computes it, rather than a hardcoded string.
-        self::assertContains(\Piwigo\Core\CurrentPaths::get()->root . 'galleries/', $urls);
+        self::assertContains(CurrentPaths::get()->root . 'galleries/', $urls);
     }
 
     public function test_find_all_includes_a_newly_inserted_site(): void

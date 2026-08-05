@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\Template;
 
 /**
  * Piwigo\Template\CurrentTemplate -- container-shared instance (singleton/
@@ -43,7 +43,7 @@ beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot($root));
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
     if (! $currentConfig instanceof CurrentConfig) {
-        throw new \LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
     $currentConfig->setDataLocation('data/');
     $currentConfig->setDataDirChecked('1');
@@ -51,7 +51,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     current_template_test_rrmdir(CurrentPaths::get()->root);
-    \Piwigo\Config\CurrentConfig::current()->reset();
+    CurrentConfig::current()->reset();
     Kernel::reset();
 });
 
@@ -65,7 +65,7 @@ test('get throws when no Template has ever been set', function (): void {
 
 test('set publishes a Template instance that get returns and isInitialized reports true', function (): void {
     $currentTemplate = new CurrentTemplate();
-    $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $template = TemplateTestFactory::build();
 
     $currentTemplate->set($template);
 
@@ -75,7 +75,7 @@ test('set publishes a Template instance that get returns and isInitialized repor
 
 test('reset clears the published instance so get throws again', function (): void {
     $currentTemplate = new CurrentTemplate();
-    $currentTemplate->set(\Piwigo\Tests\Support\TemplateTestFactory::build());
+    $currentTemplate->set(TemplateTestFactory::build());
     expect($currentTemplate->isInitialized())->toBeTrue();
 
     $currentTemplate->reset();
@@ -94,7 +94,7 @@ test('current() falls back to a memoized instance when Kernel is not booted', fu
     // *before* resetting Kernel (its constructor reaches CurrentPaths::
     // get(), which throws once Kernel is reset), then capture the root
     // and reset to reach the genuinely not-booted branch.
-    $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+    $template = TemplateTestFactory::build();
     $root = CurrentPaths::get()->root;
     Kernel::reset();
 

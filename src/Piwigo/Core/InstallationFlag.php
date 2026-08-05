@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use LogicException;
+
 /**
  * "This request is past the install-check gate" marker -- Legacy
  * Coupling Retirement gap-closure (entry-shell define()/include round,
@@ -93,7 +95,7 @@ final class InstallationFlag
 
         $instance = Kernel::container()->get(self::class);
         if (! $instance instanceof self) {
-            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+            throw new LogicException('Container returned an unexpected type for ' . self::class);
         }
 
         return $instance->isActive();

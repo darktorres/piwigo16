@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Auth\AccessControl;
+use Piwigo\Bootstrap\RequestBootstrap;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -25,7 +28,7 @@ use Piwigo\Core\Paths;
 
 $paths = Paths::fromRoot(dirname(__DIR__));
 
-\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths, isAdmin: true);
+RequestBootstrap::bootEntryPoint($paths, isAdmin: true);
 
-new AdminShell(\Piwigo\Bootstrap\RequestBootstrap::lang(), \Piwigo\Auth\AccessControl::current(), new RedirectService(\Piwigo\Bootstrap\RequestBootstrap::lang(), \Piwigo\Bootstrap\RequestBootstrap::userService()), \Piwigo\Bootstrap\RequestBootstrap::urlService(), \Piwigo\Bootstrap\RequestBootstrap::currentConfigService()->get(), $paths, \Piwigo\Bootstrap\RequestBootstrap::filesystemIntegrityChecker(), \Piwigo\Bootstrap\RequestBootstrap::coreTabs(), \Piwigo\Bootstrap\RequestBootstrap::sessionService(), \Piwigo\Bootstrap\RequestBootstrap::eventDispatcher(), \Piwigo\Bootstrap\RequestBootstrap::deploymentPolicy(), \Piwigo\Bootstrap\RequestBootstrap::pageState(), \Piwigo\Bootstrap\RequestBootstrap::currentUser(), \Piwigo\Bootstrap\RequestBootstrap::currentTemplate(), \Piwigo\Bootstrap\RequestBootstrap::commentService(), \Piwigo\Bootstrap\RequestBootstrap::imageService(), \Piwigo\Bootstrap\RequestBootstrap::preferencesService(), \Piwigo\Bootstrap\RequestBootstrap::userService(), \Piwigo\Bootstrap\RequestBootstrap::htmlService(), \Piwigo\Bootstrap\RequestBootstrap::currentConfig(), \Piwigo\Bootstrap\RequestBootstrap::inputValidator())
+new AdminShell(RequestBootstrap::lang(), AccessControl::current(), new RedirectService(RequestBootstrap::lang(), RequestBootstrap::userService()), RequestBootstrap::urlService(), RequestBootstrap::currentConfigService()->get(), $paths, RequestBootstrap::filesystemIntegrityChecker(), RequestBootstrap::coreTabs(), RequestBootstrap::sessionService(), RequestBootstrap::eventDispatcher(), RequestBootstrap::deploymentPolicy(), RequestBootstrap::pageState(), RequestBootstrap::currentUser(), RequestBootstrap::currentTemplate(), RequestBootstrap::commentService(), RequestBootstrap::imageService(), RequestBootstrap::preferencesService(), RequestBootstrap::userService(), RequestBootstrap::htmlService(), RequestBootstrap::currentConfig(), RequestBootstrap::inputValidator())
     ->run();

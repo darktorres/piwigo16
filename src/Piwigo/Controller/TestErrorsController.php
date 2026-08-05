@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Override;
 use Piwigo\Core\Env;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Http\ControllerInterface;
@@ -30,7 +31,7 @@ final class TestErrorsController implements ControllerInterface
         private readonly ErrorCollector $errorCollector,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         if (! Env::testModeIsActive()) {

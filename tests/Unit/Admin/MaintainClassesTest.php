@@ -38,7 +38,7 @@ test('PluginMaintain\'s base install/activate/deactivate/uninstall/update are al
             $wsContext = Kernel::container()->get(WsContext::class);
             $accessControl = Kernel::container()->get(AccessControl::class);
             if (! $wsContext instanceof WsContext || ! $accessControl instanceof AccessControl) {
-                throw new \LogicException('Container returned an unexpected type');
+                throw new LogicException('Container returned an unexpected type');
             }
 
             $errors = [];
@@ -71,7 +71,7 @@ test('DummyPluginMaintain returns null for every hook when no procedural plugin_
             $wsContext = Kernel::container()->get(WsContext::class);
             $accessControl = Kernel::container()->get(AccessControl::class);
             if (! $wsContext instanceof WsContext || ! $accessControl instanceof AccessControl) {
-                throw new \LogicException('Container returned an unexpected type');
+                throw new LogicException('Container returned an unexpected type');
             }
 
             $errors = [];

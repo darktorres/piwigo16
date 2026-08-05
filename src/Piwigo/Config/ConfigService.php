@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
+use Piwigo\Cache\CachePools;
 use Piwigo\Event\Lifecycle\LoadConf;
+use Piwigo\PluginConfig\EventDispatcher;
+use ReflectionMethod;
+use ReflectionNamedType;
+use ReflectionProperty;
+use RuntimeException;
 
 /**
  * The DI/Doctrine-backed config persistence layer -- the real writer
@@ -344,7 +350,7 @@ final readonly class ConfigService
 
     public function __construct(
         private ConfigRepository $repo,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private EventDispatcher $eventDispatcher,
         private CurrentConfig $currentConfig,
     ) {}
 
@@ -362,7 +368,7 @@ final readonly class ConfigService
     {
         $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
         if ($propertyName !== null) {
-            $value = new \ReflectionMethod(CurrentConfig::class, $propertyName)->invoke($this->currentConfig);
+            $value = new ReflectionMethod(CurrentConfig::class, $propertyName)->invoke($this->currentConfig);
             /** @var array<mixed>|string|int|float|bool|NotificationConfig|null $value every mapped property getter's declared return type */
 
             return $value ?? $defaultValue;
@@ -411,7 +417,7 @@ final readonly class ConfigService
             $entry = $this->repo->find($param);
             if ($entry === null) {
                 if ($dieIfNotFound) {
-                    throw new \RuntimeException("No configuration data for param '{$param}'.");
+                    throw new RuntimeException("No configuration data for param '{$param}'.");
                 }
                 return;
             }
@@ -438,7 +444,7 @@ final readonly class ConfigService
      */
     private function allRowsFromCacheOrDb(): array
     {
-        $pool = \Piwigo\Cache\CachePools::config();
+        $pool = CachePools::config();
         $item = $pool->getItem(self::CACHE_ITEM_KEY);
         if ($item->isHit()) {
             /** @var array<string, ?string> $cached */
@@ -466,12 +472,12 @@ final readonly class ConfigService
     public function confUpdateParam(string $param, array|string|int|float|bool|null $value, bool $updateGlobal = false): void
     {
         $this->repo->upsert($param, self::encode($param, $value));
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         if ($updateGlobal) {
             $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
             if ($propertyName !== null) {
-                new \ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($propertyName))->invoke($this->currentConfig, $value);
+                new ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($propertyName))->invoke($this->currentConfig, $value);
             }
         }
     }
@@ -484,7 +490,7 @@ final readonly class ConfigService
         $params = is_array($params) ? $params : [$params];
         foreach ($params as $param) {
             $this->repo->deleteByParam($param);
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
 
             $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
             if ($propertyName === null) {
@@ -495,8 +501,8 @@ final readonly class ConfigService
             // cluster, but a real non-null default for e.g.
             // disabledDerivatives's [] -- resetting those to null would
             // violate their own non-nullable type).
-            $property = new \ReflectionProperty(CurrentConfig::class, $propertyName);
-            new \ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($propertyName))
+            $property = new ReflectionProperty(CurrentConfig::class, $propertyName);
+            new ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($propertyName))
                 ->invoke($this->currentConfig, $property->getDefaultValue());
         }
     }
@@ -533,10 +539,10 @@ final readonly class ConfigService
             return;
         }
 
-        $setter = new \ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($propertyName));
+        $setter = new ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($propertyName));
         $paramType = $setter->getParameters()[0]
             ->getType();
-        $paramTypeName = $paramType instanceof \ReflectionNamedType ? $paramType->getName() : null;
+        $paramTypeName = $paramType instanceof ReflectionNamedType ? $paramType->getName() : null;
 
         if ($raw === null) {
             if ($paramType?->allowsNull() === true) {

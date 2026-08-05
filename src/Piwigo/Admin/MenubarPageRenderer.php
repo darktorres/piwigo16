@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Request\MenubarSubmitRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Cache\CachePools;
+use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Menu\BlockManager;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 
 /**
  * Ported from admin/menubar.php (page slug "menubar").
@@ -27,7 +35,7 @@ use Piwigo\Menu\BlockManager;
  */
 final class MenubarPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
 
@@ -79,7 +87,7 @@ final class MenubarPageRenderer
             $idx++;
         }
 
-        $menubarSubmit = Request\MenubarSubmitRequest::fromGlobals();
+        $menubarSubmit = MenubarSubmitRequest::fromGlobals();
         if ($menubarSubmit->isSubmitted and $accessControl->isWebmaster()) {
             foreach ($mb_conf as $id => $pos) {
                 $hide = $menubarSubmit->isHidden($id);
@@ -95,7 +103,7 @@ final class MenubarPageRenderer
             $mb_conf_db = $mb_conf;
             $encodedPositions = json_encode($mb_conf_db);
             assert($encodedPositions !== false);
-            \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Config\ConfigEntry::class)
+            EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class)
                 ->upsert('blk_' . $menu->get_id(), $encodedPositions);
 
             // saveLayout() used to do this -- bypasses ConfigService::
@@ -104,7 +112,7 @@ final class MenubarPageRenderer
             // ConfigService::allRowsFromCacheOrDb() would keep serving the
             // pre-save layout to every request until some unrelated config
             // write happened to clear the pool.
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
 
             $template->assign(
                 [

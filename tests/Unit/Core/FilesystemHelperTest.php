@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\Paths;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -59,10 +61,10 @@ function filesystemHelperTestRrmdir(string $dir): void
  * HtmlRenderingInterface return type without losing readability of the
  * captured value afterwards.
  */
-function filesystemHelperTestMakeFatalRenderer(\stdClass $capture): HtmlRenderingInterface
+function filesystemHelperTestMakeFatalRenderer(stdClass $capture): HtmlRenderingInterface
 {
     return new class($capture) implements HtmlRenderingInterface {
-        public function __construct(private readonly \stdClass $capture)
+        public function __construct(private readonly stdClass $capture)
         {
         }
 
@@ -91,26 +93,26 @@ function filesystemHelperTestMakeFatalRenderer(\stdClass $capture): HtmlRenderin
             return 0;
         }
 
-        public function accessDenied(\Piwigo\Core\RedirectServiceInterface $redirectService): never
+        public function accessDenied(RedirectServiceInterface $redirectService): never
         {
-            throw new \RuntimeException('accessDenied');
+            throw new RuntimeException('accessDenied');
         }
 
-        public function badRequest(\Piwigo\Core\RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
+        public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
         {
-            throw new \RuntimeException('badRequest');
+            throw new RuntimeException('badRequest');
         }
 
-        public function pageNotFound(\Piwigo\Core\RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
+        public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
         {
-            throw new \RuntimeException('pageNotFound');
+            throw new RuntimeException('pageNotFound');
         }
 
         public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
         {
             $this->capture->lastMessage = $msg;
 
-            throw new \RuntimeException('renderer-fatal:' . $msg);
+            throw new RuntimeException('renderer-fatal:' . $msg);
         }
 
         public function getTagsContentTitle(array $tags): string
@@ -252,7 +254,7 @@ test('mkgetdir throws a RuntimeException carrying the untranslated message when 
     $dir = $parent . '/child';
 
     expect(fn () => FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
-        ->toThrow(\RuntimeException::class, $dir . ' no write access');
+        ->toThrow(RuntimeException::class, $dir . ' no write access');
 });
 
 test('mkgetdir delegates the fatal message to the installed HtmlRenderingInterface instead of throwing RuntimeException directly', function (): void {
@@ -275,11 +277,11 @@ test('mkgetdir delegates the fatal message to the installed HtmlRenderingInterfa
     KernelContainerOverride::with(
         [
             HtmlRenderingInterface::class => filesystemHelperTestMakeFatalRenderer($capture),
-            \Piwigo\Core\Paths::class => \Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()),
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
         ],
         function () use ($dir): void {
             expect(fn () => FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
-                ->toThrow(\RuntimeException::class, 'renderer-fatal:' . $dir . ' no write access');
+                ->toThrow(RuntimeException::class, 'renderer-fatal:' . $dir . ' no write access');
         }
     );
 
@@ -303,7 +305,7 @@ test('mkgetdir throws when an already-existing directory has lost its write perm
     chmod($dir, 0o500);
 
     expect(fn () => FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
-        ->toThrow(\RuntimeException::class, $dir . ' no write access');
+        ->toThrow(RuntimeException::class, $dir . ' no write access');
 });
 
 /**

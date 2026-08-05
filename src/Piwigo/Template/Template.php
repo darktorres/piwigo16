@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Exception;
+use LogicException;
+use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
@@ -19,15 +22,24 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\DeviceHelper;
 use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Core\TemplateInterface;
+use Piwigo\Core\ThemeConfProviderInterface;
+use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Event\CombinedCss;
 use Piwigo\Template\Event\CombinedScript;
+use Piwigo\Template\Request\TemplateExtentsRequest;
+use Smarty\Debug;
 use Smarty\Smarty;
 
 /**
@@ -54,7 +66,7 @@ use Smarty\Smarty;
  * each real use site (see func_define_derivative() for the fullest
  * example), the same "parse, don't trust" boundary as InputValidator.
  */
-final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\TemplateInterface
+final class Template implements ThemeConfProviderInterface, TemplateInterface
 {
     /**
      * @var Smarty
@@ -155,7 +167,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
 
         if ($this->currentConfig->dataDirChecked() === null) {
             $dir = CurrentPaths::get()->root . $conf_data_location;
-            \Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
+            FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
             if (! is_writable($dir)) {
                 $this->lang->load('admin.lang');
                 $this->htmlRenderer()
@@ -225,7 +237,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         }
 
         $compile_dir = CurrentPaths::get()->root . $conf_data_location . 'templates_c';
-        \Piwigo\Core\FilesystemHelper::mkgetdir($compile_dir);
+        FilesystemHelper::mkgetdir($compile_dir);
 
         $this->smarty->setCompileDir($compile_dir);
 
@@ -335,9 +347,9 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      */
     private static function urlService(): UrlServiceInterface
     {
-        $urlService = \Piwigo\Core\Kernel::container()->get(UrlServiceInterface::class);
+        $urlService = Kernel::container()->get(UrlServiceInterface::class);
         if (! $urlService instanceof UrlServiceInterface) {
-            throw new \LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
+            throw new LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
         }
 
         return $urlService;
@@ -358,9 +370,9 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      */
     private function accessControl(): AccessControl
     {
-        $accessControl = \Piwigo\Core\Kernel::container()->get(AccessControl::class);
+        $accessControl = Kernel::container()->get(AccessControl::class);
         if (! $accessControl instanceof AccessControl) {
-            throw new \LogicException('Container returned an unexpected type for ' . AccessControl::class);
+            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
 
         return $accessControl;
@@ -375,11 +387,11 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      * above (singleton/service-locator elimination campaign, Phase 11
      * sub-phase 11G).
      */
-    private function translator(): \Piwigo\Lang\Translator
+    private function translator(): Translator
     {
-        $translator = \Piwigo\Core\Kernel::container()->get(\Piwigo\Lang\Translator::class);
-        if (! $translator instanceof \Piwigo\Lang\Translator) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Lang\Translator::class);
+        $translator = Kernel::container()->get(Translator::class);
+        if (! $translator instanceof Translator) {
+            throw new LogicException('Container returned an unexpected type for ' . Translator::class);
         }
 
         return $translator;
@@ -396,11 +408,11 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      * constructor for a 14-site error-path-only usage (singleton/
      * service-locator elimination campaign, Phase 11 sub-phase 11E).
      */
-    private function htmlRenderer(): \Piwigo\Core\HtmlRenderingInterface
+    private function htmlRenderer(): HtmlRenderingInterface
     {
-        $htmlRenderer = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\HtmlRenderingInterface::class);
-        if (! $htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\HtmlRenderingInterface::class);
+        $htmlRenderer = Kernel::container()->get(HtmlRenderingInterface::class);
+        if (! $htmlRenderer instanceof HtmlRenderingInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . HtmlRenderingInterface::class);
         }
 
         return $htmlRenderer;
@@ -424,9 +436,9 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      */
     private function imageStdParams(): ImageStdParams
     {
-        $imageStdParams = \Piwigo\Core\Kernel::container()->get(ImageStdParams::class);
+        $imageStdParams = Kernel::container()->get(ImageStdParams::class);
         if (! $imageStdParams instanceof ImageStdParams) {
-            throw new \LogicException('Container returned an unexpected type for ' . ImageStdParams::class);
+            throw new LogicException('Container returned an unexpected type for ' . ImageStdParams::class);
         }
 
         return $imageStdParams;
@@ -443,9 +455,9 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      */
     private function currentTemplate(): CurrentTemplate
     {
-        $currentTemplate = \Piwigo\Core\Kernel::container()->get(CurrentTemplate::class);
+        $currentTemplate = Kernel::container()->get(CurrentTemplate::class);
         if (! $currentTemplate instanceof CurrentTemplate) {
-            throw new \LogicException('Container returned an unexpected type for ' . CurrentTemplate::class);
+            throw new LogicException('Container returned an unexpected type for ' . CurrentTemplate::class);
         }
 
         return $currentTemplate;
@@ -469,7 +481,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         // standard pages can't get the header to load the html header
         if (
             $theme !== 'default'
-            and in_array(\Piwigo\Core\PageFilterHelper::scriptBasename(), ['identification', 'register', 'password', 'profile'], true)
+            and in_array(PageFilterHelper::scriptBasename(), ['identification', 'register', 'password', 'profile'], true)
             and ((bool) ($themeconf['use_standard_pages'] ?? false) or $this->currentConfig->useStandardPages())
         ) {
             $theme = 'standard_pages';
@@ -574,7 +586,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      * reach it without depending on this L3 class; see that interface's
      * own docblock.
      */
-    #[\Override]
+    #[Override]
     public function themeConf(string $key): string
     {
         $value = $this->get_themeconf($key);
@@ -588,7 +600,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      * @param string $handle
      * @param string $filename
      */
-    #[\Override]
+    #[Override]
     public function set_filename($handle, $filename): bool
     {
         return $this->set_filenames([
@@ -603,7 +615,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      *   handle=>filename; a null value unsets that handle (no current
      *   first-party caller exercises this, but the API supports it)
      */
-    #[\Override]
+    #[Override]
     public function set_filenames($filename_array): bool
     {
         reset($filename_array);
@@ -648,7 +660,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         if (! is_array($filename_array)) {
             return false;
         }
-        $getKeysConcatenated = Request\TemplateExtentsRequest::fromGlobals()->keysConcatenated;
+        $getKeysConcatenated = TemplateExtentsRequest::fromGlobals()->keysConcatenated;
         foreach ($filename_array as $filename => $value) {
             if (is_array($value)) {
                 $handle = $value[0] ?? null;
@@ -702,7 +714,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      *    (in this case, do not use the _$value_ parameter)
      * @param mixed $value
      */
-    #[\Override]
+    #[Override]
     public function assign($tpl_var, $value = null): void
     {
         $this->smarty->assign($tpl_var, $value);
@@ -716,7 +728,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      * @param string $varname
      * @return true
      */
-    #[\Override]
+    #[Override]
     public function assign_var_from_handle($varname, string $handle): bool
     {
         $this->assign($varname, $this->parse($handle, true));
@@ -731,7 +743,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      * @param mixed $value
      * @param bool $merge
      */
-    #[\Override]
+    #[Override]
     public function append($tpl_var, $value = null, $merge = false): void
     {
         $this->smarty->append($tpl_var, $value, $merge);
@@ -758,7 +770,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      *
      * @param string $tpl_var
      */
-    #[\Override]
+    #[Override]
     public function clear_assign($tpl_var): void
     {
         $this->smarty->clearAssign($tpl_var);
@@ -770,7 +782,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      *
      * @param string|null $tpl_var
      */
-    #[\Override]
+    #[Override]
     public function get_template_vars($tpl_var = null): mixed
     {
         return $this->smarty->getTemplateVars($tpl_var);
@@ -926,7 +938,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         if ((bool) $this->smarty->debugging) {
             $this->smarty->assign(
                 [
-                    'AAAA_DEBUG_TOTAL_TIME__' => \Piwigo\Core\TimingHelper::getElapsedTime($this->pageState->requestStart, \Piwigo\Core\TimingHelper::getMoment()),
+                    'AAAA_DEBUG_TOTAL_TIME__' => TimingHelper::getElapsedTime($this->pageState->requestStart, TimingHelper::getMoment()),
                 ]
             );
             // Genuine bug, found live while closing this line's own
@@ -944,7 +956,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             // than aggregating per-template timings) -- debug.tpl's own
             // markup treats template_name/template_data as optional, so
             // this degrades gracefully instead of reproducing the crash.
-            (new \Smarty\Debug())->display_debug($this->smarty->createTemplate('string:'), true);
+            (new Debug())->display_debug($this->smarty->createTemplate('string:'), true);
         }
     }
 
@@ -1065,7 +1077,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
     public static function mod_explode($text, $delimiter = ','): array
     {
         if ($delimiter === '') {
-            throw new \Exception('mod_explode(): delimiter must not be empty');
+            throw new Exception('mod_explode(): delimiter must not be empty');
         }
         return explode($delimiter, $text);
     }

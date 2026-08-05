@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Config\ConfigRepository;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Users\CurrentUser;
 use Doctrine\DBAL\Connection;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Config\ConfigEntry;
@@ -85,7 +90,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     /** @var array{check_key: string, enabled: int, last_send: ?string} */
     private array $user1OriginalRow;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -112,8 +117,8 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
 
         $conn = DbConnection::build();
         $repo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        self::assertInstanceOf(\Piwigo\Config\ConfigRepository::class, $repo);
-        $configService = new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current());
+        self::assertInstanceOf(ConfigRepository::class, $repo);
+        $configService = new ConfigService($repo, new EventDispatcher(), CurrentConfig::current());
         CurrentConfigService::current()->set($configService);
         // sendMailNotifications()'s recent-post-dates block builds real
         // thumbnail URLs (NotificationService::getHtmlDescriptionRecentPostDate()
@@ -127,7 +132,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // real-config-row wiring as CategoryDefaultRendererTest/
         // CalendarMonthlyTest's own identical setUp.
         $configService->loadConfFromDb();
-        \Piwigo\Image\ImageStdParams::current()->load_from_db();
+        ImageStdParams::current()->load_from_db();
 
         $this->conn = $conn;
         $row = $this->conn->fetchAssociative(
@@ -154,7 +159,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         PageState::current()->reset();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->restoreUser1Row();
@@ -218,7 +223,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // CurrentUser::current()->get() reached from the fresh sender
         // (e.g. via AccessControl) throws "not initialised" against this
         // now-unseeded container.
-        \Piwigo\Users\CurrentUser::current()->attachGlobals();
+        CurrentUser::current()->attachGlobals();
         // Kernel::reset() also discards the container-shared CurrentConfig
         // instance (singleton/service-locator elimination campaign, Phase
         // 9 -- CurrentConfig is now rebuilt fresh per container too, back

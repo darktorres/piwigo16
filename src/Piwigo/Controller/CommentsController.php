@@ -6,31 +6,55 @@ namespace Piwigo\Controller;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Bootstrap\PageTail;
 use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Request\CommentsRequest;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\DateHelper;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\MailerInterface;
+use Piwigo\Core\PageState;
+use Piwigo\Core\PaginationService;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Location\LocBeginComments;
 use Piwigo\Event\Location\LocEndComments;
 use Piwigo\Event\Template\RenderCommentAuthor;
 use Piwigo\Event\Template\RenderCommentContent;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\Event\GetCommentsDerivativeParams;
-use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\Image;
 use Piwigo\Image\SrcImage;
+use Piwigo\Lang\Translator;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -53,26 +77,26 @@ final class CommentsController implements ControllerInterface
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly \Piwigo\Core\FilterState $filterState,
-        private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
+        private readonly FilterState $filterState,
+        private readonly SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
-        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
-        private readonly \Piwigo\Core\PageState $pageState,
-        private readonly \Piwigo\Users\CurrentUser $currentUser,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly DeploymentPolicy $deploymentPolicy,
+        private readonly ImageStdParams $imageStdParams,
+        private readonly PageState $pageState,
+        private readonly CurrentUser $currentUser,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly PermissionService $permissionService,
         private readonly CategoryService $categoryService,
-        private readonly \Piwigo\Html\HtmlService $htmlService,
-        private readonly \Piwigo\Core\MailerInterface $mailer,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\Lang\Translator $translator,
-        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly HtmlService $htmlService,
+        private readonly MailerInterface $mailer,
+        private readonly CurrentConfig $currentConfig,
+        private readonly InputValidator $inputValidator,
+        private readonly Translator $translator,
+        private readonly CurrentLogger $currentLogger,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $template = $this->currentTemplate->get();
@@ -158,7 +182,7 @@ final class CommentsController implements ControllerInterface
 
         $this->eventDispatcher->dispatchNotify(new LocBeginComments());
 
-        $commentsRequest = Request\CommentsRequest::fromGlobals($comments_page_nb_comments, $this->inputValidator);
+        $commentsRequest = CommentsRequest::fromGlobals($comments_page_nb_comments, $this->inputValidator);
 
         $since = $commentsRequest->since !== null ? intval($commentsRequest->since) : 4;
 
@@ -306,7 +330,7 @@ final class CommentsController implements ControllerInterface
         $comment_id = $commentsRequest->actionCommentId;
         $edit_comment = null;
 
-        $commentService = new CommentService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->accessControl);
+        $commentService = new CommentService($this->lang, EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->accessControl);
 
         if (isset($action) and $comment_id !== null) {
             $commentIdVo = CommentId::from($comment_id);
@@ -318,14 +342,14 @@ final class CommentsController implements ControllerInterface
                 $perform_redirect = false;
 
                 if ($action === 'delete') {
-                    new \Piwigo\Csrf\CsrfService()
+                    new CsrfService()
                         ->checkOrFail($this->htmlService, $this->redirectService);
                     $commentService->deleteComment($commentIdVo);
                     $perform_redirect = true;
                 }
 
                 if ($action === 'validate') {
-                    new \Piwigo\Csrf\CsrfService()
+                    new CsrfService()
                         ->checkOrFail($this->htmlService, $this->redirectService);
                     $commentService->validateComment($commentIdVo);
                     $perform_redirect = true;
@@ -334,7 +358,7 @@ final class CommentsController implements ControllerInterface
                 if ($action === 'edit') {
                     $content = $commentsRequest->content;
                     if ($content !== null) {
-                        new \Piwigo\Csrf\CsrfService()
+                        new CsrfService()
                             ->checkOrFail($this->htmlService, $this->redirectService);
                         $comment_action = $commentService->updateComment(
                             [
@@ -487,7 +511,7 @@ final class CommentsController implements ControllerInterface
         // rendered (matching the 'all' UX intent).
         $items_number_for_navbar = is_numeric($selected_items_number) ? (int) $selected_items_number : PHP_INT_MAX;
 
-        $navbar = new \Piwigo\Core\PaginationService($this->currentConfig)
+        $navbar = new PaginationService($this->currentConfig)
             ->createNavigationBar($url, $counter, $start, $items_number_for_navbar);
 
         $template->assign('navbar', $navbar);
@@ -495,8 +519,8 @@ final class CommentsController implements ControllerInterface
         if (count($comments) > 0) {
             // retrieving element informations
             $elements = array_map(
-                static fn (\Piwigo\Image\Projection\Image $image): array => $image->toArray(),
-                \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+                static fn (Image $image): array => $image->toArray(),
+                EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
                     ->findByIds($element_ids)
             );
 
@@ -527,7 +551,7 @@ final class CommentsController implements ControllerInterface
                 if (is_string($element_name) && $element_name !== '' && $element_name !== '0') {
                     $name = $element_name;
                 } else {
-                    $name = \Piwigo\Core\StringHelper::getNameFromFile($elements[$image_id_int]['file']);
+                    $name = StringHelper::getNameFromFile($elements[$image_id_int]['file']);
                 }
 
                 // source of the thumbnail picture
@@ -576,7 +600,7 @@ final class CommentsController implements ControllerInterface
                     'ALT' => $name,
                     'AUTHOR' => $authorEvent->commentAuthor,
                     'WEBSITE_URL' => $comment['website_url'],
-                    'DATE' => \Piwigo\Core\DateHelper::formatDate($date, ['day_name', 'day', 'month', 'year', 'time']),
+                    'DATE' => DateHelper::formatDate($date, ['day_name', 'day', 'month', 'year', 'time']),
                     'CONTENT' => $contentEvent->commentContent,
                 ];
 
@@ -589,7 +613,7 @@ final class CommentsController implements ControllerInterface
                         $url_self,
                         [
                             'delete' => $comment['comment_id'],
-                            'pwg_token' => new \Piwigo\Csrf\CsrfService()
+                            'pwg_token' => new CsrfService()
                                 ->getToken(),
                         ]
                     );
@@ -606,12 +630,12 @@ final class CommentsController implements ControllerInterface
                     $comment_id_str = is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '';
                     if ($edit_comment !== null and $comment_id_str === (string) $edit_comment) {
                         $tpl_comment['IN_EDIT'] = true;
-                        $key = new \Piwigo\Auth\EphemeralKeyService($this->currentConfig)
+                        $key = new EphemeralKeyService($this->currentConfig)
                             ->generate(2, $image_id);
                         $tpl_comment['KEY'] = $key;
                         $tpl_comment['IMAGE_ID'] = $image_id;
                         $tpl_comment['CONTENT'] = $comment['content'];
-                        $tpl_comment['PWG_TOKEN'] = new \Piwigo\Csrf\CsrfService()->getToken();
+                        $tpl_comment['PWG_TOKEN'] = new CsrfService()->getToken();
                         $tpl_comment['U_CANCEL'] = $url_self;
                     }
                 }
@@ -622,7 +646,7 @@ final class CommentsController implements ControllerInterface
                             $url_self,
                             [
                                 'validate' => $comment['comment_id'],
-                                'pwg_token' => new \Piwigo\Csrf\CsrfService()
+                                'pwg_token' => new CsrfService()
                                     ->getToken(),
                             ]
                         );
@@ -646,7 +670,7 @@ final class CommentsController implements ControllerInterface
         // +---------------------------------------------------------------+
         // |                      html code display                        |
         // +---------------------------------------------------------------+
-        new \Piwigo\Page\PageHeaderRenderer()
+        new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatchNotify(new LocEndComments());
         $this->htmlService
@@ -655,7 +679,7 @@ final class CommentsController implements ControllerInterface
             $template->assign_var_from_handle('COMMENT_LIST', 'comment_list');
         }
         $template->parse('comments', false);
-        $body = \Piwigo\Bootstrap\PageTail::renderToString();
+        $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

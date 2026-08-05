@@ -67,7 +67,7 @@ add_picture($option, $cookies, $pwg_token, $mysqli);
 /**
  * @param array<string, mixed> $option
  */
-function create_database(array $option, \mysqli $mysqli): string
+function create_database(array $option, mysqli $mysqli): string
 {
     $db_name = $option['db_name'] ?? null;
     if (! is_string($db_name) || $db_name === '') {
@@ -292,7 +292,7 @@ function create_album(array $option, string $cookies): void
 /**
  * @param array<string, mixed> $option
  */
-function add_picture(array $option, string $cookies, ?string $pwg_token, \mysqli $mysqli): void
+function add_picture(array $option, string $cookies, ?string $pwg_token, mysqli $mysqli): void
 {
     $url = $option['url'];
     if (! is_string($url)) {

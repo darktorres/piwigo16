@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use DateTime;
+use RuntimeException;
+
 /**
  * Modified version of KLogger 0.2.0
  *
@@ -144,7 +147,7 @@ final class Logger
             $directory = is_string($directory) ? $directory : '';
 
             if (! file_exists($directory)) {
-                \Piwigo\Core\FilesystemHelper::mkgetdir($directory, FilesystemHelper::MKGETDIR_DEFAULT | FilesystemHelper::MKGETDIR_PROTECT_HTACCESS);
+                FilesystemHelper::mkgetdir($directory, FilesystemHelper::MKGETDIR_DEFAULT | FilesystemHelper::MKGETDIR_PROTECT_HTACCESS);
             }
 
             $filePath = $this->options['filePath'] ?? null;
@@ -152,7 +155,7 @@ final class Logger
 
             if (file_exists($filePath) && ! is_writable($filePath)) {
                 $this->_logStatus = self::STATUS_OPEN_FAILED;
-                throw new \RuntimeException(self::$_messages['writefail']);
+                throw new RuntimeException(self::$_messages['writefail']);
             }
 
             $handle = fopen($filePath, 'a');
@@ -161,7 +164,7 @@ final class Logger
                 $this->_logStatus = self::STATUS_LOG_OPEN;
             } else {
                 $this->_logStatus = self::STATUS_OPEN_FAILED;
-                throw new \RuntimeException(self::$_messages['openfail']);
+                throw new RuntimeException(self::$_messages['openfail']);
             }
         }
     }
@@ -349,7 +352,7 @@ final class Logger
             // also assigns _fileHandle a real resource.
             assert($this->_fileHandle !== null);
             if (fwrite($this->_fileHandle, $line) === false) {
-                throw new \RuntimeException(self::$_messages['writefail']);
+                throw new RuntimeException(self::$_messages['writefail']);
             }
         }
     }
@@ -413,7 +416,7 @@ final class Logger
     {
         $originalTime = microtime(true);
         $micro = sprintf('%06d', (int) (($originalTime - floor($originalTime)) * 1000000.0));
-        $date = new \DateTime(date('Y-m-d H:i:s.' . $micro, intval($originalTime)));
+        $date = new DateTime(date('Y-m-d H:i:s.' . $micro, intval($originalTime)));
 
         $dateFormat = $this->options['dateFormat'] ?? null;
         $dateFormat = is_string($dateFormat) ? $dateFormat : 'Y-m-d G:i:s';
@@ -477,7 +480,7 @@ final class Logger
             self::WARNING => 'WARNING',
             self::DEBUG => 'DEBUG',
             self::ERROR => 'ERROR',
-            default => throw new \RuntimeException('Unknown severity level ' . $level),
+            default => throw new RuntimeException('Unknown severity level ' . $level),
         };
     }
 
@@ -497,7 +500,7 @@ final class Logger
             'WARNING' => self::WARNING,
             'DEBUG' => self::DEBUG,
             'ERROR' => self::ERROR,
-            default => throw new \RuntimeException('Unknown severity code ' . $code),
+            default => throw new RuntimeException('Unknown severity code ' . $code),
         };
     }
 }

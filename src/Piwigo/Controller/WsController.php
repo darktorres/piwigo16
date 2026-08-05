@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Ws\WsInitializer;
 use Psr\Http\Message\ResponseInterface;
@@ -44,12 +47,12 @@ final class WsController implements ControllerInterface
     public function __construct(
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
-        private readonly \Piwigo\Html\HtmlService $htmlService,
-        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly HtmlService $htmlService,
+        private readonly CurrentConfig $currentConfig,
         private readonly WsInitializer $wsInitializer,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $this->accessControl->checkStatus(AccessLevel::Free);

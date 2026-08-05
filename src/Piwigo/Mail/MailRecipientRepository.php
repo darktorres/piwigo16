@@ -6,6 +6,7 @@ namespace Piwigo\Mail;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
+use Override;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Group\UserGroupEntity;
@@ -40,7 +41,7 @@ final readonly class MailRecipientRepository implements MailRecipientRepositoryI
      * @param  list<string>  $userStatuses
      * @return list<MailRecipient>
      */
-    #[\Override]
+    #[Override]
     public function findAdminsAndWebmasters(
         array $userStatuses,
         ?int $groupId,
@@ -75,7 +76,7 @@ final readonly class MailRecipientRepository implements MailRecipientRepositoryI
     /**
      * @return list<string>
      */
-    #[\Override]
+    #[Override]
     public function findDistinctLanguagesInGroup(
         int $groupId,
         ?string $languageFilter
@@ -103,7 +104,7 @@ final readonly class MailRecipientRepository implements MailRecipientRepositoryI
     /**
      * @return list<MailRecipient>
      */
-    #[\Override]
+    #[Override]
     public function findByGroupAndLanguage(
         int $groupId,
         string $language

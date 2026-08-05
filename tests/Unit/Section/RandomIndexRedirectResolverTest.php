@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess;
+use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Section\RandomIndexRedirectResolver;
 use Piwigo\Users\CurrentUser;
@@ -17,7 +21,7 @@ use Piwigo\Users\UserStatus;
 function seedCurrentUserStatus(UserStatus $status): void
 {
     CurrentUser::current()->set(new User(
-        id: \Piwigo\Common\ValueObject\UserId::from(1),
+        id: UserId::from(1),
         username: '',
         email: '',
         language: '',
@@ -40,10 +44,10 @@ function seedCurrentUserStatus(UserStatus $status): void
 function randomIndexRedirectResolverTestAccessControl(): AccessControl
 {
     return new AccessControl(
-        new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess(),
-        new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled(),
+        new AccessControlTestFakeHtmlRendererDeniesAccess(),
+        new AccessControlTestFakeRedirectServiceNeverCalled(),
         CurrentUser::current(),
-        \Piwigo\Config\CurrentConfig::current(),
+        CurrentConfig::current(),
     );
 }
 

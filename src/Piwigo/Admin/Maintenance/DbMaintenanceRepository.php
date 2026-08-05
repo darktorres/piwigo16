@@ -6,16 +6,22 @@ namespace Piwigo\Admin\Maintenance;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Schema\Name\OptionallyQualifiedName;
+use Doctrine\DBAL\Schema\Name\UnqualifiedName;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Common\ValueObject\TagId;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\History\HistoryEntity;
 use Piwigo\History\HistorySummaryEntity;
 use Piwigo\Image\LoungeEntity;
+use Piwigo\Search\SavedSearchEntity;
+use Piwigo\Session\SessionEntity;
 use Piwigo\Tag\ImageTagEntity;
 use Piwigo\Tag\TagEntity;
+use Piwigo\Users\UserEntity;
 
 /**
  * Persistence layer for admin/maintenance_actions.php's own raw SQL
@@ -70,7 +76,7 @@ final readonly class DbMaintenanceRepository
 
     public function purgeSearchHistory(): void
     {
-        $this->em->createQuery('DELETE FROM ' . \Piwigo\Search\SavedSearchEntity::class . ' s')
+        $this->em->createQuery('DELETE FROM ' . SavedSearchEntity::class . ' s')
             ->execute();
         $this->em->clear();
     }
@@ -189,10 +195,10 @@ final readonly class DbMaintenanceRepository
         // TABLES/DESC's own output gave the original raw-splice version.
         $allTableNames = array_values(array_filter(
             $schemaManager->introspectTableNames(),
-            static fn (\Doctrine\DBAL\Schema\Name\OptionallyQualifiedName $name): bool => str_starts_with($name->getUnqualifiedName()->getValue(), $prefix)
+            static fn (OptionallyQualifiedName $name): bool => str_starts_with($name->getUnqualifiedName()->getValue(), $prefix)
         ));
         $allTables = array_map(
-            static fn (\Doctrine\DBAL\Schema\Name\OptionallyQualifiedName $name): string => $name->getUnqualifiedName()
+            static fn (OptionallyQualifiedName $name): string => $name->getUnqualifiedName()
                 ->getValue(),
             $allTableNames
         );
@@ -218,7 +224,7 @@ final readonly class DbMaintenanceRepository
             }
 
             $primaryKeyCsv = implode(', ', array_map(
-                static fn (\Doctrine\DBAL\Schema\Name\UnqualifiedName $column): string => $column->getIdentifier()
+                static fn (UnqualifiedName $column): string => $column->getIdentifier()
                     ->getValue(),
                 $primaryKey->getColumnNames()
             ));
@@ -257,18 +263,18 @@ final readonly class DbMaintenanceRepository
     {
         $sessions = $this->em->createQueryBuilder()
             ->select('s.id', 's.data')
-            ->from(\Piwigo\Session\SessionEntity::class, 's')
+            ->from(SessionEntity::class, 's')
             ->getQuery()
             ->getArrayResult();
 
         $allUserIds = $this->em->createQueryBuilder()
             ->select('u.id')
-            ->from(\Piwigo\Users\UserEntity::class, 'u')
+            ->from(UserEntity::class, 'u')
             ->getQuery()
             ->getArrayResult();
         $allUserIdStrings = [];
         foreach ($allUserIds as $row) {
-            if (is_array($row) && ($row['id'] ?? null) instanceof \Piwigo\Common\ValueObject\UserId) {
+            if (is_array($row) && ($row['id'] ?? null) instanceof UserId) {
                 $allUserIdStrings[] = (string) $row['id']->value;
             }
         }
@@ -296,7 +302,7 @@ final readonly class DbMaintenanceRepository
         }
 
         $this->em->createQueryBuilder()
-            ->delete(\Piwigo\Session\SessionEntity::class, 's')
+            ->delete(SessionEntity::class, 's')
             ->where('s.id IN (:ids)')
             ->setParameter('ids', $sessionsToDelete, ArrayParameterType::STRING)
             ->getQuery()

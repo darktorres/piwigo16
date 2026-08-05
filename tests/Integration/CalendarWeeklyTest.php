@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
+use Override;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\RedirectServiceInterface;
+use LogicException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Calendar\CalendarBase;
 use Piwigo\Calendar\CalendarQueryScope;
@@ -17,7 +24,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\SqlCondition;
-use Piwigo\Template\Template;
 
 function calendar_weekly_test_rrmdir(string $dir): void
 {
@@ -59,7 +65,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
 
     private CalendarWeeklyTestFakeUrlService $urlService;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -98,7 +104,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         $this->urlService = new CalendarWeeklyTestFakeUrlService();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         // CurrentConfig::setDataLocation('data/') above only redirects
@@ -119,7 +125,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
 
     private function makeCalendar(): CalendarWeekly
     {
-        $calendar = new CalendarWeekly(Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), \Piwigo\Image\ImageStdParams::current());
+        $calendar = new CalendarWeekly(Lang::current(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
         $calendar->chronology_field = 'posted';
         $calendar->initialize(new CalendarQueryScope(
             new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)'),
@@ -227,7 +233,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
     {
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [];
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
 
         self::assertFalse($calendar->generate_category_content($template));
 
@@ -250,7 +256,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
     {
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [2024];
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
 
         self::assertFalse($calendar->generate_category_content($template));
 
@@ -267,7 +273,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
     {
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [2025, 4];
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
 
         self::assertFalse($calendar->generate_category_content($template));
 
@@ -291,7 +297,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
     {
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [2024];
-        $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
+        $template = TemplateTestFactory::build();
 
         $calendar->generate_category_content($template);
 
@@ -358,105 +364,105 @@ final class CalendarWeeklyTest extends IntegrationTestCase
  * own docblock for the full rationale (identical: CalendarWeekly, like
  * CalendarMonthly, only ever calls duplicateIndexUrl()).
  */
-final class CalendarWeeklyTestFakeUrlService implements \Piwigo\Core\UrlServiceInterface
+final class CalendarWeeklyTestFakeUrlService implements UrlServiceInterface
 {
-    #[\Override]
+    #[Override]
     public function getRootUrl(): string
     {
         return '/fake-root/';
     }
 
-    #[\Override]
+    #[Override]
     public function getAbsoluteRootUrl(bool $withScheme = true): string
     {
         return 'https://fake.test/';
     }
 
-    #[\Override]
+    #[Override]
     public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string
     {
         return $url;
     }
 
-    #[\Override]
+    #[Override]
     public function makeIndexUrl(array $params = []): string
     {
         return '/fake-index?' . json_encode($params);
     }
 
-    #[\Override]
+    #[Override]
     public function duplicateIndexUrl(array $redefined = [], array $removed = []): string
     {
         return '/fake-index?' . json_encode($redefined) . '|removed=' . json_encode($removed);
     }
 
-    #[\Override]
+    #[Override]
     public function duplicatePictureUrl(array $redefined = [], array $removed = []): string
     {
         return '/fake-picture';
     }
 
-    #[\Override]
+    #[Override]
     public function makePictureUrl(array $params): string
     {
         return '/fake-picture';
     }
 
-    #[\Override]
-    public function parseSectionUrl(array $tokens, &$nextToken, \Piwigo\Core\RedirectServiceInterface $redirectService): array
+    #[Override]
+    public function parseSectionUrl(array $tokens, &$nextToken, RedirectServiceInterface $redirectService): array
     {
-        throw new \LogicException('not used by CalendarWeekly');
+        throw new LogicException('not used by CalendarWeekly');
     }
 
-    #[\Override]
+    #[Override]
     public function parseWellKnownParamsUrl(array $tokens, int &$i): array
     {
-        throw new \LogicException('not used by CalendarWeekly');
+        throw new LogicException('not used by CalendarWeekly');
     }
 
-    #[\Override]
+    #[Override]
     public function getActionUrl($id, $whatPart, bool $download): string
     {
-        throw new \LogicException('not used by CalendarWeekly');
+        throw new LogicException('not used by CalendarWeekly');
     }
 
-    #[\Override]
+    #[Override]
     public function getElementUrl(array $elementInfo): string
     {
-        throw new \LogicException('not used by CalendarWeekly');
+        throw new LogicException('not used by CalendarWeekly');
     }
 
-    #[\Override]
+    #[Override]
     public function setMakeFullUrl(): void {}
 
-    #[\Override]
+    #[Override]
     public function unsetMakeFullUrl(): void {}
 
-    #[\Override]
+    #[Override]
     public function embellishUrl(string $url): string
     {
         return $url;
     }
 
-    #[\Override]
+    #[Override]
     public function getGalleryHomeUrl(): string
     {
-        throw new \LogicException('not used by CalendarWeekly');
+        throw new LogicException('not used by CalendarWeekly');
     }
 
-    #[\Override]
+    #[Override]
     public function getQueryStringDiff(array $rejects = [], bool $escape = true): string
     {
-        throw new \LogicException('not used by CalendarWeekly');
+        throw new LogicException('not used by CalendarWeekly');
     }
 
-    #[\Override]
+    #[Override]
     public function urlIsRemote(string $url): bool
     {
         return false;
     }
 
-    #[\Override]
+    #[Override]
     public function getUserFavorites(): array
     {
         return [];

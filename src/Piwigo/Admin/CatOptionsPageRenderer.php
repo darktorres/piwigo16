@@ -6,13 +6,19 @@ namespace Piwigo\Admin;
 
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Request\CatOptionsRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Ported from admin/cat_options.php (page slug "cat_options") -- a flat
@@ -30,13 +36,13 @@ final class CatOptionsPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
-        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly CurrentTemplate $currentTemplate,
         private readonly CategoryAdminService $categoryAdminService,
         private readonly ActivityService $activityService,
         private readonly CategoryService $categoryService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Validation\InputValidator $inputValidator,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly InputValidator $inputValidator,
+        private readonly EventDispatcher $eventDispatcher,
     ) {}
 
     public function render(): void
@@ -46,10 +52,10 @@ final class CatOptionsPageRenderer
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        $catOptionsRequest = Request\CatOptionsRequest::fromGlobals($this->inputValidator);
+        $catOptionsRequest = CatOptionsRequest::fromGlobals($this->inputValidator);
 
         if ($catOptionsRequest->isSubmitted) {
-            new \Piwigo\Csrf\CsrfService()
+            new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
@@ -147,7 +153,7 @@ final class CatOptionsPageRenderer
             $categoryService->displaySelectByRepresentativePresence(true, 'category_option_true', $htmlService, $template);
             $categoryService->displaySelectByRepresentativePresence(false, 'category_option_false', $htmlService, $template);
         }
-        $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
+        $template->assign('PWG_TOKEN', new CsrfService()->getToken());
         $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Properties of abums'));
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');

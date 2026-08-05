@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Override;
 use Piwigo\Admin\CatOptionsPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -20,7 +21,7 @@ final class CatOptionsSubController implements AdminSubControllerInterface
         private readonly CatOptionsPageRenderer $catOptionsPageRenderer,
     ) {}
 
-    #[\Override]
+    #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         $this->catOptionsPageRenderer

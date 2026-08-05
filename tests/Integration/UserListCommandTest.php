@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\Db\DbConnection;
 use Piwigo\Command\UserListCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -18,7 +20,7 @@ final class UserListCommandTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -83,7 +85,7 @@ final class UserListCommandTest extends IntegrationTestCase
         // and correctly bypassed the same way every other real
         // disableForeignKeyChecks() caller in this suite already relies
         // on.
-        $conn = \Piwigo\Db\DbConnection::build();
+        $conn = DbConnection::build();
         $this->disableForeignKeyChecks($conn);
         $conn->executeStatement('DELETE FROM ' . $this->dbPrefix . 'user_infos');
         $conn->executeStatement('DELETE FROM ' . $this->dbPrefix . 'users');

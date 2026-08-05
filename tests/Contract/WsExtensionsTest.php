@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use Piwigo\Cache\CachePools;
+use Piwigo\Core\Env;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -28,7 +31,7 @@ final class WsExtensionsTest extends ContractTestCase
     /** @var list<int> */
     private array $extraUserIdsToDelete = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -36,7 +39,7 @@ final class WsExtensionsTest extends ContractTestCase
         $this->loginAsAdmin();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->setConfigBool('enable_extensions_install', true);
@@ -59,7 +62,7 @@ final class WsExtensionsTest extends ContractTestCase
     {
         $encoded = $value ? 'true' : 'false';
         $this->upsertConfig($param, $encoded);
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
     }
 
     /**
@@ -459,7 +462,7 @@ final class WsExtensionsTest extends ContractTestCase
     {
         $token = $this->getPwgToken();
         $pluginId = 'ct_fake_plugin_' . uniqid();
-        $now = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
+        $now = Env::now()->format('Y-m-d H:i:s');
         $this->conn->insert(Tables::extensionIgnoredUpdates(), [
             'extension_type' => 'plugin',
             'extension_id' => $pluginId,
@@ -493,7 +496,7 @@ final class WsExtensionsTest extends ContractTestCase
     public function test_ignoreUpdate_reset_without_type_clears_everything(): void
     {
         $token = $this->getPwgToken();
-        $now = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
+        $now = Env::now()->format('Y-m-d H:i:s');
         $this->conn->insert(Tables::extensionIgnoredUpdates(), ['extension_type' => 'plugin', 'extension_id' => 'a', 'ignored_at' => $now]);
         $this->conn->insert(Tables::extensionIgnoredUpdates(), ['extension_type' => 'theme', 'extension_id' => 'b', 'ignored_at' => $now]);
         $this->conn->insert(Tables::extensionIgnoredUpdates(), ['extension_type' => 'language', 'extension_id' => 'c', 'ignored_at' => $now]);

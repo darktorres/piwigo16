@@ -12,6 +12,20 @@ declare(strict_types=1);
 // passthrough with no handlers registered, so no local stub is needed.
 namespace Piwigo\Tests\Integration {
 
+    use Override;
+    use Piwigo\Core\Kernel;
+    use LogicException;
+    use Piwigo\Core\Lang;
+    use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\PluginConfig\EventDispatcher;
+    use Piwigo\Users\CurrentUser;
+    use Piwigo\Session\SessionService;
+    use Piwigo\Core\FilterState;
+    use RuntimeException;
+    use Error;
+    use Imagick;
+    use ReflectionMethod;
+    use Piwigo\Db\Tables;
     use Doctrine\DBAL\Connection;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
@@ -33,7 +47,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     private string $scratchDir;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -45,9 +59,9 @@ final class MetadataServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -56,7 +70,7 @@ final class MetadataServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $currentLogger = new CurrentLogger();
         $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-        $this->service = new MetadataService(\Piwigo\Core\Lang::current(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $currentLogger, \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Session\SessionService::get(), new \Piwigo\Core\FilterState());
+        $this->service = new MetadataService(Lang::current(), new MetadataRepository(EntityManagerFactory::build($this->conn)), $currentLogger, EventDispatcher::get(), CurrentConfig::current(), CurrentUser::current(), SessionService::get(), new FilterState());
 
         CurrentConfig::current()->setUseIptc(false);
         CurrentConfig::current()->setUseExif(true);
@@ -71,7 +85,7 @@ final class MetadataServiceTest extends IntegrationTestCase
         @mkdir($this->scratchDir, 0o777, true);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $files = glob($this->scratchDir . '/*');
@@ -115,7 +129,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
         $img = imagecreatetruecolor(6, 6);
         if ($img === false) {
-            throw new \RuntimeException('imagecreatetruecolor failed');
+            throw new RuntimeException('imagecreatetruecolor failed');
         }
         ob_start();
         imagejpeg($img);
@@ -138,7 +152,7 @@ final class MetadataServiceTest extends IntegrationTestCase
     {
         $img = imagecreatetruecolor(6, 6);
         if ($img === false) {
-            throw new \RuntimeException('imagecreatetruecolor failed');
+            throw new RuntimeException('imagecreatetruecolor failed');
         }
         ob_start();
         imagejpeg($img);
@@ -411,14 +425,14 @@ final class MetadataServiceTest extends IntegrationTestCase
     public function test_clean_iptc_value_lets_a_plugin_handler_override_the_value(): void
     {
         $handler = static fn (CleanIptcValue $event): CleanIptcValue => new CleanIptcValue('plugin-override');
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(CleanIptcValue::class, $handler);
+        EventDispatcher::get()->addTypedHandler(CleanIptcValue::class, $handler);
 
         try {
             $result = $this->service->cleanIptcValue("raw \x92 value");
 
             self::assertSame('plugin-override', $result);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(CleanIptcValue::class, $handler);
+            EventDispatcher::get()->removeEventHandler(CleanIptcValue::class, $handler);
         }
     }
 
@@ -479,7 +493,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getExifData($path, []);
@@ -487,7 +501,7 @@ final class MetadataServiceTest extends IntegrationTestCase
             self::assertEqualsWithDelta(41.9027, $result['latitude'], 0.001);
             self::assertEqualsWithDelta(12.5, $result['longitude'], 0.001);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -509,7 +523,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getExifData($path, []);
@@ -517,7 +531,7 @@ final class MetadataServiceTest extends IntegrationTestCase
             self::assertArrayNotHasKey('latitude', $result);
             self::assertArrayNotHasKey('longitude', $result);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -532,14 +546,14 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getExifData($path, ['multi' => 'MultiField']);
 
             self::assertSame(['multi' => ['one', 'two']], $result);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -554,14 +568,14 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getExifData($path, ['author' => 'Artist']);
 
             self::assertSame(['author' => 'alert(1)Jane'], $result);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -586,9 +600,9 @@ final class MetadataServiceTest extends IntegrationTestCase
         // this shape now means not returning a FormatExifData instance
         // at all, which fails loud instead of falling back to [].
         $handler = static fn (): string => 'plugin-supplied-non-array-exif';
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(FormatExifData::class, $handler);
+        EventDispatcher::get()->addEventHandler(FormatExifData::class, $handler);
 
-        $this->expectException(\Error::class);
+        $this->expectException(Error::class);
         $this->expectExceptionMessage('must return an instance of');
 
         set_error_handler(static fn (): bool => true);
@@ -596,7 +610,7 @@ final class MetadataServiceTest extends IntegrationTestCase
             $this->service->getExifData($path, ['author' => 'Artist']);
         } finally {
             restore_error_handler();
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -673,14 +687,14 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncExifData($path);
 
             self::assertSame('2024-03-15 10:20:30', $result['date_creation']);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -698,14 +712,14 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncExifData($path);
 
             self::assertSame('2024-03-15', $result['date_creation']);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -726,14 +740,14 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncExifData($path);
 
             self::assertArrayNotHasKey('date_creation', $result);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -749,14 +763,14 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncExifData($path);
 
             self::assertArrayNotHasKey('date_creation', $result);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -772,14 +786,14 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncExifData($path);
 
             self::assertSame('nature,travel,family', $result['keywords']);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -803,7 +817,7 @@ final class MetadataServiceTest extends IntegrationTestCase
         $originalRelative = '_data/metadata-service-test-scratch/tiff-original.tiff';
         $originalAbsolute = dirname(__DIR__, 2) . '/' . $originalRelative;
 
-        $tiff = new \Imagick();
+        $tiff = new Imagick();
         $tiff->newImage(8, 6, 'white');
         $tiff->setImageFormat('tiff');
         $tiff->writeImage($originalAbsolute);
@@ -824,7 +838,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return $event;
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncMetadata([
@@ -832,7 +846,7 @@ final class MetadataServiceTest extends IntegrationTestCase
                 'representative_ext' => 'jpg',
             ]);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
             @unlink($representativeDir . '/tiff-original.jpg');
             @rmdir($representativeDir);
         }
@@ -876,7 +890,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_parse_svg_dimensions_falls_back_to_the_viewbox_when_width_and_height_are_absent(): void
     {
-        $method = new \ReflectionMethod(MetadataService::class, 'parseSvgDimensions');
+        $method = new ReflectionMethod(MetadataService::class, 'parseSvgDimensions');
         $path = $this->scratchDir . '/viewbox-only.svg';
         file_put_contents(
             $path,
@@ -890,7 +904,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_parse_svg_dimensions_defaults_to_zero_for_a_malformed_viewbox(): void
     {
-        $method = new \ReflectionMethod(MetadataService::class, 'parseSvgDimensions');
+        $method = new ReflectionMethod(MetadataService::class, 'parseSvgDimensions');
         $path = $this->scratchDir . '/malformed-viewbox.svg';
         file_put_contents(
             $path,
@@ -904,7 +918,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_parse_svg_dimensions_returns_null_for_an_unreadable_file(): void
     {
-        $method = new \ReflectionMethod(MetadataService::class, 'parseSvgDimensions');
+        $method = new ReflectionMethod(MetadataService::class, 'parseSvgDimensions');
 
         // file_get_contents() on a missing file emits a real E_WARNING --
         // swallowed for this one call, same established pattern as
@@ -921,7 +935,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_parse_svg_dimensions_returns_null_when_preg_replace_hits_the_backtrack_limit(): void
     {
-        $method = new \ReflectionMethod(MetadataService::class, 'parseSvgDimensions');
+        $method = new ReflectionMethod(MetadataService::class, 'parseSvgDimensions');
         $path = $this->scratchDir . '/doctype.svg';
         file_put_contents(
             $path,
@@ -975,7 +989,7 @@ final class MetadataServiceTest extends IntegrationTestCase
         file_put_contents($this->scratchDir . '/sync-tags.jpg', $bytes);
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . \Piwigo\Db\Tables::images() . ' (path) VALUES (?)',
+            'INSERT INTO ' . Tables::images() . ' (path) VALUES (?)',
             [$relativePath]
         );
         $imageId = (int) $this->conn->lastInsertId();
@@ -984,8 +998,8 @@ final class MetadataServiceTest extends IntegrationTestCase
             $this->service->syncMetadata([$imageId]);
 
             $tagNames = $this->conn->fetchFirstColumn(
-                'SELECT t.name FROM ' . \Piwigo\Db\Tables::tags() . ' t
-                 INNER JOIN ' . \Piwigo\Db\Tables::imageTag() . ' it ON it.tag_id = t.id
+                'SELECT t.name FROM ' . Tables::tags() . ' t
+                 INNER JOIN ' . Tables::imageTag() . ' it ON it.tag_id = t.id
                  WHERE it.image_id = ?
                  ORDER BY t.name',
                 [$imageId]
@@ -993,21 +1007,21 @@ final class MetadataServiceTest extends IntegrationTestCase
             self::assertSame(['sync-nature', 'sync-travel'], $tagNames);
 
             $updatedDate = $this->conn->fetchOne(
-                'SELECT date_metadata_update FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?',
+                'SELECT date_metadata_update FROM ' . Tables::images() . ' WHERE id = ?',
                 [$imageId]
             );
             self::assertNotNull($updatedDate);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::imageTag() . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$imageId]);
-            $this->conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::tags() . " WHERE name IN ('sync-nature', 'sync-travel')");
+            $this->conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement("DELETE FROM " . Tables::tags() . " WHERE name IN ('sync-nature', 'sync-travel')");
         }
     }
 
     public function test_sync_metadata_skips_a_row_whose_file_is_unreadable(): void
     {
         $this->conn->executeStatement(
-            "INSERT INTO " . \Piwigo\Db\Tables::images() . " (path) VALUES ('no/such/file-for-sync.jpg')"
+            "INSERT INTO " . Tables::images() . " (path) VALUES ('no/such/file-for-sync.jpg')"
         );
         $imageId = (int) $this->conn->lastInsertId();
 
@@ -1018,12 +1032,12 @@ final class MetadataServiceTest extends IntegrationTestCase
             $this->service->syncMetadata([$imageId]);
 
             $updatedDate = $this->conn->fetchOne(
-                'SELECT date_metadata_update FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?',
+                'SELECT date_metadata_update FROM ' . Tables::images() . ' WHERE id = ?',
                 [$imageId]
             );
             self::assertNull($updatedDate);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
         }
     }
 

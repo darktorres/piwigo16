@@ -51,7 +51,7 @@ function send_notification_email_handler_test_mail_service(): MailService
         || ! $translator instanceof Translator || ! $eventDispatcher instanceof EventDispatcher
         || ! $currentUser instanceof CurrentUser || ! $urlService instanceof UrlServiceInterface
     ) {
-        throw new \LogicException('Container returned an unexpected type');
+        throw new LogicException('Container returned an unexpected type');
     }
 
     return new MailService($lang, $currentConfig, $deploymentPolicy, $pageState, $paths, $sessionService, $translator, $eventDispatcher, $currentUser, $urlService);
@@ -94,7 +94,7 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
     // Current* wrapper in this campaign, e.g.
     // RequestBootstrapBootConfigOnlyTest.php's own "reuses an
     // already-set CurrentConfigService" test).
-    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
 
     CurrentConfig::current()->setMailSenderEmail('sender@example.test');
     CurrentConfig::current()->setMailSenderName('Test Sender');
@@ -132,7 +132,7 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
         expect($capturedArgs['subject'] ?? null)->toBe('Test Subject');
     } finally {
         EventDispatcher::get()->removeEventHandler(BeforeSendMail::class, $eventHandler);
-        \Piwigo\Config\CurrentConfig::current()->reset();
-        \Piwigo\Core\Kernel::reset();
+        CurrentConfig::current()->reset();
+        Kernel::reset();
     }
 });

@@ -8,6 +8,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\VersionHelper;
 use Piwigo\Http\HttpClientService;
 
 /**
@@ -115,7 +116,7 @@ final readonly class ExtensionUpdateChecker
             $revisionNameRaw = $serverInfo['revision_name'] ?? null;
             $revisionName = is_string($revisionNameRaw) ? $revisionNameRaw : '';
 
-            if (! (bool) \Piwigo\Core\VersionHelper::safeVersionCompare($fsVersion, $revisionName, '>=')) {
+            if (! (bool) VersionHelper::safeVersionCompare($fsVersion, $revisionName, '>=')) {
                 $pending[$extId] = [
                     'fs' => $fsExt,
                     'server' => $serverInfo,
@@ -192,7 +193,7 @@ final readonly class ExtensionUpdateChecker
                 $fsVersionRaw = $fsExt['version'] ?? null;
                 $fsVersion = is_string($fsVersionRaw) ? $fsVersionRaw : '';
 
-                if (is_string($neededVersion) and (bool) \Piwigo\Core\VersionHelper::safeVersionCompare($fsVersion, $neededVersion, '>=')) {
+                if (is_string($neededVersion) and (bool) VersionHelper::safeVersionCompare($fsVersion, $neededVersion, '>=')) {
                     $this->checkExtensions();
 
                     return;

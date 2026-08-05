@@ -11,18 +11,24 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\TagId;
+use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Album\MergeTags;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Tag\GetTagAltNames;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Tag\RenderTagUrl;
+use Piwigo\Image\ImageEntity;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\TagService;
 
 /**
@@ -35,10 +41,10 @@ final class PwgTags
     public function __construct(
         private readonly TagService $tagService,
         private readonly ActivityService $activityService,
-        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
-        private readonly \Piwigo\Core\UrlServiceInterface $urlService,
-        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private readonly \Doctrine\ORM\EntityManagerInterface $entityManager,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly UrlServiceInterface $urlService,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly EntityManagerInterface $entityManager,
         private readonly WsHelper $wsHelper,
     ) {}
 
@@ -165,7 +171,7 @@ final class PwgTags
             $rank_of = array_flip($image_ids);
             $favorite_ids = $urlService->getUserFavorites();
 
-            foreach (\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)->findByIds($image_ids) as $row_id => $imageRow) {
+            foreach (EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)->findByIds($image_ids) as $row_id => $imageRow) {
                 // Unboxed here rather than kept as the typed object -- this
                 // loop rebuilds a differently-shaped $image array from
                 // $row's fields and separately passes the whole row to

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\Lang;
+use Piwigo\Template\CurrentTemplate;
 
 /**
  * Ported from admin/photos_add_ftp.php (the "ftp" tab of the "photos_add"
@@ -12,7 +13,7 @@ use Piwigo\Core\Lang;
  */
 final class PhotosAddFtpPageRenderer
 {
-    public function render(Lang $lang, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, CurrentTemplate $currentTemplate): void
     {
         $template = $currentTemplate->get();
 

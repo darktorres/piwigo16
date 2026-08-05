@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Override;
+use Piwigo\Cache\CachePools;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -43,14 +45,14 @@ final class WsCommentsTest extends ContractTestCase
     /** @var list<int> */
     private array $commentIdsToDelete = [];
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
         $this->conn = DbConnection::build();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         if ($this->commentIdsToDelete !== []) {
@@ -232,7 +234,7 @@ final class WsCommentsTest extends ContractTestCase
         $this->conn->executeStatement(
             "UPDATE " . Tables::config() . " SET value = 'false' WHERE param = 'activate_comments'"
         );
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         try {
             $response = $this->wsAdmin('pwg.userComments.getList', [
@@ -246,7 +248,7 @@ final class WsCommentsTest extends ContractTestCase
             $this->conn->executeStatement(
                 "UPDATE " . Tables::config() . " SET value = 'true' WHERE param = 'activate_comments'"
             );
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 
@@ -395,7 +397,7 @@ final class WsCommentsTest extends ContractTestCase
         $this->conn->executeStatement(
             "UPDATE " . Tables::config() . " SET value = 'true' WHERE param = 'comments_forall'"
         );
-        \Piwigo\Cache\CachePools::config()->clear();
+        CachePools::config()->clear();
 
         try {
             $info = $this->ws('pwg.images.getInfo', ['image_id' => 1]);
@@ -443,7 +445,7 @@ final class WsCommentsTest extends ContractTestCase
             $this->conn->executeStatement(
                 "UPDATE " . Tables::config() . " SET value = 'false' WHERE param = 'comments_forall'"
             );
-            \Piwigo\Cache\CachePools::config()->clear();
+            CachePools::config()->clear();
         }
     }
 }

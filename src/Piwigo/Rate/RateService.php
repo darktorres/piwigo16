@@ -7,8 +7,11 @@ namespace Piwigo\Rate;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\CookieService;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Event\Picture\UpdateRatingScore;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Rate domain business logic: submitting a rate, recomputing the bayesian
@@ -29,9 +32,9 @@ final readonly class RateService
         private AccessControl $accessControl,
         private RateRepository $repo,
         private CookieService $cookies,
-        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
-        private \Piwigo\Users\CurrentUser $currentUser,
-        private \Piwigo\Config\CurrentConfig $currentConfig,
+        private EventDispatcher $eventDispatcher,
+        private CurrentUser $currentUser,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**

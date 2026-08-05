@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Common\ValueObject\ImageId;
@@ -27,13 +28,13 @@ final class ImageIdTest extends TestCase
 
     public function testFromRejectsZero(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         ImageId::from(0);
     }
 
     public function testFromRejectsNegative(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         ImageId::from(-1);
     }
 

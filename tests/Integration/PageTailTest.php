@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Override;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use LogicException;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbCredentials;
+use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -13,11 +20,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\UniqueExecLock;
-use Piwigo\Html\HtmlService;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\ScriptLoader;
-use Piwigo\Template\Template;
-use Piwigo\Url\UrlService;
 
 /**
  * Piwigo\Bootstrap\PageTail -- renderToString()/render() themselves are
@@ -54,7 +57,7 @@ final class PageTailTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -70,30 +73,30 @@ final class PageTailTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
         // Kernel is already booted by parent::setUp() with this exact same
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
 
         // footer.tpl's own {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
-        CurrentTemplate::current()->set(\Piwigo\Tests\Support\TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
 
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->setSendPiwigoInfos(false);
         $currentConfig->setShowVersion(true);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         UniqueExecLock::ends('check_for_updates');
         UniqueExecLock::reset();
         CurrentTemplate::current()->reset();
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
         Kernel::reset();
@@ -102,9 +105,9 @@ final class PageTailTest extends IntegrationTestCase
 
     public function test_renderToString_skips_the_update_check_when_another_exec_already_holds_the_fresh_lock(): void
     {
-        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
-        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
-            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfig::class);
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->setUpdateNotifyCheckPeriod(1);
         // Far enough in the past that, with a 1-second check period,
@@ -118,9 +121,9 @@ final class PageTailTest extends IntegrationTestCase
         // UniqueExecLock::begins() a 2nd time here wouldn't simulate real
         // contention at all. checkForUpdates()'s own begins() call (its
         // own cached, request-scoped connection) then loses the race.
-        $otherConn = \Piwigo\Db\DbConnection::build();
-        $lockName = 'piwigo_exec_' . sha1(\Piwigo\Db\DbCredentials::current()->prefix . ':unique_exec:check_for_updates');
-        self::assertTrue(\Piwigo\Db\AdvisorySessionLock::acquire($otherConn, $lockName, 1));
+        $otherConn = DbConnection::build();
+        $lockName = 'piwigo_exec_' . sha1(DbCredentials::current()->prefix . ':unique_exec:check_for_updates');
+        self::assertTrue(AdvisorySessionLock::acquire($otherConn, $lockName, 1));
         self::assertTrue(UniqueExecLock::isRunning('check_for_updates'));
 
         try {
@@ -139,7 +142,7 @@ final class PageTailTest extends IntegrationTestCase
             // race rather than clearing and replacing it.
             self::assertTrue(UniqueExecLock::isRunning('check_for_updates'));
         } finally {
-            \Piwigo\Db\AdvisorySessionLock::release($otherConn, $lockName);
+            AdvisorySessionLock::release($otherConn, $lockName);
         }
     }
 }

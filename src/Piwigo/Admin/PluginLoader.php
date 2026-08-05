@@ -8,12 +8,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use LogicException;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\PageState;
+use Piwigo\Core\VersionHelper;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\PluginsLoaded;
-use Piwigo\PluginConfig\PluginRepository;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\PluginConfig\PluginEntity;
 
 /**
  * Loads all currently-active plugins on every request (was
@@ -45,17 +53,17 @@ final class PluginLoader
      */
     public static function pluginsPath(): string
     {
-        return \Piwigo\Core\CurrentPaths::get()->plugins;
+        return CurrentPaths::get()->plugins;
     }
 
     /**
      * Loads all the registered plugins.
      */
-    public static function loadPlugins(LoadedPlugins $loadedPlugins, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Config\CurrentConfig $currentConfig, WsContext $wsContext, AccessControl $accessControl, \Piwigo\Core\PageState $pageState): void
+    public static function loadPlugins(LoadedPlugins $loadedPlugins, EventDispatcher $eventDispatcher, ActivityService $activityService, CurrentConfig $currentConfig, WsContext $wsContext, AccessControl $accessControl, PageState $pageState): void
     {
         $loadedPlugins->set([]);
         if ($currentConfig->enablePlugins()) {
-            $plugins = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\PluginConfig\PluginEntity::class)->getDbPlugins('active');
+            $plugins = EntityManagerFactory::build(DbConnection::build())->getRepository(PluginEntity::class)->getDbPlugins('active');
             foreach ($plugins as $plugin) {// include main from a function to avoid using same function context
                 // Unboxed back to array here -- loadPlugin()/autoupdatePlugin()
                 // mutate $plugin['version'] in place through a by-reference
@@ -77,7 +85,7 @@ final class PluginLoader
      *   loadPlugins(), unboxes the repository's typed row there since this
      *   method needs mutable array semantics, not a readonly object)
      */
-    private static function loadPlugin(array $plugin, LoadedPlugins $loadedPlugins, \Piwigo\Activity\ActivityService $activityService, WsContext $wsContext, AccessControl $accessControl, \Piwigo\Core\PageState $pageState): void
+    private static function loadPlugin(array $plugin, LoadedPlugins $loadedPlugins, ActivityService $activityService, WsContext $wsContext, AccessControl $accessControl, PageState $pageState): void
     {
         $plugin_id = $plugin['id'];
 
@@ -97,7 +105,7 @@ final class PluginLoader
      *   be updated if version changes - matches loadPlugin()'s own param
      *   shape (its only caller, already guards 'id' to string)
      */
-    private static function autoupdatePlugin(array &$plugin, \Piwigo\Activity\ActivityService $activityService, WsContext $wsContext, AccessControl $accessControl, \Piwigo\Core\PageState $pageState): void
+    private static function autoupdatePlugin(array &$plugin, ActivityService $activityService, WsContext $wsContext, AccessControl $accessControl, PageState $pageState): void
     {
         $plugin_id = $plugin['id'];
 
@@ -126,7 +134,7 @@ final class PluginLoader
         // if version is auto (dev) or superior
         if ($fs_version !== null && (
             $fs_version === 'auto' || $plugin_version === 'auto' ||
-              (bool) \Piwigo\Core\VersionHelper::safeVersionCompare($plugin_version, $fs_version, '<')
+              (bool) VersionHelper::safeVersionCompare($plugin_version, $fs_version, '<')
         )
         ) {
             $old_version = $plugin_version;
@@ -149,7 +157,7 @@ final class PluginLoader
 
                 $plugin_maintain = new $classname($plugin_id, $wsContext, $accessControl);
                 if (! $plugin_maintain instanceof PluginMaintain) {
-                    throw new \LogicException("PluginLoader::autoupdatePlugin(): {$classname} does not extend PluginMaintain");
+                    throw new LogicException("PluginLoader::autoupdatePlugin(): {$classname} does not extend PluginMaintain");
                 }
                 // $old_version (pre-mutation), not $plugin['version'] (already
                 // overwritten with $fs_version above) -- passing the mutated
@@ -169,7 +177,7 @@ final class PluginLoader
             // which happens for each "version=auto" plugin on each page load.
             if ($new_version !== $old_version) {
                 $conn = DbConnection::build();
-                \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\PluginConfig\PluginEntity::class)
+                EntityManagerFactory::build($conn)->getRepository(PluginEntity::class)
                     ->updateVersion($plugin_id, $fs_version);
 
                 $activityService

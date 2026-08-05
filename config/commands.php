@@ -13,6 +13,7 @@ use Piwigo\Command\MaintenancePurgeSessionsCommand;
 use Piwigo\Command\MaintenanceRepairDbCommand;
 use Piwigo\Command\SchemaDumpCommand;
 use Piwigo\Command\UserListCommand;
+use Symfony\Component\Console\Command\Command;
 
 // bin/piwigo's registered command list, resolved via the DI container
 // (Piwigo\Bootstrap\CliBootstrap). Grows one entry at a time as commands
@@ -23,9 +24,8 @@ use Piwigo\Command\UserListCommand;
 // all 4 maintenance:* commands but none were ever built) autowire
 // DbMaintenanceRepository (built P21, had zero real callers until now)
 // with zero new container.php entries. All 4 are now registered.
-
 /**
- * @return list<class-string<\Symfony\Component\Console\Command\Command>>
+ * @return list<class-string<Command>>
  */
 return [
     CacheClearCommand::class,

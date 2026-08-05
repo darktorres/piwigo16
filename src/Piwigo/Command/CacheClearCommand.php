@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Command;
 
+use Override;
 use Psr\Cache\CacheItemPoolInterface;
+use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -44,14 +46,14 @@ final class CacheClearCommand extends Command
         parent::__construct();
     }
 
-    #[\Override]
+    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $latteDir = $this->latteCacheDir ?? self::defaultLatteCacheDir();
 
         if (is_dir($latteDir)) {
             if (! self::looksLikeLatteCacheDir($latteDir)) {
-                throw new \RuntimeException("Refusing to clear a path that doesn't look like the Latte compiled-template cache dir (expected .../templates_c/latte): {$latteDir}");
+                throw new RuntimeException("Refusing to clear a path that doesn't look like the Latte compiled-template cache dir (expected .../templates_c/latte): {$latteDir}");
             }
 
             $this->removeDir($latteDir);

@@ -89,9 +89,9 @@ final class Tabsheet
     /*
        select a tab to be active
     */
-    public function select(string $name): void
+    public function select(string $name, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
-        $event = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new TabsheetBeforeSelect($this->sheets, $this->uniqid));
+        $event = $eventDispatcher->dispatchChange(new TabsheetBeforeSelect($this->sheets, $this->uniqid));
         // 'tabsheet_before_select' handlers are documented to filter/append to
         // the array<string, array{caption: string, url: string}> $sheets they
         // receive and return the same shape, but TabsheetBeforeSelect::$sheets

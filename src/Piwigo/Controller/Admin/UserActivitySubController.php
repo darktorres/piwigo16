@@ -33,12 +33,13 @@ final class UserActivitySubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new UserActivityPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->currentTemplate, $this->currentConfig, $this->activityService, $this->userService, $this->imageService, $this->categoryService, $this->groupService, $this->htmlRenderer, $this->inputValidator);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->currentTemplate, $this->currentConfig, $this->activityService, $this->userService, $this->imageService, $this->categoryService, $this->groupService, $this->htmlRenderer, $this->inputValidator, $this->eventDispatcher);
     }
 }

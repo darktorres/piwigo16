@@ -24,12 +24,13 @@ final class CommentsSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new CommentsPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->currentTemplate);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->currentTemplate, $this->eventDispatcher);
     }
 }

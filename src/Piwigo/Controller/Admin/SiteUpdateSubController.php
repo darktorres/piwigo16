@@ -224,7 +224,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('site_update');
-        $tabsheet->select('synchronization');
+        $tabsheet->select('synchronization', $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
         // +-----------------------------------------------------------------------+

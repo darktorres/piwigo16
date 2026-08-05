@@ -85,7 +85,7 @@ final class PluginsSubController implements AdminSubControllerInterface
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('plugins');
-        $tabsheet->select($tab);
+        $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
         if ($tab === 'update') {

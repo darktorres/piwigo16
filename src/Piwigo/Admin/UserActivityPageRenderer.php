@@ -20,7 +20,7 @@ use Piwigo\Template\Template;
  */
 final class UserActivityPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Users\UserService $userService, \Piwigo\Image\ImageService $imageService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Group\GroupService $groupService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer, \Piwigo\Validation\InputValidator $inputValidator): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Users\UserService $userService, \Piwigo\Image\ImageService $imageService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Group\GroupService $groupService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer, \Piwigo\Validation\InputValidator $inputValidator, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $template = $currentTemplate->get();
 
@@ -32,7 +32,7 @@ final class UserActivityPageRenderer
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('users');
-        $tabsheet->select('user_activity');
+        $tabsheet->select('user_activity', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
         $activity_service = $activityService;

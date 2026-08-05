@@ -60,6 +60,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Category\CategoryService $categoryService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
@@ -102,7 +103,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('albums');
-        $tabsheet->select('permalinks');
+        $tabsheet->select('permalinks', $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
         $nb_cats = $this->categoryService->countAllCategories();

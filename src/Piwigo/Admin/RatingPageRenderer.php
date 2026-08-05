@@ -16,7 +16,7 @@ use Piwigo\Image\DerivativeImage;
  */
 final class RatingPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Validation\InputValidator $inputValidator): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Validation\InputValidator $inputValidator, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $template = $currentTemplate->get();
 
@@ -26,7 +26,7 @@ final class RatingPageRenderer
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('rating');
-        $tabsheet->select('rating');
+        $tabsheet->select('rating', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
         $start = $ratingRequest->start;

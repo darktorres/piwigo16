@@ -19,13 +19,13 @@ use Piwigo\Image\ImageStdParams;
  */
 final class RatingUserPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $template = $currentTemplate->get();
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('rating');
-        $tabsheet->select('rating_user');
+        $tabsheet->select('rating_user', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
         $ratingFilter = Request\RatingUserFilterRequest::fromGlobals($currentConfig->topNumber());

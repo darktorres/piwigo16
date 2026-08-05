@@ -34,12 +34,13 @@ final class StatsSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\History\HistoryService $historyService,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new StatsPageRenderer()
-            ->render($this->lang, $this->accessControl, 'stats', $this->urlService, $this->configService, $this->coreTabs, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->historyService);
+            ->render($this->lang, $this->accessControl, 'stats', $this->urlService, $this->configService, $this->coreTabs, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->historyService, $this->eventDispatcher);
     }
 }

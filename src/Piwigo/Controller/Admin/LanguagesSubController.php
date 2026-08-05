@@ -63,6 +63,7 @@ final class LanguagesSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
@@ -80,7 +81,7 @@ final class LanguagesSubController implements AdminSubControllerInterface
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('languages');
-        $tabsheet->select($tab);
+        $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
         if ($tab === 'update') {

@@ -53,7 +53,7 @@ final class AlbumsPageRenderer
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('albums');
-        $tabsheet->select('list');
+        $tabsheet->select('list', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
         $nb_cats = $categoryService->countAllCategories();

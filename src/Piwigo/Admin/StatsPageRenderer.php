@@ -35,7 +35,7 @@ final class StatsPageRenderer
      * shared 'history' tabsheet group (see HistoryPageRenderer, its
      * sibling in that same group).
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\History\HistoryService $historyService): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\History\HistoryService $historyService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $template = $currentTemplate->get();
 
@@ -59,7 +59,7 @@ final class StatsPageRenderer
         $coreTabs->setContext(new CoreTabsContext(linkStart: $urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('history');
-        $tabsheet->select($pageSlug);
+        $tabsheet->select($pageSlug, $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
         $base_url = $urlService->getRootUrl() . 'admin.php?page=history';

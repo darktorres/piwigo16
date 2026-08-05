@@ -26,6 +26,7 @@ final class GroupListPageRenderer
         private readonly Translator $translator,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     public function render(): void
@@ -40,7 +41,7 @@ final class GroupListPageRenderer
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('groups');
-        $tabsheet->select('group_list');
+        $tabsheet->select('group_list', $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);

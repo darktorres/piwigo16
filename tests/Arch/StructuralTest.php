@@ -1188,7 +1188,7 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     // on the shim, each for one of the same 3 reasons already established
     // by earlier phases: **too many manual construction sites to justify a
     // required param** (HtmlService.php 59 sites, MailService.php 29 sites,
-    // Tabsheet.php 29 sites, matching MailService's own precedent from the
+    // matching MailService's own precedent from the
     // SessionService/Translator phases); **Phase-6-entangled, still
     // manually `new`'d at dozens of sites** (SrcImage.php/DerivativeImage.php/
     // Template.php/CssLoader.php/ScriptLoader.php/UrlService.php/
@@ -1210,13 +1210,16 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     // construction). Phase 11 sub-phase 11B: Users/UserRepository.php
     // removed from this allow-list -- no longer a Doctrine repository with
     // an ORM-fixed constructor, it now takes EventDispatcher via real
-    // constructor injection like everything else in this campaign.
+    // constructor injection like everything else in this campaign. Phase
+    // 11 sub-phase 11E: Admin/Tabsheet.php removed too -- select() now
+    // takes EventDispatcher as an explicit method param (matching
+    // CurrentTemplate's own established precedent for this exact file
+    // from Phase 5), threaded through all 29 real call sites.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
         '/src/Piwigo/Admin/Extensions/ExtensionScanner.php',
         '/src/Piwigo/Admin/Install/InstallWizard.php',
-        '/src/Piwigo/Admin/Tabsheet.php',
         '/src/Piwigo/Bootstrap/PageTail.php',
         '/src/Piwigo/Bootstrap/RedirectService.php',
         '/src/Piwigo/Bootstrap/RequestBootstrap.php',

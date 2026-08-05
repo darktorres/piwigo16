@@ -122,7 +122,7 @@ final class IntroSubController implements AdminSubControllerInterface
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('admin_home');
-        $tabsheet->select('');
+        $tabsheet->select('', $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
         // +-----------------------------------------------------------------------+

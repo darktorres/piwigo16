@@ -30,12 +30,13 @@ final class RatingSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Category\CategoryService $categoryService,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new RatingPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->currentTemplate, $this->currentConfig, $this->categoryService, $this->inputValidator);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->currentTemplate, $this->currentConfig, $this->categoryService, $this->inputValidator, $this->eventDispatcher);
     }
 }

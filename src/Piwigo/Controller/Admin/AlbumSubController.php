@@ -80,7 +80,7 @@ final class AlbumSubController implements AdminSubControllerInterface
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('album');
-        $tabsheet->select($tab);
+        $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
         $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($category['name'], 'get_cat_display_name_cache'));

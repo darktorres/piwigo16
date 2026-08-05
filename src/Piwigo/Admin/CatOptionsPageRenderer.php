@@ -36,6 +36,7 @@ final class CatOptionsPageRenderer
         private readonly CategoryService $categoryService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     public function render(): void
@@ -85,7 +86,7 @@ final class CatOptionsPageRenderer
         $this->coreTabs->setContext(new CoreTabsContext(linkStart: $this->urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('cat_options');
-        $tabsheet->select($section);
+        $tabsheet->select($section, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
         // for each section, categories in the multiselect field can be :

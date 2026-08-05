@@ -17,7 +17,7 @@ use Piwigo\Template\Template;
  */
 final class CommentsPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $template = $currentTemplate->get();
 
@@ -43,7 +43,7 @@ final class CommentsPageRenderer
         $coreTabs->setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('comments');
-        $tabsheet->select('');
+        $tabsheet->select('', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
         $template->assign('ADMIN_PAGE_TITLE', $lang->t('User comments'));

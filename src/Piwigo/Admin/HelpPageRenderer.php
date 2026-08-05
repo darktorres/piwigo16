@@ -31,7 +31,7 @@ final class HelpPageRenderer
         $coreTabs->setContext(new CoreTabsContext(helpLink: $urlService->getRootUrl() . 'admin.php?page=help&amp;section='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('help');
-        $tabsheet->select($selected);
+        $tabsheet->select($selected, $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
         $eventDispatcher->dispatchNotify(new LocEndHelp());

@@ -71,6 +71,7 @@ final class ThemesSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
@@ -88,7 +89,7 @@ final class ThemesSubController implements AdminSubControllerInterface
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('themes');
-        $tabsheet->select($tab);
+        $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
         if ($tab === 'update') {

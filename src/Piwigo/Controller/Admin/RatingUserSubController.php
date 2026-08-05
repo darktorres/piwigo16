@@ -26,12 +26,13 @@ final class RatingUserSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new RatingUserPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->currentConfig);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher);
     }
 }

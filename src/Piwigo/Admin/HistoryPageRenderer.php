@@ -79,7 +79,7 @@ final class HistoryPageRenderer
         $coreTabs->setContext(new CoreTabsContext(linkStart: $urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('history');
-        $tabsheet->select($pageSlug);
+        $tabsheet->select($pageSlug, $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
         $template->assign(

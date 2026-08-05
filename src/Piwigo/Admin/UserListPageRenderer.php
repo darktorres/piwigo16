@@ -28,7 +28,7 @@ final class UserListPageRenderer
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('users');
-        $tabsheet->select('user_list');
+        $tabsheet->select('user_list', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
         $groups = [];

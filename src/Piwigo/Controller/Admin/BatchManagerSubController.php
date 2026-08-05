@@ -155,7 +155,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         $this->coreTabs->setContext(new CoreTabsContext(managerLink: $this->urlService->getRootUrl() . 'admin.php?page=batch_manager&amp;mode='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('batch_manager');
-        $tabsheet->select($tab);
+        $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
         // +-------------------------------------------------------------------+

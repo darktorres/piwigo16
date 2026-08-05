@@ -99,7 +99,7 @@ final class CatListPageRenderer
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('albums');
-        $tabsheet->select('list');
+        $tabsheet->select('list', $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
         $nb_cats = $categoryService->countAllCategories();

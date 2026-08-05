@@ -43,7 +43,7 @@ final class MenubarPageRenderer
         $coreTabs->setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('menus');
-        $tabsheet->select('');
+        $tabsheet->select('', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
         $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate, $currentConfig);

@@ -136,7 +136,7 @@ test('select picks the requested tab when it exists', function (): void {
     $tabsheet->add('general', 'General', '/general');
     $tabsheet->add('advanced', 'Advanced', '/advanced');
 
-    $tabsheet->select('advanced');
+    $tabsheet->select('advanced', EventDispatcher::get());
 
     expect($tabsheet->selected)->toBe('advanced');
     expect($tabsheet->get_selected())->toBe(['caption' => 'Advanced', 'url' => '/advanced']);
@@ -147,7 +147,7 @@ test('select falls back to the first remaining tab when the requested name does 
     $tabsheet->add('general', 'General', '/general');
     $tabsheet->add('advanced', 'Advanced', '/advanced');
 
-    $tabsheet->select('not-a-real-tab');
+    $tabsheet->select('not-a-real-tab', EventDispatcher::get());
 
     expect($tabsheet->selected)->toBe('general');
 });
@@ -168,7 +168,7 @@ test('select applies a tabsheet_before_select handler that filters and appends t
         $tabsheet->add('removed-by-handler', 'Removed', '/removed');
         $tabsheet->add('kept', 'Kept', '/kept');
 
-        $tabsheet->select('added-by-handler');
+        $tabsheet->select('added-by-handler', EventDispatcher::get());
 
         expect($tabsheet->sheets)->toBe([
             'kept' => ['caption' => 'Kept', 'url' => '/kept'],
@@ -195,7 +195,7 @@ test('select discards a handler-returned entry that does not match the expected 
         $tabsheet = new Tabsheet();
         $tabsheet->add('general', 'General', '/general');
 
-        $tabsheet->select('general');
+        $tabsheet->select('general', EventDispatcher::get());
 
         expect($tabsheet->sheets)->toBe(['general' => ['caption' => 'General', 'url' => '/general']]);
     } finally {
@@ -222,7 +222,7 @@ test('select discards a well-shaped sheet entry keyed by an int, not just a malf
         $tabsheet = new Tabsheet();
         $tabsheet->add('general', 'General', '/general');
 
-        $tabsheet->select('general');
+        $tabsheet->select('general', EventDispatcher::get());
 
         expect($tabsheet->sheets)->toBe(['general' => ['caption' => 'General', 'url' => '/general']]);
     } finally {
@@ -240,7 +240,7 @@ test('select throws when a tabsheet_before_select handler returns something othe
         $tabsheet = new Tabsheet();
         $tabsheet->add('general', 'General', '/general');
 
-        expect(static fn () => $tabsheet->select('general'))
+        expect(static fn () => $tabsheet->select('general', EventDispatcher::get()))
             ->toThrow(\Error::class, 'must return an instance of');
     } finally {
         EventDispatcher::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);

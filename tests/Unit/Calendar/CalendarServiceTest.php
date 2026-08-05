@@ -44,10 +44,16 @@ use Piwigo\Users\UserStatus;
 function makeCalendarService(): CalendarService
 {
     $conn = DbConnection::build();
+    $filterState = Kernel::container()->get(FilterState::class);
+    if (! $filterState instanceof FilterState) {
+        throw new \LogicException('Container returned an unexpected type for ' . FilterState::class);
+    }
     $permissionService = new PermissionService(
         new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
         \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
         new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\Config\CurrentConfig::current()),
+        \Piwigo\Users\CurrentUser::current(),
+        $filterState,
     );
 
     return new CalendarService(
@@ -57,11 +63,12 @@ function makeCalendarService(): CalendarService
 }
 
 /**
- * PermissionService::getSqlConditionFandFAsCondition() (buildInnerSql()'s
- * own dependency) reads FilterState through the transitional
- * `*Static()` shims (singleton/service-locator elimination campaign,
- * Phase 2 -- see FilterState::isInitializedStatic()'s own docblock), which
- * resolve the real container-shared instance once Kernel::boot() has run.
+ * PermissionService::getPermissionCriteria() (buildInnerSql()'s own
+ * dependency) reads FilterState via real constructor injection
+ * (singleton/service-locator elimination campaign, Phase 11 sub-phase
+ * 11G) -- this helper seeds the real container-shared instance directly
+ * so the same object makeCalendarService() constructed with observes the
+ * seeded state.
  */
 function seedCalendarFilterState(bool $enabled, string $visibleCategories = '', string $visibleImages = ''): void
 {

@@ -218,6 +218,16 @@ final class SearchServiceTest extends IntegrationTestCase
 
     private Connection $conn;
 
+    private function filterState(): \Piwigo\Core\FilterState
+    {
+        $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
+        if (! $filterState instanceof \Piwigo\Core\FilterState) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        }
+
+        return $filterState;
+    }
+
     #[\Override]
     protected function setUp(): void
     {
@@ -272,11 +282,11 @@ final class SearchServiceTest extends IntegrationTestCase
         $this->service = new SearchService(
             \Piwigo\Auth\AccessControl::current(),
             $this->repo,
-            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current())),
+            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Users\CurrentUser::current(), $this->filterState()),
             new CategoryService(
                 \Piwigo\Core\Lang::current(),
                 new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()),
-                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current())),
+                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Users\CurrentUser::current(), $this->filterState()),
                 \Piwigo\Config\CurrentConfig::current(),
                 new \Piwigo\PluginConfig\EventDispatcher(),
                 \Piwigo\Lang\Translator::get()
@@ -337,11 +347,11 @@ final class SearchServiceTest extends IntegrationTestCase
         return new SearchService(
             \Piwigo\Auth\AccessControl::current(),
             $repo,
-            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current())),
+            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Users\CurrentUser::current(), $this->filterState()),
             new CategoryService(
                 \Piwigo\Core\Lang::current(),
                 new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()),
-                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current())),
+                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Users\CurrentUser::current(), $this->filterState()),
                 \Piwigo\Config\CurrentConfig::current(),
                 new \Piwigo\PluginConfig\EventDispatcher(),
                 \Piwigo\Lang\Translator::get()

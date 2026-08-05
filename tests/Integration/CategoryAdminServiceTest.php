@@ -145,11 +145,18 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
         Kernel::boot();
 
+        $filterState = Kernel::container()->get(\Piwigo\Core\FilterState::class);
+        if (! $filterState instanceof \Piwigo\Core\FilterState) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        }
+
         $this->conn = DbConnection::build();
         $permissionService = new PermissionService(
             new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
             \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-            new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current())
+            new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()),
+            \Piwigo\Users\CurrentUser::current(),
+            $filterState
         );
         $categoryService = new CategoryService(
             \Piwigo\Core\Lang::current(),

@@ -143,6 +143,28 @@ final class UrlService implements UrlServiceInterface
     }
 
     /**
+     * Same reasoning as currentLogger()/sessionService()/translator()
+     * above -- used only inside this class's own 2 `new
+     * PermissionService(...)` construction sites. Falls back to a fresh,
+     * uninitialised instance when `Kernel::boot()` hasn't run, matching
+     * `FilterState`'s own former `isInitializedStatic()` shim's identical
+     * pre-boot fallback.
+     */
+    private function filterState(): \Piwigo\Core\FilterState
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
+            if (! $filterState instanceof \Piwigo\Core\FilterState) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+            }
+
+            return $filterState;
+        }
+
+        return new \Piwigo\Core\FilterState();
+    }
+
+    /**
      * Returns a prefix for each url link on displayed page and returns an
      * empty string for current path.
      */
@@ -692,7 +714,7 @@ final class UrlService implements UrlServiceInterface
             $categoryService = new CategoryService(
                 $this->lang,
                 new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig),
-                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig)),
+                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig), $this->currentUser, $this->filterState()),
                 $this->currentConfig,
                 $this->eventDispatcher,
                 $this->translator()
@@ -823,7 +845,7 @@ final class UrlService implements UrlServiceInterface
             }
 
             $tagConn = DbConnection::build();
-            $page['tags'] = new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn), $this->currentConfig)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), $this->sessionService())
+            $page['tags'] = new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn), $this->currentConfig), $this->currentUser, $this->filterState()), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), $this->sessionService())
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
                 $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');

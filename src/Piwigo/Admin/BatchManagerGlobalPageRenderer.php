@@ -76,6 +76,7 @@ final class BatchManagerGlobalPageRenderer
         private readonly \Piwigo\Html\HtmlService $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly \Piwigo\Core\FilterState $filterState,
     ) {}
 
     /**
@@ -497,7 +498,7 @@ final class BatchManagerGlobalPageRenderer
         );
 
         // metadata
-        $site_reader = new LocalSiteReader('./', $this->currentConfig, new \Piwigo\Metadata\MetadataService($this->lang, new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService));
+        $site_reader = new LocalSiteReader('./', $this->currentConfig, new \Piwigo\Metadata\MetadataService($this->lang, new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState));
         $used_metadata = implode(', ', $site_reader->get_metadata_attributes());
 
         $template->assign(

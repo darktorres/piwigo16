@@ -89,11 +89,16 @@ final class NotificationServiceTest extends IntegrationTestCase
             'image_access_list' => '',
         ]));
 
+        $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
+        if (! $filterState instanceof \Piwigo\Core\FilterState) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        }
+
         $this->service = new NotificationService(
             \Piwigo\Core\Lang::current(),
             \Piwigo\Auth\AccessControl::current(),
             new NotificationRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
-            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig)),
+            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig), \Piwigo\Users\CurrentUser::current(), $filterState),
             \Piwigo\Tests\Support\HtmlServiceTestFactory::build(),
             \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
             new Translator(\Piwigo\Config\CurrentConfig::current()),

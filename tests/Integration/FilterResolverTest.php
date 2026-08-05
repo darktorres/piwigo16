@@ -71,6 +71,10 @@ final class FilterResolverTest extends IntegrationTestCase
             CurrentConfig::current(),
             \Piwigo\Lang\Translator::get(),
         );
+        $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
+        if (! $filterState instanceof \Piwigo\Core\FilterState) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        }
         $categoryService = new CategoryService(
             \Piwigo\Core\Lang::current(),
             new \Piwigo\Category\CategoryRepository($em, CurrentConfig::current()),
@@ -78,6 +82,8 @@ final class FilterResolverTest extends IntegrationTestCase
                 new PermissionRepository($em),
                 $em->getRepository(\Piwigo\Group\GroupEntity::class),
                 new \Piwigo\Category\CategoryRepository($em, CurrentConfig::current()),
+                \Piwigo\Users\CurrentUser::current(),
+                $filterState,
             ),
             \Piwigo\Config\CurrentConfig::current(),
             new \Piwigo\PluginConfig\EventDispatcher(),

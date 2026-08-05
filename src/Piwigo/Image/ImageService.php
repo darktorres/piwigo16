@@ -62,7 +62,48 @@ final readonly class ImageService
      * for the sake of the 2 methods below, so it's inline-constructed
      * instead, matching {@see \Piwigo\Tag\TagService::newImageService()}'s
      * established precedent.
+     *
+     * Falls back to a fresh, disconnected instance when `Kernel::boot()`
+     * hasn't run, matching `CurrentUser::current()`'s own established
+     * graceful degradation -- this class's own PermissionService
+     * construction below never actually reads it back out on
+     * updateCategory()'s call path, same "throwaway, never actually read"
+     * reasoning as every other collaborator built this way in a plain
+     * Unit test (see PiwigoInfosSenderTest.php).
      */
+    private function currentUser(): \Piwigo\Users\CurrentUser
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $currentUser = \Piwigo\Core\Kernel::container()->get(\Piwigo\Users\CurrentUser::class);
+            if (! $currentUser instanceof \Piwigo\Users\CurrentUser) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\CurrentUser::class);
+            }
+
+            return $currentUser;
+        }
+
+        return new \Piwigo\Users\CurrentUser($this->currentConfig);
+    }
+
+    /**
+     * Same reasoning as currentUser() above -- falls back to a fresh,
+     * uninitialised instance, matching `FilterState`'s own former
+     * `isInitializedStatic()` shim's identical pre-boot fallback.
+     */
+    private function filterState(): \Piwigo\Core\FilterState
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
+            if (! $filterState instanceof \Piwigo\Core\FilterState) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+            }
+
+            return $filterState;
+        }
+
+        return new \Piwigo\Core\FilterState();
+    }
+
     private function categoryService(): CategoryService
     {
         $conn = DbConnection::build();
@@ -70,7 +111,7 @@ final readonly class ImageService
         return new CategoryService(
             $this->lang,
             new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig),
-            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig)),
+            new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser(), $this->filterState()),
             $this->currentConfig,
             $this->eventDispatcher,
             $this->translator

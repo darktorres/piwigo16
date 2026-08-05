@@ -165,7 +165,7 @@ final class FilterService implements FilterUpdaterInterface
                 $computedCategories = new CategoryService(
                     $this->lang,
                     new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig),
-                    new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig)),
+                    new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig), $currentUser, $this->filterState),
                     $this->currentConfig,
                     $this->eventDispatcher,
                     $this->translator

@@ -71,14 +71,19 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
         self::assertInstanceOf(MailService::class, $mailer);
         $userService = new \Piwigo\Users\UserService(\Piwigo\Core\Lang::current(), new \Piwigo\Users\UserRepository($this->em, EventDispatcher::get(), \Piwigo\Config\CurrentConfig::current()), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), $mailer, new \Piwigo\Activity\ActivityService($this->em->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), \Piwigo\Config\CurrentConfig::current()), EventDispatcher::get(), new \Piwigo\Config\DeploymentPolicy(), CurrentUser::current(), \Piwigo\Config\CurrentConfig::current(), new \Piwigo\Core\InstallationFlag(), new \Piwigo\Core\ProcessCache());
 
+        $filterState = Kernel::container()->get(\Piwigo\Core\FilterState::class);
+        if (! $filterState instanceof \Piwigo\Core\FilterState) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        }
+
         $this->service = new SearchService(
             \Piwigo\Auth\AccessControl::current(),
             $repo,
-            new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository($this->em, \Piwigo\Config\CurrentConfig::current())),
+            new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository($this->em, \Piwigo\Config\CurrentConfig::current()), CurrentUser::current(), $filterState),
             new CategoryService(
                 \Piwigo\Core\Lang::current(),
                 new \Piwigo\Category\CategoryRepository($this->em, \Piwigo\Config\CurrentConfig::current()),
-                new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository($this->em, \Piwigo\Config\CurrentConfig::current())),
+                new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository($this->em, \Piwigo\Config\CurrentConfig::current()), CurrentUser::current(), $filterState),
                 \Piwigo\Config\CurrentConfig::current(),
                 new \Piwigo\PluginConfig\EventDispatcher(),
                 \Piwigo\Lang\Translator::get(),

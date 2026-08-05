@@ -144,6 +144,8 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\Config\CurrentConfig::current()),
+            \Piwigo\Users\CurrentUser::current(),
+            new \Piwigo\Core\FilterState(),
         );
     }
 

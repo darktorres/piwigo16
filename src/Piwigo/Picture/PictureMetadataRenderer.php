@@ -26,11 +26,11 @@ final class PictureMetadataRenderer
     /**
      * @param array<string, array{src_image: SrcImage, ...}> $picture
      */
-    public function render(Lang $lang, array $picture, \Piwigo\Core\CurrentLogger $currentLogger, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Session\SessionService $sessionService): void
+    public function render(Lang $lang, array $picture, \Piwigo\Core\CurrentLogger $currentLogger, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Config\CurrentConfig $currentConfig, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Session\SessionService $sessionService, \Piwigo\Core\FilterState $filterState): void
     {
         $template = $currentTemplate->get();
 
-        $metadataService = new MetadataService($lang, new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $currentLogger, $eventDispatcher, $currentConfig, $currentUser, $sessionService);
+        $metadataService = new MetadataService($lang, new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $currentLogger, $eventDispatcher, $currentConfig, $currentUser, $sessionService, $filterState);
 
         if (($currentConfig->showExif()) and function_exists('exif_read_data')) {
             $showExifFields = $currentConfig->showExifFields();

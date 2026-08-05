@@ -913,9 +913,12 @@ final class RequestBootstrap
      * Resolves the container-shared instance so that this method's own
      * `FilterService::initializeFromRequest()`/direct `set(false)` writes
      * are visible to every other consumer holding the same shared instance
-     * (singleton/service-locator elimination campaign, Phase 2).
+     * (singleton/service-locator elimination campaign, Phase 2). Widened
+     * to public in Phase 11 sub-phase 11G for config/messenger.php's own
+     * `new MetadataService(...)` construction, matching this class's own
+     * established accessor-widening precedent.
      */
-    private static function filterState(): \Piwigo\Core\FilterState
+    public static function filterState(): \Piwigo\Core\FilterState
     {
         $filterState = Kernel::container()->get(\Piwigo\Core\FilterState::class);
         if (! $filterState instanceof \Piwigo\Core\FilterState) {

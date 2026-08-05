@@ -72,6 +72,11 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
+        $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
+        if (! $filterState instanceof \Piwigo\Core\FilterState) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        }
+
         $this->conn = DbConnection::build();
         $this->pool = new ArrayAdapter();
 
@@ -79,6 +84,8 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
             new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
             \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()),
+            \Piwigo\Users\CurrentUser::current(),
+            $filterState,
         );
         $this->cache = new EffectiveForbiddenCategoriesCache(
             \Piwigo\Auth\AccessControl::current(),
@@ -141,10 +148,14 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
             // A fresh pool (not $this->cache's), same user -- the point
             // here is a genuinely fresh computation reflecting the new
             // forbidden category, not a per-user cache-entry distinction.
+            $afterCacheFilterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
+            if (! $afterCacheFilterState instanceof \Piwigo\Core\FilterState) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+            }
             $afterCache = new EffectiveForbiddenCategoriesCache(
                 \Piwigo\Auth\AccessControl::current(),
-                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current())),
-                new CategoryService(\Piwigo\Core\Lang::current(), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current())), \Piwigo\Config\CurrentConfig::current(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Lang\Translator::get()),
+                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Users\CurrentUser::current(), $afterCacheFilterState),
+                new CategoryService(\Piwigo\Core\Lang::current(), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Users\CurrentUser::current(), $afterCacheFilterState), \Piwigo\Config\CurrentConfig::current(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Lang\Translator::get()),
                 new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
                 new ArrayAdapter(),
             );

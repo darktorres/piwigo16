@@ -85,7 +85,8 @@ return [
             \Piwigo\PluginConfig\EventDispatcher::get(),
             \Piwigo\Bootstrap\RequestBootstrap::currentConfig(),
             \Piwigo\Bootstrap\RequestBootstrap::currentUser(),
-            \Piwigo\Bootstrap\RequestBootstrap::sessionService()
+            \Piwigo\Bootstrap\RequestBootstrap::sessionService(),
+            \Piwigo\Bootstrap\RequestBootstrap::filterState()
         )),
         SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(new MailService(
             new \Piwigo\Core\Lang(

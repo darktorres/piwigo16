@@ -260,6 +260,9 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Users/UserService.php',
         '/src/Piwigo/Category/CategoryService.php',
         '/src/Piwigo/Tag/TagService.php',
+        '/src/Piwigo/Permission/PermissionService.php',
+        '/src/Piwigo/Image/ImageService.php',
+        '/src/Piwigo/Comment/CommentService.php',
     ];
 
     $hits = [
@@ -893,40 +896,6 @@ test('SessionService::get() transitional bridge has a shrinking, known allow-lis
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
-test('FilterState::*Static() transitional shims have a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 2: the real
-    // writer (Piwigo\Filter\FilterService/Piwigo\Bootstrap\RequestBootstrap)
-    // and most readers (SectionPopulator, Category\CategoryService,
-    // Menu\MenubarRenderer, Controller\PictureController, and every
-    // controller that calls MenubarRenderer::render()) take FilterState via
-    // constructor/explicit-parameter injection. Piwigo\Permission\
-    // PermissionService::getSqlConditionFandFAsCondition() is the one
-    // exception: it has ~30 real callers, several inside the still-static
-    // Ws\Pwg* dispatch layer (Phase 10), so it uses these static shims
-    // instead of the real isInitialized()/visibleCategories()/
-    // visibleImages() instance methods (see isInitializedStatic()'s own
-    // docblock). Delete the shims and this test once PermissionService
-    // itself takes FilterState via constructor injection.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-        '/src/Piwigo/Permission/PermissionService.php',
-    ];
-
-    $hits = [
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'FilterState::isInitializedStatic('),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'FilterState::visibleCategoriesStatic('),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'FilterState::visibleImagesStatic('),
-    ];
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
 test('InstallationFlag::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {
     // Singleton/service-locator elimination campaign, Phase 1: real callers
     // (Piwigo\Bootstrap\SessionBootstrap -- a genuinely static-only class)
@@ -1320,13 +1289,14 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
     // reachable from a genuinely static context (no `$this`), same shape
     // already established for CategoryService.php's own
     // moveCategories()-adjacent statics during the Translator phase.
-    // InstallWizard.php/PemCatalog.php/PermissionService.php match
-    // DeploymentPolicy::current()'s own identical allow-list reasoning:
-    // one-off manual construction sites or a method already known to be
-    // entangled with the still-static Ws/Pwg* layer
-    // (PermissionService::getSqlConditionFandFAsCondition()).
-    // public/random.php is a raw entry-shell root file, no constructor to
-    // inject through.
+    // InstallWizard.php/PemCatalog.php match DeploymentPolicy::current()'s
+    // own identical allow-list reasoning: one-off manual construction
+    // sites. public/random.php is a raw entry-shell root file, no
+    // constructor to inject through (its own PermissionService
+    // construction still needs a real CurrentUser instance, hence this
+    // one remaining shim call). Permission/PermissionService.php and
+    // Metadata/MetadataService.php both closed this shim in Phase 11
+    // sub-phase 11G -- real constructor injection.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
@@ -1339,8 +1309,6 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Auth/PwgTOTP.php',
         '/src/Piwigo/Caddie/CaddieService.php',
         '/src/Piwigo/Comment/CommentService.php',
-        '/src/Piwigo/Metadata/MetadataService.php',
-        '/src/Piwigo/Permission/PermissionService.php',
     ];
 
     $hits = [
@@ -1433,9 +1401,12 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
     // shape as this class's own former urlService() helper) -- doesn't
     // match this test's literal `AccessControl::current(` search pattern,
     // so none of them ever appears as a hit here either way.
-    // PermissionService.php/CategoryService.php/
-    // CommentService.php/UserService.php have real Ws/Pwg*.php-locked
-    // callers (Phase-10-locked static dispatch). CssLoader.php/
+    // CommentService.php has real Ws/Pwg*.php-locked callers
+    // (Phase-10-locked static dispatch). Category/CategoryService.php and
+    // Permission/PermissionService.php both closed this shim in Phase 11
+    // sub-phase 11G -- each resolves via a private lazy accessControl()
+    // helper instead (same reasoning as UserService.php's own note
+    // below). CssLoader.php/
     // ScriptLoader.php are NOT in this allow-list -- found live during
     // this phase's own close-out: constructing a Doctrine repository for
     // the first time in a process makes Doctrine eagerly connect to
@@ -1475,9 +1446,7 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
         '/public/random.php',
         '/src/Piwigo/Bootstrap/PageTail.php',
         '/src/Piwigo/Bootstrap/RequestBootstrap.php',
-        '/src/Piwigo/Category/CategoryService.php',
         '/src/Piwigo/Comment/CommentService.php',
-        '/src/Piwigo/Permission/PermissionService.php',
     ];
 
     $hits = [

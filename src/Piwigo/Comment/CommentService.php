@@ -61,6 +61,31 @@ final readonly class CommentService
     ) {}
 
     /**
+     * Container resolve, not a constructor property -- used only inside
+     * getNbAvailableComments()'s own static-context PermissionService
+     * construction below (that method builds its own collaborators
+     * internally, no $this available). Singleton/service-locator
+     * elimination campaign, Phase 11 sub-phase 11G: PermissionService's
+     * own new required FilterState collaborator needs satisfying here
+     * too. Falls back to a fresh, uninitialised instance when
+     * `Kernel::boot()` hasn't run, matching `FilterState`'s own former
+     * `isInitializedStatic()` shim's identical pre-boot fallback.
+     */
+    private static function filterState(): \Piwigo\Core\FilterState
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
+            if (! $filterState instanceof \Piwigo\Core\FilterState) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+            }
+
+            return $filterState;
+        }
+
+        return new \Piwigo\Core\FilterState();
+    }
+
+    /**
      * returns the number of available comments for the connected user
      *
      * P23 batch 8d: relocated from include/functions.inc.php's
@@ -85,7 +110,7 @@ final readonly class CommentService
             if (! AccessControl::current()->isAdmin()) {
                 $where[] = new SqlCondition('com.validated = true');
             }
-            $permissionCriteria = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), \Piwigo\Config\CurrentConfig::current()))
+            $permissionCriteria = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Users\CurrentUser::current(), self::filterState())
                 ->getPermissionCriteria();
             $where[] = $permissionCriteria->forbiddenCategoriesCondition('ic.categoryId');
             $where[] = $permissionCriteria->imageAccessCondition('ic.imageId');

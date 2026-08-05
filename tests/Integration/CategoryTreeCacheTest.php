@@ -63,13 +63,18 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
+        $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
+        if (! $filterState instanceof \Piwigo\Core\FilterState) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        }
+
         $this->conn = DbConnection::build();
         $this->pool = new ArrayAdapter();
         $this->cache = new CategoryTreeCache(
             new CategoryService(
                 \Piwigo\Core\Lang::current(),
                 new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig),
-                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig)),
+                new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $currentConfig), \Piwigo\Users\CurrentUser::current(), $filterState),
                 \Piwigo\Config\CurrentConfig::current(),
                 new \Piwigo\PluginConfig\EventDispatcher(),
                 \Piwigo\Lang\Translator::get()

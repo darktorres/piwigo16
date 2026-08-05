@@ -116,6 +116,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly CurrentConfig $currentConfig,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
         private readonly \Piwigo\Lang\Translator $translator,
+        private readonly \Piwigo\Core\FilterState $filterState,
     ) {}
 
     private function imageService(Connection $conn): ImageService
@@ -201,7 +202,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             $this->htmlRenderer
                 ->fatalError('remote sites not supported');
         } else {
-            $site_reader = new LocalSiteReader($site_url, $this->currentConfig, new \Piwigo\Metadata\MetadataService($this->lang, new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService));
+            $site_reader = new LocalSiteReader($site_url, $this->currentConfig, new \Piwigo\Metadata\MetadataService($this->lang, new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState));
         }
 
         if ($this->pageState->noMd5sumNumber !== null) {

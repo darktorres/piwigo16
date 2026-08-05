@@ -124,7 +124,27 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     private function permissionService(): PermissionService
     {
-        return new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $this->currentConfig));
+        return new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), $this->currentConfig), $this->currentUser, $this->filterState());
+    }
+
+    /**
+     * Same reasoning as translator() above. Falls back to a fresh,
+     * uninitialised instance when `Kernel::boot()` hasn't run, matching
+     * `FilterState`'s own former `isInitializedStatic()` shim's identical
+     * pre-boot fallback.
+     */
+    private function filterState(): \Piwigo\Core\FilterState
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
+            if (! $filterState instanceof \Piwigo\Core\FilterState) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+            }
+
+            return $filterState;
+        }
+
+        return new \Piwigo\Core\FilterState();
     }
 
     /**

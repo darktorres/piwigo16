@@ -30,7 +30,29 @@ final readonly class PermissionService
         private PermissionRepository $repo,
         private GroupRepository $groupRepo,
         private CategoryRepository $categoryRepo,
+        private \Piwigo\Users\CurrentUser $currentUser,
+        private \Piwigo\Core\FilterState $filterState,
     ) {}
+
+    /**
+     * Container resolve, not a constructor property -- AccessControl's own
+     * dependency chain (RedirectServiceInterface -> Bootstrap\RedirectService
+     * -> Users\UserService -> ...) means a required constructor param here
+     * risks a genuine circular dependency PHP-DI can't autowire, same
+     * shape as Mail\MailService/Url\UrlService/Template\Template/
+     * Users\UserService/Category\CategoryService's own identical
+     * accessControl() helper (singleton/service-locator elimination
+     * campaign, Phase 11 sub-phase 11G).
+     */
+    private function accessControl(): \Piwigo\Auth\AccessControl
+    {
+        $accessControl = \Piwigo\Core\Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
+        if (! $accessControl instanceof \Piwigo\Auth\AccessControl) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Auth\AccessControl::class);
+        }
+
+        return $accessControl;
+    }
 
     /**
      * Which of $categoryIds are private -- Admin\GroupPermPageRenderer's
@@ -105,7 +127,7 @@ final readonly class PermissionService
         $forbiddenIds = array_diff($privateIds, $authorizedIds);
 
         // if user is not an admin, locked categories are forbidden
-        if (! \Piwigo\Auth\AccessControl::current()->isAdmin($userStatus)) {
+        if (! $this->accessControl()->isAdmin($userStatus)) {
             $forbiddenIds = array_unique(array_merge($forbiddenIds, $this->repo->findLockedCategoryIds()));
         }
 
@@ -148,11 +170,11 @@ final readonly class PermissionService
      */
     public function getPermissionCriteria(): PermissionCriteria
     {
-        $currentUser = \Piwigo\Users\CurrentUser::current()->get();
+        $currentUser = $this->currentUser->get();
 
         $userForbiddenCategories = $currentUser->forbiddenCategories;
-        $filterVisibleCategories = \Piwigo\Core\FilterState::isInitializedStatic() ? \Piwigo\Core\FilterState::visibleCategoriesStatic() : '';
-        $filterVisibleImages = \Piwigo\Core\FilterState::isInitializedStatic() ? \Piwigo\Core\FilterState::visibleImagesStatic() : '';
+        $filterVisibleCategories = $this->filterState->isInitialized() ? $this->filterState->visibleCategories() : '';
+        $filterVisibleImages = $this->filterState->isInitialized() ? $this->filterState->visibleImages() : '';
         $userImageAccessType = $currentUser->rawAttributes['image_access_type'] ?? null;
         $userImageAccessType = is_scalar($userImageAccessType) ? (string) $userImageAccessType : '';
         $userImageAccessList = $currentUser->rawAttributes['image_access_list'] ?? null;

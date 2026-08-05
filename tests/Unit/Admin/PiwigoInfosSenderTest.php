@@ -152,6 +152,8 @@ test('send returns immediately without touching the DB or network when telemetry
         new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build()),
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Group\GroupEntity::class),
         new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build(), new \Piwigo\Config\CurrentConfig()),
+        new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig()),
+        new \Piwigo\Core\FilterState(),
     );
     $categoryService = new \Piwigo\Category\CategoryService(
         piwigoInfosSenderTestLang(),

@@ -68,7 +68,7 @@ final class MenubarRenderer
         $conn = DbConnection::build();
         // Built once, reused below -- was the same PermissionService recipe
         // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
-        $permissionService = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $currentConfig));
+        $permissionService = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $currentConfig), $currentUser, $filterState);
         $tagService = new TagService($lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Tag\TagEntity::class), $permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger, $sessionService);
         $categoryService = new CategoryService($lang, new \Piwigo\Category\CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator);
 

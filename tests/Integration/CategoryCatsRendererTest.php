@@ -152,10 +152,17 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $imageRepo = $em->getRepository(ImageEntity::class);
         self::assertInstanceOf(ImageRepository::class, $imageRepo);
 
+        $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
+        if (! $filterState instanceof \Piwigo\Core\FilterState) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        }
+
         $permissionService = new PermissionService(
             new PermissionRepository($em),
             $em->getRepository(GroupEntity::class),
-            $categoryRepo
+            $categoryRepo,
+            \Piwigo\Users\CurrentUser::current(),
+            $filterState
         );
         $this->categoryService = new CategoryService(\Piwigo\Core\Lang::current(), $categoryRepo, $permissionService, \Piwigo\Config\CurrentConfig::current(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Lang\Translator::get());
 

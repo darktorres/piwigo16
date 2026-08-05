@@ -1218,7 +1218,7 @@ final class PictureController implements ControllerInterface
         }
         if ($metadata_showable and $this->sessionService->getSessionVar('show_metadata') !== null) {
             new PictureMetadataRenderer()
-                ->render($this->lang, $picture, $this->currentLogger, $this->eventDispatcher, $this->currentTemplate, $this->currentConfig, $this->currentUser, $this->sessionService);
+                ->render($this->lang, $picture, $this->currentLogger, $this->eventDispatcher, $this->currentTemplate, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState);
         }
 
         // include menubar

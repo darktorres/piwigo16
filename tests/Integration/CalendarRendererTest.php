@@ -121,7 +121,7 @@ final class CalendarRendererTest extends IntegrationTestCase
 
     private function makeRenderer(): CalendarRenderer
     {
-        return new CalendarRenderer(Lang::current(), $this->htmlService, \Piwigo\Tests\Support\TemplateTestFactory::build(), $this->urlService, CurrentUser::current(), CurrentConfig::current(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Lang\Translator::get());
+        return new CalendarRenderer(Lang::current(), $this->htmlService, \Piwigo\Tests\Support\TemplateTestFactory::build(), $this->urlService, CurrentUser::current(), CurrentConfig::current(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Lang\Translator::get(), new \Piwigo\Core\FilterState());
     }
 
     /**
@@ -254,7 +254,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_groups_multiple_years_and_months_for_the_default_monthly_calendar_view(): void
     {
         $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
-        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Lang\Translator::get());
+        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Lang\Translator::get(), new \Piwigo\Core\FilterState());
 
         $result = $renderer->render(
             section: 'items',
@@ -302,7 +302,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_normalizes_chronology_date_to_ints_and_next_prev_navigation_still_works(): void
     {
         $template = \Piwigo\Tests\Support\TemplateTestFactory::build();
-        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Lang\Translator::get());
+        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Lang\Translator::get(), new \Piwigo\Core\FilterState());
 
         $result = $renderer->render(
             section: 'items',

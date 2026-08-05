@@ -127,7 +127,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $em = \Piwigo\Db\EntityManagerFactory::build($this->conn);
         $categoryRepo = new \Piwigo\Category\CategoryRepository($em, CurrentConfig::current());
-        $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo);
+        $this->filterState = new FilterState();
+        $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo, \Piwigo\Users\CurrentUser::current(), $this->filterState);
         $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $this->permissionService, \Piwigo\Config\CurrentConfig::current(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Lang\Translator::get());
         $this->sessionService = new SessionService($em->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current());
         $this->tagService = new TagService(Lang::current(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), CurrentConfig::current(), new \Piwigo\Core\CurrentLogger(), $this->sessionService);
@@ -136,7 +137,6 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->userService = new UserService(Lang::current(), new \Piwigo\Users\UserRepository($em, new \Piwigo\PluginConfig\EventDispatcher(), CurrentConfig::current()), $em->getRepository(GroupEntity::class), $mailer, new ActivityService($em->getRepository(ActivityEntity::class)), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), $this->conn, $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current(), new \Piwigo\Core\InstallationFlag(), new \Piwigo\Core\ProcessCache());
         $this->searchService = new SearchService(\Piwigo\Auth\AccessControl::current(), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), new RedirectService(Lang::current(), $this->userService), $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), Lang::current(), \Piwigo\Config\CurrentConfig::current(), new \Piwigo\Core\CurrentLogger(), new \Piwigo\Config\DeploymentPolicy(), $this->tagService);
         $this->sectionRepo = new SectionRepository($em);
-        $this->filterState = new FilterState();
         $this->currentLogger = new CurrentLogger();
         $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
         // Must be the container-shared instance, not a fresh new

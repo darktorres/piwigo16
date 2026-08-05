@@ -93,6 +93,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Html\HtmlService $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly \Piwigo\Core\FilterState $filterState,
     ) {}
 
     #[\Override]
@@ -178,7 +179,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             $this->batchManagerUnitPageRenderer
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->inputValidator)
+            new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->inputValidator, $this->filterState)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }

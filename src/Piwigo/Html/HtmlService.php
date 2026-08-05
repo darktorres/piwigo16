@@ -139,6 +139,29 @@ final class HtmlService implements HtmlRenderingInterface
     }
 
     /**
+     * Used only inside this class's own one `new PermissionService(...)`
+     * construction below (singleton/service-locator elimination campaign,
+     * Phase 11 sub-phase 11G). Falls back to a fresh, uninitialised
+     * instance when `Kernel::boot()` hasn't run, matching `FilterState`'s
+     * own former `isInitializedStatic()` shim's identical pre-boot
+     * fallback -- that PermissionService is never actually read back out
+     * on getCatDisplayNameFromId()'s own call path.
+     */
+    private function filterState(): \Piwigo\Core\FilterState
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
+            if (! $filterState instanceof \Piwigo\Core\FilterState) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+            }
+
+            return $filterState;
+        }
+
+        return new \Piwigo\Core\FilterState();
+    }
+
+    /**
      * Container resolve, not a constructor property -- AccessControl's own
      * constructor requires HtmlRenderingInterface directly, same real-cycle
      * reasoning as lang() above.
@@ -327,7 +350,9 @@ final class HtmlService implements HtmlRenderingInterface
             new \Piwigo\Permission\PermissionService(
                 new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)),
                 \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class),
-                new CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig)
+                new CategoryRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn), $this->currentConfig),
+                $this->currentUser,
+                $this->filterState()
             ),
             $this->currentConfig,
             $this->eventDispatcher,

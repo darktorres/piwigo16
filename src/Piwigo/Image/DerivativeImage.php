@@ -47,6 +47,62 @@ final class DerivativeImage
     }
 
     /**
+     * Same "no DI, genuinely static factory API" shape as urlService()
+     * above -- the class's own public API (thumb_url()/url()/get_all()/
+     * get_one()/build()) is almost entirely static factory methods with no
+     * `$this` to inject through, so this stays a container resolve rather
+     * than a constructor property, used consistently by both the static
+     * factories and the constructor's own instance-context read below
+     * (singleton/service-locator elimination campaign, Phase 11 sub-phase
+     * 11F).
+     */
+    private static function imageStdParams(): ImageStdParams
+    {
+        if (! Kernel::isBooted()) {
+            throw new \RuntimeException('DerivativeImage: no ImageStdParams set (RequestBootstrap not run yet?)');
+        }
+        $imageStdParams = Kernel::container()->get(ImageStdParams::class);
+        if (! $imageStdParams instanceof ImageStdParams) {
+            throw new \RuntimeException('DerivativeImage: no ImageStdParams set (RequestBootstrap not run yet?)');
+        }
+
+        return $imageStdParams;
+    }
+
+    private static function eventDispatcher(): \Piwigo\PluginConfig\EventDispatcher
+    {
+        if (! Kernel::isBooted()) {
+            throw new \RuntimeException('DerivativeImage: no EventDispatcher set (RequestBootstrap not run yet?)');
+        }
+        $eventDispatcher = Kernel::container()->get(\Piwigo\PluginConfig\EventDispatcher::class);
+        if (! $eventDispatcher instanceof \Piwigo\PluginConfig\EventDispatcher) {
+            throw new \RuntimeException('DerivativeImage: no EventDispatcher set (RequestBootstrap not run yet?)');
+        }
+
+        return $eventDispatcher;
+    }
+
+    /**
+     * Same reasoning as urlService()/imageStdParams() above -- this
+     * class's own constructor already takes a real CurrentConfig
+     * ($this->currentConfig, for instance-context reads), but every
+     * static factory method below has no `$this` to read it through, so
+     * they resolve fresh from the container instead.
+     */
+    private static function currentConfig(): CurrentConfig
+    {
+        if (! Kernel::isBooted()) {
+            throw new \RuntimeException('DerivativeImage: no CurrentConfig set (RequestBootstrap not run yet?)');
+        }
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new \RuntimeException('DerivativeImage: no CurrentConfig set (RequestBootstrap not run yet?)');
+        }
+
+        return $currentConfig;
+    }
+
+    /**
      * @var string
      */
     private $rel_path = '';
@@ -69,7 +125,7 @@ final class DerivativeImage
         private readonly CurrentConfig $currentConfig,
     ) {
         if (is_string($type)) {
-            $this->params = ImageStdParams::current()->get_by_type($type);
+            $this->params = self::imageStdParams()->get_by_type($type);
         } else {
             $this->params = $type;
         }
@@ -97,15 +153,15 @@ final class DerivativeImage
     public static function url($type, $infos): string
     {
         $src_image = is_object($infos) ? $infos : new SrcImage($infos);
-        $params = is_string($type) ? ImageStdParams::current()->get_by_type($type) : $type;
+        $params = is_string($type) ? self::imageStdParams()->get_by_type($type) : $type;
         $rel_path = '';
         $rel_url = '';
-        self::build($src_image, CurrentConfig::current(), $params, $rel_path, $rel_url);
+        self::build($src_image, self::currentConfig(), $params, $rel_path, $rel_url);
         if ($params === null) {
             return $src_image->get_url();
         }
         $default_url = self::urlService()->getRootUrl() . $rel_url;
-        $filtered_url = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetDerivativeUrl(
+        $filtered_url = self::eventDispatcher()->dispatchChange(new GetDerivativeUrl(
             $default_url,
             $params,
             $src_image,
@@ -133,12 +189,12 @@ final class DerivativeImage
 
         $ret = [];
         // build enabled types
-        foreach (ImageStdParams::current()->get_defined_type_map() as $type => $params) {
-            $derivative = new self($params, $src_image, CurrentConfig::current());
+        foreach (self::imageStdParams()->get_defined_type_map() as $type => $params) {
+            $derivative = new self($params, $src_image, self::currentConfig());
             $ret[$type] = $derivative;
         }
         // disabled types, fallback to enabled types
-        foreach (ImageStdParams::current()->get_undefined_type_map() as $type => $type2) {
+        foreach (self::imageStdParams()->get_undefined_type_map() as $type => $type2) {
             $ret[$type] = $ret[$type2];
         }
 
@@ -160,14 +216,14 @@ final class DerivativeImage
             $src_image = new SrcImage($src_image);
         }
 
-        $defined = ImageStdParams::current()->get_defined_type_map();
+        $defined = self::imageStdParams()->get_defined_type_map();
         if (isset($defined[$type])) {
-            return new self($defined[$type], $src_image, CurrentConfig::current());
+            return new self($defined[$type], $src_image, self::currentConfig());
         }
 
-        $undefined = ImageStdParams::current()->get_undefined_type_map();
+        $undefined = self::imageStdParams()->get_undefined_type_map();
         if (isset($undefined[$type])) {
-            return new self($defined[$undefined[$type]], $src_image, CurrentConfig::current());
+            return new self($defined[$undefined[$type]], $src_image, self::currentConfig());
         }
 
         return null;
@@ -200,11 +256,11 @@ final class DerivativeImage
                     $rel_path = $rel_url = $src->rel_path;
                     return;
                 }
-                $defined_types = array_keys(ImageStdParams::current()->get_defined_type_map());
+                $defined_types = array_keys(self::imageStdParams()->get_defined_type_map());
                 for ($i = 0; $i < count($defined_types); $i++) {
                     if ($defined_types[$i] === $params->type) {
                         for ($i--; $i >= 0; $i--) {
-                            $smaller = ImageStdParams::current()->get_by_type($defined_types[$i]);
+                            $smaller = self::imageStdParams()->get_by_type($defined_types[$i]);
                             if ($smaller->sizing->max_crop === $params->sizing->max_crop && $smaller->is_identity($src_size)) {
                                 $params = $smaller;
                                 self::build($src, $currentConfig, $params, $rel_path, $rel_url, $is_cached);
@@ -275,7 +331,7 @@ final class DerivativeImage
             return $this->src_image->get_url();
         }
         $default_url = self::urlService()->getRootUrl() . $this->rel_url;
-        $filtered_url = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetDerivativeUrl(
+        $filtered_url = self::eventDispatcher()->dispatchChange(new GetDerivativeUrl(
             $default_url,
             $this->params,
             $this->src_image,

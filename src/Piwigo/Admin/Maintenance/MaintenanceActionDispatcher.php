@@ -205,7 +205,7 @@ final class MaintenanceActionDispatcher
 
                 $this->currentTemplate->get()
                     ->delete_compiled_templates();
-                FileCombiner::clear_combined_files();
+                FileCombiner::clear_combined_files($this->currentConfig);
                 if (! $this->persistentCache instanceof \Piwigo\Cache\PersistentCache) {
                     $this->htmlRenderer
                         ->fatalError('persistent cache not initialized');

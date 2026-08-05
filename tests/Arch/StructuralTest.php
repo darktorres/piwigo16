@@ -370,9 +370,7 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // own established static-context precedent), Admin/Upload/
     // UploadService.php's 9 static uploadFileXxx() event handlers (matches
     // this same file's own established CurrentLogger::getStatic()
-    // precedent), Image/DerivativeImage.php's url()/get_all()/get_one()
-    // static factory entry points (its own constructor already takes
-    // real CurrentConfig DI -- only these static callers can't reach it),
+    // precedent),
     // Comment/CommentService.php::getNbAvailableComments() (Phase 11
     // sub-phase 11B: needs CurrentConfig to build the CategoryRepository
     // its own PermissionService::getPermissionCriteria() call constructs
@@ -383,16 +381,18 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     //
     // (b) Too many real raw `new X(...)` construction sites, no DI
     // involved, matching the established HtmlService/Template
-    // precedent from every prior phase -- Image/
-    // SrcImage.php (~20 sites, also its own class docblock), Csrf/
-    // CsrfService.php (~50 sites, no constructor at all),
-    // Template/CssLoader.php, Template/ScriptLoader.php,
-    // Template/FileCombiner.php, Template/PwgTemplateAdapter.php (the
-    // Template-family group). Mail/MailService.php, Url/UrlService.php,
-    // Template/Template.php, and Html/HtmlService.php itself all closed
-    // this shim in Phase 11 sub-phase 11E -- real constructor injection
-    // now that the "too many manual construction sites" reasoning no
-    // longer holds.
+    // precedent from every prior phase -- Csrf/CsrfService.php (~50
+    // sites, no constructor at all), Template/PwgTemplateAdapter.php.
+    // Mail/MailService.php, Url/UrlService.php, Template/Template.php,
+    // and Html/HtmlService.php itself all closed this shim in Phase 11
+    // sub-phase 11E -- real constructor injection now that the "too many
+    // manual construction sites" reasoning no longer holds. Image/
+    // SrcImage.php/DerivativeImage.php, Template/CssLoader.php/
+    // ScriptLoader.php/FileCombiner.php closed it in Phase 11 sub-phase
+    // 11F -- each resolves CurrentConfig via its own private static
+    // container-resolve helper (matching each file's own pre-existing
+    // urlService()-shaped idiom) instead of the shim, from both static
+    // factory methods and instance context alike.
     //
     // (c) Structural exceptions -- Auth/AccessControl.php's one site is
     // inside currentForCaching()'s own designed degraded-fallback object
@@ -425,14 +425,9 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Core/ThemeCatalog.php',
         '/src/Piwigo/Csrf/CsrfService.php',
         '/src/Piwigo/Http/HttpClientService.php',
-        '/src/Piwigo/Image/DerivativeImage.php',
         '/src/Piwigo/Image/LoungeMaintenance.php',
-        '/src/Piwigo/Image/SrcImage.php',
         '/src/Piwigo/Permission/PermissionService.php',
-        '/src/Piwigo/Template/CssLoader.php',
-        '/src/Piwigo/Template/FileCombiner.php',
         '/src/Piwigo/Template/PwgTemplateAdapter.php',
-        '/src/Piwigo/Template/ScriptLoader.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentConfig::current(');
@@ -569,13 +564,15 @@ test('ImageStdParams::current() transitional bridge has a shrinking, known allow
     // (PwgCategories.php/PwgCore.php/PwgImages.php/WsDefaultMethods.php),
     // once those classes were instance-based. Template/Template.php
     // closed this shim in Phase 11 sub-phase 11E -- real constructor
-    // injection, same as its other collaborators.
+    // injection, same as its other collaborators. Image/DerivativeImage.php
+    // closed it in Phase 11 sub-phase 11F -- resolves ImageStdParams via
+    // its own private static container-resolve helper instead (same
+    // reasoning as its CurrentConfig::current() closure above).
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
         '/src/Piwigo/Admin/Upload/UploadService.php',
         '/src/Piwigo/Calendar/CalendarMonthly.php',
-        '/src/Piwigo/Image/DerivativeImage.php',
         '/src/Piwigo/Image/DerivativeParams.php',
     ];
 
@@ -1158,8 +1155,7 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     // injection or an explicit method/render() parameter; only these stay
     // on the shim, each for one of the same 3 reasons already established
     // by earlier phases: **Phase-6-entangled, still
-    // manually `new`'d at dozens of sites** (SrcImage.php/DerivativeImage.php/
-    // CssLoader.php/ScriptLoader.php/UrlService.php/
+    // manually `new`'d at dozens of sites** (UrlService.php/
     // RedirectService.php/MenubarRenderer.php -- the same UrlService-bridge
     // trio plus its own known-entangled callers); **genuinely static-context
     // or structurally locked, no `$this` to inject through** (CategoryService.php --
@@ -1185,7 +1181,13 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     // from Phase 5), threaded through all 29 real call sites.
     // Mail/MailService.php, Template/Template.php, and Html/HtmlService.php
     // itself also removed -- real constructor injection, the "too many
-    // manual construction sites" reasoning no longer holds.
+    // manual construction sites" reasoning no longer holds. Phase 11
+    // sub-phase 11F: Image/SrcImage.php/DerivativeImage.php, Template/
+    // CssLoader.php/ScriptLoader.php removed too -- each resolves
+    // EventDispatcher via its own private static container-resolve
+    // helper (CssLoader.php via an explicit method param instead,
+    // extending its own pre-existing get_css(UrlServiceInterface)
+    // pattern) rather than the shim.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
@@ -1195,12 +1197,8 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Bootstrap/RedirectService.php',
         '/src/Piwigo/Bootstrap/RequestBootstrap.php',
         '/src/Piwigo/Category/CategoryService.php',
-        '/src/Piwigo/Image/DerivativeImage.php',
-        '/src/Piwigo/Image/SrcImage.php',
         '/src/Piwigo/Menu/MenubarRenderer.php',
         '/src/Piwigo/Site/LocalSiteReader.php',
-        '/src/Piwigo/Template/CssLoader.php',
-        '/src/Piwigo/Template/ScriptLoader.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'EventDispatcher::get(');
@@ -1258,23 +1256,23 @@ test('CurrentTemplate::current() transitional bridge has a shrinking, known allo
     // from). Every phase that converts one more of these files to
     // constructor-injected CurrentTemplate should remove it from the
     // allow-list below.
-    // CssLoader.php/ScriptLoader.php are Phase-6-entangled (the same
-    // UrlService-bridge static-context group this campaign's own Context
-    // section already flagged for Phase 6). Ws/PwgExtensions.php took
-    // real constructor injection during its own Phase 10 sub-batch.
-    // InstallWizard.php matches DeploymentPolicy::current()'s own
-    // identical allow-list reasoning: a one-off manual construction site
-    // (public/install.php, a raw entry-shell root file that never boots
-    // Kernel) not worth forcing real injection this late. Html/HtmlService.php
-    // itself closed this shim in Phase 11 sub-phase 11E -- real
-    // constructor injection, the "too many manual construction sites"
-    // reasoning no longer holds.
+    // Ws/PwgExtensions.php took real constructor injection during its own
+    // Phase 10 sub-batch. InstallWizard.php matches
+    // DeploymentPolicy::current()'s own identical allow-list reasoning: a
+    // one-off manual construction site (public/install.php, a raw
+    // entry-shell root file that never boots Kernel) not worth forcing
+    // real injection this late. Html/HtmlService.php itself closed this
+    // shim in Phase 11 sub-phase 11E -- real constructor injection, the
+    // "too many manual construction sites" reasoning no longer holds.
+    // Phase 11 sub-phase 11F: Template/CssLoader.php/ScriptLoader.php
+    // removed too -- CssLoader.php via an explicit method param
+    // (extending its own pre-existing get_css(UrlServiceInterface)
+    // pattern), ScriptLoader.php via its own private static
+    // container-resolve helper.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
         '/src/Piwigo/Admin/Install/InstallWizard.php',
-        '/src/Piwigo/Template/CssLoader.php',
-        '/src/Piwigo/Template/ScriptLoader.php',
     ];
 
     $hits = [

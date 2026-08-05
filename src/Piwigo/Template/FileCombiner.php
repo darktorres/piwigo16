@@ -43,16 +43,16 @@ final class FileCombiner
     /**
      * Deletes all combined files from cache directory.
      */
-    public static function clear_combined_files(): void
+    public static function clear_combined_files(CurrentConfig $currentConfig): void
     {
         $root = CurrentPaths::get()->root;
-        $dir = opendir($root . CurrentConfig::current()->combinedDir());
+        $dir = opendir($root . $currentConfig->combinedDir());
         if ($dir === false) {
             return;
         }
         while ((bool) ($file = readdir($dir))) {
             if (\Piwigo\Core\StringHelper::getExtension($file) === 'js' || \Piwigo\Core\StringHelper::getExtension($file) === 'css') {
-                unlink($root . CurrentConfig::current()->combinedDir() . $file);
+                unlink($root . $currentConfig->combinedDir() . $file);
             }
         }
         closedir($dir);

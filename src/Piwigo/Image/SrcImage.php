@@ -93,6 +93,25 @@ final class SrcImage
         return $currentConfig;
     }
 
+    /**
+     * Same "~20 real raw `new SrcImage($infos)` construction sites, no DI
+     * involved" constraint as the other collaborator methods above --
+     * resolves fresh from the container on every call (singleton/
+     * service-locator elimination campaign, Phase 11 sub-phase 11F).
+     */
+    private static function eventDispatcher(): \Piwigo\PluginConfig\EventDispatcher
+    {
+        if (! Kernel::isBooted()) {
+            throw new \RuntimeException('SrcImage: no EventDispatcher set (RequestBootstrap not run yet?)');
+        }
+        $eventDispatcher = Kernel::container()->get(\Piwigo\PluginConfig\EventDispatcher::class);
+        if (! $eventDispatcher instanceof \Piwigo\PluginConfig\EventDispatcher) {
+            throw new \RuntimeException('SrcImage: no EventDispatcher set (RequestBootstrap not run yet?)');
+        }
+
+        return $eventDispatcher;
+    }
+
     public const int IS_ORIGINAL = 0x01;
 
     public const int IS_MIMETYPE = 0x02;
@@ -162,7 +181,7 @@ final class SrcImage
             $this->rel_path = \Piwigo\Image\ImagePathHelper::originalToRepresentative($path, $representative_ext);
         } else {
             $default_mimetype_location = self::themeConf('mime_icon_dir') . $ext . '.png';
-            $this->rel_path = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetMimetypeLocation($default_mimetype_location, $ext))->location;
+            $this->rel_path = self::eventDispatcher()->dispatchChange(new GetMimetypeLocation($default_mimetype_location, $ext))->location;
             $this->flags |= self::IS_MIMETYPE;
             $mimetype_abs_path = CurrentPaths::get()->root . $this->rel_path;
             $size = file_exists($mimetype_abs_path) ? getimagesize($mimetype_abs_path) : false;
@@ -241,7 +260,7 @@ final class SrcImage
             $part = $this->is_original() ? 'e' : 'r';
             $url = self::urlService()->getActionUrl($this->id, $part, false);
 
-            $url = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetSrcImageUrl($url, $this))->url;
+            $url = self::eventDispatcher()->dispatchChange(new GetSrcImageUrl($url, $this))->url;
         }
 
         return self::urlService()->embellishUrl($url);

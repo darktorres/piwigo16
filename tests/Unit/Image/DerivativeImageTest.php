@@ -118,12 +118,20 @@ afterEach(function (): void {
     Kernel::reset();
 });
 
-test('urlService() throws a RuntimeException when RequestBootstrap has not set one yet', function (): void {
+test('url() throws a RuntimeException when RequestBootstrap has not set a CurrentConfig yet', function (): void {
     // SrcImage's own constructor now needs a booted Kernel too (Phase 9:
     // its pictureExtensions() read) -- construct it under a real boot,
-    // then reset before calling url() so DerivativeImage::urlService()'s
-    // own Kernel::isBooted() guard is what throws, not SrcImage's. $src
-    // itself holds no live container reference once built, so resetting
+    // then reset before calling url(). Singleton/service-locator
+    // elimination campaign, Phase 11 sub-phase 11F: url() -> build()
+    // resolves CurrentConfig via DerivativeImage's own private static
+    // currentConfig() helper now, which (like SrcImage's own equivalent
+    // helper) throws eagerly on a not-booted Kernel rather than falling
+    // back to CurrentConfig::current()'s own memoized pre-boot instance --
+    // this guard fires before build() ever reaches urlService(), so this
+    // is the RuntimeException url() actually throws first now, not
+    // urlService()'s own (see the dedicated get_url() test below for that
+    // one, which is reachable without a CurrentConfig read). $src itself
+    // holds no live container reference once built, so resetting
     // afterward doesn't invalidate it.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-url-not-booted'));
     $src = new SrcImage([
@@ -134,6 +142,28 @@ test('urlService() throws a RuntimeException when RequestBootstrap has not set o
     Kernel::reset();
 
     expect(fn () => DerivativeImage::url(new DerivativeParams(SizingParams::classic(50, 50)), $src))
+        ->toThrow(\RuntimeException::class, 'DerivativeImage: no CurrentConfig set (RequestBootstrap not run yet?)');
+});
+
+test('get_url() throws a RuntimeException when RequestBootstrap has not set a URL service yet', function (): void {
+    // Unlike url() above, the instance get_url() method never reads
+    // currentConfig() -- constructing the DerivativeImage instance itself
+    // (under a real boot, with a real CurrentConfig instance already
+    // injected) is enough; resetting afterward only invalidates the
+    // static container-resolve helpers (urlService()/eventDispatcher()),
+    // not the already-injected instance property, so this isolates
+    // urlService()'s own not-booted guard exactly like it did before
+    // Phase 11 sub-phase 11F introduced currentConfig()'s own guard above.
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-geturl-not-booted'));
+    $src = new SrcImage([
+        'id' => 42,
+        'path' => 'upload/2026/07/photo.jpg',
+        'file' => 'photo.jpg',
+    ]);
+    $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(50, 50)), $src, CurrentConfig::current());
+    Kernel::reset();
+
+    expect(fn () => $derivative->get_url())
         ->toThrow(\RuntimeException::class, 'DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
 });
 

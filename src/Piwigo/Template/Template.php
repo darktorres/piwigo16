@@ -414,6 +414,25 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
     }
 
     /**
+     * Container resolve, not a constructor property -- the only real use
+     * in this class is CssLoader::get_css()'s one call site below. A
+     * required constructor param here would ripple to every real
+     * `new Template(...)` construction site across the app for a single
+     * caller, the same low-blast-radius reasoning as htmlRenderer()/
+     * imageStdParams() above (singleton/service-locator elimination
+     * campaign, Phase 11 sub-phase 11F).
+     */
+    private function currentTemplate(): CurrentTemplate
+    {
+        $currentTemplate = \Piwigo\Core\Kernel::container()->get(CurrentTemplate::class);
+        if (! $currentTemplate instanceof CurrentTemplate) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentTemplate::class);
+        }
+
+        return $currentTemplate;
+    }
+
+    /**
      * Loads theme's parameters.
      *
      * @param string $root
@@ -824,7 +843,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             } // else maybe error or warning ?
         }
 
-        $css = $this->cssLoader->get_css(self::urlService());
+        $css = $this->cssLoader->get_css(self::urlService(), $this->eventDispatcher, $this->currentTemplate(), $this->currentConfig);
 
         $content = [];
         foreach ($css as $combi) {

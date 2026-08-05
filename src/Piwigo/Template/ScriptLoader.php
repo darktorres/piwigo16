@@ -104,6 +104,57 @@ final class ScriptLoader
         return $urlService;
     }
 
+    /**
+     * Same "no DI, genuinely static factory API" shape as urlService()
+     * above -- do_combine()/check_load_dep() are both `private static`,
+     * no `$this` to inject through (singleton/service-locator elimination
+     * campaign, Phase 11 sub-phase 11F).
+     */
+    private static function eventDispatcher(): \Piwigo\PluginConfig\EventDispatcher
+    {
+        if (! \Piwigo\Core\Kernel::isBooted()) {
+            throw new \RuntimeException('ScriptLoader: no EventDispatcher set (RequestBootstrap not run yet?)');
+        }
+        $eventDispatcher = \Piwigo\Core\Kernel::container()->get(\Piwigo\PluginConfig\EventDispatcher::class);
+        if (! $eventDispatcher instanceof \Piwigo\PluginConfig\EventDispatcher) {
+            throw new \RuntimeException('ScriptLoader: no EventDispatcher set (RequestBootstrap not run yet?)');
+        }
+
+        return $eventDispatcher;
+    }
+
+    /**
+     * Same reasoning as eventDispatcher() above.
+     */
+    private static function currentTemplate(): CurrentTemplate
+    {
+        if (! \Piwigo\Core\Kernel::isBooted()) {
+            throw new \RuntimeException('ScriptLoader: no CurrentTemplate set (RequestBootstrap not run yet?)');
+        }
+        $currentTemplate = \Piwigo\Core\Kernel::container()->get(CurrentTemplate::class);
+        if (! $currentTemplate instanceof CurrentTemplate) {
+            throw new \RuntimeException('ScriptLoader: no CurrentTemplate set (RequestBootstrap not run yet?)');
+        }
+
+        return $currentTemplate;
+    }
+
+    /**
+     * Same reasoning as eventDispatcher() above.
+     */
+    private static function currentConfig(): \Piwigo\Config\CurrentConfig
+    {
+        if (! \Piwigo\Core\Kernel::isBooted()) {
+            throw new \RuntimeException('ScriptLoader: no CurrentConfig set (RequestBootstrap not run yet?)');
+        }
+        $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
+        if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
+            throw new \RuntimeException('ScriptLoader: no CurrentConfig set (RequestBootstrap not run yet?)');
+        }
+
+        return $currentConfig;
+    }
+
     final public function clear(): void
     {
         $this->registered_scripts = [];
@@ -268,7 +319,7 @@ final class ScriptLoader
      */
     private static function do_combine(array $scripts, int $load_mode): array
     {
-        $combiner = new FileCombiner(\Piwigo\Auth\AccessControl::currentForCaching(), 'js', self::urlService(), \Piwigo\Core\CurrentPaths::get(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), $scripts);
+        $combiner = new FileCombiner(\Piwigo\Auth\AccessControl::currentForCaching(), 'js', self::urlService(), \Piwigo\Core\CurrentPaths::get(), self::eventDispatcher(), self::currentTemplate(), self::currentConfig(), $scripts);
         return $combiner->combine();
     }
 
@@ -292,7 +343,7 @@ final class ScriptLoader
                         $scripts[$precedent]->load_mode = $load;
                         $changed = true;
                     }
-                    if ($load === 2 && $scripts[$precedent]->load_mode === 2 && ($scripts[$precedent]->is_remote(self::urlService()) or ! \Piwigo\Config\CurrentConfig::current()->templateCombineFiles())) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
+                    if ($load === 2 && $scripts[$precedent]->load_mode === 2 && ($scripts[$precedent]->is_remote(self::urlService()) or ! self::currentConfig()->templateCombineFiles())) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
                         $scripts[$precedent]->load_mode = 1;
                         $changed = true;
                     }

@@ -11,7 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\PluginConfig\EventDispatcher;
 
 final class CssLoader
 {
@@ -39,9 +41,9 @@ final class CssLoader
     /**
      * @return Combinable[] array of combined CSS.
      */
-    public function get_css(UrlServiceInterface $urlService): array
+    public function get_css(UrlServiceInterface $urlService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig): array
     {
-        $combiner = new FileCombiner(\Piwigo\Auth\AccessControl::currentForCaching(), 'css', $urlService, \Piwigo\Core\CurrentPaths::get(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Template\CurrentTemplate::current(), \Piwigo\Config\CurrentConfig::current(), $this->sortedRegisteredCss());
+        $combiner = new FileCombiner(\Piwigo\Auth\AccessControl::currentForCaching(), 'css', $urlService, \Piwigo\Core\CurrentPaths::get(), $eventDispatcher, $currentTemplate, $currentConfig, $this->sortedRegisteredCss());
         return $combiner->combine();
     }
 

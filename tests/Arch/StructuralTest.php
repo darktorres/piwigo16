@@ -256,7 +256,6 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Auth/AccessControl.php',
         '/src/Piwigo/Core/Lang.php',
         '/src/Piwigo/Config/CurrentConfig.php',
-        '/src/Piwigo/Ws/WsInitializer.php',
     ];
 
     $hits = [
@@ -1214,8 +1213,10 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     // UserRepository.php -- a Doctrine repository, whose constructor is
     // fixed by the ORM and can't take extra application params at all;
     // Ws/PwgCategories.php/PwgComments.php/PwgCore.php/PwgImages.php/
-    // PwgTags.php/PwgUsers.php/WsInitializer.php -- Phase-10-locked static
-    // dispatch code). RequestBootstrap.php/InstallWizard.php are
+    // PwgTags.php/PwgUsers.php -- Phase-10-locked static dispatch code;
+    // WsInitializer.php converted to real constructor injection once
+    // Phase 10's own last sub-batch landed). RequestBootstrap.php/
+    // InstallWizard.php are
     // Bootstrap/-only wiring code that already has direct container access
     // (RequestBootstrap also gained a new public eventDispatcher() resolver,
     // matching coreTabs()/sessionService()/translator()'s own precedent, for
@@ -1241,7 +1242,6 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Users/UserRepository.php',
-        '/src/Piwigo/Ws/WsInitializer.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'EventDispatcher::get(');

@@ -184,7 +184,11 @@ final class UserBootstrap
                     // value -- never needed `global $service;` (see that
                     // class's own docblock for the now-removed
                     // $GLOBALS['service'] publish this predates).
-                    $service = \Piwigo\Ws\WsInitializer::init();
+                    $wsInitializer = Kernel::container()->get(\Piwigo\Ws\WsInitializer::class);
+                    if (! $wsInitializer instanceof \Piwigo\Ws\WsInitializer) {
+                        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Ws\WsInitializer::class);
+                    }
+                    $service = $wsInitializer->init();
                     $service->sendResponse(new PwgError(401, 'Invalid api_key'));
                     exit;
                 }
@@ -209,7 +213,11 @@ final class UserBootstrap
             and $userBootstrapRequest->username !== null
             and $userBootstrapRequest->password !== null
         ) {
-            $service = \Piwigo\Ws\WsInitializer::init();
+            $wsInitializer = Kernel::container()->get(\Piwigo\Ws\WsInitializer::class);
+            if (! $wsInitializer instanceof \Piwigo\Ws\WsInitializer) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Ws\WsInitializer::class);
+            }
+            $service = $wsInitializer->init();
 
             $credentials = [
                 'username' => $userBootstrapRequest->username,

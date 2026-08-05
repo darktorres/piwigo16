@@ -46,6 +46,7 @@ final class WsController implements ControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly \Piwigo\Html\HtmlService $htmlService,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly WsInitializer $wsInitializer,
     ) {}
 
     #[\Override]
@@ -65,7 +66,7 @@ final class WsController implements ControllerInterface
         // here even when UserBootstrap's api_key/uploadAsync branches
         // already initialized it earlier in this request (the include_once
         // era left this method's *local* $service unset in that case).
-        $service = WsInitializer::init();
+        $service = $this->wsInitializer->init();
         $service->run();
 
         // Unreachable: PwgServer::run() always ends the response itself

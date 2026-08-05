@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Ws\GetHistory;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Ws\Event\WsAddMethods;
 use Piwigo\Ws\Event\WsInvokeAllowed;
 use Piwigo\Ws\Protocol\PwgJsonEncoder;
@@ -35,15 +37,38 @@ use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
  * PwgServer as a real parameter instead of reading the global, and
  * WsController/UserBootstrap were already reading init()'s return value
  * directly, never the global.
+ *
+ * Singleton/service-locator elimination campaign, Phase 10: the last file
+ * in this phase -- converted only once WsDefaultMethods/every Pwg* class
+ * it wires together were already real, container-resolved instances (see
+ * the plan's own "corrected ordering" note: referencing a still-static
+ * Pwg* method via the old ClassName::method() syntax after that class
+ * converts is a fatal PHP error, so this file could only convert last).
+ * The `$server` cache is now a plain instance property, container-shared
+ * like every other converted class in this campaign -- `init()`'s own
+ * memoized-early-return semantics are unchanged (still at most one
+ * PwgServer/default-event registration per process), since PHP-DI's
+ * default sharing already gives WsController/UserBootstrap the same
+ * instance. `WsHelper::isInvokeAllowed(...)` stays a bare static
+ * reference -- `WsHelper` itself is not in this campaign's scope (matches
+ * `FilesystemHelper`/`DateHelper`'s own established "stays a plain static
+ * utility" precedent).
  */
 final class WsInitializer
 {
-    private static ?PwgServer $server = null;
+    private ?PwgServer $server = null;
 
-    public static function init(): PwgServer
+    public function __construct(
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly WsDefaultMethods $wsDefaultMethods,
+        private readonly PwgCore $pwgCore,
+        private readonly UrlServiceInterface $urlService,
+    ) {}
+
+    public function init(): PwgServer
     {
-        if (self::$server instanceof PwgServer) {
-            return self::$server;
+        if ($this->server instanceof PwgServer) {
+            return $this->server;
         }
 
         // P23 batch 8e-8: WsDefaultMethods::register() replaces the old bare
@@ -51,24 +76,8 @@ final class WsInitializer
         // ws_default_methods.inc.php, include_once'd by WsController before
         // this ran); first-class-callable, same pattern as the 2
         // registrations below it.
-        //
-        // Singleton/service-locator elimination campaign, Phase 10:
-        // WsDefaultMethods/PwgCore are real, container-resolved instances
-        // now (neither register() nor historyGet() is static any more) --
-        // WsInitializer itself stays static (its own $server cache is the
-        // last piece of this file still needing conversion), so these are
-        // transitional inline container-resolves, not yet constructor
-        // params.
-        $wsDefaultMethods = \Piwigo\Core\Kernel::container()->get(WsDefaultMethods::class);
-        if (! $wsDefaultMethods instanceof WsDefaultMethods) {
-            throw new \LogicException('Container returned an unexpected type for ' . WsDefaultMethods::class);
-        }
-        $pwgCore = \Piwigo\Core\Kernel::container()->get(PwgCore::class);
-        if (! $pwgCore instanceof PwgCore) {
-            throw new \LogicException('Container returned an unexpected type for ' . PwgCore::class);
-        }
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(WsAddMethods::class, $wsDefaultMethods->register(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(WsInvokeAllowed::class, WsHelper::isInvokeAllowed(...));
+        $this->eventDispatcher->addTypedHandler(WsAddMethods::class, $this->wsDefaultMethods->register(...));
+        $this->eventDispatcher->addTypedHandler(WsInvokeAllowed::class, WsHelper::isInvokeAllowed(...));
         // P23 batch 8e-4: relocated from include/ws_functions/pwg.php's own
         // top-level add_event_handler('get_history', 'get_history') call --
         // that file's lazy include_once (right before PwgServer::invoke()
@@ -77,12 +86,12 @@ final class WsInitializer
         // call could fire; now that pwg.php's functions are class methods
         // (autoloaded, no include-time side effect to hook this to), it
         // registers here instead, unconditionally, once per WS request.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(GetHistory::class, $pwgCore->historyGet(...));
+        $this->eventDispatcher->addTypedHandler(GetHistory::class, $this->pwgCore->historyGet(...));
 
         $requestFormat = 'rest';
         $responseFormat = Request\WsFormatRequest::fromGlobals()->responseFormat;
 
-        $service = new PwgServer(\Piwigo\PluginConfig\EventDispatcher::get());
+        $service = new PwgServer($this->eventDispatcher);
 
         // $requestFormat is hardcoded to 'rest' above; the format-selection
         // switch stays for parity with $responseFormat's structure and in case
@@ -112,10 +121,9 @@ final class WsInitializer
         }
         $service->setEncoder($responseFormat, $encoder);
 
-        \Piwigo\Bootstrap\PresentationAccessor::urlService()
-            ->setMakeFullUrl();
+        $this->urlService->setMakeFullUrl();
 
-        self::$server = $service;
+        $this->server = $service;
 
         return $service;
     }

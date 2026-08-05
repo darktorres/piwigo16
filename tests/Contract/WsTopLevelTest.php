@@ -199,6 +199,13 @@ final class WsTopLevelTest extends ContractTestCase
         // 'square' derivative on disk -- confirmed live before writing this
         // assertion (`i.php?/.../20260801000000-2e7ed018-sq.jpg` shows up
         // in the un-filtered call's result too).
+        //
+        // The upload path's own hash suffix is baked into each fixture
+        // file at regen time and genuinely differs between
+        // piwigo-17.0.sql and piwigo-17.0-pgsql.sql (separate,
+        // independent install+upload runs) -- same real gap already
+        // fixed in NotificationRepositoryTest.
+        $expectedHash = $this->dbDriver === 'pgsql' ? '2e7eba7a' : '2e7ed018';
         $response = $this->wsAdmin('pwg.getMissingDerivatives', ['ids' => [1], 'max_urls' => 5000]);
 
         self::assertSame('ok', $response['stat']);
@@ -209,7 +216,7 @@ final class WsTopLevelTest extends ContractTestCase
         self::assertNotEmpty($urls);
         foreach ($urls as $url) {
             self::assertIsString($url);
-            self::assertStringContainsString('2e7ed018', $url);
+            self::assertStringContainsString($expectedHash, $url);
         }
     }
 
@@ -406,6 +413,24 @@ final class WsTopLevelTest extends ContractTestCase
         }
     }
 
+    /**
+     * Real bug found live: this used to rate fixture image 1 directly.
+     * RateService::updateRatingScore() (triggered by every real
+     * pwg.images.rate/pwg.rates.delete call) recomputes *every* image's
+     * rating_score from a bayesian average over the whole piwigo_rate
+     * table, not just the touched row -- confirmed live that adding then
+     * deleting a rate on image 1 leaves every other fixture image's
+     * rating_score numerically different from its pre-test value (a
+     * bayesian/shrinkage estimator's own global-mean input shifts while
+     * the extra rate briefly exists, and doesn't reliably land back on
+     * the exact original float afterward), corrupting later tests that
+     * read fixture rating_score values (WsHelperTest's own f_min_rate/
+     * f_max_rate assertions). Same "avoid nudging the shared fixture's
+     * rating_score, which other test files also read" rationale this
+     * class's own test_ratesDelete_with_anonymous_id_only_removes_the_matching_rate()
+     * and WsImagesMutationTest::insertThrowawayImage() already established
+     * -- uses a throwaway image instead of fixture image 1.
+     */
     public function test_ratesDelete_removes_all_rates_for_a_user(): void
     {
         $status = $this->wsAdmin('pwg.session.getStatus');
@@ -417,27 +442,43 @@ final class WsTopLevelTest extends ContractTestCase
         );
         self::assertIsNumeric($userId);
 
-        $rateResponse = $this->wsAdmin('pwg.images.rate', ['image_id' => 1, 'rate' => 5]);
-        self::assertSame('ok', $rateResponse['stat']);
-
-        $before = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . Tables::rate() . ' WHERE user_id = ? AND element_id = 1',
-            [$userId]
+        $filename = 'ratesdelete-throwaway-' . uniqid() . '.jpg';
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            [$filename, 'upload/' . $filename, md5($filename)]
         );
-        self::assertIsNumeric($before);
-        self::assertSame(1, (int) $before);
+        $imageId = (int) $this->conn->lastInsertId();
 
-        $response = $this->wsAdmin('pwg.rates.delete', ['user_id' => (int) $userId, 'image_id' => 1]);
+        try {
+            $this->conn->executeStatement(
+                'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, ?)',
+                [$imageId, 1]
+            );
 
-        self::assertSame('ok', $response['stat']);
-        self::assertSame(1, $response['result']);
+            $rateResponse = $this->wsAdmin('pwg.images.rate', ['image_id' => $imageId, 'rate' => 5]);
+            self::assertSame('ok', $rateResponse['stat']);
 
-        $after = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . Tables::rate() . ' WHERE user_id = ? AND element_id = 1',
-            [$userId]
-        );
-        self::assertIsNumeric($after);
-        self::assertSame(0, (int) $after);
+            $before = $this->conn->fetchOne(
+                'SELECT COUNT(*) FROM ' . Tables::rate() . ' WHERE user_id = ? AND element_id = ?',
+                [$userId, $imageId]
+            );
+            self::assertIsNumeric($before);
+            self::assertSame(1, (int) $before);
+
+            $response = $this->wsAdmin('pwg.rates.delete', ['user_id' => (int) $userId, 'image_id' => $imageId]);
+
+            self::assertSame('ok', $response['stat']);
+            self::assertSame(1, $response['result']);
+
+            $after = $this->conn->fetchOne(
+                'SELECT COUNT(*) FROM ' . Tables::rate() . ' WHERE user_id = ? AND element_id = ?',
+                [$userId, $imageId]
+            );
+            self::assertIsNumeric($after);
+            self::assertSame(0, (int) $after);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        }
     }
 
     public function test_ratesDelete_with_no_matching_rate_returns_zero(): void
@@ -483,11 +524,11 @@ final class WsTopLevelTest extends ContractTestCase
 
         try {
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::rate() . ' (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 4, CURDATE())',
+                'INSERT INTO ' . Tables::rate() . ' (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 4, CURRENT_DATE)',
                 [(int) $guestId, $imageId, 'anon-a']
             );
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::rate() . ' (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 2, CURDATE())',
+                'INSERT INTO ' . Tables::rate() . ' (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 2, CURRENT_DATE)',
                 [(int) $guestId, $imageId, 'anon-b']
             );
 

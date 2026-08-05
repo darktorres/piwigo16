@@ -119,7 +119,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
 
     private function makeCalendar(): CalendarWeekly
     {
-        $calendar = new CalendarWeekly(Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current());
+        $calendar = new CalendarWeekly(Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), \Piwigo\Image\ImageStdParams::current());
         $calendar->chronology_field = 'posted';
         $calendar->initialize(new CalendarQueryScope(
             new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)'),

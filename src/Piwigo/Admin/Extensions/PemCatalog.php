@@ -37,6 +37,7 @@ final readonly class PemCatalog
     public function __construct(
         private ZipExtractor $zipExtractor,
         private \Piwigo\Core\CurrentLogger $currentLogger,
+        private \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     /**
@@ -126,7 +127,8 @@ final readonly class PemCatalog
 
         $pemBaseUrl = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
         $url = $pemBaseUrl . '/api/get_revision_list-next.php';
-        $userLanguage = \Piwigo\Users\CurrentUser::current()->get()->language;
+        $userLanguage = $this->currentUser->get()
+            ->language;
         $getData = [
             'category_id' => $type->pemCategoryId(),
             'format' => 'php',

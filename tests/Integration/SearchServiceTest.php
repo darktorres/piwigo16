@@ -228,6 +228,23 @@ final class SearchServiceTest extends IntegrationTestCase
         return $filterState;
     }
 
+    /**
+     * SearchService's own userService()/tagService() lazy-default helpers
+     * both resolve ProcessCache via this same container (singleton/
+     * service-locator elimination campaign, Phase 11 sub-phase 11G) --
+     * resolves the same shared instance so forget() here is actually
+     * observed by $this->service internally.
+     */
+    private function processCache(): \Piwigo\Core\ProcessCache
+    {
+        $processCache = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
+        if (! $processCache instanceof \Piwigo\Core\ProcessCache) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ProcessCache::class);
+        }
+
+        return $processCache;
+    }
+
     #[\Override]
     protected function setUp(): void
     {
@@ -248,9 +265,7 @@ final class SearchServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         // UserService's own ProcessCache usage (reached via this test's own
-        // ProcessCache::forgetStatic('default_user') calls below) now goes
-        // through a transitional static shim (singleton/service-locator
-        // elimination campaign, Phase 1), which needs a real container.
+        // processCache() helper below) needs a real, booted container.
         \Piwigo\Core\Kernel::boot();
 
         $this->conn = DbConnection::build();
@@ -1529,7 +1544,7 @@ final class SearchServiceTest extends IntegrationTestCase
         // guest account) -- getDefaultLanguage() reads *this* row, entirely
         // independent of CurrentUser (id=1 in this file's own setUp()).
         $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET language = 'zz_ZZ' WHERE user_id = 2");
-        \Piwigo\Core\ProcessCache::forgetStatic('default_user');
+        $this->processCache()->forget('default_user');
 
         try {
             $this->expectException(\LogicException::class);
@@ -1538,7 +1553,7 @@ final class SearchServiceTest extends IntegrationTestCase
             $this->service->getQuickSearchResultsNoCache('nature', []);
         } finally {
             $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET language = ? WHERE user_id = 2', [$originalLanguage]);
-            \Piwigo\Core\ProcessCache::forgetStatic('default_user');
+            $this->processCache()->forget('default_user');
         }
     }
 

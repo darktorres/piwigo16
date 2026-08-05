@@ -38,6 +38,8 @@ final readonly class CategoryDefaultRenderer
         private \Piwigo\Image\ImageStdParams $imageStdParams,
         private \Piwigo\Users\CurrentUser $currentUser,
         private \Piwigo\Config\CurrentConfig $currentConfig,
+        private \Piwigo\Core\Lang $lang,
+        private \Piwigo\Core\ProcessCache $processCache,
     ) {}
 
     /**
@@ -169,7 +171,7 @@ final readonly class CategoryDefaultRenderer
                 $recentPeriodRaw = $this->currentUser->get()
                     ->rawAttributes['recent_period'] ?? null;
                 $recentPeriodForIcon = is_numeric($recentPeriodRaw) ? (int) $recentPeriodRaw : 0;
-                $tplVar['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon($dateAvailable, $recentPeriodForIcon);
+                $tplVar['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon($dateAvailable, $recentPeriodForIcon, $this->processCache, $this->lang);
             }
 
             if ((bool) $this->currentUser->get()->rawAttributes['show_nb_hits']) {

@@ -104,6 +104,33 @@ final readonly class ImageService
         return new \Piwigo\Core\FilterState();
     }
 
+    /**
+     * Container resolve, not a constructor property -- used only inside
+     * emptyLounge()'s own internal CurrentLogger::getStatic() read below.
+     * A required constructor param here would ripple across this class's
+     * own real construction sites for the sake of this one internal read,
+     * same low-blast-radius reasoning as currentUser()/filterState() above
+     * (singleton/service-locator elimination campaign, Phase 11 sub-phase
+     * 11G). Falls back to an OFF-severity Logger when Kernel::boot()
+     * hasn't run, matching CurrentLogger::getStatic()'s own identical
+     * pre-boot fallback.
+     */
+    private function logger(): \Piwigo\Core\Logger
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $currentLogger = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
+            if (! $currentLogger instanceof \Piwigo\Core\CurrentLogger) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentLogger::class);
+            }
+
+            return $currentLogger->get();
+        }
+
+        return new \Piwigo\Core\Logger([
+            'severity' => \Piwigo\Core\Logger::OFF,
+        ]);
+    }
+
     private function categoryService(): CategoryService
     {
         $conn = DbConnection::build();
@@ -389,7 +416,7 @@ final readonly class ImageService
      */
     public function emptyLounge(bool $invalidateUserCache = true): ?array
     {
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = $this->logger();
 
         $emptyLoungeRunning = $this->currentConfig->emptyLoungeRunning();
         if ($emptyLoungeRunning !== null) {

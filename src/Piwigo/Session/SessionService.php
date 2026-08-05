@@ -17,6 +17,32 @@ final class SessionService
     ) {}
 
     /**
+     * Container resolve, not a constructor property -- used only inside
+     * sessionWrite()'s own internal ApiKeyRequestFlag::isActiveStatic()
+     * read below. A required constructor param here would ripple across
+     * this class's own ~27 real construction sites for the sake of one
+     * internal caller, same low-blast-radius reasoning as every other
+     * lazy helper this session (singleton/service-locator elimination
+     * campaign, Phase 11 sub-phase 11G). Falls back to a fresh,
+     * unmemoized `false`-active instance when Kernel::boot() hasn't run,
+     * matching ApiKeyRequestFlag::isActiveStatic()'s own former identical
+     * pre-boot fallback.
+     */
+    private function apiKeyRequestFlag(): ApiKeyRequestFlag
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $apiKeyRequestFlag = \Piwigo\Core\Kernel::container()->get(ApiKeyRequestFlag::class);
+            if (! $apiKeyRequestFlag instanceof ApiKeyRequestFlag) {
+                throw new \LogicException('Container returned an unexpected type for ' . ApiKeyRequestFlag::class);
+            }
+
+            return $apiKeyRequestFlag;
+        }
+
+        return new ApiKeyRequestFlag();
+    }
+
+    /**
      * @deprecated transitional bridge for callers not yet converted to
      * constructor injection -- singleton/service-locator elimination
      * campaign, Phase 4. No independent state of its own (same shape as
@@ -149,7 +175,7 @@ final class SessionService
         // you do not want the session to be written to the database (no user
         // session persistence) -- this avoids polluting the session table
         // with stateless API accesses
-        if (ApiKeyRequestFlag::isActiveStatic()) {
+        if ($this->apiKeyRequestFlag()->isActive()) {
             return true;
         }
         $this->repo->write($this->getRemoteAddrSessionHash() . $sessionId, $data);

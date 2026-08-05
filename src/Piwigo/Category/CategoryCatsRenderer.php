@@ -70,6 +70,8 @@ final readonly class CategoryCatsRenderer
         private \Piwigo\Image\ImageStdParams $imageStdParams,
         private \Piwigo\Users\CurrentUser $currentUser,
         private \Piwigo\Config\CurrentConfig $currentConfig,
+        private \Piwigo\Core\Lang $lang,
+        private \Piwigo\Core\ProcessCache $processCache,
     ) {}
 
     /**
@@ -388,7 +390,7 @@ final readonly class CategoryCatsRenderer
                     $categoryIsChildDateLast = $category['is_child_date_last'];
                     $categoryIsChildDateLast = is_bool($categoryIsChildDateLast) ? $categoryIsChildDateLast : false;
                     $recentPeriodForIcon = is_numeric($user->rawAttributes['recent_period'] ?? null) ? (int) $user->rawAttributes['recent_period'] : 0;
-                    $tplVar['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon($categoryMaxDateLast, $recentPeriodForIcon, $categoryIsChildDateLast);
+                    $tplVar['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon($categoryMaxDateLast, $recentPeriodForIcon, $this->processCache, $this->lang, $categoryIsChildDateLast);
                 }
 
                 if ($this->currentConfig->displayFromto()) {

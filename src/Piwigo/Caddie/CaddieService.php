@@ -20,9 +20,10 @@ final class CaddieService
      *
      * @param array<int, int> $elementsId
      */
-    public static function fillCurrentUserCaddie(array $elementsId): void
+    public static function fillCurrentUserCaddie(array $elementsId, \Piwigo\Users\CurrentUser $currentUser): void
     {
-        $userId = \Piwigo\Users\CurrentUser::current()->get()->id->value;
+        $userId = $currentUser->get()
+            ->id->value;
 
         \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(CaddieEntity::class)
             ->addElements($userId, $elementsId);

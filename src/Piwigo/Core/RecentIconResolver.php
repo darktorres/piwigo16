@@ -9,19 +9,22 @@ namespace Piwigo\Core;
  * include/functions.inc.php -- no natural existing class home (real
  * callers span Category and Users domains: CategoryCatsRenderer/
  * CategoryService/CategoryDefaultRenderer, and UserService), stateless
- * beyond the per-request `ProcessCache::getStatic('get_icon')` memoization
- * bridge it reads/writes through (Legacy Coupling Retirement Track A
- * gap-fill batch G5, formerly `$cache['get_icon']`), unchanged.
+ * beyond the per-request `get_icon` memoization bridge it reads/writes
+ * through (Legacy Coupling Retirement Track A gap-fill batch G5, formerly
+ * `$cache['get_icon']`), unchanged.
  *
  * Legacy Coupling Retirement: DI+DBAL migration Phase 1e --
  * `\Piwigo\Db\MysqliDb::getRecentPeriod()`'s own real `SELECT SUBDATE(...)`
  * query (a genuine DB round-trip, unlike `SqlDialect::
  * getRecentPeriodExpression()`'s pure fragment-building sibling) is now
  * executed via `DbConnection::build()`, constructed inline -- this static
- * method has no instance state to inject a Connection into, and every
- * real caller invokes it statically (`RecentIconResolver::getIcon(...)`),
- * matching the established "static method constructs its own dependency
- * inline" precedent (same as `Cache\PermissionCacheInvalidator`).
+ * method has no instance state to inject a Connection into. `ProcessCache`/
+ * `Lang` take explicit method parameters instead (singleton/
+ * service-locator elimination campaign, Phase 11 sub-phase 11G: every real
+ * caller already has both available, so this closed the
+ * `ProcessCache::*Static()`/`Lang::current()` shims for this file for real,
+ * matching the NOCTOR explicit-param precedent used throughout this
+ * campaign).
  */
 final class RecentIconResolver
 {
@@ -30,7 +33,7 @@ final class RecentIconResolver
      *
      * @return false|array{}|array{TITLE: string, IS_CHILD_DATE: bool}
      */
-    public static function getIcon(string $date, int $recentPeriod, bool $isChildDate = false): false|array
+    public static function getIcon(string $date, int $recentPeriod, ProcessCache $processCache, Lang $lang, bool $isChildDate = false): false|array
     {
         if ($date === '' || $date === '0') {
             return false;
@@ -38,11 +41,11 @@ final class RecentIconResolver
 
         $recent_period = $recentPeriod;
 
-        $get_icon_cache_raw = ProcessCache::getStatic('get_icon');
+        $get_icon_cache_raw = $processCache->get('get_icon');
         $get_icon_cache = is_array($get_icon_cache_raw) ? $get_icon_cache_raw : [];
 
         if (! isset($get_icon_cache['title'])) {
-            $get_icon_cache['title'] = Lang::current()->t(
+            $get_icon_cache['title'] = $lang->t(
                 'photos posted during the last %d days',
                 $recent_period
             );
@@ -54,7 +57,7 @@ final class RecentIconResolver
         ];
 
         if (isset($get_icon_cache[$date])) {
-            ProcessCache::setStatic('get_icon', $get_icon_cache);
+            $processCache->set('get_icon', $get_icon_cache);
             return ((bool) $get_icon_cache[$date]) ? $icon : [];
         }
 
@@ -65,7 +68,7 @@ final class RecentIconResolver
         }
 
         $get_icon_cache[$date] = $date > $get_icon_cache['sql_recent_date'];
-        ProcessCache::setStatic('get_icon', $get_icon_cache);
+        $processCache->set('get_icon', $get_icon_cache);
 
         return $get_icon_cache[$date] ? $icon : [];
     }

@@ -1156,11 +1156,11 @@ function imageServiceTestReadLogMessages(string $logPath): array
 }
 
 /**
- * emptyLounge() reads CurrentLogger through the transitional
- * `getStatic()` shim (singleton/service-locator elimination campaign,
- * Phase 2 -- see that method's own docblock: its callers include the
- * still-static Ws\PwgImages dispatch layer, Phase 10), which resolves the
- * real container-shared instance once Kernel::boot() has run.
+ * emptyLounge() reads CurrentLogger through its own private lazy logger()
+ * helper (singleton/service-locator elimination campaign, Phase 11
+ * sub-phase 11G -- formerly the transitional `getStatic()` shim, Phase 2),
+ * which resolves the real container-shared instance once Kernel::boot()
+ * has run.
  */
 function imageServiceTestSeedCurrentLogger(\Piwigo\Core\Logger $logger): void
 {

@@ -29,6 +29,32 @@ final readonly class ActivityService implements ActivityLoggerInterface
     ) {}
 
     /**
+     * Container resolve, not a constructor property -- used only inside
+     * record()'s own internal CurrentUser::current() read below. A
+     * required constructor param here would ripple across this class's
+     * own huge real construction-site count (dozens of literal `new
+     * ActivityService(...)` calls across the codebase, especially in test
+     * files), same low-blast-radius reasoning as every other lazy helper
+     * this session (singleton/service-locator elimination campaign, Phase
+     * 11 sub-phase 11G). Falls back to a fresh, unmemoized instance when
+     * Kernel::boot() hasn't run, matching CurrentUser::current()'s own
+     * identical pre-boot fallback.
+     */
+    private function currentUser(): CurrentUser
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $currentUser = \Piwigo\Core\Kernel::container()->get(CurrentUser::class);
+            if (! $currentUser instanceof CurrentUser) {
+                throw new \LogicException('Container returned an unexpected type for ' . CurrentUser::class);
+            }
+
+            return $currentUser;
+        }
+
+        return new CurrentUser(new \Piwigo\Config\CurrentConfig());
+    }
+
+    /**
      * @param int|string|array<int, int|string> $objectId
      * @param array<string, mixed> $details
      */
@@ -140,7 +166,10 @@ final readonly class ActivityService implements ActivityLoggerInterface
             // misattribute these rows to the guest user instead of
             // 'unknown actor' (null) in exactly the case this fallback
             // exists for.
-            $performedBy = CurrentUser::current()->wasRealUserResolved() ? CurrentUser::current()->get()->id->value : null;
+            $performedBy = $this->currentUser()
+                ->wasRealUserResolved() ? $this->currentUser()
+                ->get()
+                ->id->value : null;
 
             if ($action === 'logout') {
                 $performedBy = is_numeric($loopObjectId) ? (int) $loopObjectId : null;

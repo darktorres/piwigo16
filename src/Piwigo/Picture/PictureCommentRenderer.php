@@ -80,7 +80,7 @@ final class PictureCommentRenderer
         $template = $currentTemplate->get();
 
         $commentRepository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class);
-        $commentService = new CommentService($lang, $commentRepository, new EphemeralKeyService($currentConfig), $mailer, $htmlRenderer, $urlService, $eventDispatcher, $pageState, $currentUser, $currentConfig);
+        $commentService = new CommentService($lang, $commentRepository, new EphemeralKeyService($currentConfig), $mailer, $htmlRenderer, $urlService, $eventDispatcher, $pageState, $currentUser, $currentConfig, $accessControl);
 
         $commentAction = null;
 

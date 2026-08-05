@@ -205,7 +205,7 @@ test('getOtpAuthUrl builds an otpauth:// url from the current user and a scheme-
     ));
 
     try {
-        $url = PwgTOTP::getOtpAuthUrl('JBSWY3DPEHPK3PXP', new PwgTOTPTestFakeUrlService());
+        $url = PwgTOTP::getOtpAuthUrl('JBSWY3DPEHPK3PXP', new PwgTOTPTestFakeUrlService(), CurrentUser::current());
 
         expect($url)->toBe(
             'otpauth://totp/totp_user:https://gallery.example.test/piwigo?secret=JBSWY3DPEHPK3PXP&issuer=Piwigo&algorithm=sha1&digits=6&period=30'
@@ -227,7 +227,7 @@ test('getQrCode returns a base64 PNG data uri encoding the same otpauth url as g
     ));
 
     try {
-        $dataUri = PwgTOTP::getQrCode('JBSWY3DPEHPK3PXP', new PwgTOTPTestFakeUrlService());
+        $dataUri = PwgTOTP::getQrCode('JBSWY3DPEHPK3PXP', new PwgTOTPTestFakeUrlService(), CurrentUser::current());
 
         expect($dataUri)->toStartWith('data:image/png;base64,');
     } finally {

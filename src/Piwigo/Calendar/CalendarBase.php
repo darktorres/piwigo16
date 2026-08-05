@@ -140,6 +140,7 @@ abstract class CalendarBase
         protected readonly CalendarRepository $calendarRepository,
         protected readonly UrlServiceInterface $urlService,
         protected readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        protected readonly \Piwigo\Image\ImageStdParams $imageStdParams,
     ) {}
 
     /**

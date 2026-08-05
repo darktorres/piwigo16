@@ -81,6 +81,7 @@ final readonly class SectionPopulator
         private \Piwigo\Users\CurrentUser $currentUser,
         private \Piwigo\Config\CurrentConfig $currentConfig,
         private \Piwigo\Lang\Translator $translator,
+        private \Piwigo\Image\ImageStdParams $imageStdParams,
     ) {}
 
     public function populate(): void
@@ -679,7 +680,7 @@ final readonly class SectionPopulator
             $calendar_items_raw = is_array($page['items'] ?? null) ? $page['items'] : [];
             $calendar_items = array_values(array_filter($calendar_items_raw, static fn (mixed $v): bool => is_int($v) || is_string($v)));
 
-            $calendar_result = new CalendarRenderer($this->lang, $this->htmlRenderer, $this->template, $this->urlService, $this->currentUser, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->filterState)
+            $calendar_result = new CalendarRenderer($this->lang, $this->htmlRenderer, $this->template, $this->urlService, $this->currentUser, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->filterState, $this->imageStdParams)
                 ->render(
                     $section,
                     $page_category,

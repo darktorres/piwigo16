@@ -664,7 +664,7 @@ define(\'DB_COLLATE\', \'\');
         new ExtensionLifecycle(
             $this->lang,
             new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($languageActivationConn)),
-            new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InstallBootstrap::currentLogger()),
+            new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InstallBootstrap::currentLogger(), \Piwigo\Users\CurrentUser::current()),
             $urlService,
             $configService,
             \Piwigo\Db\EntityManagerFactory::build($languageActivationConn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),

@@ -186,6 +186,11 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $currentLogger = new CurrentLogger();
         $currentLogger->set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
 
+        $processCache = Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
+        if (! $processCache instanceof \Piwigo\Core\ProcessCache) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ProcessCache::class);
+        }
+
         $this->renderer = new CategoryCatsRenderer(
             $this->filterUpdater,
             $htmlService,
@@ -200,6 +205,8 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             ImageStdParams::current(),
             \Piwigo\Users\CurrentUser::current(),
             \Piwigo\Config\CurrentConfig::current(),
+            \Piwigo\Core\Lang::current(),
+            $processCache,
         );
     }
 

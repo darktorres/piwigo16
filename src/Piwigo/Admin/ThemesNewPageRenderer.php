@@ -39,6 +39,7 @@ final class ThemesNewPageRenderer
         private readonly \Piwigo\Users\PreferencesService $preferencesService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     /**
@@ -61,7 +62,7 @@ final class ThemesNewPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
 
-        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger);
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser);
         $extension_scanner = new ExtensionScanner();
 
         // +-----------------------------------------------------------------------+

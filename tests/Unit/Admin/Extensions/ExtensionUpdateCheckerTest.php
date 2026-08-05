@@ -126,7 +126,7 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
     return new ExtensionUpdateChecker(
         Lang::current(),
         new ExtensionScanner(),
-        new PemCatalog(new ZipExtractor(), new \Piwigo\Core\CurrentLogger()),
+        new PemCatalog(new ZipExtractor(), new \Piwigo\Core\CurrentLogger(), new \Piwigo\Users\CurrentUser(new \Piwigo\Config\CurrentConfig())),
         \Piwigo\Tests\Support\UrlServiceTestFactory::build(),
         $repo,
     );

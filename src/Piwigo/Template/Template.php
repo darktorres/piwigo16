@@ -229,7 +229,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
 
         $this->smarty->setCompileDir($compile_dir);
 
-        $this->smarty->assign('pwg', new PwgTemplateAdapter($this->lang));
+        $this->smarty->assign('pwg', new PwgTemplateAdapter($this->lang, $this->translator(), $this->currentConfig));
         $this->smarty->registerPlugin('modifiercompiler', 'translate', $this->modcompiler_translate(...));
         $this->smarty->registerPlugin('modifiercompiler', 'translate_dec', $this->modcompiler_translate_dec(...));
         $this->smarty->registerPlugin('modifier', 'sprintf', 'sprintf');
@@ -364,6 +364,25 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         }
 
         return $accessControl;
+    }
+
+    /**
+     * Container resolve, not a constructor property -- used only inside
+     * this class's own one `new PwgTemplateAdapter(...)` construction
+     * above. A required constructor param here would ripple across this
+     * class's own many real construction sites for the sake of a single
+     * internal caller, same low-blast-radius reasoning as accessControl()
+     * above (singleton/service-locator elimination campaign, Phase 11
+     * sub-phase 11G).
+     */
+    private function translator(): \Piwigo\Lang\Translator
+    {
+        $translator = \Piwigo\Core\Kernel::container()->get(\Piwigo\Lang\Translator::class);
+        if (! $translator instanceof \Piwigo\Lang\Translator) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Lang\Translator::class);
+        }
+
+        return $translator;
     }
 
     /**

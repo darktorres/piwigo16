@@ -263,14 +263,14 @@ test('getSessionVar returns the default when unset', function (): void {
 test('sessionWrite short-circuits to true without touching the repository when the request is api_key-authenticated', function (): void {
     // Same "never touches the repository's DB-backed methods" shape as
     // this file's own header comment: if this short-circuit branch
-    // (ApiKeyRequestFlag::isActiveStatic(), reading the container-shared
-    // instance -- SessionService itself isn't converted to constructor
-    // injection until Phase 4, see that class's own shim docblock) were
-    // broken and control fell through to $this->repo->write(), that would
-    // attempt a real connection to the deliberately unreachable
-    // PIWIGO_DB_HOST set up by makeSessionService() and this test would
-    // error out instead of passing -- so a clean `true` result here is
-    // itself proof the repository was never reached.
+    // (SessionService's own private lazy apiKeyRequestFlag() helper,
+    // reading the same container-shared instance seeded below -- Phase 11
+    // sub-phase 11G) were broken and control fell through to
+    // $this->repo->write(), that would attempt a real connection to the
+    // deliberately unreachable PIWIGO_DB_HOST set up by
+    // makeSessionService() and this test would error out instead of
+    // passing -- so a clean `true` result here is itself proof the
+    // repository was never reached.
     $service = makeSessionService();
     Kernel::boot();
     $flag = Kernel::container()->get(ApiKeyRequestFlag::class);

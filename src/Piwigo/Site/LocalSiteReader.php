@@ -50,7 +50,62 @@ final class LocalSiteReader
     private function metadataService(): MetadataService
     {
         return $this->metadataService
-            ?? new MetadataService(\Piwigo\Core\Lang::current(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), new \Piwigo\Core\CurrentLogger(), \Piwigo\PluginConfig\EventDispatcher::get(), $this->currentConfig, new \Piwigo\Users\CurrentUser($this->currentConfig), \Piwigo\Session\SessionService::get(), new \Piwigo\Core\FilterState());
+            ?? new MetadataService($this->lang(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), new \Piwigo\Core\CurrentLogger(), $this->eventDispatcher(), $this->currentConfig, new \Piwigo\Users\CurrentUser($this->currentConfig), $this->sessionService(), new \Piwigo\Core\FilterState());
+    }
+
+    /**
+     * Container resolve, not a constructor property -- used only inside
+     * metadataService()'s own lazy-default fallback above. A required
+     * constructor param here would break this class's own "both real
+     * callers construct with just a site URL" simplicity (singleton/
+     * service-locator elimination campaign, Phase 11 sub-phase 11G).
+     */
+    private function lang(): \Piwigo\Core\Lang
+    {
+        $lang = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\Lang::class);
+        if (! $lang instanceof \Piwigo\Core\Lang) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\Lang::class);
+        }
+
+        return $lang;
+    }
+
+    /**
+     * Same reasoning as lang() above -- gracefully falls back when
+     * Kernel::boot() hasn't run, matching EventDispatcher::get()'s own
+     * identical pre-boot fallback (unlike lang()/Lang::current(), which
+     * has no safe default and always throws).
+     */
+    private function eventDispatcher(): \Piwigo\PluginConfig\EventDispatcher
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $eventDispatcher = \Piwigo\Core\Kernel::container()->get(\Piwigo\PluginConfig\EventDispatcher::class);
+            if (! $eventDispatcher instanceof \Piwigo\PluginConfig\EventDispatcher) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\PluginConfig\EventDispatcher::class);
+            }
+
+            return $eventDispatcher;
+        }
+
+        return new \Piwigo\PluginConfig\EventDispatcher();
+    }
+
+    /**
+     * Same reasoning as eventDispatcher() above -- SessionService::get()
+     * has its own identical pre-boot fallback too.
+     */
+    private function sessionService(): \Piwigo\Session\SessionService
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $sessionService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Session\SessionService::class);
+            if (! $sessionService instanceof \Piwigo\Session\SessionService) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Session\SessionService::class);
+            }
+
+            return $sessionService;
+        }
+
+        return new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Session\SessionEntity::class), new \Piwigo\Config\CurrentConfig());
     }
 
     /**

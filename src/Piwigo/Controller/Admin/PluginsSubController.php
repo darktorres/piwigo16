@@ -68,6 +68,7 @@ final class PluginsSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     #[\Override]
@@ -97,7 +98,7 @@ final class PluginsSubController implements AdminSubControllerInterface
                 ->render('plugins', $tab);
         } else {
             new PluginsInstalledPageRenderer()
-                ->render($this->lang, $this->accessControl, 'plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate, $this->preferencesService, $this->htmlRenderer, $this->currentConfig);
+                ->render($this->lang, $this->accessControl, 'plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate, $this->preferencesService, $this->htmlRenderer, $this->currentConfig, $this->currentUser);
         }
     }
 }

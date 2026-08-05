@@ -64,7 +64,7 @@ final class CaddieServiceTest extends IntegrationTestCase
     {
         CurrentUser::current()->set(User::fromUserArray(['id' => 3]));
 
-        CaddieService::fillCurrentUserCaddie([2, 4, 1]);
+        CaddieService::fillCurrentUserCaddie([2, 4, 1], CurrentUser::current());
 
         self::assertSame([1, 2, 4], $this->fetchElementIds(3));
     }
@@ -72,10 +72,10 @@ final class CaddieServiceTest extends IntegrationTestCase
     public function test_fill_current_user_caddie_scopes_to_whichever_user_is_current(): void
     {
         CurrentUser::current()->set(User::fromUserArray(['id' => 1]));
-        CaddieService::fillCurrentUserCaddie([5]);
+        CaddieService::fillCurrentUserCaddie([5], CurrentUser::current());
 
         CurrentUser::current()->set(User::fromUserArray(['id' => 4]));
-        CaddieService::fillCurrentUserCaddie([2, 3]);
+        CaddieService::fillCurrentUserCaddie([2, 3], CurrentUser::current());
 
         self::assertSame([5], $this->fetchElementIds(1), 'user 1 must only have its own element');
         self::assertSame([2, 3], $this->fetchElementIds(4), 'user 4 must only have its own elements');
@@ -85,7 +85,7 @@ final class CaddieServiceTest extends IntegrationTestCase
     {
         CurrentUser::current()->set(User::fromUserArray(['id' => 3]));
 
-        CaddieService::fillCurrentUserCaddie([]);
+        CaddieService::fillCurrentUserCaddie([], CurrentUser::current());
 
         self::assertSame([], $this->fetchElementIds(3));
     }

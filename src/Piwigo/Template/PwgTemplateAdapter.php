@@ -20,6 +20,8 @@ final class PwgTemplateAdapter
 {
     public function __construct(
         private readonly Lang $lang,
+        private readonly Translator $translator,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
     ) {}
 
     #[\Deprecated(message: 'use "translate" modifier')]
@@ -31,7 +33,7 @@ final class PwgTemplateAdapter
     #[\Deprecated(message: 'use "translate_dec" modifier')]
     public function l10n_dec(string $s, string $p, int $v): string
     {
-        return Translator::get()->plural($s, $p, $v);
+        return $this->translator->plural($s, $p, $v);
     }
 
     #[\Deprecated(message: 'use "translate" or "sprintf" modifier')]
@@ -50,7 +52,7 @@ final class PwgTemplateAdapter
         // Mirrors derivative_url()/DerivativeImage::url()'s own
         // is_object($infos) ? $infos : new SrcImage($infos) handling — the
         // constructor itself only accepts a real SrcImage.
-        return new DerivativeImage($type, is_object($img) ? $img : new SrcImage($img), \Piwigo\Config\CurrentConfig::current());
+        return new DerivativeImage($type, is_object($img) ? $img : new SrcImage($img), $this->currentConfig);
     }
 
     /**

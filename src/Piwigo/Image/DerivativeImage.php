@@ -251,7 +251,7 @@ final class DerivativeImage
             // returns non-null here.
             assert($src_size !== null);
             if ($params->is_identity($src_size)) {// the source image is smaller than what we should do - we do not upsample
-                if (! $params->will_watermark($src_size) && ! (bool) $src->rotation) {// no watermark, no rotation required -> we will use the source image
+                if (! $params->will_watermark($src_size, self::imageStdParams()) && ! (bool) $src->rotation) {// no watermark, no rotation required -> we will use the source image
                     $params = null;
                     $rel_path = $rel_url = $src->rel_path;
                     return;

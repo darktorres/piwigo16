@@ -203,6 +203,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             \Piwigo\Users\CurrentUser::current(),
             \Piwigo\Config\CurrentConfig::current(),
             \Piwigo\Lang\Translator::get(),
+            \Piwigo\Image\ImageStdParams::current(),
         );
     }
 

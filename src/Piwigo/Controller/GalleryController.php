@@ -173,7 +173,7 @@ final class GalleryController implements ControllerInterface
 
         // caddie filling :-)
         if ($galleryDisplay->hasCaddie) {
-            \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($page_items);
+            \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($page_items, $this->currentUser);
             $redirectService->redirect($urlService->duplicateIndexUrl());
         }
 

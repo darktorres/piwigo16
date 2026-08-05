@@ -51,7 +51,7 @@ final class PluginLoader
     /**
      * Loads all the registered plugins.
      */
-    public static function loadPlugins(LoadedPlugins $loadedPlugins, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Config\CurrentConfig $currentConfig, WsContext $wsContext, AccessControl $accessControl): void
+    public static function loadPlugins(LoadedPlugins $loadedPlugins, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Config\CurrentConfig $currentConfig, WsContext $wsContext, AccessControl $accessControl, \Piwigo\Core\PageState $pageState): void
     {
         $loadedPlugins->set([]);
         if ($currentConfig->enablePlugins()) {
@@ -62,7 +62,7 @@ final class PluginLoader
                 // param, which a readonly Plugin object can't support (same
                 // "unbox where genuinely needed" shape as
                 // CategoryCatsRenderer's own unboxing).
-                self::loadPlugin($plugin->toArray(), $loadedPlugins, $activityService, $wsContext, $accessControl);
+                self::loadPlugin($plugin->toArray(), $loadedPlugins, $activityService, $wsContext, $accessControl, $pageState);
             }
             $eventDispatcher->dispatchNotify(new PluginsLoaded());
         }
@@ -77,13 +77,13 @@ final class PluginLoader
      *   loadPlugins(), unboxes the repository's typed row there since this
      *   method needs mutable array semantics, not a readonly object)
      */
-    private static function loadPlugin(array $plugin, LoadedPlugins $loadedPlugins, \Piwigo\Activity\ActivityService $activityService, WsContext $wsContext, AccessControl $accessControl): void
+    private static function loadPlugin(array $plugin, LoadedPlugins $loadedPlugins, \Piwigo\Activity\ActivityService $activityService, WsContext $wsContext, AccessControl $accessControl, \Piwigo\Core\PageState $pageState): void
     {
         $plugin_id = $plugin['id'];
 
         $file_name = self::pluginsPath() . $plugin_id . '/main.inc.php';
         if (file_exists($file_name)) {
-            self::autoupdatePlugin($plugin, $activityService, $wsContext, $accessControl);
+            self::autoupdatePlugin($plugin, $activityService, $wsContext, $accessControl, $pageState);
             $loadedPlugins->add($plugin_id, $plugin);
             include_once $file_name;
         }
@@ -97,7 +97,7 @@ final class PluginLoader
      *   be updated if version changes - matches loadPlugin()'s own param
      *   shape (its only caller, already guards 'id' to string)
      */
-    private static function autoupdatePlugin(array &$plugin, \Piwigo\Activity\ActivityService $activityService, WsContext $wsContext, AccessControl $accessControl): void
+    private static function autoupdatePlugin(array &$plugin, \Piwigo\Activity\ActivityService $activityService, WsContext $wsContext, AccessControl $accessControl, \Piwigo\Core\PageState $pageState): void
     {
         $plugin_id = $plugin['id'];
 
@@ -160,9 +160,9 @@ final class PluginLoader
                 // non-sequential keys), narrower than PageState::$errors'
                 // list<string> -- round-trip through a local var and
                 // re-index on the way back in.
-                $errors = \Piwigo\Core\PageState::current()->errors;
+                $errors = $pageState->errors;
                 $plugin_maintain->update($old_version, $fs_version, $errors);
-                \Piwigo\Core\PageState::current()->errors = array_values($errors);
+                $pageState->errors = array_values($errors);
             }
 
             // update database (only on production). We want to avoid registering an "auto" to "auto" update,

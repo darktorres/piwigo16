@@ -2168,8 +2168,12 @@ test('load_themeconf caches under the exact "themeconf:" . $dir key shape, not a
     mkdir($dir, 0o777, true);
     file_put_contents($dir . '/themeconf.inc.php', '<?php $themeconf = ["real" => true];');
     $realDir = (string) realpath($dir);
-    ProcessCache::setStatic($realDir, ['poisoned' => 'bare-dir-key']);
-    ProcessCache::setStatic($realDir . 'themeconf:', ['poisoned' => 'switched-key']);
+    $processCache = Kernel::container()->get(ProcessCache::class);
+    if (! $processCache instanceof ProcessCache) {
+        throw new \LogicException('Container returned an unexpected type for ' . ProcessCache::class);
+    }
+    $processCache->set($realDir, ['poisoned' => 'bare-dir-key']);
+    $processCache->set($realDir . 'themeconf:', ['poisoned' => 'switched-key']);
 
     $result = $t->load_themeconf($dir);
 

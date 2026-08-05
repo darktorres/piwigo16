@@ -93,7 +93,7 @@ test('will_watermark is always false when use_watermark is off', function (): vo
     $params = new DerivativeParams(SizingParams::classic(800, 600));
     $params->use_watermark = false;
 
-    expect($params->will_watermark([600, 400]))->toBeFalse();
+    expect($params->will_watermark([600, 400], ImageStdParams::current()))->toBeFalse();
 });
 
 test('__serialize exposes last_mod_time, sizing, and sharpen -- not type or use_watermark', function (): void {
@@ -131,8 +131,8 @@ test('will_watermark is true once the output is at least as large as the waterma
         $params = new DerivativeParams(SizingParams::classic(800, 600));
         $params->use_watermark = true;
 
-        expect($params->will_watermark([600, 400]))->toBeTrue();
-        expect($params->will_watermark([400, 400]))->toBeFalse();
+        expect($params->will_watermark([600, 400], ImageStdParams::current()))->toBeTrue();
+        expect($params->will_watermark([400, 400], ImageStdParams::current()))->toBeFalse();
     } finally {
         ImageStdParams::current()->set_watermark($originalWatermark);
     }
@@ -160,17 +160,17 @@ test('will_watermark compares each dimension independently, against exactly its 
         // comparison's `<=`->`<` (would now read 100<100, false) and its
         // min_size[0]->min_size[1] swap (would compare 300<=100, also
         // false), either of which would wrongly flip this to false.
-        expect($params->will_watermark([100, 50]))->toBeTrue();
+        expect($params->will_watermark([100, 50], ImageStdParams::current()))->toBeTrue();
         // Exactly meets the HEIGHT condition (300 <= 300) at the
         // boundary; fails the width condition outright -- kills the
         // second comparison's `<=`->`<` and its out_size[1]->out_size[0]
         // swap (would compare 300<=50, false), either of which would
         // wrongly flip this to false.
-        expect($params->will_watermark([50, 300]))->toBeTrue();
+        expect($params->will_watermark([50, 300], ImageStdParams::current()))->toBeTrue();
         // Fails both conditions when read straight -- but the second
         // comparison's min_size[1]->min_size[0] swap would instead check
         // 100<=150 (true), wrongly flipping this to true.
-        expect($params->will_watermark([50, 150]))->toBeFalse();
+        expect($params->will_watermark([50, 150], ImageStdParams::current()))->toBeFalse();
     } finally {
         ImageStdParams::current()->set_watermark($originalWatermark);
     }

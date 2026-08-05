@@ -20,10 +20,13 @@ namespace Piwigo\Core;
  *
  * Singleton/service-locator elimination campaign, Phase 1: converted from a
  * self-managed static facade to a container-shared instance. `UserBootstrap`
- * (the only writer) constructor-injects this directly. `Piwigo\Ws\PwgCore`/
- * `Piwigo\Ws\PwgServer` (Phase 10) and `Piwigo\Session\SessionService`
- * (Phase 4) aren't converted yet, so they keep calling the `isActiveStatic()`
- * shim below instead of `isActive()` -- see that method's own docblock.
+ * (the only writer) constructor-injects this directly, as do
+ * `Piwigo\Ws\PwgCore`/`Piwigo\Ws\PwgServer` (Phase 10) now. `Piwigo\Session\
+ * SessionService::sessionWrite()` reads this via its own private lazy
+ * apiKeyRequestFlag() helper instead (Phase 11 sub-phase 11G: ~27 real
+ * construction sites made a required constructor param too high a blast
+ * radius for this one internal read) -- the `isActiveStatic()` transitional
+ * shim this class used to host is gone now that every real caller converted.
  */
 final class ApiKeyRequestFlag
 {
@@ -37,40 +40,5 @@ final class ApiKeyRequestFlag
     public function isActive(): bool
     {
         return $this->active;
-    }
-
-    /**
-     * @deprecated transitional bridge for callers not yet converted to
-     * constructor injection (Piwigo\Ws\PwgCore::sessionLogin()/
-     * sessionLogout(), Piwigo\Ws\PwgServer::isInvokeAllowed(), and
-     * Piwigo\Session\SessionService::sessionWrite()) -- PHP forbids an
-     * instance method and a static method sharing one name, hence the
-     * `Static` suffix (not a rename of the real API -- `isActive()` above
-     * is the real one; this is scaffolding only). Delete once
-     * `grep -rn "ApiKeyRequestFlag::isActiveStatic("` outside tests/
-     * returns nothing.
-     *
-     * Falls back to `false` (the same default the old static `$active`
-     * property always started at) when `Kernel::boot()` hasn't run --
-     * matches Piwigo\Core\InstallationFlag::isActiveStatic()'s own
-     * identical reasoning: a great many tests reach `SessionService::
-     * sessionWrite()` indirectly without ever calling the old
-     * `ApiKeyRequestFlag::activate()`, so `false` is the exact
-     * behavior-preserving default for them. A real request always has a
-     * booted Kernel by the time these callers run, so this fallback is
-     * never reached in production.
-     */
-    public static function isActiveStatic(): bool
-    {
-        if (! Kernel::isBooted()) {
-            return false;
-        }
-
-        $instance = Kernel::container()->get(self::class);
-        if (! $instance instanceof self) {
-            throw new \LogicException('Container returned an unexpected type for ' . self::class);
-        }
-
-        return $instance->isActive();
     }
 }

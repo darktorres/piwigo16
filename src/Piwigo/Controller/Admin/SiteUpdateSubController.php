@@ -731,7 +731,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                     // add new photos to caddie
                     if (isset($post['add_to_caddie']) and $post['add_to_caddie'] === '1') {
-                        \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($caddiables);
+                        \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($caddiables, $this->currentUser);
                     }
                 }
 

@@ -39,6 +39,28 @@ final class PageHeaderRenderer
     }
 
     /**
+     * Same reasoning as urlService() above -- this class has no
+     * constructor at all, and ~14 real render() call sites (singleton/
+     * service-locator elimination campaign, Phase 11 sub-phase 11G).
+     * Falls back to `false` when Kernel::boot() hasn't run, matching
+     * AdminContext::isActiveStatic()'s own former identical pre-boot
+     * fallback.
+     */
+    private static function isAdminContextActive(): bool
+    {
+        if (! \Piwigo\Core\Kernel::isBooted()) {
+            return false;
+        }
+
+        $adminContext = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\AdminContext::class);
+        if (! $adminContext instanceof \Piwigo\Core\AdminContext) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\AdminContext::class);
+        }
+
+        return $adminContext->isActive();
+    }
+
+    /**
      * @param string $title set by the including page script, right before
      *   the original page_header.php include.
      * @param string|null $refresh optional meta-refresh delay in seconds;
@@ -57,7 +79,7 @@ final class PageHeaderRenderer
         $eventDispatcher->dispatchNotify(new LocBeginPageHeader());
 
         $show_mobile_app_banner = $currentConfig->showMobileAppBannerInGallery();
-        if (\Piwigo\Core\AdminContext::isActiveStatic()) {
+        if (self::isAdminContextActive()) {
             $show_mobile_app_banner = $currentConfig->showMobileAppBannerInAdmin();
         }
 

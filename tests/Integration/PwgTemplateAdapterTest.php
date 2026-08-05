@@ -55,7 +55,7 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
         $configService->loadConfFromDb();
         \Piwigo\Image\ImageStdParams::current()->load_from_db();
 
-        $this->adapter = new PwgTemplateAdapter(\Piwigo\Core\Lang::current());
+        $this->adapter = new PwgTemplateAdapter(\Piwigo\Core\Lang::current(), \Piwigo\Lang\Translator::get(), \Piwigo\Config\CurrentConfig::current());
     }
 
     #[\Override]

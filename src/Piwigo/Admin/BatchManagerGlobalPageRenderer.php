@@ -385,7 +385,7 @@ final class BatchManagerGlobalPageRenderer
 
             // add_to_caddie
             elseif ($action === 'add_to_caddie') {
-                \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($collection);
+                \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($collection, $this->currentUser);
             }
 
             // delete

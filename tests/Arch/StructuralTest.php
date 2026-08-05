@@ -213,7 +213,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
     // Singleton/service-locator elimination campaign: a handful of classes
     // outside Bootstrap/ also carry ONE narrow, explicitly-tracked
     // exception each -- a transitional `@deprecated ...Static()` shim
-    // method (see e.g. Piwigo\Core\ApiKeyRequestFlag::isActiveStatic()'s
+    // method (see e.g. Piwigo\Core\InstallationFlag::isActiveStatic()'s
     // own docblock) that lets a not-yet-converted caller elsewhere keep
     // working unchanged until its own phase converts it. Every entry below
     // is removed once that class's shim is deleted -- this allow-list
@@ -222,10 +222,8 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
     $repoRoot = __DIR__ . '/../..';
 
     $shimAllowedFiles = [
-        '/src/Piwigo/Core/ApiKeyRequestFlag.php',
         '/src/Piwigo/Core/InstallationFlag.php',
         '/src/Piwigo/Core/ProcessCache.php',
-        '/src/Piwigo/Core/FilterState.php',
         '/src/Piwigo/Core/CurrentLogger.php',
         '/src/Piwigo/Section/SectionContextRegistry.php',
         '/src/Piwigo/Core/ErrorCollector.php',
@@ -263,6 +261,10 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Permission/PermissionService.php',
         '/src/Piwigo/Image/ImageService.php',
         '/src/Piwigo/Comment/CommentService.php',
+        '/src/Piwigo/Activity/ActivityService.php',
+        '/src/Piwigo/Site/LocalSiteReader.php',
+        '/src/Piwigo/Auth/CookieService.php',
+        '/src/Piwigo/Search/SearchService.php',
     ];
 
     $hits = [
@@ -388,7 +390,7 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // (b) Too many real raw `new X(...)` construction sites, no DI
     // involved, matching the established HtmlService/Template
     // precedent from every prior phase -- Csrf/CsrfService.php (~50
-    // sites, no constructor at all), Template/PwgTemplateAdapter.php.
+    // sites, no constructor at all).
     // Mail/MailService.php, Url/UrlService.php, Template/Template.php,
     // and Html/HtmlService.php itself all closed this shim in Phase 11
     // sub-phase 11E -- real constructor injection now that the "too many
@@ -398,7 +400,12 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // 11F -- each resolves CurrentConfig via its own private static
     // container-resolve helper (matching each file's own pre-existing
     // urlService()-shaped idiom) instead of the shim, from both static
-    // factory methods and instance context alike.
+    // factory methods and instance context alike. Template/
+    // PwgTemplateAdapter.php closed it in Phase 11 sub-phase 11G -- its
+    // one real call site (Template.php) already resolves everything else
+    // it needs, so PwgTemplateAdapter took CurrentConfig/Translator as
+    // real required constructor params instead (only 1 real construction
+    // site + 1 test, a small enough blast radius).
     //
     // (c) Structural exceptions -- Auth/AccessControl.php's one site is
     // inside currentForCaching()'s own designed degraded-fallback object
@@ -433,7 +440,6 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Http/HttpClientService.php',
         '/src/Piwigo/Image/LoungeMaintenance.php',
         '/src/Piwigo/Permission/PermissionService.php',
-        '/src/Piwigo/Template/PwgTemplateAdapter.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentConfig::current(');
@@ -493,18 +499,21 @@ test('CurrentConfigService::current() transitional bridge has a shrinking, known
     // from). Every phase that converts one more of these files to
     // constructor-injected ConfigService/CurrentConfigService should
     // remove it from the allow-list below.
-    // Core/UniqueExecLock.php, Cache/PermissionCacheInvalidator.php, and
-    // Admin/Install/InstallService.php are genuinely static utilities, no
-    // constructor at all. Image/ImageService.php (10 real construction
-    // sites) matches ImageStdParams's own too-many-sites precedent for
-    // this exact file. Template/Template.php closed this shim in Phase 11
-    // sub-phase 11E -- real constructor injection, same as its other 8
-    // collaborators (its own too-many-construction-sites reasoning no
-    // longer holds). Phase 10 closed out every Ws/Pwg* file's own use of
-    // this shim (PwgCore.php/PwgUsers.php took a real, directly-injected
-    // ConfigService instead, once their own classes were instance-based;
-    // PwgExtensions.php/PwgImages.php had already converted in their own
-    // earlier sub-batches). public/install.php passes the wrapper itself
+    // Cache/PermissionCacheInvalidator.php, and Admin/Install/
+    // InstallService.php are genuinely static utilities, no constructor at
+    // all. Image/ImageService.php (10 real construction sites) matches
+    // ImageStdParams's own too-many-sites precedent for this exact file.
+    // Template/Template.php closed this shim in Phase 11 sub-phase 11E --
+    // real constructor injection, same as its other 8 collaborators (its
+    // own too-many-construction-sites reasoning no longer holds). Phase 10
+    // closed out every Ws/Pwg* file's own use of this shim (PwgCore.php/
+    // PwgUsers.php took a real, directly-injected ConfigService instead,
+    // once their own classes were instance-based; PwgExtensions.php/
+    // PwgImages.php had already converted in their own earlier
+    // sub-batches). Core/UniqueExecLock.php closed this shim in Phase 11
+    // sub-phase 11G -- confirmed a stale allow-list entry, no
+    // CurrentConfigService usage of any kind left in that file.
+    // public/install.php passes the wrapper itself
     // (not ->get()) into InstallWizard's constructor -- same "raw
     // entry-shell root file that never boots Kernel before this point"
     // reasoning as every prior phase's identical allow-list entry for
@@ -512,7 +521,6 @@ test('CurrentConfigService::current() transitional bridge has a shrinking, known
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Core/UniqueExecLock.php',
         '/src/Piwigo/Admin/Install/InstallService.php',
         '/src/Piwigo/Cache/PermissionCacheInvalidator.php',
         '/src/Piwigo/Image/ImageService.php',
@@ -541,12 +549,14 @@ test('DeploymentPolicy::current() transitional bridge has a shrinking, known all
     // 'DeploymentPolicy::set()/reset() are only called from tests/' arch
     // test. Every phase that converts one more of these files to
     // constructor-injected DeploymentPolicy should remove it from the
-    // allow-list below.
+    // allow-list below. Search/SearchService.php closed this shim in Phase
+    // 11 sub-phase 11G part 1 -- real constructor injection.
+    // Admin/Install/InstallWizard.php's remaining site is install-flow,
+    // timing-sensitive (Phase 11 sub-phase 11K).
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
         '/src/Piwigo/Admin/Install/InstallWizard.php',
-        '/src/Piwigo/Search/SearchService.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'DeploymentPolicy::current(');
@@ -573,13 +583,22 @@ test('ImageStdParams::current() transitional bridge has a shrinking, known allow
     // injection, same as its other collaborators. Image/DerivativeImage.php
     // closed it in Phase 11 sub-phase 11F -- resolves ImageStdParams via
     // its own private static container-resolve helper instead (same
-    // reasoning as its CurrentConfig::current() closure above).
+    // reasoning as its CurrentConfig::current() closure above). Phase 11
+    // sub-phase 11G: Calendar/CalendarMonthly.php took ImageStdParams via
+    // CalendarBase's own real constructor injection (shared by
+    // CalendarWeekly.php too), and Image/DerivativeParams.php's own
+    // will_watermark() -- a plain DTO with ~58 real construction sites --
+    // took it as an explicit method parameter instead, matching Tabsheet's
+    // own established NOCTOR precedent. Admin/Upload/UploadService.php's
+    // remaining site is inside getOptimalDimensionsForRepresentative(), a
+    // `private static` helper reached only from this file's own static
+    // uploadFileXxx() event handlers -- same established exception as its
+    // CurrentLogger::getStatic() entry elsewhere in this file (Phase 11
+    // sub-phase 11I's own genuinely-static-only bucket).
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
         '/src/Piwigo/Admin/Upload/UploadService.php',
-        '/src/Piwigo/Calendar/CalendarMonthly.php',
-        '/src/Piwigo/Image/DerivativeParams.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ImageStdParams::current(');
@@ -599,9 +618,12 @@ test('PageState::current() transitional bridge has a shrinking, known allow-list
     // competing real instance method to disambiguate from). Every phase
     // that converts one more of these files to constructor-injected
     // PageState should remove it from the allow-list below.
-    // PluginLoader.php/Logger.php/TimingHelper.php are genuinely static-
+    // Logger.php/TimingHelper.php are genuinely static-
     // context-only utilities (no wrapper instance needed, matching
-    // FilesystemHelper's own precedent).
+    // FilesystemHelper's own precedent). Admin/PluginLoader.php closed
+    // this shim in Phase 11 sub-phase 11G -- loadPlugins()/loadPlugin()/
+    // autoupdatePlugin() (already fully NOCTOR, every other collaborator
+    // an explicit static param) take PageState the same way.
     // Every Ws/Pwg*.php file took real constructor injection during its
     // own Phase 10 sub-batch, so none remain on this allow-list.
     // NotificationByMailSubController.php's 2 sites are both inside its
@@ -625,7 +647,6 @@ test('PageState::current() transitional bridge has a shrinking, known allow-list
 
     $allowedFiles = [
         '/src/Piwigo/Admin/Install/InstallWizard.php',
-        '/src/Piwigo/Admin/PluginLoader.php',
         '/src/Piwigo/Bootstrap/RedirectService.php',
         '/src/Piwigo/Controller/Admin/NotificationByMailSubController.php',
         '/src/Piwigo/Core/Logger.php',
@@ -656,75 +677,20 @@ test('PageState::current() transitional bridge has a shrinking, known allow-list
  * 'X::get()/isSet()'/'X::current()' transitional bridge allow-list tests
  * further below instead).
  */
-test('AdminContext::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 3:
-    // Piwigo\Page\PageHeaderRenderer and Piwigo\Bootstrap\RedirectService
-    // both deliberately have no constructor at all (early-crash-fallback
-    // shape, Phase 6) -- both use this static shim instead of the real
-    // isActive() instance method (see that method's own docblock).
-    // Piwigo\Template\Template closed this shim in Phase 11 sub-phase
-    // 11E -- real constructor injection, same as its other collaborators.
-    // Every phase that converts one more of these files should remove it
-    // from the allow-list below; once empty, delete the shim and this
-    // test.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-        '/src/Piwigo/Page/PageHeaderRenderer.php',
-        '/src/Piwigo/Bootstrap/RedirectService.php',
-    ];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'AdminContext::isActiveStatic(');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
-test('ApiKeyRequestFlag::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 1: real caller
-    // (Piwigo\Session\SessionService -- Phase 4) isn't converted to
-    // constructor injection yet, so it uses this static shim instead of
-    // the real isActive() instance method (see that method's own
-    // docblock). PwgCore.php took real constructor injection during its
-    // own Phase 10 sub-batch; Ws/PwgServer.php took it during Phase 11
-    // sub-phase 11A. Every phase that converts one more of these files
-    // should remove it from the allow-list below; once the allow-list is
-    // empty, delete isActiveStatic() itself and this test.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-        '/src/Piwigo/Session/SessionService.php',
-    ];
-
-    // Comment-aware (findCallSitesOutsideComments, not findCallSites): this
-    // class's own docblock spells out the exact grep string callers should
-    // use to find their own remaining references, which would otherwise
-    // self-match as a false "call site" in its own file.
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ApiKeyRequestFlag::isActiveStatic(');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
 test('CurrentLogger::getStatic() transitional shim has a shrinking, known allow-list', function (): void {
     // Singleton/service-locator elimination campaign, Phase 2: real callers
     // (Piwigo\Core\UniqueExecLock -- genuinely static-only; Piwigo\Admin\
-    // Upload\UploadService's 6 uploadFile* static event handlers;
-    // Piwigo\Image\ImageService::emptyLounge()) aren't converted to
-    // constructor injection, so they use this static shim instead of the
-    // real get() instance method (see that method's own docblock).
-    // Piwigo\Ws\PwgUsers/Piwigo\Ws\PwgImages took real constructor
-    // injection during their own Phase 10 sub-batches. Piwigo\Tag\
-    // TagService.php closed this shim in Phase 11 sub-phase 11G --
-    // setTagsOf() now reads $this->currentLogger->get() instead. Every
+    // Upload\UploadService's 6 uploadFile* static event handlers) aren't
+    // converted to constructor injection, so they use this static shim
+    // instead of the real get() instance method (see that method's own
+    // docblock). Piwigo\Ws\PwgUsers/Piwigo\Ws\PwgImages took real
+    // constructor injection during their own Phase 10 sub-batches.
+    // Piwigo\Tag\TagService.php closed this shim in Phase 11 sub-phase
+    // 11G -- setTagsOf() now reads $this->currentLogger->get() instead.
+    // Piwigo\Image\ImageService::emptyLounge() closed it too -- reads its
+    // own new private lazy logger() helper instead (a required
+    // constructor param would ripple across this class's own many real
+    // construction sites for the sake of this one internal read). Every
     // phase that converts one more of these files should remove it from
     // the allow-list below; once empty, delete the shim and this test.
     $repoRoot = __DIR__ . '/../..';
@@ -732,7 +698,6 @@ test('CurrentLogger::getStatic() transitional shim has a shrinking, known allow-
     $allowedFiles = [
         '/src/Piwigo/Core/UniqueExecLock.php',
         '/src/Piwigo/Admin/Upload/UploadService.php',
-        '/src/Piwigo/Image/ImageService.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentLogger::getStatic(');
@@ -872,18 +837,16 @@ test('SessionService::get() transitional bridge has a shrinking, known allow-lis
     // TagService.php closed it too -- newImageService() now takes a real
     // required SessionService constructor param like everything else in
     // this file, the "too many manual construction sites" reasoning no
-    // longer holds. Site/LocalSiteReader.php's own metadataService()
-    // fallback (used only when the class's own optional MetadataService
-    // constructor param is omitted -- both real production callers always
-    // supply one) is a new, deliberately narrow entry: MetadataService's
-    // own required SessionService param (11G) needs satisfying there too,
-    // and this fallback path is specifically the "no real DI reachable"
-    // case the shim exists for.
+    // longer holds. Site/LocalSiteReader.php closed it too -- its own
+    // metadataService() fallback (used only when the class's own optional
+    // MetadataService constructor param is omitted, which is what both
+    // real production callers actually do) now resolves SessionService
+    // via its own new private lazy sessionService() helper instead,
+    // matching the shim's own identical pre-boot graceful fallback.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
         '/src/Piwigo/Core/DeviceHelper.php',
-        '/src/Piwigo/Site/LocalSiteReader.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'SessionService::get(');
@@ -954,64 +917,6 @@ test('PageState::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('ProcessCache::*Static() transitional shims have a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 1: real callers
-    // (Piwigo\Core\RecentIconResolver -- a genuinely static-only utility)
-    // aren't converted to constructor injection, so they use these static
-    // shims instead of the real has()/get()/set() instance methods (see
-    // hasStatic()'s own docblock). Piwigo\Template\Template and
-    // Piwigo\Html\HtmlService itself both closed this shim in Phase 11
-    // sub-phase 11E -- real constructor injection, same as their other
-    // collaborators. Piwigo\Users\UserService.php closed it in Phase 11
-    // sub-phase 11G. Every phase that converts one more of these files
-    // should remove it from the allow-list below; once empty, delete all
-    // 4 shims and this test.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-        '/src/Piwigo/Core/RecentIconResolver.php',
-    ];
-
-    $hits = [
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ProcessCache::hasStatic('),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ProcessCache::getStatic('),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ProcessCache::setStatic('),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ProcessCache::forgetStatic('),
-    ];
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
-test('RequestMountDepth::currentStatic() transitional shim has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 3:
-    // Piwigo\Url\UrlService and Piwigo\Auth\CookieService are both still
-    // manually `new`'d at dozens of call sites each (Phase 6), so neither
-    // can take RequestMountDepth via constructor injection yet -- they
-    // use this static shim instead of the real current() instance method
-    // (see that method's own docblock). Every phase that converts one
-    // more of these files should remove it from the allow-list below;
-    // once empty, delete the shim and this test.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-        '/src/Piwigo/Auth/CookieService.php',
-    ];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'RequestMountDepth::currentStatic(');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
 test('src/Piwigo/ contains no InputValidator::createStatic() calls', function (): void {
     // Phase 11 sub-phase 11C close-out: every one of InputValidator's
     // ~43 real construction sites (39 pure Request DTO
@@ -1055,12 +960,16 @@ test('Translator::get() transitional bridge has a shrinking, known allow-list', 
     // dependency an explicit render() parameter instead, see FilterState's
     // own precedent) and only needs Translator for one internal, throwaway
     // `new FilterService(...)` -- not worth a 12th render() parameter for.
-    // Template/PwgTemplateAdapter.php's one call site is a `#[\Deprecated]`
-    // method reached from Template.php's own `new PwgTemplateAdapter($this->lang)`
-    // construction -- PwgTemplateAdapter itself is still a throwaway value
-    // object with no constructor deps beyond Lang, unrelated to Template's
-    // own Phase 11 sub-phase 11E conversion (belongs to a later sub-phase's
-    // own pass over this file, see 11G). NotificationByMail
+    // Template/PwgTemplateAdapter.php closed this shim in Phase 11
+    // sub-phase 11G -- its one real call site (Template.php) resolves
+    // Translator via its own new private lazy translator() helper,
+    // matching Template.php's own established accessControl()-shaped
+    // idiom (a required constructor param there would ripple across
+    // Template's own many real construction sites for the sake of this
+    // one internal caller). Menu/MenubarRenderer.php closed this shim too
+    // -- confirmed a stale allow-list entry, its own internal
+    // `new FilterService(...)` already passes the real explicit render()
+    // param through. NotificationByMail
     // SubController.php's one remaining site is inside its own private
     // static doTimeoutTreatment() helper (no $this there either).
     $repoRoot = __DIR__ . '/../..';
@@ -1069,8 +978,6 @@ test('Translator::get() transitional bridge has a shrinking, known allow-list', 
         '/src/Piwigo/Category/CategoryService.php',
         '/src/Piwigo/Controller/Admin/NotificationByMailSubController.php',
         '/src/Piwigo/Core/DateHelper.php',
-        '/src/Piwigo/Menu/MenubarRenderer.php',
-        '/src/Piwigo/Template/PwgTemplateAdapter.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'Translator::get(');
@@ -1136,7 +1043,14 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     // EventDispatcher via its own private static container-resolve
     // helper (CssLoader.php via an explicit method param instead,
     // extending its own pre-existing get_css(UrlServiceInterface)
-    // pattern) rather than the shim.
+    // pattern) rather than the shim. Phase 11 sub-phase 11G:
+    // Category/CategoryService.php and Menu/MenubarRenderer.php both
+    // removed -- confirmed stale allow-list entries, both take
+    // EventDispatcher as a real constructor/explicit render() param now.
+    // Site/LocalSiteReader.php closed it too -- its own metadataService()
+    // fallback now resolves EventDispatcher via a new private lazy
+    // eventDispatcher() helper instead, matching the shim's own identical
+    // pre-boot graceful fallback.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
@@ -1145,9 +1059,6 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Bootstrap/PageTail.php',
         '/src/Piwigo/Bootstrap/RedirectService.php',
         '/src/Piwigo/Bootstrap/RequestBootstrap.php',
-        '/src/Piwigo/Category/CategoryService.php',
-        '/src/Piwigo/Menu/MenubarRenderer.php',
-        '/src/Piwigo/Site/LocalSiteReader.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'EventDispatcher::get(');
@@ -1268,14 +1179,13 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
     // competing real instance method to disambiguate from). Every phase
     // that converts one more of these files to constructor-injected
     // CurrentUser should remove it from the allow-list below.
-    // ExtensionScanner.php/PwgTOTP.php/CaddieService.php are genuinely
-    // static-context-only utilities/classes with too many manual
-    // construction sites for a required constructor param (same "no
-    // wrapper needed" precedent as FilesystemHelper/HtmlService).
-    // AccessControl.php itself now constructor-injects CurrentUser for
-    // real (Phase 7), so it's off this allow-list -- see its own
-    // "AccessControl::current() transitional bridge" test below instead.
-    // MetadataService.php is Phase-6-entangled (dozens of manual
+    // ExtensionScanner.php is a genuinely static-context-only utility with
+    // no constructor at all (same "no wrapper needed" precedent as
+    // FilesystemHelper/HtmlService) -- deferred to a later sub-phase's own
+    // NOCTOR pass. AccessControl.php itself now constructor-injects
+    // CurrentUser for real (Phase 7), so it's off this allow-list -- see
+    // its own "AccessControl::current() transitional bridge" test below
+    // instead. MetadataService.php is Phase-6-entangled (dozens of manual
     // construction sites). Mail/MailService.php, Url/UrlService.php, and
     // Html/HtmlService.php itself all closed this shim in Phase 11
     // sub-phase 11E -- real constructor injection (UrlService.php's own
@@ -1284,14 +1194,30 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
     // WsHelper.php itself took real constructor injection during Phase 11
     // sub-phase 11A (every Ws/Pwg*.php file + WsDefaultMethods.php itself
     // closed out this shim during Phase 10). CommentService::
-    // getNbAvailableComments() and
-    // ActivityService::record() are the one method on each class still
+    // getNbAvailableComments() is the one method on that class still
     // reachable from a genuinely static context (no `$this`), same shape
     // already established for CategoryService.php's own
     // moveCategories()-adjacent statics during the Translator phase.
-    // InstallWizard.php/PemCatalog.php match DeploymentPolicy::current()'s
-    // own identical allow-list reasoning: one-off manual construction
-    // sites. public/random.php is a raw entry-shell root file, no
+    // Activity/ActivityService.php closed this shim in Phase 11 sub-phase
+    // 11G -- its own huge real construction-site count (dozens of literal
+    // `new ActivityService(...)` calls, especially in tests) made a
+    // required constructor param too high a blast radius, so record() now
+    // resolves CurrentUser via its own private lazy currentUser() helper
+    // instead. Admin/Extensions/PemCatalog.php, Auth/PwgTOTP.php, and
+    // Caddie/CaddieService.php also closed this shim -- PemCatalog.php
+    // took CurrentUser as a real required constructor param (13 real
+    // construction sites, small enough blast radius); PwgTOTP.php/
+    // CaddieService.php are fully static, no `$this` anywhere, so their
+    // one real method each (getOtpAuthUrl()/getQrCode(),
+    // fillCurrentUserCaddie()) takes it as an explicit parameter instead,
+    // matching this campaign's own established NOCTOR precedent.
+    // InstallWizard.php/InstallService.php match DeploymentPolicy::
+    // current()'s own identical allow-list reasoning: one-off manual
+    // construction sites (both also need this to satisfy PemCatalog's own
+    // new required CurrentUser param, never actually read on either call
+    // path -- a real, previously-unrecorded gap found live via a full
+    // Integration run after PemCatalog's own conversion). public/random.php
+    // is a raw entry-shell root file, no
     // constructor to inject through (its own PermissionService
     // construction still needs a real CurrentUser instance, hence this
     // one remaining shim call). Permission/PermissionService.php and
@@ -1301,13 +1227,9 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
 
     $allowedFiles = [
         '/public/random.php',
-        '/src/Piwigo/Activity/ActivityService.php',
         '/src/Piwigo/Admin/Extensions/ExtensionScanner.php',
-        '/src/Piwigo/Admin/Extensions/PemCatalog.php',
+        '/src/Piwigo/Admin/Install/InstallService.php',
         '/src/Piwigo/Admin/Install/InstallWizard.php',
-        '/src/Piwigo/Admin/Upload/UploadService.php',
-        '/src/Piwigo/Auth/PwgTOTP.php',
-        '/src/Piwigo/Caddie/CaddieService.php',
         '/src/Piwigo/Comment/CommentService.php',
     ];
 
@@ -1348,9 +1270,19 @@ test('Lang::current() transitional bridge has a shrinking, known allow-list', fu
     // directly, a genuine circular-dependency avoidance, see that
     // method's own docblock), which doesn't match this test's literal
     // `Lang::current(` search pattern either, so it never appears as a
-    // hit here regardless of the allow-list. Shrink this list further as
-    // each remaining one lands, same as every other allow-list in this
-    // file.
+    // hit here regardless of the allow-list. Phase 11 sub-phase 11G:
+    // Menu/MenubarRenderer.php and Picture/PictureMetadataRenderer.php
+    // both removed -- confirmed stale allow-list entries, both already
+    // take Lang as a real explicit render() param. Site/LocalSiteReader.php
+    // closed it too -- its own metadataService() fallback now resolves
+    // Lang via a new private lazy lang() helper instead (this one has no
+    // safe pre-boot default and always throws, matching Lang::current()'s
+    // own identical unconditional-throw shape). Core/RecentIconResolver.php
+    // closed it too -- getIcon() now takes Lang (and ProcessCache) as
+    // explicit method parameters instead, every real caller already having
+    // both available. Shrink this list
+    // further as each remaining one lands, same as every other allow-list
+    // in this file.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
@@ -1358,12 +1290,8 @@ test('Lang::current() transitional bridge has a shrinking, known allow-list', fu
         '/src/Piwigo/Category/CategoryService.php',
         '/src/Piwigo/Core/DateHelper.php',
         '/src/Piwigo/Core/FilesystemHelper.php',
-        '/src/Piwigo/Core/RecentIconResolver.php',
         '/src/Piwigo/Core/ThemeCatalog.php',
-        '/src/Piwigo/Menu/MenubarRenderer.php',
         '/src/Piwigo/Permission/PermissionService.php',
-        '/src/Piwigo/Picture/PictureMetadataRenderer.php',
-        '/src/Piwigo/Site/LocalSiteReader.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'Lang::current(');

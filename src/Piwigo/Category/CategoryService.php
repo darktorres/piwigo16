@@ -85,6 +85,32 @@ final readonly class CategoryService
     }
 
     /**
+     * Container resolve, not a constructor property -- used only inside
+     * getComputedCategories()'s own internal RecentIconResolver::getIcon()
+     * call below. A required constructor param here would ripple across
+     * this class's own ~21 real construction sites for the sake of this
+     * one internal read, same low-blast-radius reasoning as
+     * accessControl() above (singleton/service-locator elimination
+     * campaign, Phase 11 sub-phase 11G). Falls back to a fresh,
+     * unmemoized instance when Kernel::boot() hasn't run, matching
+     * ProcessCache::getStatic()/setStatic()'s own identical pre-boot
+     * fallback.
+     */
+    private function processCache(): \Piwigo\Core\ProcessCache
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $processCache = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
+            if (! $processCache instanceof \Piwigo\Core\ProcessCache) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ProcessCache::class);
+            }
+
+            return $processCache;
+        }
+
+        return new \Piwigo\Core\ProcessCache();
+    }
+
+    /**
      * `Activity` is L2bExtendedDomain; `CategoryService` is L2aCoreDomain
      * and may not depend on it directly (a private helper constructing
      * `ActivityService` inline, same as {@see \Piwigo\Image\ImageService}'s
@@ -767,7 +793,7 @@ final readonly class CategoryService
             if ($this->currentConfig->indexNewIcon()) {
                 $maxDateLast = $row['max_date_last'] ?? null;
                 $recentPeriodForIcon = is_numeric($user->rawAttributes['recent_period'] ?? null) ? (int) $user->rawAttributes['recent_period'] : 0;
-                $row['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon(is_string($maxDateLast) ? $maxDateLast : '', $recentPeriodForIcon, $childDateLast);
+                $row['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon(is_string($maxDateLast) ? $maxDateLast : '', $recentPeriodForIcon, $this->processCache(), $this->lang, $childDateLast);
             }
             $cats[] = $row;
             $categoryPageId = $categoryPage['id'] ?? null;

@@ -105,6 +105,29 @@ final readonly class SearchService
         return $this->tagService ?? new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class), $this->permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger, $this->sessionService);
     }
 
+    /**
+     * Container resolve, not a constructor property -- used only inside
+     * this class's own one `new UserService(...)` fallback below (matching
+     * $this->tagService's own optional-with-lazy-default shape). Falls
+     * back to a fresh, unmemoized instance when Kernel::boot() hasn't run,
+     * matching ProcessCache::getStatic()/setStatic()'s own former identical
+     * pre-boot fallback (singleton/service-locator elimination campaign,
+     * Phase 11 sub-phase 11G).
+     */
+    private function processCache(): \Piwigo\Core\ProcessCache
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $processCache = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
+            if (! $processCache instanceof \Piwigo\Core\ProcessCache) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ProcessCache::class);
+            }
+
+            return $processCache;
+        }
+
+        return new \Piwigo\Core\ProcessCache();
+    }
+
     public static function getSearchIdPattern(int|string $candidate): ?string
     {
         if (preg_match('/^psk-\d{8}-[a-z0-9]{10}$/i', (string) $candidate) === 1) {
@@ -1537,7 +1560,7 @@ final readonly class SearchService
         $expression = new QExpression($q, $scopes);
 
         $inflector = null;
-        $userService = $this->userService ?? new UserService($this->lang, new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, new \Piwigo\Core\InstallationFlag(), new \Piwigo\Core\ProcessCache());
+        $userService = $this->userService ?? new UserService($this->lang, new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, new \Piwigo\Core\InstallationFlag(), $this->processCache());
         $langCode = substr($userService->getDefaultLanguage(), 0, 2);
         $className = '\\Piwigo\\Search\\Inflector\\Inflector_' . $langCode;
         if (class_exists($className)) {

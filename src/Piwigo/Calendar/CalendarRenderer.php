@@ -54,6 +54,7 @@ final readonly class CalendarRenderer
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Lang\Translator $translator,
         private \Piwigo\Core\FilterState $filterState,
+        private \Piwigo\Image\ImageStdParams $imageStdParams,
     ) {}
 
     /**
@@ -147,7 +148,7 @@ final readonly class CalendarRenderer
         $cal_style = $chronology_style;
         $classname = $styles[$cal_style]['classname'];
 
-        $calendar = new $classname($this->lang, new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), $this->urlService, $this->currentConfig);
+        $calendar = new $classname($this->lang, new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), $this->urlService, $this->currentConfig, $this->imageStdParams);
         $calendar->chronology_field = $chronologyField;
 
         // Retrieve view

@@ -108,7 +108,12 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         }
         $urlService = \Piwigo\Tests\Support\UrlServiceTestFactory::build($htmlService, $rootPathOverride);
 
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), \Piwigo\Config\CurrentConfig::current()), EventDispatcher::get(), ImageStdParams::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
+        $processCache = Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
+        if (! $processCache instanceof \Piwigo\Core\ProcessCache) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ProcessCache::class);
+        }
+
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), \Piwigo\Config\CurrentConfig::current()), EventDispatcher::get(), ImageStdParams::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current(), \Piwigo\Core\Lang::current(), $processCache);
     }
 
     #[\Override]

@@ -56,6 +56,8 @@ namespace Piwigo\Tests\Integration {
 
         private Connection $conn;
 
+        private \Piwigo\Core\ProcessCache $processCache;
+
         #[\Override]
         protected function setUp(): void
         {
@@ -67,6 +69,11 @@ namespace Piwigo\Tests\Integration {
                 throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\InstallationFlag::class);
             }
             $installationFlag->mark();
+            $processCache = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
+            if (! $processCache instanceof \Piwigo\Core\ProcessCache) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ProcessCache::class);
+            }
+            $this->processCache = $processCache;
 
             if (! self::$fixtureReady) {
                 $this->resetDatabase();
@@ -95,7 +102,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $mailer = \Piwigo\Core\Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
-            $this->service = new UserService(Lang::current(), new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), $mailer, new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current(), $installationFlag, new \Piwigo\Core\ProcessCache());
+            $this->service = new UserService(Lang::current(), new \Piwigo\Users\UserRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), $mailer, new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Tests\Support\HtmlServiceTestFactory::build(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current(), $installationFlag, $this->processCache);
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
@@ -1257,15 +1264,16 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_default_theme_coerces_a_non_string_cached_value_to_the_literal_default(): void
         {
-            // ProcessCache::get('default_user') is a plain per-request
-            // memoization cell -- getDefaultTheme() defensively re-checks
-            // is_string() on whatever getDefaultUserValue('theme', ...)
-            // hands back rather than trusting the docblock-only array
-            // shape. Poisoning the cache with a non-string 'theme' value
-            // is the only way to reach that guard: without it,
-            // ThemeCatalog::checkThemeInstalled() (a strictly-typed string
-            // param) would receive an int and fatal with a TypeError.
-            \Piwigo\Core\ProcessCache::setStatic('default_user', [
+            // $this->processCache (the same instance $this->service was
+            // constructed with) is a plain per-request memoization cell --
+            // getDefaultTheme() defensively re-checks is_string() on
+            // whatever getDefaultUserValue('theme', ...) hands back rather
+            // than trusting the docblock-only array shape. Poisoning the
+            // cache with a non-string 'theme' value is the only way to
+            // reach that guard: without it, ThemeCatalog::
+            // checkThemeInstalled() (a strictly-typed string param) would
+            // receive an int and fatal with a TypeError.
+            $this->processCache->set('default_user', [
                 'nb_image_page' => 15,
                 'language' => 'en_UK',
                 'expand' => false,

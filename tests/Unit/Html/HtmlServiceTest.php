@@ -58,6 +58,22 @@ function htmlServiceTestRenderCommentContent(HtmlService $service, string $conte
 }
 
 /**
+ * ProcessCache::setStatic()/getStatic() (singleton/service-locator
+ * elimination campaign, Phase 1) are gone -- resolves the same
+ * container-shared instance HtmlServiceTestFactory::build() injects into
+ * HtmlService, so seeding/reading it here observes the same object.
+ */
+function htmlServiceTestProcessCache(): ProcessCache
+{
+    $processCache = Kernel::container()->get(ProcessCache::class);
+    if (! $processCache instanceof ProcessCache) {
+        throw new \LogicException('Container returned an unexpected type for ' . ProcessCache::class);
+    }
+
+    return $processCache;
+}
+
+/**
  * HtmlService::urlService() now resolves UrlServiceInterface (and, via its
  * own constructor, RootPathOverride) live from the container on every call
  * (singleton/service-locator elimination campaign, Phase 6) -- a bare
@@ -585,7 +601,7 @@ test('tagAlphaCompare reuses an already-cached transliteration instead of recomp
     // pwgTransliterate('apple') is 'apple', which sorts before 'zebra';
     // the poisoned cache claims 'apple' transliterates to 'zzz-poison',
     // which sorts after).
-    ProcessCache::setStatic(HtmlService::class . '::tagAlphaCompare', [
+    htmlServiceTestProcessCache()->set(HtmlService::class . '::tagAlphaCompare', [
         'apple' => 'zzz-poison',
     ]);
     $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
@@ -597,7 +613,7 @@ test('tagAlphaCompare treats a non-array cached value as empty and recomputes bo
     // Kills line 338's TernaryNegated ($transliterated stays the
     // non-array raw value instead of falling back to [], which would
     // fatal on the very next array-offset read).
-    ProcessCache::setStatic(HtmlService::class . '::tagAlphaCompare', 'not-an-array');
+    htmlServiceTestProcessCache()->set(HtmlService::class . '::tagAlphaCompare', 'not-an-array');
     $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
 
     expect($service->tagAlphaCompare(['name' => 'apple'], ['name' => 'zebra']))->toBeLessThan(0);
@@ -612,7 +628,7 @@ test('tagAlphaCompare computes and caches both names, keyed by class name, for a
 
     $service->tagAlphaCompare(['name' => 'apple'], ['name' => 'zebra']);
 
-    $cached = ProcessCache::getStatic(HtmlService::class . '::tagAlphaCompare');
+    $cached = htmlServiceTestProcessCache()->get(HtmlService::class . '::tagAlphaCompare');
     expect($cached)->toBe([
         'apple' => 'apple',
         'zebra' => 'zebra',
@@ -897,7 +913,7 @@ test('getCatDisplayNameCache joins multiple names with a <span>-wrapped separato
     // Kills line 201's FalseToTrue -- the getCatDisplayNameCache()
     // sibling of getCatDisplayName()'s own line 118 finding above, same
     // "only visible with 2+ categories" gap.
-    ProcessCache::setStatic('cat_names', [
+    htmlServiceTestProcessCache()->set('cat_names', [
         '3' => ['id' => 3, 'name' => 'Nature', 'permalink' => null],
         '7' => ['id' => 7, 'name' => 'Portraits', 'permalink' => null],
     ]);
@@ -909,7 +925,7 @@ test('getCatDisplayNameCache joins multiple names with a <span>-wrapped separato
 });
 
 test('getCatDisplayNameCache injects an auth param and wraps the whole chain in a single link with a class when singleLink is set', function (): void {
-    ProcessCache::setStatic('cat_names', [
+    htmlServiceTestProcessCache()->set('cat_names', [
         '3' => ['id' => 3, 'name' => 'Nature', 'permalink' => null],
     ]);
     $service = \Piwigo\Tests\Support\HtmlServiceTestFactory::build();
@@ -928,7 +944,7 @@ test('getCatDisplayNameCache\'s singleLink href uses the LAST uppercats id, pref
     // file), and line 177's ConcatEqualToEqual (`=` instead of `.=` on
     // the opening `<a href="..."` fragment).
     htmlServiceTestRootPathOverride()->push('/gallery/');
-    ProcessCache::setStatic('cat_names', [
+    htmlServiceTestProcessCache()->set('cat_names', [
         '3' => ['id' => 3, 'name' => 'Nature', 'permalink' => null],
         '7' => ['id' => 7, 'name' => 'Portraits', 'permalink' => null],
     ]);
@@ -944,7 +960,7 @@ test('getCatDisplayNameCache\'s singleLink href uses the LAST uppercats id, pref
 });
 
 test('getCatDisplayNameCache throws when a render_category_name handler returns something other than a RenderCategoryName instance', function (): void {
-    ProcessCache::setStatic('cat_names', [
+    htmlServiceTestProcessCache()->set('cat_names', [
         '5' => ['id' => 5, 'name' => 'Landscape', 'permalink' => null],
     ]);
     // See RenderElementName's own sibling test above for why this uses

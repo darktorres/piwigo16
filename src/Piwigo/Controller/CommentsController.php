@@ -306,7 +306,7 @@ final class CommentsController implements ControllerInterface
         $comment_id = $commentsRequest->actionCommentId;
         $edit_comment = null;
 
-        $commentService = new CommentService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig);
+        $commentService = new CommentService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->accessControl);
 
         if (isset($action) and $comment_id !== null) {
             $commentIdVo = CommentId::from($comment_id);

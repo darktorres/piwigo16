@@ -82,7 +82,7 @@ final class InstallService
         $lifecycle = new ExtensionLifecycle(
             \Piwigo\Core\Lang::current(),
             new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
-            new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InstallBootstrap::currentLogger()),
+            new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InstallBootstrap::currentLogger(), \Piwigo\Users\CurrentUser::current()),
             $urlService,
             CurrentConfigService::current()->get(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),

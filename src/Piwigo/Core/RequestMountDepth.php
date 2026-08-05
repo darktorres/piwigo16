@@ -36,8 +36,10 @@ namespace Piwigo\Core;
  * `public/admin/popuphelp.php`),
  * never mutated afterward during a request -- no "current instance"
  * concept needed at all (same lesson as the Phase 0 `CurrentPersistentCache`
- * pilot). currentStatic() is a `@deprecated` transitional bridge for
- * callers not yet converted to constructor injection.
+ * pilot). Its own former `currentStatic()` transitional bridge is gone --
+ * Piwigo\Auth\CookieService (its one remaining caller) now resolves this
+ * via its own private lazy requestMountDepth() helper instead (singleton/
+ * service-locator elimination campaign, Phase 11 sub-phase 11G).
  */
 final class RequestMountDepth
 {
@@ -48,32 +50,5 @@ final class RequestMountDepth
     public function current(): int
     {
         return $this->depth;
-    }
-
-    /**
-     * @deprecated transitional bridge for callers not yet converted to
-     * constructor injection -- Piwigo\Url\UrlService and Piwigo\Auth\
-     * CookieService are both still manually `new`'d at dozens of call
-     * sites each (singleton/service-locator elimination campaign, Phase 6),
-     * so neither can take RequestMountDepth via constructor injection yet.
-     * Gracefully falls back to 0 (the same value an unset instance already
-     * defaults to) when Kernel hasn't booted -- both callers are reached by
-     * many Unit tests that never boot a container at all, matching the
-     * `InstallationFlag::isActiveStatic()` shim's own established
-     * reasoning. Delete once `grep -rn "RequestMountDepth::currentStatic("`
-     * outside tests/ returns nothing.
-     */
-    public static function currentStatic(): int
-    {
-        if (! Kernel::isBooted()) {
-            return 0;
-        }
-
-        $instance = Kernel::container()->get(self::class);
-        if (! $instance instanceof self) {
-            throw new \LogicException('Container returned an unexpected type for ' . self::class);
-        }
-
-        return $instance->current();
     }
 }

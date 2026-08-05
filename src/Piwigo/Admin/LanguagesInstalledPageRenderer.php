@@ -56,6 +56,7 @@ final class LanguagesInstalledPageRenderer
         private readonly \Piwigo\Config\CurrentConfig $currentConfig,
         private readonly \Piwigo\Validation\InputValidator $inputValidator,
         private readonly WsContext $wsContext,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     /**
@@ -83,7 +84,7 @@ final class LanguagesInstalledPageRenderer
 
         $conn = DbConnection::build();
         $extension_repository = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
-        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger);
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
         $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl);

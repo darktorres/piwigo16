@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RecentIconResolver;
 
@@ -19,6 +20,10 @@ final class RecentIconResolverTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
 
+    private ProcessCache $processCache;
+
+    private Lang $lang;
+
     #[\Override]
     protected function setUp(): void
     {
@@ -31,16 +36,23 @@ final class RecentIconResolverTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        // RecentIconResolver's own ProcessCache usage now goes through a
-        // transitional static shim (singleton/service-locator elimination
-        // campaign, Phase 1 -- RecentIconResolver is a genuinely
-        // static-only utility, see that shim's own docblock), which needs
-        // a real container.
+        // RecentIconResolver takes ProcessCache/Lang as explicit method
+        // parameters (singleton/service-locator elimination campaign,
+        // Phase 11 sub-phase 11G) -- resolve the real container-shared
+        // instances a real caller would get.
         Kernel::boot();
         $processCache = Kernel::container()->get(ProcessCache::class);
-        if ($processCache instanceof ProcessCache) {
-            $processCache->reset();
+        if (! $processCache instanceof ProcessCache) {
+            throw new \LogicException('Container returned an unexpected type for ' . ProcessCache::class);
         }
+        $processCache->reset();
+        $this->processCache = $processCache;
+
+        $lang = Kernel::container()->get(Lang::class);
+        if (! $lang instanceof Lang) {
+            throw new \LogicException('Container returned an unexpected type for ' . Lang::class);
+        }
+        $this->lang = $lang;
     }
 
     #[\Override]
@@ -52,15 +64,15 @@ final class RecentIconResolverTest extends IntegrationTestCase
 
     public function test_getIcon_returns_false_for_an_empty_or_zero_date(): void
     {
-        self::assertFalse(RecentIconResolver::getIcon('', 7));
-        self::assertFalse(RecentIconResolver::getIcon('0', 7));
+        self::assertFalse(RecentIconResolver::getIcon('', 7, $this->processCache, $this->lang));
+        self::assertFalse(RecentIconResolver::getIcon('0', 7, $this->processCache, $this->lang));
     }
 
     public function test_getIcon_returns_the_title_icon_for_a_date_within_the_recent_period(): void
     {
         // PIWIGO_TEST_NOW is 2026-08-01; 7 days back is 2026-07-25, so
         // 2026-07-30 is within the recent window.
-        $result = RecentIconResolver::getIcon('2026-07-30', 7);
+        $result = RecentIconResolver::getIcon('2026-07-30', 7, $this->processCache, $this->lang);
 
         self::assertIsArray($result);
         if (! array_key_exists('TITLE', $result)) {
@@ -72,14 +84,14 @@ final class RecentIconResolverTest extends IntegrationTestCase
 
     public function test_getIcon_returns_an_empty_array_for_a_date_outside_the_recent_period(): void
     {
-        $result = RecentIconResolver::getIcon('2026-07-01', 7);
+        $result = RecentIconResolver::getIcon('2026-07-01', 7, $this->processCache, $this->lang);
 
         self::assertSame([], $result);
     }
 
     public function test_getIcon_propagates_the_isChildDate_flag(): void
     {
-        $result = RecentIconResolver::getIcon('2026-07-30', 7, true);
+        $result = RecentIconResolver::getIcon('2026-07-30', 7, $this->processCache, $this->lang, true);
 
         self::assertIsArray($result);
         if (! array_key_exists('IS_CHILD_DATE', $result)) {
@@ -90,8 +102,8 @@ final class RecentIconResolverTest extends IntegrationTestCase
 
     public function test_getIcon_reuses_the_per_request_cache_for_a_repeated_date(): void
     {
-        $first = RecentIconResolver::getIcon('2026-07-30', 7);
-        $second = RecentIconResolver::getIcon('2026-07-30', 7);
+        $first = RecentIconResolver::getIcon('2026-07-30', 7, $this->processCache, $this->lang);
+        $second = RecentIconResolver::getIcon('2026-07-30', 7, $this->processCache, $this->lang);
 
         self::assertSame($first, $second);
     }

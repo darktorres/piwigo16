@@ -17,6 +17,30 @@ namespace Piwigo\Auth;
 final class CookieService
 {
     /**
+     * Container resolve, not a constructor property -- this class is still
+     * manually `new`'d at ~34 real call sites (singleton/service-locator
+     * elimination campaign, Phase 11 sub-phase 11G: a required constructor
+     * param would ripple across all of them for the sake of this one
+     * internal read). Falls back to 0 (the same value an unset instance
+     * already defaults to) when Kernel::boot() hasn't run, matching
+     * RequestMountDepth::currentStatic()'s own former identical
+     * pre-boot fallback.
+     */
+    private function requestMountDepth(): int
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $requestMountDepth = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\RequestMountDepth::class);
+            if (! $requestMountDepth instanceof \Piwigo\Core\RequestMountDepth) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\RequestMountDepth::class);
+            }
+
+            return $requestMountDepth->current();
+        }
+
+        return 0;
+    }
+
+    /**
      * Returns the path to use for the Piwigo cookie.
      * If Piwigo is installed on:
      * http://domain.org/meeting/gallery/
@@ -75,7 +99,7 @@ final class CookieService
             $scr .= '/';
         }
 
-        $mountDepth = \Piwigo\Core\RequestMountDepth::currentStatic();
+        $mountDepth = $this->requestMountDepth();
         // `> 0` vs `>= 0`/`> -1` at the mountDepth===0 boundary is
         // unobservable: entering the block below with mountDepth=0 makes
         // str_repeat('../', 0) a no-op ('') and the while loop's own

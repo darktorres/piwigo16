@@ -312,7 +312,7 @@ final class ImageDerivativeController implements ControllerInterface
             $timing['sharpen'] = $this->timeStep($step);
         }
 
-        if ($params->will_watermark($d_size)) {
+        if ($params->will_watermark($d_size, $this->imageStdParams)) {
             $wm = $this->imageStdParams->get_watermark();
             $wm_image = new PwgImage($this->paths->root . $wm->file, $this->currentLogger, $this->eventDispatcher, $this->currentConfig);
             $wm_size = [(int) $wm_image->get_width(), (int) $wm_image->get_height()];
@@ -706,7 +706,7 @@ final class ImageDerivativeController implements ControllerInterface
 
         $use_watermark = $params->use_watermark;
         if ($use_watermark) {
-            $use_watermark = $params->will_watermark($dsize);
+            $use_watermark = $params->will_watermark($dsize, $this->imageStdParams);
         }
 
         $candidates = [];

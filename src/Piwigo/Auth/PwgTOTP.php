@@ -55,9 +55,10 @@ final class PwgTOTP
      * @param string $secret Encoded base32 secret
      * @return string otpauth://totp/ url
      */
-    public static function getOtpAuthUrl($secret, UrlServiceInterface $urlService): string
+    public static function getOtpAuthUrl($secret, UrlServiceInterface $urlService, \Piwigo\Users\CurrentUser $currentUser): string
     {
-        $username = \Piwigo\Users\CurrentUser::current()->get()->username;
+        $username = $currentUser->get()
+            ->username;
         $url = substr($urlService->getAbsoluteRootUrl(), 0, -1);
         return 'otpauth://totp/' . $username . ':' . $url . '?secret=' . $secret . '&issuer=Piwigo&algorithm=sha1&digits=6&period=30';
     }
@@ -66,9 +67,9 @@ final class PwgTOTP
      * @param string $secret Encoded base32 secret
      * @return string data:image/png;base64..
      */
-    public static function getQrCode($secret, UrlServiceInterface $urlService): string
+    public static function getQrCode($secret, UrlServiceInterface $urlService, \Piwigo\Users\CurrentUser $currentUser): string
     {
-        $otp_url = self::getOtpAuthUrl($secret, $urlService);
+        $otp_url = self::getOtpAuthUrl($secret, $urlService, $currentUser);
 
         return new Builder(data: $otp_url)
             ->build()

@@ -273,7 +273,7 @@ final class HtmlService implements HtmlRenderingInterface
                 ->findAllIdNamePermalink();
             $this->processCache->set('cat_names', $cat_names_raw);
         }
-        // Narrowed once here (fix pattern #7): ProcessCache::getStatic() returns
+        // Narrowed once here (fix pattern #7): ProcessCache::get() returns
         // mixed, proving the key exists does not prove the stored value is
         // array-like.
         $cat_names = is_array($cat_names_raw) ? $cat_names_raw : [];
@@ -440,7 +440,7 @@ final class HtmlService implements HtmlRenderingInterface
         $name_a = is_string($a['name'] ?? null) ? $a['name'] : '';
         $name_b = is_string($b['name'] ?? null) ? $b['name'] : '';
 
-        // Narrowed once here (fix pattern #7): ProcessCache::getStatic() returns
+        // Narrowed once here (fix pattern #7): ProcessCache::get() returns
         // mixed, so the stored value is still mixed even after this check.
         $transliterated_raw = $this->processCache->get(self::class . '::tagAlphaCompare');
         $transliterated = is_array($transliterated_raw) ? $transliterated_raw : [];

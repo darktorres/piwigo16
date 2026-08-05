@@ -433,7 +433,7 @@ final class RequestBootstrap
         self::imageStdParams();
 
         session_start();
-        PluginLoader::loadPlugins(self::loadedPlugins(), \Piwigo\PluginConfig\EventDispatcher::get(), self::activityService($conn), self::currentConfig(), self::wsContext(), self::accessControl());
+        PluginLoader::loadPlugins(self::loadedPlugins(), \Piwigo\PluginConfig\EventDispatcher::get(), self::activityService($conn), self::currentConfig(), self::wsContext(), self::accessControl(), self::pageState());
 
         if (self::currentConfig()->piwigoInstalledVersion() === null) {
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
@@ -779,7 +779,7 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentUser(), self::currentConfig())->checkForSpam(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentUser(), self::currentConfig(), self::accessControl())->checkForSpam(...));
         // Item 16E: real listener for a previously-unregistered event --
         // Category\CategoryService::deleteSite() dispatches this instead
         // of reaching into Site\SiteRepository directly (a real deptrac

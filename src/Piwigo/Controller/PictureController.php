@@ -123,7 +123,7 @@ final class PictureController implements ControllerInterface
 
     private function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
     {
-        return new CommentService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig);
+        return new CommentService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->accessControl);
     }
 
     #[\Override]
@@ -414,7 +414,7 @@ final class PictureController implements ControllerInterface
                     // no break
                 case 'add_to_caddie':
 
-                    \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie([$image_id]);
+                    \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie([$image_id], $this->currentUser);
                     $this->redirectService->redirect($url_self);
 
                     // no break

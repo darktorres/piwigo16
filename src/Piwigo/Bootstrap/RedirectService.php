@@ -169,7 +169,7 @@ final class RedirectService implements RedirectServiceInterface
             ]);
             $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), \Piwigo\Core\PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), $paths->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
-        } elseif (\Piwigo\Core\AdminContext::isActiveStatic()) {
+        } elseif (self::adminContext()->isActive()) {
             $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), \Piwigo\Core\PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get()->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         }

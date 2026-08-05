@@ -1560,12 +1560,20 @@ final class ImageRepository extends EntityRepository
             $qb->andWhere($alias . '.dateCreation < :filterMaxDateCreated')
                 ->setParameter('filterMaxDateCreated', $criteria->maxDateCreated);
         }
+        // pgsql support pass: real bug found live -- width/height are
+        // plain integer columns, and while MySQL's `/` operator always
+        // computes in decimal context, PostgreSQL's `/` on two integer
+        // operands truncates to an integer (same real bug already fixed
+        // in SearchService's and FilterResolver's own ratio filters --
+        // see SearchService's own docblock for the live-confirmed
+        // 200/150 example). `width * 1.0` forces decimal-context
+        // arithmetic on both platforms without needing a DQL CAST.
         if ($criteria->minRatio !== null) {
-            $qb->andWhere($alias . '.width / ' . $alias . '.height >= :filterMinRatio')
+            $qb->andWhere($alias . '.width * 1.0 / ' . $alias . '.height >= :filterMinRatio')
                 ->setParameter('filterMinRatio', $criteria->minRatio);
         }
         if ($criteria->maxRatio !== null) {
-            $qb->andWhere($alias . '.width / ' . $alias . '.height <= :filterMaxRatio')
+            $qb->andWhere($alias . '.width * 1.0 / ' . $alias . '.height <= :filterMaxRatio')
                 ->setParameter('filterMaxRatio', $criteria->maxRatio);
         }
         if ($criteria->maxLevel !== null) {

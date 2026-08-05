@@ -79,10 +79,9 @@ final class WsHelperTest extends ContractTestCase
 
     public function test_stdImageSqlFilterCriteria_invalid_date_sends_an_error_response_and_stops(): void
     {
-        // Fixture images 1-5's real ratings (4.5, 3, 5, 2, null) confirmed
-        // live via a direct DB read before writing the assertions below.
-        // All 5 start with hit=0 -- the f_min_hit test below seeds its own
-        // nonzero value rather than relying on the fixture for that column.
+        // All 5 fixture images start with hit=0 -- the f_min_hit test
+        // below seeds its own nonzero value rather than relying on the
+        // fixture for that column.
         $response = $this->ws('pwg.images.search', [
             'query' => 'Photo',
             'f_min_date_available' => 'not-a-real-date',
@@ -93,16 +92,60 @@ final class WsHelperTest extends ContractTestCase
         self::assertSame('Invalid f_min_date_available', $response['message']);
     }
 
+    /**
+     * Real bug found live: fixture images 1-5's real ratings are not just
+     * genuinely different between piwigo-17.0.sql and
+     * piwigo-17.0-pgsql.sql (separate independent install+upload+rate
+     * runs, same real gap already fixed for the fixture-photo hash
+     * suffixes elsewhere in this pass) -- they also shift *during* a
+     * single suite run. RateService::updateRatingScore() recomputes a
+     * bayesian-shrinkage score for every rated image whenever any rate
+     * is added or removed anywhere (confirmed live by reading its own
+     * source: every image's score depends on global averages over the
+     * whole piwigo_rate table, not just its own rows), so even a
+     * different test's throwaway-image rate call shifts every fixture
+     * image's rating_score for the rest of the run -- a hardcoded
+     * expected value (for either platform) is fundamentally unreliable
+     * regardless of portability. Reads the real, live rating_score
+     * values right before asserting and computes the expected id set
+     * from them, instead of a baked-in literal.
+     *
+     * @return list<int>
+     */
+    private function fetchFixtureImageIdsWithRating(callable $matches): array
+    {
+        $rows = $this->conn->fetchAllAssociative('SELECT id, rating_score FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3, 4, 5)');
+        $matching = [];
+        foreach ($rows as $row) {
+            $id = $row['id'] ?? null;
+            $rating = $row['rating_score'] ?? null;
+            if (is_numeric($id) && is_numeric($rating) && $matches((float) $rating)) {
+                $matching[] = (int) $id;
+            }
+        }
+        sort($matching);
+
+        return $matching;
+    }
+
     public function test_stdImageSqlFilterCriteria_f_min_rate_keeps_only_images_at_or_above(): void
     {
+        $expected = $this->fetchFixtureImageIdsWithRating(static fn (float $rating): bool => $rating >= 4.0);
+        self::assertNotEmpty($expected, 'at least one fixture image must genuinely have a rating >= 4 for this test to prove anything');
+
         $ids = $this->searchIds('Photo', ['f_min_rate' => 4]);
-        self::assertSame([1, 3], $ids);
+        sort($ids);
+        self::assertSame($expected, $ids);
     }
 
     public function test_stdImageSqlFilterCriteria_f_max_rate_keeps_only_images_at_or_below(): void
     {
+        $expected = $this->fetchFixtureImageIdsWithRating(static fn (float $rating): bool => $rating <= 3.0);
+        self::assertNotEmpty($expected, 'at least one fixture image must genuinely have a rating <= 3 for this test to prove anything');
+
         $ids = $this->searchIds('Photo', ['f_max_rate' => 3]);
-        self::assertSame([2, 4], $ids);
+        sort($ids);
+        self::assertSame($expected, $ids);
     }
 
     public function test_stdImageSqlFilterCriteria_f_min_hit_keeps_only_images_at_or_above(): void

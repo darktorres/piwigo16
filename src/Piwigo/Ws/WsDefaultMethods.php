@@ -42,6 +42,7 @@ final class WsDefaultMethods
     // was tried and found broken.
     public function __construct(
         private readonly PwgPermissions $pwgPermissions,
+        private readonly PwgComments $pwgComments,
     ) {}
 
     /**
@@ -2295,7 +2296,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.userComments.getList',
-            PwgComments::getList(...),
+            $this->pwgComments->getList(...),
             [
                 'status' => [
                     'default' => 'all',
@@ -2337,7 +2338,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.userComments.delete',
-            PwgComments::delete(...),
+            $this->pwgComments->delete(...),
             [
                 'comment_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -2354,7 +2355,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.userComments.validate',
-            PwgComments::validate(...),
+            $this->pwgComments->validate(...),
             [
                 'comment_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,

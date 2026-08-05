@@ -12,12 +12,10 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Doctrine\DBAL\ParameterType;
-use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Template\RenderCommentAuthor;
 use Piwigo\Event\Template\RenderCommentContent;
@@ -32,6 +30,14 @@ use Piwigo\Permission\SqlCondition;
  */
 final class PwgComments
 {
+    public function __construct(
+        private readonly CommentService $commentService,
+        private readonly Lang $lang,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Core\UrlServiceInterface $urlService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+    ) {}
+
     /**
      * API method
      * Get comments
@@ -44,7 +50,7 @@ final class PwgComments
      *   with no 'default' key -- may be entirely absent; WsParamType::ID
      *   guarantees a plain int when present. page: non-null int default,
      *   WsParamType::INT|WsParamType::POSITIVE -- always present. per_page: same type
-     *   flag, default is \Piwigo\Config\CurrentConfig::current()->commentsPageNbComments() (a real int,
+     *   flag, default is $this->currentConfig->commentsPageNbComments() (a real int,
      *   confirmed 10 in config_default.inc.php) -- always present, always
      *   int.
      * A composite, multi-query response (raw summary/nb_authors aggregate
@@ -53,9 +59,9 @@ final class PwgComments
      * unverified; left as array<string, mixed>.
      * @return PwgError|array<string, mixed>
      */
-    public static function getList(array $params, PwgServer &$service): PwgError|array
+    public function getList(array $params, PwgServer &$service): PwgError|array
     {
-        if (! \Piwigo\Config\CurrentConfig::current()->activateComments()) {
+        if (! $this->currentConfig->activateComments()) {
             return new PwgError(403, 'Comments are disabled');
         }
 
@@ -152,7 +158,7 @@ final class PwgComments
         // coercion would otherwise silently convert 'true' to 0 too,
         // inverting the validated/pending counts (same bug class
         // Category's own commentable/visible retype found).
-        $summary = self::commentService()->getSummaryCounts(array_values($where_clauses));
+        $summary = $this->commentService->getSummaryCounts(array_values($where_clauses));
         if ($summary === null) {
             return new PwgError(500, 'Unable to compute comments summary');
         }
@@ -175,9 +181,9 @@ final class PwgComments
 
         // comments
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\CurrentConfig::current()->userFields();
+        $user_fields = $this->currentConfig->userFields();
         $list = [];
-        foreach (self::commentService()->getListForAdminWs(
+        foreach ($this->commentService->getListForAdminWs(
             array_values($where_clauses),
             $user_fields['id'],
             $user_fields['username'],
@@ -201,11 +207,11 @@ final class PwgComments
             $medium = $medium_derivative->get_url();
 
             $row_author = is_string($row['author']) ? $row['author'] : null;
-            if (! is_numeric($row['author_id']) or (int) $row['author_id'] === 0 or (int) $row['author_id'] === \Piwigo\Config\CurrentConfig::current()->guestId()) {
+            if (! is_numeric($row['author_id']) or (int) $row['author_id'] === 0 or (int) $row['author_id'] === $this->currentConfig->guestId()) {
                 $author_name = $row_author;
             } else {
                 $row_username = $row['username'] ?? null;
-                $author_name = stripslashes((is_string($row_username) ? $row_username : null) ?? $row_author ?? Lang::current()->t('guest'));
+                $author_name = stripslashes((is_string($row_username) ? $row_username : null) ?? $row_author ?? $this->lang->t('guest'));
             }
 
             // date/date_available are NOT NULL DATETIME columns -- always
@@ -217,19 +223,19 @@ final class PwgComments
             $comment_date = is_string($row['date']) ? $row['date'] : false;
             $comment_date_available = is_string($row['date_available']) ? $row['date_available'] : false;
 
-            $authorEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCommentAuthor($author_name ?? ''));
+            $authorEvent = $this->eventDispatcher->dispatchChange(new RenderCommentAuthor($author_name ?? ''));
 
-            $contentEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCommentContent(is_string($row['content']) ? $row['content'] : ''));
+            $contentEvent = $this->eventDispatcher->dispatchChange(new RenderCommentContent(is_string($row['content']) ? $row['content'] : ''));
 
             $list[] = [
                 'id' => $row['id'],
-                'admin_link' => \Piwigo\Bootstrap\PresentationAccessor::urlService()
+                'admin_link' => $this->urlService
                     ->getRootUrl() . 'admin.php?page=photo-' . (is_scalar($row_image_id) ? (string) $row_image_id : ''),
                 'medium_url' => $medium,
                 'file' => $row['file'],
                 'image_date_available' => \Piwigo\Core\DateHelper::formatDate($comment_date_available, ['day_name', 'day', 'month', 'year', 'time']),
                 'author' => $authorEvent->commentAuthor,
-                'author_status' => is_numeric($row['author_id']) && \Piwigo\Config\CurrentConfig::current()->webmasterId() === (int) $row['author_id'] ? 'main_user' : $row['status'],
+                'author_status' => is_numeric($row['author_id']) && $this->currentConfig->webmasterId() === (int) $row['author_id'] ? 'main_user' : $row['status'],
                 'date' => \Piwigo\Core\DateHelper::formatDate($comment_date, ['day_name', 'day', 'month', 'year', 'time']),
                 'content' => $contentEvent->commentContent,
                 'raw_content' => $row['content'],
@@ -238,13 +244,13 @@ final class PwgComments
         }
 
         // filters
-        $dates = self::commentService()->getDateRange(array_values($where_clauses));
+        $dates = $this->commentService->getDateRange(array_values($where_clauses));
         if ($dates === null) {
             return new PwgError(500, 'Unable to compute comments date range');
         }
 
         unset($where_clauses['author_id']);
-        $nb_authors_in = self::commentService()->getAuthorCounts(array_values($where_clauses));
+        $nb_authors_in = $this->commentService->getAuthorCounts(array_values($where_clauses));
 
         return [
             'summary' => $summary,
@@ -271,14 +277,14 @@ final class PwgComments
      *   neither has a 'default' key -- both mandatory, always present;
      *   FORCE_ARRAY always coerces comment_id to a list of positive ints.
      */
-    public static function delete(array $params, PwgServer &$service): PwgError|string
+    public function delete(array $params, PwgServer &$service): PwgError|string
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, Lang::current()->t('Invalid security token'));
+            return new PwgError(403, $this->lang->t('Invalid security token'));
         }
 
         $commentIds = array_values(array_map(CommentId::from(...), array_unique($params['comment_id'])));
-        self::commentService()->deleteComment($commentIds);
+        $this->commentService->deleteComment($commentIds);
         return 'Comment successfully deleted';
     }
 
@@ -291,25 +297,14 @@ final class PwgComments
      *   neither has a 'default' key -- both mandatory, always present;
      *   FORCE_ARRAY always coerces comment_id to a list of positive ints.
      */
-    public static function validate(array $params, PwgServer &$service): PwgError|string
+    public function validate(array $params, PwgServer &$service): PwgError|string
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, Lang::current()->t('Invalid security token'));
+            return new PwgError(403, $this->lang->t('Invalid security token'));
         }
 
         $commentIds = array_values(array_map(CommentId::from(...), array_unique($params['comment_id'])));
-        self::commentService()->validateComment($commentIds);
+        $this->commentService->validateComment($commentIds);
         return 'Comment successfully validated';
-    }
-
-    /**
-     * Constructed identically in delete()/validate() -- both static
-     * methods, no shared instance state to inject into, same
-     * "private static helper" precedent as
-     * Bootstrap\RequestBootstrap::activityService().
-     */
-    private static function commentService(): CommentService
-    {
-        return new CommentService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current()), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
     }
 }

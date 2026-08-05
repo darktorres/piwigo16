@@ -12,8 +12,6 @@ use Piwigo\Admin\CatListPageRenderer;
 use Piwigo\Admin\CatOptionsPageRenderer;
 use Piwigo\Admin\CatPermPageRenderer;
 use Piwigo\Admin\ElementSetRanksPageRenderer;
-use Piwigo\Admin\Extensions\CoreUpdateService;
-use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\GroupListPageRenderer;
 use Piwigo\Admin\LanguagesInstalledPageRenderer;
 use Piwigo\Admin\LanguagesNewPageRenderer;
@@ -61,24 +59,6 @@ final class AdminAccessor
         $service = Kernel::container()->get(CategoryAdminService::class);
         if (! $service instanceof CategoryAdminService) {
             throw new \LogicException('Container returned an unexpected type for ' . CategoryAdminService::class);
-        }
-        return $service;
-    }
-
-    public static function extensionUpdateChecker(): ExtensionUpdateChecker
-    {
-        $service = Kernel::container()->get(ExtensionUpdateChecker::class);
-        if (! $service instanceof ExtensionUpdateChecker) {
-            throw new \LogicException('Container returned an unexpected type for ' . ExtensionUpdateChecker::class);
-        }
-        return $service;
-    }
-
-    public static function coreUpdateService(): CoreUpdateService
-    {
-        $service = Kernel::container()->get(CoreUpdateService::class);
-        if (! $service instanceof CoreUpdateService) {
-            throw new \LogicException('Container returned an unexpected type for ' . CoreUpdateService::class);
         }
         return $service;
     }

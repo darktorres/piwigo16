@@ -10,8 +10,6 @@ use Piwigo\Admin\CatListPageRenderer;
 use Piwigo\Admin\CatOptionsPageRenderer;
 use Piwigo\Admin\CatPermPageRenderer;
 use Piwigo\Admin\ElementSetRanksPageRenderer;
-use Piwigo\Admin\Extensions\CoreUpdateService;
-use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\GroupListPageRenderer;
 use Piwigo\Admin\LanguagesInstalledPageRenderer;
 use Piwigo\Admin\LanguagesNewPageRenderer;
@@ -32,7 +30,7 @@ use Piwigo\Bootstrap\AdminAccessor;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
- * Piwigo\Bootstrap\AdminAccessor -- every one of its 26 typed accessors'
+ * Piwigo\Bootstrap\AdminAccessor -- every one of its 24 typed accessors'
  * own "Container returned an unexpected type" \LogicException guard had
  * zero coverage: the happy path (container really does resolve the real
  * class) is already exercised indirectly through the many
@@ -63,8 +61,6 @@ test('every accessor returns its real, correctly-typed instance from a real cont
     \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
 
     expect(AdminAccessor::categoryAdminService())->toBeInstanceOf(CategoryAdminService::class);
-    expect(AdminAccessor::extensionUpdateChecker())->toBeInstanceOf(ExtensionUpdateChecker::class);
-    expect(AdminAccessor::coreUpdateService())->toBeInstanceOf(CoreUpdateService::class);
     expect(AdminAccessor::dbMaintenanceRepository())->toBeInstanceOf(DbMaintenanceRepository::class);
     expect(AdminAccessor::filterResolver())->toBeInstanceOf(FilterResolver::class);
     expect(AdminAccessor::userPermPageRenderer())->toBeInstanceOf(UserPermPageRenderer::class);
@@ -96,20 +92,6 @@ test('categoryAdminService throws when the container returns an unexpected type'
         static fn () => AdminAccessor::categoryAdminService()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CategoryAdminService::class);
-
-test('extensionUpdateChecker throws when the container returns an unexpected type', function (): void {
-    KernelContainerOverride::withWrongTypeFor(
-        ExtensionUpdateChecker::class,
-        static fn () => AdminAccessor::extensionUpdateChecker()
-    );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . ExtensionUpdateChecker::class);
-
-test('coreUpdateService throws when the container returns an unexpected type', function (): void {
-    KernelContainerOverride::withWrongTypeFor(
-        CoreUpdateService::class,
-        static fn () => AdminAccessor::coreUpdateService()
-    );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . CoreUpdateService::class);
 
 test('dbMaintenanceRepository throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(

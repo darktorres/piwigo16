@@ -17,10 +17,7 @@ use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
-use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Bootstrap\RedirectService;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
@@ -36,6 +33,22 @@ use Piwigo\Template\Template;
  */
 final class PwgExtensions
 {
+    public function __construct(
+        private readonly Lang $lang,
+        private readonly \Piwigo\Core\UrlServiceInterface $urlService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly AccessControl $accessControl,
+        private readonly \Piwigo\Config\CurrentConfig $currentConfig,
+        private readonly \Piwigo\Config\ConfigService $configService,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Users\UserService $userService,
+        private readonly \Piwigo\Admin\Extensions\ExtensionUpdateChecker $extensionUpdateChecker,
+        private readonly \Piwigo\Admin\Extensions\CoreUpdateService $coreUpdateService,
+        private readonly \Piwigo\Core\RedirectServiceInterface $redirectService,
+        private readonly PemCatalog $pemCatalog,
+    ) {}
+
     /**
      * API method
      * Returns the list of all plugins
@@ -45,9 +58,9 @@ final class PwgExtensions
      *   entirely unvalidated request array, but the body doesn't read it.
      * @return list<array{id: string, name: string, version: string, state: string, description: string}>
      */
-    public static function pluginsGetList(array $params, PwgServer &$service): array
+    public function pluginsGetList(array $params, PwgServer &$service): array
     {
-        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        $urlService = $this->urlService;
         // ExtensionScanner::scan()'s own declared return type is a generic
         // array<string, array<string, mixed>> dispatch shape (by design --
         // see that method's own docblock), but every real entry for
@@ -57,8 +70,8 @@ final class PwgExtensions
          *   'author uri'?: string, extension?: string}> $fs_plugins
          */
         $fs_plugins = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService, Lang::current());
-        uasort($fs_plugins, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->nameCompare(...));
+            ->scan(ExtensionType::Plugin, $urlService, $this->lang);
+        uasort($fs_plugins, $this->htmlRenderer->nameCompare(...));
         $db_plugins_by_id = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()))->findAll(ExtensionType::Plugin);
         $plugin_list = [];
 
@@ -89,20 +102,20 @@ final class PwgExtensions
      *   none has a 'default' key -- all mandatory, always present, no 'type'
      *   flag.
      */
-    public static function pluginsPerformAction(array $params, PwgServer &$service): PwgError|true
+    public function pluginsPerformAction(array $params, PwgServer &$service): PwgError|true
     {
-        $template = \Piwigo\Template\CurrentTemplate::current()->get();
+        $template = $this->currentTemplate->get();
 
         /** @var Template $template */
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (! AccessControl::current()->isWebmaster()) {
-            return new PwgError(403, Lang::current()->t('Webmaster status is required.'));
+        if (! $this->accessControl->isWebmaster()) {
+            return new PwgError(403, $this->lang->t('Webmaster status is required.'));
         }
 
-        if (! \Piwigo\Config\CurrentConfig::current()->enableExtensionsInstall() and $params['action'] === 'delete') {
+        if (! $this->currentConfig->enableExtensionsInstall() and $params['action'] === 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -115,22 +128,22 @@ final class PwgExtensions
         // grep). Dropping it also avoids a real SEC-60 (no define() under
         // src/Piwigo/) arch-test violation.
 
-        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        $urlService = $this->urlService;
         $conn = DbConnection::build();
         $lifecycle = new ExtensionLifecycle(
-            Lang::current(),
+            $this->lang,
             new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
-            new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger()),
+            $this->pemCatalog,
             $urlService,
-            CurrentConfigService::current()->get(),
+            $this->configService,
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
-            \Piwigo\Bootstrap\CoreDomainAccessor::userService(),
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-            \Piwigo\Config\CurrentConfig::current(),
+            $this->activityService,
+            $this->userService,
+            $this->htmlRenderer,
+            $this->currentConfig,
         );
         $fsEntry = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService, Lang::current())[$params['plugin']] ?? null;
+            ->scan(ExtensionType::Plugin, $urlService, $this->lang)[$params['plugin']] ?? null;
         $errors = $lifecycle->performAction(ExtensionType::Plugin, $params['action'], $params['plugin'], $fsEntry);
 
         if ($errors !== []) {
@@ -151,16 +164,16 @@ final class PwgExtensions
      *   none has a 'default' key -- all mandatory, always present, no 'type'
      *   flag.
      */
-    public static function themesPerformAction(array $params, PwgServer &$service): PwgError|true
+    public function themesPerformAction(array $params, PwgServer &$service): PwgError|true
     {
-        $template = \Piwigo\Template\CurrentTemplate::current()->get();
+        $template = $this->currentTemplate->get();
 
         /** @var Template $template */
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (! \Piwigo\Config\CurrentConfig::current()->enableExtensionsInstall() and $params['action'] === 'delete') {
+        if (! $this->currentConfig->enableExtensionsInstall() and $params['action'] === 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -168,22 +181,22 @@ final class PwgExtensions
         // original define('IN_ADMIN', true) here is equally a no-op for
         // this request.
 
-        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        $urlService = $this->urlService;
         $conn = DbConnection::build();
         $lifecycle = new ExtensionLifecycle(
-            Lang::current(),
+            $this->lang,
             new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
-            new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger()),
+            $this->pemCatalog,
             $urlService,
-            CurrentConfigService::current()->get(),
+            $this->configService,
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
-            \Piwigo\Bootstrap\CoreDomainAccessor::userService(),
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-            \Piwigo\Config\CurrentConfig::current(),
+            $this->activityService,
+            $this->userService,
+            $this->htmlRenderer,
+            $this->currentConfig,
         );
         $fsEntry = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $urlService, Lang::current())[$params['theme']] ?? null;
+            ->scan(ExtensionType::Theme, $urlService, $this->lang)[$params['theme']] ?? null;
         $errors = $lifecycle->performAction(ExtensionType::Theme, $params['action'], $params['theme'], $fsEntry);
 
         if ($errors !== []) {
@@ -207,14 +220,14 @@ final class PwgExtensions
      *   self-redirect a few lines below that appends it as a raw extra query
      *   param) -- covered by the shape's open tail, never explicitly typed.
      */
-    public static function update(array $params, PwgServer &$service): PwgError|string
+    public function update(array $params, PwgServer &$service): PwgError|string
     {
-        if (! \Piwigo\Config\CurrentConfig::current()->enableExtensionsInstall()) {
+        if (! $this->currentConfig->enableExtensionsInstall()) {
             return new PwgError(401, 'Piwigo extensions install/update system is disabled');
         }
 
-        if (! AccessControl::current()->isWebmaster()) {
-            return new PwgError(401, Lang::current()->t('Webmaster status is required.'));
+        if (! $this->accessControl->isWebmaster()) {
+            return new PwgError(401, $this->lang->t('Webmaster status is required.'));
         }
 
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
@@ -237,13 +250,13 @@ final class PwgExtensions
             default => ExtensionType::Language,
         };
 
-        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        $urlService = $this->urlService;
         $scanner = new ExtensionScanner();
         $conn = DbConnection::build();
         $repo = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
-        $pemCatalog = new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger());
+        $pemCatalog = $this->pemCatalog;
         $pluginMigrationRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
-        $lifecycle = new ExtensionLifecycle(Lang::current(), $repo, $pemCatalog, $urlService, CurrentConfigService::current()->get(), $pluginMigrationRepo, \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\CoreDomainAccessor::userService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Config\CurrentConfig::current());
+        $lifecycle = new ExtensionLifecycle($this->lang, $repo, $pemCatalog, $urlService, $this->configService, $pluginMigrationRepo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig);
 
         if ($type === ExtensionType::Plugin) {
             $dbPluginsById = $repo->findAll(ExtensionType::Plugin);
@@ -251,10 +264,10 @@ final class PwgExtensions
                 isset($dbPluginsById[$extension_id])
                 and $dbPluginsById[$extension_id]['state'] === 'active'
             ) {
-                $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, Lang::current())[$extension_id] ?? null;
+                $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang)[$extension_id] ?? null;
                 $lifecycle->performAction(ExtensionType::Plugin, 'deactivate', $extension_id, $fsEntry);
 
-                new RedirectService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\CoreDomainAccessor::userService())
+                $this->redirectService
                     ->redirect(
                         $urlService->getRootUrl()
                                 . 'ws.php'
@@ -268,18 +281,18 @@ final class PwgExtensions
                     );
             }
 
-            $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, Lang::current())[$extension_id] ?? null;
+            $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang)[$extension_id] ?? null;
             $upgrade_status = $lifecycle->performAction(ExtensionType::Plugin, 'update', $extension_id, $fsEntry, [
                 'revision' => $revision,
             ])[0] ?? null;
-            $extension_name = $scanner->scan(ExtensionType::Plugin, $urlService, Lang::current())[$extension_id]['name'] ?? $extension_id;
+            $extension_name = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang)[$extension_id]['name'] ?? $extension_id;
 
             if (isset($params['reactivate'])) {
-                $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, Lang::current())[$extension_id] ?? null;
+                $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang)[$extension_id] ?? null;
                 $lifecycle->performAction(ExtensionType::Plugin, 'activate', $extension_id, $fsEntry);
             }
         } elseif ($type === ExtensionType::Theme) {
-            $fsThemesBefore = $scanner->scan(ExtensionType::Theme, $urlService, Lang::current());
+            $fsThemesBefore = $scanner->scan(ExtensionType::Theme, $urlService, $this->lang);
             $extension_name = $fsThemesBefore[$extension_id]['name'] ?? $extension_id;
 
             $extraction = $pemCatalog->extractArchive(ExtensionType::Theme, 'upgrade', $revision, $extension_id);
@@ -291,17 +304,17 @@ final class PwgExtensions
             ];
 
             if ($upgrade_status === 'ok') {
-                $fsThemesAfter = $scanner->scan(ExtensionType::Theme, $urlService, Lang::current()); // refresh list
+                $fsThemesAfter = $scanner->scan(ExtensionType::Theme, $urlService, $this->lang); // refresh list
                 $activity_details['to_version'] = $fsThemesAfter[$extension_id]['version'] ?? null;
             } else {
                 $activity_details['result'] = 'error';
             }
 
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->record('system', ActivitySystem::Theme, 'update', $activity_details);
+            $this->activityService->record('system', ActivitySystem::Theme, 'update', $activity_details);
         } elseif ($type === ExtensionType::Language) {
             $extraction = $pemCatalog->extractArchive(ExtensionType::Language, 'upgrade', $revision, $extension_id);
             $upgrade_status = $extraction['status'];
-            $extension_name = $scanner->scan(ExtensionType::Language, $urlService, Lang::current())[$extension_id]['name'] ?? $extension_id;
+            $extension_name = $scanner->scan(ExtensionType::Language, $urlService, $this->lang)[$extension_id]['name'] ?? $extension_id;
         } else {
             // Unreachable: $type is derived from $params['type'], already
             // restricted to plugins/themes/languages by the in_array()
@@ -310,17 +323,17 @@ final class PwgExtensions
             throw new LogicException('Invalid extension type');
         }
 
-        $template = \Piwigo\Template\CurrentTemplate::current()->get();
+        $template = $this->currentTemplate->get();
 
         /** @var Template $template */
         $template->delete_compiled_templates();
 
         return match ($upgrade_status) {
-            'ok' => Lang::current()->t('%s has been successfully updated.', $extension_name),
-            'temp_path_error' => new PwgError(500, Lang::current()->t('Can\'t create temporary file.')),
-            'dl_archive_error' => new PwgError(500, Lang::current()->t('Can\'t download archive.')),
-            'archive_error' => new PwgError(500, Lang::current()->t('Can\'t read or extract archive.')),
-            default => new PwgError(500, Lang::current()->t('An error occured during extraction (%s).', $upgrade_status)),
+            'ok' => $this->lang->t('%s has been successfully updated.', $extension_name),
+            'temp_path_error' => new PwgError(500, $this->lang->t('Can\'t create temporary file.')),
+            'dl_archive_error' => new PwgError(500, $this->lang->t('Can\'t download archive.')),
+            'archive_error' => new PwgError(500, $this->lang->t('Can\'t read or extract archive.')),
+            default => new PwgError(500, $this->lang->t('An error occured during extraction (%s).', $upgrade_status)),
         };
     }
 
@@ -332,7 +345,7 @@ final class PwgExtensions
      *   reset: non-null bool default, WsParamType::BOOL -- always present.
      *   pwg_token: no 'default' key -- mandatory, always present.
      */
-    public static function ignoreUpdate(array $params, PwgServer &$service): PwgError|true
+    public function ignoreUpdate(array $params, PwgServer &$service): PwgError|true
     {
         // P23 batch 8e-2: the original define('IN_ADMIN', true)+
         // include_once admin/include/functions.php here are both dropped --
@@ -344,7 +357,7 @@ final class PwgExtensions
         // which deleted include/functions.inc.php entirely; Phase 5
         // Legacy Coupling Retirement retargeted it onto CurrentConfigService).
 
-        if (! AccessControl::current()->isWebmaster()) {
+        if (! $this->accessControl->isWebmaster()) {
             return new PwgError(401, 'Access denied');
         }
 
@@ -352,7 +365,7 @@ final class PwgExtensions
             return new PwgError(403, 'Invalid security token');
         }
 
-        $updateChecker = \Piwigo\Bootstrap\AdminAccessor::extensionUpdateChecker();
+        $updateChecker = $this->extensionUpdateChecker;
         $type = is_string($params['type']) ? ExtensionType::fromPluralWsParam($params['type']) : null;
 
         // Reset ignored extension
@@ -390,11 +403,11 @@ final class PwgExtensions
      *   entirely unvalidated request array, but the body doesn't read it.
      * @return array{piwigo_need_update: bool|null, ext_need_update: bool|null}
      */
-    public static function checkUpdates(array $params, PwgServer &$service): array
+    public function checkUpdates(array $params, PwgServer &$service): array
     {
-        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
-        $coreUpdateService = \Piwigo\Bootstrap\AdminAccessor::coreUpdateService();
-        $updateChecker = \Piwigo\Bootstrap\AdminAccessor::extensionUpdateChecker();
+        $urlService = $this->urlService;
+        $coreUpdateService = $this->coreUpdateService;
+        $updateChecker = $this->extensionUpdateChecker;
         $result = [];
 
         if (! isset($_SESSION['need_update' . AppInfo::VERSION])) {

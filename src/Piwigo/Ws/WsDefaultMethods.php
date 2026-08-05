@@ -43,6 +43,7 @@ final class WsDefaultMethods
     public function __construct(
         private readonly PwgPermissions $pwgPermissions,
         private readonly PwgComments $pwgComments,
+        private readonly PwgExtensions $pwgExtensions,
     ) {}
 
     /**
@@ -1366,7 +1367,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.plugins.getList',
-            PwgExtensions::pluginsGetList(...),
+            $this->pwgExtensions->pluginsGetList(...),
             null,
             'Gets the list of plugins with id, name, version, state and description.',
             options: [
@@ -1376,7 +1377,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.plugins.performAction',
-            PwgExtensions::pluginsPerformAction(...),
+            $this->pwgExtensions->pluginsPerformAction(...),
             [
                 'action' => [
                     'info' => 'install, activate, deactivate, uninstall, delete',
@@ -1392,7 +1393,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.themes.performAction',
-            PwgExtensions::themesPerformAction(...),
+            $this->pwgExtensions->themesPerformAction(...),
             [
                 'action' => [
                     'info' => 'activate, deactivate, delete, set_default',
@@ -1408,7 +1409,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.extensions.update',
-            PwgExtensions::update(...),
+            $this->pwgExtensions->update(...),
             [
                 'type' => [
                     'info' => 'plugins, languages, themes',
@@ -1425,7 +1426,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.extensions.ignoreUpdate',
-            PwgExtensions::ignoreUpdate(...),
+            $this->pwgExtensions->ignoreUpdate(...),
             [
                 'type' => [
                     'default' => null,
@@ -1449,7 +1450,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.extensions.checkUpdates',
-            PwgExtensions::checkUpdates(...),
+            $this->pwgExtensions->checkUpdates(...),
             null,
             'Checks if piwigo or extensions are up to date.',
             options: [

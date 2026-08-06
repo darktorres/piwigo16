@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Db;
 
-use Piwigo\Core\Kernel;
-use Psr\Container\ContainerExceptionInterface;
-
 /**
  * The 7 PIWIGO_DB_* connection parameters, read from the process
  * environment only. Originally P12-only (CLI commands shelling out to
@@ -33,22 +30,23 @@ use Psr\Container\ContainerExceptionInterface;
  * mid-request `seed()` call must still see the freshly-submitted values
  * afterward, not a stale copy captured at construction time.
  *
- * `current()` was originally the `@deprecated` transitional bridge for the
- * static-utility classes with no constructor at all (`Tables`,
- * `DbConnection`) -- both closed it in Phase 11 sub-phase 11I (their own
- * private `dbCredentials()` container-resolve helpers replaced it). Its
- * one remaining, permanent reason to exist: `public/install.php`/
- * `public/ready.php`, the campaign's own documented "raw entry-shell root
- * file, runs before Kernel::boot()" exception category -- no object graph
- * exists yet for those files to receive this via constructor injection
- * through. Unlike every other shim backing a value with no safe default in
- * this campaign, it gracefully falls back to a fresh `fromEnv()` read
- * (bypassing the container entirely) when `Kernel` isn't booted, rather
- * than throwing: env vars are always meaningfully available regardless of
- * DI wiring, and the vast majority of this codebase's own Unit tests
- * construct a `Connection`/read a `Tables::*()` name without ever calling
- * `Kernel::boot()` at all, exactly the "one-shot process, a fresh read
- * doesn't matter" reasoning `fromEnv()` itself already existed for.
+ * `fromEnv()` (bypassing the container entirely) is the direct answer for
+ * the campaign's own documented "raw entry-shell root file, runs before
+ * Kernel::boot()" exception category -- `public/install.php` resolves its
+ * one real credentials read via `InstallBootstrap::dbCredentials()`'s own
+ * direct container access instead (no object graph exists yet for install.php
+ * itself to receive this via constructor injection through, but
+ * InstallBootstrap::boot() has already run by that point); `public/ready.php`
+ * called `fromEnv()` directly as of sub-phase 12F-3, closing the former
+ * `@deprecated current()` transitional bridge outright (env vars are
+ * always meaningfully available regardless of DI wiring, and the vast
+ * majority of this codebase's own Unit tests construct a `Connection`/
+ * read a `Tables::*()` name without ever calling `Kernel::boot()` at all,
+ * exactly the "one-shot process, a fresh read doesn't matter" reasoning
+ * `fromEnv()` itself already existed for). `Tables`/`DbConnection` closed
+ * their own former `current()` shim usage earlier, in Phase 11
+ * sub-phase 11I (their own private `dbCredentials()` container-resolve
+ * helpers).
  *
  * toMysqlArgs() mirrors tools/restore-drill.sh's own mysql_args
  * construction exactly, so backup/restore commands shell out to the
@@ -81,28 +79,6 @@ final class DbCredentials
             port: $portEnv !== false && $portEnv !== '' && is_numeric($portEnv) ? (int) $portEnv : null,
             driver: $driverEnv !== false && $driverEnv !== '' ? $driverEnv : 'mysqli',
         );
-    }
-
-    /**
-     * @deprecated transitional bridge -- see this class's own docblock.
-     */
-    public static function current(): self
-    {
-        if (Kernel::isBooted()) {
-            try {
-                $instance = Kernel::container()->get(self::class);
-                if ($instance instanceof self) {
-                    return $instance;
-                }
-            } catch (ContainerExceptionInterface) {
-                // Falls through to fromEnv() below -- see this class's own
-                // docblock (same has()-is-unreliable reasoning CurrentPaths
-                // documents, not applicable here since this method already
-                // has a real, safe default to fall back to).
-            }
-        }
-
-        return self::fromEnv();
     }
 
     /**

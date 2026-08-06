@@ -810,35 +810,6 @@ test('CurrentPaths::get()/isSet() transitional bridge has a shrinking, known all
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
-test('DbCredentials::current() transitional bridge has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 11 sub-phase
-    // 11I: Tables.php/DbConnection.php/EntityManagerFactory.php/
-    // UniqueExecLock.php (pure static utilities, no instance context to
-    // receive constructor injection through) now resolve a private
-    // dbCredentials() helper doing a direct Kernel::container() resolve
-    // instead (with the same graceful fromEnv() fallback the shim itself
-    // has), matching FilesystemHelper's own established "no wrapper
-    // instance" precedent -- not this shim. UploadService.php/
-    // Ws/PwgImages.php took a real DbCredentials constructor param the
-    // same sub-phase. Bootstrap/RequestBootstrap.php closed this shim in
-    // sub-phase 11J -- a private dbCredentials() resolver helper (same
-    // shape as paths() there) replaces what was only ever style
-    // consistency with its own neighboring DbConnection::build() call.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-    ];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'DbCredentials::current(');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
 // Singleton/service-locator elimination campaign:
 // InstallationFlag::isActiveStatic() itself is fully deleted (Phase 12
 // sub-phase 12B) -- its former "transitional shim has a shrinking, known

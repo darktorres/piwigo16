@@ -19,7 +19,7 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\DbCredentials;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Users\CurrentUser;
 
@@ -73,7 +73,7 @@ final class InstallServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        DbCredentials::current()->seed([
+        DbCredentialsTestFactory::get()->seed([
             'PIWIGO_DB_HOST' => $this->dbHost,
             'PIWIGO_DB_USER' => $this->dbUser,
             'PIWIGO_DB_PASSWORD' => $this->dbPass,
@@ -86,7 +86,7 @@ final class InstallServiceTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        DbCredentials::current()->seed($this->originalDbEnv);
+        DbCredentialsTestFactory::get()->seed($this->originalDbEnv);
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -181,7 +181,7 @@ final class InstallServiceTest extends IntegrationTestCase
 
     public function test_installDbConnect_returns_null_and_records_an_error_for_a_wrong_password(): void
     {
-        DbCredentials::current()->seed([
+        DbCredentialsTestFactory::get()->seed([
             'PIWIGO_DB_HOST' => $this->dbHost,
             'PIWIGO_DB_USER' => $this->dbUser,
             'PIWIGO_DB_PASSWORD' => $this->dbPass . '-definitely-wrong',
@@ -221,7 +221,7 @@ final class InstallServiceTest extends IntegrationTestCase
         // succeeds (MySQL: "Unknown database"; Postgres: "database ...
         // does not exist"), unlike an unreachable host, which would
         // otherwise block on a real ~60s connect-timeout here.
-        DbCredentials::current()->seed([
+        DbCredentialsTestFactory::get()->seed([
             'PIWIGO_DB_HOST' => $this->dbHost,
             'PIWIGO_DB_USER' => $this->dbUser,
             'PIWIGO_DB_PASSWORD' => $this->dbPass,
@@ -256,7 +256,7 @@ final class InstallServiceTest extends IntegrationTestCase
     // REQUIRED_MYSQL_VERSION, '<')`) is left uncovered: REQUIRED_MYSQL_VERSION
     // is '5.0.0' (a `public const string`, immutable -- no seam to lower
     // it from a test), and installDbConnect() builds its own Connection
-    // internally via DbConnection::build()/DbCredentials::current() with no
+    // internally via DbConnection::build()/DbCredentialsTestFactory::get() with no
     // parameter to substitute a fake one reporting an old `SELECT
     // VERSION()` result. Reaching this branch for real would need an
     // actual MySQL/MariaDB server built before 5.0 (released 2005)

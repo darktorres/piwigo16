@@ -9,7 +9,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use LogicException;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\DbCredentials;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\ConfigLoader;
@@ -123,7 +123,7 @@ final class PageTailTest extends IntegrationTestCase
         // contention at all. checkForUpdates()'s own begins() call (its
         // own cached, request-scoped connection) then loses the race.
         $otherConn = DbConnection::build();
-        $lockName = 'piwigo_exec_' . sha1(DbCredentials::current()->prefix . ':unique_exec:check_for_updates');
+        $lockName = 'piwigo_exec_' . sha1(DbCredentialsTestFactory::get()->prefix . ':unique_exec:check_for_updates');
         self::assertTrue(AdvisorySessionLock::acquire($otherConn, $lockName, 1));
         self::assertTrue(UniqueExecLock::isRunning('check_for_updates'));
 

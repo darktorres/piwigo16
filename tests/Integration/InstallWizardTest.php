@@ -31,7 +31,7 @@ use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\DbCredentials;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
@@ -241,7 +241,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $_GET = $this->originalGet;
         $_POST = $this->originalPost;
         $_SERVER = $this->originalServer;
-        DbCredentials::current()->seed($this->originalDbEnv);
+        DbCredentialsTestFactory::get()->seed($this->originalDbEnv);
         if ($this->installBootstrapBooted) {
             restore_error_handler();
             $errorCollector = Kernel::container()->get(ErrorCollector::class);
@@ -310,7 +310,7 @@ final class InstallWizardTest extends IntegrationTestCase
      * just InstallWizard's constructor+boot()): that entry shell seeds
      * PIWIGO_DB_PREFIX itself before constructing the wizard (InstallWizard::
      * boot() only ever seeds host/user/password/dbname -- Tables::*()'s own
-     * DbCredentials::current()->prefix read would otherwise silently keep
+     * DbCredentialsTestFactory::get()->prefix read would otherwise silently keep
      * resolving to whatever prefix was already ambient in this process, not
      * the one this test actually wants every table named with), and sets
      * Piwigo\Template\ScriptLoader's static URL service (a "pre-existing
@@ -336,7 +336,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/install.php';
         unset($_SERVER['HTTPS']);
 
-        $dbCredentials = DbCredentials::current();
+        $dbCredentials = DbCredentialsTestFactory::get();
         $dbCredentials->seed([
             'PIWIGO_DB_PREFIX' => $prefix,
         ]);
@@ -427,7 +427,7 @@ final class InstallWizardTest extends IntegrationTestCase
         // the CurrentPaths::get() shim. KernelContainerOverride::with()
         // rebinds Paths::class for just this test's own scope instead.
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            $wizard = new InstallWizard(Lang::current(), 'itest_', $this->paths, DbCredentials::current(), CurrentConfigService::current(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUser::current());
+            $wizard = new InstallWizard(Lang::current(), 'itest_', $this->paths, DbCredentialsTestFactory::get(), CurrentConfigService::current(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUser::current());
 
             self::assertSame('_data/', $this->reflectPrivate($wizard, 'confDataLocation'));
         });
@@ -441,7 +441,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $this->expectExceptionMessage("Invalid \$conf['data_location'] configuration: expected a string.");
 
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            new InstallWizard(Lang::current(), 'itest_', $this->paths, DbCredentials::current(), CurrentConfigService::current(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUser::current());
+            new InstallWizard(Lang::current(), 'itest_', $this->paths, DbCredentialsTestFactory::get(), CurrentConfigService::current(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUser::current());
         });
     }
 

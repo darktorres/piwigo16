@@ -8,7 +8,7 @@ use Override;
 use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\DbCredentials;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Doctrine\DBAL\Schema\Name\OptionallyQualifiedName;
 use Doctrine\DBAL\Schema\Name\UnqualifiedName;
 use Doctrine\DBAL\Connection;
@@ -55,7 +55,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new DbMaintenanceRepository(EntityManagerFactory::build($this->conn), DbCredentials::current());
+        $this->repo = new DbMaintenanceRepository(EntityManagerFactory::build($this->conn), DbCredentialsTestFactory::get());
     }
 
     public function test_purge_history_detail_deletes_every_row(): void
@@ -338,7 +338,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
      */
     public function test_repair_optimize_all_tables_introspection_matches_raw_show_tables_and_create_table(): void
     {
-        $prefix = DbCredentials::current()->prefix;
+        $prefix = DbCredentialsTestFactory::get()->prefix;
         $schemaManager = $this->conn->createSchemaManager();
 
         $introspectedTableNames = array_values(array_filter(

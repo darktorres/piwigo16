@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbCredentials;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
 
 // putenv($var) with no '=value' unsets the var process-wide -- since Pest
 // runs the whole suite in one PHP process, clearing PIWIGO_DB_* here
@@ -129,29 +130,31 @@ test('fromEnv() falls back to the default driver when PIWIGO_DB_DRIVER is explic
  * generates (not the differently-precedenced version this docblock's
  * sibling test was originally verified against by mistake).
  */
-test('current() returns a fresh read on every call when Kernel is not booted', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 3: current()
-    // is a pure shim now, with no independent memo of its own -- when
-    // there's no container to resolve a shared instance from, it falls
-    // back to a bare fromEnv() read every time (same reasoning as every
-    // other Unit test in this codebase that never boots Kernel at all).
+test('DbCredentialsTestFactory::get returns a fresh read on every call when Kernel is not booted', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 3: the former
+    // current() shim (closed in sub-phase 12F-3) was a pure shim with no
+    // independent memo of its own -- when there's no container to resolve
+    // a shared instance from, it fell back to a bare fromEnv() read every
+    // time (same reasoning as every other Unit test in this codebase that
+    // never boots Kernel at all). DbCredentialsTestFactory::get()
+    // reproduces this exactly.
     putenv('PIWIGO_DB_HOST=first.example.test');
-    $first = DbCredentials::current();
+    $first = DbCredentialsTestFactory::get();
 
     putenv('PIWIGO_DB_HOST=second.example.test');
-    $second = DbCredentials::current();
+    $second = DbCredentialsTestFactory::get();
 
     expect($second)->not->toBe($first)
         ->and($first->host)->toBe('first.example.test')
         ->and($second->host)->toBe('second.example.test');
 });
 
-test('current() returns the same container-shared instance across calls once Kernel is booted', function (): void {
+test('DbCredentialsTestFactory::get returns the same container-shared instance across calls once Kernel is booted', function (): void {
     putenv('PIWIGO_DB_HOST=booted.example.test');
     Kernel::boot();
 
-    $first = DbCredentials::current();
-    $second = DbCredentials::current();
+    $first = DbCredentialsTestFactory::get();
+    $second = DbCredentialsTestFactory::get();
 
     expect($second)->toBe($first)
         ->and($first->host)->toBe('booted.example.test');
@@ -194,12 +197,12 @@ test('seed() putenvs each non-null value and reload()s this same instance in pla
 
 test('seed() on the container-shared instance is visible to every other consumer holding it', function (): void {
     Kernel::boot();
-    $before = DbCredentials::current();
+    $before = DbCredentialsTestFactory::get();
 
     $before->seed(['PIWIGO_DB_HOST' => 'seeded-shared.example.test']);
 
-    expect(DbCredentials::current())->toBe($before)
-        ->and(DbCredentials::current()->host)->toBe('seeded-shared.example.test');
+    expect(DbCredentialsTestFactory::get())->toBe($before)
+        ->and(DbCredentialsTestFactory::get()->host)->toBe('seeded-shared.example.test');
 });
 
 test('toMysqlArgs() includes -p only when a password is set', function (): void {

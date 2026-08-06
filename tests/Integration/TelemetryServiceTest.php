@@ -9,7 +9,7 @@ use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
 use ReflectionMethod;
-use Piwigo\Db\DbCredentials;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
@@ -216,7 +216,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
         $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 2) . '/src/Piwigo'], isDevMode: true);
         $ormConfig->enableNativeLazyObjects(true);
         $em = new EntityManager($conn, $ormConfig);
-        $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentials::current()));
+        $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentialsTestFactory::get()));
 
         $repo = $em->getRepository(ConfigEntry::class);
         self::assertInstanceOf(ConfigRepository::class, $repo);

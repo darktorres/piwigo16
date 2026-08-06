@@ -42,7 +42,7 @@ use Override;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Core\PageState;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
-use Piwigo\Db\DbCredentials;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Validation\InputValidator;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -284,7 +284,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
         $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(Lang::current(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageState::current()), UrlServiceTestFactory::build(), $configService, new FilesystemIntegrityChecker(Lang::current(), CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfig::current(), CurrentPaths::get()), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()), new Translator(CurrentConfig::current()), new EventDispatcher(), PageState::current(), CurrentTemplate::current(), new DbMaintenanceRepository(EntityManagerFactory::build($this->conn), DbCredentials::current()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), HtmlServiceTestFactory::build(), Lang::current(), CurrentConfig::current(), new InputValidator(), CurrentPaths::get());
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(Lang::current(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageState::current()), UrlServiceTestFactory::build(), $configService, new FilesystemIntegrityChecker(Lang::current(), CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfig::current(), CurrentPaths::get()), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()), new Translator(CurrentConfig::current()), new EventDispatcher(), PageState::current(), CurrentTemplate::current(), new DbMaintenanceRepository(EntityManagerFactory::build($this->conn), DbCredentialsTestFactory::get()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), HtmlServiceTestFactory::build(), Lang::current(), CurrentConfig::current(), new InputValidator(), CurrentPaths::get());
     }
 
     #[Override]
@@ -671,7 +671,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new EventDispatcher(),
             PageState::current(),
             CurrentTemplate::current(),
-            new DbMaintenanceRepository(EntityManagerFactory::build($this->conn), DbCredentials::current()),
+            new DbMaintenanceRepository(EntityManagerFactory::build($this->conn), DbCredentialsTestFactory::get()),
             $this->maintenanceActionDispatcherTestActivityService(),
             $this->maintenanceActionDispatcherTestRateService(),
             $this->maintenanceActionDispatcherTestCategoryService(),

@@ -7,7 +7,7 @@ use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Events;
 use Piwigo\Db\TablePrefixListener;
-use Piwigo\Db\DbCredentials;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Bootstrap\RequestBootstrap;
@@ -199,7 +199,7 @@ test('bootConfigOnly reuses an already-set CurrentConfigService instead of resol
     $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 3) . '/src/Piwigo'], isDevMode: true);
     $ormConfig->enableNativeLazyObjects(true);
     $em = new EntityManager($conn, $ormConfig);
-    $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentials::current()));
+    $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentialsTestFactory::get()));
     $preSetService = new ConfigService($em->getRepository(ConfigEntry::class), new EventDispatcher(), CurrentConfig::current());
     CurrentConfigService::current()->set($preSetService);
 

@@ -8,7 +8,7 @@ use Override;
 use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\DbCredentials;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Command\MaintenanceOrphanTagsCommand;
 use Piwigo\Config\CurrentConfig;
@@ -59,7 +59,7 @@ final class MaintenanceOrphanTagsCommandTest extends IntegrationTestCase
             ->executeStatement();
 
         try {
-            $command = new MaintenanceOrphanTagsCommand(new DbMaintenanceRepository(EntityManagerFactory::build($conn), DbCredentials::current()));
+            $command = new MaintenanceOrphanTagsCommand(new DbMaintenanceRepository(EntityManagerFactory::build($conn), DbCredentialsTestFactory::get()));
             $tester = new CommandTester($command);
 
             $exitCode = $tester->execute([]);

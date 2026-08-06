@@ -19,7 +19,7 @@ use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\DbCredentials;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -115,7 +115,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        DbCredentials::current()->seed($this->originalDbEnv);
+        DbCredentialsTestFactory::get()->seed($this->originalDbEnv);
 
         // connect()'s own first statement is ErrorCollector::installIfConfigured()
         // -- every test below reaches it regardless of what happens
@@ -154,7 +154,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
         // instead of blocking on a real ~60s connect-timeout the way an
         // unreachable host/IP would -- same reasoning as
         // InstallServiceTest::test_installDbConnect_returns_null_and_records_an_error_for_a_wrong_password.
-        DbCredentials::current()->seed([
+        DbCredentialsTestFactory::get()->seed([
             'PIWIGO_DB_HOST' => $this->dbHost,
             'PIWIGO_DB_USER' => $this->dbUser,
             'PIWIGO_DB_PASSWORD' => $this->dbPass . '-definitely-wrong',

@@ -11,10 +11,14 @@ use Piwigo\Db\DbCredentials;
 // \Piwigo\Db\DbConnection::build() — that helper assumes the full request
 // bootstrap (the DI container, PageState's query-count/show_queries
 // logging), which doesn't belong in a probe response.
-// \Piwigo\Db\DbCredentials::current() (env-only, Config generic-accessor
+// \Piwigo\Db\DbCredentials::fromEnv() (env-only, Config generic-accessor
 // removal) is exactly the same credential source DbConnection::build()
 // itself resolves to, so this reflects whatever DB the real app would
-// connect to.
+// connect to. fromEnv() directly, not the current() shim -- this file
+// never calls Kernel::boot() (singleton/service-locator elimination
+// campaign, Phase 12 sub-phase 12F-3), so current()'s own
+// Kernel::isBooted() branch was always false here anyway, always falling
+// straight through to this exact same fromEnv() read.
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -24,7 +28,7 @@ Env::loadEnvFile($paths->root);
 
 header('Content-Type: text/plain');
 
-$credentials = DbCredentials::current();
+$credentials = DbCredentials::fromEnv();
 $host = $credentials->host;
 $socket = null;
 if (str_starts_with($host, '/')) {

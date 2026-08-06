@@ -7,7 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Override;
 use Piwigo\Core\Logger;
 use Piwigo\Db\AdvisorySessionLock;
-use Piwigo\Db\DbCredentials;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Db\DbConnection;
 
@@ -141,7 +141,7 @@ final class UniqueExecLockTest extends IntegrationTestCase
      */
     private function lockNameFor(string $tokenName): string
     {
-        $prefix = DbCredentials::current()->prefix;
+        $prefix = DbCredentialsTestFactory::get()->prefix;
 
         return 'piwigo_exec_' . sha1($prefix . ':unique_exec:' . $tokenName);
     }

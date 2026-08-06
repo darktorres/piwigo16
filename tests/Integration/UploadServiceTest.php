@@ -30,7 +30,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\CurrentPaths;
-use Piwigo\Db\DbCredentials;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Db\DbConnection;
@@ -449,7 +449,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $expectedMd5 = md5_file($source);
         self::assertIsString($expectedMd5);
 
-        $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current())->addUploadedFile($source, $this->urlService, 'holiday.png');
+        $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'holiday.png');
         $id = $imageId;
         self::assertGreaterThan(0, $id);
         $this->imageIdsToDelete[] = $id;
@@ -483,7 +483,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
 
-        $result = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current())->addUploadedFile(
+        $result = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get())->addUploadedFile(
             $source,
             $this->urlService,
             'dup.jpg',
@@ -519,7 +519,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function test_addUploadedFile_updates_an_existing_photo_in_place(): void
     {
-        $service = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current());
+        $service = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get());
 
         $firstSource = $this->marker . '/first.png';
         $this->makeImage($firstSource, 'png', 40, 30);
@@ -568,7 +568,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current())->addUploadedFile($source, $this->urlService, 'orphan.png', image_id: 999_999);
+            new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'orphan.png', image_id: 999_999);
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -586,7 +586,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_updates_the_level_when_given_on_the_update_branch(): void
     {
-        $service = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current());
+        $service = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get());
 
         $first = $this->marker . '/lvl-first.png';
         $this->makeImage($first, 'png', 20, 20);
@@ -612,7 +612,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_dispatches_the_correct_extension_for_each_raster_image_type(): void
     {
-        $service = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current());
+        $service = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get());
         $cases = [
             'png' => 'png',
             'jpeg' => 'jpg',
@@ -659,7 +659,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/archive.zip';
         file_put_contents($source, "PK\x03\x04" . str_repeat('x', 32));
 
-        $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current())->addUploadedFile($source, $this->urlService, 'archive.zip');
+        $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'archive.zip');
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
@@ -696,7 +696,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/big.jpg';
         $this->makeImage($source, 'jpeg', 200, 150);
 
-        $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current())->addUploadedFile($source, $this->urlService, 'big.jpg');
+        $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'big.jpg');
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
@@ -744,7 +744,7 @@ final class UploadServiceTest extends IntegrationTestCase
                 self::markTestSkipped('ImageMagick convert failed to build a PDF fixture: ' . implode("\n", $out));
             }
 
-            $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current())->addUploadedFile($pdf, $this->urlService, 'document.pdf');
+            $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get())->addUploadedFile($pdf, $this->urlService, 'document.pdf');
             $id = $imageId;
             $this->imageIdsToDelete[] = $id;
 
@@ -771,7 +771,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current())->addUploadedFile($source, $this->urlService, 'fake.png');
+            new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'fake.png');
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -803,7 +803,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current())->addUploadedFile($source, $this->urlService, 'payload.exe');
+            new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'payload.exe');
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -827,7 +827,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current())->addUploadedFile($source, $this->urlService, 'notes.txt');
+            new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'notes.txt');
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -855,7 +855,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/threshold.png';
         $this->makeImage($source, 'png', 10, 8);
 
-        $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current())->addUploadedFile($source, $this->urlService, 'threshold.png');
+        $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'threshold.png');
         $this->imageIdsToDelete[] = $imageId;
 
         // addUploadedFileAddToCategories()'s own COUNT(*) check (running
@@ -872,7 +872,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/associate.png';
         $this->makeImage($source, 'png', 10, 8);
 
-        $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current())->addUploadedFile($source, $this->urlService, 'associate.png', categories: [1]);
+        $imageId = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get())->addUploadedFile($source, $this->urlService, 'associate.png', categories: [1]);
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
@@ -928,7 +928,7 @@ final class UploadServiceTest extends IntegrationTestCase
         CurrentConfig::current()->setFormatExtensions(['tif']);
 
         try {
-            $service = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current());
+            $service = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get());
             $source = $this->marker . '/orphan-format.tif';
             file_put_contents($source, 'not a real tiff, just needs bytes on disk');
 
@@ -963,7 +963,7 @@ final class UploadServiceTest extends IntegrationTestCase
         CurrentConfig::current()->setFormatExtensions(['tif']);
 
         try {
-            $service = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentials::current());
+            $service = new UploadService(Lang::current(), $this->currentLogger, $this->storageRegistry, EventDispatcher::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get());
 
             $sourceV1 = $this->marker . '/format-v1.tif';
             file_put_contents($sourceV1, str_repeat('a', 128));

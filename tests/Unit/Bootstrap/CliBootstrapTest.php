@@ -6,6 +6,7 @@ use Piwigo\Core\ShutdownHandler;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserStatus;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Bootstrap\CliBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Kernel;
@@ -73,8 +74,8 @@ test('buildApplication attaches a real CurrentUser (guest) globally', function (
 test('buildApplication initializes CurrentConfigService with a real, resolved ConfigService', function (): void {
     CliBootstrap::buildApplication();
 
-    expect(fn () => CurrentConfigService::current()->get())->not->toThrow(LogicException::class);
-    expect(CurrentConfigService::current()->get())->toBeInstanceOf(ConfigService::class);
+    expect(fn () => CurrentConfigServiceTestFactory::get()->get())->not->toThrow(LogicException::class);
+    expect(CurrentConfigServiceTestFactory::get()->get())->toBeInstanceOf(ConfigService::class);
 });
 
 test('run() installs the shutdown handler, builds the Application and executes the given argv', function (): void {

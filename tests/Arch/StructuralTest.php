@@ -586,65 +586,6 @@ test('CurrentConfigService::reset() is only called from tests/', function (): vo
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('CurrentConfigService::current() transitional bridge has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 5: current()
-    // kept its original name (no `Static` suffix, matching CurrentTemplate/
-    // CurrentUser/PageState/ImageStdParams/DeploymentPolicy/DbCredentials's
-    // own precedent -- no competing real instance method to disambiguate
-    // from). Every phase that converts one more of these files to
-    // constructor-injected ConfigService/CurrentConfigService should
-    // remove it from the allow-list below.
-    // Template/Template.php closed this shim in Phase 11 sub-phase 11E --
-    // real constructor injection, same as its other 8 collaborators (its
-    // own too-many-construction-sites reasoning no longer holds). Phase 10
-    // closed out every Ws/Pwg* file's own use of this shim (PwgCore.php/
-    // PwgUsers.php took a real, directly-injected ConfigService instead,
-    // once their own classes were instance-based; PwgExtensions.php/
-    // PwgImages.php had already converted in their own earlier
-    // sub-batches). Core/UniqueExecLock.php closed this shim in Phase 11
-    // sub-phase 11G -- confirmed a stale allow-list entry, no
-    // CurrentConfigService usage of any kind left in that file. Sub-phase
-    // 12B: public/install.php closed too -- it's actually already past
-    // InstallBootstrap::boot()'s own Kernel::boot() call at this point
-    // (the former "raw entry-shell, no container yet" reasoning was
-    // stale/never re-verified), same as every other RequestBootstrap::x()
-    // public accessor it already uses on the very same lines; now uses
-    // RequestBootstrap::currentConfigService() instead. Admin/Install/
-    // InstallService.php closed too -- its 4 static methods now take
-    // Lang/CurrentUser/CurrentConfigService/CurrentConfig/Paths as real
-    // explicit params from their sole caller, InstallWizard. Sub-phase
-    // 12D: Cache/PermissionCacheInvalidator.php closed too -- ~30 real
-    // call sites across Admin/Ws/Group/Users rule out a required
-    // constructor param (it's a genuinely static utility, no constructor
-    // at all), so invalidate() now resolves CurrentConfigService via a
-    // new private lazy currentConfigService() resolver instead (same
-    // Kernel::isBooted()-checked shape as Core/Logger.php's own
-    // pageState()); an independent, unmemoized fallback is safe here
-    // because CurrentConfigService::current()->get() already throws
-    // unconditionally on a never-.set() instance regardless of which
-    // fallback object it is, so there is no observable pre-boot behavior
-    // change either way. Image/ImageService.php closed too --
-    // emptyLounge()/countOrphans() now resolve it via a matching private
-    // lazy currentConfigService() helper on the instance, same
-    // established "too many construction sites" reasoning this class's
-    // own logger()/currentUser() helpers already use.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [];
-
-    $hits = [
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentConfigService::current('),
-        ...findCallSitesOutsideComments($repoRoot . '/public', 'CurrentConfigService::current('),
-    ];
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
 test('PageState::current() transitional bridge has a shrinking, known allow-list', function (): void {
     // Singleton/service-locator elimination campaign, Phase 4: current()
     // kept its original name (no `Static` suffix, matching

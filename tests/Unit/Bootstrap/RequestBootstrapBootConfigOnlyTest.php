@@ -14,6 +14,7 @@ use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
@@ -45,11 +46,11 @@ beforeEach(function (): void {
     // loading its own -- without this reset, a set() left over from an
     // earlier test would make these tests skip that resolve-and-load path
     // entirely and silently pass/fail on stale state.
-    CurrentConfigService::current()->reset();
+    CurrentConfigServiceTestFactory::get()->reset();
     // No Lang::current()->reset() here (unlike afterEach below): Lang, since
     // the singleton/service-locator elimination campaign's Phase 8, has no
     // memoized pre-boot fallback the way CurrentUser::current()/
-    // CurrentConfigService::current() do -- see its own docblock -- and
+    // CurrentConfigServiceTestFactory::get() do -- see its own docblock -- and
     // Kernel::reset() just above already tore down whatever container (and
     // whatever Lang instance lived in it) the previous test left behind.
     // There's nothing left to reset here; a fresh Kernel::boot() a few lines
@@ -63,7 +64,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     CurrentConfig::current()->reset();
     CurrentUser::current()->reset();
-    CurrentConfigService::current()->reset();
+    CurrentConfigServiceTestFactory::get()->reset();
     // Lang::current() has no memoized pre-boot fallback (see beforeEach's
     // own comment above), so it must resolve -- and get reset -- while the
     // container is still up, before Kernel::reset() below tears it down;
@@ -146,13 +147,13 @@ test('bootConfigOnly sets CurrentConfigService when resolving a fresh instance f
     // in beforeEach) too, but only ever assert on CurrentConfig's own
     // static state, populated by $configService->loadConfFromDb() acting
     // directly on the local variable -- neither can tell whether
-    // CurrentConfigService::current()->set($configService) itself actually ran.
-    expect(CurrentConfigService::current()->isSet())->toBeFalse();
+    // CurrentConfigServiceTestFactory::get()->set($configService) itself actually ran.
+    expect(CurrentConfigServiceTestFactory::get()->isSet())->toBeFalse();
 
     RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
 
-    expect(fn () => CurrentConfigService::current()->get())->not->toThrow(LogicException::class);
-    expect(CurrentConfigService::current()->get())->toBeInstanceOf(ConfigService::class);
+    expect(fn () => CurrentConfigServiceTestFactory::get()->get())->not->toThrow(LogicException::class);
+    expect(CurrentConfigServiceTestFactory::get()->get())->toBeInstanceOf(ConfigService::class);
 });
 
 test('bootConfigOnly attaches Lang globals from whatever the Translator has loaded', function (): void {
@@ -201,24 +202,24 @@ test('bootConfigOnly reuses an already-set CurrentConfigService instead of resol
     $em = new EntityManager($conn, $ormConfig);
     $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentialsTestFactory::get()));
     $preSetService = new ConfigService($em->getRepository(ConfigEntry::class), new EventDispatcher(), CurrentConfig::current());
-    CurrentConfigService::current()->set($preSetService);
+    CurrentConfigServiceTestFactory::get()->set($preSetService);
 
     RequestBootstrap::bootConfigOnly($paths);
 
     // Same instance as the one set beforehand -- proves the isSet() branch
     // really did reuse it instead of resolving (and loadConfFromDb()-ing) a
     // fresh one from the container.
-    expect(CurrentConfigService::current()->get())->toBe($preSetService);
+    expect(CurrentConfigServiceTestFactory::get()->get())->toBe($preSetService);
 });
 
 test('CurrentConfigService::get throws when nothing has ever been set', function (): void {
-    expect(CurrentConfigService::current()->isSet())->toBeFalse();
+    expect(CurrentConfigServiceTestFactory::get()->isSet())->toBeFalse();
 
-    CurrentConfigService::current()->get();
+    CurrentConfigServiceTestFactory::get()->get();
 })->throws(LogicException::class, 'CurrentConfigService not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect()/CliBootstrap::run()/InstallBootstrap::activateConfigService() first.');
 
 test('bootConfigOnly throws when the container returns an unexpected type for ConfigService', function (): void {
-    // CurrentConfigService::current()->isSet() is false (reset in beforeEach above), so
+    // CurrentConfigServiceTestFactory::get()->isSet() is false (reset in beforeEach above), so
     // bootConfigOnly() takes the "resolve from the container" branch instead
     // of reusing an already-set instance -- the real container always
     // autowires a genuine ConfigService for this class-string, so this

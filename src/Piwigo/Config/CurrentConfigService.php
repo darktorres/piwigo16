@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Config;
 
 use LogicException;
-use Piwigo\Core\Kernel;
 
 /**
  * Container-shared instance holding the current request's `ConfigService`
@@ -17,9 +16,11 @@ use Piwigo\Core\Kernel;
  * wrong fit here since `ConfigService` is an injected collaborator with its
  * own identity, not a bag of scalars).
  *
- * `current()` is a memoized `@deprecated` transitional bridge for callers
- * not yet converted to constructor injection -- same "load once, read/write
- * many times per request" reasoning as `CurrentTemplate`/`CurrentUser`.
+ * The former `current()` transitional bridge for callers not yet converted
+ * to constructor injection (memoized -- same "load once, read/write many
+ * times per request" reasoning as `CurrentTemplate`/`CurrentUser`) closed
+ * outright in sub-phase 12F-5: every real caller now takes this via
+ * constructor injection.
  *
  * Deliberately NOT a lazily-resolving `get()` (an earlier draft of this
  * class considered that, to guarantee `ConfigService`/`Connection` never
@@ -49,23 +50,7 @@ use Piwigo\Core\Kernel;
  */
 final class CurrentConfigService
 {
-    private static ?self $fallback = null;
-
     private ?ConfigService $configService = null;
-
-    public static function current(): self
-    {
-        if (Kernel::isBooted()) {
-            $instance = Kernel::container()->get(self::class);
-            if (! $instance instanceof self) {
-                throw new LogicException('Container returned an unexpected type for ' . self::class);
-            }
-
-            return $instance;
-        }
-
-        return self::$fallback ??= new self();
-    }
 
     public function get(): ConfigService
     {

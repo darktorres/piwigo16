@@ -25,6 +25,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\CurrentConfigService;
+    use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
     use Piwigo\Core\ActivityLoggerInterface;
     use Piwigo\Core\CurrentPaths;
     use Piwigo\Core\HtmlRenderingInterface;
@@ -257,7 +258,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // explicit wiring needed here anymore, same reasoning as
         // NotificationByMailSenderTest's own identical setUp.
         // ImageStdParams::load_from_db() itself needs CurrentConfigService.
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
         ImageStdParamsTestFactory::get()->load_from_db();
     }
 

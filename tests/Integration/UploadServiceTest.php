@@ -26,6 +26,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
@@ -271,7 +272,7 @@ final class UploadServiceTest extends IntegrationTestCase
         // Deliberately not followed by $configService->loadConfFromDb() --
         // see this class's own docblock.
         $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
-        CurrentConfigService::current()->set($configService);
+        CurrentConfigServiceTestFactory::get()->set($configService);
         $this->configService = $configService;
         // Needed for DerivativeImage::url()'s own ImageStdParams::
         // get_by_type() call (addUploadedFile()'s "cache a derivative"

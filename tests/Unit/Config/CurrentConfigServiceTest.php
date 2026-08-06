@@ -6,6 +6,7 @@ use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\EntityManagerFactory;
@@ -60,26 +61,26 @@ test('reset clears the published instance so get throws again', function (): voi
     $currentConfigService->get();
 })->throws(LogicException::class);
 
-test('current() falls back to a memoized instance when Kernel is not booted', function (): void {
+test('CurrentConfigServiceTestFactory::get falls back to a memoized instance when Kernel is not booted', function (): void {
     // Memoized (not fresh-per-call), same reasoning as Translator::get()/
     // EventDispatcher::get()/CurrentTemplate::current(): a caller that
     // writes via current() in one call and reads via current() in a later
     // call must see the same instance, or the write would be lost.
     $configService = current_config_service_test_config_service();
 
-    $first = CurrentConfigService::current();
+    $first = CurrentConfigServiceTestFactory::get();
     $first->set($configService);
 
-    $second = CurrentConfigService::current();
+    $second = CurrentConfigServiceTestFactory::get();
 
     expect($second)->toBe($first)
         ->and($second->isSet())->toBeTrue();
 });
 
-test('current() resolves the container-shared instance once Kernel is booted', function (): void {
+test('CurrentConfigServiceTestFactory::get resolves the container-shared instance once Kernel is booted', function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
     $instance = Kernel::container()->get(CurrentConfigService::class);
 
-    expect(CurrentConfigService::current())->toBe($instance);
+    expect(CurrentConfigServiceTestFactory::get())->toBe($instance);
 });

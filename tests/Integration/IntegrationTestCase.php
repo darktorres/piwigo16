@@ -15,6 +15,7 @@ use Piwigo\Core\FilterState;
 use Piwigo\Cache\CachePools;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\PageState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Env;
@@ -221,9 +222,9 @@ abstract class IntegrationTestCase extends TestCase
         }
         CurrentConfig::current()->reset();
         // Harmless even for test classes that never call
-        // buildConfigRepository()/wire CurrentConfigService::current()->set() at
+        // buildConfigRepository()/wire CurrentConfigServiceTestFactory::get()->set() at
         // all -- reset() on an already-unset registry is a no-op.
-        CurrentConfigService::current()->reset();
+        CurrentConfigServiceTestFactory::get()->reset();
         if (Kernel::isBooted()) {
             $pageState = Kernel::container()->get(PageState::class);
             if ($pageState instanceof PageState) {

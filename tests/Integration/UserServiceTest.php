@@ -30,6 +30,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\CurrentConfigService;
+    use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
     use Piwigo\Core\Lang;
     use Piwigo\Core\WsError;
     use Piwigo\Db\DbConnection;
@@ -121,12 +122,12 @@ namespace Piwigo\Tests\Integration {
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
             // PermissionCacheInvalidator::invalidate() ->
-            // CurrentConfigService::current()->get() -- confirmed via a standalone
+            // CurrentConfigServiceTestFactory::get()->get() -- confirmed via a standalone
             // sanity script that a bare "CurrentConfigService not
             // initialised" LogicException is the real failure mode
             // without this, since no other test in this file previously
             // reached that call chain.
-            CurrentConfigService::current()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new EventDispatcher(), $currentConfig));
+            CurrentConfigServiceTestFactory::get()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new EventDispatcher(), $currentConfig));
         }
 
         /** @param array<int<0, max>|string, mixed> $params */

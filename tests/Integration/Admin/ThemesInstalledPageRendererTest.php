@@ -21,6 +21,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
@@ -94,10 +95,10 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
 
         $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
         // Template::__construct()'s own data_dir_checked first-time-setup
-        // flow reaches CurrentConfigService::current()->get() -- same wiring every
+        // flow reaches CurrentConfigServiceTestFactory::get()->get() -- same wiring every
         // other Integration test constructing a real Template directly
         // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
-        CurrentConfigService::current()->set($this->configService);
+        CurrentConfigServiceTestFactory::get()->set($this->configService);
         CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $urlService = UrlServiceTestFactory::build();

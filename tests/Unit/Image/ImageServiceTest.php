@@ -26,6 +26,7 @@ use LogicException;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\DbConnection;
@@ -1250,7 +1251,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         CurrentConfig::current()->setEmptyLoungeRunning('staleexecid-' . (time() - 100));
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
-        CurrentConfigService::current()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
         // invalidateUserCache: false below -- this must survive untouched,
         // proving line 383's IfNegated does not wrongly invoke
         // PermissionCacheInvalidator::invalidate() (whose own real,
@@ -1338,10 +1339,10 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
             // this assertion) -- live sed-mutate-and-rerun directly
             // confirms a real kill: this exact assertion fails
             // ('"execid-..." is false') the moment the call is removed.
-            expect(CurrentConfigService::current()->get()->findRawValue('empty_lounge_running'))->toBeFalse();
+            expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('empty_lounge_running'))->toBeFalse();
             // findRawValue() transparently json_decode()s the stored value
             // back to the plain string it was originally encoded as.
-            expect(CurrentConfigService::current()->get()->findRawValue('count_orphans'))->toBe('3');
+            expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('count_orphans'))->toBe('3');
         } finally {
             EventDispatcher::get()->removeEventHandler(EmptyLounge::class, $handler);
             $_REQUEST = $originalRequest;
@@ -1349,7 +1350,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
             $conn->executeStatement('DELETE FROM ' . Tables::lounge() . ' WHERE image_id IN (?, ?)', [$imageA, $imageB]);
             $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id IN (?, ?)', [$imageA, $imageB]);
             $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
-            CurrentConfigService::current()->reset();
+            CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfig::current()->reset();
             imageServiceTestRrmdir($logDir);
@@ -1377,7 +1378,7 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
         $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
-        CurrentConfigService::current()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
         $conn->executeStatement(
             "INSERT INTO " . Tables::config() . " (param, value) VALUES ('count_orphans', ?)",
             [json_encode(3)]
@@ -1388,10 +1389,10 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
 
             $service->emptyLounge(invalidateUserCache: true);
 
-            expect(CurrentConfigService::current()->get()->findRawValue('count_orphans'))->toBeFalse();
+            expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('count_orphans'))->toBeFalse();
         } finally {
             $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
-            CurrentConfigService::current()->reset();
+            CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfig::current()->reset();
         }
@@ -1426,7 +1427,7 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
         CurrentConfig::current()->setEmptyLoungeRunning($staleValue);
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
-        CurrentConfigService::current()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
 
         try {
             $service = imageServiceTestNewService($repo, $conn);
@@ -1436,7 +1437,7 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
             expect($result)->toBeArray();
         } finally {
             $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
-            CurrentConfigService::current()->reset();
+            CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfig::current()->reset();
         }
@@ -1480,7 +1481,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
         CurrentConfig::current()->setEmptyLoungeRunning($freshLockValue);
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
-        CurrentConfigService::current()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
 
         $originalRequest = $_REQUEST;
         unset($_REQUEST['method']);
@@ -1507,11 +1508,11 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
             // findRawValue() transparently json_decode()s the stored value
             // back to the plain string insertIgnoreRawValue() originally
             // encoded (see ConfigRepository::findRawValue()'s own docblock).
-            expect(CurrentConfigService::current()->get()->findRawValue('empty_lounge_running'))->toBe($freshLockValue);
+            expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('empty_lounge_running'))->toBe($freshLockValue);
         } finally {
             $_REQUEST = $originalRequest;
             $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
-            CurrentConfigService::current()->reset();
+            CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfig::current()->reset();
             imageServiceTestRrmdir($logDir);
@@ -1590,7 +1591,7 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
         CurrentConfig::current()->setEmptyLoungeRunning($lockValue);
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
-        CurrentConfigService::current()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
 
         try {
             $service = imageServiceTestNewService($repo, $conn);
@@ -1610,10 +1611,10 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
             // findRawValue() transparently json_decode()s the stored value
             // back to the plain string insertIgnoreRawValue() originally
             // encoded (see ConfigRepository::findRawValue()'s own docblock).
-            expect(CurrentConfigService::current()->get()->findRawValue('empty_lounge_running'))->toBe($lockValue);
+            expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('empty_lounge_running'))->toBe($lockValue);
         } finally {
             $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
-            CurrentConfigService::current()->reset();
+            CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfig::current()->reset();
             imageServiceTestRrmdir($logDir);
@@ -1648,7 +1649,7 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
         CurrentConfig::current()->setEmptyLoungeRunning($staleValue);
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
-        CurrentConfigService::current()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
 
         try {
             $service = imageServiceTestNewService($repo, $conn);
@@ -1658,7 +1659,7 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
             expect($result)->toBeArray();
         } finally {
             $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
-            CurrentConfigService::current()->reset();
+            CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfig::current()->reset();
         }

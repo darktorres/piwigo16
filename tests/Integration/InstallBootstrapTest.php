@@ -9,6 +9,7 @@ use LogicException;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
@@ -198,11 +199,11 @@ final class InstallBootstrapTest extends IntegrationTestCase
 
         InstallBootstrap::activateConfigService();
 
-        self::assertTrue(CurrentConfigService::current()->isSet());
+        self::assertTrue(CurrentConfigServiceTestFactory::get()->isSet());
         // Same instance as the container would hand out itself -- proves
         // this really pulled the container's own (implicitly singleton)
         // ConfigService rather than building a detached one.
-        self::assertSame(Kernel::container()->get(ConfigService::class), CurrentConfigService::current()->get());
+        self::assertSame(Kernel::container()->get(ConfigService::class), CurrentConfigServiceTestFactory::get()->get());
 
         restore_error_handler();
     }

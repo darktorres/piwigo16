@@ -22,6 +22,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
@@ -217,7 +218,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         Lang::current()->load('admin.lang');
 
         $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
-        CurrentConfigService::current()->set($this->configService);
+        CurrentConfigServiceTestFactory::get()->set($this->configService);
 
         // themes_standard_pages.tpl's own {combine_script}/{footer_script}
         // tags only *register* scripts (ScriptLoader::add()/add_inline(),
@@ -347,11 +348,11 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // Same reasoning again -- Kernel::reset() also discards the
         // container-shared CurrentConfigService instance setUp()'s own
         // set() call populated; without reseeding here, Template's own
-        // constructor (its Tier-2 CurrentConfigService::current()->get()
+        // constructor (its Tier-2 CurrentConfigServiceTestFactory::get()->get()
         // read, see that class's own docblock) throws "not initialised"
         // against this fresh, unseeded container the moment the new
         // Template below is constructed.
-        CurrentConfigService::current()->set($this->configService);
+        CurrentConfigServiceTestFactory::get()->set($this->configService);
         // Same reasoning as the CurrentUser reseed above -- Kernel::reset()
         // also discards the container-shared CurrentTemplate instance
         // setUp()'s own set() call populated; without reseeding here,

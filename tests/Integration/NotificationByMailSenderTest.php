@@ -17,6 +17,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
@@ -120,7 +121,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         $repo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         self::assertInstanceOf(ConfigRepository::class, $repo);
         $configService = new ConfigService($repo, new EventDispatcher(), CurrentConfig::current());
-        CurrentConfigService::current()->set($configService);
+        CurrentConfigServiceTestFactory::get()->set($configService);
         // sendMailNotifications()'s recent-post-dates block builds real
         // thumbnail URLs (NotificationService::getHtmlDescriptionRecentPostDate()
         // -> DerivativeImage::thumb_url()) -- needs ImageStdParams loaded

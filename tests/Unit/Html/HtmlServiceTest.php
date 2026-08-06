@@ -1055,8 +1055,8 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
     // setDataLocation()/setDataDirChecked() calls below must therefore run
     // AFTER entering the closure, against that new instance, or
     // Template::__construct()'s own dataDirChecked()===null branch reaches
-    // CurrentConfigService::current()->get() (never set() in this Unit
-    // test) and throws.
+    // its constructor-injected $this->currentConfigService->get() (never
+    // set() in this Unit test) and throws.
     KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($root): void {
         CurrentConfig::current()->setDataLocation('data/');
         CurrentConfig::current()->setDataDirChecked('1');

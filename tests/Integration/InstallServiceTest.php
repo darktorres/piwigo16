@@ -14,6 +14,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
@@ -295,7 +296,7 @@ final class InstallServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot();
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
     }
 
     /**
@@ -327,7 +328,7 @@ final class InstallServiceTest extends IntegrationTestCase
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
 
-            InstallService::activateCoreThemes(Lang::current(), CurrentUser::current(), CurrentConfigService::current(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcher::get());
+            InstallService::activateCoreThemes(Lang::current(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcher::get());
 
             self::assertFalse($this->conn->fetchAssociative('SELECT id FROM ' . Tables::themes() . ' WHERE id = ' . $this->conn->quote($themeId)));
             self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
@@ -353,7 +354,7 @@ final class InstallServiceTest extends IntegrationTestCase
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
 
-            InstallService::activateCoreThemes(Lang::current(), CurrentUser::current(), CurrentConfigService::current(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcher::get());
+            InstallService::activateCoreThemes(Lang::current(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcher::get());
 
             self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
         } finally {

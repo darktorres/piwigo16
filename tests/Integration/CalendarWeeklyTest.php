@@ -83,9 +83,10 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
         // Template::__construct() unconditionally checks
         // CurrentConfig::dataDirChecked() and, when null, writes through
-        // CurrentConfigService::current()->get() -- which this test never wires
-        // (no test here needs a real ConfigService/ConfigRepository, see
-        // buildConfigRepository()'s own docblock for the opt-in shape).
+        // its own constructor-injected $this->currentConfigService->get()
+        // -- which this test never wires (no test here needs a real
+        // ConfigService/ConfigRepository, see buildConfigRepository()'s
+        // own docblock for the opt-in shape).
         // Pre-marking it "1" skips that write entirely, same technique as
         // tests/Unit/Picture/PictureCommentRendererTest.php's own
         // makePictureCommentTestTemplate().

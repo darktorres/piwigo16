@@ -370,7 +370,7 @@ final class PictureModifyPageRenderer
         ];
 
         if ($this->currentConfig->rateEnabled() && ! in_array($row['rating_score'], [null, false, 0, 0.0, '0', '', []], true)) {
-            $row['nb_rates'] = $this->rateService->countRatesForElement($image_id);
+            $row['nb_rates'] = $this->rateService->countRatesForElement(ImageId::from($image_id));
 
             $intro_vars['stats'] .= ', ' . sprintf($this->lang->t('Rated %d times, score : %.2f'), $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
         }

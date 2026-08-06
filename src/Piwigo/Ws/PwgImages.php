@@ -487,7 +487,7 @@ final class PwgImages
             'average' => null,
         ];
         if (isset($rating['score'])) {
-            $rate_summary = $this->rateService->getRateSummaryForElement($image_id);
+            $rate_summary = $this->rateService->getRateSummaryForElement(ImageId::from($image_id));
 
             assert(is_numeric($rating_score_raw));
             $rating['score'] = (float) $rating_score_raw;

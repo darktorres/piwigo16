@@ -7,6 +7,8 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Request\RatingRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -72,7 +74,9 @@ final class RatingPageRenderer
             $users[$user_id] = stripslashes($username);
         }
 
-        $nb_images = $rate_repository->countRatedElements($filter_user_id, $exclude_filter_user, $cat_ids);
+        $filterUserId = $filter_user_id === null ? null : UserId::from($filter_user_id);
+
+        $nb_images = $rate_repository->countRatedElements($filterUserId, $exclude_filter_user, $cat_ids);
         $nb_elements = $rate_repository->countAllRates();
 
         $template->set_filename('rating', 'rating.tpl');
@@ -123,7 +127,7 @@ final class RatingPageRenderer
         $template->assign('ADMIN_PAGE_TITLE', $lang->t('Rating'));
 
         $images = $rate_repository->findRatingReport(
-            $filter_user_id,
+            $filterUserId,
             $exclude_filter_user,
             $cat_ids,
             $available_order_by[$order_by_index][1],
@@ -137,7 +141,7 @@ final class RatingPageRenderer
 
             $image_url = $urlService->getRootUrl() . 'admin.php?page=photo-' . $image['id'];
 
-            $rates = $rate_repository->findRateRowsForElement($image['id']);
+            $rates = $rate_repository->findRateRowsForElement(ImageId::from($image['id']));
             $nb_rates = count($rates);
 
             $tpl_image =

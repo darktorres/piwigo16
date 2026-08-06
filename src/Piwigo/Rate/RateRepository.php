@@ -8,6 +8,8 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
+use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
 use Piwigo\Image\ImageCategoryEntity;
@@ -31,7 +33,7 @@ final class RateRepository extends EntityRepository
     /**
      * @return list<int>
      */
-    public function findElementIdsForUserAndAnonymousId(int $userId, string $anonymousId): array
+    public function findElementIdsForUserAndAnonymousId(UserId $userId, string $anonymousId): array
     {
         $ids = $this->createQueryBuilder('r')
             ->select('r.elementId')
@@ -48,7 +50,7 @@ final class RateRepository extends EntityRepository
     /**
      * @param array<int, int> $elementIds
      */
-    public function deleteByUserAnonymousAndElements(int $userId, string $anonymousId, array $elementIds): void
+    public function deleteByUserAnonymousAndElements(UserId $userId, string $anonymousId, array $elementIds): void
     {
         if ($elementIds === []) {
             return;
@@ -62,13 +64,13 @@ final class RateRepository extends EntityRepository
             ->andWhere('r.elementId IN (:elementIds)')
             ->setParameter('userId', $userId)
             ->setParameter('anonymousId', $anonymousId)
-            ->setParameter('elementIds', $elementIds)
+            ->setParameter('elementIds', $elementIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
     }
 
-    public function reassignAnonymousId(int $userId, string $oldAnonymousId, string $newAnonymousId): void
+    public function reassignAnonymousId(UserId $userId, string $oldAnonymousId, string $newAnonymousId): void
     {
         $em = $this->getEntityManager();
         $em->createQueryBuilder()
@@ -90,7 +92,7 @@ final class RateRepository extends EntityRepository
      * insert that follows never collides with the (element_id, user_id,
      * anonymous_id) primary key.
      */
-    public function deleteExistingRate(int $elementId, int $userId, ?string $anonymousId): void
+    public function deleteExistingRate(ImageId $elementId, UserId $userId, ?string $anonymousId): void
     {
         $em = $this->getEntityManager();
         $qb = $em->createQueryBuilder()
@@ -110,7 +112,7 @@ final class RateRepository extends EntityRepository
         $em->clear();
     }
 
-    public function insertRate(int $elementId, int $userId, string $anonymousId, int $rate): void
+    public function insertRate(ImageId $elementId, UserId $userId, string $anonymousId, int $rate): void
     {
         // Env::now() rather than SQL's NOW() -- same reasoning as
         // CommentRepository::insert()'s own docblock: NOW() runs on the
@@ -144,11 +146,16 @@ final class RateRepository extends EntityRepository
 
         $byItem = [];
         foreach ($rows as $row) {
-            if (! is_array($row) || ! is_numeric($row['elementId'] ?? null)) {
+            if (! is_array($row)) {
                 continue;
             }
 
-            $byItem[(int) $row['elementId']] = [
+            $elementId = $row['elementId'] ?? null;
+            if (! $elementId instanceof ImageId) {
+                continue;
+            }
+
+            $byItem[$elementId->value] = [
                 'rcount' => is_numeric($row['rcount'] ?? null) ? (int) $row['rcount'] : 0,
                 'rsum' => is_numeric($row['rsum'] ?? null) ? (float) $row['rsum'] : 0.0,
             ];
@@ -268,7 +275,7 @@ final class RateRepository extends EntityRepository
      *
      * @param list<int> $categoryIds
      */
-    public function countRatedElements(?int $filterUserId, bool $excludeFilterUser, array $categoryIds): int
+    public function countRatedElements(?UserId $filterUserId, bool $excludeFilterUser, array $categoryIds): int
     {
         $qb = $this->getEntityManager()
             ->createQueryBuilder()
@@ -304,6 +311,12 @@ final class RateRepository extends EntityRepository
      * for the 5 aggregate/aliased columns, a real property path for the 3
      * plain `ImageEntity` columns.
      *
+     * `i.id` hydrates as a real {@see \Piwigo\Common\ValueObject\ImageId}
+     * under `getArrayResult()` -- the `id` narrow below checks for that
+     * VO instance rather than `is_numeric()`, which would silently
+     * default every row's id to 0 (never caught by PHPStan, since
+     * `getArrayResult()`'s own return type is bare `mixed[]`).
+     *
      * @param list<int> $categoryIds
      * @param string $orderBy one of 'recently_rated'/'score'/'avg_rates'/
      *   'nb_rates'/'sum_rates'/'file'/'date_creation'/'date_available',
@@ -312,7 +325,7 @@ final class RateRepository extends EntityRepository
      *   unordered
      * @return list<array{id: int, path: string, file: string, representative_ext: ?string, score: ?float, recently_rated: ?string, avg_rates: ?float, nb_rates: int, sum_rates: float}>
      */
-    public function findRatingReport(?int $filterUserId, bool $excludeFilterUser, array $categoryIds, string $orderBy, int $limit, int $offset): array
+    public function findRatingReport(?UserId $filterUserId, bool $excludeFilterUser, array $categoryIds, string $orderBy, int $limit, int $offset): array
     {
         $qb = $this->getEntityManager()
             ->createQueryBuilder()
@@ -368,7 +381,7 @@ final class RateRepository extends EntityRepository
             $avgRates = is_numeric($row['avg_rates'] ?? null) ? round((float) $row['avg_rates'], 2) : null;
 
             $result[] = [
-                'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+                'id' => ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : (is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0),
                 'path' => is_string($row['path'] ?? null) ? $row['path'] : '',
                 'file' => is_string($row['file'] ?? null) ? $row['file'] : '',
                 'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
@@ -386,7 +399,7 @@ final class RateRepository extends EntityRepository
     /**
      * @return list<Rate>
      */
-    public function findRateRowsForElement(int $elementId): array
+    public function findRateRowsForElement(ImageId $elementId): array
     {
         // Maps the hydrated RateEntity objects to Rate by hand instead of
         // reusing Rate::fromRow() -- fromRow()'s own contract expects a
@@ -403,8 +416,8 @@ final class RateRepository extends EntityRepository
 
         return array_map(
             static fn (RateEntity $r): Rate => new Rate(
-                userId: $r->userId,
-                elementId: $r->elementId,
+                userId: $r->userId->value,
+                elementId: $r->elementId->value,
                 anonymousId: $r->anonymousId,
                 rate: $r->rate,
                 date: $r->date,
@@ -430,7 +443,7 @@ final class RateRepository extends EntityRepository
      * non-empty elementIds list; every condition here is independently
      * optional). Returns the number of rows actually deleted.
      */
-    public function deleteByOptionalConditions(int $userId, ?string $anonymousId, ?int $elementId): int
+    public function deleteByOptionalConditions(UserId $userId, ?string $anonymousId, ?ImageId $elementId): int
     {
         $em = $this->getEntityManager();
         $qb = $em->createQueryBuilder()
@@ -459,7 +472,7 @@ final class RateRepository extends EntityRepository
      * Number of rates for a single element -- Admin\PictureModifyPageRenderer's
      * own "how many times has this photo been rated" display.
      */
-    public function countRatesForElement(int $elementId): int
+    public function countRatesForElement(ImageId $elementId): int
     {
         return (int) $this->createQueryBuilder('r')
             ->select('COUNT(r.elementId)')
@@ -520,8 +533,8 @@ final class RateRepository extends EntityRepository
 
         return array_map(
             static fn (RateEntity $r): Rate => new Rate(
-                userId: $r->userId,
-                elementId: $r->elementId,
+                userId: $r->userId->value,
+                elementId: $r->elementId->value,
                 anonymousId: $r->anonymousId,
                 rate: $r->rate,
                 date: $r->date,
@@ -535,6 +548,9 @@ final class RateRepository extends EntityRepository
      * report), same precedent as this repository's own images.rating_score
      * update above -- not worth a new ImageRepository dependency for one
      * report query.
+     *
+     * Same `getArrayResult()`-hydration handling as {@see findRatingReport()}
+     * above, for both `id` (ImageId) and `path` (RelPath).
      *
      * @param list<int> $imageIds
      * @return list<array{id: int, name: ?string, file: string, path: string, representative_ext: ?string, level: int}>
@@ -568,10 +584,10 @@ final class RateRepository extends EntityRepository
                 }
 
                 return [
-                    'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+                    'id' => ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : (is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0),
                     'name' => is_string($row['name'] ?? null) ? $row['name'] : null,
                     'file' => is_string($row['file'] ?? null) ? $row['file'] : '',
-                    'path' => is_string($row['path'] ?? null) ? $row['path'] : '',
+                    'path' => ($row['path'] ?? null) instanceof RelPath ? $row['path']->value : (is_string($row['path'] ?? null) ? $row['path'] : ''),
                     'representative_ext' => is_string($row['representativeExt'] ?? null) ? $row['representativeExt'] : null,
                     'level' => is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
                 ];
@@ -593,8 +609,9 @@ final class RateRepository extends EntityRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (is_array($row) && is_numeric($row['elementId'] ?? null)) {
-                $result[(int) $row['elementId']] = is_numeric($row['avgRate'] ?? null) ? (float) $row['avgRate'] : 0.0;
+            $elementId = is_array($row) ? ($row['elementId'] ?? null) : null;
+            if ($elementId instanceof ImageId) {
+                $result[$elementId->value] = is_numeric($row['avgRate'] ?? null) ? (float) $row['avgRate'] : 0.0;
             }
         }
 
@@ -638,7 +655,7 @@ final class RateRepository extends EntityRepository
      *
      * @return array{count: int, average: ?float}
      */
-    public function findRateSummaryForElement(int $elementId): array
+    public function findRateSummaryForElement(ImageId $elementId): array
     {
         $row = $this->createQueryBuilder('r')
             ->select('COUNT(r.rate) AS count', 'AVG(r.rate) AS average')
@@ -671,7 +688,7 @@ final class RateRepository extends EntityRepository
      * NonUniqueResultException in that case, so this pairs the query with
      * ->setMaxResults(1) instead, returning any one matching row.
      */
-    public function findUserRate(int $elementId, int $userId, ?string $anonymousId): ?int
+    public function findUserRate(ImageId $elementId, UserId $userId, ?string $anonymousId): ?int
     {
         $qb = $this->createQueryBuilder('r')
             ->select('r.rate')

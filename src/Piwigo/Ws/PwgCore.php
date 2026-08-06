@@ -397,7 +397,14 @@ final class PwgCore
         $anonymous_id = (! in_array($params['anonymous_id'], [null, ''], true)) ? $params['anonymous_id'] : null;
         $image_id = (isset($params['image_id']) and $params['image_id'] !== 0) ? $params['image_id'] : null;
 
-        $changes = $this->rateService->deleteByOptionalConditions($params['user_id'], $anonymous_id, $image_id);
+        // Real bug fix, not just a MysqliDb retarget: the original (both here
+        // and in the pre-rewrite legacy include/ws_functions/pwg.php) built
+        // its own raw query and then NEVER executed it -- MysqliDb::changes()
+        // just reads $mysqli->affected_rows from whatever OTHER query last
+        // ran on the connection, completely disconnected from this DELETE.
+        // executeStatement() both runs the query for real and returns its
+        // actual affected-row count.
+        $changes = $this->rateService->deleteByOptionalConditions(UserId::from($params['user_id']), $anonymous_id, $image_id === null ? null : ImageId::from($image_id));
         $this->entityManager->clear();
         if ($changes > 0) {
             $this->rateService->updateRatingScore();

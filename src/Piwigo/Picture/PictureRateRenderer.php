@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Picture;
 
 use Piwigo\Auth\AccessControl;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
@@ -65,7 +66,7 @@ final class PictureRateRenderer
             $picture_current_id = $picture['current']['id'];
             assert(is_numeric($picture_current_id));
 
-            $summary = $this->repo->findRateSummaryForElement((int) $picture_current_id);
+            $summary = $this->repo->findRateSummaryForElement(ImageId::from((int) $picture_current_id));
             $rate_summary['count'] = $summary['count'];
             $rate_summary['average'] = $summary['average'];
         }
@@ -74,9 +75,9 @@ final class PictureRateRenderer
         $user_rate = null;
         if ($this->currentConfig->rateAnonymous() or $this->accessControl->isAuthorizeStatus(AccessLevel::Classic)) {
             if ($rate_summary['count'] > 0) {
-                $rate_image_id = $imageId;
+                $rate_image_id = ImageId::from($imageId);
                 $rate_user_id = $this->currentUser->get()
-                    ->id->value;
+                    ->id;
 
                 $anonymous_id = null;
                 if (! $this->accessControl->isAuthorizeStatus(AccessLevel::Classic)) {

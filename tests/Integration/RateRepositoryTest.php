@@ -7,6 +7,8 @@ namespace Piwigo\Tests\Integration;
 use Override;
 use Piwigo\Core\Kernel;
 use LogicException;
+use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Rate\RateEntity;
 use Doctrine\DBAL\Connection;
@@ -61,7 +63,7 @@ final class RateRepositoryTest extends IntegrationTestCase
     {
         // fixture: user_id 1 rated element 1 and element 3, both with
         // anonymous_id ''
-        $ids = $this->repo->findElementIdsForUserAndAnonymousId(1, '');
+        $ids = $this->repo->findElementIdsForUserAndAnonymousId(UserId::from(1), '');
 
         sort($ids);
         self::assertSame([1, 3], $ids);
@@ -69,71 +71,71 @@ final class RateRepositoryTest extends IntegrationTestCase
 
     public function test_find_element_ids_returns_empty_for_no_match(): void
     {
-        self::assertSame([], $this->repo->findElementIdsForUserAndAnonymousId(1, '10.0.0'));
+        self::assertSame([], $this->repo->findElementIdsForUserAndAnonymousId(UserId::from(1), '10.0.0'));
     }
 
     public function test_delete_by_user_anonymous_and_elements(): void
     {
-        $this->repo->insertRate(5, 2, 'disp-a', 3);
+        $this->repo->insertRate(ImageId::from(5), UserId::from(2), 'disp-a', 3);
 
-        $this->repo->deleteByUserAnonymousAndElements(2, 'disp-a', [5]);
+        $this->repo->deleteByUserAnonymousAndElements(UserId::from(2), 'disp-a', [5]);
 
-        self::assertSame([], $this->repo->findElementIdsForUserAndAnonymousId(2, 'disp-a'));
+        self::assertSame([], $this->repo->findElementIdsForUserAndAnonymousId(UserId::from(2), 'disp-a'));
     }
 
     public function test_delete_by_user_anonymous_and_elements_is_a_no_op_for_empty_ids(): void
     {
-        $this->repo->insertRate(5, 2, 'disp-b', 3);
+        $this->repo->insertRate(ImageId::from(5), UserId::from(2), 'disp-b', 3);
 
         try {
-            $this->repo->deleteByUserAnonymousAndElements(2, 'disp-b', []);
+            $this->repo->deleteByUserAnonymousAndElements(UserId::from(2), 'disp-b', []);
 
-            self::assertSame([5], $this->repo->findElementIdsForUserAndAnonymousId(2, 'disp-b'));
+            self::assertSame([5], $this->repo->findElementIdsForUserAndAnonymousId(UserId::from(2), 'disp-b'));
         } finally {
-            $this->repo->deleteByUserAnonymousAndElements(2, 'disp-b', [5]);
+            $this->repo->deleteByUserAnonymousAndElements(UserId::from(2), 'disp-b', [5]);
         }
     }
 
     public function test_reassign_anonymous_id(): void
     {
-        $this->repo->insertRate(5, 2, 'disp-c-old', 3);
+        $this->repo->insertRate(ImageId::from(5), UserId::from(2), 'disp-c-old', 3);
 
         try {
-            $this->repo->reassignAnonymousId(2, 'disp-c-old', 'disp-c-new');
+            $this->repo->reassignAnonymousId(UserId::from(2), 'disp-c-old', 'disp-c-new');
 
-            self::assertSame([], $this->repo->findElementIdsForUserAndAnonymousId(2, 'disp-c-old'));
-            self::assertSame([5], $this->repo->findElementIdsForUserAndAnonymousId(2, 'disp-c-new'));
+            self::assertSame([], $this->repo->findElementIdsForUserAndAnonymousId(UserId::from(2), 'disp-c-old'));
+            self::assertSame([5], $this->repo->findElementIdsForUserAndAnonymousId(UserId::from(2), 'disp-c-new'));
         } finally {
-            $this->repo->deleteByUserAnonymousAndElements(2, 'disp-c-new', [5]);
+            $this->repo->deleteByUserAnonymousAndElements(UserId::from(2), 'disp-c-new', [5]);
         }
     }
 
     public function test_delete_existing_rate_scoped_to_anonymous_id(): void
     {
-        $this->repo->insertRate(5, 2, 'disp-d', 1);
+        $this->repo->insertRate(ImageId::from(5), UserId::from(2), 'disp-d', 1);
 
         try {
             // mismatched anonymous_id -- must not delete
-            $this->repo->deleteExistingRate(5, 2, 'wrong-ip');
+            $this->repo->deleteExistingRate(ImageId::from(5), UserId::from(2), 'wrong-ip');
 
             self::assertSame(1, $this->fetchRateCount(5, 2));
         } finally {
-            $this->repo->deleteExistingRate(5, 2, null);
+            $this->repo->deleteExistingRate(ImageId::from(5), UserId::from(2), null);
         }
     }
 
     public function test_delete_existing_rate_with_null_anonymous_id_matches_any(): void
     {
-        $this->repo->insertRate(5, 2, 'disp-e', 1);
+        $this->repo->insertRate(ImageId::from(5), UserId::from(2), 'disp-e', 1);
 
-        $this->repo->deleteExistingRate(5, 2, null);
+        $this->repo->deleteExistingRate(ImageId::from(5), UserId::from(2), null);
 
         self::assertSame(0, $this->fetchRateCount(5, 2));
     }
 
     public function test_insert_rate(): void
     {
-        $this->repo->insertRate(5, 2, 'disp-f', 3);
+        $this->repo->insertRate(ImageId::from(5), UserId::from(2), 'disp-f', 3);
 
         try {
             $value = $this->conn->createQueryBuilder()
@@ -146,7 +148,7 @@ final class RateRepositoryTest extends IntegrationTestCase
 
             self::assertSame(3, is_numeric($value) ? (int) $value : null);
         } finally {
-            $this->repo->deleteExistingRate(5, 2, null);
+            $this->repo->deleteExistingRate(ImageId::from(5), UserId::from(2), null);
         }
     }
 
@@ -310,9 +312,9 @@ final class RateRepositoryTest extends IntegrationTestCase
     public function test_count_rated_elements_filtered_by_user(): void
     {
         // user 1 rated elements 1 and 3
-        self::assertSame(2, $this->repo->countRatedElements(1, false, []));
+        self::assertSame(2, $this->repo->countRatedElements(UserId::from(1), false, []));
         // everyone except user 1 rated elements 1, 2, 4
-        self::assertSame(3, $this->repo->countRatedElements(1, true, []));
+        self::assertSame(3, $this->repo->countRatedElements(UserId::from(1), true, []));
     }
 
     public function test_find_rating_report_matches_the_fixture(): void
@@ -352,7 +354,7 @@ final class RateRepositoryTest extends IntegrationTestCase
 
     public function test_find_rate_rows_for_element(): void
     {
-        $rows = $this->repo->findRateRowsForElement(1);
+        $rows = $this->repo->findRateRowsForElement(ImageId::from(1));
 
         self::assertCount(2, $rows);
         self::assertSame(9, array_sum(array_column($rows, 'rate')));
@@ -361,7 +363,7 @@ final class RateRepositoryTest extends IntegrationTestCase
 
     public function test_find_rate_rows_for_element_returns_empty_for_an_unrated_element(): void
     {
-        self::assertSame([], $this->repo->findRateRowsForElement(5));
+        self::assertSame([], $this->repo->findRateRowsForElement(ImageId::from(5)));
     }
 
     public function test_count_all_rates_matches_the_fixture(): void
@@ -437,7 +439,7 @@ final class RateRepositoryTest extends IntegrationTestCase
      */
     public function test_find_rate_summary_for_element_matches_the_fixture(): void
     {
-        self::assertSame(['count' => 2, 'average' => 4.5], $this->repo->findRateSummaryForElement(1));
+        self::assertSame(['count' => 2, 'average' => 4.5], $this->repo->findRateSummaryForElement(ImageId::from(1)));
     }
 
     /**
@@ -449,27 +451,27 @@ final class RateRepositoryTest extends IntegrationTestCase
      */
     public function test_find_rate_summary_for_element_is_zero_for_an_unrated_element(): void
     {
-        self::assertSame(['count' => 0, 'average' => null], $this->repo->findRateSummaryForElement(5));
+        self::assertSame(['count' => 0, 'average' => null], $this->repo->findRateSummaryForElement(ImageId::from(5)));
     }
 
     public function test_find_user_rate_returns_the_users_own_rate(): void
     {
-        self::assertSame(5, $this->repo->findUserRate(1, 1, null));
+        self::assertSame(5, $this->repo->findUserRate(ImageId::from(1), UserId::from(1), null));
     }
 
     public function test_find_user_rate_matches_a_non_null_anonymous_id(): void
     {
-        self::assertSame(5, $this->repo->findUserRate(1, 1, ''));
+        self::assertSame(5, $this->repo->findUserRate(ImageId::from(1), UserId::from(1), ''));
     }
 
     public function test_find_user_rate_returns_null_when_the_anonymous_id_does_not_match(): void
     {
-        self::assertNull($this->repo->findUserRate(1, 1, 'no-such-anonymous-id'));
+        self::assertNull($this->repo->findUserRate(ImageId::from(1), UserId::from(1), 'no-such-anonymous-id'));
     }
 
     public function test_find_user_rate_returns_null_for_a_user_with_no_rate_on_that_element(): void
     {
-        self::assertNull($this->repo->findUserRate(1, 999999, null));
+        self::assertNull($this->repo->findUserRate(ImageId::from(1), UserId::from(999999), null));
     }
 
     private function fetchRateCount(int $elementId, int $userId): int

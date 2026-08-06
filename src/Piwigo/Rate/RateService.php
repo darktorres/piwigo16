@@ -6,7 +6,9 @@ namespace Piwigo\Rate;
 
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\CookieService;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Event\Picture\UpdateRatingScore;
@@ -75,7 +77,8 @@ final readonly class RateService
         }
 
         $userId = $this->currentUser->get()
-            ->id->value;
+            ->id;
+        $elementId = ImageId::from($imageId);
 
         $remoteAddr = IpAddress::fromRemoteAddr()->value ?? '';
         $ipComponents = explode('.', $remoteAddr);
@@ -101,8 +104,8 @@ final readonly class RateService
             $this->cookies->setCookieVar('anonymous_rater', $anonymousId);
         }
 
-        $this->repo->deleteExistingRate($imageId, $userId, $userAnonymous ? $anonymousId : null);
-        $this->repo->insertRate($imageId, $userId, $anonymousId, $rateInt);
+        $this->repo->deleteExistingRate($elementId, $userId, $userAnonymous ? $anonymousId : null);
+        $this->repo->insertRate($elementId, $userId, $anonymousId, $rateInt);
 
         return $this->updateRatingScore($imageId);
     }
@@ -183,7 +186,7 @@ final readonly class RateService
      * Number of rates for a single element -- Admin\PictureModifyPageRenderer's
      * own "how many times has this photo been rated" display.
      */
-    public function countRatesForElement(int $elementId): int
+    public function countRatesForElement(ImageId $elementId): int
     {
         return $this->repo->countRatesForElement($elementId);
     }
@@ -191,7 +194,7 @@ final readonly class RateService
     /**
      * @return array{count: int, average: ?float}
      */
-    public function getRateSummaryForElement(int $elementId): array
+    public function getRateSummaryForElement(ImageId $elementId): array
     {
         return $this->repo->findRateSummaryForElement($elementId);
     }
@@ -201,7 +204,7 @@ final readonly class RateService
         return $this->repo->countAllRates();
     }
 
-    public function deleteByOptionalConditions(int $userId, ?string $anonymousId, ?int $elementId): int
+    public function deleteByOptionalConditions(UserId $userId, ?string $anonymousId, ?ImageId $elementId): int
     {
         return $this->repo->deleteByOptionalConditions($userId, $anonymousId, $elementId);
     }

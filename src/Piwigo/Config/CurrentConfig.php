@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
+use LogicException;
+use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use ReflectionClass;
@@ -607,7 +609,7 @@ final class CurrentConfig
     /**
      * Sort order for comment display: ASC (oldest first) or DESC (newest first).
      */
-    private string $commentsOrder = 'ASC';
+    private string $commentsOrder = SortOrder::Asc->value;
 
     public function commentsOrder(): string
     {

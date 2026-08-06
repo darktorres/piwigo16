@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Request;
 
+use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Validation\InputValidator;
 
@@ -84,7 +85,7 @@ final readonly class CommentsRequest
         $sort_by = (is_string($sort_by_raw) && in_array($sort_by_raw, ['date', 'image_id'], true)) ? $sort_by_raw : 'date';
 
         $sort_order_raw = $get['sort_order'] ?? null;
-        $sort_order = (is_string($sort_order_raw) && in_array($sort_order_raw, ['DESC', 'ASC'], true)) ? $sort_order_raw : 'DESC';
+        $sort_order = (is_string($sort_order_raw) && in_array($sort_order_raw, [SortOrder::Desc->value, SortOrder::Asc->value], true)) ? $sort_order_raw : SortOrder::Desc->value;
 
         // No (int) cast on the GET-provided branch: the original kept
         // $_GET['items_number'] as its native string in $page['items_number']

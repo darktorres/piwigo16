@@ -8,6 +8,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
+use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
@@ -171,17 +172,17 @@ final class PictureCommentRenderer
         if ($nbComments > 0) {
             // comments order (get, session, conf)
             $getCommentsOrder = $pictureCommentSubmitRequest->commentsOrderRaw;
-            if ($getCommentsOrder !== null && $getCommentsOrder !== '' && $getCommentsOrder !== '0' && in_array(strtoupper($getCommentsOrder), ['ASC', 'DESC'], true)) {
+            if ($getCommentsOrder !== null && $getCommentsOrder !== '' && $getCommentsOrder !== '0' && in_array(strtoupper($getCommentsOrder), [SortOrder::Asc->value, SortOrder::Desc->value], true)) {
                 $sessionService->setSessionVar('comments_order', $getCommentsOrder);
             }
             $commentsOrder = $sessionService->getSessionVar('comments_order', $currentConfig->commentsOrder());
-            $commentsOrder = is_string($commentsOrder) ? $commentsOrder : 'ASC';
+            $commentsOrder = is_string($commentsOrder) ? $commentsOrder : SortOrder::Asc->value;
 
             $template->assign([
                 'COMMENTS_ORDER_URL' => $urlService->addUrlParams($urlService->duplicatePictureUrl(), [
-                    'comments_order' => ($commentsOrder === 'ASC' ? 'DESC' : 'ASC'),
+                    'comments_order' => ($commentsOrder === SortOrder::Asc->value ? SortOrder::Desc->value : SortOrder::Asc->value),
                 ]),
-                'COMMENTS_ORDER_TITLE' => $commentsOrder === 'ASC' ? $lang->t('Show latest comments first') : $lang->t('Show oldest comments first'),
+                'COMMENTS_ORDER_TITLE' => $commentsOrder === SortOrder::Asc->value ? $lang->t('Show latest comments first') : $lang->t('Show oldest comments first'),
             ]);
 
             $rows = $commentRepository->findForImage(

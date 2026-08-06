@@ -9,6 +9,7 @@ use Piwigo\Admin\Request\AlbumsRequest;
 use Piwigo\Category\CategoryRefDateAggregate;
 use Piwigo\Category\CategoryRefDateField;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -118,7 +119,7 @@ final class AlbumsPageRenderer
 
                 $refDateField = $order_by_field === 'date_creation' ? CategoryRefDateField::DateCreation : CategoryRefDateField::DateAvailable;
                 $ref_dates = $categoryAdminService
-                    ->getCategoriesRefDate($category_ids, $refDateField, $order_by_asc === 'ASC' ? CategoryRefDateAggregate::Min : CategoryRefDateAggregate::Max);
+                    ->getCategoriesRefDate($category_ids, $refDateField, $order_by_asc === SortOrder::Asc->value ? CategoryRefDateAggregate::Min : CategoryRefDateAggregate::Max);
             }
 
             foreach ($categoryService->getIdsNamesUppercatsForIds($category_ids) as $cat_row) {
@@ -143,7 +144,7 @@ final class AlbumsPageRenderer
             array_multisort(
                 $sort,
                 $order_by_field === 'natural_order' ? SORT_NATURAL : SORT_REGULAR,
-                $order_by_asc === 'ASC' ? SORT_ASC : SORT_DESC,
+                $order_by_asc === SortOrder::Asc->value ? SORT_ASC : SORT_DESC,
                 $categories
             );
 

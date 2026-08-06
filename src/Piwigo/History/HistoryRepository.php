@@ -10,6 +10,8 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use Override;
 use Piwigo\Auth\LastVisitLookupInterface;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
 use Piwigo\Db\Tables;
@@ -83,7 +85,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             ->where('h.userId = :userId')
             ->orderBy('h.id', 'DESC')
             ->setMaxResults(1)
-            ->setParameter('userId', $userId)
+            ->setParameter('userId', UserId::from($userId))
             ->getQuery()
             ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
@@ -678,12 +680,12 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
 
         if ($userId !== null) {
             $qb->andWhere('h.userId = :userId')
-                ->setParameter('userId', $userId);
+                ->setParameter('userId', UserId::from($userId));
         }
 
         if ($imageId !== null) {
             $qb->andWhere('h.imageId = :imageId')
-                ->setParameter('imageId', $imageId);
+                ->setParameter('imageId', ImageId::from($imageId));
         }
 
         if ($imageIdsFromFilename !== null) {
@@ -710,13 +712,13 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             $results[] = [
                 'date' => is_string($row['date'] ?? null) ? $row['date'] : null,
                 'time' => is_string($row['time'] ?? null) ? $row['time'] : '',
-                'user_id' => is_numeric($row['userId'] ?? null) ? (int) $row['userId'] : 0,
+                'user_id' => ($row['userId'] ?? null) instanceof UserId ? $row['userId']->value : (is_numeric($row['userId'] ?? null) ? (int) $row['userId'] : 0),
                 'IP' => is_string($row['ip'] ?? null) ? $row['ip'] : '',
                 'section' => is_string($row['section'] ?? null) ? $row['section'] : null,
-                'category_id' => is_numeric($row['categoryId'] ?? null) ? (int) $row['categoryId'] : null,
+                'category_id' => ($row['categoryId'] ?? null) instanceof CategoryId ? $row['categoryId']->value : (is_numeric($row['categoryId'] ?? null) ? (int) $row['categoryId'] : null),
                 'search_id' => is_numeric($row['searchId'] ?? null) ? (int) $row['searchId'] : null,
                 'tag_ids' => is_string($row['tagIds'] ?? null) ? $row['tagIds'] : null,
-                'image_id' => is_numeric($row['imageId'] ?? null) ? (int) $row['imageId'] : null,
+                'image_id' => ($row['imageId'] ?? null) instanceof ImageId ? $row['imageId']->value : (is_numeric($row['imageId'] ?? null) ? (int) $row['imageId'] : null),
                 'image_type' => ($row['imageType'] ?? null) instanceof HistoryImageType ? $row['imageType']->value : null,
             ];
         }
@@ -873,13 +875,13 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
         $entity = new HistoryEntity(
             date: $now->format('Y-m-d'),
             time: $now->format('H:i:s'),
-            userId: $data['userId'],
+            userId: UserId::from($data['userId']),
             ip: $data['ip'],
             section: $data['section'],
-            categoryId: $data['categoryId'],
+            categoryId: $data['categoryId'] === null ? null : CategoryId::from($data['categoryId']),
             searchId: $data['searchId'],
             tagIds: $data['tagsString'],
-            imageId: $data['imageId'],
+            imageId: $data['imageId'] === null ? null : ImageId::from($data['imageId']),
             imageType: $data['imageType'] !== null ? HistoryImageType::tryFrom($data['imageType']) : null,
             formatId: is_numeric($data['formatId']) ? (int) $data['formatId'] : null,
             authKeyId: $data['authKeyId'],

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\History;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Maps the `history` table (`piwigo_history` once
@@ -35,20 +38,20 @@ final class HistoryEntity
         public ?string $date,
         #[ORM\Column(type: 'string', length: 8)]
         public string $time,
-        #[ORM\Column(name: 'user_id', type: 'integer')]
-        public int $userId,
+        #[ORM\Column(name: 'user_id', type: 'user_id')]
+        public UserId $userId,
         #[ORM\Column(name: 'IP', type: 'string', length: 39)]
         public string $ip,
         #[ORM\Column(type: 'string', length: 20, nullable: true)]
         public ?string $section,
-        #[ORM\Column(name: 'category_id', type: 'integer', nullable: true)]
-        public ?int $categoryId,
+        #[ORM\Column(name: 'category_id', type: 'category_id', nullable: true)]
+        public ?CategoryId $categoryId,
         #[ORM\Column(name: 'search_id', type: 'integer', nullable: true)]
         public ?int $searchId,
         #[ORM\Column(name: 'tag_ids', type: 'string', length: 50, nullable: true)]
         public ?string $tagIds,
-        #[ORM\Column(name: 'image_id', type: 'integer', nullable: true)]
-        public ?int $imageId,
+        #[ORM\Column(name: 'image_id', type: 'image_id', nullable: true)]
+        public ?ImageId $imageId,
         #[ORM\Column(name: 'image_type', type: 'string', length: 10, nullable: true, enumType: HistoryImageType::class)]
         public ?HistoryImageType $imageType,
         #[ORM\Column(name: 'format_id', type: 'integer', nullable: true)]

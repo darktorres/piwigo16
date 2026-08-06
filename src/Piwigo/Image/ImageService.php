@@ -137,14 +137,15 @@ final readonly class ImageService
 
     /**
      * Container resolve, not a constructor property -- used only inside
-     * emptyLounge()'s own internal CurrentLogger::getStatic() read below.
-     * A required constructor param here would ripple across this class's
-     * own real construction sites for the sake of this one internal read,
-     * same low-blast-radius reasoning as currentUser()/filterState() above
-     * (singleton/service-locator elimination campaign, Phase 11 sub-phase
-     * 11G). Falls back to an OFF-severity Logger when Kernel::boot()
-     * hasn't run, matching CurrentLogger::getStatic()'s own identical
-     * pre-boot fallback.
+     * emptyLounge()'s own internal read below. A required constructor
+     * param here would ripple across this class's own real construction
+     * sites for the sake of this one internal read, same low-blast-radius
+     * reasoning as currentUser()/filterState() above (singleton/
+     * service-locator elimination campaign, Phase 11 sub-phase 11G). Falls
+     * back to an OFF-severity Logger when Kernel::boot() hasn't run, same
+     * pre-boot fallback shape as every other private resolver this
+     * campaign has added (e.g. `UploadService::currentLogger()`, sub-phase
+     * 12F-1).
      */
     private function logger(): Logger
     {

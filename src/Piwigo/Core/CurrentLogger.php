@@ -18,11 +18,14 @@ use LogicException;
  * Logger before render() runs).
  *
  * Singleton/service-locator elimination campaign, Phase 2: converted from
- * a self-managed static facade to a container-shared instance. Most real
- * readers take it via constructor injection; `Piwigo\Core\UniqueExecLock`
- * (genuinely static-only) and `Piwigo\Ws\PwgUsers`/`Piwigo\Ws\PwgImages`
- * (Phase 10's still-static dispatch layer) keep calling the
- * `getStatic()` shim below instead.
+ * a self-managed static facade to a container-shared instance -- every
+ * real reader takes it via constructor injection now, including
+ * `Piwigo\Ws\PwgUsers`/`Piwigo\Ws\PwgImages` (`$this->currentLogger->get()`)
+ * and `Piwigo\Core\UniqueExecLock` (a real `Logger` parameter, NOCTOR).
+ * The former `getStatic()` transitional bridge (for
+ * `Piwigo\Admin\Upload\UploadService`'s static event handlers, which
+ * can't take constructor injection) was closed in sub-phase 12F-1 -- see
+ * `UploadService::currentLogger()`'s own private static resolver.
  */
 final class CurrentLogger
 {
@@ -50,41 +53,5 @@ final class CurrentLogger
     public function reset(): void
     {
         $this->instance = null;
-    }
-
-    /**
-     * @deprecated transitional bridge for callers not yet converted to
-     * constructor injection (`Piwigo\Core\UniqueExecLock` -- genuinely
-     * static-only; `Piwigo\Ws\PwgUsers`/`Piwigo\Ws\PwgImages` -- Phase 10's
-     * still-static dispatch layer) -- PHP forbids an instance method and a
-     * static method sharing one name, hence the `Static` suffix. Delete
-     * once `grep -rn "CurrentLogger::getStatic("` outside tests/ returns
-     * nothing.
-     *
-     * Falls back to a real, harmless no-op Logger (`severity => OFF` makes
-     * every log call an immediate no-op, same as `Logger::OFF`'s own
-     * documented behavior and `IntegrationTestCase`'s own established
-     * "disabled logger" fixture convention) when `Kernel::boot()` hasn't
-     * run -- unlike a boolean flag's `false` default, there's no
-     * "uninitialized Logger" sentinel value, but a no-op Logger is exactly
-     * as safe: no test relying on this fallback ever wrote through the old
-     * static `CurrentLogger::get()` either (a real request always has a
-     * booted Kernel with a real seeded Logger by the time these callers
-     * run).
-     */
-    public static function getStatic(): Logger
-    {
-        if (! Kernel::isBooted()) {
-            return new Logger([
-                'severity' => Logger::OFF,
-            ]);
-        }
-
-        $instance = Kernel::container()->get(self::class);
-        if (! $instance instanceof self) {
-            throw new LogicException('Container returned an unexpected type for ' . self::class);
-        }
-
-        return $instance->get();
     }
 }

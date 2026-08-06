@@ -56,8 +56,8 @@ final class InfrastructureAccessor
      * Same rationale as entityManager() above -- gives still-static callers
      * (e.g. config/messenger.php's handler factories) the real
      * container-shared CurrentLogger instance, not just the Logger value
-     * CurrentLogger::getStatic() itself unwraps to (singleton/
-     * service-locator elimination campaign, Phase 2).
+     * its own get() unwraps to (singleton/service-locator elimination
+     * campaign, Phase 2).
      */
     public static function currentLogger(): CurrentLogger
     {

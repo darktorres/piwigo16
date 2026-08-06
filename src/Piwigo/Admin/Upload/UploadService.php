@@ -12,6 +12,7 @@ use DOMElement;
 use DOMNode;
 use DOMXPath;
 use Exception;
+use LogicException;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
@@ -22,7 +23,9 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
@@ -877,7 +880,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = CurrentLogger::getStatic();
+        $logger = self::currentLogger();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -939,7 +942,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = CurrentLogger::getStatic();
+        $logger = self::currentLogger();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -995,7 +998,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = CurrentLogger::getStatic();
+        $logger = self::currentLogger();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1080,7 +1083,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = CurrentLogger::getStatic();
+        $logger = self::currentLogger();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1169,7 +1172,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = CurrentLogger::getStatic();
+        $logger = self::currentLogger();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1248,7 +1251,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = CurrentLogger::getStatic();
+        $logger = self::currentLogger();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1351,6 +1354,36 @@ final class UploadService
         }
 
         FilesystemHelper::secureDirectory($directory);
+    }
+
+    /**
+     * Singleton/service-locator elimination campaign, Phase 12 sub-phase
+     * 12F-1: the `uploadFileXxx()` event handlers below must stay static
+     * (EventDispatcher::callablesEqual()'s closure-identity dedup only
+     * correctly no-ops repeat registrations for a static method's closure;
+     * an instance method's closure would double-register across this
+     * class's own real non-singleton `new UploadService(...)` sites), so
+     * they can't read the constructor-injected `$this->currentLogger`
+     * `needResize()` uses below -- this resolves the container-shared
+     * instance directly instead, same "container resolve, not a
+     * constructor property" shape as Core\Logger::pageState(). Falls back
+     * to a fresh, no-op `severity => OFF` Logger pre-boot, matching
+     * CurrentLogger::getStatic()'s own former fallback exactly.
+     */
+    private static function currentLogger(): Logger
+    {
+        if (Kernel::isBooted()) {
+            $currentLogger = Kernel::container()->get(CurrentLogger::class);
+            if (! $currentLogger instanceof CurrentLogger) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
+            }
+
+            return $currentLogger->get();
+        }
+
+        return new Logger([
+            'severity' => Logger::OFF,
+        ]);
     }
 
     private function needResize(string $image_filepath, int $max_width, int $max_height): bool

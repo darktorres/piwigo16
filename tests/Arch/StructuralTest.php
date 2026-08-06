@@ -237,7 +237,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
     $shimAllowedFiles = [
         '/src/Piwigo/Core/InstallationFlag.php',
         '/src/Piwigo/Core/ProcessCache.php',
-        '/src/Piwigo/Core/CurrentLogger.php',
+        '/src/Piwigo/Admin/Upload/UploadService.php',
         '/src/Piwigo/Section/SectionContextRegistry.php',
         '/src/Piwigo/Core/ErrorCollector.php',
         '/src/Piwigo/Core/RequestMountDepth.php',
@@ -387,8 +387,10 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // (a) Purely static utility classes/methods with no instance/`$this`
     // to receive CurrentConfig via constructor injection through --
     // Admin/Upload/UploadService.php's 9 static uploadFileXxx()
-    // event handlers (matches this same file's own established
-    // CurrentLogger::getStatic() precedent). Phase 12 sub-phase 12A:
+    // event handlers (matches this file's own former
+    // CurrentLogger::getStatic() precedent -- closed via a private static
+    // resolver in sub-phase 12F-1, see UploadService::currentLogger()).
+    // Phase 12 sub-phase 12A:
     // Comment/CommentService.php removed -- its own getNbAvailableComments()
     // static method (the sole reason it was here) was extracted into its
     // own class, Comment/AvailableCommentsCounter.php, which takes
@@ -432,8 +434,9 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // Admin/Upload/UploadService.php's own uploadFileXxx() static event
     // handlers (uploadFilePdf/Heic/Tiff/Psd/Eps -- the same permanent
     // EventDispatcher-dedup-sensitive handlers documented above and in
-    // the CurrentUser::current()/CurrentLogger::getStatic() allow-lists'
-    // own comments); is_ext_imagick() is called internally by
+    // the CurrentUser::current() allow-list's own comments, and formerly
+    // in this file's own CurrentLogger::getStatic() allow-list before it
+    // closed in sub-phase 12F-1); is_ext_imagick() is called internally by
     // get_library() with no arguments, so it must keep the identical
     // no-param/shimmed shape to stay callable from there;
     // get_graphics_library() calls both of the above internally too. A
@@ -666,8 +669,9 @@ test('ImageStdParams::current() transitional bridge has a shrinking, known allow
     // remaining site is inside getOptimalDimensionsForRepresentative(), a
     // `private static` helper reached only from this file's own static
     // uploadFileXxx() event handlers -- same established exception as its
-    // CurrentLogger::getStatic() entry elsewhere in this file (Phase 11
-    // sub-phase 11I's own genuinely-static-only bucket).
+    // former CurrentLogger::getStatic() entry elsewhere in this file
+    // (Phase 11 sub-phase 11I's own genuinely-static-only bucket; that
+    // shim closed via a private static resolver in sub-phase 12F-1).
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
@@ -765,47 +769,6 @@ test('PageState::current() transitional bridge has a shrinking, known allow-list
  * 'X::get()/isSet()'/'X::current()' transitional bridge allow-list tests
  * further below instead).
  */
-test('CurrentLogger::getStatic() transitional shim has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 2: real callers
-    // (Piwigo\Core\UniqueExecLock -- genuinely static-only; Piwigo\Admin\
-    // Upload\UploadService's 6 uploadFile* static event handlers) aren't
-    // converted to constructor injection, so they use this static shim
-    // instead of the real get() instance method (see that method's own
-    // docblock). Piwigo\Ws\PwgUsers/Piwigo\Ws\PwgImages took real
-    // constructor injection during their own Phase 10 sub-batches.
-    // Piwigo\Tag\TagService.php closed this shim in Phase 11 sub-phase
-    // 11G -- setTagsOf() now reads $this->currentLogger->get() instead.
-    // Piwigo\Image\ImageService::emptyLounge() closed it too -- reads its
-    // own new private lazy logger() helper instead (a required
-    // constructor param would ripple across this class's own many real
-    // construction sites for the sake of this one internal read).
-    // Sub-phase 12D: Core/UniqueExecLock.php closed too -- begins()/ends()
-    // now take Logger (the real unwrapped type CurrentLogger::getStatic()
-    // itself returns, not the CurrentLogger wrapper) as an explicit param
-    // instead, threaded from both real callers (Admin/PiwigoInfosSender.php,
-    // which already had $this->currentLogger->get() available; Bootstrap/
-    // PageTail.php, whose own currentLogger() resolver just needed ->get()
-    // appended). Admin/Upload/UploadService.php stays -- confirmed genuine
-    // permanent exception (EventDispatcher registration-dedup, see this
-    // campaign's own plan document for the full trace). Every
-    // phase that converts one more of these files should remove it from
-    // the allow-list below; once empty, delete the shim and this test.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-        '/src/Piwigo/Admin/Upload/UploadService.php',
-    ];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentLogger::getStatic(');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
 test('CurrentPaths::get()/isSet() transitional bridge has a shrinking, known allow-list', function (): void {
     // Singleton/service-locator elimination campaign, Phase 3: unlike
     // every other shimmed class in this campaign, get()/isSet() kept their

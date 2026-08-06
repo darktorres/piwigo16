@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
+use Piwigo\Tests\Support\CurrentLoggerTestFactory;
 
 /**
  * A Logger constructed with severity: OFF returns before touching the
@@ -48,15 +49,15 @@ test('reset clears the instance back to uninitialized', function (): void {
     expect(fn () => $currentLogger->get())->toThrow(LogicException::class);
 });
 
-test('getStatic falls back to a no-op OFF Logger when Kernel has not booted', function (): void {
+test('CurrentLoggerTestFactory::getStatic falls back to a no-op OFF Logger when Kernel has not booted', function (): void {
     expect(Kernel::isBooted())->toBeFalse();
 
-    $logger = CurrentLogger::getStatic();
+    $logger = CurrentLoggerTestFactory::getStatic();
 
     expect($logger->severity())->toBe(Logger::OFF);
 });
 
-test('getStatic delegates to the container-shared instance once Kernel has booted', function (): void {
+test('CurrentLoggerTestFactory::getStatic delegates to the container-shared instance once Kernel has booted', function (): void {
     Kernel::boot();
     $currentLogger = Kernel::container()->get(CurrentLogger::class);
     if (! $currentLogger instanceof CurrentLogger) {
@@ -65,7 +66,7 @@ test('getStatic delegates to the container-shared instance once Kernel has boote
     $logger = new Logger(['severity' => Logger::OFF]);
     $currentLogger->set($logger);
 
-    expect(CurrentLogger::getStatic())->toBe($logger);
+    expect(CurrentLoggerTestFactory::getStatic())->toBe($logger);
 
     Kernel::reset();
 });

@@ -1389,21 +1389,21 @@ final readonly class CategoryService
      */
     public function setCatStatus(array $categories, string $value): ?false
     {
-        if (! in_array($value, ['public', 'private'], true)) {
+        if (! in_array($value, [CategoryStatus::Public->value, CategoryStatus::Private->value], true)) {
             trigger_error("setCatStatus invalid param {$value}", E_USER_WARNING);
             return false;
         }
 
         // make public a category => all its parent categories become public
-        if ($value === 'public') {
+        if ($value === CategoryStatus::Public->value) {
             $uppercats = $this->getUppercatIds($categories);
-            $this->repo->updateCategoryStatus($uppercats, 'public');
+            $this->repo->updateCategoryStatus($uppercats, CategoryStatus::Public->value);
         }
 
         // make a category private => all its child categories become private
-        if ($value === 'private') {
+        if ($value === CategoryStatus::Private->value) {
             $subcats = $this->getSubcatIds($categories);
-            $this->repo->updateCategoryStatus($subcats, 'private');
+            $this->repo->updateCategoryStatus($subcats, CategoryStatus::Private->value);
 
             // We have to keep permissions consistant: a sub-album can't be
             // permitted to a user or group if its parent album is not permitted to
@@ -1489,7 +1489,7 @@ final readonly class CategoryService
                 $topCategoryHasParent = $topCategoryIdUppercat !== null && $topCategoryIdUppercat !== 0;
                 if ($topCategoryHasParent) {
                     $parentCatId = $topCategoryIdUppercat;
-                    if (isset($parentCats[$parentCatId]) && $parentCats[$parentCatId]['status'] === 'private') {
+                    if (isset($parentCats[$parentCatId]) && $parentCats[$parentCatId]['status'] === CategoryStatus::Private->value) {
                         $refCatId = $parentCatId;
                     }
                 }
@@ -1794,13 +1794,13 @@ final readonly class CategoryService
 
         // status and related permissions management
         if ($newParentSql === 'NULL') {
-            $parentStatus = 'public';
+            $parentStatus = CategoryStatus::Public->value;
         } else {
             $parentStatus = $this->repo->findCategoryStatus((int) $newParentSql);
         }
 
-        if ($parentStatus === 'private') {
-            $this->setCatStatus(array_map(intval(...), array_keys($categories)), 'private');
+        if ($parentStatus === CategoryStatus::Private->value) {
+            $this->setCatStatus(array_map(intval(...), array_keys($categories)), CategoryStatus::Private->value);
         }
 
         $pageState->addInfo($this->translator->plural(
@@ -1869,8 +1869,8 @@ final readonly class CategoryService
         }
 
         // is the album private? (may be overwritten if parent album is private)
-        if (isset($options['status']) && $options['status'] === 'private') {
-            $insert['status'] = 'private';
+        if (isset($options['status']) && $options['status'] === CategoryStatus::Private->value) {
+            $insert['status'] = CategoryStatus::Private->value;
         } else {
             $insert['status'] = $this->currentConfig->newcatDefaultStatus();
         }
@@ -1903,8 +1903,8 @@ final readonly class CategoryService
             // at creation, must a category be public or private ? Warning : if the
             // parent category is private, the category is automatically create
             // private.
-            if ($parent['status'] === 'private') {
-                $insert['status'] = 'private';
+            if ($parent['status'] === CategoryStatus::Private->value) {
+                $insert['status'] = CategoryStatus::Private->value;
             }
 
             $uppercatsPrefix = $parent['uppercats'] . ',';
@@ -1931,7 +1931,7 @@ final readonly class CategoryService
         $this->updateGlobalRank();
 
         $insertIdUppercat = $insert['id_uppercat'] ?? null;
-        if ($insert['status'] === 'private' && $insertIdUppercat !== null && $insertIdUppercat !== 0 && ((isset($options['inherit']) && (bool) $options['inherit']) || $this->currentConfig->inheritanceByDefault())) {
+        if ($insert['status'] === CategoryStatus::Private->value && $insertIdUppercat !== null && $insertIdUppercat !== 0 && ((isset($options['inherit']) && (bool) $options['inherit']) || $this->currentConfig->inheritanceByDefault())) {
             $grantedGrps = $this->repo->findAccessGroupIds($insertIdUppercat);
             $inserts = [];
             foreach ($grantedGrps as $grantedGrp) {
@@ -1944,7 +1944,7 @@ final readonly class CategoryService
 
             $grantedUsers = $this->repo->findAccessUserIds($insertIdUppercat);
             $this->permissionService->addPermissionOnCategory((int) $insertedId, $grantedUsers);
-        } elseif ($insert['status'] === 'private') {
+        } elseif ($insert['status'] === CategoryStatus::Private->value) {
             $currentUserId = $currentUser->get()
                 ->id->value;
             $adminIds = array_map(

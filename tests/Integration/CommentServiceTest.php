@@ -16,7 +16,9 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\UrlServiceTestFactory;
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Auth\AccessControl;
+    use Piwigo\Auth\AccessLevelChecker;
     use Doctrine\DBAL\Connection;
+    use Piwigo\Comment\AvailableCommentsCounter;
     use Piwigo\Auth\EphemeralKeyService;
     use Piwigo\Comment\CommentService;
     use Piwigo\Common\ValueObject\CommentId;
@@ -220,7 +222,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
-            $this->service = new CommentService(Lang::current(), EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class), new EphemeralKeyService(CurrentConfig::current()), $mailer, HtmlServiceTestFactory::build(), UrlServiceTestFactory::build(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentConfig::current(), $this->accessControl());
+            $this->service = new CommentService(Lang::current(), EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class), new EphemeralKeyService(CurrentConfig::current()), $mailer, HtmlServiceTestFactory::build(), UrlServiceTestFactory::build(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentConfig::current(), $this->accessLevelChecker());
         }
 
         private function accessControl(): AccessControl
@@ -234,6 +236,16 @@ namespace Piwigo\Tests\Integration {
             }
 
             return $accessControl;
+        }
+
+        private function accessLevelChecker(): AccessLevelChecker
+        {
+            $accessLevelChecker = Kernel::container()->get(AccessLevelChecker::class);
+            if (! $accessLevelChecker instanceof AccessLevelChecker) {
+                throw new LogicException('Container returned an unexpected type for ' . AccessLevelChecker::class);
+            }
+
+            return $accessLevelChecker;
         }
 
         // --- checkForSpam() -------------------------------------------------
@@ -823,18 +835,19 @@ namespace Piwigo\Tests\Integration {
             // tests exercise the same repository mechanism, but never
             // through this exact caller.
             $repo = EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class);
-            $baseline = CommentService::getNbAvailableComments();
+            $counter = new AvailableCommentsCounter(CurrentUser::current(), CurrentConfig::current(), $this->accessLevelChecker());
+            $baseline = $counter->count();
 
             $validatedId = $repo->insert(['author' => 'nbc-test', 'authorId' => null, 'anonymousId' => '10.40.0.1', 'content' => 'nbc validated', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
             $unvalidatedId = $repo->insert(['author' => 'nbc-test', 'authorId' => null, 'anonymousId' => '10.40.0.2', 'content' => 'nbc unvalidated', 'validated' => false, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
 
             try {
-                // Busts getNbAvailableComments()'s own per-request cache
+                // Busts count()'s own per-request cache
                 // (CurrentUser::rawAttributes['nb_available_comments']) so
                 // the second call genuinely recomputes.
                 CurrentUser::current()->set(CurrentUser::current()->get()->withRawAttribute('nb_available_comments', null));
 
-                $afterInsert = CommentService::getNbAvailableComments();
+                $afterInsert = $counter->count();
 
                 self::assertSame($baseline + 1, $afterInsert, 'only the validated comment should count');
             } finally {
@@ -886,7 +899,7 @@ namespace Piwigo\Tests\Integration {
                 PageState::current(),
                 CurrentUser::current(),
                 CurrentConfig::current(),
-                $this->accessControl(),
+                $this->accessLevelChecker(),
             );
         }
 
@@ -912,7 +925,7 @@ namespace Piwigo\Tests\Integration {
                 PageState::current(),
                 CurrentUser::current(),
                 CurrentConfig::current(),
-                $this->accessControl(),
+                $this->accessLevelChecker(),
             );
         }
 

@@ -8,6 +8,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\AccessLevel;
 use Throwable;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
@@ -67,11 +68,13 @@ function accessControlTestMake(
     ?RedirectServiceInterface $redirectService = null,
     ?CurrentConfig $currentConfig = null,
 ): AccessControl {
+    $currentUser = seedAccessControlUser($status, $id);
+    $currentConfig ??= new CurrentConfig();
+
     return new AccessControl(
         $htmlRenderer ?? new AccessControlTestFakeHtmlRendererDeniesAccess(),
         $redirectService ?? new AccessControlTestFakeRedirectServiceNeverCalled(),
-        seedAccessControlUser($status, $id),
-        $currentConfig ?? new CurrentConfig(),
+        new AccessLevelChecker($currentUser, $currentConfig),
     );
 }
 

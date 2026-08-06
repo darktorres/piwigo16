@@ -12,6 +12,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Rate\RateService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
@@ -134,8 +135,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new AccessControl(
                 new AccessControlTestFakeHtmlRendererDeniesAccess(),
                 new AccessControlTestFakeRedirectServiceNeverCalled(),
-                new CurrentUser(new CurrentConfig()),
-                new CurrentConfig(),
+                new AccessLevelChecker(new CurrentUser(new CurrentConfig()), new CurrentConfig()),
             ),
             EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class),
             new CookieService(),
@@ -188,6 +188,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()),
             CurrentUser::current(),
             new FilterState(),
+            new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()),
         );
     }
 
@@ -205,6 +206,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             CurrentConfig::current(),
             new EventDispatcher(),
             Translator::get(),
+            new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()),
         );
     }
 

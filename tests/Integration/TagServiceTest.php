@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
     use Override;
+    use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Core\Kernel;
     use LogicException;
     use Piwigo\Core\CurrentLogger;
@@ -81,7 +82,7 @@ namespace Piwigo\Tests\Integration {
             }
 
             $this->conn = DbConnection::build();
-            $this->service = new TagService(Lang::current(), EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), EventDispatcher::get(), CurrentUser::current(), CurrentConfig::current(), $currentLogger, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfig::current()));
+            $this->service = new TagService(Lang::current(), EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), EventDispatcher::get(), CurrentUser::current(), CurrentConfig::current(), $currentLogger, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfig::current()));
         }
 
         #[Override]

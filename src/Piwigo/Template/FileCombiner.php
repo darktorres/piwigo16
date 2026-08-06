@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Template;
 
 use Exception;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
@@ -31,7 +31,7 @@ final class FileCombiner
      * @param Combinable[] $combinables
      */
     public function __construct(
-        private readonly AccessControl $accessControl,
+        private readonly AccessLevelChecker $accessLevelChecker,
         private $type,
         private readonly UrlServiceInterface $urlService,
         private readonly Paths $paths,
@@ -119,7 +119,7 @@ final class FileCombiner
 
     private function computeForce(): bool
     {
-        if ($this->accessControl->isAdmin() && ($this->is_css || ! $this->currentConfig->templateCompileCheck())) {
+        if ($this->accessLevelChecker->isAdmin() && ($this->is_css || ! $this->currentConfig->templateCompileCheck())) {
             return (isset($_SERVER['HTTP_CACHE_CONTROL']) && is_string($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
               || (isset($_SERVER['HTTP_PRAGMA']) && is_string($_SERVER['HTTP_PRAGMA']) && (bool) strpos($_SERVER['HTTP_PRAGMA'], 'no-cache'));
         }

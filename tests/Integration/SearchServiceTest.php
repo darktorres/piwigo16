@@ -12,7 +12,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Kernel;
     use Piwigo\Core\ProcessCache;
     use Piwigo\Db\EntityManagerFactory;
-    use Piwigo\Auth\AccessControl;
+    use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Group\GroupEntity;
     use Piwigo\Core\Lang;
     use Piwigo\Lang\Translator;
@@ -311,17 +311,19 @@ final class SearchServiceTest extends IntegrationTestCase
         $currentConfig->setQuickSearchIncludeSubAlbums(false);
         $currentConfig->setRateEnabled(true);
 
+        $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
         $this->service = new SearchService(
-            AccessControl::current(),
+            $accessLevelChecker,
             $this->repo,
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState()),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState(), $accessLevelChecker),
             new CategoryService(
                 Lang::current(),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState()),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState(), $accessLevelChecker),
                 CurrentConfig::current(),
                 new EventDispatcher(),
-                Translator::get()
+                Translator::get(),
+                $accessLevelChecker
             ),
             $this->mailService(),
             HtmlServiceTestFactory::build(),
@@ -377,17 +379,20 @@ final class SearchServiceTest extends IntegrationTestCase
      */
     private function makeService(SearchRepository $repo, HtmlRenderingInterface $htmlRenderer): SearchService
     {
+        $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
+
         return new SearchService(
-            AccessControl::current(),
+            $accessLevelChecker,
             $repo,
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState()),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState(), $accessLevelChecker),
             new CategoryService(
                 Lang::current(),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState()),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState(), $accessLevelChecker),
                 CurrentConfig::current(),
                 new EventDispatcher(),
-                Translator::get()
+                Translator::get(),
+                $accessLevelChecker
             ),
             $this->mailService(),
             $htmlRenderer,

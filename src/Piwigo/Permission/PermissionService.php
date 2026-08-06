@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Permission;
 
-use LogicException;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilterState;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Users\CurrentUser;
@@ -39,27 +37,8 @@ final readonly class PermissionService
         private CategoryRepository $categoryRepo,
         private CurrentUser $currentUser,
         private FilterState $filterState,
+        private AccessLevelChecker $accessLevelChecker,
     ) {}
-
-    /**
-     * Container resolve, not a constructor property -- AccessControl's own
-     * dependency chain (RedirectServiceInterface -> Bootstrap\RedirectService
-     * -> Users\UserService -> ...) means a required constructor param here
-     * risks a genuine circular dependency PHP-DI can't autowire, same
-     * shape as Mail\MailService/Url\UrlService/Template\Template/
-     * Users\UserService/Category\CategoryService's own identical
-     * accessControl() helper (singleton/service-locator elimination
-     * campaign, Phase 11 sub-phase 11G).
-     */
-    private function accessControl(): AccessControl
-    {
-        $accessControl = Kernel::container()->get(AccessControl::class);
-        if (! $accessControl instanceof AccessControl) {
-            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
-        }
-
-        return $accessControl;
-    }
 
     /**
      * Which of $categoryIds are private -- Admin\GroupPermPageRenderer's
@@ -134,7 +113,7 @@ final readonly class PermissionService
         $forbiddenIds = array_diff($privateIds, $authorizedIds);
 
         // if user is not an admin, locked categories are forbidden
-        if (! $this->accessControl()->isAdmin($userStatus)) {
+        if (! $this->accessLevelChecker->isAdmin($userStatus)) {
             $forbiddenIds = array_unique(array_merge($forbiddenIds, $this->repo->findLockedCategoryIds()));
         }
 

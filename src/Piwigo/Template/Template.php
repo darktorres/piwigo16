@@ -14,7 +14,7 @@ namespace Piwigo\Template;
 use Exception;
 use LogicException;
 use Override;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AdminContext;
@@ -139,6 +139,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         private readonly ProcessCache $processCache,
         private readonly CurrentConfigService $currentConfigService,
         private readonly Paths $paths,
+        private readonly AccessLevelChecker $accessLevelChecker,
         string $root = '.',
         string $theme = '',
         string $path = 'template'
@@ -281,19 +282,15 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
         $this->smarty->registerPlugin('modifier', 'l10n', $this->lang->t(...));
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
-        // Deliberately lazy (unlike the other collaborator-backed modifiers
-        // above) -- accessControl()'s dependency chain (RedirectService ->
-        // UserService -> a real DB connection) can throw before any
-        // template ever actually pipes a value through `is_admin`/
-        // `is_classic_user`; a container-resolved instance was never taken
-        // as a constructor property for exactly this reason (same
-        // circular-dependency-adjacent shape as MailService/UrlService's
-        // own accessControl() helper). Found live: InstallWizard::render()
-        // builds a Template before the submitted DB credentials are known
-        // to be valid, which must not fail merely because the constructor
-        // ran.
-        $this->smarty->registerPlugin('modifier', 'is_admin', fn (string $userStatus = ''): bool => $this->accessControl()->isAdmin($userStatus));
-        $this->smarty->registerPlugin('modifier', 'is_classic_user', fn (string $userStatus = ''): bool => $this->accessControl()->isClassicUser($userStatus));
+        // AccessLevelChecker (singleton/service-locator elimination
+        // campaign, Phase 12 sub-phase 12A) has no dependency chain that
+        // can throw (unlike the old AccessControl, whose chain reached a
+        // real DB connection via RedirectService -> UserService) -- a
+        // required constructor property is safe here, including for
+        // InstallWizard::render()'s own Template construction before
+        // submitted DB credentials are known to be valid.
+        $this->smarty->registerPlugin('modifier', 'is_admin', fn (string $userStatus = ''): bool => $this->accessLevelChecker->isAdmin($userStatus));
+        $this->smarty->registerPlugin('modifier', 'is_classic_user', fn (string $userStatus = ''): bool => $this->accessLevelChecker->isClassicUser($userStatus));
         $this->smarty->registerPlugin('modifier', 'get_device', DeviceHelper::getDevice(...));
         $this->smarty->registerPlugin('modifier', 'is_file', 'is_file');
         $this->smarty->registerPlugin('modifier', 'strpos', 'strpos');
@@ -356,29 +353,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
 
         return $urlService;
-    }
-
-    /**
-     * Container resolve, not a constructor property -- AccessControl's own
-     * dependency chain (RedirectServiceInterface -> Bootstrap\RedirectService
-     * -> Users\UserService -> Core\MailerInterface -> Mail\MailService ->
-     * Core\UrlServiceInterface) means a required constructor param on any
-     * class this deep in that graph risks a circular dependency PHP-DI
-     * can't autowire; kept lazy here too so the `is_admin`/`is_classic_user`
-     * modifiers registered in __construct() above don't force an eager
-     * resolve (and eager DB connect) merely by constructing a Template --
-     * same reasoning as MailService::accessControl()/UrlService's own
-     * equivalent (singleton/service-locator elimination campaign, Phase 11
-     * sub-phase 11E).
-     */
-    private function accessControl(): AccessControl
-    {
-        $accessControl = Kernel::container()->get(AccessControl::class);
-        if (! $accessControl instanceof AccessControl) {
-            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
-        }
-
-        return $accessControl;
     }
 
     /**
@@ -864,7 +838,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         if (! $this->scriptLoader->did_head()) {
             $pos = strpos($this->output, self::COMBINED_SCRIPTS_TAG);
             if ($pos !== false) {
-                $scripts = $this->scriptLoader->get_head_scripts();
+                $scripts = $this->scriptLoader->get_head_scripts($this->accessLevelChecker);
                 $content = [];
                 foreach ($scripts as $script) {
                     $content[] =
@@ -877,7 +851,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             } // else maybe error or warning ?
         }
 
-        $css = $this->cssLoader->get_css(self::urlService(), $this->eventDispatcher, $this->currentTemplate(), $this->currentConfig, $this->paths);
+        $css = $this->cssLoader->get_css(self::urlService(), $this->eventDispatcher, $this->currentTemplate(), $this->currentConfig, $this->paths, $this->accessLevelChecker);
 
         $content = [];
         foreach ($css as $combi) {
@@ -1291,7 +1265,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         if ($load === 0) {
             return self::COMBINED_SCRIPTS_TAG;
         } else {
-            $scripts = $this->scriptLoader->get_footer_scripts();
+            $scripts = $this->scriptLoader->get_footer_scripts($this->accessLevelChecker);
             foreach ($scripts[0] as $script) {
                 $content[] =
                   '<script type="text/javascript" src="'

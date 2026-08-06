@@ -6,6 +6,7 @@ namespace Piwigo\Bootstrap;
 
 use LogicException;
 use Override;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
@@ -194,10 +195,10 @@ final class RedirectService implements RedirectServiceInterface
                 'no_fallback' => true,
                 'local' => true,
             ]);
-            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, $paths->root . 'themes', $this->userService->getDefaultTheme());
+            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, new AccessLevelChecker(self::currentUser(), self::currentConfig()), $paths->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         } elseif (self::adminContext()->isActive()) {
-            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::paths()->root . 'themes', $this->userService->getDefaultTheme());
+            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::paths()->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         }
 

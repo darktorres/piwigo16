@@ -9,7 +9,7 @@ use LogicException;
 use Override;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -71,8 +71,13 @@ use Piwigo\Users\UserRepository;
  * old "too many manual construction sites" reasoning no longer holds
  * (churn is not a deciding factor for this campaign); every real
  * `new UrlService(...)` call site was updated accordingly. AccessControl
- * stays a lazily-resolved private helper (see its own docblock) -- a
- * genuine circular dependency, not the same too-many-call-sites reasoning.
+ * itself stayed a lazily-resolved private helper -- a genuine circular
+ * dependency, not the same too-many-call-sites reasoning -- but the one
+ * thing this class actually reads from it (`isAGuest()`) moved to
+ * AccessLevelChecker (singleton/service-locator elimination campaign,
+ * Phase 12 sub-phase 12A), which has no UrlServiceInterface dependency of
+ * its own, so it's built from this class's own already-required
+ * currentUser/currentConfig instead of a container resolve.
  */
 final class UrlService implements UrlServiceInterface
 {
@@ -91,25 +96,15 @@ final class UrlService implements UrlServiceInterface
     ) {}
 
     /**
-     * Container resolve, not a constructor property -- AccessControl's own
-     * dependency chain (RedirectServiceInterface -> Bootstrap\RedirectService
-     * -> Users\UserService -> Core\MailerInterface -> Mail\MailService ->
-     * Core\UrlServiceInterface, i.e. this class) means a required
-     * constructor param here would be a genuine circular dependency PHP-DI
-     * can't autowire (this class implements UrlServiceInterface). Same
-     * "private helper, not constructor property" shape already established
-     * for Mail\MailService's own identical accessControl() helper
-     * (singleton/service-locator elimination campaign, Phase 11 sub-phase
-     * 11E).
+     * Built from this class's own already-required currentUser/
+     * currentConfig -- AccessLevelChecker has no UrlServiceInterface
+     * dependency of its own, so unlike accessControl() (deleted, singleton/
+     * service-locator elimination campaign, Phase 12 sub-phase 12A) this
+     * needs no container resolve at all.
      */
-    private function accessControl(): AccessControl
+    private function accessLevelChecker(): AccessLevelChecker
     {
-        $accessControl = Kernel::container()->get(AccessControl::class);
-        if (! $accessControl instanceof AccessControl) {
-            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
-        }
-
-        return $accessControl;
+        return new AccessLevelChecker($this->currentUser, $this->currentConfig);
     }
 
     /**
@@ -730,10 +725,11 @@ final class UrlService implements UrlServiceInterface
             $categoryService = new CategoryService(
                 $this->lang,
                 new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig),
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($categoryConn)), EntityManagerFactory::build($categoryConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig), $this->currentUser, $this->filterState()),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($categoryConn)), EntityManagerFactory::build($categoryConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig), $this->currentUser, $this->filterState(), $this->accessLevelChecker()),
                 $this->currentConfig,
                 $this->eventDispatcher,
-                $this->translator()
+                $this->translator(),
+                $this->accessLevelChecker()
             );
 
             while (isset($tokens[$nextToken])) {
@@ -861,7 +857,7 @@ final class UrlService implements UrlServiceInterface
             }
 
             $tagConn = DbConnection::build();
-            $page['tags'] = new TagService($this->lang, EntityManagerFactory::build($tagConn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($tagConn)), EntityManagerFactory::build($tagConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($tagConn), $this->currentConfig), $this->currentUser, $this->filterState()), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), $this->sessionService())
+            $page['tags'] = new TagService($this->lang, EntityManagerFactory::build($tagConn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($tagConn)), EntityManagerFactory::build($tagConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($tagConn), $this->currentConfig), $this->currentUser, $this->filterState(), $this->accessLevelChecker()), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), $this->sessionService())
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
                 $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
@@ -1113,7 +1109,7 @@ final class UrlService implements UrlServiceInterface
     #[Override]
     public function getUserFavorites(): array
     {
-        if ($this->accessControl()->isAGuest()) {
+        if ($this->accessLevelChecker()->isAGuest()) {
             return [];
         }
 

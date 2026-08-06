@@ -15,6 +15,7 @@ use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\ApiKeyRepository;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthRepository;
@@ -684,13 +685,13 @@ final class RequestBootstrap
             $admin_theme = new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
                 ->getParam('admin_theme', self::currentConfig()->adminTheme());
             $admin_theme = is_string($admin_theme) ? $admin_theme : self::currentConfig()->adminTheme();
-            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::paths()->root . 'themes/admin', $admin_theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::paths()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = self::currentUser()->get()->theme;
             if (PageFilterHelper::scriptBasename() !== 'ws' and DeviceHelper::mobileTheme()) {
                 $theme = self::currentConfig()->mobilTheme();
             }
-            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::paths()->root . 'themes', $theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::paths()->root . 'themes', $theme);
         }
 
         // Legacy Coupling Retirement Track A / Phase 2 global-residual
@@ -721,7 +722,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(self::lang(), AccessControl::current(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService()), self::urlService(), self::paths(), self::adminContext(), self::sessionService(), EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService(), self::currentConfig(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::htmlService(), self::installationFlag())
+            new NoPhotoYetRenderer(self::lang(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService()), self::urlService(), self::paths(), self::adminContext(), self::sessionService(), EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService(), self::currentConfig(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::htmlService(), self::installationFlag())
                 ->render();
         }
 
@@ -823,7 +824,7 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentUser(), self::currentConfig(), self::accessControl())->checkForSpam(...));
+        EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentUser(), self::currentConfig(), new AccessLevelChecker(self::currentUser(), self::currentConfig()))->checkForSpam(...));
         // Item 16E: real listener for a previously-unregistered event --
         // Category\CategoryService::deleteSite() dispatches this instead
         // of reaching into Site\SiteRepository directly (a real deptrac

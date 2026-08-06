@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
@@ -114,7 +115,7 @@ final class NbmController implements ControllerInterface
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! is_array($hide_menu_on) or ! in_array('theNBMPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
+                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
         }
 
         new PageHeaderRenderer()

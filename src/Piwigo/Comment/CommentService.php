@@ -4,30 +4,21 @@ declare(strict_types=1);
 
 namespace Piwigo\Comment;
 
-use LogicException;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\EphemeralKeyService;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\User\UserCommentCheck;
 use Piwigo\Event\User\UserCommentDeletion;
 use Piwigo\Event\User\UserCommentValidation;
-use Piwigo\Group\GroupEntity;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
@@ -49,7 +40,7 @@ use Piwigo\Validation\InputValidator;
  * routed through the same-shaped HtmlRenderingInterface (Piwigo\Core)
  * instead of staying a bare free-function call.
  *
- * $this->accessControl->isAdmin()/isAGuest()/isClassicUser() and the
+ * $this->accessLevelChecker->isAdmin()/isAGuest()/isClassicUser() and the
  * $this->currentUser->get()/CurrentConfig:: accessors they and this class
  * use replace the original functions_comment.inc.php's bare is_admin()/
  * is_a_guest()/is_classic_user() calls and `$user`/`$conf` globals.
@@ -67,71 +58,8 @@ final readonly class CommentService
         private PageState $pageState,
         private CurrentUser $currentUser,
         private CurrentConfig $currentConfig,
-        private AccessControl $accessControl,
+        private AccessLevelChecker $accessLevelChecker,
     ) {}
-
-    /**
-     * Container resolve, not a constructor property -- used only inside
-     * getNbAvailableComments()'s own static-context PermissionService
-     * construction below (that method builds its own collaborators
-     * internally, no $this available). Singleton/service-locator
-     * elimination campaign, Phase 11 sub-phase 11G: PermissionService's
-     * own new required FilterState collaborator needs satisfying here
-     * too. Falls back to a fresh, uninitialised instance when
-     * `Kernel::boot()` hasn't run, matching `FilterState`'s own former
-     * `isInitializedStatic()` shim's identical pre-boot fallback.
-     */
-    private static function filterState(): FilterState
-    {
-        if (Kernel::isBooted()) {
-            $filterState = Kernel::container()->get(FilterState::class);
-            if (! $filterState instanceof FilterState) {
-                throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
-            }
-
-            return $filterState;
-        }
-
-        return new FilterState();
-    }
-
-    /**
-     * returns the number of available comments for the connected user
-     *
-     * P23 batch 8d: relocated from include/functions.inc.php's
-     * get_nb_available_comments(), unchanged logic -- static since it
-     * builds its own PermissionService/GroupRepository internally (same
-     * as the original free function did) rather than needing this class's
-     * own injected CommentRepository/EphemeralKeyService/MailerInterface,
-     * matching InputValidator's own mixed static/instance precedent.
-     */
-    public static function getNbAvailableComments(): int
-    {
-        $currentUser = CurrentUser::current()->get();
-
-        if (! isset($currentUser->rawAttributes['nb_available_comments'])) {
-            // Item 16I: countAvailableWithConditions() converted to real
-            // DQL -- condition fragments now reference DQL property
-            // paths (com.validated/ic.categoryId/ic.imageId), not raw
-            // column names, same convention already established
-            // throughout the codebase (e.g. Tag\TagRepository's own
-            // PermissionCriteria consumers).
-            $where = [];
-            if (! AccessControl::current()->isAdmin()) {
-                $where[] = new SqlCondition('com.validated = true');
-            }
-            $permissionCriteria = new PermissionService(new PermissionRepository(EntityManagerFactory::build(DbConnection::build())), EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build(DbConnection::build()), CurrentConfig::current()), CurrentUser::current(), self::filterState())
-                ->getPermissionCriteria();
-            $where[] = $permissionCriteria->forbiddenCategoriesCondition('ic.categoryId');
-            $where[] = $permissionCriteria->imageAccessCondition('ic.imageId');
-
-            $nbAvailableComments = EntityManagerFactory::build(DbConnection::build())->getRepository(CommentEntity::class)->countAvailableWithConditions($where);
-            $currentUser = $currentUser->withRawAttribute('nb_available_comments', $nbAvailableComments);
-            CurrentUser::current()->set($currentUser);
-        }
-        $nb_available_comments = $currentUser->rawAttributes['nb_available_comments'];
-        return is_numeric($nb_available_comments) ? (int) $nb_available_comments : 0;
-    }
 
     /**
      * @param list<SqlCondition> $whereClauses
@@ -228,7 +156,7 @@ final readonly class CommentService
             return $event;
         }
 
-        if (! $this->accessControl->isAGuest()) {
+        if (! $this->accessLevelChecker->isAGuest()) {
             return $event;
         }
 
@@ -270,9 +198,9 @@ final readonly class CommentService
         $comm['agent'] = is_string($http_user_agent) ? $http_user_agent : '';
 
         $infos = [];
-        $commentAction = (! $this->currentConfig->commentsValidation() || $this->accessControl->isAdmin()) ? 'validate' : 'moderate';
+        $commentAction = (! $this->currentConfig->commentsValidation() || $this->accessLevelChecker->isAdmin()) ? 'validate' : 'moderate';
 
-        if (! $this->accessControl->isClassicUser()) {
+        if (! $this->accessLevelChecker->isClassicUser()) {
             if (self::emptyValue($comm['author'])) {
                 if ($this->currentConfig->commentsAuthorMandatory()) {
                     $infos[] = $this->lang->t('Username is mandatory');
@@ -370,8 +298,8 @@ final readonly class CommentService
 
         $antiFloodTime = $this->currentConfig->antiFloodTime();
 
-        if ($commentAction !== 'reject' && $antiFloodTime > 0 && ! $this->accessControl->isAdmin()) { // anti-flood system
-            $anonymousIdPrefix = $this->accessControl->isClassicUser() ? null : $trimmedIp;
+        if ($commentAction !== 'reject' && $antiFloodTime > 0 && ! $this->accessLevelChecker->isAdmin()) { // anti-flood system
+            $anonymousIdPrefix = $this->accessLevelChecker->isClassicUser() ? null : $trimmedIp;
             $counter = $this->repo->countRecentComments($authorId, $anonymousIdPrefix, $antiFloodTime);
             if ($counter > 0) {
                 $infos[] = $this->lang->t('Anti-flood system : please wait for a moment before trying to post another comment');
@@ -444,7 +372,7 @@ final readonly class CommentService
         $ids = is_array($commentId) ? $commentId : [$commentId];
 
         $authorId = null;
-        if (! $this->accessControl->isAdmin()) {
+        if (! $this->accessLevelChecker->isAdmin()) {
             $authorId = $this->currentUser->get()
                 ->id->value;
         }
@@ -506,7 +434,7 @@ final readonly class CommentService
 
         if (! $this->ephemeralKeys->verify($postKey, $imageIdRaw)) {
             $commentAction = 'reject';
-        } elseif (! $this->currentConfig->commentsValidation() || $this->accessControl->isAdmin()) { // should the updated comment be validated
+        } elseif (! $this->currentConfig->commentsValidation() || $this->accessLevelChecker->isAdmin()) { // should the updated comment be validated
             $commentAction = 'validate';
         } else {
             $commentAction = 'moderate';
@@ -537,7 +465,7 @@ final readonly class CommentService
 
         if ($commentAction !== 'reject') {
             $authorId = null;
-            if (! $this->accessControl->isAdmin()) {
+            if (! $this->accessLevelChecker->isAdmin()) {
                 $authorId = $this->currentUser->get()
                     ->id->value;
             }

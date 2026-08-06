@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
     use Override;
+    use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Core\Kernel;
     use LogicException;
     use Piwigo\Core\FilterState;
@@ -64,15 +65,17 @@ final class CalendarServiceTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
+        $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), $currentConfig);
         $this->service = new CalendarService(
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, $accessLevelChecker),
             new CategoryService(
                 Lang::current(),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, $accessLevelChecker),
                 CurrentConfig::current(),
                 new EventDispatcher(),
-                Translator::get()
+                Translator::get(),
+                $accessLevelChecker
             )
         );
 

@@ -19,7 +19,7 @@ use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\FilterState;
 use LogicException;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Lang\Translator;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Db\Tables;
@@ -93,17 +93,19 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
 
+        $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
         $this->service = new SearchService(
-            AccessControl::current(),
+            $accessLevelChecker,
             $repo,
-            new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfig::current()), CurrentUser::current(), $filterState),
+            new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfig::current()), CurrentUser::current(), $filterState, $accessLevelChecker),
             new CategoryService(
                 Lang::current(),
                 new CategoryRepository($this->em, CurrentConfig::current()),
-                new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfig::current()), CurrentUser::current(), $filterState),
+                new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfig::current()), CurrentUser::current(), $filterState, $accessLevelChecker),
                 CurrentConfig::current(),
                 new EventDispatcher(),
                 Translator::get(),
+                $accessLevelChecker,
             ),
             $mailer,
             HtmlServiceTestFactory::build(),

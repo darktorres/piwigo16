@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Override;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Core\FilterState;
@@ -83,10 +84,11 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
             new CategoryService(
                 Lang::current(),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)),
                 CurrentConfig::current(),
                 new EventDispatcher(),
-                Translator::get()
+                Translator::get(),
+                new AccessLevelChecker(CurrentUser::current(), $currentConfig)
             ),
             new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
             $this->pool

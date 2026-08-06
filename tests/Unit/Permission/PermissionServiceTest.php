@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Common\ValueObject\UserId;
@@ -45,6 +46,7 @@ function makePermissionService(): PermissionService
         new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()),
         CurrentUser::current(),
         $filterState,
+        new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()),
     );
 }
 

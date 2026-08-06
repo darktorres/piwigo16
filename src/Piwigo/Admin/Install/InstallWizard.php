@@ -25,6 +25,7 @@ use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\PluginMigrationEntity;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\Install\Request\InstallWizardRequest;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
@@ -408,7 +409,7 @@ final class InstallWizard
         }
 
         // --------------------------------------------- template initialization
-        $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, $this->paths->root . 'themes/admin', 'clear');
+        $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), $this->paths->root . 'themes/admin', 'clear');
         $this->currentTemplate->set($template);
         $template->set_filenames([
             'install' => 'install.tpl',

@@ -7,7 +7,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Mail\MailService;
 use Piwigo\Core\Lang;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -125,7 +125,7 @@ function pictureCommentRendererTestMailService(): MailService
 test('render does nothing when no related category is commentable', function (): void {
     $renderer = new PictureCommentRenderer();
 
-    $renderer->render(Lang::current(), AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
+    $renderer->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, 42, 0, makePictureCommentUrlService(), [
         ['commentable' => false],
         ['commentable' => 0],
     ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
@@ -197,7 +197,7 @@ test('render only counts the first commentable related category then stops (`bre
 
     $exception = null;
     try {
-        $renderer->render(Lang::current(), AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
+        $renderer->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => true],
             ['id' => 999], // no 'commentable' key -- only reached by `continue`
         ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
@@ -223,7 +223,7 @@ test('render rejects a posted comment as "ugly spammer" when no related category
 
     $exception = null;
     try {
-        $renderer->render(Lang::current(), AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
+        $renderer->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => false],
         ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
     } catch (ResponseReadyException $e) {
@@ -255,7 +255,7 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
 
     $exception = null;
     try {
-        $renderer->render(Lang::current(), AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
+        $renderer->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => true],
         ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
     } catch (ResponseReadyException $e) {
@@ -288,7 +288,7 @@ test('render lets a guest post a comment when comments_forall is on', function (
     // and stays at Integration level).
 
     $renderer = new PictureCommentRenderer();
-    $renderer->render(Lang::current(), AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
+    $renderer->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, 42, 0, makePictureCommentUrlService(), [
         ['commentable' => false],
     ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
 
@@ -331,7 +331,7 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     // harmless (always 0 rows), so the row-fetching branch below it
     // (which needs a real CommentRepository row -- DB-write territory)
     // is never entered either.
-    $renderer->render(Lang::current(), AccessControl::current(), null, 999999999, 0, makePictureCommentUrlService(), [
+    $renderer->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, 999999999, 0, makePictureCommentUrlService(), [
         ['commentable' => true],
     ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
 

@@ -6,7 +6,7 @@ namespace Piwigo\Html;
 
 use LogicException;
 use Override;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
@@ -59,14 +59,19 @@ use Piwigo\Users\CurrentUser;
  * isn't worth forcing on every one of them) (singleton/service-locator
  * elimination campaign, Phase 11 sub-phase 11E).
  *
- * `Lang`/`AccessControl` are NOT required constructor params, despite
- * being shims this class reads -- both stay lazily-resolved private
- * helpers below (same shape as urlService()), because both are genuine
- * PHP-DI circular dependencies, not just churn: `Lang` itself requires
+ * `Lang` is NOT a required constructor param, despite being a shim this
+ * class reads -- it stays a lazily-resolved private helper below (same
+ * shape as urlService()), because it's a genuine PHP-DI circular
+ * dependency, not just churn: `Lang` itself requires
  * `HtmlRenderingInterface` (this class implements it, so
  * `HtmlService -> Lang -> HtmlRenderingInterface -> HtmlService` would be
- * a hard autowiring cycle), and `AccessControl` requires
- * `HtmlRenderingInterface` directly too. Since `UrlService` itself also
+ * a hard autowiring cycle). `AccessControl` itself had the same problem,
+ * but the one thing this class actually reads from it (`isAGuest()`)
+ * moved to `AccessLevelChecker` (singleton/service-locator elimination
+ * campaign, Phase 12 sub-phase 12A) -- that class has no
+ * `HtmlRenderingInterface` dependency of its own, so it's built from this
+ * class's own already-required `currentUser`/`currentConfig` instead of a
+ * container resolve. Since `UrlService` itself also
  * requires `HtmlRenderingInterface` (this class is its own
  * `htmlRenderer`), and `UrlServiceInterface` is one of the most widely
  * autowired dependencies in the whole app, HtmlService sits on an
@@ -174,18 +179,15 @@ final class HtmlService implements HtmlRenderingInterface
     }
 
     /**
-     * Container resolve, not a constructor property -- AccessControl's own
-     * constructor requires HtmlRenderingInterface directly, same real-cycle
-     * reasoning as lang() above.
+     * Built from this class's own already-required currentUser/
+     * currentConfig -- AccessLevelChecker has no HtmlRenderingInterface
+     * dependency of its own, so unlike accessControl() (deleted, singleton/
+     * service-locator elimination campaign, Phase 12 sub-phase 12A) this
+     * needs no container resolve at all.
      */
-    private function accessControl(): AccessControl
+    private function accessLevelChecker(): AccessLevelChecker
     {
-        $accessControl = Kernel::container()->get(AccessControl::class);
-        if (! $accessControl instanceof AccessControl) {
-            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
-        }
-
-        return $accessControl;
+        return new AccessLevelChecker($this->currentUser, $this->currentConfig);
     }
 
     private function urlService(): UrlServiceInterface
@@ -364,11 +366,13 @@ final class HtmlService implements HtmlRenderingInterface
                 EntityManagerFactory::build($categoryConn)->getRepository(GroupEntity::class),
                 new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig),
                 $this->currentUser,
-                $this->filterState()
+                $this->filterState(),
+                $this->accessLevelChecker()
             ),
             $this->currentConfig,
             $this->eventDispatcher,
-            $this->translator
+            $this->translator,
+            $this->accessLevelChecker()
         )->getCategoryInfo($catId);
         // $catId isn't existence-validated by callers (WS/URL param) -- a
         // stale/forged id falls back to an empty breadcrumb.
@@ -483,7 +487,7 @@ final class HtmlService implements HtmlRenderingInterface
     #[Override]
     public function accessDenied(RedirectServiceInterface $redirectService): never
     {
-        if ($this->currentUser->isInitialized() and ! $this->accessControl()->isAGuest()) {
+        if ($this->currentUser->isInitialized() and ! $this->accessLevelChecker()->isAGuest()) {
             $html = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="shortcut icon" type="image/x-icon" href="themes/default/icon/favicon.ico">
 <div style="display: flex; justify-content: center;align-items: center;height: 100vh;margin: 0;color: #3C3C3C;font-family: \'Open Sans\', sans-serif;font-size: 20px;font-style: normal;font-weight: 600;line-height: normal;">

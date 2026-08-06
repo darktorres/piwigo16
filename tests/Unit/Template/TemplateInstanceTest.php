@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Url\RootPathOverride;
 use Smarty\Smarty;
 use Piwigo\Template\CssLoader;
@@ -1966,7 +1967,7 @@ test('finalizeOutput clears the CSS loader so a second call does not re-emit alr
 
 test('finalizeOutput does not reprocess the combined-scripts tag once did_head is already true', function (): void {
     $t = TemplateTestFactory::build();
-    $t->scriptLoader->get_head_scripts();
+    $t->scriptLoader->get_head_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
     $t->output = Template::COMBINED_SCRIPTS_TAG;
 
     $result = $t->fetchOutput();

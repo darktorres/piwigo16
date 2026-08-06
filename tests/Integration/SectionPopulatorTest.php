@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Override;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Category\CategoryRepository;
@@ -14,7 +15,6 @@ use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\ProcessCache;
-use Piwigo\Auth\AccessControl;
 use LogicException;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -139,14 +139,15 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $em = EntityManagerFactory::build($this->conn);
         $categoryRepo = new CategoryRepository($em, CurrentConfig::current());
         $this->filterState = new FilterState();
-        $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo, CurrentUser::current(), $this->filterState);
-        $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $this->permissionService, CurrentConfig::current(), new EventDispatcher(), Translator::get());
+        $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
+        $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo, CurrentUser::current(), $this->filterState, $accessLevelChecker);
+        $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $this->permissionService, CurrentConfig::current(), new EventDispatcher(), Translator::get(), $accessLevelChecker);
         $this->sessionService = new SessionService($em->getRepository(SessionEntity::class),CurrentConfig::current());
         $this->tagService = new TagService(Lang::current(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new EventDispatcher(), CurrentUser::current(), CurrentConfig::current(), new CurrentLogger(), $this->sessionService);
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
         $this->userService = new UserService(Lang::current(), new UserRepository($em, new EventDispatcher(), CurrentConfig::current()), $em->getRepository(GroupEntity::class), $mailer, new ActivityService($em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, $this->sessionService, new EventDispatcher(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPaths::get());
-        $this->searchService = new SearchService(AccessControl::current(), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, HtmlServiceTestFactory::build(), new RedirectService(Lang::current(), $this->userService), $this->sessionService, new EventDispatcher(), CurrentUser::current(), Lang::current(), CurrentConfig::current(), new CurrentLogger(), new DeploymentPolicy(), CurrentPaths::get(), $this->tagService);
+        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, HtmlServiceTestFactory::build(), new RedirectService(Lang::current(), $this->userService), $this->sessionService, new EventDispatcher(), CurrentUser::current(), Lang::current(), CurrentConfig::current(), new CurrentLogger(), new DeploymentPolicy(), CurrentPaths::get(), $this->tagService);
         $this->sectionRepo = new SectionRepository($em);
         $this->currentLogger = new CurrentLogger();
         $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
@@ -193,7 +194,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
     {
         return new SectionPopulator(
             Lang::current(),
-            AccessControl::current(),
+            new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()),
             HtmlServiceTestFactory::build(),
             CurrentTemplate::current()->get(),
             $this->sectionRepo,

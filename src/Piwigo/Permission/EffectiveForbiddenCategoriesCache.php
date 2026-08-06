@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Permission;
 
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryService;
 use Psr\Cache\CacheItemPoolInterface;
 
@@ -57,7 +57,7 @@ use Psr\Cache\CacheItemPoolInterface;
 final readonly class EffectiveForbiddenCategoriesCache
 {
     public function __construct(
-        private AccessControl $accessControl,
+        private AccessLevelChecker $accessLevelChecker,
         private PermissionService $permissionService,
         private CategoryService $categoryService,
         private PermissionRepository $permissionRepository,
@@ -135,7 +135,7 @@ final readonly class EffectiveForbiddenCategoriesCache
         ], null);
 
         $effectiveForbidden = $structuralForbidden;
-        if (! $this->accessControl->isAdmin($userStatus)) { // for non admins we forbid categories with no image (feature 1053)
+        if (! $this->accessLevelChecker->isAdmin($userStatus)) { // for non admins we forbid categories with no image (feature 1053)
             $zeroImageIds = [];
             foreach ($computedCategories['categories'] as $cat) {
                 if ($cat['count_images'] === 0) {

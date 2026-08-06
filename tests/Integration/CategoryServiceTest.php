@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration {
 
     use Override;
     use LogicException;
+    use Piwigo\Auth\AccessLevelChecker;
     use RuntimeException;
     use Piwigo\Core\Kernel;
     use Piwigo\Core\FilterState;
@@ -237,10 +238,11 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->service = new CategoryService(
             Lang::current(),
             $this->repo,
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)),
             CurrentConfig::current(),
             EventDispatcher::get(),
-            Translator::get()
+            Translator::get(),
+            new AccessLevelChecker(CurrentUser::current(), $currentConfig)
         );
 
         CurrentUser::current()->set(User::fromUserArray(['id' => 1]));

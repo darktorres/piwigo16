@@ -9,7 +9,7 @@ use Exception;
 use LogicException;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\TagId;
@@ -94,7 +94,7 @@ final readonly class SearchService
      * default-language/saveSearch paths.
      */
     public function __construct(
-        private AccessControl $accessControl,
+        private AccessLevelChecker $accessLevelChecker,
         private SearchRepository $repo,
         private PermissionService $permissionService,
         private CategoryService $categoryService,
@@ -291,8 +291,8 @@ final readonly class SearchService
         foreach ($displayFilters as $filtName => $filtConf) {
             if (isset($filtConf['access'])) {
                 $filtConf['access'] = $filtConf['access'] === 'everybody'
-                    || ($filtConf['access'] === 'admins-only' && $this->accessControl->isAdmin())
-                    || ($filtConf['access'] === 'registered-users' && $this->accessControl->isClassicUser());
+                    || ($filtConf['access'] === 'admins-only' && $this->accessLevelChecker->isAdmin())
+                    || ($filtConf['access'] === 'registered-users' && $this->accessLevelChecker->isClassicUser());
                 $displayFilters[$filtName] = $filtConf;
             }
         }
@@ -1783,7 +1783,7 @@ final readonly class SearchService
 
         $this->repo->insertSavedSearch($rules, $dbNow, $userId, $searchUuid, $forkedFrom);
 
-        if (! $this->accessControl->isAGuest() && ! $this->accessControl->isGeneric()) {
+        if (! $this->accessLevelChecker->isAGuest() && ! $this->accessLevelChecker->isGeneric()) {
             $rulesFields = $rules['fields'] ?? [];
             $preferencesService = $this->preferencesService ?? new PreferencesService(new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), $this->currentUser);
             $preferencesService->updateParam('gallery_search_filters', array_keys(is_array($rulesFields) ? $rulesFields : []));

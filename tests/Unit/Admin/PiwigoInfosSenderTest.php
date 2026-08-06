@@ -43,6 +43,7 @@ use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\PiwigoInfosSender;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\InstallationFlag;
@@ -133,8 +134,7 @@ test('send returns immediately without touching the DB or network when telemetry
         new AccessControl(
             new AccessControlTestFakeHtmlRendererDeniesAccess(),
             new AccessControlTestFakeRedirectServiceNeverCalled(),
-            new CurrentUser(new CurrentConfig()),
-            new CurrentConfig(),
+            new AccessLevelChecker(new CurrentUser(new CurrentConfig()), new CurrentConfig()),
         ),
         EntityManagerFactory::build()->getRepository(RateEntity::class),
         new CookieService(),
@@ -146,8 +146,7 @@ test('send returns immediately without touching the DB or network when telemetry
         new AccessControl(
             new AccessControlTestFakeHtmlRendererDeniesAccess(),
             new AccessControlTestFakeRedirectServiceNeverCalled(),
-            new CurrentUser(new CurrentConfig()),
-            new CurrentConfig(),
+            new AccessLevelChecker(new CurrentUser(new CurrentConfig()), new CurrentConfig()),
         ),
         EntityManagerFactory::build()->getRepository(HistoryEntity::class),
         $configService,
@@ -195,6 +194,7 @@ test('send returns immediately without touching the DB or network when telemetry
         new CategoryRepository(EntityManagerFactory::build(), new CurrentConfig()),
         new CurrentUser(new CurrentConfig()),
         new FilterState(),
+        new AccessLevelChecker(new CurrentUser(new CurrentConfig()), new CurrentConfig()),
     );
     $categoryService = new CategoryService(
         piwigoInfosSenderTestLang(),
@@ -203,6 +203,7 @@ test('send returns immediately without touching the DB or network when telemetry
         new CurrentConfig(),
         new EventDispatcher(),
         new Translator(new CurrentConfig()),
+        new AccessLevelChecker(new CurrentUser(new CurrentConfig()), new CurrentConfig()),
     );
     $tagService = new TagService(
         piwigoInfosSenderTestLang(),

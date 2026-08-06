@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Caddie\CaddieService;
 use Piwigo\Category\CategoryCatsRenderer;
@@ -224,7 +225,7 @@ final class GalleryController implements ControllerInterface
 
         // -------------------------------------------------- menubar
         $categoryCountCategories = new MenubarRenderer()
-            ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
+            ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
 
         $template->set_filename('index', 'index.tpl');
 

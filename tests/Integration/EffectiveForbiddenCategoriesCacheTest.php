@@ -11,7 +11,7 @@ use Piwigo\Core\FilterState;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Core\Lang;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Lang\Translator;
@@ -96,11 +96,12 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
             new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
             CurrentUser::current(),
             $filterState,
+            new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()),
         );
         $this->cache = new EffectiveForbiddenCategoriesCache(
-            AccessControl::current(),
+            new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()),
             $permissionService,
-            new CategoryService(Lang::current(), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), $permissionService, CurrentConfig::current(), new EventDispatcher(), Translator::get()),
+            new CategoryService(Lang::current(), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), $permissionService, CurrentConfig::current(), new EventDispatcher(), Translator::get(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current())),
             new PermissionRepository(EntityManagerFactory::build($this->conn)),
             $this->pool,
         );
@@ -163,9 +164,9 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
                 throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
             }
             $afterCache = new EffectiveForbiddenCategoriesCache(
-                AccessControl::current(),
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $afterCacheFilterState),
-                new CategoryService(Lang::current(), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $afterCacheFilterState), CurrentConfig::current(), new EventDispatcher(), Translator::get()),
+                new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $afterCacheFilterState, new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current())),
+                new CategoryService(Lang::current(), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $afterCacheFilterState, new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current())), CurrentConfig::current(), new EventDispatcher(), Translator::get(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current())),
                 new PermissionRepository(EntityManagerFactory::build($this->conn)),
                 new ArrayAdapter(),
             );

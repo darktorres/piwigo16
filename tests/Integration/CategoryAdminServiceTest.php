@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Override;
 use LogicException;
+use Piwigo\Auth\AccessLevelChecker;
 use RuntimeException;
 use Piwigo\Core\FilterState;
 use Piwigo\Db\EntityManagerFactory;
@@ -162,12 +163,14 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
+        $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
         $permissionService = new PermissionService(
             new PermissionRepository(EntityManagerFactory::build($this->conn)),
             EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
             new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
             CurrentUser::current(),
-            $filterState
+            $filterState,
+            $accessLevelChecker
         );
         $categoryService = new CategoryService(
             Lang::current(),
@@ -175,7 +178,8 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             $permissionService,
             CurrentConfig::current(),
             new EventDispatcher(),
-            Translator::get()
+            Translator::get(),
+            $accessLevelChecker
         );
         $this->service = new CategoryAdminService($categoryService, $permissionService, HtmlServiceTestFactory::build());
     }

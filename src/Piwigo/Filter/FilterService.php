@@ -6,6 +6,7 @@ namespace Piwigo\Filter;
 
 use Doctrine\DBAL\Connection;
 use Override;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
@@ -174,13 +175,15 @@ final class FilterService implements FilterUpdaterInterface
                 // named lastPhotoDate property) so every other retargeted
                 // consumer (e.g. CategoryCatsRenderer) observes the same
                 // value.
+                $accessLevelChecker = new AccessLevelChecker($currentUser, $this->currentConfig);
                 $computedCategories = new CategoryService(
                     $this->lang,
                     new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig),
-                    new PermissionService(new PermissionRepository(EntityManagerFactory::build($categoryConn)), EntityManagerFactory::build($categoryConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig), $currentUser, $this->filterState),
+                    new PermissionService(new PermissionRepository(EntityManagerFactory::build($categoryConn)), EntityManagerFactory::build($categoryConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($categoryConn), $this->currentConfig), $currentUser, $this->filterState, $accessLevelChecker),
                     $this->currentConfig,
                     $this->eventDispatcher,
-                    $this->translator
+                    $this->translator,
+                    $accessLevelChecker
                 )->getComputedCategories($user->toUserArray(), $filter_recent_period);
                 $filter['categories'] = $computedCategories['categories'];
                 $currentUser->set($user->withRawAttribute('last_photo_date', $computedCategories['lastPhotoDate']));

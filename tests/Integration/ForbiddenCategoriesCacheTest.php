@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Override;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Core\FilterState;
@@ -71,6 +72,7 @@ final class ForbiddenCategoriesCacheTest extends IntegrationTestCase
                 new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
                 CurrentUser::current(),
                 $filterState,
+                new AccessLevelChecker(CurrentUser::current(), $currentConfig),
             ),
             $this->pool,
         );

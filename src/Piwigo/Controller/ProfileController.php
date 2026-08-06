@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Bootstrap\PageTail;
@@ -215,7 +216,7 @@ final class ProfileController implements ControllerInterface
         if (! is_array($hide_menu_on) or ! in_array('theProfilePage', $hide_menu_on, true)) {
             if (($themeconf['id'] ?? null) !== 'standard_pages') {
                 new MenubarRenderer()
-                    ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
+                    ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
             }
         }
 

@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
@@ -43,9 +43,9 @@ final class CssLoader
     /**
      * @return Combinable[] array of combined CSS.
      */
-    public function get_css(UrlServiceInterface $urlService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, Paths $paths): array
+    public function get_css(UrlServiceInterface $urlService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, Paths $paths, AccessLevelChecker $accessLevelChecker): array
     {
-        $combiner = new FileCombiner(AccessControl::currentForCaching(), 'css', $urlService, $paths, $eventDispatcher, $currentTemplate, $currentConfig, $this->sortedRegisteredCss());
+        $combiner = new FileCombiner($accessLevelChecker, 'css', $urlService, $paths, $eventDispatcher, $currentTemplate, $currentConfig, $this->sortedRegisteredCss());
         return $combiner->combine();
     }
 

@@ -6,10 +6,10 @@ namespace Piwigo\Menu;
 
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
-use Piwigo\Comment\CommentService;
+use Piwigo\Comment\AvailableCommentsCounter;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AccessLevel;
@@ -37,10 +37,10 @@ use Piwigo\Users\CurrentUser;
  * Builds the main menubar's blocks. Injects nothing on its own
  * constructor -- same "no constructor deps" shape as
  * Html\HtmlService/Url\UrlService: cross-domain calls
- * (AccessControl::isAGuest()/isAuthorizeStatus()/isAdmin(),
+ * (AccessLevelChecker::isAGuest()/isAuthorizeStatus()/isAdmin(),
  * PageFilterHelper::getFilterPageValue()/scriptBasename(), Lang::t(),
- * CommentService::getNbAvailableComments()) already call the real
- * migrated OOP classes directly, not plain global-function wrappers.
+ * AvailableCommentsCounter::count()) already call the real migrated OOP
+ * classes directly, not plain global-function wrappers.
  * get_available_tags()/get_nb_available_tags()/tags_counter_compare()
  * (functions_tag.inc.php) and get_categories_menu()/
  * get_related_categories_menu() (functions_category.inc.php) were ported
@@ -76,7 +76,7 @@ final class MenubarRenderer
      * write to, this method returns that value instead; every caller but
      * GalleryController ignores it.
      */
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, FilterState $filterState, SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, DeploymentPolicy $deploymentPolicy, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, Translator $translator, CurrentLogger $currentLogger): ?int
+    public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, UrlServiceInterface $urlService, FilterState $filterState, SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, DeploymentPolicy $deploymentPolicy, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, Translator $translator, CurrentLogger $currentLogger): ?int
     {
         $template = $currentTemplate->get();
         $section_context = $sectionContextRegistry->current();
@@ -84,14 +84,14 @@ final class MenubarRenderer
         $conn = DbConnection::build();
         // Built once, reused below -- was the same PermissionService recipe
         // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
-        $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, $filterState);
+        $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, $filterState, $accessLevelChecker);
         $tagService = new TagService($lang, EntityManagerFactory::build($conn)->getRepository(TagEntity::class), $permissionService, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger, $sessionService);
-        $categoryService = new CategoryService($lang, new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator);
+        $categoryService = new CategoryService($lang, new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator, $accessLevelChecker);
 
         $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate, $currentConfig);
 
         // if guest_access is disabled, we only display the menus if the user is identified
-        if ($currentConfig->guestAccess() or ! $accessControl->isAGuest()) {
+        if ($currentConfig->guestAccess() or ! $accessLevelChecker->isAGuest()) {
             $menu->load_registered_blocks();
         }
         $menu->prepare_display();
@@ -242,7 +242,7 @@ final class MenubarRenderer
         // ----------------------------------------------------------- special categories
         if (($block = $menu->get_block('mbSpecials')) !== null) {
             $block->data = [];
-            if (! $accessControl->isAGuest()) {// favorites
+            if (! $accessLevelChecker->isAGuest()) {// favorites
                 $block->data['favorites'] =
                   [
                       'URL' => $urlService->makeIndexUrl([
@@ -348,7 +348,8 @@ final class MenubarRenderer
                       'TITLE' => $lang->t('display last user comments'),
                       'NAME' => $lang->t('Comments'),
                       'URL' => $urlService->getRootUrl() . 'comments.php',
-                      'COUNTER' => CommentService::getNbAvailableComments(),
+                      'COUNTER' => new AvailableCommentsCounter($currentUser, $currentConfig, $accessLevelChecker)
+                          ->count(),
                   ];
             }
 
@@ -372,7 +373,7 @@ final class MenubarRenderer
         }
 
         // --------------------------------------------------------------- identification
-        if ($accessControl->isAGuest()) {
+        if ($accessLevelChecker->isAGuest()) {
             $template->assign(
                 [
                     'U_LOGIN' => $urlService->getRootUrl() . 'identification.php',
@@ -387,7 +388,7 @@ final class MenubarRenderer
             $username = $currentUser->get()
                 ->username;
             $template->assign('USERNAME', stripslashes($username));
-            if ($accessControl->isAuthorizeStatus(AccessLevel::Classic)) {
+            if ($accessLevelChecker->isAuthorizeStatus(AccessLevel::Classic)) {
                 $template->assign('U_PROFILE', $urlService->getRootUrl() . 'profile.php');
             }
 
@@ -396,7 +397,7 @@ final class MenubarRenderer
             if (! $deploymentPolicy->apacheAuthentication) {
                 $template->assign('U_LOGOUT', $urlService->getRootUrl() . '?act=logout');
             }
-            if ($accessControl->isAdmin()) {
+            if ($accessLevelChecker->isAdmin()) {
                 $template->assign('U_ADMIN', $urlService->getRootUrl() . 'admin.php');
             }
         }

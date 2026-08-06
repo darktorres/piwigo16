@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Support;
 
 use Throwable;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\DeploymentPolicy;
@@ -19,6 +20,7 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Template;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Singleton/service-locator elimination campaign, Phase 11 sub-phase 11E:
@@ -34,8 +36,11 @@ use Piwigo\Template\Template;
  * instead (see Template::imageStdParams()'s own docblock). Phase 11
  * sub-phase 11H added a 9th, Paths (its own former CurrentPaths::get()
  * shim usage), falling back to the same Paths::fromRoot(sys_get_temp_dir())
- * already used for Lang's own fallback above. Resolves each
- * of the real 9 from the real container-shared instance when one exists
+ * already used for Lang's own fallback above. Phase 12 sub-phase 12A added
+ * a 10th, AccessLevelChecker (extracted from the old AccessControl
+ * circular-dependency shim), falling back to a fresh instance built from
+ * the same currentConfig/currentUser resolved above. Resolves each
+ * of the real 10 from the real container-shared instance when one exists
  * (matching what every real production caller already gets, including
  * honoring any test-seeded state on those instances), falling back to a
  * fresh, DB-free, bare instance for the many plain Unit tests that never
@@ -47,8 +52,11 @@ final class TemplateTestFactory
 {
     public static function build(string $root = '.', string $theme = '', string $path = 'template'): Template
     {
+        $currentConfig = self::resolve(CurrentConfig::class) ?? new CurrentConfig();
+        $currentUser = self::resolve(CurrentUser::class) ?? new CurrentUser($currentConfig);
+
         return new Template(
-            self::resolve(CurrentConfig::class) ?? new CurrentConfig(),
+            $currentConfig,
             self::resolve(Lang::class) ?? new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
             self::resolve(AdminContext::class) ?? new AdminContext(),
             self::resolve(EventDispatcher::class) ?? new EventDispatcher(),
@@ -57,6 +65,7 @@ final class TemplateTestFactory
             self::resolve(ProcessCache::class) ?? new ProcessCache(),
             self::resolve(CurrentConfigService::class) ?? new CurrentConfigService(),
             self::resolve(Paths::class) ?? Paths::fromRoot(sys_get_temp_dir()),
+            self::resolve(AccessLevelChecker::class) ?? new AccessLevelChecker($currentUser, $currentConfig),
             $root,
             $theme,
             $path,

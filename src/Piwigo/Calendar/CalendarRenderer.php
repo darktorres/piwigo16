@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -92,10 +93,11 @@ final readonly class CalendarRenderer
 
         // ------------------ initialize the condition on items to take into account ---
         $conn = DbConnection::build();
-        $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser, $this->filterState);
+        $accessLevelChecker = new AccessLevelChecker($this->currentUser, $this->currentConfig);
+        $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser, $this->filterState, $accessLevelChecker);
         $calendarService = new CalendarService(
             $permissionService,
-            new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, $this->translator)
+            new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, $this->translator, $accessLevelChecker)
         );
 
         if ($section === 'categories') { // we will regenerate the items by including subcats elements

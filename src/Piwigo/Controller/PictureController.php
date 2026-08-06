@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Bootstrap\PageTail;
@@ -154,7 +155,7 @@ final class PictureController implements ControllerInterface
 
     private function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
     {
-        return new CommentService($this->lang, EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->accessControl);
+        return new CommentService($this->lang, EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, new AccessLevelChecker($this->currentUser, $this->currentConfig));
     }
 
     #[Override]
@@ -1245,7 +1246,7 @@ final class PictureController implements ControllerInterface
             ->render($image_id, $urlService, $picture, $url_self);
         if ($this->currentConfig->activateComments()) {
             new PictureCommentRenderer()
-                ->render($this->lang, $this->accessControl, $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->mailer, $this->htmlService);
+                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->mailer, $this->htmlService);
         }
         if ($metadata_showable and $this->sessionService->getSessionVar('show_metadata') !== null) {
             new PictureMetadataRenderer()
@@ -1257,7 +1258,7 @@ final class PictureController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if ($this->currentConfig->pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
             new MenubarRenderer()
-                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
+                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
         }
 
         // The slideshow branch above may have set $refresh/$url_link

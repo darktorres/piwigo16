@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Override;
 use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Bootstrap\PageTail;
@@ -251,7 +252,7 @@ final class RegisterController implements ControllerInterface
         $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
         if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
+                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
         }
 
         // Load language if cookie is set from login/register/password

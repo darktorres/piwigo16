@@ -13,6 +13,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Category\CategoryRepository;
@@ -60,7 +61,7 @@ $nb_image_page = is_numeric($rawNbImagePage) ? (int) $rawNbImagePage : 15;
 
 $conn = DbConnection::build();
 
-$permissionCriteria = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()), CurrentUser::current(), RequestBootstrap::filterState())->getPermissionCriteria();
+$permissionCriteria = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()), CurrentUser::current(), RequestBootstrap::filterState(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()))->getPermissionCriteria();
 $condition = SqlCondition::combine(
     'AND',
     $permissionCriteria->forbiddenCategoriesCondition('category_id'),

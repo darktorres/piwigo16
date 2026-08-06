@@ -8,6 +8,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Category\CategoryService;
@@ -330,7 +331,7 @@ final class CommentsController implements ControllerInterface
         $comment_id = $commentsRequest->actionCommentId;
         $edit_comment = null;
 
-        $commentService = new CommentService($this->lang, EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->accessControl);
+        $commentService = new CommentService($this->lang, EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, new AccessLevelChecker($this->currentUser, $this->currentConfig));
 
         if (isset($action) and $comment_id !== null) {
             $commentIdVo = CommentId::from($comment_id);
@@ -664,7 +665,7 @@ final class CommentsController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theCommentsPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
+                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
         }
 
         // +---------------------------------------------------------------+

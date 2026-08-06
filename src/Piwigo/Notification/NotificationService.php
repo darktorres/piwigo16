@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Notification;
 
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -29,7 +29,7 @@ final readonly class NotificationService
 {
     public function __construct(
         private Lang $lang,
-        private AccessControl $accessControl,
+        private AccessLevelChecker $accessLevelChecker,
         private NotificationRepository $repo,
         private PermissionService $permissionService,
         private HtmlRenderingInterface $htmlRenderer,
@@ -205,8 +205,8 @@ final readonly class NotificationService
         return $this->nbNewComments($start, $end) > 0
             || $this->nbNewElements($start, $end) > 0
             || $this->nbUpdatedCategories($start, $end) > 0
-            || ($this->accessControl->isAdmin() && $this->nbUnvalidatedComments($start, $end) > 0)
-            || ($this->accessControl->isAdmin() && $this->nbNewUsers($start, $end) > 0);
+            || ($this->accessLevelChecker->isAdmin() && $this->nbUnvalidatedComments($start, $end) > 0)
+            || ($this->accessLevelChecker->isAdmin() && $this->nbNewUsers($start, $end) > 0);
     }
 
     /**
@@ -337,7 +337,7 @@ final readonly class NotificationService
             $addUrl
         );
 
-        if ($this->accessControl->isAdmin()) {
+        if ($this->accessLevelChecker->isAdmin()) {
             $this->addNewsLine(
                 $news,
                 $this->nbUnvalidatedComments($start, $end),

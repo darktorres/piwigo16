@@ -3,16 +3,14 @@
 declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess;
-use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Section\RandomIndexRedirectResolver;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
-// RandomIndexRedirectResolver now calls (an injected) AccessControl::
+// RandomIndexRedirectResolver now calls (an injected) AccessLevelChecker::
 // isAGuest() (P23 batch 8d, converted to constructor injection in the
 // singleton/service-locator elimination campaign's Phase 7), which reads
 // Piwigo\Users\CurrentUser (Legacy Coupling Retirement Track A batch A3)
@@ -32,23 +30,15 @@ function seedCurrentUserStatus(UserStatus $status): void
 }
 
 /**
- * Only isAGuest() is ever reached, which only reads CurrentUser -- the
- * HtmlRenderingInterface/RedirectServiceInterface collaborators are never
- * touched, so the shared "throws if called" fakes from AccessControlTest.php
- * are reused here rather than duplicating them. No Kernel::boot() happens
- * in this file, so AccessControl::current() (which has no pre-boot
- * fallback) isn't an option -- construct directly instead, against the
- * same shared CurrentUser::current() instance seedCurrentUserStatus()
- * mutates.
+ * Only isAGuest() is ever reached, which only reads CurrentUser --
+ * AccessLevelChecker (singleton/service-locator elimination campaign,
+ * Phase 12 sub-phase 12A) has no HtmlRenderingInterface/
+ * RedirectServiceInterface dependency at all, so no fakes are needed here
+ * any more.
  */
-function randomIndexRedirectResolverTestAccessControl(): AccessControl
+function randomIndexRedirectResolverTestAccessLevelChecker(): AccessLevelChecker
 {
-    return new AccessControl(
-        new AccessControlTestFakeHtmlRendererDeniesAccess(),
-        new AccessControlTestFakeRedirectServiceNeverCalled(),
-        CurrentUser::current(),
-        CurrentConfig::current(),
-    );
+    return new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
 }
 
 beforeEach(function (): void {
@@ -62,13 +52,13 @@ afterEach(function (): void {
 test('resolveCandidates matches an empty-string condition', function (): void {
     $resolver = new RandomIndexRedirectResolver();
 
-    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessControl(), ['index.php' => '']))->toBe(['index.php']);
+    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), ['index.php' => '']))->toBe(['index.php']);
 });
 
 test('resolveCandidates matches a literal "return true;" condition', function (): void {
     $resolver = new RandomIndexRedirectResolver();
 
-    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessControl(), ['index.php' => 'return true;']))->toBe(['index.php']);
+    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), ['index.php' => 'return true;']))->toBe(['index.php']);
 });
 
 test('resolveCandidates matches "return is_a_guest();" only for a real guest', function (): void {
@@ -76,23 +66,23 @@ test('resolveCandidates matches "return is_a_guest();" only for a real guest', f
     $candidates = ['guest.php' => 'return is_a_guest();'];
 
     seedCurrentUserStatus(UserStatus::Guest);
-    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessControl(), $candidates))->toBe(['guest.php']);
+    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), $candidates))->toBe(['guest.php']);
 
     seedCurrentUserStatus(UserStatus::Normal);
-    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessControl(), $candidates))->toBe([]);
+    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), $candidates))->toBe([]);
 });
 
 test('resolveCandidates never matches an arbitrary PHP condition string', function (): void {
     // The [SEC-15] fix itself: this used to be eval()'d.
     $resolver = new RandomIndexRedirectResolver();
 
-    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessControl(), ['evil.php' => 'system("id");']))->toBe([]);
+    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), ['evil.php' => 'system("id");']))->toBe([]);
 });
 
 test('resolveCandidates skips non-string keys and preserves match order', function (): void {
     $resolver = new RandomIndexRedirectResolver();
 
-    $result = $resolver->resolveCandidates(randomIndexRedirectResolverTestAccessControl(), [
+    $result = $resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), [
         'first.php' => '',
         0 => 'return true;',
         'second.php' => 'return true;',

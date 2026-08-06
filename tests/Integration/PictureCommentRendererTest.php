@@ -12,7 +12,7 @@ use Piwigo\Comment\CommentEntity;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Core\CurrentPaths;
 use mysqli;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -137,7 +137,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $this->seedUser($ownerId, UserStatus::Normal);
         CurrentConfig::current()->setUserCanEditComment(true);
 
-        $this->renderer()->render(Lang::current(), AccessControl::current(), $commentIdB, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+        $this->renderer()->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), $commentIdB, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
 
         $rows = $this->renderedComments();
         $rowA = $this->findRenderedRow($rows, $commentIdA);
@@ -182,7 +182,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['content'] = 'A guest comment attempt.';
 
         try {
-            $this->renderer()->render(Lang::current(), AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+            $this->renderer()->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
             self::fail('Expected a ResponseReadyException');
         } catch (ResponseReadyException $e) {
             self::assertSame(200, $e->response()->getStatusCode());
@@ -198,7 +198,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['content'] = 'Spam attempt on a non-commentable picture.';
 
         try {
-            $this->renderer()->render(Lang::current(), AccessControl::current(), null, $imageId, 0, $this->urlService(), [['commentable' => false]], '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+            $this->renderer()->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, $imageId, 0, $this->urlService(), [['commentable' => false]], '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
             self::fail('Expected a ResponseReadyException');
         } catch (ResponseReadyException $e) {
             self::assertSame(403, $e->response()->getStatusCode());
@@ -223,7 +223,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['key'] = new EphemeralKeyService(CurrentConfig::current())->generate(0, (string) $imageId);
 
         try {
-            $this->renderer()->render(Lang::current(), AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+            $this->renderer()->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame(
                 [
@@ -252,7 +252,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['key'] = new EphemeralKeyService(CurrentConfig::current())->generate(0, (string) $imageId);
 
         try {
-            $this->renderer()->render(Lang::current(), AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+            $this->renderer()->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame(['Your comment has been registered'], PageState::current()->infos);
         } finally {
@@ -277,7 +277,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['key'] = 'totally-invalid-key';
 
         try {
-            $this->renderer()->render(Lang::current(), AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+            $this->renderer()->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame(
                 ['Your comment has NOT been registered because it did not pass the validation rules'],
@@ -306,7 +306,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_GET['comments_order'] = 'desc';
 
         try {
-            $this->renderer()->render(Lang::current(), AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+            $this->renderer()->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame('desc', SessionService::get()->getSessionVar('comments_order'));
             // The nav link toggles to the opposite of whatever order is now
@@ -385,7 +385,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
      */
     private function renderComments(int $imageId): array
     {
-        $this->renderer()->render(Lang::current(), AccessControl::current(), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+        $this->renderer()->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
 
         return $this->renderedComments();
     }

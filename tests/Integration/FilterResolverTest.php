@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Override;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Core\Lang;
@@ -97,6 +98,7 @@ final class FilterResolverTest extends IntegrationTestCase
         if (! $filterState instanceof FilterState) {
             throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
+        $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
         $categoryService = new CategoryService(
             Lang::current(),
             new CategoryRepository($em, CurrentConfig::current()),
@@ -106,10 +108,12 @@ final class FilterResolverTest extends IntegrationTestCase
                 new CategoryRepository($em, CurrentConfig::current()),
                 CurrentUser::current(),
                 $filterState,
+                $accessLevelChecker,
             ),
             CurrentConfig::current(),
             new EventDispatcher(),
             Translator::get(),
+            $accessLevelChecker,
         );
         $caddieRepo = $em->getRepository(CaddieEntity::class);
         $mailer = Kernel::container()->get(MailService::class);

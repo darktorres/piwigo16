@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Config\CurrentConfig;
@@ -53,17 +54,19 @@ function makeCalendarService(): CalendarService
     if (! $filterState instanceof FilterState) {
         throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
     }
+    $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
     $permissionService = new PermissionService(
         new PermissionRepository(EntityManagerFactory::build($conn)),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
         new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()),
         CurrentUser::current(),
         $filterState,
+        $accessLevelChecker,
     );
 
     return new CalendarService(
         $permissionService,
-        new CategoryService(Lang::current(), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()), $permissionService, CurrentConfig::current(), new EventDispatcher(), Translator::get()),
+        new CategoryService(Lang::current(), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()), $permissionService, CurrentConfig::current(), new EventDispatcher(), Translator::get(), $accessLevelChecker),
     );
 }
 

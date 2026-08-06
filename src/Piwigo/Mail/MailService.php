@@ -11,7 +11,7 @@ use Override;
 use Pelago\Emogrifier\CssInliner;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
@@ -97,9 +97,14 @@ use Symfony\Component\Mime\Email;
  * params -- the old "stays cheap to call with no args" reasoning no
  * longer holds (churn is not a deciding factor for this campaign); every
  * real `new MailService(...)` call site was updated accordingly.
- * AccessControl stays a lazily-resolved private helper (see its own
- * docblock) -- a genuine circular dependency, not the same
- * too-many-call-sites reasoning. AdminContext/ErrorCollector/ProcessCache/
+ * AccessControl itself stayed a lazily-resolved private helper -- a
+ * genuine circular dependency, not the same too-many-call-sites reasoning
+ * -- but the one thing this class actually reads from it (`isAdmin()`)
+ * moved to AccessLevelChecker (singleton/service-locator elimination
+ * campaign, Phase 12 sub-phase 12A), which has no MailerInterface
+ * dependency of its own, so it's built from this class's own already-
+ * required currentUser/currentConfig instead of a container resolve.
+ * AdminContext/ErrorCollector/ProcessCache/
  * CurrentConfigService are 4 further lazily-resolved private helpers
  * (same "container resolve, not a constructor property" shape as
  * accessControl(), see that method's own docblock for why) added right
@@ -157,24 +162,15 @@ final class MailService implements MailerInterface
     ) {}
 
     /**
-     * Container resolve, not a constructor property -- AccessControl's own
-     * dependency chain (RedirectServiceInterface -> Bootstrap\RedirectService
-     * -> Users\UserService -> Core\MailerInterface, i.e. this class) means a
-     * required constructor param here would be a genuine circular
-     * dependency PHP-DI can't autowire (this class implements
-     * MailerInterface). Same "private helper, not constructor property"
-     * shape already established for $urlService's own former equivalent
-     * (see this class's git history) and for authService()/userService()'s
-     * own real-cycle-avoidance reasoning below.
+     * Built from this class's own already-required currentUser/
+     * currentConfig -- AccessLevelChecker has no MailerInterface dependency
+     * of its own, so unlike accessControl() (deleted, singleton/
+     * service-locator elimination campaign, Phase 12 sub-phase 12A) this
+     * needs no container resolve at all.
      */
-    private function accessControl(): AccessControl
+    private function accessLevelChecker(): AccessLevelChecker
     {
-        $accessControl = Kernel::container()->get(AccessControl::class);
-        if (! $accessControl instanceof AccessControl) {
-            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
-        }
-
-        return $accessControl;
+        return new AccessLevelChecker($this->currentUser, $this->currentConfig);
     }
 
     /**
@@ -576,7 +572,7 @@ final class MailService implements MailerInterface
      */
     public function getMailTemplate(string $emailFormat): Template
     {
-        return new Template($this->currentConfig, $this->lang, $this->adminContext(), $this->eventDispatcher, $this->pageState, $this->errorCollector(), $this->processCache(), $this->currentConfigService(), $this->paths, $this->paths->root . 'themes', 'default', 'template/mail/' . $emailFormat);
+        return new Template($this->currentConfig, $this->lang, $this->adminContext(), $this->eventDispatcher, $this->pageState, $this->errorCollector(), $this->processCache(), $this->currentConfigService(), $this->paths, $this->accessLevelChecker(), $this->paths->root . 'themes', 'default', 'template/mail/' . $emailFormat);
     }
 
     public function getStrEmailFormat(bool $isHtml): string
@@ -1158,7 +1154,7 @@ final class MailService implements MailerInterface
                 $errorMessage = $e->getMessage();
             }
 
-            if (! $ret && (! (bool) ini_get('display_errors') || $this->accessControl()->isAdmin())) {
+            if (! $ret && (! (bool) ini_get('display_errors') || $this->accessLevelChecker()->isAdmin())) {
                 trigger_error('Mailer Error: ' . $errorMessage, \E_USER_WARNING);
             }
             if ($this->currentConfig->debugMail()) {

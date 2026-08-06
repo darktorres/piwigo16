@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Picture;
 
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
@@ -86,12 +86,12 @@ final class PictureCommentRenderer
      *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
      *   genuinely string|null.
      */
-    public function render(Lang $lang, AccessControl $accessControl, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, MailerInterface $mailer, HtmlRenderingInterface $htmlRenderer): void
+    public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, MailerInterface $mailer, HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
         $commentRepository = EntityManagerFactory::build(DbConnection::build())->getRepository(CommentEntity::class);
-        $commentService = new CommentService($lang, $commentRepository, new EphemeralKeyService($currentConfig), $mailer, $htmlRenderer, $urlService, $eventDispatcher, $pageState, $currentUser, $currentConfig, $accessControl);
+        $commentService = new CommentService($lang, $commentRepository, new EphemeralKeyService($currentConfig), $mailer, $htmlRenderer, $urlService, $eventDispatcher, $pageState, $currentUser, $currentConfig, $accessLevelChecker);
 
         $commentAction = null;
 
@@ -108,7 +108,7 @@ final class PictureCommentRenderer
         }
 
         if ($showComments and $pictureCommentSubmitRequest->contentPresent) {
-            if ($accessControl->isAGuest() and ! $currentConfig->commentsForall()) {
+            if ($accessLevelChecker->isAGuest() and ! $currentConfig->commentsForall()) {
                 throw new ResponseReadyException(ResponseFactory::text('Session expired'));
             }
 
@@ -173,7 +173,7 @@ final class PictureCommentRenderer
             return;
         }
 
-        $onlyValidated = ! $accessControl->isAdmin();
+        $onlyValidated = ! $accessLevelChecker->isAdmin();
 
         // number of comments for this picture
         $nbComments = $commentRepository->countForImage($imageId, $onlyValidated);
@@ -253,7 +253,7 @@ final class PictureCommentRenderer
                 // "never matches" sentinel.
                 $commentAuthorId = $row->authorId ?? -1;
 
-                if ($accessControl->canManageComment('delete', $commentAuthorId)) {
+                if ($accessLevelChecker->canManageComment('delete', $commentAuthorId)) {
                     $tplComment['U_DELETE'] = $urlService->addUrlParams(
                         $url_self,
                         [
@@ -264,7 +264,7 @@ final class PictureCommentRenderer
                         ]
                     );
                 }
-                if ($accessControl->canManageComment('edit', $commentAuthorId)) {
+                if ($accessLevelChecker->canManageComment('edit', $commentAuthorId)) {
                     $tplComment['U_EDIT'] = $urlService->addUrlParams(
                         $url_self,
                         [
@@ -282,7 +282,7 @@ final class PictureCommentRenderer
                         $tplComment['U_CANCEL'] = $url_self;
                     }
                 }
-                if ($accessControl->isAdmin()) {
+                if ($accessLevelChecker->isAdmin()) {
                     $tplComment['EMAIL'] = $email;
 
                     if (! $row->validated) {
@@ -305,7 +305,7 @@ final class PictureCommentRenderer
         if ($editCommentId !== null) {
             $showAddCommentForm = false;
         }
-        if ($accessControl->isAGuest() and ! $currentConfig->commentsForall()) {
+        if ($accessLevelChecker->isAGuest() and ! $currentConfig->commentsForall()) {
             $showAddCommentForm = false;
         }
 
@@ -321,11 +321,11 @@ final class PictureCommentRenderer
                 'F_ACTION' => $url_self,
                 'KEY' => $key,
                 'CONTENT' => '',
-                'SHOW_AUTHOR' => ! $accessControl->isClassicUser(),
+                'SHOW_AUTHOR' => ! $accessLevelChecker->isClassicUser(),
                 'AUTHOR_MANDATORY' => $currentConfig->commentsAuthorMandatory(),
                 'AUTHOR' => '',
                 'WEBSITE_URL' => '',
-                'SHOW_EMAIL' => ! $accessControl->isClassicUser() or $userEmailEmpty,
+                'SHOW_EMAIL' => ! $accessLevelChecker->isClassicUser() or $userEmailEmpty,
                 'EMAIL_MANDATORY' => $currentConfig->commentsEmailMandatory(),
                 'EMAIL' => '',
                 'SHOW_WEBSITE' => $currentConfig->commentsEnableWebsite(),

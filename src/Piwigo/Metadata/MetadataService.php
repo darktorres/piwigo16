@@ -6,6 +6,7 @@ namespace Piwigo\Metadata;
 
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CharsetHelper;
@@ -571,7 +572,7 @@ final readonly class MetadataService
         // one-method-only TagService dependency, avoiding touching every
         // existing `new MetadataService(...)` call site for zero benefit.
         $tagConn = DbConnection::build();
-        $tagService = new TagService($this->lang, EntityManagerFactory::build($tagConn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($tagConn)), EntityManagerFactory::build($tagConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($tagConn), $this->currentConfig), $this->currentUser, $this->filterState), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger, $this->sessionService);
+        $tagService = new TagService($this->lang, EntityManagerFactory::build($tagConn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($tagConn)), EntityManagerFactory::build($tagConn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($tagConn), $this->currentConfig), $this->currentUser, $this->filterState, new AccessLevelChecker($this->currentUser, $this->currentConfig)), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger, $this->sessionService);
 
         foreach ($this->repo->findImagesByIds($ids) as $row) {
             $data = $this->getSyncMetadata($row->toArray());

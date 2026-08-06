@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Section;
 
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 
 /**
  * [SEC-15] Replaces eval($random_url_condition) for the
@@ -25,24 +25,24 @@ final class RandomIndexRedirectResolver
      *   meant to be a URL string; skipped defensively rather than trusted.
      * @return list<string> urls whose condition matched
      */
-    public function resolveCandidates(AccessControl $accessControl, array $redirectCandidates): array
+    public function resolveCandidates(AccessLevelChecker $accessLevelChecker, array $redirectCandidates): array
     {
         $matches = [];
         foreach ($redirectCandidates as $url => $condition) {
-            if (is_string($url) && $this->conditionMatches($accessControl, $condition)) {
+            if (is_string($url) && $this->conditionMatches($accessLevelChecker, $condition)) {
                 $matches[] = $url;
             }
         }
         return $matches;
     }
 
-    private function conditionMatches(AccessControl $accessControl, string $condition): bool
+    private function conditionMatches(AccessLevelChecker $accessLevelChecker, string $condition): bool
     {
         if ($condition === '' || $condition === 'return true;') {
             return true;
         }
         if ($condition === 'return is_a_guest();') {
-            return $accessControl->isAGuest();
+            return $accessLevelChecker->isAGuest();
         }
         return false;
     }

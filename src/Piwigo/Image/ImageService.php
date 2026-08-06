@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use LogicException;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -102,6 +103,15 @@ final readonly class ImageService
     }
 
     /**
+     * Built from this class's own currentUser()/currentConfig -- no
+     * separate container resolve needed.
+     */
+    private function accessLevelChecker(): AccessLevelChecker
+    {
+        return new AccessLevelChecker($this->currentUser(), $this->currentConfig);
+    }
+
+    /**
      * Same reasoning as currentUser() above -- falls back to a fresh,
      * uninitialised instance, matching `FilterState`'s own former
      * `isInitializedStatic()` shim's identical pre-boot fallback.
@@ -154,10 +164,11 @@ final readonly class ImageService
         return new CategoryService(
             $this->lang,
             new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig),
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser(), $this->filterState()),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser(), $this->filterState(), $this->accessLevelChecker()),
             $this->currentConfig,
             $this->eventDispatcher,
-            $this->translator
+            $this->translator,
+            $this->accessLevelChecker()
         );
     }
 

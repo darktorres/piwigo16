@@ -8,7 +8,7 @@ use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
 use Exception;
 use LogicException;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\UserId;
@@ -79,38 +79,18 @@ final readonly class CategoryService
         private CurrentConfig $currentConfig,
         private EventDispatcher $eventDispatcher,
         private Translator $translator,
+        private AccessLevelChecker $accessLevelChecker,
     ) {}
-
-    /**
-     * Container resolve, not a constructor property -- AccessControl's own
-     * dependency chain (RedirectServiceInterface -> Bootstrap\RedirectService
-     * -> Users\UserService -> ... ) means a required constructor param here
-     * risks a genuine circular dependency PHP-DI can't autowire, same shape
-     * as Mail\MailService/Url\UrlService/Template\Template/Users\UserService's
-     * own identical accessControl() helper (singleton/service-locator
-     * elimination campaign, Phase 11 sub-phase 11G).
-     */
-    private function accessControl(): AccessControl
-    {
-        $accessControl = Kernel::container()->get(AccessControl::class);
-        if (! $accessControl instanceof AccessControl) {
-            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
-        }
-
-        return $accessControl;
-    }
 
     /**
      * Container resolve, not a constructor property -- used only inside
      * getComputedCategories()'s own internal RecentIconResolver::getIcon()
      * call below. A required constructor param here would ripple across
      * this class's own ~21 real construction sites for the sake of this
-     * one internal read, same low-blast-radius reasoning as
-     * accessControl() above (singleton/service-locator elimination
-     * campaign, Phase 11 sub-phase 11G). Falls back to a fresh,
-     * unmemoized instance when Kernel::boot() hasn't run, matching
-     * ProcessCache::getStatic()/setStatic()'s own identical pre-boot
-     * fallback.
+     * one internal read (singleton/service-locator elimination campaign,
+     * Phase 11 sub-phase 11G). Falls back to a fresh, unmemoized instance
+     * when Kernel::boot() hasn't run, matching ProcessCache::getStatic()/
+     * setStatic()'s own identical pre-boot fallback.
      */
     private function processCache(): ProcessCache
     {
@@ -350,7 +330,7 @@ final readonly class CategoryService
             [$this->lang->t('Rating score, low &rarr; high'), 'rating_score ASC', $this->currentConfig->rateEnabled()],
             [$this->lang->t('Visits, high &rarr; low'), 'hit DESC', true],
             [$this->lang->t('Visits, low &rarr; high'), 'hit ASC', true],
-            [$this->lang->t('Permissions'), 'level DESC', $this->accessControl()->isAdmin()],
+            [$this->lang->t('Permissions'), 'level DESC', $this->accessLevelChecker->isAdmin()],
         ]))->orders;
 
         $result = [];

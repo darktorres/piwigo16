@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Section;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryService;
@@ -74,7 +74,7 @@ final readonly class SectionPopulator
 {
     public function __construct(
         private Lang $lang,
-        private AccessControl $accessControl,
+        private AccessLevelChecker $accessLevelChecker,
         private HtmlRenderingInterface $htmlRenderer,
         private TemplateInterface $template,
         private SectionRepository $repo,
@@ -168,7 +168,7 @@ final readonly class SectionPopulator
                     $next_token_is_empty = $next_token_value === '' || $next_token_value === '0';
                     if ($redirect_candidates !== [] and $next_token_is_empty) {
                         $random_index_redirect = new RandomIndexRedirectResolver()
-                            ->resolveCandidates($this->accessControl, $redirect_candidates);
+                            ->resolveCandidates($this->accessLevelChecker, $redirect_candidates);
                         if ($random_index_redirect !== []) {
                             $this->redirectService->redirect($random_index_redirect[random_int(0, count($random_index_redirect) - 1)]);
                         }

@@ -277,7 +277,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Tag/TagService.php',
         '/src/Piwigo/Permission/PermissionService.php',
         '/src/Piwigo/Image/ImageService.php',
-        '/src/Piwigo/Comment/CommentService.php',
+        '/src/Piwigo/Comment/AvailableCommentsCounter.php',
         '/src/Piwigo/Activity/ActivityService.php',
         '/src/Piwigo/Site/LocalSiteReader.php',
         '/src/Piwigo/Auth/CookieService.php',
@@ -395,14 +395,13 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // own established static-context precedent), Admin/Upload/
     // UploadService.php's 9 static uploadFileXxx() event handlers (matches
     // this same file's own established CurrentLogger::getStatic()
-    // precedent),
-    // Comment/CommentService.php::getNbAvailableComments() (Phase 11
-    // sub-phase 11B: needs CurrentConfig to build the CategoryRepository
-    // its own PermissionService::getPermissionCriteria() call constructs
-    // inline -- this method is `public static`, no `$this` to inject
-    // through, same "one method on an otherwise-instance class" shape as
-    // CurrentUser::current()'s own allow-list entry for this same
-    // method).
+    // precedent). Phase 12 sub-phase 12A: Comment/CommentService.php
+    // removed -- its own getNbAvailableComments() static method (the sole
+    // reason it was here) was extracted into its own class,
+    // Comment/AvailableCommentsCounter.php, which takes CurrentConfig via
+    // real constructor injection instead (it and its one real caller,
+    // Menu/MenubarRenderer.php, never needed CommentService's other 10
+    // collaborators in the first place).
     //
     // (b) Too many real raw `new X(...)` construction sites, no DI
     // involved, matching the established HtmlService/Template
@@ -424,11 +423,16 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // real required constructor params instead (only 1 real construction
     // site + 1 test, a small enough blast radius).
     //
-    // (c) Structural exceptions -- Auth/AccessControl.php's one site is
-    // inside currentForCaching()'s own designed degraded-fallback object
-    // graph (never touches the real container, safe pre-boot read by
-    // design -- see that method's own docblock). Phase 11 sub-phase 11B:
-    // Category/CategoryRepository.php removed from this allow-list --
+    // (c) Structural exceptions -- Auth/AccessControl.php's one site used
+    // to be inside currentForCaching()'s own designed degraded-fallback
+    // object graph; Phase 12 sub-phase 12A deleted that method entirely
+    // (AccessLevelChecker, extracted from AccessControl to break its own
+    // circular dependency on HtmlRenderingInterface/
+    // RedirectServiceInterface, has no Doctrine dependency of its own, so
+    // the eager-connect risk that fallback existed to survive no longer
+    // applies) -- AccessControl.php no longer calls this shim at all.
+    // Phase 11 sub-phase 11B: Category/CategoryRepository.php removed from
+    // this allow-list --
     // like Users/UserRepository.php before it, no longer a Doctrine
     // repository with an ORM-fixed constructor, it now takes CurrentConfig
     // via real constructor injection like everything else in this
@@ -446,8 +450,6 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Admin/Image/PwgImage.php',
         '/src/Piwigo/Admin/Install/InstallService.php',
         '/src/Piwigo/Admin/Upload/UploadService.php',
-        '/src/Piwigo/Auth/AccessControl.php',
-        '/src/Piwigo/Comment/CommentService.php',
         '/src/Piwigo/Config/ConfigLoader.php',
         '/src/Piwigo/Core/DeviceHelper.php',
         '/src/Piwigo/Core/FilesystemHelper.php',
@@ -1110,11 +1112,11 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
     // in this comment, found live while closing HtmlService.php).
     // WsHelper.php itself took real constructor injection during Phase 11
     // sub-phase 11A (every Ws/Pwg*.php file + WsDefaultMethods.php itself
-    // closed out this shim during Phase 10). CommentService::
-    // getNbAvailableComments() is the one method on that class still
-    // reachable from a genuinely static context (no `$this`), same shape
-    // already established for CategoryService.php's own
-    // moveCategories()-adjacent statics during the Translator phase.
+    // closed out this shim during Phase 10). Phase 12 sub-phase 12A:
+    // Comment/CommentService.php removed -- its own getNbAvailableComments()
+    // (the sole reason it was here) was extracted into
+    // Comment/AvailableCommentsCounter.php, which takes CurrentUser via
+    // real constructor injection instead.
     // Activity/ActivityService.php closed this shim in Phase 11 sub-phase
     // 11G -- its own huge real construction-site count (dozens of literal
     // `new ActivityService(...)` calls, especially in tests) made a
@@ -1152,7 +1154,6 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
         '/public/random.php',
         '/src/Piwigo/Admin/Extensions/ExtensionScanner.php',
         '/src/Piwigo/Admin/Install/InstallService.php',
-        '/src/Piwigo/Comment/CommentService.php',
     ];
 
     $hits = [
@@ -1233,62 +1234,44 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
     // disambiguate from). Unlike CurrentUser/CurrentTemplate/etc., this
     // shim has no memoized pre-boot fallback (a live container resolve on
     // every call instead) -- see the class's own docblock for why.
-    // UrlService.php matches its own already-established
-    // too-many-manual-construction-sites precedent (same files stay on
-    // every other large facade's own allow-list too). Mail/MailService.php,
-    // Template/Template.php, and Html/HtmlService.php itself all closed
-    // this shim in Phase 11 sub-phase 11E -- but NOT via a required
-    // constructor param like their other shim collaborators:
-    // AccessControl's own dependency chain (RedirectServiceInterface ->
-    // Bootstrap\RedirectService -> Users\UserService -> MailerInterface ->
-    // Mail\MailService -> Core\UrlServiceInterface -> Url\UrlService ->
-    // Core\HtmlRenderingInterface -> Html\HtmlService) means a required
-    // param on any of them would be a genuine circular dependency PHP-DI
-    // can't autowire (and Template.php's own `is_admin`/`is_classic_user`
-    // modifiers need to stay lazy regardless, see their own docblock).
-    // All 3 stay a private, lazily-resolved
-    // Kernel::container()->get(AccessControl::class) helper instead (same
-    // shape as this class's own former urlService() helper) -- doesn't
-    // match this test's literal `AccessControl::current(` search pattern,
-    // so none of them ever appears as a hit here either way.
-    // CommentService.php has real Ws/Pwg*.php-locked callers
-    // (Phase-10-locked static dispatch). Category/CategoryService.php and
-    // Permission/PermissionService.php both closed this shim in Phase 11
-    // sub-phase 11G -- each resolves via a private lazy accessControl()
-    // helper instead (same reasoning as UserService.php's own note
-    // below). CssLoader.php/
-    // ScriptLoader.php are NOT in this allow-list -- found live during
-    // this phase's own close-out: constructing a Doctrine repository for
-    // the first time in a process makes Doctrine eagerly connect to
-    // auto-detect the DB platform, so current()'s new dependency chain
-    // (-> RedirectService -> UserService -> a repository) could turn a
-    // transient DB outage into an uncaught fatal on every single page
-    // render (Template::parse() calls CssLoader::get_css()
-    // unconditionally). Both files call the never-throwing
-    // AccessControl::currentForCaching() instead -- see that method's own
-    // docblock -- which doesn't match this test's `current(` search
-    // pattern, so they simply never appear as a hit here. PluginMaintain.php
-    // closed this shim in Phase 11 sub-phase 11D -- real constructor
-    // injection now that external PEM plugin constructor compatibility is
-    // no longer a blocker. Bootstrap/PageTail.php/
-    // Bootstrap/RequestBootstrap.php resolve it the same way every other
-    // Bootstrap/-internal file resolves a not-yet-constructor-injected
-    // collaborator. Ws/PwgServer.php/WsHelper.php both took real
-    // constructor injection during Phase 11 sub-phase 11A (every other
-    // Ws/Pwg*.php file + WsDefaultMethods.php itself closed out this shim
-    // during Phase 10). public/admin.php/public/random.php are raw
-    // entry-shell root files, no constructor to inject through.
-    // Users/UserService.php closed this shim in Phase 11 sub-phase 11G --
-    // AccessControl's own dependency chain routes back through
-    // RedirectServiceInterface -> Bootstrap\RedirectService -> this same
-    // class, a genuine circular dependency, so it resolves via a private
-    // lazy accessControl() helper instead (same shape as Mail\MailService/
-    // Url\UrlService/Template\Template's own identical helper) -- doesn't
-    // match this test's literal `AccessControl::current(` search pattern,
-    // so it never appears as a hit here either way (it's on the
-    // `Kernel::container()` allow-list above instead).
-    // Every phase that converts one more of these files to constructor-
-    // injected AccessControl should remove it from the allow-list below.
+    //
+    // Phase 12 sub-phase 12A: AccessControl's own circular dependency
+    // (RedirectServiceInterface -> Bootstrap\RedirectService ->
+    // Users\UserService -> MailerInterface -> Mail\MailService ->
+    // Core\UrlServiceInterface -> Url\UrlService ->
+    // Core\HtmlRenderingInterface -> Html\HtmlService) turned out to be
+    // artificial: every real caller across the whole app -- Mail\MailService,
+    // Url\UrlService, Template\Template, Users\UserService,
+    // Category\CategoryService, Permission\PermissionService,
+    // Comment\CommentService, Notification\NotificationService,
+    // Search\SearchService, Page\NoPhotoYetRenderer, Menu\MenubarRenderer,
+    // Section\SectionPopulator, Section\RandomIndexRedirectResolver,
+    // Template\CssLoader/ScriptLoader/FileCombiner, and every Controller
+    // that only ever read isAdmin()/isAGuest()/isClassicUser()/
+    // isWebmaster()/canManageComment() -- never checkStatus()/
+    // accessDenied(), the only methods that genuinely need
+    // HtmlRenderingInterface/RedirectServiceInterface. Those 8 read-only
+    // methods moved to a new class, Auth\AccessLevelChecker (CurrentUser/
+    // CurrentConfig only, no circular dependency at all), which every one
+    // of the files above now takes via real, eager constructor injection
+    // instead of a private lazy Kernel::container()->get(AccessControl::class)
+    // helper. AccessControl itself now only has checkStatus() as real
+    // logic, delegating everything else to AccessLevelChecker.
+    // currentForCaching() (CssLoader.php/ScriptLoader.php's own former
+    // never-throwing fallback, built to survive the old cycle's
+    // eager-Doctrine-connect risk) is deleted outright -- both files take
+    // AccessLevelChecker directly now, which has no Doctrine dependency to
+    // guard against.
+    //
+    // What remains below are files that still need the FULL AccessControl
+    // (real checkStatus()/accessDenied() enforcement, not just the cheap
+    // read-only checks): Bootstrap/PageTail.php/Bootstrap/RequestBootstrap.php
+    // resolve it the same way every other Bootstrap/-internal file resolves
+    // a not-yet-constructor-injected collaborator; public/admin.php/
+    // public/random.php are raw entry-shell root files, no constructor to
+    // inject through. Every phase that converts one more of these files to
+    // constructor-injected AccessControl should remove it from the
+    // allow-list below.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
@@ -1296,7 +1279,6 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
         '/public/random.php',
         '/src/Piwigo/Bootstrap/PageTail.php',
         '/src/Piwigo/Bootstrap/RequestBootstrap.php',
-        '/src/Piwigo/Comment/CommentService.php',
     ];
 
     $hits = [

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// NotificationService::newsExists() now calls Piwigo\Auth\AccessControl::
+// NotificationService::newsExists() now calls Piwigo\Auth\AccessLevelChecker::
 // isAdmin() directly (P23 batch 8d), which reads Piwigo\Users\CurrentUser
 // (Legacy Coupling Retirement Track A batch A3) -- tests below seed
 // CurrentUser instead.
@@ -13,7 +13,7 @@ namespace Piwigo\Tests\Integration {
     use LogicException;
     use Piwigo\Core\FilterState;
     use Piwigo\Core\Lang;
-    use Piwigo\Auth\AccessControl;
+    use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Group\GroupEntity;
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -103,9 +103,9 @@ final class NotificationServiceTest extends IntegrationTestCase
 
         $this->service = new NotificationService(
             Lang::current(),
-            AccessControl::current(),
+            new AccessLevelChecker(CurrentUser::current(), $currentConfig),
             new NotificationRepository(EntityManagerFactory::build($this->conn)),
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)),
             HtmlServiceTestFactory::build(),
             UrlServiceTestFactory::build(),
             new Translator(CurrentConfig::current()),

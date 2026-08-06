@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Template;
 
 use LogicException;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
@@ -280,7 +280,7 @@ final class ScriptLoader
      *
      * @return Combinable[]
      */
-    public function get_head_scripts(): array
+    public function get_head_scripts(AccessLevelChecker $accessLevelChecker): array
     {
         self::check_load_dep($this->registered_scripts);
         foreach (array_keys($this->registered_scripts) as $id) {
@@ -300,7 +300,7 @@ final class ScriptLoader
             }
         }
         $this->did_head = true;
-        return self::do_combine($this->head_done_scripts, 0);
+        return $this->do_combine($this->head_done_scripts, 0, $accessLevelChecker);
     }
 
     /**
@@ -308,7 +308,7 @@ final class ScriptLoader
      *
      * @return array{0: Combinable[], 1: Combinable[]}
      */
-    public function get_footer_scripts(): array
+    public function get_footer_scripts(AccessLevelChecker $accessLevelChecker): array
     {
         if (! $this->did_head) {
             self::check_load_dep($this->registered_scripts);
@@ -335,16 +335,16 @@ final class ScriptLoader
                 $result[$script->load_mode - 1][$id] = $script;
             }
         }
-        return [self::do_combine($result[0], 1), self::do_combine($result[1], 2)];
+        return [$this->do_combine($result[0], 1, $accessLevelChecker), $this->do_combine($result[1], 2, $accessLevelChecker)];
     }
 
     /**
      * @param Script[] $scripts
      * @return Combinable[]
      */
-    private static function do_combine(array $scripts, int $load_mode): array
+    private function do_combine(array $scripts, int $load_mode, AccessLevelChecker $accessLevelChecker): array
     {
-        $combiner = new FileCombiner(AccessControl::currentForCaching(), 'js', self::urlService(), self::paths(), self::eventDispatcher(), self::currentTemplate(), self::currentConfig(), $scripts);
+        $combiner = new FileCombiner($accessLevelChecker, 'js', self::urlService(), self::paths(), self::eventDispatcher(), self::currentTemplate(), self::currentConfig(), $scripts);
         return $combiner->combine();
     }
 

@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Request\PictureModifyRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
@@ -235,7 +236,8 @@ final class PictureModifyPageRenderer
                     $this->permissionService,
                     $this->currentConfig,
                     $this->eventDispatcher,
-                    $this->translator
+                    $this->translator,
+                    new AccessLevelChecker($this->currentUser, $this->currentConfig)
                 )->setRandomRepresentant($no_longer_thumbnail_for);
             }
 

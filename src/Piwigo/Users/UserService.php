@@ -9,7 +9,7 @@ use Doctrine\DBAL\ParameterType;
 use Exception;
 use LogicException;
 use Override;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
@@ -105,22 +105,15 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     ) {}
 
     /**
-     * Container resolve, not a constructor property -- AccessControl's own
-     * dependency chain (RedirectServiceInterface -> Bootstrap\RedirectService
-     * -> Users\UserService, i.e. this class) means a required constructor
-     * param here would be a genuine circular dependency PHP-DI can't
-     * autowire, same reasoning as Mail\MailService/Url\UrlService/
-     * Template\Template's own identical accessControl() helper (singleton/
-     * service-locator elimination campaign, Phase 11 sub-phase 11G).
+     * Built from this class's own already-required currentUser/
+     * currentConfig -- AccessLevelChecker has no RedirectServiceInterface
+     * dependency of its own, so unlike accessControl() (deleted, singleton/
+     * service-locator elimination campaign, Phase 12 sub-phase 12A) this
+     * needs no container resolve at all.
      */
-    private function accessControl(): AccessControl
+    private function accessLevelChecker(): AccessLevelChecker
     {
-        $accessControl = Kernel::container()->get(AccessControl::class);
-        if (! $accessControl instanceof AccessControl) {
-            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
-        }
-
-        return $accessControl;
+        return new AccessLevelChecker($this->currentUser, $this->currentConfig);
     }
 
     /**
@@ -150,7 +143,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     private function permissionService(): PermissionService
     {
-        return new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $this->currentConfig), $this->currentUser, $this->filterState());
+        return new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $this->currentConfig), $this->currentUser, $this->filterState(), $this->accessLevelChecker());
     }
 
     /**
@@ -181,7 +174,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     private function categoryService(): CategoryService
     {
-        return new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($this->conn), $this->currentConfig), $this->permissionService(), $this->currentConfig, $this->eventDispatcher, $this->translator());
+        return new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($this->conn), $this->currentConfig), $this->permissionService(), $this->currentConfig, $this->eventDispatcher, $this->translator(), $this->accessLevelChecker());
     }
 
     /**
@@ -833,7 +826,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $effective_level = is_int($effective_level_raw) || is_string($effective_level_raw) ? $effective_level_raw : '0';
 
         $effective = new EffectiveForbiddenCategoriesCache(
-            $this->accessControl(),
+            $this->accessLevelChecker(),
             $this->permissionService(),
             $this->categoryService(),
             new PermissionRepository(EntityManagerFactory::build($this->conn)),
@@ -1186,7 +1179,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function saveEditContext(?string $sectionUrl, int|string|null $imageId): void
     {
-        if (! $this->accessControl()->isAdmin() or $sectionUrl === null or $imageId === null) {
+        if (! $this->accessLevelChecker()->isAdmin() or $sectionUrl === null or $imageId === null) {
             return;
         }
 
@@ -1347,7 +1340,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             }
 
             if (! self::emptyValue($params['password'] ?? null)) {
-                if (! $this->accessControl()->isWebmaster()) {
+                if (! $this->accessLevelChecker()->isWebmaster()) {
                     $password_protected_users = [$this->currentConfig->guestId()];
 
                     $admin_ids = array_map(
@@ -1380,7 +1373,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (! self::emptyValue($params['status'] ?? null)) {
             $status_param = $params['status'] ?? null;
-            if (in_array($status_param, ['webmaster', 'admin'], true) and ! $this->accessControl()->isWebmaster()) {
+            if (in_array($status_param, ['webmaster', 'admin'], true) and ! $this->accessLevelChecker()->isWebmaster()) {
                 return [
                     'error' => [
                         'code ' => 403,

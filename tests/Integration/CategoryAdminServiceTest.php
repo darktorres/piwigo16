@@ -16,6 +16,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Users\UserService;
 use Doctrine\DBAL\Connection;
@@ -179,7 +180,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             $permissionService,
             CurrentConfig::current(),
             new EventDispatcher(),
-            Translator::get(),
+            TranslatorTestFactory::get(),
             $accessLevelChecker
         );
         $this->service = new CategoryAdminService($categoryService, $permissionService, HtmlServiceTestFactory::build());

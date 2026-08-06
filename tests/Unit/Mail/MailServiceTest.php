@@ -19,6 +19,7 @@ use Piwigo\Event\Mail\BeforeParseMailTemplate;
 use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Event\Mail\RenderLostPasswordMailContent;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -246,7 +247,7 @@ afterEach(function (): void {
     // PermissionServiceTest's own English-fallback assertions whenever it
     // ran later in the same process (composer test's own default,
     // non---parallel mode).
-    Translator::get()->reset();
+    TranslatorTestFactory::get()->reset();
     // Every Kernel::boot() call in this file (mail_service_capture_send()'s
     // own, plus several tests' direct calls) was never matched by a reset
     // -- Kernel stayed booted (with whichever root the last call used) for
@@ -1630,7 +1631,7 @@ test('switchLangTo replays every plugin language file already loaded this reques
 
         $service->switchLangTo('de_DE');
 
-        expect(Translator::get()->translate('MailServiceTestPluginMarker'))->toBe('Deutscher Marker');
+        expect(TranslatorTestFactory::get()->translate('MailServiceTestPluginMarker'))->toBe('Deutscher Marker');
     } finally {
         mail_service_rrmdir($dir);
     }

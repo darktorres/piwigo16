@@ -17,6 +17,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Group\GroupEntity;
     use Piwigo\Core\Lang;
     use Piwigo\Lang\Translator;
+    use Piwigo\Tests\Support\TranslatorTestFactory;
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
     use Piwigo\Core\CurrentLogger;
     use Piwigo\Config\DeploymentPolicy;
@@ -323,7 +324,7 @@ final class SearchServiceTest extends IntegrationTestCase
                 new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState(), $accessLevelChecker),
                 CurrentConfig::current(),
                 new EventDispatcher(),
-                Translator::get(),
+                TranslatorTestFactory::get(),
                 $accessLevelChecker
             ),
             $this->mailService(),
@@ -392,7 +393,7 @@ final class SearchServiceTest extends IntegrationTestCase
                 new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState(), $accessLevelChecker),
                 CurrentConfig::current(),
                 new EventDispatcher(),
-                Translator::get(),
+                TranslatorTestFactory::get(),
                 $accessLevelChecker
             ),
             $this->mailService(),

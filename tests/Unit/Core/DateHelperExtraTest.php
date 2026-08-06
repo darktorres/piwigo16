@@ -356,7 +356,7 @@ test('timeSince with only_last_unit advances past leading zero chunks to a real,
  * Also confirmed-equivalent this sweep (verified live via a temporary
  * sed-applied mutation, checked against the multi-segment "2 months 2
  * weeks 2 days 13 hours ago" scenario below): a ConcatSwitchSides on
- * line 242's `' ' . Translator::get()->plural(...)` -> `plural(...) .
+ * line 292's `' ' . self::translator()->plural(...)` -> `plural(...) .
  * ' '`, moving the join separator from before each segment to after it.
  * Since every segment in the default (!only_last_unit) loop gets the
  * identical treatment, consecutive segments still end up separated by

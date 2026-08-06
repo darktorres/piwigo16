@@ -14,6 +14,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Lang;
     use Piwigo\Group\GroupEntity;
     use Piwigo\Lang\Translator;
+    use Piwigo\Tests\Support\TranslatorTestFactory;
     use Error;
     use Piwigo\Tests\Support\UrlServiceTestFactory;
     use Piwigo\Site\SiteEntity;
@@ -243,7 +244,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)),
             CurrentConfig::current(),
             EventDispatcher::get(),
-            Translator::get(),
+            TranslatorTestFactory::get(),
             new AccessLevelChecker(CurrentUser::current(), $currentConfig)
         );
 

@@ -62,6 +62,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
@@ -109,7 +110,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()),
             new EventDispatcher(),
             CurrentConfig::current(),
-            Translator::get(),
+            TranslatorTestFactory::get(),
             CurrentPaths::get(),
         );
     }
@@ -206,7 +207,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             $this->maintenanceActionDispatcherTestPermissionService(),
             CurrentConfig::current(),
             new EventDispatcher(),
-            Translator::get(),
+            TranslatorTestFactory::get(),
             new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()),
         );
     }

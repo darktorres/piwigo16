@@ -43,9 +43,10 @@ final class DateHelper
 
     /**
      * Same reasoning as self::lang() above, but mirrors Translator::get()'s
-     * own shim body instead -- that shim DOES define a safe pre-boot
-     * fallback (a fresh, memoized `new Translator(new CurrentConfig())`),
-     * so this keeps the identical shape/memoization.
+     * former shim body instead (closed in sub-phase 12F-6) -- that shim
+     * DID define a safe pre-boot fallback (a fresh, memoized
+     * `new Translator(new CurrentConfig())`), so this keeps the identical
+     * shape/memoization.
      */
     private static function translator(): Translator
     {

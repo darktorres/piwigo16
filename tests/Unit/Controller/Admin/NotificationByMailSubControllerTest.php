@@ -6,6 +6,7 @@ use Piwigo\Controller\Admin\NotificationByMailSubController;
 use Piwigo\Core\PageState;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Mail\NotificationByMailSender;
 
 /**
@@ -53,7 +54,7 @@ function nbmSubReflectSender(float $startTime, bool $isSendmailTimeout): Notific
  * 12D) -- a reflected, no-constructor instance with just those 2
  * properties hand-set needs no DB/mail/template dependency either,
  * matching nbmSubReflectSender()'s own precedent just above. Both are
- * set to the real PageState::current()/Translator::get() pre-boot
+ * set to the real PageState::current()/TranslatorTestFactory::get() pre-boot
  * fallback instances (this file never calls Kernel::boot()) so the
  * tests' own PageState::current()->errors/Translator-driven message
  * assertions below keep reading back the same shared state
@@ -67,7 +68,7 @@ function nbmSubReflectController(): NotificationByMailSubController
     $pageStateProp->setValue($controller, PageState::current());
 
     $translatorProp = new ReflectionProperty(NotificationByMailSubController::class, 'translator');
-    $translatorProp->setValue($controller, Translator::get());
+    $translatorProp->setValue($controller, TranslatorTestFactory::get());
 
     return $controller;
 }

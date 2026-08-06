@@ -11,6 +11,7 @@ use Piwigo\Activity\ActivityEntity;
 use Piwigo\Tests\Support\SessionServiceTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Kernel;
 use Psr\Container\ContainerExceptionInterface;
@@ -49,7 +50,7 @@ afterEach(function (): void {
 });
 
 test('getDefaultSlideshowParams reads conf', function (): void {
-    $params = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()))->getDefaultSlideshowParams();
+    $params = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->getDefaultSlideshowParams();
 
     expect($params['period'])->toBe(4)
         ->and($params['repeat'])->toBeTrue()
@@ -57,38 +58,38 @@ test('getDefaultSlideshowParams reads conf', function (): void {
 });
 
 test('correctSlideshowParams clamps below the minimum', function (): void {
-    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams(['period' => 0]);
+    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams(['period' => 0]);
 
     expect($corrected['period'])->toBe(1);
 });
 
 test('correctSlideshowParams clamps above the maximum', function (): void {
-    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams(['period' => 99]);
+    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams(['period' => 99]);
 
     expect($corrected['period'])->toBe(10);
 });
 
 test('correctSlideshowParams leaves an in-range value untouched', function (): void {
-    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams(['period' => 5]);
+    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams(['period' => 5]);
 
     expect($corrected['period'])->toBe(5);
 });
 
 test('decodeSlideshowParams with a numeric string sets period', function (): void {
-    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('7');
+    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('7');
 
     expect($decoded['period'])->toBe('7');
 });
 
 test('decodeSlideshowParams parses key-value tokens', function (): void {
-    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('period-6+repeat-false');
+    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('period-6+repeat-false');
 
     expect($decoded['period'])->toBe('6')
         ->and($decoded['repeat'])->toBeFalse();
 });
 
 test('decodeSlideshowParams with null input returns the defaults', function (): void {
-    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams(null);
+    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams(null);
 
     expect($decoded['period'])->toBe(4)
         ->and($decoded['repeat'])->toBeTrue()
@@ -96,13 +97,13 @@ test('decodeSlideshowParams with null input returns the defaults', function (): 
 });
 
 test('decodeSlideshowParams clamps an out-of-range period', function (): void {
-    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('period-99');
+    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('period-99');
 
     expect($decoded['period'])->toBe(10);
 });
 
 test('encodeSlideshowParams round-trips a non-default period', function (): void {
-    $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()));
+    $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
     $encoded = $service->encodeSlideshowParams(['period' => 6, 'repeat' => true, 'play' => true]);
 
     expect($encoded)->toBe('+period-6');
@@ -112,13 +113,13 @@ test('encodeSlideshowParams round-trips a non-default period', function (): void
 });
 
 test('encodeSlideshowParams omits default values', function (): void {
-    $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()));
+    $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
 
     expect($service->encodeSlideshowParams($service->getDefaultSlideshowParams()))->toBe('');
 });
 
 test('encodeSlideshowParams encodes a changed boolean', function (): void {
-    $encoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()))->encodeSlideshowParams(['period' => 4, 'repeat' => false, 'play' => true]);
+    $encoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->encodeSlideshowParams(['period' => 4, 'repeat' => false, 'play' => true]);
 
     expect($encoded)->toBe('+repeat-false');
 });
@@ -203,7 +204,7 @@ test('correctSlideshowParams treats a period exactly equal to the maximum as alr
  * against the full suite too.
  */
 test('decodeSlideshowParams parses more than one key-value token from the same string', function (): void {
-    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('period-6+repeat-false+play-false');
+    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('period-6+repeat-false+play-false');
 
     expect($decoded['period'])->toBe('6')
         ->and($decoded['repeat'])->toBeFalse()
@@ -282,13 +283,13 @@ test('countPdfPages counts page markers', function (): void {
     }
     file_put_contents($tmp, "%PDF-1.4\n1 0 obj\n<< /Type /Page >>\nendobj\n2 0 obj\n<< /Type /Page >>\nendobj\n");
 
-    expect(new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()))->countPdfPages($tmp))->toBe(2);
+    expect(new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->countPdfPages($tmp))->toBe(2);
 
     unlink($tmp);
 });
 
 test('countPdfPages returns false for a missing file', function (): void {
-    expect(new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()))->countPdfPages('/no/such/file.pdf'))->toBeFalse();
+    expect(new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->countPdfPages('/no/such/file.pdf'))->toBeFalse();
 });
 
 test('countPdfPages returns false when the path is readable but reading it produces no content (not a regular file)', function (): void {
@@ -306,7 +307,7 @@ test('countPdfPages returns false when the path is readable but reading it produ
     }
     socket_bind($socket, $sockPath);
 
-    $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()));
+    $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
 
     try {
         expect($service->countPdfPages($sockPath))->toBeFalse();
@@ -381,7 +382,7 @@ function imageServiceTestLang(): Lang
 
 function imageServiceTestNewService(ImageRepository $repo, Connection $conn, ?Paths $paths = null): ImageService
 {
-    return new ImageService(imageServiceTestLang(), $repo, new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), $paths ?? Paths::fromRoot(sys_get_temp_dir()));
+    return new ImageService(imageServiceTestLang(), $repo, new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), $paths ?? Paths::fromRoot(sys_get_temp_dir()));
 }
 
 /**
@@ -788,7 +789,7 @@ test('deleteElements() fires begin_delete_elements and delete_elements with the 
     EventDispatcher::get()->addTypedHandler(DeleteElements::class, $deleteHandler);
 
     try {
-        $service = new ImageService(imageServiceTestLang(), $repo, $activityService, SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()));
+        $service = new ImageService(imageServiceTestLang(), $repo, $activityService, SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
 
         $count = $service->deleteElements([$imageId], $urlService, physicalDeletion: false);
 
@@ -1719,7 +1720,7 @@ test('countPdfPages() returns false when the path passes is_file()/is_readable()
     try {
         set_error_handler(static fn (): bool => true);
         try {
-            $result = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), Translator::get(), Paths::fromRoot(sys_get_temp_dir()))->countPdfPages($scheme . '://fake.pdf');
+            $result = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcher::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->countPdfPages($scheme . '://fake.pdf');
         } finally {
             restore_error_handler();
         }

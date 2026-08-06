@@ -8,6 +8,7 @@ use Piwigo\Group\GroupEntity;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Common\ValueObject\UserId;
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Calendar\CalendarService;
@@ -66,7 +67,7 @@ function makeCalendarService(): CalendarService
 
     return new CalendarService(
         $permissionService,
-        new CategoryService(Lang::current(), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()), $permissionService, CurrentConfig::current(), new EventDispatcher(), Translator::get(), $accessLevelChecker),
+        new CategoryService(Lang::current(), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()), $permissionService, CurrentConfig::current(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker),
     );
 }
 

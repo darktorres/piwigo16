@@ -27,6 +27,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Permission\SqlCondition;
 
 /**
@@ -94,7 +95,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Lang::current()->reset();
-        Translator::get()->reset();
+        TranslatorTestFactory::get()->reset();
 
         $this->conn = DbConnection::build();
 
@@ -118,7 +119,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         Lang::current()->reset();
-        Translator::get()->reset();
+        TranslatorTestFactory::get()->reset();
         parent::tearDown();
     }
 

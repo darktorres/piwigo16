@@ -9,6 +9,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Template\Template;
 
 // get_php_str_val() stays a static, instance-free utility (referenced
@@ -28,11 +29,11 @@ use Piwigo\Template\Template;
 // modcompiler_translate() goes through $this->lang->t() (Legacy Coupling
 // Retirement Track A batch A2; Lang itself became a real, container-shared
 // instance in the singleton/service-locator elimination campaign's
-// Phase 8), which delegates to Translator::get()'s singleton -- reset
+// Phase 8), which delegates to TranslatorTestFactory::get()'s singleton -- reset
 // both, matching LangTest.php's own established pattern, so no test's
 // loaded PO state/lang table leaks into another. Lang::current() is a
 // live container resolve with no pre-boot fallback (unlike
-// Translator::get()), so this file now also boots/resets a real Kernel
+// TranslatorTestFactory::get()), so this file now also boots/resets a real Kernel
 // around each test. A real Paths must be supplied to boot() too -- Lang's
 // own constructor needs one, and PHP-DI can't autowire Paths on its own
 // (every property is a required string with no default); TemplateTestFactory::build()
@@ -54,7 +55,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     Lang::current()->reset();
-    Translator::get()->reset();
+    TranslatorTestFactory::get()->reset();
     CurrentConfig::current()->reset();
     Kernel::reset();
 });

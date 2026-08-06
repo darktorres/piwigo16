@@ -13,6 +13,7 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Core\FilterState;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Group\GroupEntity;
@@ -91,7 +92,7 @@ final class FilterResolverTest extends IntegrationTestCase
             $sessionService,
             new EventDispatcher(),
             CurrentConfig::current(),
-            Translator::get(),
+            TranslatorTestFactory::get(),
             $paths,
         );
         $filterState = Kernel::container()->get(FilterState::class);
@@ -112,7 +113,7 @@ final class FilterResolverTest extends IntegrationTestCase
             ),
             CurrentConfig::current(),
             new EventDispatcher(),
-            Translator::get(),
+            TranslatorTestFactory::get(),
             $accessLevelChecker,
         );
         $caddieRepo = $em->getRepository(CaddieEntity::class);

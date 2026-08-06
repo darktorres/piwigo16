@@ -104,9 +104,9 @@ test('setUpdatedVersion/markAuthKeyInvalid set their respective fields', functio
 });
 
 test('current() falls back to a memoized instance when Kernel is not booted', function (): void {
-    // Memoized (not fresh-per-call), same reasoning as Translator::get()/
-    // EventDispatcher::get() (and formerly ImageStdParams::current(),
-    // closed in sub-phase 12F-4): a caller that
+    // Memoized (not fresh-per-call), same reasoning as EventDispatcher::get()
+    // (and formerly ImageStdParams::current()/Translator::get(), closed in
+    // sub-phases 12F-4/12F-6): a caller that
     // writes via current() in one call and reads via current() in a
     // later call must see the same instance, or the write would be lost.
     // reset() first: the memoized fallback is one real object shared by

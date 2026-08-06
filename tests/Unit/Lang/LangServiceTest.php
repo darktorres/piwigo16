@@ -8,6 +8,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Lang\LangService;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 
 /**
  * Lang is a real, container-shared instance now (singleton/service-
@@ -18,7 +19,7 @@ use Piwigo\Lang\Translator;
  * construct their own LangService against a different throwaway
  * $root/Paths can each get a properly-typed Lang for it too --
  * PHPStan can't narrow a Pest-bound `$this->...` property's type
- * across separate test closures. Translator::get() is shared with this
+ * across separate test closures. TranslatorTestFactory::get() is shared with this
  * Lang instance so loadArray()'s Translator-mirror side effect (see
  * Lang::loadArray()'s own docblock) lands in the same Translator
  * instance the file's own assertions (and LangService itself) read
@@ -26,18 +27,18 @@ use Piwigo\Lang\Translator;
  */
 function langServiceTestNewLang(Paths $paths): Lang
 {
-    return new Lang(Translator::get(), HtmlServiceTestFactory::build(), $paths, new InstallationFlag());
+    return new Lang(TranslatorTestFactory::get(), HtmlServiceTestFactory::build(), $paths, new InstallationFlag());
 }
 
 beforeEach(function (): void {
-    Translator::get()->reset();
+    TranslatorTestFactory::get()->reset();
     $this->paths = Paths::fromRoot(dirname(__DIR__, 3));
     $this->lang = langServiceTestNewLang($this->paths);
-    $this->service = new LangService($this->lang, $this->paths, Translator::get());
+    $this->service = new LangService($this->lang, $this->paths, TranslatorTestFactory::get());
 });
 
 afterEach(function (): void {
-    Translator::get()->reset();
+    TranslatorTestFactory::get()->reset();
 });
 
 test('t delegates to Lang::t', function (): void {
@@ -117,7 +118,7 @@ test('loadLanguageForPlugin rejects a locale that fails the installed-locale for
     // check itself distinguishes real code from either mutant here.
     $root = sys_get_temp_dir() . '/piwigo-lang-service-test-format-' . bin2hex(random_bytes(8));
     mkdir($root . '/language/12x', 0o777, true);
-    $service = new LangService(langServiceTestNewLang(Paths::fromRoot($root)), Paths::fromRoot($root), Translator::get());
+    $service = new LangService(langServiceTestNewLang(Paths::fromRoot($root)), Paths::fromRoot($root), TranslatorTestFactory::get());
 
     $pluginDir = sys_get_temp_dir() . '/piwigo-lang-service-test-format-plugin';
     @mkdir($pluginDir . '/language/12x', 0o777, true);
@@ -144,7 +145,7 @@ test('loadLanguageForPlugin checks the installed-locale directory under this ser
     // resolves as installed if the root prefix is genuinely applied.
     $root = sys_get_temp_dir() . '/piwigo-lang-service-test-root-' . bin2hex(random_bytes(8));
     mkdir($root . '/language/xx_YY', 0o777, true);
-    $service = new LangService(langServiceTestNewLang(Paths::fromRoot($root)), Paths::fromRoot($root), Translator::get());
+    $service = new LangService(langServiceTestNewLang(Paths::fromRoot($root)), Paths::fromRoot($root), TranslatorTestFactory::get());
 
     $pluginDir = sys_get_temp_dir() . '/piwigo-lang-service-test-root-plugin';
     @mkdir($pluginDir . '/language/xx_YY', 0o777, true);
@@ -172,7 +173,7 @@ test('loadLanguageForPlugin checks the exact locale subdirectory, not just wheth
     // and wrongly treat ww_ZZ as installed.
     $root = sys_get_temp_dir() . '/piwigo-lang-service-test-subdir-' . bin2hex(random_bytes(8));
     mkdir($root . '/language', 0o777, true);
-    $service = new LangService(langServiceTestNewLang(Paths::fromRoot($root)), Paths::fromRoot($root), Translator::get());
+    $service = new LangService(langServiceTestNewLang(Paths::fromRoot($root)), Paths::fromRoot($root), TranslatorTestFactory::get());
 
     $pluginDir = sys_get_temp_dir() . '/piwigo-lang-service-test-subdir-plugin';
     @mkdir($pluginDir . '/language/ww_ZZ', 0o777, true);
@@ -204,7 +205,7 @@ test('loadLanguageForPlugin loads a real PO file for a real installed locale', f
 
     try {
         expect($this->service->loadLanguageForPlugin($pluginDir, 'en_UK'))->toBeTrue()
-            ->and(Translator::get()->translate('plugin_greeting'))->toBe('plugin hi');
+            ->and(TranslatorTestFactory::get()->translate('plugin_greeting'))->toBe('plugin hi');
     } finally {
         unlink($pluginDir . '/language/en_UK/plugin.po');
         rmdir($pluginDir . '/language/en_UK');

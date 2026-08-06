@@ -768,75 +768,6 @@ test('src/Piwigo/ contains no InputValidator::createStatic() calls', function ()
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('Translator::get() transitional bridge has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 4: same shape
-    // as SessionService::get()'s former shim (closed in sub-phase 12F-2) --
-    // no Static suffix, since there was no
-    // competing real instance method to disambiguate from. Lang.php was
-    // the textbook transitional-shim case the campaign plan documented,
-    // but Phase 8 converted it to constructor-injected Translator, so it's
-    // no longer a caller.
-    // Mail/MailService.php and Html/HtmlService.php itself both closed
-    // this shim in Phase 11 sub-phase 11E -- real constructor injection
-    // (MailService's own former snapshot/clone-for-switchLangTo()/
-    // switchLangBack() reads now go through $this->translator instead).
-    // Ws/PwgCore.php and Ws/PwgUsers.php took real constructor injection
-    // during their own Phase 10 sub-batches. Phase 11
-    // sub-phase 11G: CategoryService.php itself gained a real Translator
-    // constructor param for every real instance-context call (including
-    // moveCategories(), previously misdocumented here as "unreachable" --
-    // it's a real instance method, now closed for real). Menu/
-    // MenubarRenderer.php takes no constructor deps by design (every
-    // dependency an explicit render() parameter instead, see FilterState's
-    // own precedent) and only needs Translator for one internal, throwaway
-    // `new FilterService(...)` -- not worth a 12th render() parameter for.
-    // Template/PwgTemplateAdapter.php closed this shim in Phase 11
-    // sub-phase 11G -- its one real call site (Template.php) resolves
-    // Translator via its own new private lazy translator() helper,
-    // matching Template.php's own established accessControl()-shaped
-    // idiom (a required constructor param there would ripple across
-    // Template's own many real construction sites for the sake of this
-    // one internal caller). Menu/MenubarRenderer.php closed this shim too
-    // -- confirmed a stale allow-list entry, its own internal
-    // `new FilterService(...)` already passes the real explicit render()
-    // param through. NotificationByMail
-    // SubController.php's one remaining site is inside its own private
-    // static doTimeoutTreatment() helper (no $this there either).
-    // Sub-phase 12D: Category/CategoryService.php closed too -- its former
-    // "unreachable any other way" claim for getDisplayImagesCount() was
-    // stale (never re-verified since Phase 4): its own sole real caller
-    // outside this file, Category/CategoryCatsRenderer.php, already holds
-    // a real Lang, and its one real instance-context caller
-    // (getCategoriesMenu(), reached from Menu/MenubarRenderer.php, which
-    // already has $lang in scope for its own FilterService construction)
-    // now threads Lang through as an explicit param too -- getDisplayImagesCount()
-    // itself takes Lang (not Translator) since Lang::t()/plural() already
-    // cover everything it needs and its one real external caller only had
-    // Lang, not Translator, in scope. Core/DateHelper.php closed too --
-    // ~30 real call sites across Admin/Ws/Controller/Auth rule out
-    // threading Lang/Translator as explicit params through every one, so
-    // it now resolves both via its own private static lang()/translator()
-    // resolvers instead (mirrors each shim's own exact body/fallback
-    // shape -- Lang::current() has none, Translator::get() has a
-    // memoized pre-boot fallback -- rather than inventing a new one).
-    // Controller/Admin/NotificationByMailSubController.php closed too --
-    // see the PageState::current() allow-list's own comment for the full
-    // trace (doTimeoutTreatment() now reads $this->translator, an
-    // already-existing constructor property, instead).
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'Translator::get(');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
 test('MailService::reset() is only called from tests/', function (): void {
     $repoRoot = __DIR__ . '/../..';
 
@@ -851,8 +782,9 @@ test('MailService::reset() is only called from tests/', function (): void {
 
 test('EventDispatcher::get() transitional bridge has a shrinking, known allow-list', function (): void {
     // Singleton/service-locator elimination campaign, Phase 4: same shape
-    // as Translator::get() above (no Static suffix -- there is no
-    // competing real instance method to disambiguate from). EventDispatcher
+    // as Translator::get()'s former shim (closed in sub-phase 12F-6) --
+    // no Static suffix, since there was no competing real instance method
+    // to disambiguate from. EventDispatcher
     // is the widest single-class ripple in the campaign so far (~80 real
     // production files touched) -- the vast majority took real constructor
     // injection or an explicit method/render() parameter; only these stay
@@ -1128,8 +1060,7 @@ test('Lang::current() transitional bridge has a shrinking, known allow-list', fu
     // too -- getDisplayImagesCount()'s own "unreachable any other way"
     // claim was stale; its real callers already had (or could trivially
     // gain) a real Lang, so it now takes one as an explicit param instead
-    // (see the Translator::get() allow-list's own comment for the full
-    // trace through CategoryCatsRenderer.php/MenubarRenderer.php/
+    // (traced through CategoryCatsRenderer.php/MenubarRenderer.php/
     // getCategoriesMenu()). Core/ThemeCatalog.php closed too --
     // getPwgThemes()/checkThemeInstalled() take CurrentConfig/Lang as
     // explicit params now instead (NOCTOR shape, same as
@@ -1139,9 +1070,9 @@ test('Lang::current() transitional bridge has a shrinking, known allow-list', fu
     // closed too -- getPrivacyLevelOptions() takes CurrentConfig/Lang as
     // explicit params now instead (NOCTOR shape), rippled through its 6
     // real callers, all of which already held both. Core/DateHelper.php
-    // closed too -- see the Translator::get() allow-list's own comment
-    // for the full trace (same private static lang()/translator()
-    // resolver pair closes both shims for this file at once).
+    // closed too -- its own private static lang()/translator() resolver
+    // pair closed both this shim and Translator::get()'s former shim
+    // (closed in sub-phase 12F-6) for this file at once.
     // Core/FilesystemHelper.php closed too -- t() now resolves Lang via
     // its own private static lang() helper (Kernel::container()->get()
     // directly), safe because Lang::current() itself has no pre-boot

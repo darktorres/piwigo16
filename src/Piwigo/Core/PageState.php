@@ -204,9 +204,9 @@ final class PageState
      * @deprecated transitional bridge for callers not yet converted to
      * constructor injection -- singleton/service-locator elimination
      * campaign, Phase 4. Memoized fallback (not fresh-per-call), same
-     * reasoning as Translator::get()/EventDispatcher::get() (and formerly
-     * ImageStdParams::current(), closed in sub-phase 12F-4): this class
-     * accumulates state written by
+     * reasoning as EventDispatcher::get() (and formerly
+     * ImageStdParams::current()/Translator::get(), closed in sub-phases
+     * 12F-4/12F-6): this class accumulates state written by
      * one caller (e.g. addError()) and read by another later in the same
      * request (PageHeaderRenderer's own hasErrors() read) -- a fresh
      * instance per not-booted call would silently lose every write

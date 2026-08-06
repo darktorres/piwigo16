@@ -15,6 +15,7 @@ use Piwigo\Group\GroupEntity;
 use Piwigo\Users\CurrentUser;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -87,7 +88,7 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
                 new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)),
                 CurrentConfig::current(),
                 new EventDispatcher(),
-                Translator::get(),
+                TranslatorTestFactory::get(),
                 new AccessLevelChecker(CurrentUser::current(), $currentConfig)
             ),
             new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),

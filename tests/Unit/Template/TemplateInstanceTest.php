@@ -8,6 +8,7 @@ use Smarty\Smarty;
 use Piwigo\Template\CssLoader;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -351,7 +352,7 @@ test('constructor loads admin.lang before rendering the data-dir-not-writable er
     } finally {
         restore_error_handler();
         chmod(CurrentPaths::get()->root, 0o755);
-        Translator::get()->reset();
+        TranslatorTestFactory::get()->reset();
         Lang::current()->reset();
     }
 

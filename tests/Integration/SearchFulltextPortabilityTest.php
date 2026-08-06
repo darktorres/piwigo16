@@ -21,6 +21,7 @@ use Piwigo\Core\FilterState;
 use LogicException;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Db\Tables;
 use Doctrine\DBAL\Connection;
@@ -105,7 +106,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
                 new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfig::current()), CurrentUser::current(), $filterState, $accessLevelChecker),
                 CurrentConfig::current(),
                 new EventDispatcher(),
-                Translator::get(),
+                TranslatorTestFactory::get(),
                 $accessLevelChecker,
             ),
             $mailer,

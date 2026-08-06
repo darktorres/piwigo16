@@ -17,6 +17,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Users\CurrentUser;
@@ -128,7 +129,7 @@ afterEach(function (): void {
     CurrentUser::current()->reset();
     CurrentConfig::current()->reset();
     Lang::current()->reset();
-    Translator::get()->reset();
+    TranslatorTestFactory::get()->reset();
     Kernel::reset();
 });
 

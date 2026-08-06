@@ -17,6 +17,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Lifecycle\GetPwgThemes;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 
 /**
@@ -58,14 +59,14 @@ final class ThemeCatalogTest extends IntegrationTestCase
         // deterministic regardless of what an earlier Integration test in
         // this shared process may have loaded into Translator's mirror.
         Lang::current()->reset();
-        Translator::get()->reset();
+        TranslatorTestFactory::get()->reset();
     }
 
     #[Override]
     protected function tearDown(): void
     {
         Lang::current()->reset();
-        Translator::get()->reset();
+        TranslatorTestFactory::get()->reset();
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);

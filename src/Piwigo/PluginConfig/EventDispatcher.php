@@ -22,8 +22,8 @@ final class EventDispatcher
     /**
      * Fallback instance for callers reached before/without Kernel::boot()
      * -- see get()'s own docblock for why this is memoized (same reasoning
-     * as Piwigo\Lang\Translator::get()) rather than a fresh instance per
-     * call.
+     * as Piwigo\Lang\Translator::get()'s former shim, closed in sub-phase
+     * 12F-6) rather than a fresh instance per call.
      */
     private static ?self $fallback = null;
 
@@ -49,8 +49,9 @@ final class EventDispatcher
      * @deprecated transitional bridge for callers not yet converted to
      * constructor injection -- singleton/service-locator elimination
      * campaign, Phase 4. Resolves the container-shared instance once
-     * Kernel::boot() has run, same shape as SessionService::get()/
-     * Translator::get(). Unlike SessionService's shim, the Kernel-not-booted
+     * Kernel::boot() has run, same shape as SessionService::get()'s former
+     * shim/Translator::get()'s former shim (closed in sub-phases
+     * 12F-2/12F-6). Unlike SessionService's shim, the Kernel-not-booted
      * fallback is memoized (not fresh per call): EventDispatcher accumulates
      * handler registrations across many separate addEventHandler() calls,
      * then dispatches to them from other call sites entirely -- a fresh

@@ -10,6 +10,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Users\UserRepository;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Config\DeploymentPolicy;
@@ -143,7 +144,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->filterState = new FilterState();
         $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
         $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo, CurrentUser::current(), $this->filterState, $accessLevelChecker);
-        $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $this->permissionService, CurrentConfig::current(), new EventDispatcher(), Translator::get(), $accessLevelChecker);
+        $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $this->permissionService, CurrentConfig::current(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker);
         $this->sessionService = new SessionService($em->getRepository(SessionEntity::class),CurrentConfig::current());
         $this->tagService = new TagService(Lang::current(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new EventDispatcher(), CurrentUser::current(), CurrentConfig::current(), new CurrentLogger(), $this->sessionService);
         $mailer = Kernel::container()->get(MailService::class);
@@ -216,7 +217,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             PageState::current(),
             CurrentUser::current(),
             CurrentConfig::current(),
-            Translator::get(),
+            TranslatorTestFactory::get(),
             ImageStdParamsTestFactory::get(),
         );
     }

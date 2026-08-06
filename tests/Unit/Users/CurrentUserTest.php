@@ -88,8 +88,9 @@ test('reset clears the real-user-resolved flag back to false', function (): void
 });
 
 test('current() falls back to a memoized instance when Kernel is not booted', function (): void {
-    // Memoized (not fresh-per-call), same reasoning as Translator::get()/
-    // EventDispatcher::get()/PageState::current(): a caller that writes via
+    // Memoized (not fresh-per-call), same reasoning as EventDispatcher::get()/
+    // PageState::current() (and formerly Translator::get(), closed in
+    // sub-phase 12F-6): a caller that writes via
     // current() in one call and reads via current() in a later call must
     // see the same instance, or the write would be lost. reset() first:
     // the memoized fallback is one real object shared by every not-booted

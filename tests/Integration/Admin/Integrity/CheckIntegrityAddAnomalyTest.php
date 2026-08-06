@@ -104,7 +104,7 @@ test('add_anomaly generates distinct ids for anomalies that differ only by corre
 
 // get_htlm_links_more_info() is this class's other genuinely pure method --
 // AdminUiHelper::pwgUrl() is a fixed, DB/config-free constant map, and
-// Lang::t()/Translator::get() self-initialize without any Lang::load() call
+// Lang::t()/Translator self-initialize without any Lang::load() call
 // (untranslated gettext falls back to the literal English string).
 test('get_htlm_links_more_info formats a forum + wiki link pair from the fixed pwg URL map', function (): void {
     $c13y = checkIntegrityAddAnomalyNew();

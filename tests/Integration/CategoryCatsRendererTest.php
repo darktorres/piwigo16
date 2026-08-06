@@ -10,6 +10,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Url\RootPathOverride;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -180,7 +181,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $filterState,
             $accessLevelChecker
         );
-        $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $permissionService, CurrentConfig::current(), new EventDispatcher(), Translator::get(), $accessLevelChecker);
+        $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $permissionService, CurrentConfig::current(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker);
 
         $htmlService = HtmlServiceTestFactory::build();
         // mainpage_categories.tpl's own {assign var=derivative

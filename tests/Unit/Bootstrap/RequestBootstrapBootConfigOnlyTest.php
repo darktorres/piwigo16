@@ -20,6 +20,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ServerTiming;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\CurrentUser;
 use Sentry\SentrySdk;
@@ -56,7 +57,7 @@ beforeEach(function (): void {
     // There's nothing left to reset here; a fresh Kernel::boot() a few lines
     // into each test body below hands out a brand new, already-empty
     // instance from a brand new container.
-    Translator::get()->reset();
+    TranslatorTestFactory::get()->reset();
     SentrySdk::init();
     putenv('SENTRY_DSN');
 });
@@ -78,7 +79,7 @@ afterEach(function (): void {
         Lang::current()->reset();
     }
     Kernel::reset();
-    Translator::get()->reset();
+    TranslatorTestFactory::get()->reset();
     SentrySdk::init();
     putenv('SENTRY_DSN');
 });
@@ -157,7 +158,7 @@ test('bootConfigOnly sets CurrentConfigService when resolving a fresh instance f
 });
 
 test('bootConfigOnly attaches Lang globals from whatever the Translator has loaded', function (): void {
-    // Lang::attachGlobals() snapshots Translator::get()->mirroredStrings()
+    // Lang::attachGlobals() snapshots TranslatorTestFactory::get()->mirroredStrings()
     // into Lang's own static $data -- a real, non-idempotent copy (unlike
     // PageState::attachGlobals()'s own `??=` lazy-init, which current()
     // already performs identically on its own, making that one call

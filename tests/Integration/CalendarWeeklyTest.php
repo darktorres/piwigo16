@@ -24,6 +24,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Permission\SqlCondition;
 
 function calendar_weekly_test_rrmdir(string $dir): void
@@ -93,7 +94,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         CurrentConfig::current()->setDataLocation('data/');
         CurrentConfig::current()->setDataDirChecked('1');
         Lang::current()->reset();
-        Translator::get()->reset();
+        TranslatorTestFactory::get()->reset();
 
         $this->conn = DbConnection::build();
 
@@ -121,7 +122,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         // untracked repo debris after a coverage run).
         calendar_weekly_test_rrmdir(CurrentPaths::get()->root . 'data');
         Lang::current()->reset();
-        Translator::get()->reset();
+        TranslatorTestFactory::get()->reset();
         parent::tearDown();
     }
 

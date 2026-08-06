@@ -162,7 +162,7 @@ final class UpdatesExtPageRenderer
 
         $template->assign('UPDATES_EXTENSION', $updates_extension);
         $template->assign('SHOW_RESET', $show_reset);
-        $template->assign('PWG_TOKEN', new CsrfService()->getToken());
+        $template->assign('PWG_TOKEN', new CsrfService($currentConfig)->getToken());
         $template->assign('EXT_TYPE', $pageSlug === 'updates' ? 'extensions' : $pageSlug);
         $template->assign('isWebmaster', ($accessControl->isWebmaster()) ? 1 : 0);
         $template->set_filename('plugin_admin_content', 'updates_ext.tpl');

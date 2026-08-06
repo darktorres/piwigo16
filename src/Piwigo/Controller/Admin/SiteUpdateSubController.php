@@ -266,7 +266,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         $post = $siteUpdateRequest->post;
 
         if ($siteUpdateRequest->quickSyncRequested) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $post['sync'] = 'files';
@@ -281,7 +281,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
         $general_failure = true;
         if (isset($post['submit'])) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             if ($site_reader->open()) {
@@ -1019,7 +1019,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 'METADATA_LIST' => $used_metadata,
                 'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=synchronize',
                 'ADMIN_PAGE_TITLE' => $this->lang->t('Synchronize'),
-                'PWG_TOKEN' => new CsrfService()
+                'PWG_TOKEN' => new CsrfService($this->currentConfig)
                     ->getToken(),
             ]
         );

@@ -111,7 +111,7 @@ final class LanguagesInstalledPageRenderer
         $languagesAction = LanguagesInstalledActionRequest::fromGlobals('/^(' . join('|', array_keys($fs_languages)) . ')$/', $this->inputValidator);
 
         if ($languagesAction->action !== null and $languagesAction->languageId !== null and $this->accessControl->isWebmaster()) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $fs_language_entry = $fs_languages[$languagesAction->languageId] ?? null;
@@ -133,7 +133,7 @@ final class LanguagesInstalledPageRenderer
         foreach ($fs_languages as $language_id => $language) {
             $language['u_action'] = $this->urlService->addUrlParams($base_url, [
                 'language' => $language_id,
-                'pwg_token' => new CsrfService()
+                'pwg_token' => new CsrfService($this->currentConfig)
                     ->getToken(),
             ]);
 

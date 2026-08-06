@@ -92,7 +92,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         $siteManagerRequest = SiteManagerRequest::fromGlobals();
 
         if ($siteManagerRequest->requiresCsrfCheck) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
@@ -175,7 +175,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         $template->assign(
             [
                 'F_ACTION' => $this->urlService->getRootUrl() . 'admin.php' . $this->urlService->getQueryStringDiff(['action', 'site', 'pwg_token']),
-                'PWG_TOKEN' => new CsrfService()
+                'PWG_TOKEN' => new CsrfService($this->currentConfig)
                     ->getToken(),
                 'ADMIN_PAGE_TITLE' => $this->lang->t('Synchronize'),
             ]
@@ -192,7 +192,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             $base_url = $this->urlService->getRootUrl() . 'admin.php';
             $base_url .= '?page=site_manager';
             $base_url .= '&amp;site=' . $id;
-            $base_url .= '&amp;pwg_token=' . new CsrfService()->getToken();
+            $base_url .= '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken();
             $base_url .= '&amp;action=';
 
             $update_url = $this->urlService->getRootUrl() . 'admin.php';

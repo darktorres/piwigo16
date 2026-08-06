@@ -15,8 +15,11 @@ use Piwigo\Csrf\Request\CsrfTokenRequest;
  * session id keyed by the secret-key config, so they're stable for the
  * lifetime of a session and invalidated on logout.
  *
- * Reads Piwigo\Config\CurrentConfig::secretKey() directly -- safe since Legacy
- * Coupling Retirement Track A batch A4's ConfigDb fix (see
+ * Reads CurrentConfig::secretKey() (real constructor injection, singleton/
+ * service-locator elimination campaign, Phase 12 sub-phase 12E; the
+ * transitional CurrentConfig::current() shim it read through before is
+ * safe for the same reason below, but is no longer used here) --
+ * Legacy Coupling Retirement Track A batch A4's ConfigDb fix (see
  * EphemeralKeyService's own docblock for the mechanism). Historically
  * (P18) CurrentConfig::secretKey() was silently inert on a live request: secret_key
  * is inserted into the piwigo_config DB table at install time
@@ -60,6 +63,10 @@ use Piwigo\Csrf\Request\CsrfTokenRequest;
  */
 final class CsrfService
 {
+    public function __construct(
+        private readonly CurrentConfig $currentConfig,
+    ) {}
+
     /**
      * get pwg_token used to prevent csrf attacks.
      */
@@ -70,7 +77,7 @@ final class CsrfService
             throw new Exception('CsrfService::getToken(): no active session');
         }
 
-        $secret_key = CurrentConfig::current()->secretKey();
+        $secret_key = $this->currentConfig->secretKey();
 
         return hash_hmac('sha256', $session_id, $secret_key);
     }

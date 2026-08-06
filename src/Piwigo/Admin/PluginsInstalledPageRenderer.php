@@ -84,7 +84,7 @@ final class PluginsInstalledPageRenderer
         }
 
         $base_url = $urlService->getRootUrl() . 'admin.php?page=' . $pageSlug;
-        $pwg_token = new CsrfService()
+        $pwg_token = new CsrfService($currentConfig)
             ->getToken();
 
         $conn = DbConnection::build();

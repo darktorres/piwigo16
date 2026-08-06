@@ -117,7 +117,7 @@ final class PhotosAddDirectPageRenderer
         // +-------------------------------------------------------------------+
 
         if ($photosAddDirectRequest->batchPresent) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             EntityManagerFactory::build($conn)->getRepository(CaddieEntity::class)
@@ -301,7 +301,7 @@ final class PhotosAddDirectPageRenderer
         $template->assign(
             [
                 'form_action' => self::baseUrl($this->urlService),
-                'pwg_token' => new CsrfService()
+                'pwg_token' => new CsrfService($this->currentConfig)
                     ->getToken(),
             ]
         );

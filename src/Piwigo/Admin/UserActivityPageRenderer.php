@@ -91,7 +91,7 @@ final class UserActivityPageRenderer
         $template->assign('ADMIN_PAGE_TITLE', $lang->t('Users'));
 
         $template->assign([
-            'PWG_TOKEN' => new CsrfService()
+            'PWG_TOKEN' => new CsrfService($currentConfig)
                 ->getToken(),
             'INHERIT' => $currentConfig->inheritanceByDefault(),
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($urlService, ['users']),

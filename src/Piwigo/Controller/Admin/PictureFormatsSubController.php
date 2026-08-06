@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Override;
 use Piwigo\Admin\PictureFormatsPageRenderer;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -30,12 +31,13 @@ final class PictureFormatsSubController implements AdminSubControllerInterface
         private readonly CurrentTemplate $currentTemplate,
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly InputValidator $inputValidator,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new PictureFormatsPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator, $this->currentConfig);
     }
 }

@@ -80,7 +80,7 @@ final class CatPermPageRenderer
 
         $catPermSubmit = CatPermSubmitRequest::fromGlobals();
         if ($catPermSubmit->isSubmitted) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlService, $this->redirectService);
 
             $post_status = $catPermSubmit->status;
@@ -206,7 +206,7 @@ final class CatPermPageRenderer
         // |                           sending html code                       |
         // +-------------------------------------------------------------------+
         $template->assign([
-            'PWG_TOKEN' => new CsrfService()
+            'PWG_TOKEN' => new CsrfService($this->currentConfig)
                 ->getToken(),
             'INHERIT' => $this->currentConfig->inheritanceByDefault(),
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),

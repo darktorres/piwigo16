@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Request\PictureFormatsImageIdRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -24,7 +25,7 @@ use Piwigo\Validation\InputValidator;
  */
 final class PictureFormatsPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
 
@@ -63,7 +64,7 @@ final class PictureFormatsPageRenderer
             'ADD_FORMATS_URL' => $urlService->getRootUrl() . 'admin.php?page=photos_add&formats=' . $image_id,
             'IMG_SQUARE_SRC' => DerivativeImage::url($imageStdParams->get_by_type(ImageStdParams::SQUARE), $image),
             'FORMATS' => $formats,
-            'PWG_TOKEN' => new CsrfService()
+            'PWG_TOKEN' => new CsrfService($currentConfig)
                 ->getToken(),
         ]);
 

@@ -127,7 +127,7 @@ final class PwgExtensions
         $template = $this->currentTemplate->get();
 
         /** @var Template $template */
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -194,7 +194,7 @@ final class PwgExtensions
         $template = $this->currentTemplate->get();
 
         /** @var Template $template */
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -260,7 +260,7 @@ final class PwgExtensions
             return new PwgError(401, $this->lang->t('Webmaster status is required.'));
         }
 
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -306,7 +306,7 @@ final class PwgExtensions
                                 . '&id=' . $extension_id
                                 . '&revision=' . $revision
                                 . '&reactivate=true'
-                                . '&pwg_token=' . new CsrfService()->getToken()
+                                . '&pwg_token=' . new CsrfService($this->currentConfig)->getToken()
                                 . '&format=json'
                     );
             }
@@ -391,7 +391,7 @@ final class PwgExtensions
             return new PwgError(401, 'Access denied');
         }
 
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 

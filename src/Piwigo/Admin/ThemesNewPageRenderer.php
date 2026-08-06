@@ -97,7 +97,7 @@ final class ThemesNewPageRenderer
             if (! $this->accessControl->isWebmaster()) {
                 $this->pageState->addError($this->lang->t('Webmaster status is required.'));
             } else {
-                new CsrfService()
+                new CsrfService($this->currentConfig)
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
                 $extraction = $pem_catalog->extractArchive(ExtensionType::Theme, 'install', $themesNewInstall->revision, $themesNewInstall->extension);
@@ -180,7 +180,7 @@ final class ThemesNewPageRenderer
                 $url_auto_install = htmlentities($base_url)
                   . '&amp;revision=' . $revision_id
                   . '&amp;extension=' . $extension_id
-                  . '&amp;pwg_token=' . new CsrfService()->getToken()
+                  . '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken()
                 ;
 
                 $template->append(

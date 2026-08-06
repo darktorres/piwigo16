@@ -9,6 +9,7 @@ use Piwigo\Admin\GroupPermPageRenderer;
 use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -41,12 +42,13 @@ final class GroupPermSubController implements AdminSubControllerInterface
         private readonly PermissionService $permissionService,
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly InputValidator $inputValidator,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
-        new GroupPermPageRenderer($this->lang, $this->accessControl, $this->redirectService, $this->urlService, $this->currentUser, $this->currentTemplate, $this->auditService, $this->categoryService, $this->groupService, $this->permissionService, $this->htmlRenderer, $this->inputValidator)
+        new GroupPermPageRenderer($this->lang, $this->accessControl, $this->redirectService, $this->urlService, $this->currentUser, $this->currentTemplate, $this->auditService, $this->categoryService, $this->groupService, $this->permissionService, $this->htmlRenderer, $this->inputValidator, $this->currentConfig)
             ->render();
     }
 }

@@ -401,7 +401,7 @@ final class PwgUsers
      */
     public function add(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -471,7 +471,7 @@ final class PwgUsers
      */
     public function getAuthKey(array $params, PwgServer &$service): PwgError|array
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -494,7 +494,7 @@ final class PwgUsers
      */
     public function delete(array $params, PwgServer &$service): PwgError|string
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -552,7 +552,7 @@ final class PwgUsers
      */
     public function setInfo(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -593,7 +593,7 @@ final class PwgUsers
      */
     public function setMyInfo(array $params, PwgServer &$service): PwgError|string
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -831,7 +831,7 @@ final class PwgUsers
      */
     public function generatePasswordLink(array $params, PwgServer &$service): PwgError|array
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -918,7 +918,7 @@ final class PwgUsers
         }
 
         // check pwg_token
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -958,7 +958,7 @@ final class PwgUsers
             return new PwgError(401, 'Acces Denied');
         }
 
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -1004,7 +1004,7 @@ final class PwgUsers
             return new PwgError(401, 'Acces Denied');
         }
 
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, $this->lang->t('Invalid security token'));
         }
 
@@ -1047,7 +1047,7 @@ final class PwgUsers
             return new PwgError(401, 'Acces Denied');
         }
 
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, $this->lang->t('Invalid security token'));
         }
 
@@ -1091,7 +1091,7 @@ final class PwgUsers
             return new PwgError(401, 'Acces Denied');
         }
 
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 

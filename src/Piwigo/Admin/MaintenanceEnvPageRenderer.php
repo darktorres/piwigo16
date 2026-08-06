@@ -100,7 +100,7 @@ final class MaintenanceEnvPageRenderer
             'maintenance' => 'maintenance_env.tpl',
         ]);
 
-        $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new CsrfService()->getToken();
+        $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken();
 
         /** @var array<string, string> $purge_urls */
         $purge_urls = [];

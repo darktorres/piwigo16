@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Permission\PermissionService;
@@ -26,6 +27,7 @@ final class PwgPermissions
     public function __construct(
         private readonly PermissionService $permissionService,
         private readonly CategoryService $categoryService,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -134,7 +136,7 @@ final class PwgPermissions
      */
     public function add(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -182,7 +184,7 @@ final class PwgPermissions
      */
     public function remove(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 

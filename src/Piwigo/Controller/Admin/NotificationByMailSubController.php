@@ -168,7 +168,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
 
         if ($post !== []) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($htmlRenderer, $this->redirectService);
         }
 
@@ -252,7 +252,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
         $template->assign(
             [
-                'PWG_TOKEN' => new CsrfService()
+                'PWG_TOKEN' => new CsrfService($this->currentConfig)
                     ->getToken(),
                 'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=notification_by_mail',
                 'F_ACTION' => $base_url . $this->urlService->getQueryStringDiff([]),

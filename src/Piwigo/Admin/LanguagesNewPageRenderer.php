@@ -115,7 +115,7 @@ final class LanguagesNewPageRenderer
             if (! $this->accessControl->isWebmaster()) {
                 $this->pageState->addError($this->lang->t('Webmaster status is required.'));
             } else {
-                new CsrfService()
+                new CsrfService($this->currentConfig)
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
                 $revision = $languagesNewInstall->revision;
@@ -188,7 +188,7 @@ final class LanguagesNewPageRenderer
 
                 $url_auto_install = htmlentities($base_url)
                   . '&amp;revision=' . $revision_id
-                  . '&amp;pwg_token=' . new CsrfService()->getToken()
+                  . '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken()
                 ;
 
                 $template->append('languages', [

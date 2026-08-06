@@ -111,7 +111,7 @@ final class ElementSetRanksPageRenderer
         $image_order_choice = $elementSetRanksRequest->imageOrderChoice;
 
         if ($elementSetRanksRequest->isSubmitted) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             if ($elementSetRanksRequest->rankOfImage !== []) {
@@ -183,7 +183,7 @@ final class ElementSetRanksPageRenderer
             [
                 'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
                 'F_ACTION' => $base_url . $this->urlService->getQueryStringDiff([]),
-                'PWG_TOKEN' => new CsrfService()
+                'PWG_TOKEN' => new CsrfService($this->currentConfig)
                     ->getToken(),
             ]
         );

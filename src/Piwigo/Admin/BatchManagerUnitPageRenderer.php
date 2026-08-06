@@ -129,7 +129,7 @@ final class BatchManagerUnitPageRenderer
         $batchManagerUnitRequest = BatchManagerUnitRequest::fromGlobals($this->inputValidator);
 
         if ($batchManagerUnitRequest->isSubmitted) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($htmlRenderer, $this->redirectService);
             $collection = explode(',', $batchManagerUnitRequest->elementIds);
 
@@ -243,7 +243,7 @@ final class BatchManagerUnitPageRenderer
                 'U_ELEMENTS_PAGE' => $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
                 'level_options' => PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
                 'ADMIN_PAGE_TITLE' => $this->lang->t('Batch Manager'),
-                'PWG_TOKEN' => new CsrfService()
+                'PWG_TOKEN' => new CsrfService($this->currentConfig)
                     ->getToken(),
             ]
         );
@@ -511,10 +511,10 @@ final class BatchManagerUnitPageRenderer
                             'related_category_ids' => json_encode($related_category_ids),
                             'U_JUMPTO' => (isset($url_img) and $user->level >= $media['image']['level']) ? $url_img : null,
                             'tag_selection' => $tag_selection,
-                            'U_DOWNLOAD' => 'action.php?id=' . $row_id_str . '&amp;part=e&amp;pwg_token=' . new CsrfService()->getToken() . '&amp;download',
+                            'U_DOWNLOAD' => 'action.php?id=' . $row_id_str . '&amp;part=e&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken() . '&amp;download',
                             'U_HISTORY' => $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $row_id_str,
                             'U_ACTIVITY' => $this->urlService->getRootUrl() . 'admin.php?page=user_activity&photo=' . $row_id_str,
-                            'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new CsrfService()->getToken(),
+                            'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
                             'U_SYNC' => $admin_url_start . '&amp;sync_metadata=1',
                             'PATH' => $row['path'],
                             'level_options_selected' => [$selected_level],

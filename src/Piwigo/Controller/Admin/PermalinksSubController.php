@@ -9,6 +9,7 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Request\PermalinksRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -71,6 +72,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly InputValidator $inputValidator,
         private readonly EventDispatcher $eventDispatcher,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     #[Override]
@@ -86,7 +88,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         $selected_cat = [];
         $post_cat_id = $permalinksRequest->catId;
         if ($permalinksRequest->isSetPermalink and $post_cat_id > 0) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($htmlRenderer, $this->redirectService);
             $permalink = $permalinksRequest->permalink;
             $permalink_service = $this->permalinkService;
@@ -97,7 +99,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
             }
             $selected_cat = [$post_cat_id];
         } elseif ($permalinksRequest->deletePermanentPresent) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($htmlRenderer, $this->redirectService);
             $this->permalinkService
                 ->deleteOldPermalinkByValue($permalinksRequest->deletePermanent);
@@ -125,7 +127,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
 
         $this->categoryService->displaySelectForPermalinks($selected_cat, 'categories', $htmlRenderer, $template);
 
-        $pwg_token = new CsrfService()
+        $pwg_token = new CsrfService($this->currentConfig)
             ->getToken();
 
         // --- generate display of active permalinks -----------------------------------

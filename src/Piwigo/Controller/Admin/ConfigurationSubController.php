@@ -316,7 +316,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         // ------------------------------ verification and registration of modifications
         if ($configurationRequest->isSubmitted) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
             $int_pattern = '/^\d+$/';
 
@@ -509,7 +509,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         // restore default derivatives settings
         if ($page['section'] === 'sizes' and $configurationRequest->restoreSettingsRequested and $this->accessControl->isWebmaster()) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->imageStdParams->restore_default();
@@ -559,7 +559,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $template->assign(
             [
                 'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=configuration',
-                'PWG_TOKEN' => new CsrfService()
+                'PWG_TOKEN' => new CsrfService($this->currentConfig)
                     ->getToken(),
                 'F_ACTION' => $action,
             ]

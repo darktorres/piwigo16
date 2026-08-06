@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Request\GroupListActionRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -34,6 +35,7 @@ final class GroupListPageRenderer
         private readonly CurrentTemplate $currentTemplate,
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly EventDispatcher $eventDispatcher,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void
@@ -54,7 +56,7 @@ final class GroupListPageRenderer
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
         if (GroupListActionRequest::fromGlobals()->requiresCsrfCheck) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
@@ -65,7 +67,7 @@ final class GroupListPageRenderer
         $template->assign(
             [
                 'F_ADD_ACTION' => $this->urlService->getRootUrl() . 'admin.php?page=group_list',
-                'PWG_TOKEN' => new CsrfService()
+                'PWG_TOKEN' => new CsrfService($this->currentConfig)
                     ->getToken(),
                 'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
             ]
@@ -98,10 +100,10 @@ final class GroupListPageRenderer
                     'NB_MEMBERS' => count($members),
                     'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
                     'MEMBERS' => $this->translator->plural('%d member', '%d members', count($members)),
-                    'U_DELETE' => $del_url . $row->id->value . '&amp;pwg_token=' . new CsrfService()->getToken(),
+                    'U_DELETE' => $del_url . $row->id->value . '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
                     'U_PERM' => $perm_url . $row->id->value,
                     'U_USERS' => $users_url . $row->id->value,
-                    'U_ISDEFAULT' => $toggle_is_default_url . $row->id->value . '&amp;pwg_token=' . new CsrfService()->getToken(),
+                    'U_ISDEFAULT' => $toggle_is_default_url . $row->id->value . '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
                 ]
             );
 

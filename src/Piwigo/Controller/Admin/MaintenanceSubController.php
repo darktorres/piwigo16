@@ -96,7 +96,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         $maintenanceDispatch = MaintenanceDispatchRequest::fromGlobals($this->inputValidator);
 
         if ($maintenanceDispatch->requiresCsrfCheck) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 

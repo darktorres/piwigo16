@@ -111,7 +111,7 @@ final class PhotoSubController implements AdminSubControllerInterface
                 ->render();
         } elseif ($this->currentConfig->isFormatsEnabled()) {
             new PictureFormatsPageRenderer()
-                ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator);
+                ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator, $this->currentConfig);
         }
     }
 }

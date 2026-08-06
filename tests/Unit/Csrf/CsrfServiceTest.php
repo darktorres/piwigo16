@@ -29,7 +29,7 @@ afterEach(function (): void {
 
 test('getToken is stable for the same session id and secret key', function (): void {
     session_id('fixed-test-session-id');
-    $service = new CsrfService();
+    $service = new CsrfService(CurrentConfig::current());
 
     expect($service->getToken())->toBe($service->getToken());
 });
@@ -44,12 +44,12 @@ test('getToken uses sha256, not md5', function (): void {
 
     $expected = hash_hmac('sha256', 'fixed-test-session-id', 'test-secret-key');
 
-    expect(new CsrfService()->getToken())->toBe($expected);
+    expect(new CsrfService(CurrentConfig::current())->getToken())->toBe($expected);
 });
 
 test('getToken changes when the secret key changes', function (): void {
     session_id('fixed-test-session-id');
-    $service = new CsrfService();
+    $service = new CsrfService(CurrentConfig::current());
     $first = $service->getToken();
 
     CurrentConfig::current()->setSecretKey('a-different-secret');
@@ -61,12 +61,12 @@ test('check returns null when no token was submitted', function (): void {
     session_id('fixed-test-session-id');
     unset($_REQUEST['pwg_token']);
 
-    expect(new CsrfService()->check())->toBeNull();
+    expect(new CsrfService(CurrentConfig::current())->check())->toBeNull();
 });
 
 test('check returns true when the submitted token matches', function (): void {
     session_id('fixed-test-session-id');
-    $service = new CsrfService();
+    $service = new CsrfService(CurrentConfig::current());
     $_REQUEST['pwg_token'] = $service->getToken();
 
     expect($service->check())->toBeTrue();
@@ -76,5 +76,5 @@ test('check returns false when the submitted token does not match', function ():
     session_id('fixed-test-session-id');
     $_REQUEST['pwg_token'] = 'not-the-real-token';
 
-    expect(new CsrfService()->check())->toBeFalse();
+    expect(new CsrfService(CurrentConfig::current())->check())->toBeFalse();
 });

@@ -105,7 +105,7 @@ final class ProfileController implements ControllerInterface
         $profileAction = ProfileActionRequest::fromGlobals();
 
         if ($profileAction->requiresCsrfCheck) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlService, $this->redirectService);
         }
 

@@ -8,6 +8,7 @@ use Piwigo\Admin\Request\UserPermSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -40,6 +41,7 @@ final class UserPermPageRenderer
         private readonly UserService $userService,
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly InputValidator $inputValidator,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void
@@ -56,7 +58,7 @@ final class UserPermPageRenderer
         $userPermSubmit = UserPermSubmitRequest::fromGlobals($this->inputValidator);
 
         if ($userPermSubmit->isSubmitted) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($htmlRenderer, $this->redirectService);
         }
 
@@ -140,7 +142,7 @@ final class UserPermPageRenderer
 
         $categoryService->displaySelectPrivateExcluding([...$authorized_ids, ...$group_authorized], 'category_option_false', $htmlRenderer, $template);
 
-        $template->assign('PWG_TOKEN', new CsrfService()->getToken());
+        $template->assign('PWG_TOKEN', new CsrfService($this->currentConfig)->getToken());
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'user_perm');

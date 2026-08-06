@@ -10,6 +10,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -45,6 +46,7 @@ final class GroupPermPageRenderer
         private readonly PermissionService $permissionService,
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly InputValidator $inputValidator,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void
@@ -59,7 +61,7 @@ final class GroupPermPageRenderer
         $groupPermSubmit = GroupPermSubmitRequest::fromGlobals($this->inputValidator);
 
         if ($groupPermSubmit->isSubmitted) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
@@ -146,7 +148,7 @@ final class GroupPermPageRenderer
 
         $categoryService->displaySelectPrivateExcluding($authorized_ids, 'category_option_false', $this->htmlRenderer, $template);
 
-        $template->assign('PWG_TOKEN', new CsrfService()->getToken());
+        $template->assign('PWG_TOKEN', new CsrfService($this->currentConfig)->getToken());
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'group_perm');

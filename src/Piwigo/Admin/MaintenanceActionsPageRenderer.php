@@ -103,9 +103,9 @@ final class MaintenanceActionsPageRenderer
         $template->set_filenames([
             'maintenance' => 'maintenance_actions.tpl',
         ]);
-        $pwg_token = new CsrfService()
+        $pwg_token = new CsrfService($this->currentConfig)
             ->getToken();
-        $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new CsrfService()->getToken();
+        $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken();
 
         if (! $this->accessControl->isWebmaster()) {
             $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));

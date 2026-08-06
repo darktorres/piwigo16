@@ -8,6 +8,7 @@ use Override;
 use Piwigo\Admin\CommentsPageRenderer;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -28,12 +29,13 @@ final class CommentsSubController implements AdminSubControllerInterface
         private readonly CoreTabs $coreTabs,
         private readonly CurrentTemplate $currentTemplate,
         private readonly EventDispatcher $eventDispatcher,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new CommentsPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->currentTemplate, $this->eventDispatcher);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->currentTemplate, $this->eventDispatcher, $this->currentConfig);
     }
 }

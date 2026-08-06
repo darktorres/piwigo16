@@ -75,7 +75,7 @@ final class CatListPageRenderer
         $catListRequest = CatListRequest::fromGlobals($this->inputValidator);
 
         if ($catListRequest->isCsrfCheckRequired) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
@@ -195,7 +195,7 @@ final class CatListPageRenderer
             'ADMIN_PAGE_TITLE' => $this->lang->t('Album list management'),
             'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
             'F_ACTION' => $form_action,
-            'PWG_TOKEN' => new CsrfService()
+            'PWG_TOKEN' => new CsrfService($this->currentConfig)
                 ->getToken(),
             'sort_orders' => $sort_orders,
             'sort_order_checked' => array_shift($sort_orders_checked),
@@ -290,7 +290,7 @@ final class CatListPageRenderer
 
             if (in_array($category['dir'], [null, '', '0'], true)) {
                 $tpl_cat['U_DELETE'] = $self_url . '&amp;delete=' . $cat_id;
-                $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . new CsrfService()->getToken();
+                $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken();
             } else {
                 if ($this->currentConfig->enableSynchronization()) {
                     $tpl_cat['U_SYNC'] = $base_url . 'site_update&amp;site=1&amp;cat_id=' . $cat_id;

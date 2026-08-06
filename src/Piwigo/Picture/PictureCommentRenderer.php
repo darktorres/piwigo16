@@ -259,7 +259,7 @@ final class PictureCommentRenderer
                         [
                             'action' => 'delete_comment',
                             'comment_to_delete' => $row->id->value,
-                            'pwg_token' => new CsrfService()
+                            'pwg_token' => new CsrfService($currentConfig)
                                 ->getToken(),
                         ]
                     );
@@ -278,7 +278,7 @@ final class PictureCommentRenderer
                             ->generate(2, (string) $imageId);
                         $tplComment['KEY'] = $key;
                         $tplComment['CONTENT'] = $row->content;
-                        $tplComment['PWG_TOKEN'] = new CsrfService()->getToken();
+                        $tplComment['PWG_TOKEN'] = new CsrfService($currentConfig)->getToken();
                         $tplComment['U_CANCEL'] = $url_self;
                     }
                 }
@@ -291,7 +291,7 @@ final class PictureCommentRenderer
                             [
                                 'action' => 'validate_comment',
                                 'comment_to_validate' => $row->id->value,
-                                'pwg_token' => new CsrfService()
+                                'pwg_token' => new CsrfService($currentConfig)
                                     ->getToken(),
                             ]
                         );

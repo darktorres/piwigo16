@@ -134,7 +134,7 @@ final class PictureModifyPageRenderer
         // +-------------------------------------------------------------------+
 
         if ($pictureModifyRequest->deletePresent) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $imageService->deleteElements([$image_id], $this->urlService, true);
@@ -162,7 +162,7 @@ final class PictureModifyPageRenderer
         // +-------------------------------------------------------------------+
 
         if ($pictureModifyRequest->syncMetadataPresent) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->metadataService
@@ -174,7 +174,7 @@ final class PictureModifyPageRenderer
         /** @var array<string, mixed> $data */
         $data = [];
         if ($pictureModifyRequest->isSubmitted) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $data = [];
@@ -320,9 +320,9 @@ final class PictureModifyPageRenderer
         $template->assign(
             [
                 'tag_selection' => $tag_selection,
-                'U_DOWNLOAD' => 'action.php?id=' . $image_id . '&amp;part=e&amp;pwg_token=' . new CsrfService()->getToken(),
-                'U_SYNC' => $admin_url_start . '&amp;sync_metadata=1&amp;pwg_token=' . new CsrfService()->getToken(),
-                'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new CsrfService()->getToken(),
+                'U_DOWNLOAD' => 'action.php?id=' . $image_id . '&amp;part=e&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
+                'U_SYNC' => $admin_url_start . '&amp;sync_metadata=1&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
+                'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
                 'U_HISTORY' => $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $image_id,
                 'U_ACTIVITY' => $this->urlService->getRootUrl() . 'admin.php?page=user_activity&photo=' . $image_id,
 
@@ -501,7 +501,7 @@ final class PictureModifyPageRenderer
             'represented_albums' => $represented_albums,
             'STORAGE_ALBUM' => $storage_category_id,
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
-            'PWG_TOKEN' => new CsrfService()
+            'PWG_TOKEN' => new CsrfService($this->currentConfig)
                 ->getToken(),
         ]);
 

@@ -15,6 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\TagId;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
@@ -46,6 +47,7 @@ final class PwgTags
         private readonly EventDispatcher $eventDispatcher,
         private readonly EntityManagerInterface $entityManager,
         private readonly WsHelper $wsHelper,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -291,7 +293,7 @@ final class PwgTags
      */
     public function delete(array $params, PwgServer &$service): PwgError|array
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -324,7 +326,7 @@ final class PwgTags
      */
     public function rename(array $params, PwgServer &$service): PwgError|array
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -380,7 +382,7 @@ final class PwgTags
      */
     public function duplicate(array $params, PwgServer &$service): PwgError|array
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -445,7 +447,7 @@ final class PwgTags
      */
     public function merge(array $params, PwgServer &$service): PwgError|array
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 

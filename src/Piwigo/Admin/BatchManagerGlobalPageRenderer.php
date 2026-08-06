@@ -118,7 +118,7 @@ final class BatchManagerGlobalPageRenderer
         // yet -- a minimal, single-fact existence check, same shape as
         // Ws\PwgServer::isPost()'s own already-reviewed raw $_POST read.
         if (count($_POST) > 0) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 

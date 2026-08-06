@@ -138,7 +138,7 @@ final class PasswordController implements ControllerInterface
 
         // ------------------------------------------------------- process form
         if ($this->request->isSubmitted) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlService, $this->redirectService);
 
             if ($action_param === 'lost') {
@@ -264,7 +264,7 @@ final class PasswordController implements ControllerInterface
                 'action' => $action,
                 'username' => $username ?? $this->currentUser->get()
                     ->username,
-                'PWG_TOKEN' => new CsrfService()
+                'PWG_TOKEN' => new CsrfService($this->currentConfig)
                     ->getToken(),
             ]
         );

@@ -93,7 +93,7 @@ final class AlbumNotificationPageRenderer
         $albumNotificationSubmit = AlbumNotificationSubmitRequest::fromGlobals($this->inputValidator);
 
         if ($albumNotificationSubmit->isSubmitted) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlService, $this->redirectService);
             $this->urlService->setMakeFullUrl();
 
@@ -257,7 +257,7 @@ final class AlbumNotificationPageRenderer
                         )
                 ),
                 'F_ACTION' => $admin_album_base_url . '-notification',
-                'PWG_TOKEN' => new CsrfService()
+                'PWG_TOKEN' => new CsrfService($this->currentConfig)
                     ->getToken(),
             ]
         );

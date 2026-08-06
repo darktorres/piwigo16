@@ -352,7 +352,7 @@ final class CatModifyPageRenderer
             $template->assign('parent_category', $category_id_uppercat === '' ? [] : [$category_id_uppercat]);
         }
 
-        $template->assign('PWG_TOKEN', new CsrfService()->getToken());
+        $template->assign('PWG_TOKEN', new CsrfService($currentConfig)->getToken());
 
         $eventDispatcher->dispatchNotify(new LocEndCatModify());
 

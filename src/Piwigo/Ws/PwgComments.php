@@ -246,7 +246,7 @@ final class PwgComments
      */
     public function delete(array $params, PwgServer &$service): PwgError|string
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, $this->lang->t('Invalid security token'));
         }
 
@@ -266,7 +266,7 @@ final class PwgComments
      */
     public function validate(array $params, PwgServer &$service): PwgError|string
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, $this->lang->t('Invalid security token'));
         }
 

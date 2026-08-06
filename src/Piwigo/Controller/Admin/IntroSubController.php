@@ -250,7 +250,7 @@ final class IntroSubController implements AdminSubControllerInterface
                 'NB_VIEWS' => AdminUiHelper::numberFormatHumanReadable($nb_views),
                 'NB_PLUGINS' => count($this->loadedPlugins->get()),
                 'STORAGE_USED' => str_replace(' ', '&nbsp;', $this->lang->t('%sGB', number_format($du_gb, $du_decimals))),
-                'U_QUICK_SYNC' => $this->urlService->getRootUrl() . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new CsrfService()->getToken(),
+                'U_QUICK_SYNC' => $this->urlService->getRootUrl() . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
                 'CHECK_FOR_UPDATES' => $this->currentConfig->dashboardCheckForUpdates(),
             ]
         );

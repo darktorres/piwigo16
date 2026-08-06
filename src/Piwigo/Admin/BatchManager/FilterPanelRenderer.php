@@ -132,7 +132,7 @@ final class FilterPanelRenderer
                 'selection' => $collection,
                 'all_elements' => $catElementsId,
                 'START' => $pageStart,
-                'PWG_TOKEN' => new CsrfService()
+                'PWG_TOKEN' => new CsrfService($currentConfig)
                     ->getToken(),
                 'U_DISPLAY' => $baseUrl . $urlService->getQueryStringDiff(['display']),
                 'F_ACTION' => $baseUrl . $urlService->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),

@@ -9,6 +9,7 @@ use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Request\CatOptionsRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -43,6 +44,7 @@ final class CatOptionsPageRenderer
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly InputValidator $inputValidator,
         private readonly EventDispatcher $eventDispatcher,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void
@@ -55,7 +57,7 @@ final class CatOptionsPageRenderer
         $catOptionsRequest = CatOptionsRequest::fromGlobals($this->inputValidator);
 
         if ($catOptionsRequest->isSubmitted) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
@@ -153,7 +155,7 @@ final class CatOptionsPageRenderer
             $categoryService->displaySelectByRepresentativePresence(true, 'category_option_true', $htmlService, $template);
             $categoryService->displaySelectByRepresentativePresence(false, 'category_option_false', $htmlService, $template);
         }
-        $template->assign('PWG_TOKEN', new CsrfService()->getToken());
+        $template->assign('PWG_TOKEN', new CsrfService($this->currentConfig)->getToken());
         $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Properties of abums'));
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');

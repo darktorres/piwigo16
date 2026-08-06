@@ -274,7 +274,7 @@ final class AlbumsPageRenderer
         $template->assign(
             [
                 'album_data' => self::assocToOrderedTree($associatedTree, $nb_photos_in, $nb_sub_photos, $is_forbidden),
-                'PWG_TOKEN' => new CsrfService()
+                'PWG_TOKEN' => new CsrfService($currentConfig)
                     ->getToken(),
                 'nb_albums' => count($allAlbum),
                 'ADMIN_PAGE_TITLE' => $lang->t('Albums'),

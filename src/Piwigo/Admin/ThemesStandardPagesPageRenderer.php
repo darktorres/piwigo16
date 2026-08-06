@@ -106,7 +106,7 @@ final class ThemesStandardPagesPageRenderer
         $stdPagesSubmit = ThemesStandardPagesSubmitRequest::fromGlobals($std_pgs_logo_options, $std_pgs_skin_options);
 
         if ($stdPagesSubmit->isSubmitted and $this->accessControl->isWebmaster()) {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->configService->confUpdateParam('use_standard_pages', $stdPagesSubmit->useStandardPages, true);
@@ -238,7 +238,7 @@ final class ThemesStandardPagesPageRenderer
                 'is_standard_pages_used' => $is_standard_pages_used,
                 'standard_pages_used_by' => $standard_pages_used_by,
                 'std_pgs_selected_logo_path' => $std_pgs_selected_logo_path,
-                'PWG_TOKEN' => new CsrfService()
+                'PWG_TOKEN' => new CsrfService($this->currentConfig)
                     ->getToken(),
             ]
         );

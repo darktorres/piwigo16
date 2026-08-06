@@ -123,7 +123,7 @@ final class UserListPageRenderer
         $template->assign(
             [
                 'U_HISTORY' => $urlService->getRootUrl() . 'admin.php?page=history&filter_user_id=',
-                'PWG_TOKEN' => new CsrfService()
+                'PWG_TOKEN' => new CsrfService($currentConfig)
                     ->getToken(),
                 'NB_IMAGE_PAGE' => $default_user['nb_image_page'],
                 'RECENT_PERIOD' => $default_user['recent_period'],

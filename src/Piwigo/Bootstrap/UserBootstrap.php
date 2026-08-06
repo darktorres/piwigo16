@@ -17,6 +17,7 @@ use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Bootstrap\Request\UserBootstrapRequest;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\CurrentLogger;
@@ -101,6 +102,10 @@ final class UserBootstrap
         $mailer = Kernel::container()->get(MailerInterface::class);
         if (! $mailer instanceof MailerInterface) {
             throw new LogicException('Container returned an unexpected type for ' . MailerInterface::class);
+        }
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $installationFlag = Kernel::container()->get(InstallationFlag::class);
         if (! $installationFlag instanceof InstallationFlag) {
@@ -231,7 +236,7 @@ final class UserBootstrap
                 // docblock): must stay visible to later $_POST/$_GET reads
                 // in this same request (Ws\Request\WsRawRequest::fromGlobals()
                 // and any downstream CSRF check).
-                $_POST['pwg_token'] = $_GET['pwg_token'] = new CsrfService()->getToken();
+                $_POST['pwg_token'] = $_GET['pwg_token'] = new CsrfService($currentConfig)->getToken();
 
                 // logger
                 $logger = $this->currentLogger->get();

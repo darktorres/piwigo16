@@ -118,7 +118,7 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
         if ($step === 2 and $this->accessControl->isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
-                new CsrfService()
+                new CsrfService($this->currentConfig)
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
                 $core_update_service->upgradeTo($updatesPwgRequest->upgradeToSubmitted, $step);
             }
@@ -129,7 +129,7 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
         if ($step === 3 and $this->accessControl->isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
-                new CsrfService()
+                new CsrfService($this->currentConfig)
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
                 $core_update_service->upgradeTo($updatesPwgRequest->upgradeToSubmitted, $step);
             }
@@ -163,7 +163,7 @@ final class UpdatesPwgPageRenderer
                 'STEP' => $step,
                 'PIWIGO_CURRENT_VERSION' => $this->pageState->updatedVersion ?? AppInfo::VERSION,
                 'UPGRADE_TO' => $upgrade_to,
-                'PWG_TOKEN' => new CsrfService()
+                'PWG_TOKEN' => new CsrfService($this->currentConfig)
                     ->getToken(),
             ]
         );

@@ -410,6 +410,6 @@ final class ProfileFormHandler
         // allow plugins to add their own form data to content
         $this->eventDispatcher->dispatchNotify(new LoadProfileInTemplate($userdata));
 
-        $template->assign('PWG_TOKEN', new CsrfService()->getToken());
+        $template->assign('PWG_TOKEN', new CsrfService($this->currentConfig)->getToken());
     }
 }

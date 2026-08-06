@@ -484,8 +484,7 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     //
     // (b) Too many real raw `new X(...)` construction sites, no DI
     // involved, matching the established HtmlService/Template
-    // precedent from every prior phase -- Csrf/CsrfService.php (~50
-    // sites, no constructor at all).
+    // precedent from every prior phase.
     // Mail/MailService.php, Url/UrlService.php, Template/Template.php,
     // and Html/HtmlService.php itself all closed this shim in Phase 11
     // sub-phase 11E -- real constructor injection now that the "too many
@@ -520,14 +519,19 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // later pgsql-portability commits introduced, landing after Phase 11's
     // own inventory/audit pass already ran -- fixed in the same pass as
     // UserRepository.php, just its own dedicated commit given its real
-    // ~60-site blast radius).
+    // ~60-site blast radius). Sub-phase 12E: Csrf/CsrfService.php closed
+    // too -- 148 real construction sites re-counted fresh (not the stale
+    // "~50" estimate), all threaded with a real, constructor-injected
+    // CurrentConfig instead (either an already-held $this->currentConfig/
+    // method-param $currentConfig, or, for the ~20 files that didn't
+    // already have one, a newly-added constructor/method param, threaded
+    // to every real caller in turn).
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
         '/src/Piwigo/Admin/Image/PwgImage.php',
         '/src/Piwigo/Admin/Upload/UploadService.php',
         '/src/Piwigo/Core/FilesystemHelper.php',
-        '/src/Piwigo/Csrf/CsrfService.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentConfig::current(');

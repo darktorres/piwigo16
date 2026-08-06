@@ -97,7 +97,7 @@ final class PluginsNewPageRenderer
             if (! $this->accessControl->isWebmaster()) {
                 $this->pageState->addError($this->lang->t('Webmaster status is required.'));
             } else {
-                new CsrfService()
+                new CsrfService($this->currentConfig)
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
                 $extraction = $pem_catalog->extractArchive(ExtensionType::Plugin, 'install', $pluginsNewRequest->revision, $pluginsNewRequest->extension);
@@ -217,7 +217,7 @@ final class PluginsNewPageRenderer
                 $url_auto_install = htmlentities($base_url)
                   . '&amp;revision=' . $revision_id
                   . '&amp;extension=' . $extension_id
-                  . '&amp;pwg_token=' . new CsrfService()->getToken()
+                  . '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken()
                 ;
 
                 // get the age of the last revision in days

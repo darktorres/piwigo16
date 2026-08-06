@@ -16,6 +16,7 @@ use Piwigo\Audit\AuditService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
@@ -36,6 +37,7 @@ final class PwgGroups
         private readonly GroupService $groupService,
         private readonly CurrentUser $currentUser,
         private readonly AuditService $auditService,
+        private readonly CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -117,7 +119,7 @@ final class PwgGroups
      */
     public function delete(array $params, PwgServer &$service): PwgError|PwgNamedArray
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -144,7 +146,7 @@ final class PwgGroups
      */
     public function setInfo(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -180,7 +182,7 @@ final class PwgGroups
      */
     public function addUser(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -209,7 +211,7 @@ final class PwgGroups
      */
     public function merge(array $params, PwgServer &$service): PwgError|array
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -241,7 +243,7 @@ final class PwgGroups
      */
     public function duplicate(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -268,7 +270,7 @@ final class PwgGroups
      */
     public function deleteUser(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() !== $params['pwg_token']) {
+        if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 

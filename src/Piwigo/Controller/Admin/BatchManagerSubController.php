@@ -211,7 +211,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         }
 
         if ($action === 'empty_caddie') {
-            new CsrfService()
+            new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             EntityManagerFactory::build(DbConnection::build())->getRepository(CaddieEntity::class)

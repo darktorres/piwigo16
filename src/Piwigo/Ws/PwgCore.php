@@ -482,7 +482,7 @@ final class PwgCore
         $res['status'] = $currentUser->status->value;
         $res['theme'] = $currentUser->theme;
         $res['language'] = $currentUser->language;
-        $res['pwg_token'] = new CsrfService()->getToken();
+        $res['pwg_token'] = new CsrfService($this->currentConfig)->getToken();
         $res['charset'] = CharsetHelper::getPwgCharset();
 
         // Env::now() rather than SQL's NOW() -- the real DB-server clock,

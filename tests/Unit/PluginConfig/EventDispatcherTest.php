@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Fixtures\PluginConfig\TestChangeEvent;
+use Piwigo\Tests\Fixtures\PluginConfig\TestNotifyEvent;
 
 /**
  * Narrows EventDispatcher's private $handlers property (read via
@@ -39,26 +41,6 @@ function eventDispatcherHandlersAt(EventDispatcher $dispatcher, string $event, i
     }
 
     return $atPriority;
-}
-
-/**
- * Throwaway notify-shape fixture for dispatchNotify()/addTypedHandler()
- * tests -- matches the real target shape (final readonly, no mutable
- * property).
- */
-final readonly class TestNotifyEvent
-{
-    public function __construct(public string $value) {}
-}
-
-/**
- * Throwaway change-shape fixture for dispatchChange()/addTypedHandler()
- * tests -- matches the real target shape (final, exactly one mutable
- * property, readonly context).
- */
-final class TestChangeEvent
-{
-    public function __construct(public string $value, public readonly string $context = '') {}
 }
 
 /**

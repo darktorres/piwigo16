@@ -92,7 +92,10 @@
     "psr-4": {
       "Piwigo\\Tests\\": "tests/",
       "Piwigo\\Tools\\PhpStan\\": "tools/phpstan/"
-    }
+    },
+    "exclude-from-classmap": [
+      "/tests/Fixtures/Migrations/"
+    ]
   },
   "scripts": {
     "lint:php": "@php vendor/bin/ecs check",

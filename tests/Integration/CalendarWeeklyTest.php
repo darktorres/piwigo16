@@ -21,6 +21,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
@@ -93,7 +94,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         // makePictureCommentTestTemplate().
         CurrentConfig::current()->setDataLocation('data/');
         CurrentConfig::current()->setDataDirChecked('1');
-        Lang::current()->reset();
+        LangTestFactory::get()->reset();
         TranslatorTestFactory::get()->reset();
 
         $this->conn = DbConnection::build();
@@ -121,14 +122,14 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         // found live (a stray data/templates_c/index.htm showed up as
         // untracked repo debris after a coverage run).
         calendar_weekly_test_rrmdir(CurrentPaths::get()->root . 'data');
-        Lang::current()->reset();
+        LangTestFactory::get()->reset();
         TranslatorTestFactory::get()->reset();
         parent::tearDown();
     }
 
     private function makeCalendar(): CalendarWeekly
     {
-        $calendar = new CalendarWeekly(Lang::current(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParamsTestFactory::get());
+        $calendar = new CalendarWeekly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParamsTestFactory::get());
         $calendar->chronology_field = 'posted';
         $calendar->initialize(new CalendarQueryScope(
             new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)'),
@@ -323,7 +324,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
      */
     public function test_initialize_rotates_sunday_to_the_end_of_the_day_labels_when_monday_starts_the_week(): void
     {
-        Lang::current()->loadArray(['day' => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']]);
+        LangTestFactory::get()->loadArray(['day' => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']]);
         CurrentConfig::current()->setWeekStartsOn('monday');
 
         $calendar = $this->makeCalendar();

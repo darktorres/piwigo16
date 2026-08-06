@@ -17,6 +17,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -67,7 +68,7 @@ function makeCalendarService(): CalendarService
 
     return new CalendarService(
         $permissionService,
-        new CategoryService(Lang::current(), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()), $permissionService, CurrentConfig::current(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker),
+        new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()), $permissionService, CurrentConfig::current(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker),
     );
 }
 

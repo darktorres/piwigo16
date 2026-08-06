@@ -7,7 +7,6 @@ namespace Piwigo\Core;
 use Gettext\Headers;
 use Gettext\Loader\PoLoader;
 use Gettext\Translations;
-use LogicException;
 use Piwigo\Lang\Translator;
 
 /**
@@ -119,27 +118,6 @@ final class Lang
         private readonly InstallationFlag $installationFlag,
     ) {}
 
-    /**
-     * @deprecated transitional bridge for callers not yet converted to
-     * constructor injection -- see the singleton/service-locator
-     * elimination campaign plan, Phase 8. A live container resolve on
-     * every call (no memoized pre-boot fallback, unlike e.g.
-     * `CurrentUser::current()`): like `AccessControl`, this class has
-     * required real collaborators with no safe fake to fall back to, so
-     * this throws naturally (via `Kernel::container()`) if called before
-     * `Kernel::boot()`. Delete once `grep -rn "Lang::current("` outside
-     * tests/ returns nothing.
-     */
-    public static function current(): self
-    {
-        $instance = Kernel::container()->get(self::class);
-        if (! $instance instanceof self) {
-            throw new LogicException('Container returned an unexpected type for ' . self::class);
-        }
-
-        return $instance;
-    }
-
     private function fatalError(string $msg): never
     {
         // fatalError() is `never`-typed -- always terminates -- and
@@ -204,9 +182,10 @@ final class Lang
      * only real caller, confirmed by grep) whose runtime value can be a
      * numeric DB-row string (the exact real 500 `l10n_dec()`'s own
      * docblock already documented: menubar_categories.tpl passed one).
-     * Every hand-written .php call site instead calls
-     * `Translator::current()->plural()` directly with an explicit int
-     * already in hand, per Legacy Coupling Retirement Phase 4d.
+     * Every hand-written .php call site instead calls its own
+     * constructor-injected `Translator::plural()` directly with an
+     * explicit int already in hand, per Legacy Coupling Retirement
+     * Phase 4d.
      */
     public function plural(string $singular, string $plural, mixed $decimal): string
     {

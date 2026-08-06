@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Override;
 use LogicException;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Validation\InputValidator;
@@ -342,7 +343,7 @@ final class InstallWizardTest extends IntegrationTestCase
             'PIWIGO_DB_PREFIX' => $prefix,
         ]);
 
-        $wizard = new InstallWizard(Lang::current(), $prefix, $this->paths, $dbCredentials, CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUser::current());
+        $wizard = new InstallWizard(LangTestFactory::get(), $prefix, $this->paths, $dbCredentials, CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUser::current());
         $wizard->boot();
 
         return $wizard;
@@ -428,7 +429,7 @@ final class InstallWizardTest extends IntegrationTestCase
         // the CurrentPaths::get() shim. KernelContainerOverride::with()
         // rebinds Paths::class for just this test's own scope instead.
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            $wizard = new InstallWizard(Lang::current(), 'itest_', $this->paths, DbCredentialsTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUser::current());
+            $wizard = new InstallWizard(LangTestFactory::get(), 'itest_', $this->paths, DbCredentialsTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUser::current());
 
             self::assertSame('_data/', $this->reflectPrivate($wizard, 'confDataLocation'));
         });
@@ -442,7 +443,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $this->expectExceptionMessage("Invalid \$conf['data_location'] configuration: expected a string.");
 
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            new InstallWizard(Lang::current(), 'itest_', $this->paths, DbCredentialsTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUser::current());
+            new InstallWizard(LangTestFactory::get(), 'itest_', $this->paths, DbCredentialsTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUser::current());
         });
     }
 

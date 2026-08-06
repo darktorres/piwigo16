@@ -16,6 +16,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Event\Picture\GetElementUrl;
@@ -107,10 +108,10 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         RequestBootstrap::finalize();
 
         self::assertSame(
-            [Lang::current()->t('Your authentication key is no longer valid.') . sprintf(
+            [LangTestFactory::get()->t('Your authentication key is no longer valid.') . sprintf(
                 ' <a href="%s">%s</a>',
                 UrlServiceTestFactory::build()->getRootUrl() . 'identification.php',
-                Lang::current()->t('Login')
+                LangTestFactory::get()->t('Login')
             )],
             PageStateTestFactory::get()->errors
         );
@@ -184,7 +185,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         // PageState-side list back to [] in the same method body -- the
         // template var is the only place left to observe it afterwards.
         self::assertSame(
-            [Lang::current()->t('Bad status for user "guest", default status will be used. Please notify the webmaster.')],
+            [LangTestFactory::get()->t('Bad status for user "guest", default status will be used. Please notify the webmaster.')],
             CurrentTemplate::current()->get()->get_template_vars('header_msgs')
         );
     }
@@ -205,7 +206,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
             self::assertSame(503, $response->getStatusCode());
             self::assertSame('900', $response->getHeaderLine('Retry-After'));
             $expectedBody = '<a href="' . UrlServiceTestFactory::build()->getAbsoluteRootUrl(false) . 'identification.php">'
-                . Lang::current()->t('The gallery is locked for maintenance. Please, come back later.') . '</a>'
+                . LangTestFactory::get()->t('The gallery is locked for maintenance. Please, come back later.') . '</a>'
                 . str_repeat(' ', 512);
             self::assertSame($expectedBody, (string) $response->getBody());
         }

@@ -22,6 +22,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Logger;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
@@ -122,7 +123,7 @@ function upload_service_test_make(): UploadService
         throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
     }
 
-    return new UploadService(Lang::current(), upload_service_test_current_logger(), $storageRegistry, EventDispatcher::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get());
+    return new UploadService(LangTestFactory::get(), upload_service_test_current_logger(), $storageRegistry, EventDispatcher::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get());
 }
 
 beforeEach(function (): void {
@@ -311,7 +312,7 @@ test('getUploadFormConfig returns the exact default/min/max/pattern/can_be_null 
         'max' => 20000,
         'pattern' => '/^\d+$/',
         'can_be_null' => false,
-        'error_message' => Lang::current()->t('The original maximum width must be a number between %d and %d'),
+        'error_message' => LangTestFactory::get()->t('The original maximum width must be a number between %d and %d'),
     ]);
     expect($config['original_resize_maxheight'])->toBe([
         'default' => 2000,
@@ -319,7 +320,7 @@ test('getUploadFormConfig returns the exact default/min/max/pattern/can_be_null 
         'max' => 20000,
         'pattern' => '/^\d+$/',
         'can_be_null' => false,
-        'error_message' => Lang::current()->t('The original maximum height must be a number between %d and %d'),
+        'error_message' => LangTestFactory::get()->t('The original maximum height must be a number between %d and %d'),
     ]);
     expect($config['original_resize_quality'])->toBe([
         'default' => 95,
@@ -327,7 +328,7 @@ test('getUploadFormConfig returns the exact default/min/max/pattern/can_be_null 
         'max' => 98,
         'pattern' => '/^\d+$/',
         'can_be_null' => false,
-        'error_message' => Lang::current()->t('The original image quality must be a number between %d and %d'),
+        'error_message' => LangTestFactory::get()->t('The original image quality must be a number between %d and %d'),
     ]);
 });
 

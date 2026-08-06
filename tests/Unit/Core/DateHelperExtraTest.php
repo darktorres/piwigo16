@@ -6,6 +6,7 @@ use Piwigo\Core\DateHelper;
 use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 
 /**
@@ -23,8 +24,9 @@ use Piwigo\Core\Paths;
  * Intl branch) actually reads. Every value below was independently
  * confirmed by invoking the real class before writing the assertion.
  *
- * DateHelper's own Lang::current()->t()/day()/month()/currentUserLanguage()
- * calls (singleton/service-locator elimination campaign, Phase 8) are a
+ * DateHelper's own private lang() resolver's t()/day()/month()/
+ * currentUserLanguage() calls (singleton/service-locator elimination
+ * campaign, Phase 8) are a
  * live container resolve with no pre-boot fallback -- see Lang's own
  * docblock -- so this file now also boots/resets a real Kernel around each
  * test, matching TemplateTest.php's own established pattern for the same
@@ -36,7 +38,7 @@ use Piwigo\Core\Paths;
  */
 beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    Lang::current()->loadArray([
+    LangTestFactory::get()->loadArray([
         'month' => [1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April', 5 => 'May', 6 => 'June',
             7 => 'July', 8 => 'August', 9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'],
         'day' => [0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'],
@@ -44,7 +46,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    Lang::current()->reset();
+    LangTestFactory::get()->reset();
     Kernel::reset();
 });
 
@@ -313,7 +315,7 @@ test('formatDate uses the current user\'s own language as the ICU locale, not al
     // be AppInfo::DEFAULT_LANGUAGE ('en_UK') would keep producing
     // English month/day names even with a real, present current-user
     // language.
-    Lang::current()->setDefaultLanguageProvider(new class implements DefaultLanguageProviderInterface {
+    LangTestFactory::get()->setDefaultLanguageProvider(new class implements DefaultLanguageProviderInterface {
         public function getDefaultLanguage(): string
         {
             return 'en_UK';

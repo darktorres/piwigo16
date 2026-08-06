@@ -8,6 +8,7 @@ use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 
 /**
@@ -45,10 +46,10 @@ function makeActivityRow(array $overrides = []): SystemActivityLogEntry
  * (singleton/service-locator elimination campaign, Phase 8) -- but a
  * bare throwaway instance isn't enough here, unlike most other NOCTOR
  * page-renderer Unit tests: format()'s own 'date' key runs through
- * DateHelper::formatDate(), which internally reaches Lang::current()
- * (the deprecated container-resolve shim -- no memoized pre-boot
- * fallback, see Lang's own docblock) regardless of what gets passed in
- * here. A real, booted Kernel (see beforeEach()/afterEach() below) is
+ * DateHelper::formatDate(), which internally reaches its own private
+ * static lang() resolver (a direct container resolve -- no memoized
+ * pre-boot fallback, see Lang's own docblock) regardless of what gets
+ * passed in here. A real, booted Kernel (see beforeEach()/afterEach() below) is
  * therefore required for every test in this file, so the instance
  * passed to format() might as well be the same container-shared one
  * DateHelper resolves -- with no data loaded, t()/day()/month() all
@@ -57,7 +58,7 @@ function makeActivityRow(array $overrides = []): SystemActivityLogEntry
  */
 function activityLogEntryFormatterLang(): Lang
 {
-    return Lang::current();
+    return LangTestFactory::get();
 }
 
 beforeEach(function (): void {
@@ -65,7 +66,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    Lang::current()->reset();
+    LangTestFactory::get()->reset();
     Kernel::reset();
 });
 

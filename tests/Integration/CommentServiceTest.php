@@ -11,6 +11,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\PageState;
     use Piwigo\Tests\Support\PageStateTestFactory;
     use Piwigo\Core\Lang;
+    use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Comment\CommentEntity;
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -223,7 +224,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
-            $this->service = new CommentService(Lang::current(), EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class), new EphemeralKeyService(CurrentConfig::current()), $mailer, HtmlServiceTestFactory::build(), UrlServiceTestFactory::build(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUser::current(), CurrentConfig::current(), $this->accessLevelChecker());
+            $this->service = new CommentService(LangTestFactory::get(), EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class), new EphemeralKeyService(CurrentConfig::current()), $mailer, HtmlServiceTestFactory::build(), UrlServiceTestFactory::build(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUser::current(), CurrentConfig::current(), $this->accessLevelChecker());
         }
 
         private function accessControl(): AccessControl
@@ -890,7 +891,7 @@ namespace Piwigo\Tests\Integration {
         private function serviceWithMailer(MailerInterface $mailer): CommentService
         {
             return new CommentService(
-                Lang::current(),
+                LangTestFactory::get(),
                 EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class),
                 new EphemeralKeyService(CurrentConfig::current()),
                 $mailer,
@@ -916,7 +917,7 @@ namespace Piwigo\Tests\Integration {
             self::assertInstanceOf(MailService::class, $mailer);
 
             return new CommentService(
-                Lang::current(),
+                LangTestFactory::get(),
                 EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class),
                 new EphemeralKeyService(CurrentConfig::current()),
                 $mailer,

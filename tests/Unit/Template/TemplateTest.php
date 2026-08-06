@@ -7,6 +7,7 @@ use Smarty\Smarty;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
@@ -31,7 +32,7 @@ use Piwigo\Template\Template;
 // instance in the singleton/service-locator elimination campaign's
 // Phase 8), which delegates to TranslatorTestFactory::get()'s singleton -- reset
 // both, matching LangTest.php's own established pattern, so no test's
-// loaded PO state/lang table leaks into another. Lang::current() is a
+// loaded PO state/lang table leaks into another. LangTestFactory::get() is a
 // live container resolve with no pre-boot fallback (unlike
 // TranslatorTestFactory::get()), so this file now also boots/resets a real Kernel
 // around each test. A real Paths must be supplied to boot() too -- Lang's
@@ -54,7 +55,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    Lang::current()->reset();
+    LangTestFactory::get()->reset();
     TranslatorTestFactory::get()->reset();
     CurrentConfig::current()->reset();
     Kernel::reset();
@@ -94,51 +95,51 @@ test('get_php_str_val checks the first character for a matching double-quote, no
 
 test('modcompiler_translate returns a cached lang lookup when compiled_template_cache_language is on', function (): void {
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
-    Lang::current()->loadArray(['Comment' => 'Commentaire']);
+    LangTestFactory::get()->loadArray(['Comment' => 'Commentaire']);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'Comment'"]);
 
     expect($result)->toBe(var_export('Commentaire', true));
 });
 
-test('modcompiler_translate falls back to a runtime Lang::current()->t() call when caching is off', function (): void {
+test('modcompiler_translate falls back to a runtime Template::lang()->t() call when caching is off', function (): void {
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
-    Lang::current()->loadArray(['Comment' => 'Commentaire']);
+    LangTestFactory::get()->loadArray(['Comment' => 'Commentaire']);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'Comment'"]);
 
-    expect($result)->toBe("\\Piwigo\\Core\\Lang::current()->t('Comment')");
+    expect($result)->toBe("\\Piwigo\\Template\\Template::lang()->t('Comment')");
 });
 
-test('modcompiler_translate falls back to a runtime Lang::current()->t() call when the key is not in the cached lang table', function (): void {
+test('modcompiler_translate falls back to a runtime Template::lang()->t() call when the key is not in the cached lang table', function (): void {
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
-    Lang::current()->loadArray([]);
+    LangTestFactory::get()->loadArray([]);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'Unknown'"]);
 
-    expect($result)->toBe("\\Piwigo\\Core\\Lang::current()->t('Unknown')");
+    expect($result)->toBe("\\Piwigo\\Template\\Template::lang()->t('Unknown')");
 });
 
-test('modcompiler_translate wraps a runtime Lang::current()->t() call in sprintf when extra params are given', function (): void {
+test('modcompiler_translate wraps a runtime Template::lang()->t() call in sprintf when extra params are given', function (): void {
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
-    Lang::current()->loadArray([]);
+    LangTestFactory::get()->loadArray([]);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'%d comments'", '$count']);
 
-    expect($result)->toBe("\\Piwigo\\Core\\Lang::current()->t('%d comments',\$count)");
+    expect($result)->toBe("\\Piwigo\\Template\\Template::lang()->t('%d comments',\$count)");
 });
 
-test('modcompiler_translate_dec falls back to a runtime Lang::current()->plural() call when caching is off', function (): void {
+test('modcompiler_translate_dec falls back to a runtime Template::lang()->plural() call when caching is off', function (): void {
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
 
     $result = TemplateTestFactory::build()->modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
 
-    expect($result)->toBe("\\Piwigo\\Core\\Lang::current()->plural('%d comment','%d comments',\$count)");
+    expect($result)->toBe("\\Piwigo\\Template\\Template::lang()->plural('%d comment','%d comments',\$count)");
 });
 
 test('modcompiler_translate wraps a cached lang lookup in sprintf when extra params are given and caching is on', function (): void {
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
-    Lang::current()->loadArray(['%d comments' => '%d commentaires']);
+    LangTestFactory::get()->loadArray(['%d comments' => '%d commentaires']);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'%d comments'", '$count']);
 
@@ -147,8 +148,8 @@ test('modcompiler_translate wraps a cached lang lookup in sprintf when extra par
 
 test('modcompiler_translate_dec builds a plain >1 ternary from cached lang lookups when caching is on and zero is not plural', function (): void {
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
-    Lang::current()->setLangInfo(['zero_plural' => false]);
-    Lang::current()->loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
+    LangTestFactory::get()->setLangInfo(['zero_plural' => false]);
+    LangTestFactory::get()->loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
 
     $result = TemplateTestFactory::build()->modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
 
@@ -157,8 +158,8 @@ test('modcompiler_translate_dec builds a plain >1 ternary from cached lang looku
 
 test('modcompiler_translate_dec also treats zero as plural when zero_plural is set', function (): void {
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
-    Lang::current()->setLangInfo(['zero_plural' => true]);
-    Lang::current()->loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
+    LangTestFactory::get()->setLangInfo(['zero_plural' => true]);
+    LangTestFactory::get()->loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
 
     $result = TemplateTestFactory::build()->modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
 

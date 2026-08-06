@@ -17,6 +17,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Core\Paths;
@@ -140,7 +141,7 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
     expect($repo)->toBeInstanceOf(ExtensionIgnoredUpdateRepository::class);
 
     return new ExtensionUpdateChecker(
-        Lang::current(),
+        LangTestFactory::get(),
         new ExtensionScanner(),
         new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), CurrentPaths::get(), new CurrentConfig()),
         UrlServiceTestFactory::build(),

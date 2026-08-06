@@ -17,6 +17,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Group\GroupEntity;
     use Piwigo\Core\Lang;
+    use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Lang\Translator;
     use Piwigo\Tests\Support\TranslatorTestFactory;
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -320,7 +321,7 @@ final class SearchServiceTest extends IntegrationTestCase
             $this->repo,
             new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState(), $accessLevelChecker),
             new CategoryService(
-                Lang::current(),
+                LangTestFactory::get(),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
                 new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState(), $accessLevelChecker),
                 CurrentConfig::current(),
@@ -330,10 +331,10 @@ final class SearchServiceTest extends IntegrationTestCase
             ),
             $this->mailService(),
             HtmlServiceTestFactory::build(),
-            new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()),
+            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()),
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcher::get(),
             CurrentUser::current(),
-            Lang::current(),
+            LangTestFactory::get(),
             CurrentConfig::current(),
             new CurrentLogger(),
             new DeploymentPolicy(),
@@ -389,7 +390,7 @@ final class SearchServiceTest extends IntegrationTestCase
             $repo,
             new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState(), $accessLevelChecker),
             new CategoryService(
-                Lang::current(),
+                LangTestFactory::get(),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
                 new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState(), $accessLevelChecker),
                 CurrentConfig::current(),
@@ -399,10 +400,10 @@ final class SearchServiceTest extends IntegrationTestCase
             ),
             $this->mailService(),
             $htmlRenderer,
-            new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()),
+            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()),
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcher::get(),
             CurrentUser::current(),
-            Lang::current(),
+            LangTestFactory::get(),
             CurrentConfig::current(),
             new CurrentLogger(),
             new DeploymentPolicy(),

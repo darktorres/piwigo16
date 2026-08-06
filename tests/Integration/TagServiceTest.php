@@ -11,6 +11,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\CurrentLogger;
     use Piwigo\Core\FilterState;
     use Piwigo\Core\Lang;
+    use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Tag\TagEntity;
     use Piwigo\Group\GroupEntity;
@@ -82,7 +83,7 @@ namespace Piwigo\Tests\Integration {
             }
 
             $this->conn = DbConnection::build();
-            $this->service = new TagService(Lang::current(), EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), EventDispatcher::get(), CurrentUser::current(), CurrentConfig::current(), $currentLogger, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfig::current()));
+            $this->service = new TagService(LangTestFactory::get(), EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), EventDispatcher::get(), CurrentUser::current(), CurrentConfig::current(), $currentLogger, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfig::current()));
         }
 
         #[Override]

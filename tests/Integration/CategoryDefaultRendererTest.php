@@ -11,6 +11,7 @@ use Piwigo\Url\RootPathOverride;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Error;
@@ -125,7 +126,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
         }
 
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcher::get(), ImageStdParamsTestFactory::get(), CurrentUser::current(), CurrentConfig::current(), Lang::current(), $processCache, PageStateTestFactory::get());
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcher::get(), ImageStdParamsTestFactory::get(), CurrentUser::current(), CurrentConfig::current(), LangTestFactory::get(), $processCache, PageStateTestFactory::get());
     }
 
     #[Override]

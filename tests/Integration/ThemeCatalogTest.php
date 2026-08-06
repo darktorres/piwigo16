@@ -12,6 +12,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\ThemeCatalog;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -58,14 +59,14 @@ final class ThemeCatalogTest extends IntegrationTestCase
         // Untranslated-key fallback for Lang::t('Mobile') below --
         // deterministic regardless of what an earlier Integration test in
         // this shared process may have loaded into Translator's mirror.
-        Lang::current()->reset();
+        LangTestFactory::get()->reset();
         TranslatorTestFactory::get()->reset();
     }
 
     #[Override]
     protected function tearDown(): void
     {
-        Lang::current()->reset();
+        LangTestFactory::get()->reset();
         TranslatorTestFactory::get()->reset();
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -85,7 +86,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         );
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), Lang::current());
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), LangTestFactory::get());
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes() . " WHERE id = 'broken-theme'");
         }
@@ -108,7 +109,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $currentConfig->setMobilTheme('mobile-candidate');
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), Lang::current(), showMobile: false);
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), LangTestFactory::get(), showMobile: false);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::themes() . " WHERE id = 'mobile-candidate'");
         }
@@ -128,7 +129,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $currentConfig->setMobilTheme('default');
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), Lang::current(), showMobile: true);
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), LangTestFactory::get(), showMobile: true);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::themes() . " WHERE id = 'default'");
         }
@@ -151,7 +152,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $this->expectExceptionMessage('must return an instance of');
 
         try {
-            ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), Lang::current());
+            ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), LangTestFactory::get());
         } finally {
             // EventDispatcher is a shared process-wide singleton -- a real
             // reset (not just removing this one handler, no such API

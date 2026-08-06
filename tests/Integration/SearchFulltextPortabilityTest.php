@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Override;
 use Piwigo\Users\UserService;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Users\UserRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Group\GroupEntity;
@@ -89,7 +90,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
 
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
-        $userService = new UserService(Lang::current(), new UserRepository($this->em, EventDispatcher::get(), CurrentConfig::current()), $this->em->getRepository(GroupEntity::class), $mailer, new ActivityService($this->em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcher::get(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPaths::get());
+        $userService = new UserService(LangTestFactory::get(), new UserRepository($this->em, EventDispatcher::get(), CurrentConfig::current()), $this->em->getRepository(GroupEntity::class), $mailer, new ActivityService($this->em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcher::get(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPaths::get());
 
         $filterState = Kernel::container()->get(FilterState::class);
         if (! $filterState instanceof FilterState) {
@@ -102,7 +103,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             $repo,
             new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfig::current()), CurrentUser::current(), $filterState, $accessLevelChecker),
             new CategoryService(
-                Lang::current(),
+                LangTestFactory::get(),
                 new CategoryRepository($this->em, CurrentConfig::current()),
                 new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfig::current()), CurrentUser::current(), $filterState, $accessLevelChecker),
                 CurrentConfig::current(),
@@ -112,11 +113,11 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             ),
             $mailer,
             HtmlServiceTestFactory::build(),
-            new RedirectService(Lang::current(), $userService, EventDispatcher::get(), PageStateTestFactory::get()),
+            new RedirectService(LangTestFactory::get(), $userService, EventDispatcher::get(), PageStateTestFactory::get()),
             new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()),
             EventDispatcher::get(),
             CurrentUser::current(),
-            Lang::current(),
+            LangTestFactory::get(),
             CurrentConfig::current(),
             new CurrentLogger(),
             new DeploymentPolicy(),

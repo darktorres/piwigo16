@@ -9,6 +9,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -86,7 +87,7 @@ final class FilterResolverTest extends IntegrationTestCase
         self::assertInstanceOf(Paths::class, $paths);
         $sessionService = new SessionService($em->getRepository(SessionEntity::class),CurrentConfig::current());
         $imageService = new ImageService(
-            Lang::current(),
+            LangTestFactory::get(),
             $em->getRepository(ImageEntity::class),
             new ActivityService($em->getRepository(ActivityEntity::class)),
             $sessionService,
@@ -101,7 +102,7 @@ final class FilterResolverTest extends IntegrationTestCase
         }
         $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
         $categoryService = new CategoryService(
-            Lang::current(),
+            LangTestFactory::get(),
             new CategoryRepository($em, CurrentConfig::current()),
             new PermissionService(
                 new PermissionRepository($em),
@@ -120,7 +121,7 @@ final class FilterResolverTest extends IntegrationTestCase
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
         $userService = new UserService(
-            Lang::current(),
+            LangTestFactory::get(),
             new UserRepository($em, new EventDispatcher(), CurrentConfig::current()),
             $em->getRepository(GroupEntity::class),
             $mailer,

@@ -28,6 +28,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
@@ -159,7 +160,7 @@ final class MailServiceTest extends IntegrationTestCase
         self::assertInstanceOf(Paths::class, $paths);
 
         return new UserService(
-            Lang::current(),
+            LangTestFactory::get(),
             new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcher::get(), CurrentConfig::current()),
             EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
             $mailer,
@@ -251,10 +252,10 @@ final class MailServiceTest extends IntegrationTestCase
     public function test_mailNotificationAdmins_builds_subject_and_content_from_lang_args_arrays(): void
     {
         CurrentConfig::current()->setSmtpHost('127.0.0.1:1');
-        $subject = Lang::current()->buildArgs('Registration of %s', 'someuser');
+        $subject = LangTestFactory::get()->buildArgs('Registration of %s', 'someuser');
         $content = [
-            Lang::current()->buildArgs('User: %s', 'someuser'),
-            Lang::current()->buildArgs('Email: %s', 'someuser@example.test'),
+            LangTestFactory::get()->buildArgs('User: %s', 'someuser'),
+            LangTestFactory::get()->buildArgs('Email: %s', 'someuser@example.test'),
         ];
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mailNotificationAdmins($subject, $content));
@@ -462,7 +463,7 @@ final class MailServiceTest extends IntegrationTestCase
         // foreach's own body (MailService.php lines ~453-456), not just
         // the empty-map zero-iteration case the sibling test alone would
         // leave covered.
-        Lang::current()->load('missing.lang', 'my-plugin/', ['language' => 'en_UK']);
+        LangTestFactory::get()->load('missing.lang', 'my-plugin/', ['language' => 'en_UK']);
 
         try {
             // Must not throw/warn even though 'my-plugin/missing.lang.php'
@@ -478,15 +479,15 @@ final class MailServiceTest extends IntegrationTestCase
             // passed through -- is what's still on record afterward.
             self::assertSame(
                 ['language' => 'en_UK'],
-                Lang::current()->languageFiles()['my-plugin/']['missing.lang']
+                LangTestFactory::get()->languageFiles()['my-plugin/']['missing.lang']
             );
         } finally {
             $this->mailer->switchLangBack();
-            // Lang::current()'s own $languageFiles is container-shared/
+            // LangTestFactory::get()'s own $languageFiles is container-shared/
             // process-shared and this test is the only one in the suite
             // that ever populates it -- without this, the 'my-plugin/'
             // entry above would leak into every later test in this process.
-            Lang::current()->reset();
+            LangTestFactory::get()->reset();
         }
     }
 

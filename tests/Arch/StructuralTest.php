@@ -413,15 +413,20 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // gained a new private lazy currentConfig() resolver matching its own
     // already-established currentUser() sibling exactly, for the same
     // "too many construction sites" reason that shim stays lazy-resolved
-    // there too). Core/ThemeCatalog.php closed too -- same NOCTOR shape,
-    // see the Lang::current() allow-list's own comment for the full trace.
+    // there too). Core/ThemeCatalog.php closed too -- same NOCTOR shape:
+    // getPwgThemes()/checkThemeInstalled() take CurrentConfig/Lang as
+    // explicit params, rippled through its 3 real callers
+    // (UserListPageRenderer.php/UserService.php/ProfileFormHandler.php,
+    // all of which already held both).
     // Http/HttpClientService.php closed too -- fetch()/fetchToFile()/
     // guardedFetch() now take CurrentConfig as an explicit param (NOCTOR
     // shape), rippled through every real production caller (mostly via
     // Admin/Extensions/PemCatalog.php, which gained CurrentConfig as a
     // real constructor param). Permission/PermissionService.php closed
-    // too -- see the Lang::current() allow-list's own comment for the
-    // full trace. Admin/Extensions/ExtensionType.php closed too --
+    // too -- getPrivacyLevelOptions() takes CurrentConfig/Lang as explicit
+    // params instead (NOCTOR shape), rippled through its 6 real callers,
+    // all of which already held both.
+    // Admin/Extensions/ExtensionType.php closed too --
     // pemCategoryId()/scanDirectory() take CurrentConfig as an explicit
     // param now (a real `enum` can't hold constructor state at all, so
     // this is the NOCTOR shape rather than an exception to it), rippled
@@ -450,7 +455,7 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // "ext-imagick"-named, is the actual blocking one of the 4).
     // Core/FilesystemHelper.php's own entry was RE-VERIFIED (not
     // converted) during 12D too -- its t()/Lang::current() call closed
-    // for real (see the Lang::current() allow-list's own comment), but
+    // for real (that shim itself closed outright in sub-phase 12F-8), but
     // mkgetdir()/getFsDirectories()'s CurrentConfig::current() calls did
     // not: CurrentConfig's own pre-boot fallback is memoized behind a
     // `private static ?self $fallback` only the shim itself can reach,
@@ -944,83 +949,6 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
         ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentUser::current('),
         ...findCallSitesOutsideComments($repoRoot . '/public', 'CurrentUser::current('),
     ];
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
-test('Lang::current() transitional bridge has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 8: current()
-    // itself is a real, tagged `@deprecated transitional bridge` shim (see
-    // its own docblock) with the exact same "delete once grep returns
-    // nothing outside tests/" completion criterion as every other shim in
-    // this campaign -- but it never got its own companion arch test until
-    // now (a real process gap found live during Phase 11 sub-phase 11E,
-    // while closing Mail/MailService.php's own Lang::current() usage:
-    // MailService.php is NOT on this allow-list, already closed). Every
-    // remaining entry below is a real, current caller as of that same
-    // discovery, not yet individually re-verified against the same 3
-    // categories every other shim's allow-list documents (too-many-sites/
-    // genuinely-static/structural). Url/UrlService.php, Template/Template.php,
-    // and Html/HtmlService.php itself have all since closed it -- Template.php's
-    // own real code calls all convert to $this->lang; its few remaining
-    // textual occurrences are inside modcompiler_translate()/
-    // modcompiler_translate_dec()'s own literal compiled-cache PHP source
-    // strings, a documented permanent exception, not real call sites --
-    // findCallSitesOutsideComments() blanks out string-literal tokens too,
-    // so it doesn't see them either. HtmlService.php now resolves Lang via
-    // its own private lang() helper (Kernel::container()->get(Lang::class)
-    // directly, a genuine circular-dependency avoidance, see that
-    // method's own docblock), which doesn't match this test's literal
-    // `Lang::current(` search pattern either, so it never appears as a
-    // hit here regardless of the allow-list. Phase 11 sub-phase 11G:
-    // Menu/MenubarRenderer.php and Picture/PictureMetadataRenderer.php
-    // both removed -- confirmed stale allow-list entries, both already
-    // take Lang as a real explicit render() param. Site/LocalSiteReader.php
-    // closed it too -- its own metadataService() fallback now resolves
-    // Lang via a new private lazy lang() helper instead (this one has no
-    // safe pre-boot default and always throws, matching Lang::current()'s
-    // own identical unconditional-throw shape). Core/RecentIconResolver.php
-    // closed it too -- getIcon() now takes Lang (and ProcessCache) as
-    // explicit method parameters instead, every real caller already having
-    // both available. Sub-phase 12B: Admin/Install/InstallService.php
-    // closed too -- its 4 static methods now take Lang (among others) as
-    // a real explicit param from their sole caller, InstallWizard, which
-    // already held one. Sub-phase 12D: Category/CategoryService.php closed
-    // too -- getDisplayImagesCount()'s own "unreachable any other way"
-    // claim was stale; its real callers already had (or could trivially
-    // gain) a real Lang, so it now takes one as an explicit param instead
-    // (traced through CategoryCatsRenderer.php/MenubarRenderer.php/
-    // getCategoriesMenu()). Core/ThemeCatalog.php closed too --
-    // getPwgThemes()/checkThemeInstalled() take CurrentConfig/Lang as
-    // explicit params now instead (NOCTOR shape, same as
-    // PageFilterHelper.php above), rippled through its 3 real callers
-    // (UserListPageRenderer.php/UserService.php/ProfileFormHandler.php,
-    // all of which already held both). Permission/PermissionService.php
-    // closed too -- getPrivacyLevelOptions() takes CurrentConfig/Lang as
-    // explicit params now instead (NOCTOR shape), rippled through its 6
-    // real callers, all of which already held both. Core/DateHelper.php
-    // closed too -- its own private static lang()/translator() resolver
-    // pair closed both this shim and Translator::get()'s former shim
-    // (closed in sub-phase 12F-6) for this file at once.
-    // Core/FilesystemHelper.php closed too -- t() now resolves Lang via
-    // its own private static lang() helper (Kernel::container()->get()
-    // directly), safe because Lang::current() itself has no pre-boot
-    // fallback and t()'s own isBooted() guard never reaches it unbooted
-    // either way (see this class's own docblock for the full trace; its
-    // separate CurrentConfig::current() calls stayed a genuine permanent
-    // exception, see that shim's own allow-list comment). Shrink this
-    // list further as each remaining one lands, same as every other
-    // allow-list in this file.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'Lang::current(');
 
     $disallowed = array_values(array_filter(
         $hits,

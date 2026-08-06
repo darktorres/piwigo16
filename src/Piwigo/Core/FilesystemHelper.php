@@ -35,9 +35,10 @@ use RuntimeException;
  * shimAllowedFiles allow-list, the same as every other class in this
  * campaign whose own internal resolver needs direct container access.
  * Sub-phase 12D: t() itself closed its own former direct Lang::current()
- * shim call this same way -- safe because Lang::current() has no
- * pre-boot fallback at all (t()'s own isBooted() guard never reaches it
- * unbooted either way), so there's no shared-instance-identity risk.
+ * shim call this same way -- safe because Lang's own former current()
+ * shim had no pre-boot fallback at all (t()'s own isBooted() guard never
+ * reaches it unbooted either way), so there's no shared-instance-identity
+ * risk.
  * mkgetdir()/getFsDirectories()'s own CurrentConfig::current() calls were
  * investigated the same way and found NOT safely convertible the same
  * way (see the CurrentConfig::current() allow-list's own comment in

@@ -12,6 +12,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\FilterState;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Core\Lang;
+    use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Group\GroupEntity;
     use Piwigo\Lang\Translator;
     use Piwigo\Tests\Support\TranslatorTestFactory;
@@ -240,7 +241,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->repo = new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig);
         $this->service = new CategoryService(
-            Lang::current(),
+            LangTestFactory::get(),
             $this->repo,
             new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)),
             CurrentConfig::current(),
@@ -385,7 +386,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_display_images_count_reports_photos_and_subalbums(): void
     {
-        $text = CategoryService::getDisplayImagesCount(Lang::current(), 0, 5, 1, false, ' / ');
+        $text = CategoryService::getDisplayImagesCount(LangTestFactory::get(), 0, 5, 1, false, ' / ');
 
         self::assertStringContainsString('5', $text);
         self::assertStringContainsString('1', $text);
@@ -393,7 +394,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_display_images_count_returns_empty_string_for_zero_images(): void
     {
-        self::assertSame('', CategoryService::getDisplayImagesCount(Lang::current(), 0, 0, 0));
+        self::assertSame('', CategoryService::getDisplayImagesCount(LangTestFactory::get(), 0, 0, 0));
     }
 
     public function test_get_random_image_in_category_returns_null_for_an_empty_category(): void

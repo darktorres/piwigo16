@@ -13,6 +13,7 @@ namespace Piwigo\Tests\Integration {
     use LogicException;
     use Piwigo\Core\FilterState;
     use Piwigo\Core\Lang;
+    use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Group\GroupEntity;
@@ -102,7 +103,7 @@ final class NotificationServiceTest extends IntegrationTestCase
         }
 
         $this->service = new NotificationService(
-            Lang::current(),
+            LangTestFactory::get(),
             new AccessLevelChecker(CurrentUser::current(), $currentConfig),
             new NotificationRepository(EntityManagerFactory::build($this->conn)),
             new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)),

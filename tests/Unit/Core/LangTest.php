@@ -11,6 +11,7 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Lang\Translator;
@@ -248,8 +249,9 @@ function langTestCallPoHeadersToLangInfo(Lang $lang, array $headers): array
  * InstallationFlag()) -- no test needs a fake for any of them except the
  * one HtmlRenderingInterface args()-fatalError test below, which needs to
  * observe/short-circuit fatalError() rather than let the real HtmlService
- * implementation run (which itself calls Lang::current(), a live container
- * resolve this file deliberately avoids needing for every other test).
+ * implementation run (which itself resolves Lang via its own private
+ * lang() helper, a live container resolve this file deliberately avoids
+ * needing for every other test).
  */
 function langTestMake(
     ?Translator $translator = null,
@@ -1094,10 +1096,10 @@ test('current() resolves the real container-shared instance once Kernel::boot() 
 
     $instance = Kernel::container()->get(Lang::class);
 
-    expect(Lang::current())->toBe($instance);
+    expect(LangTestFactory::get())->toBe($instance);
 });
 
 test('current() throws when Kernel has not been booted -- no memoized pre-boot fallback, unlike e.g. CurrentUser::current()', function (): void {
-    expect(fn () => Lang::current())
+    expect(fn () => LangTestFactory::get())
         ->toThrow(LogicException::class, 'Kernel not booted — call Kernel::boot() first.');
 });

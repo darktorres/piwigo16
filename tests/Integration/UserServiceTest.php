@@ -33,6 +33,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\CurrentConfigService;
     use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
     use Piwigo\Core\Lang;
+    use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Core\WsError;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
@@ -118,7 +119,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
-            $this->service = new UserService(Lang::current(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfig::current()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), new EventDispatcher(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), $installationFlag, $this->processCache, CurrentPaths::get());
+            $this->service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfig::current()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), new EventDispatcher(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), $installationFlag, $this->processCache, CurrentPaths::get());
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
@@ -372,7 +373,7 @@ namespace Piwigo\Tests\Integration {
             $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'username' => 'fixture_admin'], PageStateTestFactory::get());
 
             self::assertSame(
-                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => Lang::current()->t('this login is already used')]],
+                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => LangTestFactory::get()->t('this login is already used')]],
                 $result
             );
         }
@@ -382,7 +383,7 @@ namespace Piwigo\Tests\Integration {
             $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'username' => '<b>evil</b>'], PageStateTestFactory::get());
 
             self::assertSame(
-                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => Lang::current()->t('html tags are not allowed in login')]],
+                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => LangTestFactory::get()->t('html tags are not allowed in login')]],
                 $result
             );
         }
@@ -888,7 +889,7 @@ namespace Piwigo\Tests\Integration {
             );
 
             self::assertNull($result['userId']);
-            self::assertSame([Lang::current()->t('login mustn\'t end with a space character')], $result['errors']);
+            self::assertSame([LangTestFactory::get()->t('login mustn\'t end with a space character')], $result['errors']);
         }
 
         public function test_register_user_rejects_a_login_starting_with_a_space(): void
@@ -901,7 +902,7 @@ namespace Piwigo\Tests\Integration {
             );
 
             self::assertNull($result['userId']);
-            self::assertSame([Lang::current()->t('login mustn\'t start with a space character')], $result['errors']);
+            self::assertSame([LangTestFactory::get()->t('login mustn\'t start with a space character')], $result['errors']);
         }
 
         public function test_register_user_rejects_a_login_with_html_tags(): void
@@ -914,7 +915,7 @@ namespace Piwigo\Tests\Integration {
             );
 
             self::assertNull($result['userId']);
-            self::assertSame([Lang::current()->t('html tags are not allowed in login')], $result['errors']);
+            self::assertSame([LangTestFactory::get()->t('html tags are not allowed in login')], $result['errors']);
         }
 
         public function test_register_user_rejects_an_invalid_mail_address(): void
@@ -1106,7 +1107,7 @@ namespace Piwigo\Tests\Integration {
             if (! $installationFlag instanceof InstallationFlag) {
                 throw new LogicException('Container returned an unexpected type for ' . InstallationFlag::class);
             }
-            $service = new UserService(Lang::current(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfig::current()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), new EventDispatcher(), new DeploymentPolicy(externalAuthentification: true), CurrentUser::current(), CurrentConfig::current(), $installationFlag, new ProcessCache(), CurrentPaths::get());
+            $service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfig::current()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), new EventDispatcher(), new DeploymentPolicy(externalAuthentification: true), CurrentUser::current(), CurrentConfig::current(), $installationFlag, new ProcessCache(), CurrentPaths::get());
 
             try {
                 self::assertSame(0, $this->fetchOneInt(

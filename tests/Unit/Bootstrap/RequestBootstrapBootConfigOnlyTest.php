@@ -17,6 +17,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ServerTiming;
 use Piwigo\Lang\Translator;
@@ -49,7 +50,7 @@ beforeEach(function (): void {
     // earlier test would make these tests skip that resolve-and-load path
     // entirely and silently pass/fail on stale state.
     CurrentConfigServiceTestFactory::get()->reset();
-    // No Lang::current()->reset() here (unlike afterEach below): Lang, since
+    // No LangTestFactory::get()->reset() here (unlike afterEach below): Lang, since
     // the singleton/service-locator elimination campaign's Phase 8, has no
     // memoized pre-boot fallback the way CurrentUser::current()/
     // CurrentConfigServiceTestFactory::get() do -- see its own docblock -- and
@@ -67,7 +68,7 @@ afterEach(function (): void {
     CurrentConfig::current()->reset();
     CurrentUser::current()->reset();
     CurrentConfigServiceTestFactory::get()->reset();
-    // Lang::current() has no memoized pre-boot fallback (see beforeEach's
+    // LangTestFactory::get() has no memoized pre-boot fallback (see beforeEach's
     // own comment above), so it must resolve -- and get reset -- while the
     // container is still up, before Kernel::reset() below tears it down;
     // same ordering ExtensionScannerTest.php's own afterEach() already
@@ -77,7 +78,7 @@ afterEach(function (): void {
     // wrong-type test -- already tears its own override container back down
     // in its own finally block before this hook ever runs), hence the guard.
     if (Kernel::isBooted()) {
-        Lang::current()->reset();
+        LangTestFactory::get()->reset();
     }
     Kernel::reset();
     TranslatorTestFactory::get()->reset();
@@ -184,8 +185,8 @@ test('bootConfigOnly attaches Lang globals from whatever the Translator has load
 
     RequestBootstrap::bootConfigOnly($paths);
 
-    expect(Lang::current()->has('bootconfigonly_probe'))->toBeTrue()
-        ->and(Lang::current()->snapshot()['bootconfigonly_probe'])->toBe('probe-value');
+    expect(LangTestFactory::get()->has('bootconfigonly_probe'))->toBeTrue()
+        ->and(LangTestFactory::get()->snapshot()['bootconfigonly_probe'])->toBe('probe-value');
 });
 
 test('bootConfigOnly reuses an already-set CurrentConfigService instead of resolving a new one', function (): void {

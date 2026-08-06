@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Config\CurrentConfig;
@@ -66,7 +67,7 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
         $this->service = new ApiKeyService(
-            Lang::current(),
+            LangTestFactory::get(),
             $mailer,
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),

@@ -49,9 +49,10 @@ use Piwigo\Users\UserService;
 // core_update_service_test_user_service()).
 /**
  * This suite never boots a Kernel (redirectHttp() never reaches
- * $this->lang either, same as $this->userService above), so Lang::current()
- * (a live container resolve) isn't available -- a real, throwaway instance
- * built from its 4 real, cheap, DB-free collaborators is enough.
+ * $this->lang either, same as $this->userService above), so resolving
+ * the real container-shared Lang instance (a live container resolve)
+ * isn't available -- a real, throwaway instance built from its 4 real,
+ * cheap, DB-free collaborators is enough.
  */
 function redirect_service_test_lang(): Lang
 {

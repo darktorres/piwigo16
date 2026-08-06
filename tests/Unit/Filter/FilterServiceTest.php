@@ -30,10 +30,11 @@ use Piwigo\Tests\Support\SessionServiceTestFactory;
 // reset()/Kernel::boot() needed.
 //
 // Phase 8: FilterService also takes a constructor-injected Lang -- this
-// file never boots Kernel, so Lang::current() (no memoized pre-boot
-// fallback) isn't an option; a throwaway instance is built directly
-// instead, matching the same "real, cheap, DB-free collaborators" recipe
-// used throughout this campaign's own test fallout fixes.
+// file never boots Kernel, so resolving the real container-shared
+// instance (no memoized pre-boot fallback) isn't an option; a throwaway
+// instance is built directly instead, matching the same "real, cheap,
+// DB-free collaborators" recipe used throughout this campaign's own test
+// fallout fixes.
 function filterServiceTestLang(): Lang
 {
     return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());

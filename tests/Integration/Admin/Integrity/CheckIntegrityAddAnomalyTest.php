@@ -31,10 +31,11 @@ use Piwigo\Lang\Translator;
 // established the DB-backed Integration precedent for this class.
 
 // This file never boots Kernel (no DB-backed collaborator under test
-// actually needs it), so Lang::current() (no memoized pre-boot fallback,
-// Phase 8) isn't an option -- a throwaway instance is built directly
-// instead, matching the same "real, cheap, DB-free collaborators" recipe
-// used throughout the campaign's own test fallout fixes.
+// actually needs it), so resolving the real container-shared Lang
+// instance (no memoized pre-boot fallback, Phase 8) isn't an option --
+// a throwaway instance is built directly instead, matching the same
+// "real, cheap, DB-free collaborators" recipe used throughout the
+// campaign's own test fallout fixes.
 function checkIntegrityAddAnomalyTestLang(): Lang
 {
     return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());

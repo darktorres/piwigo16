@@ -18,6 +18,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -79,7 +80,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         @rmdir($this->scratchDir);
 
         CurrentTemplate::current()->reset();
-        Lang::current()->restore(null);
+        LangTestFactory::get()->restore(null);
 
         parent::tearDown();
     }
@@ -188,7 +189,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         // separate Translator singleton, which only loadArray() seeds --
         // confirmed live, restore() alone (which only updates Lang::has()'s
         // own table) leaves Lang::t() returning the untranslated key.
-        Lang::current()->loadArray(['exif_field_Artist' => 'Translated Artist']);
+        LangTestFactory::get()->loadArray(['exif_field_Artist' => 'Translated Artist']);
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-fields.jpg';
         file_put_contents(
@@ -196,7 +197,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane Photographer', 'ImageDescription' => 'A test photo']))
         );
 
-        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
+        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -229,7 +230,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         // Lang::has()-true sub-branch (distinct from the direct-field
         // Lang::has()/Lang::t() pair a few lines above it in the source).
         $currentConfig->setShowExifFields(['COMPUTED;Height']);
-        Lang::current()->loadArray(['exif_field_Height' => 'Hauteur']);
+        LangTestFactory::get()->loadArray(['exif_field_Height' => 'Hauteur']);
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-composite-translated.jpg';
         file_put_contents(
@@ -237,7 +238,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp1ExifSegment([]))
         );
 
-        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
+        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -257,7 +258,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-empty.jpg';
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane'])));
 
-        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
+        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
         self::assertNull(CurrentTemplate::current()->get()->get_template_vars('metadata'));
     }
@@ -278,7 +279,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         // singleton, which only loadArray() seeds -- confirmed live,
         // restore() alone (which only updates Lang::has()'s own table)
         // leaves Lang::t() returning the untranslated key.
-        Lang::current()->loadArray(['author' => 'By-line']);
+        LangTestFactory::get()->loadArray(['author' => 'By-line']);
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/iptc-fields.jpg';
         file_put_contents(
@@ -286,7 +287,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp13IptcSegment([[5, 'Sunset Over The Bay'], [80, 'Jane Photographer']]))
         );
 
-        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
+        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -316,7 +317,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         );
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $combined);
 
-        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
+        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);

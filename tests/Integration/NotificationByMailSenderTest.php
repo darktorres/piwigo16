@@ -20,6 +20,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
@@ -116,7 +117,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // which other Integration test file ran earlier in this shared
         // process -- confirmed live. Loading it explicitly here makes
         // every assertion deterministic regardless of run order.
-        Lang::current()->load('admin.lang');
+        LangTestFactory::get()->load('admin.lang');
 
         $conn = DbConnection::build();
         $repo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
@@ -217,7 +218,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // calls against the fresh, empty Translator fall back to their raw
         // untranslated literal instead of the real po wording every
         // assertion in this file expects.
-        Lang::current()->load('admin.lang');
+        LangTestFactory::get()->load('admin.lang');
         // Kernel::reset() also discards the container-shared CurrentUser
         // instance setUp()'s own attachGlobals() seed populated
         // (singleton/service-locator elimination campaign, Phase 5 --

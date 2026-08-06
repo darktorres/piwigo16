@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\SessionServiceTestFactory;
@@ -74,7 +75,7 @@ test('render appends nothing when both show_exif and show_iptc are disabled', fu
     picture_metadata_test_current_config()->setShowIptc(false);
     $renderer = new PictureMetadataRenderer();
 
-    $renderer->render(Lang::current(), [], new CurrentLogger(), new EventDispatcher(), CurrentTemplate::current(), CurrentConfig::current(), CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), CurrentPaths::get());
+    $renderer->render(LangTestFactory::get(), [], new CurrentLogger(), new EventDispatcher(), CurrentTemplate::current(), CurrentConfig::current(), CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), CurrentPaths::get());
 
     expect(CurrentTemplate::current()->get()->get_template_vars('metadata'))->toBeNull();
 });

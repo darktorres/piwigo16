@@ -18,6 +18,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\UserService;
 use Piwigo\Mail\MailService;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
@@ -135,7 +136,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         if (! $mailer instanceof MailService) {
             throw new LogicException('Container returned an unexpected type for ' . MailService::class);
         }
-        $this->renderer = new NoPhotoYetRenderer(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), EntityManagerFactory::build($this->conn)->getRepository(ImageEntity::class), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()), new RedirectService(Lang::current(), $userService, new EventDispatcher(), new PageState()), UrlServiceTestFactory::build(), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), new EventDispatcher(), new DeploymentPolicy(), CurrentUser::current(), CurrentTemplate::current(), $mailer, CurrentConfig::current(), new PageState(), new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(dirname(__DIR__, 2))), new ProcessCache(), CurrentConfigServiceTestFactory::get(), PresentationAccessor::htmlService(), new InstallationFlag());
+        $this->renderer = new NoPhotoYetRenderer(LangTestFactory::get(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), EntityManagerFactory::build($this->conn)->getRepository(ImageEntity::class), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()), new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), new PageState()), UrlServiceTestFactory::build(), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), new EventDispatcher(), new DeploymentPolicy(), CurrentUser::current(), CurrentTemplate::current(), $mailer, CurrentConfig::current(), new PageState(), new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(dirname(__DIR__, 2))), new ProcessCache(), CurrentConfigServiceTestFactory::get(), PresentationAccessor::htmlService(), new InstallationFlag());
 
         // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
         // isAdmin() directly (real class methods), which read

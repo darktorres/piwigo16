@@ -37,6 +37,7 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
@@ -135,7 +136,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
-        Lang::current()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
+        LangTestFactory::get()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
         CurrentConfig::current()->setSendPiwigoInfos(false);
         CurrentConfig::current()->setQuestionMarkInUrls(false);
 
@@ -145,13 +146,13 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->filterState = new FilterState();
         $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
         $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo, CurrentUser::current(), $this->filterState, $accessLevelChecker);
-        $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $this->permissionService, CurrentConfig::current(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker);
+        $this->categoryService = new CategoryService(LangTestFactory::get(), $categoryRepo, $this->permissionService, CurrentConfig::current(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker);
         $this->sessionService = new SessionService($em->getRepository(SessionEntity::class),CurrentConfig::current());
-        $this->tagService = new TagService(Lang::current(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new EventDispatcher(), CurrentUser::current(), CurrentConfig::current(), new CurrentLogger(), $this->sessionService);
+        $this->tagService = new TagService(LangTestFactory::get(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new EventDispatcher(), CurrentUser::current(), CurrentConfig::current(), new CurrentLogger(), $this->sessionService);
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
-        $this->userService = new UserService(Lang::current(), new UserRepository($em, new EventDispatcher(), CurrentConfig::current()), $em->getRepository(GroupEntity::class), $mailer, new ActivityService($em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, $this->sessionService, new EventDispatcher(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPaths::get());
-        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, HtmlServiceTestFactory::build(), new RedirectService(Lang::current(), $this->userService, EventDispatcher::get(), PageStateTestFactory::get()), $this->sessionService, new EventDispatcher(), CurrentUser::current(), Lang::current(), CurrentConfig::current(), new CurrentLogger(), new DeploymentPolicy(), CurrentPaths::get(), $this->tagService);
+        $this->userService = new UserService(LangTestFactory::get(), new UserRepository($em, new EventDispatcher(), CurrentConfig::current()), $em->getRepository(GroupEntity::class), $mailer, new ActivityService($em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, $this->sessionService, new EventDispatcher(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPaths::get());
+        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcher::get(), PageStateTestFactory::get()), $this->sessionService, new EventDispatcher(), CurrentUser::current(), LangTestFactory::get(), CurrentConfig::current(), new CurrentLogger(), new DeploymentPolicy(), CurrentPaths::get(), $this->tagService);
         $this->sectionRepo = new SectionRepository($em);
         $this->currentLogger = new CurrentLogger();
         $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
@@ -197,7 +198,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
     private function makePopulator(): SectionPopulator
     {
         return new SectionPopulator(
-            Lang::current(),
+            LangTestFactory::get(),
             new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()),
             HtmlServiceTestFactory::build(),
             CurrentTemplate::current()->get(),
@@ -207,7 +208,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->tagService,
             $this->searchService,
             $this->userService,
-            new RedirectService(Lang::current(), $this->userService, EventDispatcher::get(), PageStateTestFactory::get()),
+            new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcher::get(), PageStateTestFactory::get()),
             UrlServiceTestFactory::build(),
             $this->filterState,
             $this->currentLogger,

@@ -8,6 +8,7 @@ use Override;
 use LogicException;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
@@ -139,7 +140,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     private function newCheckIntegrity(): CheckIntegrity
     {
-        return new CheckIntegrity(Lang::current(), $this->buildIntegrityRepo(), new Translator(CurrentConfig::current()), EventDispatcher::get(), PageStateTestFactory::get(), CurrentTemplate::current());
+        return new CheckIntegrity(LangTestFactory::get(), $this->buildIntegrityRepo(), new Translator(CurrentConfig::current()), EventDispatcher::get(), PageStateTestFactory::get(), CurrentTemplate::current());
     }
 
     public function test_check_reports_no_header_note_when_zero_anomalies_are_found(): void

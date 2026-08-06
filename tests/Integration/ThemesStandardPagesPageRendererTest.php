@@ -27,6 +27,7 @@ use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
@@ -216,7 +217,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // Lang::t()'s real en_UK wording is deterministic regardless of run
         // order, same reasoning as MaintenanceActionDispatcherTest's own
         // setUp().
-        Lang::current()->load('admin.lang');
+        LangTestFactory::get()->load('admin.lang');
 
         $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
         CurrentConfigServiceTestFactory::get()->set($this->configService);
@@ -300,9 +301,9 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // resolves anything, singleton/service-locator elimination
         // campaign, Phase 2).
         return new ThemesStandardPagesPageRenderer(
-            Lang::current(),
+            LangTestFactory::get(),
             $this->accessControl(),
-            new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()),
+            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()),
             UrlServiceTestFactory::build(),
             $this->configService,
             StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php'),
@@ -402,7 +403,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
 
             $uploadDir = $fixtureRoot . 'logo';
             self::assertSame(
-                sprintf(Lang::current()->t('Add write access to the "%s" directory'), $uploadDir),
+                sprintf(LangTestFactory::get()->t('Add write access to the "%s" directory'), $uploadDir),
                 CurrentTemplate::current()->get()->get_template_vars('save_error')
             );
         } finally {
@@ -450,7 +451,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
 
             $uploadDir = $fixtureRoot . 'logo';
             self::assertSame(
-                "{$uploadDir}/stdpageslogo.png " . Lang::current()->t('no write access'),
+                "{$uploadDir}/stdpageslogo.png " . LangTestFactory::get()->t('no write access'),
                 CurrentTemplate::current()->get()->get_template_vars('save_error')
             );
 

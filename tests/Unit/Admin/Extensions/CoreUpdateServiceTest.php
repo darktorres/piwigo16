@@ -77,8 +77,8 @@ function core_update_service_test_user_service(): UserService
 }
 
 // Plain Unit test -- no Kernel::boot() anywhere in this file, so
-// Lang::current() (no memoized pre-boot fallback, see its own docblock)
-// would throw; containerVersionCompare()/stepIs()/processObsoleteList()
+// resolving the real container-shared Lang instance (no memoized
+// pre-boot fallback) would throw; containerVersionCompare()/stepIs()/processObsoleteList()
 // never touch the injected Lang either, same "type-satisfying instance
 // is enough" reasoning as $activityService/$userService above.
 function core_update_service_test_lang(): Lang

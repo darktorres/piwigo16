@@ -10,6 +10,7 @@ use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Users\CurrentUser;
@@ -83,7 +84,7 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
         $this->pool = new ArrayAdapter();
         $this->cache = new CategoryTreeCache(
             new CategoryService(
-                Lang::current(),
+                LangTestFactory::get(),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
                 new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)),
                 CurrentConfig::current(),

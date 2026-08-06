@@ -15,6 +15,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\Kernel;
@@ -69,7 +70,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         // Lang::langInfo() -- unset by default, real RequestBootstrap-only
         // wiring this test never boots (same reasoning as SectionInitializerTest/
         // RedirectServiceTest/SectionPopulatorTest's own identical setUp).
-        Lang::current()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
+        LangTestFactory::get()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
         CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
 
         $this->renderer = new PageHeaderRenderer();

@@ -101,8 +101,8 @@ final class LocalSiteReader
     /**
      * Same reasoning as lang() above -- gracefully falls back when
      * Kernel::boot() hasn't run, matching EventDispatcher::get()'s own
-     * identical pre-boot fallback (unlike lang()/Lang::current(), which
-     * has no safe default and always throws).
+     * identical pre-boot fallback (unlike lang() above/Lang's own former
+     * current() shim, which had no safe default and always threw).
      */
     private function eventDispatcher(): EventDispatcher
     {

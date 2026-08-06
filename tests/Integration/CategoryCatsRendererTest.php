@@ -9,6 +9,7 @@ use LogicException;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -182,7 +183,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $filterState,
             $accessLevelChecker
         );
-        $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $permissionService, CurrentConfig::current(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker);
+        $this->categoryService = new CategoryService(LangTestFactory::get(), $categoryRepo, $permissionService, CurrentConfig::current(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker);
 
         $htmlService = HtmlServiceTestFactory::build();
         // mainpage_categories.tpl's own {assign var=derivative
@@ -223,7 +224,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             ImageStdParamsTestFactory::get(),
             CurrentUser::current(),
             CurrentConfig::current(),
-            Lang::current(),
+            LangTestFactory::get(),
             $processCache,
             PageStateTestFactory::get(),
         );

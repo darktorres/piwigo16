@@ -9,6 +9,7 @@ use Piwigo\Image\ImageService;
 use Piwigo\Core\WsContext;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Doctrine\ORM\EntityManagerInterface;
@@ -180,7 +181,7 @@ test('__invoke returns the existing image id and deletes the newly uploaded file
         $sourceFilepath = sys_get_temp_dir() . '/piwigo-batch-upload-handler-test-' . bin2hex(random_bytes(8)) . '.jpg';
         file_put_contents($sourceFilepath, 'duplicate-upload-bytes');
 
-        $handler = new BatchUploadHandler(Lang::current(), UrlServiceTestFactory::build(), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), EventDispatcher::get(), batch_upload_handler_test_config_service(), batch_upload_handler_test_entity_manager(), batch_upload_handler_test_activity_service(), batch_upload_handler_test_metadata_service(), batch_upload_handler_test_image_service(), batch_upload_handler_test_current_config(), batch_upload_handler_test_ws_context(), batch_upload_handler_test_current_user(), CurrentPaths::get(), DbCredentialsTestFactory::get());
+        $handler = new BatchUploadHandler(LangTestFactory::get(), UrlServiceTestFactory::build(), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), EventDispatcher::get(), batch_upload_handler_test_config_service(), batch_upload_handler_test_entity_manager(), batch_upload_handler_test_activity_service(), batch_upload_handler_test_metadata_service(), batch_upload_handler_test_image_service(), batch_upload_handler_test_current_config(), batch_upload_handler_test_ws_context(), batch_upload_handler_test_current_user(), CurrentPaths::get(), DbCredentialsTestFactory::get());
 
         $imageId = $handler(new BatchUploadJob(
             sourceFilepath: $sourceFilepath,

@@ -33,6 +33,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
@@ -209,9 +210,9 @@ function callBuildTplTheme(string $theme_id, array $fs_theme, array $db_theme_id
     // hand-set via reflection the same way NotificationByMailSubControllerTest's
     // own nbmSubReflectSender() sets NotificationByMailSender's private
     // properties. Kernel is booted by this file's own beforeEach() before any
-    // test body runs, so Lang::current() is a real, live container resolve.
+    // test body runs, so LangTestFactory::get() is a real, live container resolve.
     $langProp = new ReflectionProperty(ThemesInstalledPageRenderer::class, 'lang');
-    $langProp->setValue($instance, Lang::current());
+    $langProp->setValue($instance, LangTestFactory::get());
 
     /** @var array<string, mixed> */
     return $method->invoke($instance, $theme_id, $fs_theme, $db_theme_ids, $default_theme, $lifecycle);
@@ -275,7 +276,7 @@ function themesInstalledLifecycle(): ExtensionLifecycle
         throw new LogicException('Container returned an unexpected type');
     }
 
-    return new ExtensionLifecycle(Lang::current(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, new CurrentUser(new CurrentConfig()), CurrentPaths::get(), new CurrentConfig()), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), CurrentConfig::current(), $wsContext, $accessControl, CurrentPaths::get(), CurrentUser::current(), new EventDispatcher());
+    return new ExtensionLifecycle(LangTestFactory::get(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, new CurrentUser(new CurrentConfig()), CurrentPaths::get(), new CurrentConfig()), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), CurrentConfig::current(), $wsContext, $accessControl, CurrentPaths::get(), CurrentUser::current(), new EventDispatcher());
 }
 
 /**
@@ -292,7 +293,7 @@ function themesInstalledLifecycleUserService(): UserService
     }
 
     return new UserService(
-        Lang::current(),
+        LangTestFactory::get(),
         new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
         $mailer,

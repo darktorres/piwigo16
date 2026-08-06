@@ -269,8 +269,9 @@ test('mkgetdir delegates the fatal message to the installed HtmlRenderingInterfa
     // KernelContainerOverride::with() gives this one test a real
     // container with the fake renderer bound, then tears it back down.
     // Piwigo\Core\Paths is also bound explicitly: mkgetdir()'s own error
-    // message now builds via Lang::current()->t('no write access')
-    // (singleton/service-locator elimination campaign, Phase 8), and
+    // message now builds via self::t('no write access') (this class's own
+    // private static resolver, singleton/service-locator elimination
+    // campaign, Phase 8/12D), and
     // Lang's Paths constructor collaborator has no autowireable default
     // -- KernelContainerOverride::with()'s own Container::build() call
     // never binds one on its own.

@@ -25,6 +25,7 @@ use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
@@ -107,7 +108,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         $this->coreTabs = $coreTabs;
         EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, $this->coreTabs->addCoreTabs(...));
 
-        Lang::current()->load('admin.lang');
+        LangTestFactory::get()->load('admin.lang');
         // Template::__construct()'s own data_dir_checked first-time-setup
         // flow reaches CurrentConfigServiceTestFactory::get()->get() -- same wiring every
         // other Integration test constructing a real Template directly
@@ -187,7 +188,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
 
-        new UserActivityPageRenderer()->render(Lang::current(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplate::current(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcher::get());
+        new UserActivityPageRenderer()->render(LangTestFactory::get(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplate::current(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcher::get());
 
         $template = CurrentTemplate::current()->get();
         self::assertSame([], $template->get_template_vars('ulist'));

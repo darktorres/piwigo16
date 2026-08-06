@@ -22,6 +22,7 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Http\ResponseReadyException;
@@ -353,7 +354,7 @@ test('constructor loads admin.lang before rendering the data-dir-not-writable er
         restore_error_handler();
         chmod(CurrentPaths::get()->root, 0o755);
         TranslatorTestFactory::get()->reset();
-        Lang::current()->reset();
+        LangTestFactory::get()->reset();
     }
 
     expect($body)->not->toBeNull()
@@ -462,12 +463,12 @@ test('constructor resets Smarty template dir to empty before adding its own (roo
 });
 
 test('constructor derives jquery_code and plupload_code from the lang code when not already set', function (): void {
-    Lang::current()->setLangInfo(['code' => 'en-UK']);
+    LangTestFactory::get()->setLangInfo(['code' => 'en-UK']);
 
     $t = TemplateTestFactory::build();
 
     $expected = ['code' => 'en-UK', 'jquery_code' => 'en-UK', 'plupload_code' => 'en_UK'];
-    expect(Lang::current()->langInfo())->toBe($expected)
+    expect(LangTestFactory::get()->langInfo())->toBe($expected)
         ->and($t->get_template_vars('lang_info'))->toBe($expected);
 });
 
@@ -1119,7 +1120,7 @@ test('parse registers external filters before compiling (so they run) and unregi
 
 test('parse salts compile_id with the current lang code during compilation when cache-by-language is on', function (): void {
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
-    Lang::current()->setLangInfo(['code' => 'fr_FR']);
+    LangTestFactory::get()->setLangInfo(['code' => 'fr_FR']);
     $t = TemplateTestFactory::build();
     $tplDir = CurrentPaths::get()->root . '/tpl/';
     mkdir($tplDir, 0o777, true);
@@ -1146,7 +1147,7 @@ test('parse salts compile_id with the current lang code during compilation when 
 
 test('parse does not salt compile_id with a lang code when cache-by-language is off', function (): void {
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
-    Lang::current()->setLangInfo(['code' => 'fr_FR']);
+    LangTestFactory::get()->setLangInfo(['code' => 'fr_FR']);
     $t = TemplateTestFactory::build();
     $tplDir = CurrentPaths::get()->root . '/tpl/';
     mkdir($tplDir, 0o777, true);

@@ -9,6 +9,7 @@ use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\PageState;
@@ -48,7 +49,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         PageStateTestFactory::get()->reset();
 
         $this->repo = new PermalinkRepository(EntityManagerFactory::build(DbConnection::build()));
-        $this->service = new PermalinkService(Lang::current(), $this->repo, new ProcessCache(), PageStateTestFactory::get());
+        $this->service = new PermalinkService(LangTestFactory::get(), $this->repo, new ProcessCache(), PageStateTestFactory::get());
 
         $this->repo->clearCategoryPermalink(1);
     }

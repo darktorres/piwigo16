@@ -19,6 +19,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Db\Tables;
@@ -172,7 +173,7 @@ final class InstallServiceTest extends IntegrationTestCase
         $infos = [];
         $errors = [];
 
-        $conn = InstallService::installDbConnect($infos, $errors, Lang::current());
+        $conn = InstallService::installDbConnect($infos, $errors, LangTestFactory::get());
 
         self::assertInstanceOf(Connection::class, $conn);
         self::assertSame([], $errors);
@@ -192,7 +193,7 @@ final class InstallServiceTest extends IntegrationTestCase
         $infos = [];
         $errors = [];
 
-        $conn = InstallService::installDbConnect($infos, $errors, Lang::current());
+        $conn = InstallService::installDbConnect($infos, $errors, LangTestFactory::get());
 
         self::assertNull($conn);
         self::assertCount(1, $errors);
@@ -232,7 +233,7 @@ final class InstallServiceTest extends IntegrationTestCase
         $infos = [];
         $errors = [];
 
-        $conn = InstallService::installDbConnect($infos, $errors, Lang::current());
+        $conn = InstallService::installDbConnect($infos, $errors, LangTestFactory::get());
 
         self::assertNull($conn);
         self::assertCount(1, $errors);
@@ -328,7 +329,7 @@ final class InstallServiceTest extends IntegrationTestCase
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
 
-            InstallService::activateCoreThemes(Lang::current(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcher::get());
+            InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcher::get());
 
             self::assertFalse($this->conn->fetchAssociative('SELECT id FROM ' . Tables::themes() . ' WHERE id = ' . $this->conn->quote($themeId)));
             self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
@@ -354,7 +355,7 @@ final class InstallServiceTest extends IntegrationTestCase
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
 
-            InstallService::activateCoreThemes(Lang::current(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcher::get());
+            InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcher::get());
 
             self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
         } finally {
@@ -377,7 +378,7 @@ final class InstallServiceTest extends IntegrationTestCase
         // even a directory with real scannable plugins would still insert
         // nothing; a truly empty scan directory is the simplest honest way
         // to exercise the same real "no-op by design" behavior.
-        InstallService::activateCorePlugins(Lang::current(), CurrentPaths::get(), CurrentUser::current(), EventDispatcher::get(), CurrentConfig::current());
+        InstallService::activateCorePlugins(LangTestFactory::get(), CurrentPaths::get(), CurrentUser::current(), EventDispatcher::get(), CurrentConfig::current());
 
         $after = $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::plugins()));
         self::assertSame($before, $after);

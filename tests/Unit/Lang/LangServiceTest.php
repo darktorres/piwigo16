@@ -14,7 +14,7 @@ use Piwigo\Tests\Support\TranslatorTestFactory;
  * Lang is a real, container-shared instance now (singleton/service-
  * locator elimination campaign, Phase 8) -- this file never boots
  * Kernel, so a throwaway instance is constructed directly instead of
- * resolving Lang::current(). A helper (rather than a `$this->lang`
+ * resolving the real one. A helper (rather than a `$this->lang`
  * built once in beforeEach) is used so the couple of tests below that
  * construct their own LangService against a different throwaway
  * $root/Paths can each get a properly-typed Lang for it too --

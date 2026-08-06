@@ -8,6 +8,7 @@ use Override;
 use LogicException;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Doctrine\DBAL\Connection;
@@ -107,7 +108,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
 
         $this->em = EntityManagerFactory::build($this->conn);
         $this->service = new ApiKeyService(
-            Lang::current(),
+            LangTestFactory::get(),
             new ApiKeyServiceLifecycleTestSpyMailer(),
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
@@ -208,7 +209,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
     {
         $mailer = new ApiKeyServiceLifecycleTestSpyMailer();
         $service = new ApiKeyService(
-            Lang::current(),
+            LangTestFactory::get(),
             $mailer,
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
@@ -232,7 +233,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
     {
         $mailer = new ApiKeyServiceLifecycleTestSpyMailer();
         $service = new ApiKeyService(
-            Lang::current(),
+            LangTestFactory::get(),
             $mailer,
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),

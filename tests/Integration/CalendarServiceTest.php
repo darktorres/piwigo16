@@ -12,6 +12,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Group\GroupEntity;
     use Piwigo\Core\Lang;
+    use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Lang\Translator;
     use Piwigo\Tests\Support\TranslatorTestFactory;
@@ -70,7 +71,7 @@ final class CalendarServiceTest extends IntegrationTestCase
         $this->service = new CalendarService(
             new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, $accessLevelChecker),
             new CategoryService(
-                Lang::current(),
+                LangTestFactory::get(),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
                 new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, $accessLevelChecker),
                 CurrentConfig::current(),

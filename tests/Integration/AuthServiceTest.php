@@ -23,6 +23,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\PageStateTestFactory;
     use Piwigo\Mail\MailService;
     use Piwigo\Core\Lang;
+    use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Tests\Support\UrlServiceTestFactory;
     use Doctrine\DBAL\Connection;
     use Piwigo\Auth\ApiKeyRepository;
@@ -693,7 +694,7 @@ namespace Piwigo\Tests\Integration {
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
             $apiKeyService = new ApiKeyService(
-                Lang::current(),
+                LangTestFactory::get(),
                 $mailer,
                 new ApiKeyRepository(EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
@@ -720,7 +721,7 @@ namespace Piwigo\Tests\Integration {
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
             $apiKeyService = new ApiKeyService(
-                Lang::current(),
+                LangTestFactory::get(),
                 $mailer,
                 new ApiKeyRepository(EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),

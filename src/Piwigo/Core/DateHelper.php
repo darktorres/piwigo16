@@ -26,10 +26,10 @@ final class DateHelper
      * static context (DateHelper is never `new`'d, no `$this` to hang a
      * resolver off of) -- ~30 real call sites across Admin/Ws/Controller/
      * Auth rule out threading Lang/Translator as explicit params through
-     * every one. Lang::current()'s own shim docblock establishes there's
-     * no safe pre-boot fallback for Lang (its constructor needs real
-     * collaborators), so this mirrors that shim's exact body instead of
-     * inventing a new fallback shape.
+     * every one. Lang's own former current() shim docblock established
+     * there's no safe pre-boot fallback for Lang (its constructor needs
+     * real collaborators), so this mirrors that shim's exact body instead
+     * of inventing a new fallback shape.
      */
     private static function lang(): Lang
     {

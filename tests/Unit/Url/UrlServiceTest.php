@@ -1200,7 +1200,8 @@ test('getUserFavorites returns an empty array for a guest', function (): void {
 
 test('parseSectionUrl enters the categories section for a token starting with "categor"', function (): void {
     // The categories branch unconditionally constructs a CategoryService
-    // (needs Piwigo\Core\Lang::current()) right after entering, before the
+    // (needs a real Piwigo\Core\Lang constructor param) right after
+    // entering, before the
     // while loop below it ever runs -- same "real booted Kernel + a real
     // Paths for Lang's own constructor" requirement as the
     // getUserFavorites() test above, even though this test's single,

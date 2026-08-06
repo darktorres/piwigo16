@@ -13,6 +13,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Core\Lang;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Kernel;
 use Psr\Container\ContainerExceptionInterface;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -354,12 +355,12 @@ function imageServiceTestConnAndRepo(): array
  * docblock. Which real Lang instance backs it therefore never affects
  * any behavior exercised below, but this file mixes tests that boot a
  * real Kernel (via an inline Kernel::boot()/Kernel::reset() pair) with
- * plenty that never do -- a bare Lang::current() would throw in every
+ * plenty that never do -- a bare LangTestFactory::get() would throw in every
  * one of the latter, so Kernel::isBooted() picks the right shape for
  * whichever test happens to be calling this. imageServiceTestSeedCurrentLogger()
  * also boots Kernel, but via a bare `Kernel::boot()` with no Paths
  * argument (it only needs CurrentLogger) -- that leaves Piwigo\Core\Paths
- * itself unresolvable in the container, so Lang::current() (which needs
+ * itself unresolvable in the container, so LangTestFactory::get() (which needs
  * one) still throws even though Kernel::isBooted() is true; falling back
  * to the same throwaway construction covers that case too.
  */
@@ -367,7 +368,7 @@ function imageServiceTestLang(): Lang
 {
     if (Kernel::isBooted()) {
         try {
-            return Lang::current();
+            return LangTestFactory::get();
         } catch (ContainerExceptionInterface) {
         }
     }

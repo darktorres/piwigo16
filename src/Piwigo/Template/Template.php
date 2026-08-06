@@ -358,6 +358,32 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
+     * `public` (unlike urlService() above) and referenced by its
+     * fully-qualified name -- singleton/service-locator elimination
+     * campaign, Phase 12 sub-phase 12F-8: replaces the former
+     * `\Piwigo\Core\Lang::current()` shim call inside
+     * modcompiler_translate()/modcompiler_translate_dec()'s own generated
+     * PHP source text. That text is spliced by Smarty into `templates_c/
+     * *.php` compiled-cache files and executed later by a Smarty-internal
+     * render function with no `Template` instance (`$this`) or class scope
+     * available at all -- a `private`/`self::`-style resolver like
+     * urlService() isn't reachable from there, only a real `public static`
+     * method called by its fully-qualified class name is. No pre-boot
+     * fallback needed (matching Lang::current()'s own former shape): a
+     * Smarty template only ever compiles/renders after a real request has
+     * fully booted.
+     */
+    public static function lang(): Lang
+    {
+        $lang = Kernel::container()->get(Lang::class);
+        if (! $lang instanceof Lang) {
+            throw new LogicException('Container returned an unexpected type for ' . Lang::class);
+        }
+
+        return $lang;
+    }
+
+    /**
      * Container resolve, not a constructor property -- used only inside
      * this class's own one `new PwgTemplateAdapter(...)` construction
      * above. A required constructor param here would ripple across this
@@ -966,7 +992,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * Usage :
      *    - {'Comment'|translate}
      *    - {'%d comments'|translate:$count}
-     * @see Lang::current()->t()
+     * @see Template::lang()
      * @param array<int, string> $params
      */
     public function modcompiler_translate(array $params): string
@@ -998,8 +1024,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 // runtime variable, or it's an unknown key): a permanent
                 // exception (singleton/service-locator elimination
                 // campaign, Phase 11 sub-phase 11E's own close-out note),
-                // not an unconverted shim caller.
-                return '\Piwigo\Core\Lang::current()->t(' . $params[0] . ')';
+                // not an unconverted shim caller -- self::lang() (a real
+                // public static resolver, sub-phase 12F-8) replaces the
+                // former Lang::current() shim call here.
+                return '\Piwigo\Template\Template::lang()->t(' . $params[0] . ')';
 
             default:
                 if ($this->currentConfig->compiledTemplateCacheLanguage()) {
@@ -1011,7 +1039,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 }
                 // Same permanent-exception reasoning as the single-param
                 // branch above.
-                return '\Piwigo\Core\Lang::current()->t(' . $params[0] . ',' . implode(',', array_slice($params, 1)) . ')';
+                return '\Piwigo\Template\Template::lang()->t(' . $params[0] . ',' . implode(',', array_slice($params, 1)) . ')';
         }
     }
 
@@ -1019,7 +1047,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * "translate_dec" variable modifier.
      * Usage :
      *    - {$count|translate_dec:'%d comment':'%d comments'}
-     * @see Lang::current()->plural()
+     * @see Template::lang()
      * @param array<int, string> $params
      */
     public function modcompiler_translate_dec(array $params): string
@@ -1041,7 +1069,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
         // Permanent exception -- see modcompiler_translate()'s own comment
         // on its identical single-param-branch return above.
-        return '\Piwigo\Core\Lang::current()->plural(' . $params[1] . ',' . $params[2] . ',' . $params[0] . ')';
+        return '\Piwigo\Template\Template::lang()->plural(' . $params[1] . ',' . $params[2] . ',' . $params[0] . ')';
     }
 
     /**

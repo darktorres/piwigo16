@@ -32,6 +32,7 @@ use Piwigo\Http\ResponseReadyException;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\SessionServiceTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -308,7 +309,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         try {
             $this->renderer()->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
 
-            self::assertSame('desc', SessionService::get()->getSessionVar('comments_order'));
+            self::assertSame('desc', SessionServiceTestFactory::get()->getSessionVar('comments_order'));
             // The nav link toggles to the opposite of whatever order is now
             // active ('desc' -> offers 'ASC').
             $orderUrl = CurrentTemplate::current()->get()->get_template_vars('COMMENTS_ORDER_URL');
@@ -316,7 +317,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertStringContainsString('comments_order=ASC', $orderUrl);
         } finally {
             unset($_GET['comments_order']);
-            SessionService::get()->unsetSessionVar('comments_order');
+            SessionServiceTestFactory::get()->unsetSessionVar('comments_order');
         }
     }
 

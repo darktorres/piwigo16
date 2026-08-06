@@ -20,7 +20,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Users\CurrentUser;
-    use Piwigo\Session\SessionService;
+    use Piwigo\Tests\Support\SessionServiceTestFactory;
     use Piwigo\Core\FilterState;
     use RuntimeException;
     use Error;
@@ -71,7 +71,7 @@ final class MetadataServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $currentLogger = new CurrentLogger();
         $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-        $this->service = new MetadataService(Lang::current(), new MetadataRepository(EntityManagerFactory::build($this->conn)), $currentLogger, EventDispatcher::get(), CurrentConfig::current(), CurrentUser::current(), SessionService::get(), new FilterState(), CurrentPaths::get());
+        $this->service = new MetadataService(Lang::current(), new MetadataRepository(EntityManagerFactory::build($this->conn)), $currentLogger, EventDispatcher::get(), CurrentConfig::current(), CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), CurrentPaths::get());
 
         CurrentConfig::current()->setUseIptc(false);
         CurrentConfig::current()->setUseExif(true);

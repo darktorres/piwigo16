@@ -9,6 +9,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\SessionServiceTestFactory;
 
 // Doctrine ORM EntityManagers/repositories are lazy -- they don't actually
 // connect until the first query runs. Every test below only exercises
@@ -279,19 +280,19 @@ test('sessionWrite short-circuits to true without touching the repository when t
     expect($service->sessionWrite('some-session-id', 'some-data'))->toBeTrue();
 });
 
-test('get() returns a fresh read on every call when Kernel is not booted', function (): void {
-    $first = SessionService::get();
-    $second = SessionService::get();
+test('SessionServiceTestFactory::get returns a fresh read on every call when Kernel is not booted', function (): void {
+    $first = SessionServiceTestFactory::get();
+    $second = SessionServiceTestFactory::get();
 
     expect($first)->not->toBe($second);
 });
 
-test('get() returns the same container-shared instance across calls once Kernel is booted', function (): void {
+test('SessionServiceTestFactory::get returns the same container-shared instance across calls once Kernel is booted', function (): void {
     makeSessionService();
     Kernel::boot();
 
-    $first = SessionService::get();
-    $second = SessionService::get();
+    $first = SessionServiceTestFactory::get();
+    $second = SessionServiceTestFactory::get();
 
     expect($first)->toBe($second);
 });

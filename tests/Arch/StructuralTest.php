@@ -839,47 +839,6 @@ test('DbCredentials::current() transitional bridge has a shrinking, known allow-
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
-test('SessionService::get() transitional bridge has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 4: same shape
-    // as DbCredentials::current() above (no Static suffix -- there is no
-    // competing real instance method to disambiguate from).
-    // Ws/PwgUsers.php and Ws/PwgCategories.php took real constructor
-    // injection during their own Phase 10 sub-batches. Mail/MailService.php
-    // closed this shim in Phase 11 sub-phase 11E -- its own former
-    // authService()/userService() lazy-default helpers now read
-    // $this->sessionService instead. Phase 11 sub-phase 11G: Tag/
-    // TagService.php closed it too -- newImageService() now takes a real
-    // required SessionService constructor param like everything else in
-    // this file, the "too many manual construction sites" reasoning no
-    // longer holds. Site/LocalSiteReader.php closed it too -- its own
-    // metadataService() fallback (used only when the class's own optional
-    // MetadataService constructor param is omitted, which is what both
-    // real production callers actually do) now resolves SessionService
-    // via its own new private lazy sessionService() helper instead,
-    // matching the shim's own identical pre-boot graceful fallback.
-    // Sub-phase 12D: Core/DeviceHelper.php closed too -- its own "outside
-    // this campaign's own scope" classification (Phase 4) was stale, never
-    // revisited: both real callers (Page\PageTailRenderer.php,
-    // Template\Template.php) already have an instance context capable of
-    // threading a real SessionService through, so getDevice()/
-    // mobileTheme() now take it as an explicit param instead (NOCTOR
-    // shape) -- DeviceHelper itself stays static (it's a plain stateless
-    // utility with no natural class home), only the shim call closed.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-    ];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'SessionService::get(');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
 // Singleton/service-locator elimination campaign:
 // InstallationFlag::isActiveStatic() itself is fully deleted (Phase 12
 // sub-phase 12B) -- its former "transitional shim has a shrinking, known
@@ -942,8 +901,9 @@ test('src/Piwigo/ contains no InputValidator::createStatic() calls', function ()
 
 test('Translator::get() transitional bridge has a shrinking, known allow-list', function (): void {
     // Singleton/service-locator elimination campaign, Phase 4: same shape
-    // as SessionService::get() above (no Static suffix -- there is no
-    // competing real instance method to disambiguate from). Lang.php was
+    // as SessionService::get()'s former shim (closed in sub-phase 12F-2) --
+    // no Static suffix, since there was no
+    // competing real instance method to disambiguate from. Lang.php was
     // the textbook transitional-shim case the campaign plan documented,
     // but Phase 8 converted it to constructor-injected Translator, so it's
     // no longer a caller.

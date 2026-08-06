@@ -10,7 +10,6 @@ use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
-use Piwigo\Db\EntityManagerFactory;
 
 final class SessionService
 {
@@ -43,36 +42,6 @@ final class SessionService
         }
 
         return new ApiKeyRequestFlag();
-    }
-
-    /**
-     * @deprecated transitional bridge for callers not yet converted to
-     * constructor injection -- singleton/service-locator elimination
-     * campaign, Phase 4. No independent state of its own (same shape as
-     * DbCredentials::current()/CurrentPaths::get()): resolves the
-     * container-shared instance once Kernel::boot() has run, so every
-     * caller sees the same SessionRepository/Connection other
-     * constructor-injected consumers already hold. Falls back to a fresh,
-     * unmemoized instance (SessionRepository is ORM-backed --
-     * EntityRepository can't be `new`'d, so this resolves it via
-     * EntityManagerFactory::build() directly rather than the DI container,
-     * same reasoning as DbConnection::build() being callable from
-     * anywhere) when Kernel isn't booted -- real production code always
-     * has a booted Kernel by the time this runs, but a pure-Unit test
-     * exercising a caller standalone shouldn't have to bootstrap one.
-     */
-    public static function get(): self
-    {
-        if (Kernel::isBooted()) {
-            $sessionService = Kernel::container()->get(self::class);
-            if (! $sessionService instanceof self) {
-                throw new LogicException('Container returned an unexpected type for ' . self::class);
-            }
-
-            return $sessionService;
-        }
-
-        return new self(EntityManagerFactory::build()->getRepository(SessionEntity::class), new CurrentConfig());
     }
 
     /**

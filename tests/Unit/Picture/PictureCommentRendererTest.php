@@ -18,6 +18,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\SessionServiceTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
@@ -109,7 +110,7 @@ function makePictureCommentUrlService(): UrlService
 
 function makePictureCommentSessionService(): SessionService
 {
-    return SessionService::get();
+    return SessionServiceTestFactory::get();
 }
 
 function pictureCommentRendererTestMailService(): MailService

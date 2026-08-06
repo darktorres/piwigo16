@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 use DateTime;
+use LogicException;
 use RuntimeException;
 
 /**
@@ -383,6 +384,33 @@ final class Logger
     }
 
     /**
+     * Same "container resolve, not a constructor property" reasoning as
+     * Activity\ActivityService's own currentUser()/currentConfig() --
+     * ~80 real `new Logger(...)` construction sites (too many for a
+     * required constructor param), and Logger itself is constructed
+     * before Kernel::boot() in some contexts (CurrentLogger's own
+     * pre-boot fallback), so this can't assume the container exists
+     * either. PageState's constructor is a genuinely trivial no-arg
+     * `public function __construct() {}` (unlike ImageStdParams, which
+     * eagerly queries the DB) -- a fresh, unmemoized fallback instance is
+     * safe here, only ever degrading formatMessage()'s own
+     * executionUuid/[…] correlation fields to their empty defaults.
+     */
+    private function pageState(): PageState
+    {
+        if (Kernel::isBooted()) {
+            $pageState = Kernel::container()->get(PageState::class);
+            if (! $pageState instanceof PageState) {
+                throw new LogicException('Container returned an unexpected type for ' . PageState::class);
+            }
+
+            return $pageState;
+        }
+
+        return new PageState();
+    }
+
+    /**
      * Formats the message for logging.
      *
      * @param  int $level severity level constant (self::EMERGENCY etc.) —
@@ -397,7 +425,8 @@ final class Logger
         if ($context !== []) {
             $message .= "\n" . $this->indent($this->contextToString($context));
         }
-        $executionUuid = PageState::current()->executionUuid;
+        $executionUuid = $this->pageState()
+            ->executionUuid;
         $executionUuid = $executionUuid !== '' ? $executionUuid : 'unkonwn';
         $line = '[' . $this->getTimestamp() . '][exec=' . $executionUuid . "]\t[" . self::levelToCode($level) . "]\t";
         if ($cat !== null) {

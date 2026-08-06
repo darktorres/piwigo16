@@ -35,6 +35,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use RuntimeException;
 
@@ -89,14 +90,14 @@ final class InstallService
     /**
      * Automatically activate all core themes in the "themes" directory.
      */
-    public static function activateCoreThemes(Lang $lang, CurrentUser $currentUser, CurrentConfigService $currentConfigService, CurrentConfig $currentConfig, Paths $paths): void
+    public static function activateCoreThemes(Lang $lang, CurrentUser $currentUser, CurrentConfigService $currentConfigService, CurrentConfig $currentConfig, Paths $paths, EventDispatcher $eventDispatcher): void
     {
         $urlService = PresentationAccessor::urlService();
         $conn = DbConnection::build();
         $lifecycle = new ExtensionLifecycle(
             $lang,
             new ExtensionRepository(EntityManagerFactory::build($conn)),
-            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), $currentUser, $paths),
+            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), $currentUser, $paths, $currentConfig),
             $urlService,
             $currentConfigService->get(),
             EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class),
@@ -107,9 +108,11 @@ final class InstallService
             InfrastructureAccessor::wsContext(),
             CoreDomainAccessor::accessControl(),
             $paths,
+            $currentUser,
+            $eventDispatcher,
         );
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $urlService, $lang, $paths);
+            ->scan(ExtensionType::Theme, $urlService, $lang, $paths, $currentUser, $eventDispatcher, $currentConfig);
         foreach ($fs_themes as $theme_id => $fs_theme) {
             if (in_array($theme_id, [AppInfo::DEFAULT_TEMPLATE], true)) {
                 $lifecycle->performAction(ExtensionType::Theme, 'activate', $theme_id, $fs_theme);
@@ -120,12 +123,12 @@ final class InstallService
     /**
      * Automatically activate some core plugins
      */
-    public static function activateCorePlugins(Lang $lang, Paths $paths): void
+    public static function activateCorePlugins(Lang $lang, Paths $paths, CurrentUser $currentUser, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig): void
     {
         // No core plugins are auto-activated at install time (empty list,
         // matching the original's own empty in_array() haystack).
         new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, PresentationAccessor::urlService(), $lang, $paths);
+            ->scan(ExtensionType::Plugin, PresentationAccessor::urlService(), $lang, $paths, $currentUser, $eventDispatcher, $currentConfig);
     }
 
     /**

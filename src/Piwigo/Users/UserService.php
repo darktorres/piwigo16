@@ -196,7 +196,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $isEmpty = $mailAddress === null || $mailAddress === '';
         if (
             $isEmpty
-            && ! ($this->currentConfig->obligatoryUserMailAddress() && in_array(PageFilterHelper::scriptBasename(), ['register', 'profile'], true))
+            && ! ($this->currentConfig->obligatoryUserMailAddress() && in_array(PageFilterHelper::scriptBasename($this->currentConfig), ['register', 'profile'], true))
         ) {
             return '';
         }
@@ -709,7 +709,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // 1. the user_infos.theme was not found in the themes table, thus themes.name is null
         // 2. the theme is not really installed on the filesystem
         $theme = $user['theme'] ?? null;
-        if (! isset($user['theme_name']) or ! is_string($theme) or ! ThemeCatalog::checkThemeInstalled($theme, $this->paths)) {
+        if (! isset($user['theme_name']) or ! is_string($theme) or ! ThemeCatalog::checkThemeInstalled($theme, $this->paths, $this->currentConfig)) {
             $user['theme'] = $this->getDefaultTheme();
             $user['theme_name'] = $user['theme'];
         }
@@ -975,12 +975,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         if (! is_string($theme)) {
             $theme = AppInfo::DEFAULT_TEMPLATE;
         }
-        if (ThemeCatalog::checkThemeInstalled($theme, $this->paths)) {
+        if (ThemeCatalog::checkThemeInstalled($theme, $this->paths, $this->currentConfig)) {
             return $theme;
         }
 
         // let's find the first available theme
-        $active_themes = array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths));
+        $active_themes = array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang));
         return isset($active_themes[0]) ? (string) $active_themes[0] : 'default';
     }
 
@@ -1449,7 +1449,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (! self::emptyValue($params['theme'] ?? null)) {
             $theme_param = $params['theme'] ?? null;
-            if (! in_array($theme_param, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths)), true)) {
+            if (! in_array($theme_param, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang)), true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,

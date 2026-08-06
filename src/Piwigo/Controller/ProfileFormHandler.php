@@ -147,7 +147,7 @@ final class ProfileFormHandler
                     ->fatalError('Hacking attempt, incorrect language value');
             }
 
-            if (! in_array($post['theme'] ?? null, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths)), true)) {
+            if (! in_array($post['theme'] ?? null, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang)), true)) {
                 $this->htmlRenderer
                     ->fatalError('Hacking attempt, incorrect theme value');
             }
@@ -351,7 +351,7 @@ final class ProfileFormHandler
         );
 
         $template->assign('template_selection', $userdata['theme']);
-        $template->assign('template_options', ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths));
+        $template->assign('template_options', ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang));
 
         $profileFormSubmitRequest = ProfileFormSubmitRequest::fromGlobals();
 

@@ -44,7 +44,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * `admin/include/functions_notification_by_mail.inc.php` (P23 batch 8b-7)
  * is now folded into `Piwigo\Mail\NotificationByMailSender`, constructed
  * once as `$nbmSender` near the top of `handle()` and threaded explicitly
- * into the private static methods below that need it -- replacing the
+ * into the private methods below that need it -- replacing the
  * former `include_once` + implicit `global $env_nbm;` state-threading with
  * a real constructed dependency. `doActionSendMailNotification()`'s own
  * body moved with it (as `NotificationByMailSender::sendMailNotifications()`)
@@ -80,9 +80,13 @@ use Psr\Http\Message\ServerRequestInterface;
  * renderGlobalCustomizeMailContent() were top-level functions in the
  * original file with zero external callers (confirmed via a direct grep --
  * tools/triggers_list.php mentions 2 of them in a documentation string
- * only, not executable code) -- folded into private static methods here,
- * removing the "cannot redeclare function on double-include" risk every
- * prior sub-batch with this shape has already converted away from.
+ * only, not executable code) -- folded into private methods here, removing
+ * the "cannot redeclare function on double-include" risk every prior
+ * sub-batch with this shape has already converted away from
+ * (do_timeout_treatment()/insertNewDataUserMailNotification() dropped
+ * `static` again during Phase 12 sub-phase 12D, once their own last
+ * remaining PageState::current()/Translator::get() shim calls closed for
+ * real via $this->pageState/$this->translator instead).
  * doActionSendMailNotification() moved to NotificationByMailSender instead,
  * see above.
  *
@@ -113,6 +117,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         private readonly NotificationByMailSender $notificationByMailSender,
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
+        private readonly PageState $pageState,
     ) {}
 
     #[Override]
@@ -155,7 +160,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         if (count($post) === 0) {
             // No insert data in post mode
-            self::insertNewDataUserMailNotification($this->lang, $nbmSender, $this->redirectService, $this->urlService, $this->sessionService, $this->currentConfig);
+            $this->insertNewDataUserMailNotification($this->lang, $nbmSender, $this->redirectService, $this->urlService, $this->sessionService, $this->currentConfig);
         }
 
         // +-----------------------------------------------------------------------+
@@ -211,10 +216,10 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
                 if (isset($post['falsify']) and isset($post['cat_true']) and is_array($post['cat_true'])) {
                     $check_key_treated = $nbmSender->unsubscribeNotificationByMail(true, array_values($post['cat_true']));
-                    $must_repost = self::doTimeoutTreatment($nbmSender, 'cat_true', $post, $check_key_treated);
+                    $must_repost = $this->doTimeoutTreatment($nbmSender, 'cat_true', $post, $check_key_treated);
                 } elseif (isset($post['trueify']) and isset($post['cat_false']) and is_array($post['cat_false'])) {
                     $check_key_treated = $nbmSender->subscribeNotificationByMail(true, array_values($post['cat_false']));
-                    $must_repost = self::doTimeoutTreatment($nbmSender, 'cat_false', $post, $check_key_treated);
+                    $must_repost = $this->doTimeoutTreatment($nbmSender, 'cat_false', $post, $check_key_treated);
                 }
                 break;
 
@@ -230,7 +235,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                         array_values($post['send_selection']),
                         stripslashes($post['send_customize_mail_content'])
                     );
-                    $must_repost = self::doTimeoutTreatment($nbmSender, 'send_selection', $post, $check_key_treated);
+                    $must_repost = $this->doTimeoutTreatment($nbmSender, 'send_selection', $post, $check_key_treated);
                 }
 
         }
@@ -405,7 +410,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
      * @param list<string> $check_key_treated: array of check_key treated
      * @return bool whether treatment timed out and must be reposted
      */
-    private static function doTimeoutTreatment(NotificationByMailSender $nbmSender, string $post_keyname, array &$post, array $check_key_treated = []): bool
+    private function doTimeoutTreatment(NotificationByMailSender $nbmSender, string $post_keyname, array &$post, array $check_key_treated = []): bool
     {
         if ($nbmSender->isSendmailTimeout()) {
             if (isset($post[$post_keyname]) and is_array($post[$post_keyname])) {
@@ -418,7 +423,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 }
                 $post[$post_keyname] = array_diff(array_filter($post[$post_keyname], is_string(...)), $check_key_treated);
 
-                PageState::current()->addError(Translator::get()->plural(
+                $this->pageState->addError($this->translator->plural(
                     'Execution time is out, treatment must be continue [Estimated time: %d second].',
                     'Execution time is out, treatment must be continue [Estimated time: %d seconds].',
                     $time_refresh
@@ -446,7 +451,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
     /**
      * Inserting News users
      */
-    private static function insertNewDataUserMailNotification(Lang $lang, NotificationByMailSender $nbmSender, RedirectServiceInterface $redirectService, UrlServiceInterface $urlService, SessionService $sessionService, CurrentConfig $currentConfig): void
+    private function insertNewDataUserMailNotification(Lang $lang, NotificationByMailSender $nbmSender, RedirectServiceInterface $redirectService, UrlServiceInterface $urlService, SessionService $sessionService, CurrentConfig $currentConfig): void
     {
         // Recomputed rather than threaded from handle()'s own CoreTabs
         // value: this is the method's only real call site, and it already
@@ -483,7 +488,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
                 $nbm_username = $nbm_user['username'];
                 $nbm_username = is_scalar($nbm_username) ? (string) $nbm_username : '';
-                PageState::current()->addInfo($lang->t(
+                $this->pageState->addInfo($lang->t(
                     'User %s [%s] added.',
                     stripslashes($nbm_username),
                     $nbm_user['mail_address']

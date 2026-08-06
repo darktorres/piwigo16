@@ -250,7 +250,7 @@ final class MaintenanceActionDispatcher
 
             case 'check_upgrade':
 
-                $result = HttpClientService::fetch(AppInfo::URL . '/download/latest_version');
+                $result = HttpClientService::fetch(AppInfo::URL . '/download/latest_version', $this->currentConfig);
                 if ($result === false) {
                     $this->pageState->addError($this->lang->t('Unable to check for upgrade.'));
                 } else {

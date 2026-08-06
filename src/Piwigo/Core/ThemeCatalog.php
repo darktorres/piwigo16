@@ -30,7 +30,7 @@ final class ThemeCatalog
      *
      * @return array<int|string, string>
      */
-    public static function getPwgThemes(EventDispatcher $eventDispatcher, Paths $paths, bool $showMobile = false): array
+    public static function getPwgThemes(EventDispatcher $eventDispatcher, Paths $paths, CurrentConfig $currentConfig, Lang $lang, bool $showMobile = false): array
     {
 
         $themes = [];
@@ -41,14 +41,14 @@ final class ThemeCatalog
             $id = $row['id'];
             $name = $row['name'];
 
-            $mobile_theme = CurrentConfig::current()->mobilTheme();
+            $mobile_theme = $currentConfig->mobilTheme();
             if ($id === $mobile_theme) {
                 if (! $showMobile) {
                     continue;
                 }
-                $name .= ' (' . Lang::current()->t('Mobile') . ')';
+                $name .= ' (' . $lang->t('Mobile') . ')';
             }
-            if (self::checkThemeInstalled($id, $paths)) {
+            if (self::checkThemeInstalled($id, $paths, $currentConfig)) {
                 $themes[$id] = $name;
             }
         }
@@ -70,7 +70,7 @@ final class ThemeCatalog
     /**
      * check if a theme is installed (directory exists)
      */
-    public static function checkThemeInstalled(string $themeId, Paths $paths): bool
+    public static function checkThemeInstalled(string $themeId, Paths $paths, CurrentConfig $currentConfig): bool
     {
 
         // CurrentConfig::themesDir() is root-relative (Part II) -- compose with
@@ -80,7 +80,7 @@ final class ThemeCatalog
         // correctly pre-fix only because public/themes is itself a symlink
         // back to the real themes/, not because the CWD-relative read was
         // actually safe).
-        $themes_dir = $paths->root . CurrentConfig::current()->themesDir();
+        $themes_dir = $paths->root . $currentConfig->themesDir();
 
         return file_exists($themes_dir . '/' . $themeId . '/themeconf.inc.php');
     }

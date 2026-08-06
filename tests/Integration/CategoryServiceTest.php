@@ -381,7 +381,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_display_images_count_reports_photos_and_subalbums(): void
     {
-        $text = CategoryService::getDisplayImagesCount(0, 5, 1, false, ' / ');
+        $text = CategoryService::getDisplayImagesCount(Lang::current(), 0, 5, 1, false, ' / ');
 
         self::assertStringContainsString('5', $text);
         self::assertStringContainsString('1', $text);
@@ -389,7 +389,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_display_images_count_returns_empty_string_for_zero_images(): void
     {
-        self::assertSame('', CategoryService::getDisplayImagesCount(0, 0, 0));
+        self::assertSame('', CategoryService::getDisplayImagesCount(Lang::current(), 0, 0, 0));
     }
 
     public function test_get_random_image_in_category_returns_null_for_an_empty_category(): void

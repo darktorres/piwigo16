@@ -256,7 +256,7 @@ final readonly class AuthService
                         // defines the authentication context (UI, API,
                         // etc). Auto-login via remember-me may miss this,
                         // so we set it to 'pwg_ui' for UI logins (not API).
-                        if (PageFilterHelper::scriptBasename() !== 'ws') {
+                        if (PageFilterHelper::scriptBasename($this->currentConfig) !== 'ws') {
                             $_SESSION['connected_with'] = 'pwg_ui';
                         }
                         $this->logUser($cookie[0], true);

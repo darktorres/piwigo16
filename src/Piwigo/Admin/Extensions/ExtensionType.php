@@ -41,16 +41,12 @@ enum ExtensionType: string
      * typed getters, replacing a former dynamic-key lookup through the
      * generic bag (Config generic-accessor removal, design #6).
      */
-    public function pemCategoryId(): int
+    public function pemCategoryId(CurrentConfig $currentConfig): int
     {
-        // Enum cases can't take constructor-injected dependencies -- this
-        // is the CurrentConfig::current() shim's own established use case
-        // (a caller with no possible $this-based instance property),
-        // matching the Ws/Pwg*.php static-dispatch precedent.
         return match ($this) {
-            self::Plugin => CurrentConfig::current()->pemPluginsCategory(),
-            self::Theme => CurrentConfig::current()->pemThemesCategory(),
-            self::Language => CurrentConfig::current()->pemLanguagesCategory(),
+            self::Plugin => $currentConfig->pemPluginsCategory(),
+            self::Theme => $currentConfig->pemThemesCategory(),
+            self::Language => $currentConfig->pemLanguagesCategory(),
         };
     }
 
@@ -71,11 +67,11 @@ enum ExtensionType: string
         };
     }
 
-    public function scanDirectory(Paths $paths): string
+    public function scanDirectory(Paths $paths, CurrentConfig $currentConfig): string
     {
         return match ($this) {
             self::Plugin => PluginLoader::pluginsPath($paths),
-            self::Theme => CurrentConfig::current()->themesPath(),
+            self::Theme => $currentConfig->themesPath(),
             self::Language => $paths->root . 'language/',
         };
     }

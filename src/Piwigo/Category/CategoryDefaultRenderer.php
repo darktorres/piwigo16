@@ -9,6 +9,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RecentIconResolver;
 use Piwigo\Core\StringHelper;
@@ -49,6 +50,7 @@ final readonly class CategoryDefaultRenderer
         private CurrentConfig $currentConfig,
         private Lang $lang,
         private ProcessCache $processCache,
+        private PageState $pageState,
     ) {}
 
     /**
@@ -229,7 +231,7 @@ final readonly class CategoryDefaultRenderer
         $template->assign_var_from_handle('THUMBNAILS', 'index_thumbnails');
         unset($pictures, $selection, $tplThumbnailsVar);
         $template->clear_assign('thumbnails');
-        TimingHelper::debug('end CategoryDefaultRenderer::render()');
+        TimingHelper::debug('end CategoryDefaultRenderer::render()', $this->pageState);
 
         return $slideshowUrl;
     }

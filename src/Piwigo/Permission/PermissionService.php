@@ -62,21 +62,21 @@ final readonly class PermissionService
      *
      * @return string[]
      */
-    public static function getPrivacyLevelOptions(): array
+    public static function getPrivacyLevelOptions(CurrentConfig $currentConfig, Lang $lang): array
     {
 
-        $available_permission_levels = CurrentConfig::current()->availablePermissionLevels();
+        $available_permission_levels = $currentConfig->availablePermissionLevels();
 
         $options = [];
         $label = '';
         foreach (array_reverse($available_permission_levels) as $level) {
             if ($level === 0) {
-                $label = Lang::current()->t('Everybody');
+                $label = $lang->t('Everybody');
             } else {
                 if (strlen($label) > 0) {
                     $label .= ', ';
                 }
-                $label .= Lang::current()->t(sprintf('Level %d', $level));
+                $label .= $lang->t(sprintf('Level %d', $level));
             }
             $options[$level] = $label;
         }

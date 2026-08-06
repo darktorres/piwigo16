@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
@@ -11,6 +12,8 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\VersionHelper;
 use Piwigo\Http\HttpClientService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Cross-type "which of my installed extensions have a newer PEM revision
@@ -37,6 +40,9 @@ final readonly class ExtensionUpdateChecker
         private UrlServiceInterface $urlService,
         private ExtensionIgnoredUpdateRepository $ignoredUpdateRepo,
         private Paths $paths,
+        private CurrentUser $currentUser,
+        private EventDispatcher $eventDispatcher,
+        private CurrentConfig $currentConfig,
     ) {}
 
     public function isIgnored(ExtensionType $type, string $extensionId): bool
@@ -82,7 +88,7 @@ final readonly class ExtensionUpdateChecker
      */
     public function getPendingUpdates(ExtensionType $type, string $version = AppInfo::VERSION): ?array
     {
-        $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang, $this->paths);
+        $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
 
         $fsExtensionIds = [];
         foreach ($fsExtensions as $fsExtension) {
@@ -189,7 +195,7 @@ final readonly class ExtensionUpdateChecker
                 continue;
             }
 
-            $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang, $this->paths);
+            $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
             foreach ($fsExtensions as $extId => $fsExt) {
                 $neededVersion = $typeUpdatesRaw[$extId] ?? null;
                 $fsVersionRaw = $fsExt['version'] ?? null;
@@ -217,7 +223,7 @@ final readonly class ExtensionUpdateChecker
         $mergedExtensionUrl = 'https://upstream.example.invalid/merged_extensions.txt';
         $merged = [];
 
-        if (is_string($result = HttpClientService::fetch($mergedExtensionUrl))) {
+        if (is_string($result = HttpClientService::fetch($mergedExtensionUrl, $this->currentConfig))) {
             $rows = explode("\n", $result);
             foreach ($rows as $row) {
                 if ((bool) preg_match('/^(\d+\.\d+): *(.*)$/', $row, $match)) {
@@ -251,7 +257,7 @@ final readonly class ExtensionUpdateChecker
         $missing = [];
 
         foreach (ExtensionType::cases() as $type) {
-            $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang, $this->paths);
+            $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
 
             $fsExtensionIds = [];
             foreach ($fsExtensions as $fsExtension) {

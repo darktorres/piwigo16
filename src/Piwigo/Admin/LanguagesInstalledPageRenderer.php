@@ -27,6 +27,7 @@ use Piwigo\Core\WsContext;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
@@ -70,6 +71,7 @@ final class LanguagesInstalledPageRenderer
         private readonly WsContext $wsContext,
         private readonly CurrentUser $currentUser,
         private readonly Paths $paths,
+        private readonly EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -97,12 +99,12 @@ final class LanguagesInstalledPageRenderer
 
         $conn = DbConnection::build();
         $extension_repository = new ExtensionRepository(EntityManagerFactory::build($conn));
-        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths);
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths, $this->currentConfig);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl, $this->paths);
+        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl, $this->paths, $this->currentUser, $this->eventDispatcher);
 
-        $fs_languages = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang, $this->paths);
+        $fs_languages = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
         $db_languages = $extension_repository->findAll(ExtensionType::Language);
 
         // --------------------------------------------------perform requested actions

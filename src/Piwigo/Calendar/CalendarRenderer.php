@@ -20,6 +20,7 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
+use Piwigo\Core\PageState;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
@@ -69,6 +70,7 @@ final readonly class CalendarRenderer
         private Translator $translator,
         private FilterState $filterState,
         private ImageStdParams $imageStdParams,
+        private PageState $pageState,
     ) {}
 
     /**
@@ -124,7 +126,7 @@ final readonly class CalendarRenderer
         }
 
         // -------------------------------------- initialize the calendar parameters ---
-        TimingHelper::debug('start initialize_calendar');
+        TimingHelper::debug('start initialize_calendar', $this->pageState);
 
         $fields = [
             // Created
@@ -219,7 +221,7 @@ final readonly class CalendarRenderer
 
         $comment = '';
         $must_show_list = true; // true until calendar generates its own display
-        if (PageFilterHelper::scriptBasename() !== 'picture') { // basename without file extention
+        if (PageFilterHelper::scriptBasename($this->currentConfig) !== 'picture') { // basename without file extention
             if ($calendar->generate_category_content($template)) {
                 $items = [];
                 $must_show_list = false;
@@ -328,7 +330,7 @@ final readonly class CalendarRenderer
                 }
             }
         }
-        TimingHelper::debug('end initialize_calendar');
+        TimingHelper::debug('end initialize_calendar', $this->pageState);
 
         return new CalendarRenderResult($items, $comment, $page_chronology_date, $chronology_style, $chronology_view);
     }

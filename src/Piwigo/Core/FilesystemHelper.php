@@ -27,14 +27,30 @@ use RuntimeException;
  * with no natural "construct once, call several times" shape -- there is
  * no instance to speak of, so unlike most classes in this campaign this
  * one has no `createStatic()`-style factory or container-shared instance.
- * The only real per-request state was `$htmlRenderer`, and
- * `HtmlRenderingInterface` is already bound in container.php, so
- * fatalError() (this class's one private, internal collaborator read)
- * resolves it directly from the container instead -- there is no other
- * caller-facing shim to track here (fatalError() has no external callers
- * to convert), so this file is simply added to Kernel::container()'s own
+ * `HtmlRenderingInterface`/`Lang` are each bound in container.php, so
+ * this class's 2 private, internal collaborator reads (fatalError()/t())
+ * each resolve directly from the container instead -- there is no
+ * caller-facing shim to track here (neither has external callers to
+ * convert), so this file is simply added to Kernel::container()'s own
  * shimAllowedFiles allow-list, the same as every other class in this
- * campaign whose own internal shim method needs direct container access.
+ * campaign whose own internal resolver needs direct container access.
+ * Sub-phase 12D: t() itself closed its own former direct Lang::current()
+ * shim call this same way -- safe because Lang::current() has no
+ * pre-boot fallback at all (t()'s own isBooted() guard never reaches it
+ * unbooted either way), so there's no shared-instance-identity risk.
+ * mkgetdir()/getFsDirectories()'s own CurrentConfig::current() calls were
+ * investigated the same way and found NOT safely convertible the same
+ * way (see the CurrentConfig::current() allow-list's own comment in
+ * tests/Arch/StructuralTest.php for the full trace) -- CurrentConfig's
+ * own pre-boot fallback is memoized behind a `private static` property
+ * only the shim itself can reach, and a real test
+ * (FilesystemHelperTest.php's own "mkgetdir returns false when a
+ * freshly-created directory ends up non-writable" case) configures state
+ * on that exact shared fallback instance via CurrentConfig::current()
+ * and expects mkgetdir() to read it back -- confirmed live: an
+ * independent, un-shared fallback instance here breaks that test for
+ * real, not just hypothetically. This file's `CurrentConfig::current()`
+ * entries stay a genuine, structurally-confirmed permanent exception.
  */
 final class FilesystemHelper
 {
@@ -84,16 +100,31 @@ final class FilesystemHelper
      * this class is a purely static utility (no wrapper instance, see this
      * class's own docblock) called from code paths that may run before
      * Kernel is booted at all (e.g. a cold-cache thumbnail generation via
-     * i.php's lighter bootstrap). Lang::current() (singleton/service-
-     * locator elimination campaign, Phase 8) has no pre-boot fallback and
-     * would throw before fatalError()'s own graceful degradation is ever
-     * reached; falling back to the raw, untranslated key here matches
-     * Translator::translate()'s own "no data loaded" fallback behavior,
-     * the same safe default this call site already had before Phase 8.
+     * i.php's lighter bootstrap). Lang::current()'s own shim docblock
+     * establishes there's no pre-boot fallback for Lang (its constructor
+     * needs real collaborators) and would throw before fatalError()'s own
+     * graceful degradation is ever reached; falling back to the raw,
+     * untranslated key here matches Translator::translate()'s own "no data
+     * loaded" fallback behavior, the same safe default this call site
+     * already had before Phase 8. self::lang() is only ever reached once
+     * this method's own isBooted() guard already holds, so its own
+     * unconditional container resolve (mirroring Lang::current()'s exact
+     * shim body, no separate fallback branch needed) never actually throws
+     * here.
      */
     private static function t(string $key): string
     {
-        return Kernel::isBooted() ? Lang::current()->t($key) : $key;
+        return Kernel::isBooted() ? self::lang()->t($key) : $key;
+    }
+
+    private static function lang(): Lang
+    {
+        $lang = Kernel::container()->get(Lang::class);
+        if (! $lang instanceof Lang) {
+            throw new RuntimeException('Container returned an unexpected type for ' . Lang::class);
+        }
+
+        return $lang;
     }
 
     /**

@@ -94,7 +94,7 @@ final readonly class SectionInitializer
         // |                             picture page                              |
         // +-----------------------------------------------------------------------+
         // the first token must be the identifier for the picture
-        if (PageFilterHelper::scriptBasename() === 'picture') {
+        if (PageFilterHelper::scriptBasename($this->currentConfig) === 'picture') {
             $token = $tokens[$next_token];
             $next_token++;
             if (is_numeric($token)) {

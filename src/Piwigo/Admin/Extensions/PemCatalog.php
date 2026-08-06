@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Bootstrap\RequestBootstrap;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilesystemHelper;
@@ -44,6 +45,7 @@ final readonly class PemCatalog
         private CurrentLogger $currentLogger,
         private CurrentUser $currentUser,
         private Paths $paths,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**
@@ -60,11 +62,11 @@ final readonly class PemCatalog
         $versionsToCheck = [];
         $url = $pemBaseUrl . '/api/get_version_list.php';
         $getData = [
-            'category_id' => $type->pemCategoryId(),
+            'category_id' => $type->pemCategoryId($this->currentConfig),
             'format' => 'php',
         ];
 
-        if (is_string($result = HttpClientService::fetch($url, $getData)) and (bool) ($pemVersions = @unserialize($result))) {
+        if (is_string($result = HttpClientService::fetch($url, $this->currentConfig, $getData)) and (bool) ($pemVersions = @unserialize($result))) {
             if (! is_array($pemVersions)) {
                 return $versionsToCheck;
             }
@@ -136,7 +138,7 @@ final readonly class PemCatalog
         $userLanguage = $this->currentUser->get()
             ->language;
         $getData = [
-            'category_id' => $type->pemCategoryId(),
+            'category_id' => $type->pemCategoryId($this->currentConfig),
             'format' => 'php',
             'last_revision_only' => 'true',
             'version' => implode(',', $versionsToCheck),
@@ -152,7 +154,7 @@ final readonly class PemCatalog
             }
         }
 
-        if (! is_string($result = HttpClientService::fetch($url, $getData))) {
+        if (! is_string($result = HttpClientService::fetch($url, $this->currentConfig, $getData))) {
             return null;
         }
 
@@ -228,13 +230,13 @@ final readonly class PemCatalog
         $pemBaseUrl = RequestBootstrap::pemUrl();
         $url = $pemBaseUrl . '/api/get_revision_list.php';
         $getData = [
-            'category_id' => $type->pemCategoryId(),
+            'category_id' => $type->pemCategoryId($this->currentConfig),
             'format' => 'php',
             'version' => implode(',', $versionsToCheck),
             'extension_include' => implode(',', $extensionIds),
         ];
 
-        if (! is_string($result = HttpClientService::fetch($url, $getData))) {
+        if (! is_string($result = HttpClientService::fetch($url, $this->currentConfig, $getData))) {
             return false;
         }
 
@@ -288,7 +290,7 @@ final readonly class PemCatalog
     {
         $logger = $this->currentLogger->get();
 
-        $scanDirectory = $type->scanDirectory($this->paths);
+        $scanDirectory = $type->scanDirectory($this->paths, $this->currentConfig);
         $archive = tempnam($scanDirectory, 'zip');
         if ($archive === false) {
             return [
@@ -308,7 +310,7 @@ final readonly class PemCatalog
         $extensionId = null;
 
         $handle = @fopen($archive, 'wb');
-        if ($handle !== false && HttpClientService::fetchToFile($handle, $url, $getData)) {
+        if ($handle !== false && HttpClientService::fetchToFile($handle, $url, $this->currentConfig, $getData)) {
             fclose($handle);
 
             $status = 'archive_error';
@@ -389,7 +391,7 @@ final readonly class PemCatalog
             return;
         }
 
-        $trashPath = $type->scanDirectory($this->paths) . 'trash';
+        $trashPath = $type->scanDirectory($this->paths, $this->currentConfig) . 'trash';
 
         foreach ($oldFiles as $oldFile) {
             $oldFile = trim($oldFile);

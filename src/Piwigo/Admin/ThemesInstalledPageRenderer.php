@@ -93,10 +93,10 @@ final class ThemesInstalledPageRenderer
 
         $conn = DbConnection::build();
         $extension_repository = new ExtensionRepository(EntityManagerFactory::build($conn));
-        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths);
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths, $this->currentConfig);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl, $this->paths);
+        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl, $this->paths, $this->currentUser, $this->eventDispatcher);
 
         // +-----------------------------------------------------------------------+
         // |                          perform actions                              |
@@ -107,7 +107,7 @@ final class ThemesInstalledPageRenderer
             new CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
-            $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths)[$themesAction->themeId] ?? null;
+            $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$themesAction->themeId] ?? null;
             $action_errors = $extension_lifecycle->performAction(ExtensionType::Theme, $themesAction->action, $themesAction->themeId, $fs_theme_entry);
             $this->pageState->errors = array_values(array_filter($action_errors, is_string(...)));
 
@@ -128,7 +128,7 @@ final class ThemesInstalledPageRenderer
         // that method's own docblock) -- every $fs_theme read below follows
         // its documented convention and reads specific keys defensively
         // instead.
-        $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths);
+        $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
         uasort($fs_themes, $this->htmlRenderer->nameCompare(...));
 
         $default_theme = $this->userService

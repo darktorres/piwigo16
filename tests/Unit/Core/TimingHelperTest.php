@@ -90,7 +90,7 @@ test('debug appends a formatted line with elapsed time and query count to PageSt
     PageState::current()->countQueries = 5;
     $before = PageState::current()->debugOutput;
 
-    TimingHelper::debug('hello world');
+    TimingHelper::debug('hello world', PageState::current());
 
     $appended = substr(PageState::current()->debugOutput, strlen($before));
     expect($appended)->toMatch('/^<p>\[\d+\.\d{3} s, 5 queries\] : hello world<\/p>\n$/');

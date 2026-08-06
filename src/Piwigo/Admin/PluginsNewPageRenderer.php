@@ -26,6 +26,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\VersionHelper;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
@@ -57,6 +58,7 @@ final class PluginsNewPageRenderer
         private readonly CurrentConfig $currentConfig,
         private readonly CurrentUser $currentUser,
         private readonly Paths $paths,
+        private readonly EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -85,7 +87,7 @@ final class PluginsNewPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
 
-        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths);
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths, $this->currentConfig);
         $extension_scanner = new ExtensionScanner();
 
         $pluginsNewRequest = PluginsNewRequest::fromGlobals();
@@ -120,7 +122,7 @@ final class PluginsNewPageRenderer
                     $this->pageState->addInfo('<a href="' . $activate_url . '">' . $this->lang->t('Activate it now') . '</a>');
 
                     $installed_plugin_id = $pluginsNewRequest->pluginId;
-                    $installed_fs_plugin = $installed_plugin_id !== null ? ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths)[$installed_plugin_id] ?? null) : null;
+                    $installed_fs_plugin = $installed_plugin_id !== null ? ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$installed_plugin_id] ?? null) : null;
                     if ($installed_fs_plugin !== null) {
                         $this->activityService->record('system', ActivitySystem::Plugin, 'install', [
                             'plugin_id' => $installed_plugin_id,
@@ -170,7 +172,7 @@ final class PluginsNewPageRenderer
         $pem_base_url = RequestBootstrap::pemUrl();
 
         $fs_plugin_ids = [];
-        foreach ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths) as $fs_plugin) {
+        foreach ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig) as $fs_plugin) {
             $extension = $fs_plugin['extension'] ?? null;
             if (is_scalar($extension)) {
                 $fs_plugin_ids[] = (string) $extension;

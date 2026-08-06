@@ -16,6 +16,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Http\ResponseReadyException;
@@ -86,7 +87,7 @@ final class RedirectServiceTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        UniqueExecLock::ends('check_for_updates');
+        UniqueExecLock::ends(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
         UniqueExecLock::reset();
         CurrentTemplate::current()->reset();
         Lang::current()->reset();
@@ -136,7 +137,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         self::assertFalse(CurrentTemplate::current()->isInitialized());
         self::assertFalse(Lang::current()->isLangInfoInitialized());
 
-        $execId = UniqueExecLock::begins('check_for_updates');
+        $execId = UniqueExecLock::begins(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
         self::assertTrue($execId);
 
         $body = null;
@@ -174,7 +175,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         Lang::current()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
         CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
 
-        $execId = UniqueExecLock::begins('check_for_updates');
+        $execId = UniqueExecLock::begins(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
         self::assertTrue($execId);
 
         $body = null;
@@ -200,7 +201,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // defaultRedirectMethod(), driving the else branch.
         $this->currentConfig()->setDefaultRedirectMethod('http');
 
-        $execId = UniqueExecLock::begins('check_for_updates');
+        $execId = UniqueExecLock::begins(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
         self::assertTrue($execId);
 
         $status = null;

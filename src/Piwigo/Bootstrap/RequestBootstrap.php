@@ -510,7 +510,7 @@ final class RequestBootstrap
             self::currentConfig()->setOrderByInsideCategory($orderByInsideCategoryCustom);
         }
 
-        if (LoungeMaintenance::needsEmptying()) {
+        if (LoungeMaintenance::needsEmptying(self::currentConfig())) {
             new ImageService(self::lang(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::activityService($conn), self::sessionService(), self::eventDispatcher(), self::currentConfig(), self::translator(), self::paths())
                 ->emptyLounge();
         }
@@ -685,13 +685,13 @@ final class RequestBootstrap
             $admin_theme = new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
                 ->getParam('admin_theme', self::currentConfig()->adminTheme());
             $admin_theme = is_string($admin_theme) ? $admin_theme : self::currentConfig()->adminTheme();
-            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::paths()->root . 'themes/admin', $admin_theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = self::currentUser()->get()->theme;
-            if (PageFilterHelper::scriptBasename() !== 'ws' and DeviceHelper::mobileTheme()) {
+            if (PageFilterHelper::scriptBasename(self::currentConfig()) !== 'ws' and DeviceHelper::mobileTheme(self::sessionService(), self::currentConfig())) {
                 $theme = self::currentConfig()->mobilTheme();
             }
-            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::paths()->root . 'themes', $theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes', $theme);
         }
 
         // Legacy Coupling Retirement Track A / Phase 2 global-residual
@@ -734,7 +734,7 @@ final class RequestBootstrap
         if (self::currentConfig()->galleryLocked()) {
             $pageState->addHeaderMessage(self::lang()->t('The gallery is locked for maintenance. Please, come back later.'));
 
-            if (PageFilterHelper::scriptBasename() !== 'identification' and ! self::accessLevelChecker()->isAdmin()) {
+            if (PageFilterHelper::scriptBasename(self::currentConfig()) !== 'identification' and ! self::accessLevelChecker()->isAdmin()) {
                 // Workstream C3, catch point 1: throws instead of the
                 // former raw header()+echo+exit() -- caught in
                 // include/common.inc.php, the one seam both dispatch
@@ -754,7 +754,7 @@ final class RequestBootstrap
             $pageState->headerMessages = [];
         }
 
-        if (self::currentConfig()->filterPages() !== [] and (bool) PageFilterHelper::getFilterPageValue('used')) {
+        if (self::currentConfig()->filterPages() !== [] and (bool) PageFilterHelper::getFilterPageValue(self::currentConfig(), 'used')) {
             // Formerly a conditional `include PHPWG_ROOT_PATH .
             // 'include/filter.inc.php';` (deleted, P23 sub-batch 8f-5).
             new FilterService(self::filterState(), self::sessionService(), self::translator(), self::lang(), self::currentConfig(), self::eventDispatcher(), $conn)

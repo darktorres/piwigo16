@@ -127,7 +127,7 @@ final class UserListPageRenderer
                     ->getToken(),
                 'NB_IMAGE_PAGE' => $default_user['nb_image_page'],
                 'RECENT_PERIOD' => $default_user['recent_period'],
-                'theme_options' => ThemeCatalog::getPwgThemes($eventDispatcher, $paths),
+                'theme_options' => ThemeCatalog::getPwgThemes($eventDispatcher, $paths, $currentConfig, $lang),
                 'theme_selected' => $userService->getDefaultTheme(),
                 'language_options' => LangService::getLanguages($paths),
                 'language_selected' => $userService->getDefaultLanguage(),

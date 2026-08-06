@@ -19,7 +19,11 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\TelemetrySenderInterface;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
@@ -87,7 +91,8 @@ final class PageTailRendererTest extends IntegrationTestCase
             new EventDispatcher(),
             PageState::current(),
             CurrentTemplate::current(),
-            CurrentConfig::current()
+            CurrentConfig::current(),
+            new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfig::current())
         );
     }
 

@@ -386,6 +386,7 @@ final readonly class CategoryService
     }
 
     public static function getDisplayImagesCount(
+        Lang $lang,
         int $catNbImages,
         int $catCountImages,
         int $catCountCategories,
@@ -396,26 +397,19 @@ final readonly class CategoryService
 
         if ($catCountImages > 0) {
             if ($catNbImages > 0 && $catNbImages < $catCountImages) {
-                $displayText .= self::getDisplayImagesCount($catNbImages, $catNbImages, 0, $shortMessage, $separator) . $separator;
+                $displayText .= self::getDisplayImagesCount($lang, $catNbImages, $catNbImages, 0, $shortMessage, $separator) . $separator;
                 $catCountImages -= $catNbImages;
                 $catNbImages = 0;
             }
 
-            $displayText .= Translator::get()->plural('%d photo', '%d photos', $catCountImages);
+            $displayText .= $lang->plural('%d photo', '%d photos', $catCountImages);
 
             if ($catCountCategories === 0 || $catNbImages === $catCountImages) {
                 if (! $shortMessage) {
-                    // getDisplayImagesCount() is `public static` (no $this
-                    // available) -- Translator::get()'s own static resolver
-                    // is already used a few lines above in this same
-                    // method, so Lang::current()'s transitional shim
-                    // matches that established in-method precedent rather
-                    // than needing an explicit Lang param plumbed through
-                    // every real caller of this static utility.
-                    $displayText .= ' ' . Lang::current()->t('in this album');
+                    $displayText .= ' ' . $lang->t('in this album');
                 }
             } else {
-                $displayText .= ' ' . Translator::get()->plural('in %d sub-album', 'in %d sub-albums', $catCountCategories);
+                $displayText .= ' ' . $lang->plural('in %d sub-album', 'in %d sub-albums', $catCountCategories);
             }
         }
 
@@ -737,7 +731,7 @@ final readonly class CategoryService
      * @param array<string, mixed>|null $category
      * @return array{menu: array<int, array<string, mixed>>, categoryCountCategories: ?int}
      */
-    public function getCategoriesMenu(?array $category, FilterUpdaterInterface $filterUpdater, UrlServiceInterface $urlService, FilterState $filterState, CurrentUser $currentUser): array
+    public function getCategoriesMenu(?array $category, FilterUpdaterInterface $filterUpdater, UrlServiceInterface $urlService, FilterState $filterState, CurrentUser $currentUser, Lang $lang): array
     {
         $user = $currentUser->get();
 
@@ -788,6 +782,7 @@ final readonly class CategoryService
                 [
                     'NAME' => $menuNameEvent->categoryName,
                     'TITLE' => self::getDisplayImagesCount(
+                        $lang,
                         $row['nb_images'],
                         $row['count_images'],
                         $row['count_categories'],

@@ -34,13 +34,13 @@ test('validateRequired throws when a required key is missing', function (): void
     // secretKey (the one #[Required] property) defaults to '', still empty
     // -- no applyDefaults() call needed, the property already carries its
     // own default from the moment the class loads.
-    expect(static fn () => ConfigLoader::validateRequired())
+    expect(static fn () => ConfigLoader::validateRequired(CurrentConfig::current()))
         ->toThrow(MissingRequiredConfigException::class);
 });
 
 test('validateRequired passes when every required key is set', function (): void {
     CurrentConfig::current()->setSecretKey('a-real-secret');
 
-    ConfigLoader::validateRequired(); // should not throw
+    ConfigLoader::validateRequired(CurrentConfig::current()); // should not throw
     expect(true)->toBeTrue();
 });

@@ -140,7 +140,7 @@ final class MenubarRenderer
         // -------------------------------------------------------------- categories
         $block = $menu->get_block('mbCategories');
         // ------------------------------------------------------------------------ filter
-        if ($currentConfig->menubarFilterIcon() and ! self::emptyValue($currentConfig->filterPages()) and (bool) PageFilterHelper::getFilterPageValue('used')) {
+        if ($currentConfig->menubarFilterIcon() and ! self::emptyValue($currentConfig->filterPages()) and (bool) PageFilterHelper::getFilterPageValue($currentConfig, 'used')) {
             if ($filterState->isEnabled()) {
                 $template->assign(
                     'U_STOP_FILTER',
@@ -163,7 +163,7 @@ final class MenubarRenderer
 
         $categoryCountCategories = null;
         if ($block !== null) {
-            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState, $sessionService, $translator, $lang, $currentConfig, $eventDispatcher), $urlService, $filterState, $currentUser);
+            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState, $sessionService, $translator, $lang, $currentConfig, $eventDispatcher), $urlService, $filterState, $currentUser, $lang);
             $categoryCountCategories = $categoriesMenu['categoryCountCategories'];
             $block->data = [
                 'NB_PICTURE' => $currentUser->get()
@@ -217,7 +217,7 @@ final class MenubarRenderer
 
         // ------------------------------------------------------------------------ tags
         $block = $menu->get_block('mbTags');
-        if ($block !== null and PageFilterHelper::scriptBasename() !== 'picture') {
+        if ($block !== null and PageFilterHelper::scriptBasename($currentConfig) !== 'picture') {
             $block->data = [];
             $tags = $tagService->getAvailableTags();
             usort($tags, $tagService->tagsCounterCompare(...));

@@ -62,6 +62,26 @@ final readonly class ActivityService implements ActivityLoggerInterface
     }
 
     /**
+     * Same "container resolve, not a constructor property" reasoning as
+     * currentUser() above -- used only inside record()'s own internal
+     * PageFilterHelper::scriptBasename() call below (singleton/
+     * service-locator elimination campaign, Phase 12 sub-phase 12D).
+     */
+    private function currentConfig(): CurrentConfig
+    {
+        if (Kernel::isBooted()) {
+            $currentConfig = Kernel::container()->get(CurrentConfig::class);
+            if (! $currentConfig instanceof CurrentConfig) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+            }
+
+            return $currentConfig;
+        }
+
+        return new CurrentConfig();
+    }
+
+    /**
      * @param int|string|array<int, int|string> $objectId
      * @param array<string, mixed> $details
      */
@@ -91,7 +111,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
         if ($requestMethod !== null) {
             $details['method'] = $requestMethod;
         } else {
-            $script = PageFilterHelper::scriptBasename();
+            $script = PageFilterHelper::scriptBasename($this->currentConfig());
             $pageParam = $activityContextRequest->pageParam;
             $details['script'] = $script === 'admin' && $pageParam !== null ? $script . '/' . $pageParam : $script;
         }

@@ -29,6 +29,8 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
 /**
@@ -70,6 +72,8 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         private readonly UrlServiceInterface $urlService,
         private readonly CurrentConfig $currentConfig,
         private readonly Paths $paths,
+        private readonly CurrentUser $currentUser,
+        private readonly EventDispatcher $eventDispatcher,
     ) {}
 
     #[Override]
@@ -115,7 +119,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
             return;
         }
 
-        $execId = UniqueExecLock::begins('send_piwigo_infos');
+        $execId = UniqueExecLock::begins($logger, 'send_piwigo_infos');
         if ($execId === false) {
             $logger->info('[' . __FUNCTION__ . '] another execution is running, abort');
             return;
@@ -202,7 +206,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         // instead of crashing on a foreach/array-access of something else.
         $pemExtensions = [];
         $pemDecodeOk = false;
-        if (is_string($result = HttpClientService::fetch($url))) {
+        if (is_string($result = HttpClientService::fetch($url, $this->currentConfig))) {
             $decodedExtensions = @unserialize($result);
             if (is_array($decodedExtensions) and $decodedExtensions !== []) {
                 $pemDecodeOk = true;
@@ -220,7 +224,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         if (! $pemDecodeOk) {
             $logger->info('[' . __FUNCTION__ . '][exec=' . $execId . '] fetchRemote on ' . $url . ' has failed');
             $this->retryLater(1 * 60 * 60); // 1 hour later
-            UniqueExecLock::ends('send_piwigo_infos');
+            UniqueExecLock::ends($logger, 'send_piwigo_infos');
             $logger->info('[' . __FUNCTION__ . '][exec=' . $execId . '] executed in ' . TimingHelper::getElapsedTime($startTime, TimingHelper::getMoment()));
             return;
         }
@@ -240,7 +244,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
 
         $urlService = $this->urlService;
         $fsPlugins = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths);
+            ->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
         $dbPluginsById = new ExtensionRepository(EntityManagerFactory::build($conn))
             ->findAll(ExtensionType::Plugin);
         $piwigoInfos['general_stats']['nb_private_plugins'] = 0;
@@ -293,7 +297,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         $piwigoInfos['general_stats']['nb_plugins'] = $piwigoInfos['general_stats']['nb_private_plugins'] + count($piwigoInfos['plugins']);
 
         $fsThemes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $urlService, $this->lang, $this->paths);
+            ->scan(ExtensionType::Theme, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
         $dbThemesById = new ExtensionRepository(EntityManagerFactory::build($conn))
             ->findAll(ExtensionType::Theme);
         $piwigoInfos['general_stats']['nb_private_themes'] = 0;
@@ -511,7 +515,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
             'data' => json_encode($piwigoInfos),
         ];
 
-        if (HttpClientService::fetch($url, $getData, $postData) === false) {
+        if (HttpClientService::fetch($url, $this->currentConfig, $getData, $postData) === false) {
             $logger->info('[' . __FUNCTION__ . '][exec=' . $execId . '] fetchRemote on ' . $url . ' method=porg.installs.update has failed');
             $this->retryLater(24 * 60 * 60);
         } else {
@@ -520,7 +524,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
             $logger->info('[' . __FUNCTION__ . '][exec=' . $execId . '] fetchRemote success, new send_piwigo_infos_last_notice=' . $lastNotice);
         }
 
-        UniqueExecLock::ends('send_piwigo_infos');
+        UniqueExecLock::ends($logger, 'send_piwigo_infos');
         $logger->info('[' . __FUNCTION__ . '][exec=' . $execId . '] executed in ' . TimingHelper::getElapsedTime($startTime, TimingHelper::getMoment()));
     }
 

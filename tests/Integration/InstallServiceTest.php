@@ -327,7 +327,7 @@ final class InstallServiceTest extends IntegrationTestCase
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
 
-            InstallService::activateCoreThemes(Lang::current(), CurrentUser::current(), CurrentConfigService::current(), CurrentConfig::current(), CurrentPaths::get());
+            InstallService::activateCoreThemes(Lang::current(), CurrentUser::current(), CurrentConfigService::current(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcher::get());
 
             self::assertFalse($this->conn->fetchAssociative('SELECT id FROM ' . Tables::themes() . ' WHERE id = ' . $this->conn->quote($themeId)));
             self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
@@ -353,7 +353,7 @@ final class InstallServiceTest extends IntegrationTestCase
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
 
-            InstallService::activateCoreThemes(Lang::current(), CurrentUser::current(), CurrentConfigService::current(), CurrentConfig::current(), CurrentPaths::get());
+            InstallService::activateCoreThemes(Lang::current(), CurrentUser::current(), CurrentConfigService::current(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcher::get());
 
             self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
         } finally {
@@ -376,7 +376,7 @@ final class InstallServiceTest extends IntegrationTestCase
         // even a directory with real scannable plugins would still insert
         // nothing; a truly empty scan directory is the simplest honest way
         // to exercise the same real "no-op by design" behavior.
-        InstallService::activateCorePlugins(Lang::current(), CurrentPaths::get());
+        InstallService::activateCorePlugins(Lang::current(), CurrentPaths::get(), CurrentUser::current(), EventDispatcher::get(), CurrentConfig::current());
 
         $after = $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::plugins()));
         self::assertSame($before, $after);

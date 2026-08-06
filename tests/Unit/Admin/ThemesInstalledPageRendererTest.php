@@ -244,7 +244,17 @@ function fsThemeEntry(array $overrides = []): array
  * ExtensionUpdateCheckerTest's own extensionUpdateChecker() helper --
  * ExtensionRepository/ConfigService/PluginMigrationRepository only satisfy
  * ExtensionLifecycle's constructor type here, never exercised by
- * missingParentTheme()/getChildrenThemes().
+ * missingParentTheme()/getChildrenThemes(). CurrentConfig/CurrentUser ARE
+ * exercised by those 2 methods though (singleton/service-locator
+ * elimination campaign, Phase 12 sub-phase 12D: missingParentTheme()/
+ * getChildrenThemes() now thread $this->currentConfig/$this->currentUser
+ * into ExtensionScanner::scan()'s own NOCTOR-shaped params) -- both must
+ * be the real, shared CurrentConfig::current()/CurrentUser::current()
+ * instances (not a fresh, disconnected one) so scan()'s directory lookup
+ * actually sees this file's own beforeEach()-configured fixture
+ * setThemesDir(), not CurrentConfig's own unrelated default. Found live:
+ * a fresh CurrentConfig here silently pointed scan() at the real project
+ * themes/ directory instead of the disposable fixture root.
  */
 function themesInstalledLifecycle(): ExtensionLifecycle
 {
@@ -265,7 +275,7 @@ function themesInstalledLifecycle(): ExtensionLifecycle
         throw new LogicException('Container returned an unexpected type');
     }
 
-    return new ExtensionLifecycle(Lang::current(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, new CurrentUser(new CurrentConfig()), CurrentPaths::get()), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), new CurrentConfig(), $wsContext, $accessControl, CurrentPaths::get());
+    return new ExtensionLifecycle(Lang::current(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, new CurrentUser(new CurrentConfig()), CurrentPaths::get(), new CurrentConfig()), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), CurrentConfig::current(), $wsContext, $accessControl, CurrentPaths::get(), CurrentUser::current(), new EventDispatcher());
 }
 
 /**

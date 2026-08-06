@@ -16,7 +16,7 @@ final class PageFilterHelper
      * Return the basename of the current script.
      * The lowercase case filename of the current script without extension
      */
-    public static function scriptBasename(): string
+    public static function scriptBasename(CurrentConfig $currentConfig): string
     {
         foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $key) {
             $raw = $_SERVER[$key] ?? null;
@@ -28,7 +28,7 @@ final class PageFilterHelper
                 // that guarantee (confirmed by the Integration test stub
                 // this method's real callers used to route through, before
                 // P23 batch 8d retargeted them here directly).
-                if (CurrentConfig::current()->phpExtensionInUrls() && StringHelper::getExtension($filename) !== 'php') {
+                if ($currentConfig->phpExtensionInUrls() && StringHelper::getExtension($filename) !== 'php') {
                     continue;
                 }
                 $basename = basename($filename, '.php');
@@ -43,12 +43,12 @@ final class PageFilterHelper
     /**
      * Return \Piwigo\Config\CurrentConfig::filterPages() value for the current page
      */
-    public static function getFilterPageValue(string $valueName): ?bool
+    public static function getFilterPageValue(CurrentConfig $currentConfig, string $valueName): ?bool
     {
 
-        $page_name = self::scriptBasename();
+        $page_name = self::scriptBasename($currentConfig);
 
-        $filter_pages = CurrentConfig::current()->filterPages();
+        $filter_pages = $currentConfig->filterPages();
 
         $page_filters = $filter_pages[$page_name] ?? null;
         if (isset($page_filters[$valueName])) {

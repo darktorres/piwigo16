@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Cache;
 
+use LogicException;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\Kernel;
 
 /**
  * Gap-closure Stage 4i (docs/plan/gap-closure-p0-p23.md): replaces
@@ -40,6 +42,33 @@ final class PermissionCacheInvalidator
     {
         CachePools::permissions()->clear();
         CachePools::effectivePermissions()->clear();
-        CurrentConfigService::current()->get()->confDeleteParam('count_orphans');
+        self::currentConfigService()->get()->confDeleteParam('count_orphans');
+    }
+
+    /**
+     * Same "container resolve, not a constructor param" reasoning as
+     * Core/Logger.php's own pageState() (singleton/service-locator
+     * elimination campaign, Phase 12 sub-phase 12D) -- ~30 real call
+     * sites across Admin/Ws/Group/Users rule out threading
+     * CurrentConfigService as an explicit param through every one.
+     * CurrentConfigService::current()'s own get() already throws
+     * unconditionally on a never-.set() instance (real callers only ever
+     * reach this after RequestBootstrap::connect() has run, well after
+     * Kernel::boot()), so an independent, unmemoized fallback here throws
+     * the exact same way the shim's own memoized one would pre-boot --
+     * no observable behavior difference either way.
+     */
+    private static function currentConfigService(): CurrentConfigService
+    {
+        if (Kernel::isBooted()) {
+            $currentConfigService = Kernel::container()->get(CurrentConfigService::class);
+            if (! $currentConfigService instanceof CurrentConfigService) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfigService::class);
+            }
+
+            return $currentConfigService;
+        }
+
+        return new CurrentConfigService();
     }
 }

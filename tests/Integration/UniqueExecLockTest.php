@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Override;
+use Piwigo\Core\Logger;
 use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Core\UniqueExecLock;
@@ -28,6 +29,8 @@ final class UniqueExecLockTest extends IntegrationTestCase
 
     private string $token;
 
+    private Logger $currentLogger;
+
     #[Override]
     protected function setUp(): void
     {
@@ -41,12 +44,13 @@ final class UniqueExecLockTest extends IntegrationTestCase
         }
 
         $this->token = 'test_lock_' . bin2hex(random_bytes(4));
+        $this->currentLogger = new Logger(['severity' => Logger::OFF]);
     }
 
     #[Override]
     protected function tearDown(): void
     {
-        UniqueExecLock::ends($this->token);
+        UniqueExecLock::ends($this->currentLogger, $this->token);
         UniqueExecLock::reset();
         parent::tearDown();
     }
@@ -58,7 +62,7 @@ final class UniqueExecLockTest extends IntegrationTestCase
 
     public function test_begins_acquires_the_lock(): void
     {
-        self::assertTrue(UniqueExecLock::begins($this->token));
+        self::assertTrue(UniqueExecLock::begins($this->currentLogger, $this->token));
         self::assertTrue(UniqueExecLock::isRunning($this->token));
     }
 
@@ -68,8 +72,8 @@ final class UniqueExecLockTest extends IntegrationTestCase
         // connection succeeds (it's reentrant per-connection, not a
         // separate contended acquisition) -- real behavior, not a gap in
         // this class's own design.
-        self::assertTrue(UniqueExecLock::begins($this->token));
-        self::assertTrue(UniqueExecLock::begins($this->token));
+        self::assertTrue(UniqueExecLock::begins($this->currentLogger, $this->token));
+        self::assertTrue(UniqueExecLock::begins($this->currentLogger, $this->token));
     }
 
     public function test_begins_fails_immediately_when_a_different_connection_already_holds_the_lock(): void
@@ -82,7 +86,7 @@ final class UniqueExecLockTest extends IntegrationTestCase
             $acquiredByOther = AdvisorySessionLock::acquire($otherConn, $this->lockNameFor($this->token), 1);
             self::assertTrue($acquiredByOther);
 
-            self::assertFalse(UniqueExecLock::begins($this->token));
+            self::assertFalse(UniqueExecLock::begins($this->currentLogger, $this->token));
         } finally {
             AdvisorySessionLock::release($otherConn, $this->lockNameFor($this->token));
         }
@@ -90,17 +94,17 @@ final class UniqueExecLockTest extends IntegrationTestCase
 
     public function test_ends_releases_the_lock(): void
     {
-        UniqueExecLock::begins($this->token);
+        UniqueExecLock::begins($this->currentLogger, $this->token);
         self::assertTrue(UniqueExecLock::isRunning($this->token));
 
-        UniqueExecLock::ends($this->token);
+        UniqueExecLock::ends($this->currentLogger, $this->token);
 
         self::assertFalse(UniqueExecLock::isRunning($this->token));
     }
 
     public function test_ends_is_a_noop_when_the_lock_was_never_held(): void
     {
-        UniqueExecLock::ends($this->token);
+        UniqueExecLock::ends($this->currentLogger, $this->token);
 
         self::assertFalse(UniqueExecLock::isRunning($this->token));
     }
@@ -120,7 +124,7 @@ final class UniqueExecLockTest extends IntegrationTestCase
 
         $acquiredByOther = AdvisorySessionLock::acquire($otherConn, $this->lockNameFor($this->token), 1);
         self::assertTrue($acquiredByOther, 'the other connection must genuinely hold the lock first');
-        self::assertFalse(UniqueExecLock::begins($this->token), 'contended while the other connection is still open');
+        self::assertFalse(UniqueExecLock::begins($this->currentLogger, $this->token), 'contended while the other connection is still open');
 
         // No RELEASE_LOCK() call -- close the connection outright and drop
         // every reference to it, simulating an abrupt process death rather
@@ -128,7 +132,7 @@ final class UniqueExecLockTest extends IntegrationTestCase
         $otherConn->close();
         unset($otherConn);
 
-        self::assertTrue(UniqueExecLock::begins($this->token), 'must be acquirable now that the other connection is gone, with no explicit release');
+        self::assertTrue(UniqueExecLock::begins($this->currentLogger, $this->token), 'must be acquirable now that the other connection is gone, with no explicit release');
     }
 
     /**

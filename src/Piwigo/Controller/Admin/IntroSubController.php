@@ -616,7 +616,7 @@ final class IntroSubController implements AdminSubControllerInterface
         if (! is_file($cache_path) or filemtime($cache_path) < strtotime('24 hours ago')) {
             $url = AppInfo::URL . '/ws.php?method=porg.news.getLatest&format=json';
 
-            $content = HttpClientService::fetch($url);
+            $content = HttpClientService::fetch($url, $currentConfig);
             if ($content !== false) {
                 $all_news = [];
 

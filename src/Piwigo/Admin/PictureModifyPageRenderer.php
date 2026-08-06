@@ -408,7 +408,7 @@ final class PictureModifyPageRenderer
         $selected_level = $pictureModifyRequest->postLevel ?? $row['level'];
         $template->assign(
             [
-                'level_options' => PermissionService::getPrivacyLevelOptions(),
+                'level_options' => PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
                 'level_options_selected' => [$selected_level],
             ]
         );

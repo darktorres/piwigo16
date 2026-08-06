@@ -60,9 +60,8 @@ final class ConfigLoader
      *
      * @throws MissingRequiredConfigException
      */
-    public static function validateRequired(): void
+    public static function validateRequired(CurrentConfig $currentConfig): void
     {
-        $currentConfig = CurrentConfig::current();
         $reflection = new ReflectionClass($currentConfig);
         foreach ($reflection->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
             if ($property->isStatic()) {

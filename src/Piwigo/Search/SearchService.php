@@ -213,7 +213,7 @@ final readonly class SearchService
         $search = $this->getSearchInfo($candidate);
 
         if ($search !== null) {
-            if (PageFilterHelper::scriptBasename() !== 'ws' and $clausePattern === 'id = ?' and $search->searchUuid !== null) {
+            if (PageFilterHelper::scriptBasename($this->currentConfig) !== 'ws' and $clausePattern === 'id = ?' and $search->searchUuid !== null) {
                 $this->htmlRenderer->fatalError('this search is not reachable with its id, need the search_uuid instead');
             }
 

@@ -18,6 +18,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Logger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Template\CurrentTemplate;
@@ -91,7 +92,7 @@ final class PageTailTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        UniqueExecLock::ends('check_for_updates');
+        UniqueExecLock::ends(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
         UniqueExecLock::reset();
         CurrentTemplate::current()->reset();
         $currentConfig = Kernel::container()->get(CurrentConfig::class);

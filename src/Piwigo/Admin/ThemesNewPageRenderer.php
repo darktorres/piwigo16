@@ -21,6 +21,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
@@ -51,6 +52,7 @@ final class ThemesNewPageRenderer
         private readonly CurrentConfig $currentConfig,
         private readonly CurrentUser $currentUser,
         private readonly Paths $paths,
+        private readonly EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -73,7 +75,7 @@ final class ThemesNewPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
 
-        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths);
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths, $this->currentConfig);
         $extension_scanner = new ExtensionScanner();
 
         // +-----------------------------------------------------------------------+
@@ -116,7 +118,7 @@ final class ThemesNewPageRenderer
                     $this->pageState->addInfo($this->lang->t('Theme has been successfully installed'));
 
                     $installed_theme_id = $themesNewInstall->installedThemeId;
-                    $installed_fs_theme = $installed_theme_id !== null ? ($extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths)[$installed_theme_id] ?? null) : null;
+                    $installed_fs_theme = $installed_theme_id !== null ? ($extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$installed_theme_id] ?? null) : null;
                     if ($installed_fs_theme !== null) {
                         $this->activityService->record('system', ActivitySystem::Theme, 'install', [
                             'theme_id' => $installed_theme_id,
@@ -156,7 +158,7 @@ final class ThemesNewPageRenderer
         ]);
 
         $fs_theme_ids = [];
-        foreach ($extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths) as $fs_theme) {
+        foreach ($extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig) as $fs_theme) {
             $extension = $fs_theme['extension'] ?? null;
             if (is_scalar($extension)) {
                 $fs_theme_ids[] = (string) $extension;

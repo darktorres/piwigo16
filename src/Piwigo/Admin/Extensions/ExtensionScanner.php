@@ -52,9 +52,9 @@ final class ExtensionScanner
      * @return array<string, array<string, mixed>> keyed by extension id
      *   (directory name)
      */
-    public function scan(ExtensionType $type, UrlServiceInterface $urlService, Lang $lang, Paths $paths, ?string $targetCharset = null): array
+    public function scan(ExtensionType $type, UrlServiceInterface $urlService, Lang $lang, Paths $paths, CurrentUser $currentUser, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, ?string $targetCharset = null): array
     {
-        $dir = opendir($type->scanDirectory($paths));
+        $dir = opendir($type->scanDirectory($paths, $currentConfig));
         if ($dir === false) {
             return [];
         }
@@ -69,8 +69,8 @@ final class ExtensionScanner
             }
 
             $entry = match ($type) {
-                ExtensionType::Plugin => $this->scanPlugin($lang, $file, $paths),
-                ExtensionType::Theme => $this->scanTheme($lang, $file, $urlService, $paths),
+                ExtensionType::Plugin => $this->scanPlugin($lang, $file, $paths, $currentUser),
+                ExtensionType::Theme => $this->scanTheme($lang, $file, $urlService, $paths, $eventDispatcher, $currentConfig, $currentUser),
                 ExtensionType::Language => $this->scanLanguage($file, $targetCharset, $paths),
             };
 
@@ -109,7 +109,7 @@ final class ExtensionScanner
     /**
      * @return array{name: string, version: string, uri: string, description: string, author: string, hasSettings: bool, 'author uri'?: string, extension?: string}|null
      */
-    private function scanPlugin(Lang $lang, string $pluginId, Paths $paths): ?array
+    private function scanPlugin(Lang $lang, string $pluginId, Paths $paths, CurrentUser $currentUser): ?array
     {
         $path = PluginLoader::pluginsPath($paths) . $pluginId;
         if (! is_dir($path) || is_link($path) || ! file_exists($path . '/main.inc.php')) {
@@ -154,7 +154,7 @@ final class ExtensionScanner
         }
         if ((bool) preg_match('/Has Settings:\s*([Tt]rue|[Ww]ebmaster)/', $data, $val)) {
             if (strtolower($val[1]) === 'webmaster') {
-                if (CurrentUser::current()->get()->status === UserStatus::Webmaster) {
+                if ($currentUser->get()->status === UserStatus::Webmaster) {
                     $plugin['hasSettings'] = true;
                 }
             } else {
@@ -195,9 +195,9 @@ final class ExtensionScanner
      *   admin_uri?: string,
      * }|null
      */
-    private function scanTheme(Lang $lang, string $themeId, UrlServiceInterface $urlService, Paths $paths): ?array
+    private function scanTheme(Lang $lang, string $themeId, UrlServiceInterface $urlService, Paths $paths, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, CurrentUser $currentUser): ?array
     {
-        $path = ExtensionType::Theme->scanDirectory($paths) . $themeId;
+        $path = ExtensionType::Theme->scanDirectory($paths, $currentConfig) . $themeId;
         if (! is_dir($path) || ! file_exists($path . '/themeconf.inc.php')) {
             return null;
         }
@@ -261,9 +261,9 @@ final class ExtensionScanner
         if (file_exists($screenshotPath)) {
             $theme['screenshot'] = $screenshotPath;
         } else {
-            $adminTheme = new PreferencesService(new UserRepository(EntityManagerFactory::build(DbConnection::build()), EventDispatcher::get(), CurrentConfig::current()), CurrentUser::current())->getParam('admin_theme', CurrentConfig::current()->adminTheme());
+            $adminTheme = new PreferencesService(new UserRepository(EntityManagerFactory::build(DbConnection::build()), $eventDispatcher, $currentConfig), $currentUser)->getParam('admin_theme', $currentConfig->adminTheme());
             $theme['screenshot'] = $urlService->getRootUrl() . 'themes/admin/'
-                . (is_string($adminTheme) ? $adminTheme : CurrentConfig::current()->adminTheme())
+                . (is_string($adminTheme) ? $adminTheme : $currentConfig->adminTheme())
                 . '/images/missing_screenshot.png';
         }
 

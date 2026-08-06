@@ -114,11 +114,12 @@ function seedPermissionUserRaw(array $rawAttributes): void
 }
 
 beforeEach(function (): void {
-    // A real Paths is required now: PermissionService::getPrivacyLevelOptions()
-    // reads Lang::current() (singleton/service-locator elimination
-    // campaign, Phase 8), and Lang's own Paths constructor collaborator
-    // has no autowireable default -- a bare Kernel::boot() with no Paths
-    // argument leaves it unresolvable in the container.
+    // A real Paths is required now: this file's own
+    // getPrivacyLevelOptions() tests pass Lang::current() in (singleton/
+    // service-locator elimination campaign, Phase 8), and Lang's own
+    // Paths constructor collaborator has no autowireable default -- a
+    // bare Kernel::boot() with no Paths argument leaves it unresolvable
+    // in the container.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     seedPermissionUser();
 });
@@ -397,7 +398,7 @@ test('getPermissionCriteria suppresses maxLevel/imageAccessIds together when acc
 });
 
 test('getPrivacyLevelOptions labels level 0 as Everybody and stacks the rest', function (): void {
-    $options = PermissionService::getPrivacyLevelOptions();
+    $options = PermissionService::getPrivacyLevelOptions(CurrentConfig::current(), Lang::current());
 
     // The shared $label accumulator walks levels high-to-low and keeps
     // growing until it hits 0, which resets it to "Everybody" instead of
@@ -414,7 +415,7 @@ test('getPrivacyLevelOptions labels level 0 as Everybody and stacks the rest', f
 test('getPrivacyLevelOptions follows CurrentConfig::availablePermissionLevels when overridden', function (): void {
     CurrentConfig::current()->setAvailablePermissionLevels([0, 5]);
 
-    $options = PermissionService::getPrivacyLevelOptions();
+    $options = PermissionService::getPrivacyLevelOptions(CurrentConfig::current(), Lang::current());
 
     expect($options)->toBe([
         5 => 'Level 5',
@@ -434,7 +435,7 @@ test('getPrivacyLevelOptions does not prepend a stray separator before the very 
     CurrentConfig::current()->setAvailablePermissionLevels([0, 1, 2]);
     Lang::current()->loadArray(['Level 2' => 'X']);
 
-    $options = PermissionService::getPrivacyLevelOptions();
+    $options = PermissionService::getPrivacyLevelOptions(CurrentConfig::current(), Lang::current());
 
     // Level 2 (processed first, array_reverse()'d) seeds $label = 'X' (1
     // char). Level 1 (processed next) must see strlen('X') === 1 > 0 and

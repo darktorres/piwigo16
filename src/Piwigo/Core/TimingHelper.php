@@ -41,17 +41,17 @@ final class TimingHelper
      *
      * P23 batch 8d: relocated from include/functions.inc.php's
      * pwg_debug(), unchanged logic (former `global $debug` accumulator is
-     * now PageState::current()'s debugOutput property).
+     * now PageState's own debugOutput property).
      */
-    public static function debug(string $string): void
+    public static function debug(string $string, PageState $pageState): void
     {
         $now = explode(' ', microtime());
         $now2 = explode('.', $now[0]);
         // microtime()'s own format ("<fraction> <seconds>", both always numeric)
         // guarantees this concatenation is always a numeric string.
         $now2_float = (float) ($now[1] . '.' . $now2[1]);
-        $time = number_format($now2_float - PageState::current()->requestStart, 3, '.', ' ') . ' s';
-        $count_queries = PageState::current()->countQueries;
-        PageState::current()->addDebugOutput('<p>[' . $time . ', ' . $count_queries . ' queries] : ' . $string . "</p>\n");
+        $time = number_format($now2_float - $pageState->requestStart, 3, '.', ' ') . ' s';
+        $count_queries = $pageState->countQueries;
+        $pageState->addDebugOutput('<p>[' . $time . ', ' . $count_queries . ' queries] : ' . $string . "</p>\n");
     }
 }

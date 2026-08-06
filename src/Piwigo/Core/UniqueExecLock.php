@@ -143,9 +143,8 @@ final class UniqueExecLock
 {
     private static ?Connection $conn = null;
 
-    public static function begins(string $tokenName, int $timeout = 0): bool
+    public static function begins(Logger $logger, string $tokenName, int $timeout = 0): bool
     {
-        $logger = CurrentLogger::getStatic();
         $conn = self::connection();
 
         $acquired = AdvisorySessionLock::acquire($conn, self::lockName($tokenName), $timeout);
@@ -172,9 +171,8 @@ final class UniqueExecLock
         return $conn->fetchOne('SELECT IS_USED_LOCK(?)', [self::lockName($tokenName)]) !== null;
     }
 
-    public static function ends(string $tokenName): void
+    public static function ends(Logger $logger, string $tokenName): void
     {
-        $logger = CurrentLogger::getStatic();
         $conn = self::connection();
 
         AdvisorySessionLock::release($conn, self::lockName($tokenName));

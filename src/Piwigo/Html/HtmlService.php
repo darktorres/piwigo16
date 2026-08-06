@@ -797,7 +797,7 @@ final class HtmlService implements HtmlRenderingInterface
 
         // We hide the quick identification menu on the identification page. It
         // would be confusing.
-        if (PageFilterHelper::scriptBasename() !== 'identification') {
+        if (PageFilterHelper::scriptBasename($this->currentConfig) !== 'identification') {
             $menu->register_block(new RegisteredBlock('mbIdentification', 'Identification', 'piwigo'));
         }
     }

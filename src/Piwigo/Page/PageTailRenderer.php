@@ -17,6 +17,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocBeginPageTail;
 use Piwigo\Event\Location\LocEndPageTail;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\UserRepository;
 
@@ -62,6 +63,7 @@ final readonly class PageTailRenderer
         private PageState $pageState,
         private CurrentTemplate $currentTemplate,
         private CurrentConfig $currentConfig,
+        private SessionService $sessionService,
     ) {}
 
     public function render(float $startTime): void
@@ -146,14 +148,14 @@ final readonly class PageTailRenderer
         $template->assign('debug', $debug_vars);
 
         // ------------------------------------------------------------- mobile version
-        if (! self::emptyValue($this->currentConfig->mobilTheme()) && (DeviceHelper::getDevice() !== 'desktop' || DeviceHelper::mobileTheme())) {
+        if (! self::emptyValue($this->currentConfig->mobilTheme()) && (DeviceHelper::getDevice($this->sessionService) !== 'desktop' || DeviceHelper::mobileTheme($this->sessionService, $this->currentConfig))) {
             $request_uri = $_SERVER['REQUEST_URI'] ?? '';
             $template->assign(
                 'TOGGLE_MOBILE_THEME_URL',
                 $this->urlService->addUrlParams(
                     htmlspecialchars(is_string($request_uri) ? $request_uri : ''),
                     [
-                        'mobile' => DeviceHelper::mobileTheme() ? 'false' : 'true',
+                        'mobile' => DeviceHelper::mobileTheme($this->sessionService, $this->currentConfig) ? 'false' : 'true',
                     ]
                 )
             );

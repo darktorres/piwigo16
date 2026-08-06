@@ -3,6 +3,12 @@
 declare(strict_types=1);
 
 use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
+use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
 
 // CategoryService's own DB-backed methods are covered by
 // tests/Integration/CategoryServiceTest.php -- this file covers its
@@ -10,6 +16,21 @@ use Piwigo\Category\CategoryService;
 // of pure computation functions extracted specifically to be testable
 // without the free functions' former globals -- see each method's own
 // docblock).
+
+/**
+ * getDisplayImagesCount() takes Lang as a genuinely new explicit param
+ * (NOCTOR shape, singleton/service-locator elimination campaign, Phase 12
+ * sub-phase 12D) -- no Kernel::boot() anywhere in this file, so a bare,
+ * never-.load()'d instance is used, same "no Kernel::boot(), type-
+ * satisfying instance is enough" reasoning already established throughout
+ * this campaign. Translator::plural()'s own ngettext() call falls back to
+ * the raw singular/plural English text passed in when nothing has been
+ * loaded, which is exactly what these tests assert against.
+ */
+function category_service_pure_helpers_test_lang(): Lang
+{
+    return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+}
 
 test('compareByGlobalRank sorts naturally by the global_rank string', function (): void {
     expect(CategoryService::compareByGlobalRank(['global_rank' => '1.2'], ['global_rank' => '1.10']))->toBeLessThan(0);
@@ -197,23 +218,23 @@ test('filterMenuRows string-casts a non-string scalar uppercats value before exp
 //   less than $catCountImages) -- 0 and a mutated -1 are equally never
 //   equal to it.
 test('getDisplayImagesCount reports a flat photo count when there are no sub-albums', function (): void {
-    $result = CategoryService::getDisplayImagesCount(0, 12, 0);
+    $result = CategoryService::getDisplayImagesCount(category_service_pure_helpers_test_lang(), 0, 12, 0);
 
     expect($result)->toBe('12 photos');
 });
 
 test('getDisplayImagesCount returns an empty string when there are no images at all', function (): void {
-    expect(CategoryService::getDisplayImagesCount(0, 0, 0))->toBe('');
+    expect(CategoryService::getDisplayImagesCount(category_service_pure_helpers_test_lang(), 0, 0, 0))->toBe('');
 });
 
 test('getDisplayImagesCount uses the singular form for exactly one image', function (): void {
-    expect(CategoryService::getDisplayImagesCount(0, 1, 0))->toBe('1 photo');
+    expect(CategoryService::getDisplayImagesCount(category_service_pure_helpers_test_lang(), 0, 1, 0))->toBe('1 photo');
 });
 
 test('getDisplayImagesCount splits direct vs sub-album counts when both exist', function (): void {
     // 5 photos directly in this album, 20 total (including sub-albums) --
     // the recursive self-call formats the direct-count portion first.
-    $result = CategoryService::getDisplayImagesCount(5, 20, 2, true, ' | ');
+    $result = CategoryService::getDisplayImagesCount(category_service_pure_helpers_test_lang(), 5, 20, 2, true, ' | ');
 
     expect($result)->toBe('5 photos | 15 photos in 2 sub-albums');
 });
@@ -223,14 +244,14 @@ test('getDisplayImagesCount only recurses into the direct-count split when direc
     // singular phrasing on the direct-count part and plural on the
     // remainder, pinned to an exact string so the recursive call's
     // concatenation order/separator can't silently drop or reorder.
-    expect(CategoryService::getDisplayImagesCount(1, 5, 0, true, '-'))->toBe('1 photo-4 photos');
+    expect(CategoryService::getDisplayImagesCount(category_service_pure_helpers_test_lang(), 1, 5, 0, true, '-'))->toBe('1 photo-4 photos');
 });
 
 test('getDisplayImagesCount reports sub-albums after a direct/remainder split when they land on the same count', function (): void {
     // 3 direct out of 4 total leaves exactly 1 remaining "sub-album" photo --
     // the post-split catNbImages (0) must NOT equal the post-split
     // catCountImages (1), or the sub-album text would be wrongly skipped.
-    expect(CategoryService::getDisplayImagesCount(3, 4, 2, true, '-'))
+    expect(CategoryService::getDisplayImagesCount(category_service_pure_helpers_test_lang(), 3, 4, 2, true, '-'))
         ->toBe('3 photos-1 photo in 2 sub-albums');
 });
 

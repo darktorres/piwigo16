@@ -23,6 +23,8 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
 /**
@@ -88,6 +90,8 @@ final readonly class ExtensionLifecycle
         private WsContext $wsContext,
         private AccessControl $accessControl,
         private Paths $paths,
+        private CurrentUser $currentUser,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -174,7 +178,7 @@ final readonly class ExtensionLifecycle
 
                 if ($errors[0] === 'ok') {
                     $newFsEntry = new ExtensionScanner()
-                        ->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths)[$id] ?? null;
+                        ->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$id] ?? null;
                     $newVersion = $this->stringOrDefault($newFsEntry['version'] ?? null, '0');
                     $activityDetails['to_version'] = $newVersion;
 
@@ -457,7 +461,7 @@ final readonly class ExtensionLifecycle
         }
 
         $parentFsEntry = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths)[$parent] ?? null;
+            ->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$parent] ?? null;
         if ($parentFsEntry === null) {
             return $parent;
         }
@@ -474,7 +478,7 @@ final readonly class ExtensionLifecycle
     public function getChildrenThemes(string $themeId): array
     {
         $children = [];
-        foreach (new ExtensionScanner()->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths) as $candidate) {
+        foreach (new ExtensionScanner()->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig) as $candidate) {
             if (($candidate['parent'] ?? null) === $themeId) {
                 $name = $candidate['name'] ?? null;
                 if (is_string($name)) {

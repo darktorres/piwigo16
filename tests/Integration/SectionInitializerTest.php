@@ -13,6 +13,7 @@ use Override;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Users\UserService;
+use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -204,7 +205,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $this->bootRedirectPreconditions();
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/0';
-        $execId = UniqueExecLock::begins('check_for_updates');
+        $execId = UniqueExecLock::begins(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
         self::assertTrue($execId);
 
         $body = null;
@@ -217,7 +218,7 @@ final class SectionInitializerTest extends IntegrationTestCase
             $status = $response->getStatusCode();
             $body = (string) $response->getBody();
         } finally {
-            UniqueExecLock::ends('check_for_updates');
+            UniqueExecLock::ends(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
         }
 
         self::assertSame(400, $status);
@@ -234,7 +235,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         // matches the "<digits>-<slug>" shape -- the genuinely-missing
         // identifier case.
         $_SERVER['PATH_INFO'] = '/';
-        $execId = UniqueExecLock::begins('check_for_updates');
+        $execId = UniqueExecLock::begins(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
         self::assertTrue($execId);
 
         $body = null;
@@ -247,7 +248,7 @@ final class SectionInitializerTest extends IntegrationTestCase
             $status = $response->getStatusCode();
             $body = (string) $response->getBody();
         } finally {
-            UniqueExecLock::ends('check_for_updates');
+            UniqueExecLock::ends(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
         }
 
         self::assertSame(400, $status);

@@ -36,6 +36,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Event\CombinedCss;
 use Piwigo\Template\Event\CombinedScript;
 use Piwigo\Template\Request\TemplateExtentsRequest;
@@ -140,6 +141,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         private readonly CurrentConfigService $currentConfigService,
         private readonly Paths $paths,
         private readonly AccessLevelChecker $accessLevelChecker,
+        private readonly SessionService $sessionService,
         string $root = '.',
         string $theme = '',
         string $path = 'template'
@@ -291,7 +293,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         // submitted DB credentials are known to be valid.
         $this->smarty->registerPlugin('modifier', 'is_admin', fn (string $userStatus = ''): bool => $this->accessLevelChecker->isAdmin($userStatus));
         $this->smarty->registerPlugin('modifier', 'is_classic_user', fn (string $userStatus = ''): bool => $this->accessLevelChecker->isClassicUser($userStatus));
-        $this->smarty->registerPlugin('modifier', 'get_device', DeviceHelper::getDevice(...));
+        $this->smarty->registerPlugin('modifier', 'get_device', fn (): string => DeviceHelper::getDevice($this->sessionService));
         $this->smarty->registerPlugin('modifier', 'is_file', 'is_file');
         $this->smarty->registerPlugin('modifier', 'strpos', 'strpos');
         $this->smarty->registerPlugin('modifier', 'preg_match', 'preg_match');
@@ -458,7 +460,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         // standard pages can't get the header to load the html header
         if (
             $theme !== 'default'
-            and in_array(PageFilterHelper::scriptBasename(), ['identification', 'register', 'password', 'profile'], true)
+            and in_array(PageFilterHelper::scriptBasename($this->currentConfig), ['identification', 'register', 'password', 'profile'], true)
             and ((bool) ($themeconf['use_standard_pages'] ?? false) or $this->currentConfig->useStandardPages())
         ) {
             $theme = 'standard_pages';

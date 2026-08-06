@@ -572,7 +572,7 @@ final class MailService implements MailerInterface
      */
     public function getMailTemplate(string $emailFormat): Template
     {
-        return new Template($this->currentConfig, $this->lang, $this->adminContext(), $this->eventDispatcher, $this->pageState, $this->errorCollector(), $this->processCache(), $this->currentConfigService(), $this->paths, $this->accessLevelChecker(), $this->paths->root . 'themes', 'default', 'template/mail/' . $emailFormat);
+        return new Template($this->currentConfig, $this->lang, $this->adminContext(), $this->eventDispatcher, $this->pageState, $this->errorCollector(), $this->processCache(), $this->currentConfigService(), $this->paths, $this->accessLevelChecker(), $this->sessionService, $this->paths->root . 'themes', 'default', 'template/mail/' . $emailFormat);
     }
 
     public function getStrEmailFormat(bool $isHtml): string

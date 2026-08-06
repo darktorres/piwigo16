@@ -17,8 +17,12 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 
@@ -46,7 +50,15 @@ use Piwigo\Users\CurrentUser;
  * fresh, DB-free, bare instance for the many plain Unit tests that never
  * boot a Kernel at all -- same "no Kernel::boot(), type-satisfying
  * instance is enough" reasoning already established throughout this
- * campaign (see UrlServiceTestFactory's own docblock).
+ * campaign (see UrlServiceTestFactory's own docblock). Phase 12 sub-phase
+ * 12D added an 11th, SessionService (its own former SessionService::get()
+ * shim usage, DeviceHelper's own closure) -- unlike ImageStdParams above,
+ * SessionService's container factory doesn't eagerly touch the DB
+ * (SessionRepository extends Doctrine's own lazy EntityRepository), so a
+ * throwaway instance built from a fresh DbConnection::build() is safe as
+ * the no-Kernel-booted fallback too (never actually queried unless
+ * Template's own get_device modifier is invoked, which no real
+ * production `install.tpl`/test template does).
  */
 final class TemplateTestFactory
 {
@@ -66,6 +78,7 @@ final class TemplateTestFactory
             self::resolve(CurrentConfigService::class) ?? new CurrentConfigService(),
             self::resolve(Paths::class) ?? Paths::fromRoot(sys_get_temp_dir()),
             self::resolve(AccessLevelChecker::class) ?? new AccessLevelChecker($currentUser, $currentConfig),
+            self::resolve(SessionService::class) ?? new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $currentConfig),
             $root,
             $theme,
             $path,

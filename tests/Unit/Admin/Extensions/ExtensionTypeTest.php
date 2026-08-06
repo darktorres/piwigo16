@@ -28,9 +28,9 @@ test('table returns each type\'s own table', function (): void {
 });
 
 test('pemCategoryId returns each type\'s own pem category id', function (): void {
-    expect(ExtensionType::Plugin->pemCategoryId())->toBe(CurrentConfig::current()->pemPluginsCategory())
-        ->and(ExtensionType::Theme->pemCategoryId())->toBe(CurrentConfig::current()->pemThemesCategory())
-        ->and(ExtensionType::Language->pemCategoryId())->toBe(CurrentConfig::current()->pemLanguagesCategory());
+    expect(ExtensionType::Plugin->pemCategoryId(CurrentConfig::current()))->toBe(CurrentConfig::current()->pemPluginsCategory())
+        ->and(ExtensionType::Theme->pemCategoryId(CurrentConfig::current()))->toBe(CurrentConfig::current()->pemThemesCategory())
+        ->and(ExtensionType::Language->pemCategoryId(CurrentConfig::current()))->toBe(CurrentConfig::current()->pemLanguagesCategory());
 });
 
 test('fromPluralWsParam maps each type\'s plural pwg.extensions.ignoreUpdate wire value back to its enum case', function (): void {
@@ -48,9 +48,9 @@ test('fromPluralWsParam returns null for an unrecognized string', function (): v
 test('scanDirectory returns each type\'s own filesystem root', function (): void {
     // P23 batch 8f-4: the PHPWG_PLUGINS_PATH define is gone --
     // Piwigo\Admin\PluginLoader::pluginsPath() is the canonical value now.
-    expect(ExtensionType::Plugin->scanDirectory(CurrentPaths::get()))->toBe(PluginLoader::pluginsPath(CurrentPaths::get()))
-        ->and(ExtensionType::Theme->scanDirectory(CurrentPaths::get()))->toBe(CurrentConfig::current()->themesPath())
-        ->and(ExtensionType::Language->scanDirectory(CurrentPaths::get()))->toBe(CurrentPaths::get()->root . 'language/');
+    expect(ExtensionType::Plugin->scanDirectory(CurrentPaths::get(), CurrentConfig::current()))->toBe(PluginLoader::pluginsPath(CurrentPaths::get()))
+        ->and(ExtensionType::Theme->scanDirectory(CurrentPaths::get(), CurrentConfig::current()))->toBe(CurrentConfig::current()->themesPath())
+        ->and(ExtensionType::Language->scanDirectory(CurrentPaths::get(), CurrentConfig::current()))->toBe(CurrentPaths::get()->root . 'language/');
 });
 
 test('markerFilename returns each type\'s own extension marker file', function (): void {

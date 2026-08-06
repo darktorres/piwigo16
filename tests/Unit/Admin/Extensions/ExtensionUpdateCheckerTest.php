@@ -18,6 +18,7 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -121,16 +122,33 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
     // only checkExtensions() does, and that method is still not covered
     // here at all -- see this file's own docblock on why (real PEM
     // network access, unavailable in this environment).
+    //
+    // CurrentUser/CurrentConfig ARE exercised though (singleton/service-
+    // locator elimination campaign, Phase 12 sub-phase 12D):
+    // getMissingExtensions() threads both into
+    // ExtensionScanner::scan()'s own NOCTOR-shaped params, which need the
+    // real, shared CurrentConfig::current() (reflecting this file's own
+    // beforeEach()-booted fixture Paths) and CurrentUser::current() --
+    // not a fresh, disconnected instance -- for scan()'s own themesDir()
+    // lookup and PreferencesService::getParam() admin_theme fallback to
+    // resolve correctly. Found live: a fresh CurrentConfig here silently
+    // pointed scan() at the real project themes/ directory instead of
+    // the disposable fixture root, and a fresh, never-.set() CurrentUser
+    // threw once scan() actually reached a real theme with no
+    // screenshot.png.
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ExtensionIgnoredUpdateEntity::class);
     expect($repo)->toBeInstanceOf(ExtensionIgnoredUpdateRepository::class);
 
     return new ExtensionUpdateChecker(
         Lang::current(),
         new ExtensionScanner(),
-        new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), CurrentPaths::get()),
+        new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), CurrentPaths::get(), new CurrentConfig()),
         UrlServiceTestFactory::build(),
         $repo,
         CurrentPaths::get(),
+        CurrentUser::current(),
+        new EventDispatcher(),
+        CurrentConfig::current(),
     );
 }
 

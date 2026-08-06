@@ -113,7 +113,7 @@ namespace Piwigo\Tests\Integration {
             self::assertInstanceOf(AccessControl::class, $accessControl);
             $currentUser = Kernel::container()->get(CurrentUser::class);
             self::assertInstanceOf(CurrentUser::class, $currentUser);
-            $this->lifecycle = new ExtensionLifecycle(Lang::current(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger, $currentUser, CurrentPaths::get()), UrlServiceTestFactory::build(), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig, $wsContext, $accessControl, CurrentPaths::get());
+            $this->lifecycle = new ExtensionLifecycle(Lang::current(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger, $currentUser, CurrentPaths::get(), $currentConfig), UrlServiceTestFactory::build(), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig, $wsContext, $accessControl, CurrentPaths::get(), $currentUser, new EventDispatcher());
 
             $currentConfig->setEnableExtensionsInstall(true);
             $currentConfig->setPhpExtensionInUrls(false);

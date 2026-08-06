@@ -84,7 +84,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         );
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get());
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), Lang::current());
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes() . " WHERE id = 'broken-theme'");
         }
@@ -107,7 +107,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $currentConfig->setMobilTheme('mobile-candidate');
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), showMobile: false);
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), Lang::current(), showMobile: false);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::themes() . " WHERE id = 'mobile-candidate'");
         }
@@ -127,7 +127,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $currentConfig->setMobilTheme('default');
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), showMobile: true);
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), Lang::current(), showMobile: true);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::themes() . " WHERE id = 'default'");
         }
@@ -150,7 +150,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $this->expectExceptionMessage('must return an instance of');
 
         try {
-            ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get());
+            ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), Lang::current());
         } finally {
             // EventDispatcher is a shared process-wide singleton -- a real
             // reset (not just removing this one handler, no such API

@@ -23,6 +23,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
@@ -161,6 +162,15 @@ final class RedirectService implements RedirectServiceInterface
         return $currentConfigService;
     }
 
+    private static function sessionService(): SessionService
+    {
+        $sessionService = Kernel::container()->get(SessionService::class);
+        if (! $sessionService instanceof SessionService) {
+            throw new LogicException('Container returned an unexpected type for ' . SessionService::class);
+        }
+        return $sessionService;
+    }
+
     #[Override]
     public function redirectHttp(string $url, int $status = 302): never
     {
@@ -197,10 +207,10 @@ final class RedirectService implements RedirectServiceInterface
                 'no_fallback' => true,
                 'local' => true,
             ]);
-            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), $this->eventDispatcher, $this->pageState, self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, new AccessLevelChecker(self::currentUser(), self::currentConfig()), $paths->root . 'themes', $this->userService->getDefaultTheme());
+            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), $this->eventDispatcher, $this->pageState, self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), $paths->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         } elseif (self::adminContext()->isActive()) {
-            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), $this->eventDispatcher, $this->pageState, self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::paths()->root . 'themes', $this->userService->getDefaultTheme());
+            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), $this->eventDispatcher, $this->pageState, self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), self::paths()->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         }
 

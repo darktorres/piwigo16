@@ -57,7 +57,12 @@ use Piwigo\Users\CurrentUser;
  * after connect() has already resolved and set a real ConfigService.
  * Every other real construction site (BatchManagerGlobalPageRenderer,
  * UploadService, TagService, Ws\PwgImages, etc.) is normal post-container
- * application code, covered the same way.
+ * application code, covered the same way. Singleton/service-locator
+ * elimination campaign, Phase 12 sub-phase 12D: emptyLounge()/
+ * countOrphans() now resolve CurrentConfigService via a new private lazy
+ * currentConfigService() helper instead of the CurrentConfigService::current()
+ * shim directly -- see self::logger()'s own docblock just above for the
+ * identical "too many construction sites" reasoning.
  */
 final readonly class ImageService
 {
@@ -155,6 +160,29 @@ final readonly class ImageService
         return new Logger([
             'severity' => Logger::OFF,
         ]);
+    }
+
+    /**
+     * Same "container resolve, not a constructor param" reasoning as
+     * self::logger() above (singleton/service-locator elimination
+     * campaign, Phase 12 sub-phase 12D) -- constructor-injecting
+     * CurrentConfigService would ripple across every one of this class's
+     * own ~33 real construction sites for the sake of emptyLounge()'s 2
+     * call sites alone, matching this class's own established
+     * CategoryService-inline-construction precedent just above.
+     */
+    private function currentConfigService(): CurrentConfigService
+    {
+        if (Kernel::isBooted()) {
+            $currentConfigService = Kernel::container()->get(CurrentConfigService::class);
+            if (! $currentConfigService instanceof CurrentConfigService) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfigService::class);
+            }
+
+            return $currentConfigService;
+        }
+
+        return new CurrentConfigService();
     }
 
     private function categoryService(): CategoryService
@@ -450,7 +478,9 @@ final readonly class ImageService
             [$runningExecId, $runningExecStartTime] = explode('-', $emptyLoungeRunning);
             if (time() - (int) $runningExecStartTime > 60) {
                 $logger->debug(__FUNCTION__ . ', exec=' . $runningExecId . ', timeout stopped by another call to the function');
-                CurrentConfigService::current()->get()->confDeleteParam('empty_lounge_running');
+                $this->currentConfigService()
+                    ->get()
+                    ->confDeleteParam('empty_lounge_running');
             }
         }
 
@@ -500,7 +530,9 @@ final readonly class ImageService
             PermissionCacheInvalidator::invalidate();
         }
 
-        CurrentConfigService::current()->get()->confDeleteParam('empty_lounge_running');
+        $this->currentConfigService()
+            ->get()
+            ->confDeleteParam('empty_lounge_running');
 
         $logger->debug(__FUNCTION__ . ', exec=' . $execId . ', ends');
 
@@ -663,7 +695,9 @@ final readonly class ImageService
             // we don't care about the list of image_ids, we only care about the number
             // of orphans, so let's use a faster method than calling count(getOrphans())
             $counter = $this->repo->countAllImages() - $this->repo->countImagesInCategories();
-            CurrentConfigService::current()->get()->confUpdateParam('count_orphans', $counter, updateGlobal: true);
+            $this->currentConfigService()
+                ->get()
+                ->confUpdateParam('count_orphans', $counter, updateGlobal: true);
         }
 
         return $this->currentConfig->countOrphans() ?? 0;

@@ -1069,7 +1069,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             }
         }
 
-        $tpl_introduction['privacy_level_options'] = PermissionService::getPrivacyLevelOptions();
+        $tpl_introduction['privacy_level_options'] = PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang);
 
         $template->assign('introduction', $tpl_introduction);
 

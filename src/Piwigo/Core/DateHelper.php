@@ -7,6 +7,8 @@ namespace Piwigo\Core;
 use DateInterval;
 use DateTime;
 use IntlDateFormatter;
+use LogicException;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Lang\Translator;
 
 /**
@@ -15,6 +17,50 @@ use Piwigo\Lang\Translator;
  */
 final class DateHelper
 {
+    private static ?Translator $translatorFallback = null;
+
+    /**
+     * Same "container resolve, not a constructor property" reasoning as
+     * Activity\ActivityService's own currentUser()/currentConfig() and
+     * this campaign's own Core/Logger.php precedent, adapted to a fully
+     * static context (DateHelper is never `new`'d, no `$this` to hang a
+     * resolver off of) -- ~30 real call sites across Admin/Ws/Controller/
+     * Auth rule out threading Lang/Translator as explicit params through
+     * every one. Lang::current()'s own shim docblock establishes there's
+     * no safe pre-boot fallback for Lang (its constructor needs real
+     * collaborators), so this mirrors that shim's exact body instead of
+     * inventing a new fallback shape.
+     */
+    private static function lang(): Lang
+    {
+        $lang = Kernel::container()->get(Lang::class);
+        if (! $lang instanceof Lang) {
+            throw new LogicException('Container returned an unexpected type for ' . Lang::class);
+        }
+
+        return $lang;
+    }
+
+    /**
+     * Same reasoning as self::lang() above, but mirrors Translator::get()'s
+     * own shim body instead -- that shim DOES define a safe pre-boot
+     * fallback (a fresh, memoized `new Translator(new CurrentConfig())`),
+     * so this keeps the identical shape/memoization.
+     */
+    private static function translator(): Translator
+    {
+        if (Kernel::isBooted()) {
+            $translator = Kernel::container()->get(Translator::class);
+            if (! $translator instanceof Translator) {
+                throw new LogicException('Container returned an unexpected type for ' . Translator::class);
+            }
+
+            return $translator;
+        }
+
+        return self::$translatorFallback ??= new Translator(new CurrentConfig());
+    }
+
     public static function dateDiff(DateTime $date1, DateTime $date2): DateInterval
     {
         return $date1->diff($date2);
@@ -90,7 +136,7 @@ final class DateHelper
         $date = self::str2DateTime($original, $format);
 
         if (! (bool) $date) {
-            return Lang::current()->t('N/A');
+            return self::lang()->t('N/A');
         }
 
         if ($show === null) {
@@ -99,7 +145,7 @@ final class DateHelper
 
         $print = '';
         if (in_array('day_name', $show, true)) {
-            $print .= Lang::current()->day((int) $date->format('w')) . ' ';
+            $print .= self::lang()->day((int) $date->format('w')) . ' ';
         }
 
         if (in_array('day', $show, true)) {
@@ -107,7 +153,7 @@ final class DateHelper
         }
 
         if (in_array('month', $show, true)) {
-            $print .= Lang::current()->month((int) $date->format('n')) . ' ';
+            $print .= self::lang()->month((int) $date->format('n')) . ' ';
         }
 
         if (in_array('year', $show, true)) {
@@ -142,7 +188,7 @@ final class DateHelper
         $date = self::str2DateTime($original, $format);
 
         if (! (bool) $date) {
-            return Lang::current()->t('N/A');
+            return self::lang()->t('N/A');
         }
 
         if ($show === null) {
@@ -161,7 +207,7 @@ final class DateHelper
                 $dateType = IntlDateFormatter::LONG;
             }
 
-            $fmt = new IntlDateFormatter(Lang::current()->currentUserLanguage() ?? AppInfo::DEFAULT_LANGUAGE, $dateType, $timeType);
+            $fmt = new IntlDateFormatter(self::lang()->currentUserLanguage() ?? AppInfo::DEFAULT_LANGUAGE, $dateType, $timeType);
             $formatted = $fmt->format($date);
             if ($formatted !== false) {
                 return $formatted;
@@ -180,7 +226,7 @@ final class DateHelper
         $toDate = self::str2DateTime($to);
 
         if ($fromDate === false || $toDate === false) {
-            return Lang::current()->t('N/A');
+            return self::lang()->t('N/A');
         }
 
         if ($fromDate->format('Y-m-d') === $toDate->format('Y-m-d')) {
@@ -195,7 +241,7 @@ final class DateHelper
             }
             $to_str = self::formatDate($toDate);
 
-            return Lang::current()->t('from %s to %s', $from_str, $to_str);
+            return self::lang()->t('from %s to %s', $from_str, $to_str);
         }
     }
 
@@ -212,7 +258,7 @@ final class DateHelper
         $date = self::str2DateTime($original, $format);
 
         if (! (bool) $date) {
-            return Lang::current()->t('N/A');
+            return self::lang()->t('N/A');
         }
 
         $now = Env::now();
@@ -242,7 +288,7 @@ final class DateHelper
         if (! $only_last_unit) {
             foreach ($chunks as $name => $value) {
                 if ($value !== 0) {
-                    $print .= ' ' . Translator::get()->plural('%d ' . $name, '%d ' . $name . 's', $value);
+                    $print .= ' ' . self::translator()->plural('%d ' . $name, '%d ' . $name . 's', $value);
                 }
                 if ($print !== '' && $i >= $j) {
                     break;
@@ -255,7 +301,7 @@ final class DateHelper
                 $name = $reversed_chunks_names[$i];
                 $value = $chunks[$name];
                 if ($value !== 0) {
-                    $print = Translator::get()->plural('%d ' . $name, '%d ' . $name . 's', $value);
+                    $print = self::translator()->plural('%d ' . $name, '%d ' . $name . 's', $value);
                 }
                 if ($print !== '' && $i >= $j) {
                     break;
@@ -276,9 +322,9 @@ final class DateHelper
             // tie; a frozen Env::now() test clock hits it whenever the compared
             // timestamp was itself written via Env::now().
             if ($now >= $date) {
-                $print = Lang::current()->t('%s ago', $print);
+                $print = self::lang()->t('%s ago', $print);
             } else {
-                $print = Lang::current()->t('%s in the future', $print);
+                $print = self::lang()->t('%s in the future', $print);
             }
         }
 

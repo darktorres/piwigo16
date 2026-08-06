@@ -28,10 +28,11 @@ use Piwigo\Image\Request\EmptyLoungeRequest;
  * Singleton/service-locator elimination campaign, Phase 9: `needsEmptying()`
  * is a purely static method with no instance/constructor at all (same
  * shape as `Core\FilesystemHelper`) -- there is no `$this` to receive
- * `CurrentConfig` via constructor injection through, so it reads via the
- * `CurrentConfig::current()` transitional bridge instead, matching
- * FilesystemHelper's own established "no wrapper needed" precedent for a
- * stateless static utility.
+ * `CurrentConfig` via constructor injection through. Phase 12 sub-phase
+ * 12D: takes CurrentConfig as an explicit param instead (NOCTOR shape) --
+ * its one real caller, Bootstrap\RequestBootstrap.php, already has one in
+ * scope via its own self::currentConfig() accessor, right next to this
+ * method's own call site.
  */
 final class LoungeMaintenance
 {
@@ -40,10 +41,10 @@ final class LoungeMaintenance
      *
      * @since 12
      */
-    public static function needsEmptying(): bool
+    public static function needsEmptying(CurrentConfig $currentConfig): bool
     {
 
-        if (! CurrentConfig::current()->loungeActive()) {
+        if (! $currentConfig->loungeActive()) {
             return false;
         }
 
@@ -67,7 +68,7 @@ final class LoungeMaintenance
         // an expected real path.
         $age = $dbnow - ($date_available !== false ? $date_available : 0);
 
-        $lounge_max_duration = CurrentConfig::current()->loungeMaxDuration();
+        $lounge_max_duration = $currentConfig->loungeMaxDuration();
 
         return $age > $lounge_max_duration;
     }

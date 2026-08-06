@@ -63,7 +63,7 @@ final readonly class CoreUpdateService
         $_SESSION['need_update' . AppInfo::VERSION] = null;
 
         if ((bool) preg_match('/(\d+\.\d+)\.(\d+)/', AppInfo::VERSION)
-          and is_string($result = @HttpClientService::fetch(AppInfo::URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true))))) {
+          and is_string($result = @HttpClientService::fetch(AppInfo::URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true)), $this->currentConfig))) {
             $allVersions = @explode("\n", $result);
             $newVersion = trim($allVersions[0]);
             $_SESSION['need_update' . AppInfo::VERSION] = version_compare(AppInfo::VERSION, $newVersion, '<');
@@ -103,7 +103,7 @@ final readonly class CoreUpdateService
         $secretKey = $secretKeyRaw;
         $url .= '&origin_hash=' . sha1($secretKey . $this->urlService->getAbsoluteRootUrl());
 
-        if (! is_string($result = @HttpClientService::fetch($url))) {
+        if (! is_string($result = @HttpClientService::fetch($url, $this->currentConfig))) {
             return $newVersions;
         }
 
@@ -299,7 +299,7 @@ final readonly class CoreUpdateService
 
         while (! $end) {
             $chunkNum++;
-            if (is_string($result = @HttpClientService::fetch(AppInfo::URL . '/download/dlcounter.php?code=' . $dlCode . '&chunk_num=' . $chunkNum))
+            if (is_string($result = @HttpClientService::fetch(AppInfo::URL . '/download/dlcounter.php?code=' . $dlCode . '&chunk_num=' . $chunkNum, $this->currentConfig))
               and (bool) ($input = @unserialize($result))) {
                 if (is_array($input)) {
                     $remaining = $input['remaining'] ?? null;

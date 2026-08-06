@@ -370,7 +370,7 @@ final class InstallWizard
         }
 
         $this->fsLanguages = new ExtensionScanner()
-            ->scan(ExtensionType::Language, PresentationAccessor::urlService(), $this->lang, $this->paths, 'utf-8');
+            ->scan(ExtensionType::Language, PresentationAccessor::urlService(), $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, 'utf-8');
 
         if ($this->request->languageParam !== null) {
             $language = $this->request->languageParam;
@@ -409,7 +409,19 @@ final class InstallWizard
         }
 
         // --------------------------------------------- template initialization
-        $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), $this->paths->root . 'themes/admin', 'clear');
+        // Throwaway SessionService built directly from a fresh
+        // DbConnection::build() call, not a constructor property -- this
+        // class deliberately never holds SessionService itself (see this
+        // class's own docblock: real DB credentials aren't known yet at
+        // this point in boot()). DbConnection::build() returns a brand
+        // new, non-cached Connection every call (DriverManager::
+        // getConnection() is a factory, not a singleton lookup) and DBAL
+        // connections are lazy (no real socket opens until a query
+        // actually runs), so this is safe even before real credentials
+        // are submitted -- Template's own get_device modifier is never
+        // actually invoked by install.tpl, so the DB is never touched in
+        // practice either.
+        $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $this->currentConfig), $this->paths->root . 'themes/admin', 'clear');
         $this->currentTemplate->set($template);
         $template->set_filenames([
             'install' => 'install.tpl',
@@ -695,7 +707,7 @@ define(\'DB_COLLATE\', \'\');
         new ExtensionLifecycle(
             $this->lang,
             new ExtensionRepository(EntityManagerFactory::build($languageActivationConn)),
-            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), $this->currentUser, $this->paths),
+            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), $this->currentUser, $this->paths, $this->currentConfig),
             $urlService,
             $configService,
             EntityManagerFactory::build($languageActivationConn)->getRepository(PluginMigrationEntity::class),
@@ -706,6 +718,8 @@ define(\'DB_COLLATE\', \'\');
             InfrastructureAccessor::wsContext(),
             CoreDomainAccessor::accessControl(),
             $this->paths,
+            $this->currentUser,
+            $this->eventDispatcher,
         )->performAction(ExtensionType::Language, 'activate', $this->language, $this->fsLanguages[$this->language] ?? null);
 
         // fill CurrentConfig::$data from the freshly-seeded config table
@@ -717,8 +731,8 @@ define(\'DB_COLLATE\', \'\');
         // `if (! defined('PWG_CHARSET'))` re-guard that sat here was
         // provably dead and was dropped in the 8f-6 port (SEC-60 forbids
         // define() in src/Piwigo anyway).
-        InstallService::activateCoreThemes($this->lang, $this->currentUser, $this->currentConfigService, $this->currentConfig, $this->paths);
-        InstallService::activateCorePlugins($this->lang, $this->paths);
+        InstallService::activateCoreThemes($this->lang, $this->currentUser, $this->currentConfigService, $this->currentConfig, $this->paths, $this->eventDispatcher);
+        InstallService::activateCorePlugins($this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
 
         $insert = [
             'id' => 1,
@@ -877,6 +891,7 @@ define(\'DB_COLLATE\', \'\');
                 // request's side effect (subscribing $admin_mail) matters.
                 HttpClientService::fetch(
                     AdminUiHelper::getNewsletterSubscribeBaseUrl($this->language) . $this->adminMail,
+                    $this->currentConfig,
                     [],
                     [
                         'origin' => 'installation',

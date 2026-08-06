@@ -241,7 +241,7 @@ final class BatchManagerUnitPageRenderer
             [
 
                 'U_ELEMENTS_PAGE' => $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
-                'level_options' => PermissionService::getPrivacyLevelOptions(),
+                'level_options' => PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
                 'ADMIN_PAGE_TITLE' => $this->lang->t('Batch Manager'),
                 'PWG_TOKEN' => new CsrfService()
                     ->getToken(),

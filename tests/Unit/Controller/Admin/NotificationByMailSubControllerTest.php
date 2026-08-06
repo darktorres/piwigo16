@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Controller\Admin\NotificationByMailSubController;
 use Piwigo\Core\PageState;
 use Piwigo\Core\TimingHelper;
+use Piwigo\Lang\Translator;
 use Piwigo\Mail\NotificationByMailSender;
 
 /**
@@ -47,6 +48,31 @@ function nbmSubReflectSender(float $startTime, bool $isSendmailTimeout): Notific
 }
 
 /**
+ * doTimeoutTreatment() reads only $this->pageState/$this->translator
+ * (singleton/service-locator elimination campaign, Phase 12 sub-phase
+ * 12D) -- a reflected, no-constructor instance with just those 2
+ * properties hand-set needs no DB/mail/template dependency either,
+ * matching nbmSubReflectSender()'s own precedent just above. Both are
+ * set to the real PageState::current()/Translator::get() pre-boot
+ * fallback instances (this file never calls Kernel::boot()) so the
+ * tests' own PageState::current()->errors/Translator-driven message
+ * assertions below keep reading back the same shared state
+ * doTimeoutTreatment() itself just wrote to.
+ */
+function nbmSubReflectController(): NotificationByMailSubController
+{
+    $controller = new ReflectionClass(NotificationByMailSubController::class)->newInstanceWithoutConstructor();
+
+    $pageStateProp = new ReflectionProperty(NotificationByMailSubController::class, 'pageState');
+    $pageStateProp->setValue($controller, PageState::current());
+
+    $translatorProp = new ReflectionProperty(NotificationByMailSubController::class, 'translator');
+    $translatorProp->setValue($controller, Translator::get());
+
+    return $controller;
+}
+
+/**
  * @param array<int|string, mixed> $post
  * @param list<string> $checkKeyTreated
  */
@@ -62,7 +88,7 @@ function nbmSubCallDoTimeoutTreatment(NotificationByMailSender $sender, string $
     $method = new ReflectionMethod(NotificationByMailSubController::class, 'doTimeoutTreatment');
 
     /** @var bool */
-    return $method->invokeArgs(null, [$sender, $postKeyname, &$post, $checkKeyTreated]);
+    return $method->invokeArgs(nbmSubReflectController(), [$sender, $postKeyname, &$post, $checkKeyTreated]);
 }
 
 test('doTimeoutTreatment computes a real, positive estimated-time when some (but not all) users were already treated', function (): void {

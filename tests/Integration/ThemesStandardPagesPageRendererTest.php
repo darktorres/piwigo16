@@ -309,6 +309,8 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             HtmlServiceTestFactory::build(),
             CurrentConfig::current(),
             CurrentPaths::get(),
+            CurrentUser::current(),
+            EventDispatcher::get(),
         );
     }
 

@@ -514,7 +514,7 @@ final class BatchManagerGlobalPageRenderer
         // image level options
         $template->assign(
             [
-                'level_options' => PermissionService::getPrivacyLevelOptions(),
+                'level_options' => PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
                 'level_options_selected' => 0,
             ]
         );

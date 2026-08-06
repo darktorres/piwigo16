@@ -135,9 +135,9 @@ final readonly class HttpClientService implements ClientInterface
      * @param array<string, mixed> $getData data added to the request URL
      * @param array<string, mixed> $postData data transmitted with POST
      */
-    public static function fetch(string $url, array $getData = [], array $postData = [], string $userAgent = 'Piwigo'): string|false
+    public static function fetch(string $url, CurrentConfig $currentConfig, array $getData = [], array $postData = [], string $userAgent = 'Piwigo'): string|false
     {
-        $response = self::guardedFetch($url, $getData, $postData, $userAgent);
+        $response = self::guardedFetch($url, $currentConfig, $getData, $postData, $userAgent);
         if (! $response instanceof \Symfony\Contracts\HttpClient\ResponseInterface) {
             return false;
         }
@@ -155,9 +155,9 @@ final readonly class HttpClientService implements ClientInterface
      * @param array<string, mixed> $getData data added to the request URL
      * @param array<string, mixed> $postData data transmitted with POST
      */
-    public static function fetchToFile($fileHandle, string $url, array $getData = [], array $postData = [], string $userAgent = 'Piwigo'): bool
+    public static function fetchToFile($fileHandle, string $url, CurrentConfig $currentConfig, array $getData = [], array $postData = [], string $userAgent = 'Piwigo'): bool
     {
-        $response = self::guardedFetch($url, $getData, $postData, $userAgent);
+        $response = self::guardedFetch($url, $currentConfig, $getData, $postData, $userAgent);
         if (! $response instanceof \Symfony\Contracts\HttpClient\ResponseInterface) {
             return false;
         }
@@ -169,7 +169,7 @@ final readonly class HttpClientService implements ClientInterface
      * @param array<string, mixed> $getData
      * @param array<string, mixed> $postData
      */
-    private static function guardedFetch(string $url, array $getData, array $postData, string $userAgent): ?SymfonyResponseInterface
+    private static function guardedFetch(string $url, CurrentConfig $currentConfig, array $getData, array $postData, string $userAgent): ?SymfonyResponseInterface
     {
 
         $method = $postData === [] ? 'GET' : 'POST';
@@ -234,7 +234,6 @@ final readonly class HttpClientService implements ClientInterface
             'timeout' => 10,
         ];
 
-        $currentConfig = CurrentConfig::current();
         if ($currentConfig->useProxy() && $currentConfig->proxyServer() !== '') {
             $proxyServer = $currentConfig->proxyServer();
             $proxyUrl = $proxyServer;

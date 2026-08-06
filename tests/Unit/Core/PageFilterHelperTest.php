@@ -65,7 +65,7 @@ test('scriptBasename lowercases SCRIPT_NAME and uses it when it is the only cand
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
     try {
-        expect(PageFilterHelper::scriptBasename())->toBe('upper');
+        expect(PageFilterHelper::scriptBasename(CurrentConfig::current()))->toBe('upper');
     } finally {
         pageFilterHelperTestRestoreServerKeys($saved);
     }
@@ -86,7 +86,7 @@ test('scriptBasename skips a genuinely unset candidate without crashing, falling
     unset($_SERVER['PHP_SELF']);
 
     try {
-        expect(PageFilterHelper::scriptBasename())->toBe('picture');
+        expect(PageFilterHelper::scriptBasename(CurrentConfig::current()))->toBe('picture');
     } finally {
         pageFilterHelperTestRestoreServerKeys($saved);
     }
@@ -101,7 +101,7 @@ test('scriptBasename uses PHP_SELF when it is the only candidate present', funct
     $_SERVER['PHP_SELF'] = '/gallery/picture.php';
 
     try {
-        expect(PageFilterHelper::scriptBasename())->toBe('picture');
+        expect(PageFilterHelper::scriptBasename(CurrentConfig::current()))->toBe('picture');
     } finally {
         pageFilterHelperTestRestoreServerKeys($saved);
     }
@@ -126,7 +126,7 @@ test('scriptBasename skips a candidate whose extension is not .php when phpExten
     unset($_SERVER['PHP_SELF']);
 
     try {
-        expect(PageFilterHelper::scriptBasename())->toBe('picture');
+        expect(PageFilterHelper::scriptBasename(CurrentConfig::current()))->toBe('picture');
     } finally {
         pageFilterHelperTestRestoreServerKeys($saved);
     }
@@ -143,7 +143,7 @@ test('getFilterPageValue returns null when neither the page nor the default entr
     ]);
 
     try {
-        expect(PageFilterHelper::getFilterPageValue('unrelated_setting'))->toBeNull();
+        expect(PageFilterHelper::getFilterPageValue(CurrentConfig::current(), 'unrelated_setting'))->toBeNull();
     } finally {
         pageFilterHelperTestRestoreServerKeys($saved);
     }
@@ -166,8 +166,8 @@ test('getFilterPageValue returns the page-specific value when configured, fallin
     ]);
 
     try {
-        expect(PageFilterHelper::getFilterPageValue('show_thumbnail_caption'))->toBeTrue()
-            ->and(PageFilterHelper::getFilterPageValue('hide_menu'))->toBeFalse();
+        expect(PageFilterHelper::getFilterPageValue(CurrentConfig::current(), 'show_thumbnail_caption'))->toBeTrue()
+            ->and(PageFilterHelper::getFilterPageValue(CurrentConfig::current(), 'hide_menu'))->toBeFalse();
     } finally {
         pageFilterHelperTestRestoreServerKeys($saved);
     }
@@ -187,7 +187,7 @@ test('scriptBasename falls through to the next candidate when basename() reduces
     unset($_SERVER['PHP_SELF']);
 
     try {
-        expect(PageFilterHelper::scriptBasename())->toBe('picture');
+        expect(PageFilterHelper::scriptBasename(CurrentConfig::current()))->toBe('picture');
     } finally {
         pageFilterHelperTestRestoreServerKeys($saved);
     }

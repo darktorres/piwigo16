@@ -151,7 +151,7 @@ final readonly class SectionPopulator
         if (! isset($page['section'])) {
             $page['section'] = 'categories';
 
-            switch (PageFilterHelper::scriptBasename()) {
+            switch (PageFilterHelper::scriptBasename($this->currentConfig)) {
                 case 'picture':
                     break;
                 case 'index':
@@ -178,7 +178,7 @@ final readonly class SectionPopulator
 
                 default:
                     trigger_error(
-                        'script_basename "' . PageFilterHelper::scriptBasename() . '" unknown',
+                        'script_basename "' . PageFilterHelper::scriptBasename($this->currentConfig) . '" unknown',
                         E_USER_WARNING
                     );
             }
@@ -196,7 +196,7 @@ final readonly class SectionPopulator
         $section = is_string($page['section']) ? $page['section'] : '';
 
         // access a picture only by id, file or id-file without given section
-        if (PageFilterHelper::scriptBasename() === 'picture' and $section === 'categories' and
+        if (PageFilterHelper::scriptBasename($this->currentConfig) === 'picture' and $section === 'categories' and
               ! isset($page['category']) and ! isset($page['chronology_field'])) {
             $page['flat'] = true;
         }
@@ -694,7 +694,7 @@ final readonly class SectionPopulator
             $calendar_items_raw = is_array($page['items'] ?? null) ? $page['items'] : [];
             $calendar_items = array_values(array_filter($calendar_items_raw, static fn (mixed $v): bool => is_int($v) || is_string($v)));
 
-            $calendar_result = new CalendarRenderer($this->lang, $this->htmlRenderer, $this->template, $this->urlService, $this->currentUser, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->filterState, $this->imageStdParams)
+            $calendar_result = new CalendarRenderer($this->lang, $this->htmlRenderer, $this->template, $this->urlService, $this->currentUser, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->filterState, $this->imageStdParams, $this->pageState)
                 ->render(
                     $section,
                     $page_category,
@@ -759,7 +759,7 @@ final readonly class SectionPopulator
                 // safe; the later, fully-populated call for the normal
                 // (non-redirect) path simply overwrites it afterward.
                 $this->sectionContextRegistry->set(self::buildSectionContext($page));
-                $redirect_url = PageFilterHelper::scriptBasename() === 'picture' ? $this->urlService->duplicatePictureUrl() : $this->urlService->duplicateIndexUrl();
+                $redirect_url = PageFilterHelper::scriptBasename($this->currentConfig) === 'picture' ? $this->urlService->duplicatePictureUrl() : $this->urlService->duplicateIndexUrl();
 
                 if (! headers_sent()) { // this is a permanent redirection
                     $this->htmlRenderer->setStatusHeader(301);

@@ -60,7 +60,7 @@ final class PageTail
         // (L4) is the one place the concrete L4 implementation gets
         // constructed. Legacy Coupling Retirement Phase 4c: UrlServiceInterface
         // is wired the same way, see PageTailRenderer's own docblock.
-        new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
+        new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService())
             ->render(self::pageState()->requestStart);
     }
 
@@ -74,7 +74,7 @@ final class PageTail
     {
         self::checkForUpdates();
 
-        return new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
+        return new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService())
             ->renderToString(self::pageState()->requestStart);
     }
 
@@ -279,12 +279,12 @@ final class PageTail
             }
 
             if ($check_for_updates) {
-                $exec_id = UniqueExecLock::begins('check_for_updates');
+                $exec_id = UniqueExecLock::begins(self::currentLogger()->get(), 'check_for_updates');
                 if ($exec_id !== false) {
                     new CoreUpdateService(RequestBootstrap::lang(), new ZipExtractor(), new RedirectService(RequestBootstrap::lang(), self::userService(), self::eventDispatcher(), self::pageState()), self::urlService(), self::currentConfigService()->get(), self::paths(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService(), RequestBootstrap::currentConfig())
                         ->notifyPiwigoNewVersions();
 
-                    UniqueExecLock::ends('check_for_updates');
+                    UniqueExecLock::ends(self::currentLogger()->get(), 'check_for_updates');
                 }
             }
         }

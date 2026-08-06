@@ -86,10 +86,10 @@ final readonly class NoPhotoYetRenderer
     {
         if (
             ! $this->adminContext->isActive()   // no message inside administration
-            and PageFilterHelper::scriptBasename() !== 'identification' // keep the ability to login
-            and PageFilterHelper::scriptBasename() !== 'password'       // keep the ability to reset password
-            and PageFilterHelper::scriptBasename() !== 'ws'             // keep the ability to discuss with web API
-            and PageFilterHelper::scriptBasename() !== 'popuphelp'      // keep the ability to display help popups
+            and PageFilterHelper::scriptBasename($this->currentConfig) !== 'identification' // keep the ability to login
+            and PageFilterHelper::scriptBasename($this->currentConfig) !== 'password'       // keep the ability to reset password
+            and PageFilterHelper::scriptBasename($this->currentConfig) !== 'ws'             // keep the ability to discuss with web API
+            and PageFilterHelper::scriptBasename($this->currentConfig) !== 'popuphelp'      // keep the ability to display help popups
             and ($this->accessLevelChecker->isAGuest() or $this->accessLevelChecker->isAdmin())          // normal users are not concerned by no_photo_yet
             and ! isset($_SESSION['no_photo_yet'])     // temporary hide
         ) {
@@ -101,7 +101,7 @@ final readonly class NoPhotoYetRenderer
                 $user_theme = $this->currentUser->get()
                     ->theme;
                 $user_theme = $user_theme !== '' ? $user_theme : new UserService($this->lang, new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class), $this->mailer, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, $this->installationFlag, $this->processCache, $this->paths)->getDefaultTheme();
-                $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, $this->accessLevelChecker, $this->paths->root . 'themes', $user_theme);
+                $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, $this->accessLevelChecker, $this->sessionService, $this->paths->root . 'themes', $user_theme);
                 $this->currentTemplate->set($template);
 
                 $noPhotoYetAction = NoPhotoYetRequest::fromGlobals()->action;

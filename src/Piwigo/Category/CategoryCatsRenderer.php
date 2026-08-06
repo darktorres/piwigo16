@@ -13,6 +13,7 @@ use Piwigo\Core\Env;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\PaginationService;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RecentIconResolver;
@@ -83,6 +84,7 @@ final readonly class CategoryCatsRenderer
         private CurrentConfig $currentConfig,
         private Lang $lang,
         private ProcessCache $processCache,
+        private PageState $pageState,
     ) {}
 
     /**
@@ -386,6 +388,7 @@ final readonly class CategoryCatsRenderer
                         ]
                     ),
                     'CAPTION_NB_IMAGES' => CategoryService::getDisplayImagesCount(
+                        $this->lang,
                         $catNbImages,
                         $catCountImages,
                         $catCountCategories,
@@ -453,7 +456,7 @@ final readonly class CategoryCatsRenderer
             $template->assign('cats_navbar', $catsNavigationBar);
         }
 
-        TimingHelper::debug('end CategoryCatsRenderer::render()');
+        TimingHelper::debug('end CategoryCatsRenderer::render()', $this->pageState);
     }
 
     private function getCachedRepresentative(CacheItemPoolInterface $pool, int $userId, int $catId): ?string

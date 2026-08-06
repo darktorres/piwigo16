@@ -440,7 +440,7 @@ test('fetch() returns the real response body through a genuine self-request roun
     $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $port;
 
     try {
-        $result = HttpClientService::fetch('http://127.0.0.1:' . $port . '/probe.php');
+        $result = HttpClientService::fetch('http://127.0.0.1:' . $port . '/probe.php', CurrentConfig::current());
 
         expect($result)->toBe('real-local-fetch-body');
     } finally {
@@ -485,7 +485,7 @@ test('fetch() builds the GET query string, POST body/Content-Type, and User-Agen
 
     try {
         // GET with query data appended via '?' (no existing query string).
-        $getResult = HttpClientService::fetch($base, ['a' => '1', 'b' => '2'], [], 'CustomAgent/1.0');
+        $getResult = HttpClientService::fetch($base, CurrentConfig::current(), ['a' => '1', 'b' => '2'], [], 'CustomAgent/1.0');
         expect($getResult)->toBeString();
         assert(is_string($getResult));
         $getDecoded = json_decode($getResult, true);
@@ -498,7 +498,7 @@ test('fetch() builds the GET query string, POST body/Content-Type, and User-Agen
         ]);
 
         // GET with query data appended via '&' (URL already has a '?').
-        $ampResult = HttpClientService::fetch($base . '?existing=1', ['a' => '1'], [], 'CustomAgent/1.0');
+        $ampResult = HttpClientService::fetch($base . '?existing=1', CurrentConfig::current(), ['a' => '1'], [], 'CustomAgent/1.0');
         expect($ampResult)->toBeString();
         assert(is_string($ampResult));
         $ampDecoded = json_decode($ampResult, true);
@@ -506,7 +506,7 @@ test('fetch() builds the GET query string, POST body/Content-Type, and User-Agen
         expect($ampDecoded['get'] ?? null)->toBe(['existing' => '1', 'a' => '1']);
 
         // POST with form-encoded body and Content-Type.
-        $postResult = HttpClientService::fetch($base, [], ['x' => 'y', 'z' => 'w'], 'CustomAgent/1.0');
+        $postResult = HttpClientService::fetch($base, CurrentConfig::current(), [], ['x' => 'y', 'z' => 'w'], 'CustomAgent/1.0');
         expect($postResult)->toBeString();
         assert(is_string($postResult));
         $postDecoded = json_decode($postResult, true);
@@ -573,7 +573,7 @@ test('fetch() forwards the X-Piwigo-Env test-mode header on a genuine self-reque
     $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $port;
 
     try {
-        $result = HttpClientService::fetch('http://127.0.0.1:' . $port . '/echo.php');
+        $result = HttpClientService::fetch('http://127.0.0.1:' . $port . '/echo.php', CurrentConfig::current());
 
         expect($result)->toBeString();
         assert(is_string($result));
@@ -616,10 +616,10 @@ test('guardedFetch() accepts status 200 and 399 but rejects 199 and 400, pinning
     $base = 'http://127.0.0.1:' . $port . '/status.php';
 
     try {
-        expect(HttpClientService::fetch($base . '?s=199'))->toBeFalse();
-        expect(HttpClientService::fetch($base . '?s=200'))->toBe('body-for-status-200');
-        expect(HttpClientService::fetch($base . '?s=399'))->toBe('body-for-status-399');
-        expect(HttpClientService::fetch($base . '?s=400'))->toBeFalse();
+        expect(HttpClientService::fetch($base . '?s=199', CurrentConfig::current()))->toBeFalse();
+        expect(HttpClientService::fetch($base . '?s=200', CurrentConfig::current()))->toBe('body-for-status-200');
+        expect(HttpClientService::fetch($base . '?s=399', CurrentConfig::current()))->toBe('body-for-status-399');
+        expect(HttpClientService::fetch($base . '?s=400', CurrentConfig::current()))->toBeFalse();
     } finally {
         if ($originalHost === null) {
             unset($_SERVER['HTTP_HOST']);
@@ -646,7 +646,7 @@ test('fetchToFile() writes the real self-requested response body into the given 
 
     try {
         if ($handle !== false) {
-            $ok = HttpClientService::fetchToFile($handle, 'http://127.0.0.1:' . $port . '/probe.php');
+            $ok = HttpClientService::fetchToFile($handle, 'http://127.0.0.1:' . $port . '/probe.php', CurrentConfig::current());
             fclose($handle);
 
             expect($ok)->toBeTrue();
@@ -683,7 +683,7 @@ test('fetch() propagates real content instead of throwing when guardedFetch() re
     $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $port;
 
     try {
-        $result = HttpClientService::fetch('http://127.0.0.1:' . $port . '/loop.php');
+        $result = HttpClientService::fetch('http://127.0.0.1:' . $port . '/loop.php', CurrentConfig::current());
 
         expect($result)->toBe('');
     } finally {
@@ -716,7 +716,7 @@ test('fetchToFile() writes real content instead of throwing when guardedFetch() 
 
     try {
         if ($handle !== false) {
-            $ok = HttpClientService::fetchToFile($handle, 'http://127.0.0.1:' . $port . '/loop.php');
+            $ok = HttpClientService::fetchToFile($handle, 'http://127.0.0.1:' . $port . '/loop.php', CurrentConfig::current());
             fclose($handle);
 
             expect($ok)->toBeTrue();
@@ -747,7 +747,7 @@ test('fetchToFile() returns false instead of crashing when guardedFetch() return
 
     try {
         if ($handle !== false) {
-            $result = HttpClientService::fetchToFile($handle, 'http:///i.php');
+            $result = HttpClientService::fetchToFile($handle, 'http:///i.php', CurrentConfig::current());
 
             expect($result)->toBeFalse();
         }
@@ -784,7 +784,7 @@ test('fetchToFile() returns false, not true, when the write to the given handle 
     set_error_handler(static fn (): bool => true, \E_WARNING);
     try {
         if ($handle !== false) {
-            $result = HttpClientService::fetchToFile($handle, 'http://127.0.0.1:' . $port . '/probe.php');
+            $result = HttpClientService::fetchToFile($handle, 'http://127.0.0.1:' . $port . '/probe.php', CurrentConfig::current());
 
             expect($result)->toBeFalse();
         }
@@ -847,7 +847,7 @@ test('guardedFetch() actually routes through the configured proxy and embeds Bas
     CurrentConfig::current()->setProxyAuth('theuser:thepass');
 
     try {
-        $result = HttpClientService::fetch('http://my-self-host.test/i.php?x=1');
+        $result = HttpClientService::fetch('http://my-self-host.test/i.php?x=1', CurrentConfig::current());
 
         expect($result)->toBeString();
         assert(is_string($result));
@@ -892,7 +892,7 @@ test('guardedFetch() does not route through the proxy at all when useProxy is fa
     CurrentConfig::current()->setProxyServer('http://127.0.0.1:' . $proxyPort);
 
     try {
-        $result = HttpClientService::fetch('http://127.0.0.1:' . $targetPort . '/direct.php');
+        $result = HttpClientService::fetch('http://127.0.0.1:' . $targetPort . '/direct.php', CurrentConfig::current());
 
         expect($result)->toBe('direct-hit');
     } finally {
@@ -934,7 +934,7 @@ test('guardedFetch() does not embed Basic-auth credentials into the proxy URL wh
     CurrentConfig::current()->setProxyAuth('');
 
     try {
-        $result = HttpClientService::fetch('http://127.0.0.1:' . $targetPort . '/direct.php');
+        $result = HttpClientService::fetch('http://127.0.0.1:' . $targetPort . '/direct.php', CurrentConfig::current());
 
         expect($result)->toBeString();
         assert(is_string($result));
@@ -1030,7 +1030,7 @@ test('fetch returns false instead of throwing when the url has no host segment',
     // way as any other unreachable request, not escape as a fatal
     // exception. No client mocking needed: the exception fires at
     // URI-parse time, before self::defaultClient() is ever dispatched to.
-    expect(HttpClientService::fetch('http:///i.php?/upload/2026/08/01/photo.png'))->toBeFalse();
+    expect(HttpClientService::fetch('http:///i.php?/upload/2026/08/01/photo.png', CurrentConfig::current()))->toBeFalse();
 });
 
 /**

@@ -86,7 +86,7 @@ final class FilterService implements FilterUpdaterInterface
 
         $recentFilterRequest = RecentFilterRequest::fromGlobals();
 
-        if (! (bool) PageFilterHelper::getFilterPageValue('cancel')) {
+        if (! (bool) PageFilterHelper::getFilterPageValue($this->currentConfig, 'cancel')) {
             if ($recentFilterRequest->filterPresent) {
                 $filter['matches'] = [];
                 $filter_get_param = $recentFilterRequest->filterValue;
@@ -226,7 +226,7 @@ final class FilterService implements FilterUpdaterInterface
                 $filter['visible_images'] = $this->sessionService->getSessionVar('filter_visible_images', '');
             }
             unset($filter_key);
-            if ((bool) PageFilterHelper::getFilterPageValue('add_notes')) {
+            if ((bool) PageFilterHelper::getFilterPageValue($this->currentConfig, 'add_notes')) {
                 $pageState->addHeaderNote($this->translator->plural(
                     'Photos posted within the last %d day.',
                     'Photos posted within the last %d days.',

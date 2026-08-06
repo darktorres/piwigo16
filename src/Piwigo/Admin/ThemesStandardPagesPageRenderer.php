@@ -19,8 +19,10 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Ported from admin/themes_standard_pages.php -- configures the "standard
@@ -64,6 +66,8 @@ final class ThemesStandardPagesPageRenderer
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly CurrentConfig $currentConfig,
         private readonly Paths $paths,
+        private readonly CurrentUser $currentUser,
+        private readonly EventDispatcher $eventDispatcher,
     ) {}
 
     public function render(): void
@@ -197,7 +201,7 @@ final class ThemesStandardPagesPageRenderer
 
         // We want to now if any themes use standard pages and which ones
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths);
+            ->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
 
         $is_standard_pages_used = false;
         $standard_pages_used_by = [];

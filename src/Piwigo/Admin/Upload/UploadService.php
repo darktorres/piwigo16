@@ -663,7 +663,7 @@ final class UploadService
         // Fire-and-forget: the response content is never read, only the
         // self-request's side effect (forcing derivative-image generation)
         // matters.
-        HttpClientService::fetch($derivative_url);
+        HttpClientService::fetch($derivative_url, $this->currentConfig);
 
         $this->eventDispatcher->dispatchNotify(new LocEndAddUploadedFile($image_infos));
 

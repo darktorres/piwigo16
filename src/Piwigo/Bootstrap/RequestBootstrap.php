@@ -476,7 +476,7 @@ final class RequestBootstrap
         self::imageStdParams();
 
         session_start();
-        PluginLoader::loadPlugins(self::loadedPlugins(), EventDispatcher::get(), self::activityService($conn), self::currentConfig(), self::wsContext(), self::accessControl(), self::pageState(), self::paths());
+        PluginLoader::loadPlugins(self::loadedPlugins(), self::eventDispatcher(), self::activityService($conn), self::currentConfig(), self::wsContext(), self::accessControl(), self::pageState(), self::paths());
 
         if (self::currentConfig()->piwigoInstalledVersion() === null) {
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
@@ -511,7 +511,7 @@ final class RequestBootstrap
         }
 
         if (LoungeMaintenance::needsEmptying()) {
-            new ImageService(self::lang(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::activityService($conn), self::sessionService(), EventDispatcher::get(), self::currentConfig(), self::translator(), self::paths())
+            new ImageService(self::lang(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::activityService($conn), self::sessionService(), self::eventDispatcher(), self::currentConfig(), self::translator(), self::paths())
                 ->emptyLounge();
         }
 
@@ -545,7 +545,7 @@ final class RequestBootstrap
         // runs during RequestPipeline::handle() -- after bootEntryPoint()
         // (connect()+finalize()) has fully returned, so it was never
         // actually affected by this ordering bug).
-        EventDispatcher::get()->addTypedHandler(TryLogUser::class, new AuthService(
+        self::eventDispatcher()->addTypedHandler(TryLogUser::class, new AuthService(
             new AuthRepository(EntityManagerFactory::build($conn)),
             self::activityService($conn),
             self::htmlService(),
@@ -553,15 +553,15 @@ final class RequestBootstrap
             new CookieService(),
             EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class),
             self::sessionService(),
-            EventDispatcher::get(),
+            self::eventDispatcher(),
             self::pageState(),
             self::currentUser(),
             self::currentConfig(),
             self::paths(),
         )->pwgLogin(...));
         new UserBootstrap(
-            AccessControl::current(),
-            new RedirectService(self::lang(), self::userService()),
+            self::accessLevelChecker(),
+            new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::pageState()),
             self::urlService(),
             self::apiKeyRequestFlag(),
             self::currentLogger(),
@@ -612,7 +612,7 @@ final class RequestBootstrap
             self::htmlService(),
             $conn,
             self::sessionService(),
-            EventDispatcher::get(),
+            self::eventDispatcher(),
             self::deploymentPolicy(),
             self::currentUser(),
             self::currentConfig(),
@@ -621,12 +621,12 @@ final class RequestBootstrap
             self::paths(),
         ));
         self::lang()->load('common.lang');
-        if (AccessControl::current()->isAdmin() || self::adminContext()->isActive()) {
+        if (self::accessLevelChecker()->isAdmin() || self::adminContext()->isActive()) {
             self::lang()->load('admin.lang');
             // Add language for temporary strings for new popup, from piwigo 15
             self::lang()->load('whats_new_' . VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
         }
-        EventDispatcher::get()->dispatchNotify(new LoadingLang());
+        self::eventDispatcher()->dispatchNotify(new LoadingLang());
         self::lang()->load('lang', self::paths()->siteLocal, [
             'no_fallback' => true,
             'local' => true,
@@ -634,7 +634,7 @@ final class RequestBootstrap
 
         // only now we can set the localized username of the guest user (and not in
         // UserBootstrap::initialize())
-        if (AccessControl::current()->isAGuest()) {
+        if (self::accessLevelChecker()->isAGuest()) {
             // Second CurrentUser sync point (the first is inside
             // UserBootstrap::initialize()) -- isAGuest() itself already
             // reads CurrentUser (synced there with the pre-localization
@@ -685,13 +685,13 @@ final class RequestBootstrap
             $admin_theme = new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
                 ->getParam('admin_theme', self::currentConfig()->adminTheme());
             $admin_theme = is_string($admin_theme) ? $admin_theme : self::currentConfig()->adminTheme();
-            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::paths()->root . 'themes/admin', $admin_theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::paths()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = self::currentUser()->get()->theme;
             if (PageFilterHelper::scriptBasename() !== 'ws' and DeviceHelper::mobileTheme()) {
                 $theme = self::currentConfig()->mobilTheme();
             }
-            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::paths()->root . 'themes', $theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::paths()->root . 'themes', $theme);
         }
 
         // Legacy Coupling Retirement Track A / Phase 2 global-residual
@@ -722,7 +722,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(self::lang(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService()), self::urlService(), self::paths(), self::adminContext(), self::sessionService(), EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService(), self::currentConfig(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::htmlService(), self::installationFlag())
+            new NoPhotoYetRenderer(self::lang(), self::accessLevelChecker(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::pageState()), self::urlService(), self::paths(), self::adminContext(), self::sessionService(), self::eventDispatcher(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService(), self::currentConfig(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::htmlService(), self::installationFlag())
                 ->render();
         }
 
@@ -734,7 +734,7 @@ final class RequestBootstrap
         if (self::currentConfig()->galleryLocked()) {
             $pageState->addHeaderMessage(self::lang()->t('The gallery is locked for maintenance. Please, come back later.'));
 
-            if (PageFilterHelper::scriptBasename() !== 'identification' and ! AccessControl::current()->isAdmin()) {
+            if (PageFilterHelper::scriptBasename() !== 'identification' and ! self::accessLevelChecker()->isAdmin()) {
                 // Workstream C3, catch point 1: throws instead of the
                 // former raw header()+echo+exit() -- caught in
                 // include/common.inc.php, the one seam both dispatch
@@ -766,13 +766,13 @@ final class RequestBootstrap
         $pageState->headerNotes = array_merge($pageState->headerNotes, self::currentConfig()->headerNotes());
 
         // default event handlers
-        EventDispatcher::get()->addTypedHandler(RenderCategoryLiteralDescription::class, self::htmlService()->renderCategoryLiteralDescription(...));
+        self::eventDispatcher()->addTypedHandler(RenderCategoryLiteralDescription::class, self::htmlService()->renderCategoryLiteralDescription(...));
         if (! self::currentConfig()->allowHtmlDescriptions()) {
             // pwgNl2br() is a generic string transform reused by
             // RenderElementDescription's own default handler too -- a thin
             // adapter closure per event, leaving pwgNl2br() itself untouched,
             // since one method can't be typed for two different event classes.
-            EventDispatcher::get()->addTypedHandler(
+            self::eventDispatcher()->addTypedHandler(
                 RenderCategoryDescription::class,
                 static function (RenderCategoryDescription $e): RenderCategoryDescription {
                     $result = self::htmlService()
@@ -783,11 +783,11 @@ final class RequestBootstrap
                 },
             );
         }
-        EventDispatcher::get()->addTypedHandler(RenderCommentContent::class, self::htmlService()->renderCommentContent(...));
+        self::eventDispatcher()->addTypedHandler(RenderCommentContent::class, self::htmlService()->renderCommentContent(...));
         // 'strip_tags' is PHP's own native function -- can't be retyped, so
         // this is a thin adapter closure instead, same reasoning as
         // pwgNl2br() above.
-        EventDispatcher::get()->addTypedHandler(
+        self::eventDispatcher()->addTypedHandler(
             RenderCommentAuthor::class,
             static function (RenderCommentAuthor $e): RenderCommentAuthor {
                 $e->commentAuthor = strip_tags($e->commentAuthor);
@@ -807,7 +807,7 @@ final class RequestBootstrap
         // StringHelper::str2url() is called directly from 6+ unrelated
         // production sites -- a thin adapter closure keeps its own signature
         // untouched, same reasoning as pwgNl2br()/strip_tags() above.
-        EventDispatcher::get()->addTypedHandler(
+        self::eventDispatcher()->addTypedHandler(
             RenderTagUrl::class,
             static function (RenderTagUrl $e): RenderTagUrl {
                 $e->tagName = StringHelper::str2url($e->tagName);
@@ -815,7 +815,7 @@ final class RequestBootstrap
                 return $e;
             },
         );
-        EventDispatcher::get()->addTypedHandler(BlockManagerRegisterBlocks::class, self::htmlService()->registerDefaultMenubarBlocks(...));
+        self::eventDispatcher()->addTypedHandler(BlockManagerRegisterBlocks::class, self::htmlService()->registerDefaultMenubarBlocks(...));
         // Relocated from include/functions_comment.inc.php (deleted, P23 batch 8c)
         // -- that file's own top-level add_event_handler() call only ever ran via
         // its include_once at each real caller, all of which now construct
@@ -824,7 +824,7 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentUser(), self::currentConfig(), new AccessLevelChecker(self::currentUser(), self::currentConfig()))->checkForSpam(...));
+        self::eventDispatcher()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentUser(), self::currentConfig(), self::accessLevelChecker())->checkForSpam(...));
         // Item 16E: real listener for a previously-unregistered event --
         // Category\CategoryService::deleteSite() dispatches this instead
         // of reaching into Site\SiteRepository directly (a real deptrac
@@ -832,7 +832,7 @@ final class RequestBootstrap
         // A thin adapter closure -- SiteRepository::delete()'s own
         // (int $id): void signature doesn't match addTypedHandler()'s
         // own callable(T): (T|void) contract.
-        EventDispatcher::get()->addTypedHandler(
+        self::eventDispatcher()->addTypedHandler(
             DeleteSite::class,
             static function (DeleteSite $e) use ($conn): void {
                 EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)->delete($e->siteId);
@@ -859,19 +859,19 @@ final class RequestBootstrap
         // signature check; addEventHandler()'s untyped string|array|object
         // parameter keeps this exactly as harmless (lazy, never eagerly
         // validated) as it was before this typed conversion.
-        EventDispatcher::get()->addEventHandler(UploadImageResize::class, 'pwg_image_resize');
-        EventDispatcher::get()->addEventHandler(UploadThumbnailResize::class, 'pwg_image_resize');
-        EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFilePdf(...));
-        EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileHeic(...));
-        EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileTiff(...));
-        EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileVideo(...));
-        EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFilePsd(...));
-        EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileEps(...));
+        self::eventDispatcher()->addEventHandler(UploadImageResize::class, 'pwg_image_resize');
+        self::eventDispatcher()->addEventHandler(UploadThumbnailResize::class, 'pwg_image_resize');
+        self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFilePdf(...));
+        self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFileHeic(...));
+        self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFileTiff(...));
+        self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFileVideo(...));
+        self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFilePsd(...));
+        self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFileEps(...));
         if (self::currentConfig()->originalUrlProtection() !== '') {
-            EventDispatcher::get()->addTypedHandler(GetElementUrl::class, self::htmlService()->getElementUrlProtectionHandler(...));
-            EventDispatcher::get()->addTypedHandler(GetSrcImageUrl::class, self::htmlService()->getSrcImageUrlProtectionHandler(...));
+            self::eventDispatcher()->addTypedHandler(GetElementUrl::class, self::htmlService()->getElementUrlProtectionHandler(...));
+            self::eventDispatcher()->addTypedHandler(GetSrcImageUrl::class, self::htmlService()->getSrcImageUrlProtectionHandler(...));
         }
-        EventDispatcher::get()->dispatchNotify(new Init());
+        self::eventDispatcher()->dispatchNotify(new Init());
 
         // Formerly the tail of Piwigo\Bootstrap\CommonBootstrap::run(),
         // called after this whole bootstrap already completed -- moved
@@ -1290,9 +1290,18 @@ final class RequestBootstrap
 
     /**
      * Resolves the container-shared instance -- singleton/service-locator
-     * elimination campaign, Phase 7.
+     * elimination campaign, Phase 7. Widened from private to public in
+     * Phase 12 sub-phase 12B: PluginLoader::loadPlugins() genuinely needs
+     * the full AccessControl (real checkStatus()/accessDenied()
+     * enforcement, passed through to third-party PluginMaintain
+     * subclasses); public/admin.php and public/random.php need the same
+     * full class for their own checkStatus() calls, and are both already
+     * past their own RequestBootstrap::bootEntryPoint() call, so this is
+     * the same established "real entry-shell caller reaches a
+     * RequestBootstrap public accessor" pattern every other
+     * RequestBootstrap::x() public method already serves.
      */
-    private static function accessControl(): AccessControl
+    public static function accessControl(): AccessControl
     {
         $accessControl = Kernel::container()->get(AccessControl::class);
         if (! $accessControl instanceof AccessControl) {
@@ -1300,6 +1309,19 @@ final class RequestBootstrap
         }
 
         return $accessControl;
+    }
+
+    /**
+     * Cheap, no-Doctrine-dependency counterpart to accessControl() above --
+     * singleton/service-locator elimination campaign, Phase 12A. Every real
+     * caller in this file only ever needs isAdmin()/isAGuest(), never
+     * checkStatus()/accessDenied(), so this builds AccessLevelChecker
+     * directly rather than resolving the full AccessControl through the
+     * container.
+     */
+    private static function accessLevelChecker(): AccessLevelChecker
+    {
+        return new AccessLevelChecker(self::currentUser(), self::currentConfig());
     }
 
     /**

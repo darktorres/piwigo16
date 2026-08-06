@@ -147,7 +147,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
         $this->userService = new UserService(Lang::current(), new UserRepository($em, new EventDispatcher(), CurrentConfig::current()), $em->getRepository(GroupEntity::class), $mailer, new ActivityService($em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, $this->sessionService, new EventDispatcher(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPaths::get());
-        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, HtmlServiceTestFactory::build(), new RedirectService(Lang::current(), $this->userService), $this->sessionService, new EventDispatcher(), CurrentUser::current(), Lang::current(), CurrentConfig::current(), new CurrentLogger(), new DeploymentPolicy(), CurrentPaths::get(), $this->tagService);
+        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, HtmlServiceTestFactory::build(), new RedirectService(Lang::current(), $this->userService, EventDispatcher::get(), PageState::current()), $this->sessionService, new EventDispatcher(), CurrentUser::current(), Lang::current(), CurrentConfig::current(), new CurrentLogger(), new DeploymentPolicy(), CurrentPaths::get(), $this->tagService);
         $this->sectionRepo = new SectionRepository($em);
         $this->currentLogger = new CurrentLogger();
         $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
@@ -203,7 +203,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->tagService,
             $this->searchService,
             $this->userService,
-            new RedirectService(Lang::current(), $this->userService),
+            new RedirectService(Lang::current(), $this->userService, EventDispatcher::get(), PageState::current()),
             UrlServiceTestFactory::build(),
             $this->filterState,
             $this->currentLogger,

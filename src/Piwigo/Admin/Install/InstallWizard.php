@@ -461,7 +461,7 @@ final class InstallWizard
      */
     public function analyzeForm(): void
     {
-        $this->conn = InstallService::installDbConnect($this->infos, $this->errors);
+        $this->conn = InstallService::installDbConnect($this->infos, $this->errors, $this->lang);
 
         if (count($this->errors) > 0) {
             print_r($this->errors);
@@ -717,8 +717,8 @@ define(\'DB_COLLATE\', \'\');
         // `if (! defined('PWG_CHARSET'))` re-guard that sat here was
         // provably dead and was dropped in the 8f-6 port (SEC-60 forbids
         // define() in src/Piwigo anyway).
-        InstallService::activateCoreThemes();
-        InstallService::activateCorePlugins();
+        InstallService::activateCoreThemes($this->lang, $this->currentUser, $this->currentConfigService, $this->currentConfig, $this->paths);
+        InstallService::activateCorePlugins($this->lang, $this->paths);
 
         $insert = [
             'id' => 1,

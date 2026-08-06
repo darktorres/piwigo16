@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
-use LogicException;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\RedirectServiceInterface;
 
 /**
@@ -44,6 +42,14 @@ use Piwigo\Core\RedirectServiceInterface;
  * AccessLevelChecker directly, which has no Doctrine dependency of its
  * own, so there is no more risk to guard against.
  *
+ * Sub-phase 12B: the current() transitional-bridge shim itself is deleted
+ * -- its last real production callers (RequestBootstrap.php's 3 direct
+ * calls, PageTail.php's 2, public/admin.php's 1, public/random.php's 2)
+ * all closed, either via real constructor injection or a private/public
+ * Bootstrap-internal resolver. Every real caller now takes this class via
+ * constructor injection or resolves it through Kernel::container()
+ * directly from Bootstrap/-internal code.
+ *
  * P23 batch 8d: ported from include/functions_user.inc.php's
  * get_user_status()/get_access_type_status()/is_autorize_status()/
  * check_status()/is_generic()/is_a_guest()/is_classic_user()/is_admin()/
@@ -56,30 +62,6 @@ final class AccessControl
         private readonly RedirectServiceInterface $redirectService,
         private readonly AccessLevelChecker $accessLevelChecker,
     ) {}
-
-    /**
-     * @deprecated transitional bridge for callers not yet converted to
-     * constructor injection -- see the singleton/service-locator
-     * elimination campaign plan, Phase 7. A live container resolve on
-     * every call (no memoized pre-boot fallback, unlike e.g.
-     * `CurrentUser::current()`): unlike a boolean marker/holder, this
-     * class has no safe "unset" default to fall back to -- access-control
-     * decisions must always reflect real state, so this throws naturally
-     * (via `Kernel::container()`) if called before `Kernel::boot()`,
-     * matching `SrcImage`/`DerivativeImage`/`ScriptLoader`'s own Phase 6
-     * bridge shape, not `CurrentUser`/`CurrentTemplate`'s memoized-fallback
-     * shape. Delete once `grep -rn "AccessControl::current("` outside
-     * tests/ returns nothing.
-     */
-    public static function current(): self
-    {
-        $instance = Kernel::container()->get(self::class);
-        if (! $instance instanceof self) {
-            throw new LogicException('Container returned an unexpected type for ' . self::class);
-        }
-
-        return $instance;
-    }
 
     public function getUserStatus(string $userStatus = ''): string
     {

@@ -67,7 +67,11 @@ namespace Piwigo\Tests\Integration {
             unset($_COOKIE['pwg_anonymous_rater']);
 
             $this->conn = DbConnection::build();
-            $this->service = new RateService(AccessControl::current(), EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class), new CookieService(), EventDispatcher::get(), CurrentUser::current(), CurrentConfig::current());
+            $accessControl = Kernel::container()->get(AccessControl::class);
+            if (! $accessControl instanceof AccessControl) {
+                throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
+            }
+            $this->service = new RateService($accessControl, EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class), new CookieService(), EventDispatcher::get(), CurrentUser::current(), CurrentConfig::current());
         }
 
         public function test_rate_returns_false_for_a_null_rate(): void

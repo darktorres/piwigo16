@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RequestBootstrap;
 
 // +-----------------------------------------------------------------------+
@@ -30,5 +29,5 @@ $paths = Paths::fromRoot(dirname(__DIR__));
 
 RequestBootstrap::bootEntryPoint($paths, isAdmin: true);
 
-new AdminShell(RequestBootstrap::lang(), AccessControl::current(), new RedirectService(RequestBootstrap::lang(), RequestBootstrap::userService()), RequestBootstrap::urlService(), RequestBootstrap::currentConfigService()->get(), $paths, RequestBootstrap::filesystemIntegrityChecker(), RequestBootstrap::coreTabs(), RequestBootstrap::sessionService(), RequestBootstrap::eventDispatcher(), RequestBootstrap::deploymentPolicy(), RequestBootstrap::pageState(), RequestBootstrap::currentUser(), RequestBootstrap::currentTemplate(), RequestBootstrap::commentService(), RequestBootstrap::imageService(), RequestBootstrap::preferencesService(), RequestBootstrap::userService(), RequestBootstrap::htmlService(), RequestBootstrap::currentConfig(), RequestBootstrap::inputValidator())
+new AdminShell(RequestBootstrap::lang(), RequestBootstrap::accessControl(), new RedirectService(RequestBootstrap::lang(), RequestBootstrap::userService(), RequestBootstrap::eventDispatcher(), RequestBootstrap::pageState()), RequestBootstrap::urlService(), RequestBootstrap::currentConfigService()->get(), $paths, RequestBootstrap::filesystemIntegrityChecker(), RequestBootstrap::coreTabs(), RequestBootstrap::sessionService(), RequestBootstrap::eventDispatcher(), RequestBootstrap::deploymentPolicy(), RequestBootstrap::pageState(), RequestBootstrap::currentUser(), RequestBootstrap::currentTemplate(), RequestBootstrap::commentService(), RequestBootstrap::imageService(), RequestBootstrap::preferencesService(), RequestBootstrap::userService(), RequestBootstrap::htmlService(), RequestBootstrap::currentConfig(), RequestBootstrap::inputValidator())
     ->run();

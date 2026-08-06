@@ -29,8 +29,8 @@ use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\EntityManagerFactory;
@@ -89,27 +89,27 @@ final class InstallService
     /**
      * Automatically activate all core themes in the "themes" directory.
      */
-    public static function activateCoreThemes(): void
+    public static function activateCoreThemes(Lang $lang, CurrentUser $currentUser, CurrentConfigService $currentConfigService, CurrentConfig $currentConfig, Paths $paths): void
     {
         $urlService = PresentationAccessor::urlService();
         $conn = DbConnection::build();
         $lifecycle = new ExtensionLifecycle(
-            Lang::current(),
+            $lang,
             new ExtensionRepository(EntityManagerFactory::build($conn)),
-            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), CurrentUser::current(), CurrentPaths::get()),
+            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), $currentUser, $paths),
             $urlService,
-            CurrentConfigService::current()->get(),
+            $currentConfigService->get(),
             EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class),
             ExtendedDomainAccessor::activityService(),
             CoreDomainAccessor::userService(),
             PresentationAccessor::htmlService(),
-            CurrentConfig::current(),
+            $currentConfig,
             InfrastructureAccessor::wsContext(),
             CoreDomainAccessor::accessControl(),
-            CurrentPaths::get(),
+            $paths,
         );
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $urlService, Lang::current(), CurrentPaths::get());
+            ->scan(ExtensionType::Theme, $urlService, $lang, $paths);
         foreach ($fs_themes as $theme_id => $fs_theme) {
             if (in_array($theme_id, [AppInfo::DEFAULT_TEMPLATE], true)) {
                 $lifecycle->performAction(ExtensionType::Theme, 'activate', $theme_id, $fs_theme);
@@ -120,12 +120,12 @@ final class InstallService
     /**
      * Automatically activate some core plugins
      */
-    public static function activateCorePlugins(): void
+    public static function activateCorePlugins(Lang $lang, Paths $paths): void
     {
         // No core plugins are auto-activated at install time (empty list,
         // matching the original's own empty in_array() haystack).
         new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, PresentationAccessor::urlService(), Lang::current(), CurrentPaths::get());
+            ->scan(ExtensionType::Plugin, PresentationAccessor::urlService(), $lang, $paths);
     }
 
     /**
@@ -140,7 +140,7 @@ final class InstallService
      *   method
      * @param array<int, string> $errors - populated with errors
      */
-    public static function installDbConnect(array &$infos, array &$errors): ?Connection
+    public static function installDbConnect(array &$infos, array &$errors, Lang $lang): ?Connection
     {
         try {
             $conn = DbConnection::build();
@@ -172,7 +172,7 @@ final class InstallService
 
             return $conn;
         } catch (Exception $e) {
-            $errors[] = Lang::current()->t($e->getMessage());
+            $errors[] = $lang->t($e->getMessage());
 
             return null;
         }

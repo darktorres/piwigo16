@@ -10,7 +10,7 @@ use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\PiwigoInfosSender;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
@@ -60,7 +60,7 @@ final class PageTail
         // (L4) is the one place the concrete L4 implementation gets
         // constructed. Legacy Coupling Retirement Phase 4c: UrlServiceInterface
         // is wired the same way, see PageTailRenderer's own docblock.
-        new PageTailRenderer(AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths()), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
+        new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
             ->render(self::pageState()->requestStart);
     }
 
@@ -74,7 +74,7 @@ final class PageTail
     {
         self::checkForUpdates();
 
-        return new PageTailRenderer(AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths()), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
+        return new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
             ->renderToString(self::pageState()->requestStart);
     }
 
@@ -238,6 +238,28 @@ final class PageTail
         return $mailService;
     }
 
+    private static function eventDispatcher(): EventDispatcher
+    {
+        $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
+        if (! $eventDispatcher instanceof EventDispatcher) {
+            throw new LogicException('Container returned an unexpected type for ' . EventDispatcher::class);
+        }
+
+        return $eventDispatcher;
+    }
+
+    /**
+     * Cheap, no-Doctrine-dependency counterpart to the other resolvers
+     * above -- singleton/service-locator elimination campaign, Phase 12A.
+     * PageTailRenderer only ever needs isAGuest(), never checkStatus()/
+     * accessDenied(), so this builds AccessLevelChecker directly rather
+     * than resolving the full AccessControl through the container.
+     */
+    private static function accessLevelChecker(): AccessLevelChecker
+    {
+        return new AccessLevelChecker(RequestBootstrap::currentUser(), RequestBootstrap::currentConfig());
+    }
+
     private static function checkForUpdates(): void
     {
         // ----------------------------------------------- update notification
@@ -259,7 +281,7 @@ final class PageTail
             if ($check_for_updates) {
                 $exec_id = UniqueExecLock::begins('check_for_updates');
                 if ($exec_id !== false) {
-                    new CoreUpdateService(RequestBootstrap::lang(), new ZipExtractor(), new RedirectService(RequestBootstrap::lang(), self::userService()), self::urlService(), self::currentConfigService()->get(), self::paths(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService(), RequestBootstrap::currentConfig())
+                    new CoreUpdateService(RequestBootstrap::lang(), new ZipExtractor(), new RedirectService(RequestBootstrap::lang(), self::userService(), self::eventDispatcher(), self::pageState()), self::urlService(), self::currentConfigService()->get(), self::paths(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService(), RequestBootstrap::currentConfig())
                         ->notifyPiwigoNewVersions();
 
                     UniqueExecLock::ends('check_for_updates');

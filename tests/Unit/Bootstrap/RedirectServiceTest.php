@@ -103,7 +103,7 @@ function redirect_service_test_user_service(): UserService
 }
 
 test('redirectHttp throws ResponseReadyException with a 302 redirect to the given URL', function (): void {
-    $service = new RedirectService(redirect_service_test_lang(), redirect_service_test_user_service());
+    $service = new RedirectService(redirect_service_test_lang(), redirect_service_test_user_service(), new EventDispatcher(), new PageState());
     $exception = null;
     try {
         $service->redirectHttp('http://example.test/target.php');
@@ -118,7 +118,7 @@ test('redirectHttp throws ResponseReadyException with a 302 redirect to the give
 });
 
 test('redirectHttp html_entity_decode()s the URL before redirecting', function (): void {
-    $service = new RedirectService(redirect_service_test_lang(), redirect_service_test_user_service());
+    $service = new RedirectService(redirect_service_test_lang(), redirect_service_test_user_service(), new EventDispatcher(), new PageState());
     $exception = null;
     try {
         $service->redirectHttp('http://example.test/target.php?a=1&amp;b=2');

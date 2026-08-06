@@ -8,7 +8,7 @@ use Override;
 use LogicException;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -74,7 +74,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         $_SESSION = [];
 
         $this->renderer = new PageTailRenderer(
-            AccessControl::current(),
+            new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()),
             new class implements TelemetrySenderInterface {
                 public function send(): void
                 {

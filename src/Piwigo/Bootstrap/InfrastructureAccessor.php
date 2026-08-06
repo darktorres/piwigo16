@@ -9,6 +9,7 @@ use LogicException;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\WsContext;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Storage\StorageRegistry;
 
 /**
@@ -32,11 +33,13 @@ use Piwigo\Storage\StorageRegistry;
  *
  * Singleton/service-locator elimination campaign, Phase 10: PwgImages's
  * own conversion (the last Ws/Pwg* class using this accessor) emptied
- * every real `src/Piwigo` caller of all 3 methods -- but `config/
+ * every real `src/Piwigo` caller of the first 3 methods -- but `config/
  * messenger.php` (outside `src/Piwigo`, and deliberately outside the
  * `Kernel::container()` arch-test boundary too, per its own docblock)
- * calls all 3 to build its handler factories' object graphs, so this
- * class stays permanently, not just until Phase 10's own close-out.
+ * calls all 4 to build its handler factories' object graphs (Phase 12
+ * sub-phase 12B added dbCredentials(), for the same file's own
+ * DbCredentials::current() closure), so this class stays permanently, not
+ * just until Phase 10's own close-out.
  */
 final class InfrastructureAccessor
 {
@@ -94,5 +97,23 @@ final class InfrastructureAccessor
             throw new LogicException('Container returned an unexpected type for ' . WsContext::class);
         }
         return $wsContext;
+    }
+
+    /**
+     * Same rationale as wsContext() above -- gives config/messenger.php's
+     * still-static handler factories the real, container-shared
+     * DbCredentials instance instead of the DbCredentials::current() shim
+     * (singleton/service-locator elimination campaign, Phase 12 sub-phase
+     * 12B). No Kernel::isBooted()-false fallback needed here, unlike the
+     * shim itself: this file's own handler factories only ever run after
+     * the bus (and therefore the container) is already built.
+     */
+    public static function dbCredentials(): DbCredentials
+    {
+        $dbCredentials = Kernel::container()->get(DbCredentials::class);
+        if (! $dbCredentials instanceof DbCredentials) {
+            throw new LogicException('Container returned an unexpected type for ' . DbCredentials::class);
+        }
+        return $dbCredentials;
     }
 }

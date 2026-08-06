@@ -81,7 +81,11 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // regardless of run order.
         $this->conn->executeStatement('DELETE FROM ' . Tables::rate() . ' WHERE element_id = 1');
 
-        $this->renderer = new PictureRateRenderer(AccessControl::current(), $this->repo, CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current());
+        $accessControl = Kernel::container()->get(AccessControl::class);
+        if (! $accessControl instanceof AccessControl) {
+            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
+        }
+        $this->renderer = new PictureRateRenderer($accessControl, $this->repo, CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current());
     }
 
     #[Override]

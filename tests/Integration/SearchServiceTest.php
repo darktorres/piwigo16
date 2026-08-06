@@ -10,6 +10,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\CurrentPaths;
     use Piwigo\Core\FilterState;
     use Piwigo\Core\Kernel;
+    use Piwigo\Core\PageState;
     use Piwigo\Core\ProcessCache;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Auth\AccessLevelChecker;
@@ -327,7 +328,7 @@ final class SearchServiceTest extends IntegrationTestCase
             ),
             $this->mailService(),
             HtmlServiceTestFactory::build(),
-            new RedirectService(Lang::current(), $this->userService()),
+            new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageState::current()),
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcher::get(),
             CurrentUser::current(),
             Lang::current(),
@@ -396,7 +397,7 @@ final class SearchServiceTest extends IntegrationTestCase
             ),
             $this->mailService(),
             $htmlRenderer,
-            new RedirectService(Lang::current(), $this->userService()),
+            new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageState::current()),
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcher::get(),
             CurrentUser::current(),
             Lang::current(),

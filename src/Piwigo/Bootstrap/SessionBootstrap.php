@@ -39,7 +39,7 @@ final class SessionBootstrap
     {
 
         if (RequestBootstrap::currentConfig()->sessionSaveHandler() === 'db'
-          and InstallationFlag::isActiveStatic()) {
+          and self::installationFlag()->isActive()) {
             $sessionService = Kernel::container()->get(SessionService::class);
             if (! $sessionService instanceof SessionService) {
                 throw new LogicException('Container returned an unexpected type for ' . SessionService::class);
@@ -67,5 +67,23 @@ final class SessionBootstrap
             session_set_cookie_params(0, new CookieService()->cookiePath());
             register_shutdown_function(session_write_close(...));
         }
+    }
+
+    /**
+     * Resolves the container-shared instance instead of the
+     * InstallationFlag::isActiveStatic() shim -- this class already has
+     * direct Kernel::container() access (arch-tested to Bootstrap/ only),
+     * so the shim here was only ever style consistency, not a structural
+     * need (singleton/service-locator elimination campaign, Phase 12
+     * sub-phase 12B).
+     */
+    private static function installationFlag(): InstallationFlag
+    {
+        $installationFlag = Kernel::container()->get(InstallationFlag::class);
+        if (! $installationFlag instanceof InstallationFlag) {
+            throw new LogicException('Container returned an unexpected type for ' . InstallationFlag::class);
+        }
+
+        return $installationFlag;
     }
 }

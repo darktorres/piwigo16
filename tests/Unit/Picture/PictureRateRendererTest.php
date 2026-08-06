@@ -58,7 +58,11 @@ afterEach(function (): void {
 
 test('render does nothing when rating is disabled', function (): void {
     CurrentConfig::current()->setRateEnabled(false);
-    $renderer = new PictureRateRenderer(AccessControl::current(), EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current());
+    $accessControl = Kernel::container()->get(AccessControl::class);
+    if (! $accessControl instanceof AccessControl) {
+        throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
+    }
+    $renderer = new PictureRateRenderer($accessControl, EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current());
 
     $renderer->render(42, UrlServiceTestFactory::build(), [], '/picture.php');
 

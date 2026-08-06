@@ -36,6 +36,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Core\PageState;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\QSingleToken;
 use Piwigo\Search\SearchRepository;
@@ -109,7 +110,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             ),
             $mailer,
             HtmlServiceTestFactory::build(),
-            new RedirectService(Lang::current(), $userService),
+            new RedirectService(Lang::current(), $userService, EventDispatcher::get(), PageState::current()),
             new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()),
             EventDispatcher::get(),
             CurrentUser::current(),

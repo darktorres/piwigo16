@@ -276,6 +276,16 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         return $userService;
     }
 
+    private function accessControl(): AccessControl
+    {
+        $accessControl = Kernel::container()->get(AccessControl::class);
+        if (! $accessControl instanceof AccessControl) {
+            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
+        }
+
+        return $accessControl;
+    }
+
     private function makeRenderer(): ThemesStandardPagesPageRenderer
     {
         // StorageRegistry is built fresh here (not container-resolved
@@ -289,8 +299,8 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // campaign, Phase 2).
         return new ThemesStandardPagesPageRenderer(
             Lang::current(),
-            AccessControl::current(),
-            new RedirectService(Lang::current(), $this->userService()),
+            $this->accessControl(),
+            new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageState::current()),
             UrlServiceTestFactory::build(),
             $this->configService,
             StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php'),

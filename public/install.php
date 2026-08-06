@@ -23,10 +23,8 @@ use Piwigo\Admin\Install\InstallWizard;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Bootstrap\SessionBootstrap;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Env;
 use Piwigo\Core\Paths;
-use Piwigo\Db\DbCredentials;
 use Piwigo\Http\ResponseEmitter;
 use Piwigo\Http\ResponseReadyException;
 
@@ -59,7 +57,7 @@ if (isset($_POST['install'])) {
 // directly here, or every Tables::*() call downstream would fall back to
 // whatever's already there (a coincidental PIWIGO_DB_PREFIX env var, or
 // the 'piwigo_' default) instead of the real chosen prefix.
-$dbCredentials = DbCredentials::current();
+$dbCredentials = InstallBootstrap::dbCredentials();
 $dbCredentials->seed([
     'PIWIGO_DB_PREFIX' => $prefixeTable,
 ]);
@@ -76,7 +74,7 @@ $wizard = new InstallWizard(
     $prefixeTable,
     $paths,
     $dbCredentials,
-    CurrentConfigService::current(),
+    RequestBootstrap::currentConfigService(),
     RequestBootstrap::currentConfig(),
     RequestBootstrap::inputValidator(),
     RequestBootstrap::adminContext(),

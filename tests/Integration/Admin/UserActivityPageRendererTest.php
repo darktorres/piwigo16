@@ -181,7 +181,12 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
 
-        new UserActivityPageRenderer()->render(Lang::current(), AccessControl::current(), $this->urlService, $this->coreTabs, CurrentTemplate::current(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcher::get());
+        $accessControl = Kernel::container()->get(AccessControl::class);
+        if (! $accessControl instanceof AccessControl) {
+            throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
+        }
+
+        new UserActivityPageRenderer()->render(Lang::current(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplate::current(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcher::get());
 
         $template = CurrentTemplate::current()->get();
         self::assertSame([], $template->get_template_vars('ulist'));

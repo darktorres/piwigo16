@@ -69,6 +69,8 @@ final class RedirectService implements RedirectServiceInterface
     public function __construct(
         private readonly Lang $lang,
         private readonly UserService $userService,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly PageState $pageState,
     ) {}
 
     private static function currentUser(): CurrentUser
@@ -190,15 +192,15 @@ final class RedirectService implements RedirectServiceInterface
             $user = $this->userService->buildUser(UserId::from($guest_id));
             self::currentUser()->set(User::fromUserArray($user));
             $this->lang->load('common.lang');
-            EventDispatcher::get()->dispatchNotify(new LoadingLang());
+            $this->eventDispatcher->dispatchNotify(new LoadingLang());
             $this->lang->load('lang', $paths->siteLocal, [
                 'no_fallback' => true,
                 'local' => true,
             ]);
-            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, new AccessLevelChecker(self::currentUser(), self::currentConfig()), $paths->root . 'themes', $this->userService->getDefaultTheme());
+            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), $this->eventDispatcher, $this->pageState, self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, new AccessLevelChecker(self::currentUser(), self::currentConfig()), $paths->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         } elseif (self::adminContext()->isActive()) {
-            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::paths()->root . 'themes', $this->userService->getDefaultTheme());
+            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), $this->eventDispatcher, $this->pageState, self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::paths()->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         }
 
@@ -224,7 +226,7 @@ final class RedirectService implements RedirectServiceInterface
 
         $refresh_str = (string) $refresh_time;
         new PageHeaderRenderer()
-            ->render($title, EventDispatcher::get(), PageState::current(), self::currentTemplate(), self::currentConfig(), $refresh_str, $url_link);
+            ->render($title, $this->eventDispatcher, $this->pageState, self::currentTemplate(), self::currentConfig(), $refresh_str, $url_link);
 
         $template->set_filenames([
             'redirect' => 'redirect.tpl',

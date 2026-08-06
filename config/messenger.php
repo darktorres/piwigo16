@@ -16,7 +16,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Job\BatchUploadJob;
@@ -33,7 +32,6 @@ use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
@@ -81,8 +79,8 @@ return [
             PresentationAccessor::urlService(),
             InfrastructureAccessor::currentLogger(),
             InfrastructureAccessor::storageRegistry(),
-            EventDispatcher::get(),
-            new ConfigService(EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class), EventDispatcher::get(), new CurrentConfig()),
+            RequestBootstrap::eventDispatcher(),
+            new ConfigService(EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class), RequestBootstrap::eventDispatcher(), new CurrentConfig()),
             InfrastructureAccessor::entityManager(),
             ExtendedDomainAccessor::activityService(),
             ExtendedDomainAccessor::metadataService(),
@@ -91,7 +89,7 @@ return [
             InfrastructureAccessor::wsContext(),
             RequestBootstrap::currentUser(),
             Paths::fromRoot(dirname(__DIR__)),
-            DbCredentials::current()
+            InfrastructureAccessor::dbCredentials()
         ),
         GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService(RequestBootstrap::currentConfig(), Paths::fromRoot(dirname(__DIR__)))),
         RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService(RequestBootstrap::currentConfig(), Paths::fromRoot(dirname(__DIR__)))),
@@ -104,7 +102,7 @@ return [
             ),
             new MetadataRepository(EntityManagerFactory::build(DbConnection::build())),
             InfrastructureAccessor::currentLogger(),
-            EventDispatcher::get(),
+            RequestBootstrap::eventDispatcher(),
             RequestBootstrap::currentConfig(),
             RequestBootstrap::currentUser(),
             RequestBootstrap::sessionService(),
@@ -124,7 +122,7 @@ return [
             Paths::fromRoot(dirname(__DIR__)),
             new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), RequestBootstrap::currentConfig()),
             new Translator(RequestBootstrap::currentConfig()),
-            EventDispatcher::get(),
+            RequestBootstrap::eventDispatcher(),
             new CurrentUser(RequestBootstrap::currentConfig()),
             PresentationAccessor::urlService(),
         )),

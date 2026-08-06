@@ -8,7 +8,7 @@ use Override;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Users\UserService;
 use LogicException;
-use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -155,7 +155,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         // exit() and is deliberately left uncovered here (see this class's
         // own docblock) -- never actually read, so a fresh, never-set()
         // instance is fine.
-        return new UserBootstrap(AccessControl::current(), new RedirectService(Lang::current(), $this->userService()), UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
+        return new UserBootstrap(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageState::current()), UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
     }
 
     public function test_initialize_auto_registers_a_new_local_account_for_an_unknown_apache_remote_user(): void

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-use LogicException;
-
 /**
  * "This request is past the install-check gate" marker -- Legacy
  * Coupling Retirement gap-closure (entry-shell define()/include round,
@@ -28,11 +26,14 @@ use LogicException;
  * Singleton/service-locator elimination campaign, Phase 1: converted from
  * a self-managed static facade to a container-shared instance.
  * `RequestBootstrap` (the only writer) constructor-resolves it from the
- * container. `Piwigo\Core\Lang` (Phase 8), `Piwigo\Users\UserService`
- * (large construction-site fan-out, out of scope for this phase), and
- * `Piwigo\Bootstrap\SessionBootstrap` (a genuinely static-only class) aren't
- * converted yet, so they keep calling the `isActiveStatic()` shim below
- * instead of `isActive()` -- see that method's own docblock.
+ * container. `Piwigo\Core\Lang` (Phase 8) and `Piwigo\Users\UserService`
+ * (Phase 11 sub-phase 11G) both closed their own former `isActiveStatic()`
+ * transitional-bridge usage via real constructor injection;
+ * `Piwigo\Bootstrap\SessionBootstrap` (a genuinely static-only class)
+ * closed its own last (Phase 12 sub-phase 12B) via a private
+ * container-resolving `installationFlag()` helper instead -- the shim
+ * itself is deleted, every real caller now reaches the real `isActive()`
+ * instance method.
  */
 final class InstallationFlag
 {
@@ -63,41 +64,5 @@ final class InstallationFlag
     public function reset(): void
     {
         $this->marked = false;
-    }
-
-    /**
-     * @deprecated transitional bridge for callers not yet converted to
-     * constructor injection (Piwigo\Core\Lang::load() -- Phase 8;
-     * Piwigo\Users\UserService's 2 call sites; Piwigo\Bootstrap\
-     * SessionBootstrap::register()) -- PHP forbids an instance method and
-     * a static method sharing one name, hence the `Static` suffix (not a
-     * rename of the real API -- `isActive()` above is the real one; this
-     * is scaffolding only). Delete once
-     * `grep -rn "InstallationFlag::isActiveStatic("` outside tests/
-     * returns nothing.
-     *
-     * Falls back to `false` (the same default the old static `$marked`
-     * property always started at) when `Kernel::boot()` hasn't run --
-     * `Lang::load()` is called from a very large number of test files that
-     * exercise it indirectly (MailService::switchLangTo(), Template
-     * construction, admin page renderers, ...) and never cared about this
-     * flag one way or the other; none of them ever called the old
-     * `InstallationFlag::mark()` either, so `false` is the exact
-     * behavior-preserving default for all of them. A real request always
-     * has a booted Kernel by the time `Lang::load()` runs, so this
-     * fallback is never reached in production.
-     */
-    public static function isActiveStatic(): bool
-    {
-        if (! Kernel::isBooted()) {
-            return false;
-        }
-
-        $instance = Kernel::container()->get(self::class);
-        if (! $instance instanceof self) {
-            throw new LogicException('Container returned an unexpected type for ' . self::class);
-        }
-
-        return $instance->isActive();
     }
 }

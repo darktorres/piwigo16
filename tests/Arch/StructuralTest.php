@@ -391,17 +391,21 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // Core/ThemeCatalog.php, Http/HttpClientService.php::guardedFetch(),
     // Permission/PermissionService.php::getPrivacyLevelOptions() (5 real
     // static callers), Admin/Image/PwgImage.php's 3 static ext-imagick
-    // helpers, Admin/Install/InstallService.php (matches InstallWizard's
-    // own established static-context precedent), Admin/Upload/
-    // UploadService.php's 9 static uploadFileXxx() event handlers (matches
-    // this same file's own established CurrentLogger::getStatic()
-    // precedent). Phase 12 sub-phase 12A: Comment/CommentService.php
-    // removed -- its own getNbAvailableComments() static method (the sole
-    // reason it was here) was extracted into its own class,
-    // Comment/AvailableCommentsCounter.php, which takes CurrentConfig via
-    // real constructor injection instead (it and its one real caller,
-    // Menu/MenubarRenderer.php, never needed CommentService's other 10
-    // collaborators in the first place).
+    // helpers, Admin/Upload/UploadService.php's 9 static uploadFileXxx()
+    // event handlers (matches this same file's own established
+    // CurrentLogger::getStatic() precedent). Phase 12 sub-phase 12A:
+    // Comment/CommentService.php removed -- its own getNbAvailableComments()
+    // static method (the sole reason it was here) was extracted into its
+    // own class, Comment/AvailableCommentsCounter.php, which takes
+    // CurrentConfig via real constructor injection instead (it and its one
+    // real caller, Menu/MenubarRenderer.php, never needed CommentService's
+    // other 10 collaborators in the first place). Sub-phase 12B:
+    // Admin/Install/InstallService.php removed too -- its 4 static methods
+    // now take Lang/CurrentUser/CurrentConfigService/CurrentConfig/Paths as
+    // real explicit params instead, threaded from their sole real caller,
+    // InstallWizard, which already held every one of them (closes this
+    // file's entries on 5 different shims at once, same shape as
+    // AvailableCommentsCounter's own extraction just above).
     //
     // (b) Too many real raw `new X(...)` construction sites, no DI
     // involved, matching the established HtmlService/Template
@@ -448,7 +452,6 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Admin/Extensions/ExtensionScanner.php',
         '/src/Piwigo/Admin/Extensions/ExtensionType.php',
         '/src/Piwigo/Admin/Image/PwgImage.php',
-        '/src/Piwigo/Admin/Install/InstallService.php',
         '/src/Piwigo/Admin/Upload/UploadService.php',
         '/src/Piwigo/Config/ConfigLoader.php',
         '/src/Piwigo/Core/DeviceHelper.php',
@@ -518,10 +521,10 @@ test('CurrentConfigService::current() transitional bridge has a shrinking, known
     // from). Every phase that converts one more of these files to
     // constructor-injected ConfigService/CurrentConfigService should
     // remove it from the allow-list below.
-    // Cache/PermissionCacheInvalidator.php, and Admin/Install/
-    // InstallService.php are genuinely static utilities, no constructor at
-    // all. Image/ImageService.php (10 real construction sites) matches
-    // ImageStdParams's own too-many-sites precedent for this exact file.
+    // Cache/PermissionCacheInvalidator.php is a genuinely static utility,
+    // no constructor at all. Image/ImageService.php (10 real construction
+    // sites) matches ImageStdParams's own too-many-sites precedent for
+    // this exact file.
     // Template/Template.php closed this shim in Phase 11 sub-phase 11E --
     // real constructor injection, same as its other 8 collaborators (its
     // own too-many-construction-sites reasoning no longer holds). Phase 10
@@ -531,19 +534,21 @@ test('CurrentConfigService::current() transitional bridge has a shrinking, known
     // PwgImages.php had already converted in their own earlier
     // sub-batches). Core/UniqueExecLock.php closed this shim in Phase 11
     // sub-phase 11G -- confirmed a stale allow-list entry, no
-    // CurrentConfigService usage of any kind left in that file.
-    // public/install.php passes the wrapper itself
-    // (not ->get()) into InstallWizard's constructor -- same "raw
-    // entry-shell root file that never boots Kernel before this point"
-    // reasoning as every prior phase's identical allow-list entry for
-    // this file.
+    // CurrentConfigService usage of any kind left in that file. Sub-phase
+    // 12B: public/install.php closed too -- it's actually already past
+    // InstallBootstrap::boot()'s own Kernel::boot() call at this point
+    // (the former "raw entry-shell, no container yet" reasoning was
+    // stale/never re-verified), same as every other RequestBootstrap::x()
+    // public accessor it already uses on the very same lines; now uses
+    // RequestBootstrap::currentConfigService() instead. Admin/Install/
+    // InstallService.php closed too -- its 4 static methods now take
+    // Lang/CurrentUser/CurrentConfigService/CurrentConfig/Paths as real
+    // explicit params from their sole caller, InstallWizard.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Admin/Install/InstallService.php',
         '/src/Piwigo/Cache/PermissionCacheInvalidator.php',
         '/src/Piwigo/Image/ImageService.php',
-        '/public/install.php',
     ];
 
     $hits = [
@@ -621,11 +626,7 @@ test('PageState::current() transitional bridge has a shrinking, known allow-list
     // insertNewDataUserMailNotification() helpers (no $this there either,
     // same shape already established for CategoryService.php's own
     // moveCategories()-adjacent statics during the Translator phase).
-    // RedirectService.php needs zero constructor args by design
-    // (early-crash fallback shape) -- its own 2 sites are actually its
-    // `new Template(...)` construction calls now (Phase 11 sub-phase
-    // 11E), same shape, still no constructor-injected PageState by
-    // design. Mail/MailService.php, Template/Template.php, and
+    // Mail/MailService.php, Template/Template.php, and
     // Html/HtmlService.php itself all closed this shim in Phase 11
     // sub-phase 11E -- real constructor injection (MailService's own
     // former authService() lazy-default helper now reads
@@ -634,11 +635,16 @@ test('PageState::current() transitional bridge has a shrinking, known allow-list
     // real, previously-unnoticed leftover bug, not a genuine need: the
     // class already had $this->pageState as a real constructor property
     // (used everywhere else in the file), this one AuthService
-    // construction site just never used it.
+    // construction site just never used it. Bootstrap/RedirectService.php
+    // closed too (Phase 12 sub-phase 12B) -- found live, a real leftover
+    // bug: EventDispatcher/PageState were passed through to
+    // Template/PageHeaderRenderer via the shim on every call despite this
+    // class already taking Lang/UserService via real constructor
+    // injection; both are now real required constructor params
+    // (`$this->eventDispatcher`/`$this->pageState`), same shape.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Bootstrap/RedirectService.php',
         '/src/Piwigo/Controller/Admin/NotificationByMailSubController.php',
         '/src/Piwigo/Core/Logger.php',
         '/src/Piwigo/Core/TimingHelper.php',
@@ -720,14 +726,16 @@ test('CurrentPaths::get()/isSet() transitional bridge has a shrinking, known all
     // direct Kernel::container() access (arch-tested to Bootstrap/ only),
     // so a private paths() resolver helper replaces what was only ever
     // style consistency with a neighboring call, not a structural need.
-    // Admin/Install/InstallService.php is the sole remaining, genuinely
-    // permanent exception: it runs on the pre-installation entry path
-    // (install.php) where no DI container exists at all yet, matching the
-    // Env/FilesystemHelper/MysqliDb precedent its own docblock cites.
+    // Sub-phase 12B: Admin/Install/InstallService.php closed too -- on
+    // direct inspection its own former "no DI container exists yet"
+    // reasoning was stale (InstallBootstrap::boot() always runs, and
+    // therefore Kernel::boot() always runs, before any of its 4 static
+    // methods are ever reached); its 4 methods now take Paths (among
+    // others) as a real explicit param from their sole caller,
+    // InstallWizard, which already held one.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Admin/Install/InstallService.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentPaths::');
@@ -805,34 +813,17 @@ test('SessionService::get() transitional bridge has a shrinking, known allow-lis
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
-test('InstallationFlag::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 1: real callers
-    // (Piwigo\Bootstrap\SessionBootstrap -- a genuinely static-only class)
-    // aren't converted to constructor injection yet, so they use this
-    // static shim instead of the real isActive() instance method (see
-    // that method's own docblock). Piwigo\Core\Lang removed from this
-    // allow-list in Phase 8: it now constructor-injects InstallationFlag
-    // and calls the real isActive() instance method instead.
-    // Piwigo\Users\UserService.php closed it in Phase 11 sub-phase 11G --
-    // real constructor injection, the "large construction-site fan-out"
-    // reasoning no longer holds. Every phase that converts one more of
-    // these files should remove it from the allow-list below; once the
-    // allow-list is empty, delete isActiveStatic() itself and this test.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-        '/src/Piwigo/Bootstrap/SessionBootstrap.php',
-    ];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'InstallationFlag::isActiveStatic(');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
+// Singleton/service-locator elimination campaign:
+// InstallationFlag::isActiveStatic() itself is fully deleted (Phase 12
+// sub-phase 12B) -- its former "transitional shim has a shrinking, known
+// allow-list" test lived here. Piwigo\Core\Lang (Phase 8) and
+// Piwigo\Users\UserService (Phase 11 sub-phase 11G) had already closed
+// their own usage via real constructor injection; Bootstrap\
+// SessionBootstrap.php (a genuinely static-only class) was the last real
+// caller, closed via a private container-resolving installationFlag()
+// helper instead of the shim -- 0 remaining production callers, so the
+// shim method was deleted outright, same discipline as every other closed
+// shim in this campaign.
 
 test('Lang::reset() is only called from tests/', function (): void {
     $repoRoot = __DIR__ . '/../..';
@@ -957,9 +948,10 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     // injection or an explicit method/render() parameter; only these stay
     // on the shim, each for one of the same 3 reasons already established
     // by earlier phases: **Phase-6-entangled, still
-    // manually `new`'d at dozens of sites** (UrlService.php/
+    // manually `new`'d at dozens of sites** (formerly UrlService.php/
     // RedirectService.php/MenubarRenderer.php -- the same UrlService-bridge
-    // trio plus its own known-entangled callers); **genuinely static-context
+    // trio plus its own known-entangled callers, all 3 since closed);
+    // **genuinely static-context
     // or structurally locked, no `$this` to inject through** (CategoryService.php --
     // several read-only menu-rendering methods never threaded with the
     // explicit-param treatment `deleteCategories()`/`deleteSite()` got, since
@@ -968,11 +960,15 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     // "no wrapper needed" precedent as FilesystemHelper;
     // every Ws/Pwg*.php file + WsInitializer.php took real constructor
     // injection during their own Phase 10 sub-batches, so none remain on
-    // this allow-list). RequestBootstrap.php is Bootstrap/-only wiring
-    // code that already has direct container access (also gained a new
-    // public eventDispatcher() resolver, matching coreTabs()/
-    // sessionService()/translator()'s own precedent, for public/admin.php's
-    // own legacy-style `new AdminShell(...)` manual construction).
+    // this allow-list). RequestBootstrap.php gained a new public
+    // eventDispatcher() resolver, matching coreTabs()/sessionService()/
+    // translator()'s own precedent, for public/admin.php's own
+    // legacy-style `new AdminShell(...)` manual construction. Sub-phase
+    // 12B: RequestBootstrap.php itself closed too -- its own 26
+    // EventDispatcher::get() call sites were a pure leftover bug (the file
+    // already had this exact resolver, right next to every one of them,
+    // unused by any of them until now), same shape as InstallWizard.php's
+    // own closure below.
     // Admin/Install/InstallWizard.php closed this shim in Phase 11
     // sub-phase 11K -- its 3 sites were a real, previously-unnoticed
     // leftover bug, not a genuine need: the class already had
@@ -1001,14 +997,19 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     // Site/LocalSiteReader.php closed it too -- its own metadataService()
     // fallback now resolves EventDispatcher via a new private lazy
     // eventDispatcher() helper instead, matching the shim's own identical
-    // pre-boot graceful fallback.
+    // pre-boot graceful fallback. Sub-phase 12B: Bootstrap/PageTail.php
+    // closed too -- gained its own new private eventDispatcher() resolver
+    // (matching every one of its dozen sibling resolvers' own idiom
+    // exactly), its 2 real call sites just never used it.
+    // Bootstrap/RedirectService.php closed too -- found live, a real
+    // leftover bug (see this file's own "PageState::current() transitional
+    // bridge" test docblock for the same finding): EventDispatcher is now
+    // a real required constructor param (`$this->eventDispatcher`), same
+    // shape as PageState.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
         '/src/Piwigo/Admin/Extensions/ExtensionScanner.php',
-        '/src/Piwigo/Bootstrap/PageTail.php',
-        '/src/Piwigo/Bootstrap/RedirectService.php',
-        '/src/Piwigo/Bootstrap/RequestBootstrap.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'EventDispatcher::get(');
@@ -1102,9 +1103,10 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
     // no constructor at all (same "no wrapper needed" precedent as
     // FilesystemHelper/HtmlService) -- deferred to a later sub-phase's own
     // NOCTOR pass. AccessControl.php itself now constructor-injects
-    // CurrentUser for real (Phase 7), so it's off this allow-list -- see
-    // its own "AccessControl::current() transitional bridge" test below
-    // instead. MetadataService.php is Phase-6-entangled (dozens of manual
+    // CurrentUser for real (Phase 7), so it's off this allow-list --
+    // AccessControl::current() itself was fully deleted in Phase 12
+    // sub-phase 12B, its own former dedicated allow-list test along with
+    // it. MetadataService.php is Phase-6-entangled (dozens of manual
     // construction sites). Mail/MailService.php, Url/UrlService.php, and
     // Html/HtmlService.php itself all closed this shim in Phase 11
     // sub-phase 11E -- real constructor injection (UrlService.php's own
@@ -1130,30 +1132,30 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
     // one real method each (getOtpAuthUrl()/getQrCode(),
     // fillCurrentUserCaddie()) takes it as an explicit parameter instead,
     // matching this campaign's own established NOCTOR precedent.
-    // Admin/Install/InstallService.php matches DeploymentPolicy::
-    // current()'s own identical allow-list reasoning: a genuinely static
-    // utility, no constructor to inject through at all. InstallWizard.php
-    // closed this shim in Phase 11 sub-phase 11K -- its 6 real sites
-    // (including 3 real mutations: attachGlobals()/set()/
+    // InstallWizard.php closed this shim in Phase 11 sub-phase 11K -- its
+    // 6 real sites (including 3 real mutations: attachGlobals()/set()/
     // markRealUserResolved()) took a real constructor param like every
     // other collaborator; unlike DeploymentPolicy/CurrentTemplate, a
     // throwaway instance in tests genuinely broke (PreferencesService/
     // UserService constructed elsewhere in the same request still read
     // back the container-shared instance's own .set() state), so its own
     // Integration test keeps passing the real CurrentUser::current()
-    // value, not a fresh one. public/random.php
-    // is a raw entry-shell root file, no
-    // constructor to inject through (its own PermissionService
-    // construction still needs a real CurrentUser instance, hence this
-    // one remaining shim call). Permission/PermissionService.php and
+    // value, not a fresh one. Permission/PermissionService.php and
     // Metadata/MetadataService.php both closed this shim in Phase 11
-    // sub-phase 11G -- real constructor injection.
+    // sub-phase 11G -- real constructor injection. Sub-phase 12B:
+    // public/random.php closed too -- it's already past
+    // RequestBootstrap::bootEntryPoint()'s own Kernel::boot() call at this
+    // point (the former "raw entry-shell, no container yet" reasoning was
+    // stale/never re-verified), same as every other RequestBootstrap::x()
+    // public accessor it already uses on the very same lines; now uses
+    // RequestBootstrap::currentUser() instead. Admin/Install/
+    // InstallService.php closed too -- its 4 static methods now take
+    // CurrentUser (among others) as a real explicit param from their sole
+    // caller, InstallWizard, which already held one.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/public/random.php',
         '/src/Piwigo/Admin/Extensions/ExtensionScanner.php',
-        '/src/Piwigo/Admin/Install/InstallService.php',
     ];
 
     $hits = [
@@ -1203,13 +1205,15 @@ test('Lang::current() transitional bridge has a shrinking, known allow-list', fu
     // own identical unconditional-throw shape). Core/RecentIconResolver.php
     // closed it too -- getIcon() now takes Lang (and ProcessCache) as
     // explicit method parameters instead, every real caller already having
-    // both available. Shrink this list
+    // both available. Sub-phase 12B: Admin/Install/InstallService.php
+    // closed too -- its 4 static methods now take Lang (among others) as
+    // a real explicit param from their sole caller, InstallWizard, which
+    // already held one. Shrink this list
     // further as each remaining one lands, same as every other allow-list
     // in this file.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Admin/Install/InstallService.php',
         '/src/Piwigo/Category/CategoryService.php',
         '/src/Piwigo/Core/DateHelper.php',
         '/src/Piwigo/Core/FilesystemHelper.php',
@@ -1227,72 +1231,26 @@ test('Lang::current() transitional bridge has a shrinking, known allow-list', fu
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
-test('AccessControl::current() transitional bridge has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 7: current()
-    // kept its original name (no `Static` suffix, matching every other
-    // large facade's own precedent -- no competing real instance method to
-    // disambiguate from). Unlike CurrentUser/CurrentTemplate/etc., this
-    // shim has no memoized pre-boot fallback (a live container resolve on
-    // every call instead) -- see the class's own docblock for why.
-    //
-    // Phase 12 sub-phase 12A: AccessControl's own circular dependency
-    // (RedirectServiceInterface -> Bootstrap\RedirectService ->
-    // Users\UserService -> MailerInterface -> Mail\MailService ->
-    // Core\UrlServiceInterface -> Url\UrlService ->
-    // Core\HtmlRenderingInterface -> Html\HtmlService) turned out to be
-    // artificial: every real caller across the whole app -- Mail\MailService,
-    // Url\UrlService, Template\Template, Users\UserService,
-    // Category\CategoryService, Permission\PermissionService,
-    // Comment\CommentService, Notification\NotificationService,
-    // Search\SearchService, Page\NoPhotoYetRenderer, Menu\MenubarRenderer,
-    // Section\SectionPopulator, Section\RandomIndexRedirectResolver,
-    // Template\CssLoader/ScriptLoader/FileCombiner, and every Controller
-    // that only ever read isAdmin()/isAGuest()/isClassicUser()/
-    // isWebmaster()/canManageComment() -- never checkStatus()/
-    // accessDenied(), the only methods that genuinely need
-    // HtmlRenderingInterface/RedirectServiceInterface. Those 8 read-only
-    // methods moved to a new class, Auth\AccessLevelChecker (CurrentUser/
-    // CurrentConfig only, no circular dependency at all), which every one
-    // of the files above now takes via real, eager constructor injection
-    // instead of a private lazy Kernel::container()->get(AccessControl::class)
-    // helper. AccessControl itself now only has checkStatus() as real
-    // logic, delegating everything else to AccessLevelChecker.
-    // currentForCaching() (CssLoader.php/ScriptLoader.php's own former
-    // never-throwing fallback, built to survive the old cycle's
-    // eager-Doctrine-connect risk) is deleted outright -- both files take
-    // AccessLevelChecker directly now, which has no Doctrine dependency to
-    // guard against.
-    //
-    // What remains below are files that still need the FULL AccessControl
-    // (real checkStatus()/accessDenied() enforcement, not just the cheap
-    // read-only checks): Bootstrap/PageTail.php/Bootstrap/RequestBootstrap.php
-    // resolve it the same way every other Bootstrap/-internal file resolves
-    // a not-yet-constructor-injected collaborator; public/admin.php/
-    // public/random.php are raw entry-shell root files, no constructor to
-    // inject through. Every phase that converts one more of these files to
-    // constructor-injected AccessControl should remove it from the
-    // allow-list below.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-        '/public/admin.php',
-        '/public/random.php',
-        '/src/Piwigo/Bootstrap/PageTail.php',
-        '/src/Piwigo/Bootstrap/RequestBootstrap.php',
-    ];
-
-    $hits = [
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'AccessControl::current('),
-        ...findCallSitesOutsideComments($repoRoot . '/public', 'AccessControl::current('),
-    ];
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
+// Singleton/service-locator elimination campaign: AccessControl::current()
+// itself is fully deleted (Phase 12 sub-phase 12B) -- its former
+// "transitional bridge has a shrinking, known allow-list" test lived here.
+// AccessControl's own circular dependency (RedirectServiceInterface ->
+// Bootstrap\RedirectService -> Users\UserService -> MailerInterface ->
+// Mail\MailService -> Core\UrlServiceInterface -> Url\UrlService ->
+// Core\HtmlRenderingInterface -> Html\HtmlService) turned out to be
+// artificial (Phase 12 sub-phase 12A): every real caller across the whole
+// app only ever read isAdmin()/isAGuest()/isClassicUser()/isWebmaster()/
+// canManageComment() -- never checkStatus()/accessDenied(), the only
+// methods that genuinely need HtmlRenderingInterface/
+// RedirectServiceInterface. Those 8 read-only methods moved to a new
+// class, Auth\AccessLevelChecker (CurrentUser/CurrentConfig only, no
+// circular dependency at all), which every real caller now takes via real
+// constructor injection. Sub-phase 12B closed the last 4 real production
+// callers of the shim itself (RequestBootstrap.php, PageTail.php,
+// public/admin.php, public/random.php) via a mix of real constructor
+// injection and Bootstrap-internal container resolvers -- 0 remaining
+// production callers, so the shim method was deleted outright, same
+// discipline as every other closed shim in this campaign.
 
 // P16: src/Piwigo/ is the typed source of truth for the 52 retired
 // include/constants.php constants (AppInfo/AccessLevel/ActivitySystem/

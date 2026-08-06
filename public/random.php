@@ -12,12 +12,10 @@ declare(strict_types=1);
 // |                          define and include                           |
 // +-----------------------------------------------------------------------+
 use Doctrine\DBAL\ParameterType;
-use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Category\CategoryRepository;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
@@ -30,7 +28,6 @@ use Piwigo\Http\ResponseReadyException;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
-use Piwigo\Users\CurrentUser;
 
 // vendor/autoload.php must be required directly here -- Paths::fromRoot()
 // below and RequestBootstrap::bootEntryPoint() are both Piwigo\ classes,
@@ -44,7 +41,7 @@ RequestBootstrap::bootEntryPoint($paths);
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-AccessControl::current()->checkStatus(AccessLevel::Guest);
+RequestBootstrap::accessControl()->checkStatus(AccessLevel::Guest);
 
 // +-----------------------------------------------------------------------+
 // |                     generate random element list                      |
@@ -55,13 +52,13 @@ AccessControl::current()->checkStatus(AccessLevel::Guest);
 // nb_image_page has exactly this one reader repo-wide, under User's own
 // documented promotion bar for a named property -- read via
 // rawAttributes, same as every other low-frequency legacy $user key.
-$top_number = CurrentConfig::current()->topNumber();
-$rawNbImagePage = CurrentUser::current()->get()->rawAttributes['nb_image_page'] ?? null;
+$top_number = RequestBootstrap::currentConfig()->topNumber();
+$rawNbImagePage = RequestBootstrap::currentUser()->get()->rawAttributes['nb_image_page'] ?? null;
 $nb_image_page = is_numeric($rawNbImagePage) ? (int) $rawNbImagePage : 15;
 
 $conn = DbConnection::build();
 
-$permissionCriteria = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()), CurrentUser::current(), RequestBootstrap::filterState(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()))->getPermissionCriteria();
+$permissionCriteria = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), RequestBootstrap::currentConfig()), RequestBootstrap::currentUser(), RequestBootstrap::filterState(), new AccessLevelChecker(RequestBootstrap::currentUser(), RequestBootstrap::currentConfig()))->getPermissionCriteria();
 $condition = SqlCondition::combine(
     'AND',
     $permissionCriteria->forbiddenCategoriesCondition('category_id'),
@@ -102,7 +99,7 @@ $types = [
 // config/routes.php. A 4th, file-local catch point, same shape as
 // AdminShell::run()'s own dispatch-context catch point.
 try {
-    new RedirectService(RequestBootstrap::lang(), RequestBootstrap::userService())
+    new RedirectService(RequestBootstrap::lang(), RequestBootstrap::userService(), RequestBootstrap::eventDispatcher(), RequestBootstrap::pageState())
         ->redirect(RequestBootstrap::urlService()->makeIndexUrl([
             'list' => array_map(
                 static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',

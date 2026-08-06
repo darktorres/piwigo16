@@ -12,6 +12,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Db\DbCredentials;
 
 /**
  * Legacy Coupling Retirement Phase 8, 8b -- the install.php counterpart to
@@ -103,5 +104,24 @@ final class InstallBootstrap
         }
 
         return $currentLogger;
+    }
+
+    /**
+     * Resolves the container-shared instance instead of the
+     * DbCredentials::current() shim -- boot() above always runs first on
+     * this class's own entry point (public/install.php), so Kernel is
+     * always already booted by the time this is called; unlike the shim
+     * itself, no Kernel::isBooted()-false fallback is needed here
+     * (singleton/service-locator elimination campaign, Phase 12 sub-phase
+     * 12B), same shape as currentLogger() above.
+     */
+    public static function dbCredentials(): DbCredentials
+    {
+        $dbCredentials = Kernel::container()->get(DbCredentials::class);
+        if (! $dbCredentials instanceof DbCredentials) {
+            throw new LogicException('Container returned an unexpected type for ' . DbCredentials::class);
+        }
+
+        return $dbCredentials;
     }
 }

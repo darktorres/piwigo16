@@ -84,6 +84,9 @@ $wizard = new InstallWizard(
     RequestBootstrap::pageState(),
     RequestBootstrap::errorCollector(),
     RequestBootstrap::processCache(),
+    RequestBootstrap::deploymentPolicy(),
+    RequestBootstrap::currentTemplate(),
+    RequestBootstrap::currentUser(),
 );
 
 // Found live while verifying Part II's public/ relocation, unrelated to the

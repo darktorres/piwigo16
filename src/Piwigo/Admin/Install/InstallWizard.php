@@ -212,6 +212,9 @@ final class InstallWizard
         private readonly PageState $pageState,
         private readonly ErrorCollector $errorCollector,
         private readonly ProcessCache $processCache,
+        private readonly DeploymentPolicy $deploymentPolicy,
+        private readonly CurrentTemplate $currentTemplate,
+        private readonly CurrentUser $currentUser,
     ) {
         $conf_data_location = LegacyFileConf::read($this->paths)['data_location'] ?? null;
         if (! is_string($conf_data_location)) {
@@ -319,7 +322,7 @@ final class InstallWizard
         // attachGlobals() is exactly the safe guest default this no-boot
         // path needs (idempotent; a later real CurrentUser::set() in
         // render() is never clobbered by this).
-        CurrentUser::current()->attachGlobals();
+        $this->currentUser->attachGlobals();
 
         // Same no-boot gap, third dependency: CurrentLogger. Originally found
         // live one step later than CurrentUser (render()'s
@@ -406,7 +409,7 @@ final class InstallWizard
 
         // --------------------------------------------- template initialization
         $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, $this->paths->root . 'themes/admin', 'clear');
-        CurrentTemplate::current()->set($template);
+        $this->currentTemplate->set($template);
         $template->set_filenames([
             'install' => 'install.tpl',
         ]);
@@ -432,7 +435,7 @@ final class InstallWizard
     private function userService(?Connection $conn = null): UserService
     {
         $conn ??= DbConnection::build();
-        return new UserService($this->lang, new UserRepository(EntityManagerFactory::build($conn), EventDispatcher::get(), $this->currentConfig), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), PresentationAccessor::mailService(), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $conn, new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), EventDispatcher::get(), DeploymentPolicy::current(), CurrentUser::current(), $this->currentConfig, new InstallationFlag(), new ProcessCache(), $this->paths);
+        return new UserService($this->lang, new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), PresentationAccessor::mailService(), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $conn, new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, new InstallationFlag(), new ProcessCache(), $this->paths);
     }
 
     /**
@@ -447,7 +450,7 @@ final class InstallWizard
      */
     private function passwordService(Connection $conn): PasswordService
     {
-        return new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), DeploymentPolicy::current());
+        return new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), $this->deploymentPolicy);
     }
 
     /**
@@ -691,7 +694,7 @@ define(\'DB_COLLATE\', \'\');
         new ExtensionLifecycle(
             $this->lang,
             new ExtensionRepository(EntityManagerFactory::build($languageActivationConn)),
-            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), CurrentUser::current(), $this->paths),
+            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), $this->currentUser, $this->paths),
             $urlService,
             $configService,
             EntityManagerFactory::build($languageActivationConn)->getRepository(PluginMigrationEntity::class),
@@ -854,9 +857,9 @@ define(\'DB_COLLATE\', \'\');
             // calling it, not after. $user (built just above, same array
             // shape UserBootstrap::initialize() uses) is already the right
             // data; this mirrors that method's own two calls verbatim.
-            CurrentUser::current()->set(User::fromUserArray($user));
-            CurrentUser::current()->markRealUserResolved();
-            new AuthService(new AuthRepository(EntityManagerFactory::build($conn)), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $this->passwordService($conn), new CookieService(), EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), EventDispatcher::get(), PageState::current(), CurrentUser::current(), $this->currentConfig, $this->paths)
+            $this->currentUser->set(User::fromUserArray($user));
+            $this->currentUser->markRealUserResolved();
+            new AuthService(new AuthRepository(EntityManagerFactory::build($conn)), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $this->passwordService($conn), new CookieService(), EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->paths)
                 ->logUser($login_user_id, false);
             $_SESSION['connected_with'] = 'pwg_ui';
 
@@ -890,9 +893,9 @@ define(\'DB_COLLATE\', \'\');
             // raw global $user bridge this comment used to reference was
             // fully retired once every consumer -- including this one --
             // moved onto CurrentUser.)
-            CurrentUser::current()->set(User::fromUserArray($user));
+            $this->currentUser->set(User::fromUserArray($user));
 
-            new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), EventDispatcher::get(), $this->currentConfig), CurrentUser::current())
+            new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig), $this->currentUser)
                 ->save();
 
             // email notification

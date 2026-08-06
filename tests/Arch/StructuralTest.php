@@ -568,12 +568,16 @@ test('DeploymentPolicy::current() transitional bridge has a shrinking, known all
     // constructor-injected DeploymentPolicy should remove it from the
     // allow-list below. Search/SearchService.php closed this shim in Phase
     // 11 sub-phase 11G part 1 -- real constructor injection.
-    // Admin/Install/InstallWizard.php's remaining site is install-flow,
-    // timing-sensitive (Phase 11 sub-phase 11K).
+    // Admin/Install/InstallWizard.php closed this shim in Phase 11
+    // sub-phase 11K -- its own 2 sites turned out not to be genuinely
+    // timing-sensitive (unlike DbCredentials/Connection, DeploymentPolicy
+    // doesn't reflect a mid-request seed() mutation), so it took a real
+    // constructor param like every other collaborator, both real callers
+    // (public/install.php, this class's own container-resolved
+    // construction) updated to supply it.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Admin/Install/InstallWizard.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'DeploymentPolicy::current(');
@@ -648,22 +652,23 @@ test('PageState::current() transitional bridge has a shrinking, known allow-list
     // insertNewDataUserMailNotification() helpers (no $this there either,
     // same shape already established for CategoryService.php's own
     // moveCategories()-adjacent statics during the Translator phase).
-    // InstallWizard.php/RedirectService.php match DeploymentPolicy::
-    // current()'s own identical allow-list reasoning: RedirectService
-    // needs zero constructor args by design (early-crash fallback shape),
-    // and InstallWizard's one site is a one-off manual AuthService
-    // construction inside the install flow -- RedirectService.php's own
-    // 2 sites are actually its `new Template(...)` construction calls
-    // now (Phase 11 sub-phase 11E), same shape, still no constructor-
-    // injected PageState by design. Mail/MailService.php,
-    // Template/Template.php, and Html/HtmlService.php itself all closed
-    // this shim in Phase 11 sub-phase 11E -- real constructor injection
-    // (MailService's own former authService() lazy-default helper now
-    // reads $this->deploymentPolicy instead).
+    // RedirectService.php needs zero constructor args by design
+    // (early-crash fallback shape) -- its own 2 sites are actually its
+    // `new Template(...)` construction calls now (Phase 11 sub-phase
+    // 11E), same shape, still no constructor-injected PageState by
+    // design. Mail/MailService.php, Template/Template.php, and
+    // Html/HtmlService.php itself all closed this shim in Phase 11
+    // sub-phase 11E -- real constructor injection (MailService's own
+    // former authService() lazy-default helper now reads
+    // $this->deploymentPolicy instead). Admin/Install/InstallWizard.php
+    // closed this shim in Phase 11 sub-phase 11K -- its one site was a
+    // real, previously-unnoticed leftover bug, not a genuine need: the
+    // class already had $this->pageState as a real constructor property
+    // (used everywhere else in the file), this one AuthService
+    // construction site just never used it.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Admin/Install/InstallWizard.php',
         '/src/Piwigo/Bootstrap/RedirectService.php',
         '/src/Piwigo/Controller/Admin/NotificationByMailSubController.php',
         '/src/Piwigo/Core/Logger.php',
@@ -994,12 +999,17 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     // "no wrapper needed" precedent as FilesystemHelper;
     // every Ws/Pwg*.php file + WsInitializer.php took real constructor
     // injection during their own Phase 10 sub-batches, so none remain on
-    // this allow-list). RequestBootstrap.php/InstallWizard.php are
-    // Bootstrap/-only wiring code that already has direct container access
-    // (RequestBootstrap also gained a new public eventDispatcher() resolver,
-    // matching coreTabs()/sessionService()/translator()'s own precedent, for
-    // public/admin.php's own legacy-style `new AdminShell(...)` manual
-    // construction). Phase 11 sub-phase 11B: Users/UserRepository.php
+    // this allow-list). RequestBootstrap.php is Bootstrap/-only wiring
+    // code that already has direct container access (also gained a new
+    // public eventDispatcher() resolver, matching coreTabs()/
+    // sessionService()/translator()'s own precedent, for public/admin.php's
+    // own legacy-style `new AdminShell(...)` manual construction).
+    // Admin/Install/InstallWizard.php closed this shim in Phase 11
+    // sub-phase 11K -- its 3 sites were a real, previously-unnoticed
+    // leftover bug, not a genuine need: the class already had
+    // $this->eventDispatcher as a real constructor property (used
+    // elsewhere in the file), these 3 sites just never used it.
+    // Phase 11 sub-phase 11B: Users/UserRepository.php
     // removed from this allow-list -- no longer a Doctrine repository with
     // an ORM-fixed constructor, it now takes EventDispatcher via real
     // constructor injection like everything else in this campaign. Phase
@@ -1027,7 +1037,6 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
 
     $allowedFiles = [
         '/src/Piwigo/Admin/Extensions/ExtensionScanner.php',
-        '/src/Piwigo/Admin/Install/InstallWizard.php',
         '/src/Piwigo/Bootstrap/PageTail.php',
         '/src/Piwigo/Bootstrap/RedirectService.php',
         '/src/Piwigo/Bootstrap/RequestBootstrap.php',
@@ -1089,22 +1098,25 @@ test('CurrentTemplate::current() transitional bridge has a shrinking, known allo
     // constructor-injected CurrentTemplate should remove it from the
     // allow-list below.
     // Ws/PwgExtensions.php took real constructor injection during its own
-    // Phase 10 sub-batch. InstallWizard.php matches
-    // DeploymentPolicy::current()'s own identical allow-list reasoning: a
-    // one-off manual construction site (public/install.php, a raw
-    // entry-shell root file that never boots Kernel) not worth forcing
-    // real injection this late. Html/HtmlService.php itself closed this
+    // Phase 10 sub-batch. Html/HtmlService.php itself closed this
     // shim in Phase 11 sub-phase 11E -- real constructor injection, the
     // "too many manual construction sites" reasoning no longer holds.
     // Phase 11 sub-phase 11F: Template/CssLoader.php/ScriptLoader.php
     // removed too -- CssLoader.php via an explicit method param
     // (extending its own pre-existing get_css(UrlServiceInterface)
     // pattern), ScriptLoader.php via its own private static
-    // container-resolve helper.
+    // container-resolve helper. Admin/Install/InstallWizard.php closed
+    // this shim in Phase 11 sub-phase 11K -- its one site
+    // (CurrentTemplate::current()->set($template)) is a write to the
+    // shared instance, not a timing-sensitive read; a real constructor
+    // param mutates the exact same shared instance, so the
+    // "one-off manual construction, not worth forcing real injection"
+    // reasoning this allow-list entry used to cite (copied from
+    // DeploymentPolicy::current()'s own, since independently fixed the
+    // same way) never actually held here either.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Admin/Install/InstallWizard.php',
     ];
 
     $hits = [
@@ -1183,12 +1195,18 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
     // one real method each (getOtpAuthUrl()/getQrCode(),
     // fillCurrentUserCaddie()) takes it as an explicit parameter instead,
     // matching this campaign's own established NOCTOR precedent.
-    // InstallWizard.php/InstallService.php match DeploymentPolicy::
-    // current()'s own identical allow-list reasoning: one-off manual
-    // construction sites (both also need this to satisfy PemCatalog's own
-    // new required CurrentUser param, never actually read on either call
-    // path -- a real, previously-unrecorded gap found live via a full
-    // Integration run after PemCatalog's own conversion). public/random.php
+    // Admin/Install/InstallService.php matches DeploymentPolicy::
+    // current()'s own identical allow-list reasoning: a genuinely static
+    // utility, no constructor to inject through at all. InstallWizard.php
+    // closed this shim in Phase 11 sub-phase 11K -- its 6 real sites
+    // (including 3 real mutations: attachGlobals()/set()/
+    // markRealUserResolved()) took a real constructor param like every
+    // other collaborator; unlike DeploymentPolicy/CurrentTemplate, a
+    // throwaway instance in tests genuinely broke (PreferencesService/
+    // UserService constructed elsewhere in the same request still read
+    // back the container-shared instance's own .set() state), so its own
+    // Integration test keeps passing the real CurrentUser::current()
+    // value, not a fresh one. public/random.php
     // is a raw entry-shell root file, no
     // constructor to inject through (its own PermissionService
     // construction still needs a real CurrentUser instance, hence this
@@ -1201,7 +1219,6 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
         '/public/random.php',
         '/src/Piwigo/Admin/Extensions/ExtensionScanner.php',
         '/src/Piwigo/Admin/Install/InstallService.php',
-        '/src/Piwigo/Admin/Install/InstallWizard.php',
         '/src/Piwigo/Comment/CommentService.php',
     ];
 

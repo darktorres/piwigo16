@@ -10,11 +10,11 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AdminContext;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Event\Lifecycle\LoadingLang;
@@ -77,6 +77,23 @@ final class RedirectService implements RedirectServiceInterface
             throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
         }
         return $currentUser;
+    }
+
+    /**
+     * Resolves the container-shared instance instead of the CurrentPaths::
+     * get() shim -- this class already has direct Kernel::container()
+     * access (arch-tested to Bootstrap/ only), so the shim here was only
+     * ever style consistency with a neighboring call, not a structural
+     * need (singleton/service-locator elimination campaign, Phase 11
+     * sub-phase 11J).
+     */
+    private static function paths(): Paths
+    {
+        $paths = Kernel::container()->get(Paths::class);
+        if (! $paths instanceof Paths) {
+            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
+        }
+        return $paths;
     }
 
     private static function currentTemplate(): CurrentTemplate
@@ -167,7 +184,7 @@ final class RedirectService implements RedirectServiceInterface
         $template = self::currentTemplate()->isInitialized() ? self::currentTemplate()->get() : null;
 
         if (! $this->lang->isLangInfoInitialized() || ! isset($template)) {
-            $paths = CurrentPaths::get();
+            $paths = self::paths();
             $guest_id = self::currentConfig()->guestId();
             $user = $this->userService->buildUser(UserId::from($guest_id));
             self::currentUser()->set(User::fromUserArray($user));
@@ -180,7 +197,7 @@ final class RedirectService implements RedirectServiceInterface
             $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, $paths->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         } elseif (self::adminContext()->isActive()) {
-            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get(), CurrentPaths::get()->root . 'themes', $this->userService->getDefaultTheme());
+            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::paths()->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         }
 

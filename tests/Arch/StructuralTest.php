@@ -740,15 +740,20 @@ test('CurrentPaths::get()/isSet() transitional bridge has a shrinking, known all
     // only called from tests/' arch test. Every phase that converts one
     // more of these files to constructor-injected Paths should remove it
     // from the allow-list below; once empty, delete CurrentPaths entirely
-    // (see its own docblock's deletion criterion).
+    // (see its own docblock's deletion criterion). Phase 11 sub-phase
+    // 11J: Bootstrap/AdminDispatcher.php/PageTail.php/RedirectService.php/
+    // RequestBootstrap.php all closed this shim -- each already has
+    // direct Kernel::container() access (arch-tested to Bootstrap/ only),
+    // so a private paths() resolver helper replaces what was only ever
+    // style consistency with a neighboring call, not a structural need.
+    // Admin/Install/InstallService.php is the sole remaining, genuinely
+    // permanent exception: it runs on the pre-installation entry path
+    // (install.php) where no DI container exists at all yet, matching the
+    // Env/FilesystemHelper/MysqliDb precedent its own docblock cites.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
         '/src/Piwigo/Admin/Install/InstallService.php',
-        '/src/Piwigo/Bootstrap/AdminDispatcher.php',
-        '/src/Piwigo/Bootstrap/PageTail.php',
-        '/src/Piwigo/Bootstrap/RedirectService.php',
-        '/src/Piwigo/Bootstrap/RequestBootstrap.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentPaths::');
@@ -771,15 +776,13 @@ test('DbCredentials::current() transitional bridge has a shrinking, known allow-
     // has), matching FilesystemHelper's own established "no wrapper
     // instance" precedent -- not this shim. UploadService.php/
     // Ws/PwgImages.php took a real DbCredentials constructor param the
-    // same sub-phase. RequestBootstrap.php is inside Bootstrap/ (already
-    // allowed direct Kernel::container() access) but uses this shim for
-    // style consistency with its own neighboring DbConnection::build()
-    // call -- deferred to sub-phase 11J alongside its other remaining
-    // style-only shim usage.
+    // same sub-phase. Bootstrap/RequestBootstrap.php closed this shim in
+    // sub-phase 11J -- a private dbCredentials() resolver helper (same
+    // shape as paths() there) replaces what was only ever style
+    // consistency with its own neighboring DbConnection::build() call.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Bootstrap/RequestBootstrap.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'DbCredentials::current(');

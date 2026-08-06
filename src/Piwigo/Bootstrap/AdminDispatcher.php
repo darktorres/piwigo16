@@ -6,8 +6,8 @@ namespace Piwigo\Bootstrap;
 
 use LogicException;
 use Piwigo\Controller\Admin\AdminSubControllerInterface;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -53,7 +53,25 @@ final class AdminDispatcher
     private static function map(): array
     {
         /** @var array<string, class-string<AdminSubControllerInterface>> $map */
-        $map = require CurrentPaths::get()->root . 'config/admin_pages.php';
+        $map = require self::paths()->root . 'config/admin_pages.php';
         return $map;
+    }
+
+    /**
+     * Resolves the container-shared instance instead of the CurrentPaths::
+     * get() shim -- this class already has direct Kernel::container()
+     * access (arch-tested to Bootstrap/ only), so the shim here was only
+     * ever style consistency with a neighboring call, not a structural
+     * need (singleton/service-locator elimination campaign, Phase 11
+     * sub-phase 11J).
+     */
+    private static function paths(): Paths
+    {
+        $paths = Kernel::container()->get(Paths::class);
+        if (! $paths instanceof Paths) {
+            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
+        }
+
+        return $paths;
     }
 }

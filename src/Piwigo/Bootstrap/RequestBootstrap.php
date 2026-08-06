@@ -38,7 +38,6 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\CoverageCollector;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\CurrentThemeConfProvider;
 use Piwigo\Core\DeviceHelper;
 use Piwigo\Core\Env;
@@ -436,7 +435,7 @@ final class RequestBootstrap
         // repository, matching the established pattern from the Search/
         // Section/Category domain migrations.
         $conn = DbConnection::build();
-        $db_password = DbCredentials::current()->password;
+        $db_password = self::dbCredentials()->password;
         try {
             $conn->getNativeConnection();
         } catch (Exception $e) {
@@ -463,7 +462,7 @@ final class RequestBootstrap
         $log_dir = self::currentConfig()->logDir();
 
         self::currentLogger()->set(new Logger([
-            'directory' => CurrentPaths::get()->root . $log_data_location . $log_dir,
+            'directory' => self::paths()->root . $log_data_location . $log_dir,
             'severity' => self::currentConfig()->logLevel(),
             // we use an hashed filename to prevent direct file access, and we salt with
             // the db_password instead of secret_key because the log must be usable in i.php
@@ -476,7 +475,7 @@ final class RequestBootstrap
         self::imageStdParams();
 
         session_start();
-        PluginLoader::loadPlugins(self::loadedPlugins(), EventDispatcher::get(), self::activityService($conn), self::currentConfig(), self::wsContext(), self::accessControl(), self::pageState(), CurrentPaths::get());
+        PluginLoader::loadPlugins(self::loadedPlugins(), EventDispatcher::get(), self::activityService($conn), self::currentConfig(), self::wsContext(), self::accessControl(), self::pageState(), self::paths());
 
         if (self::currentConfig()->piwigoInstalledVersion() === null) {
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
@@ -511,7 +510,7 @@ final class RequestBootstrap
         }
 
         if (LoungeMaintenance::needsEmptying()) {
-            new ImageService(self::lang(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::activityService($conn), self::sessionService(), EventDispatcher::get(), self::currentConfig(), self::translator(), CurrentPaths::get())
+            new ImageService(self::lang(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::activityService($conn), self::sessionService(), EventDispatcher::get(), self::currentConfig(), self::translator(), self::paths())
                 ->emptyLounge();
         }
 
@@ -557,7 +556,7 @@ final class RequestBootstrap
             self::pageState(),
             self::currentUser(),
             self::currentConfig(),
-            CurrentPaths::get(),
+            self::paths(),
         )->pwgLogin(...));
         new UserBootstrap(
             AccessControl::current(),
@@ -618,7 +617,7 @@ final class RequestBootstrap
             self::currentConfig(),
             self::installationFlag(),
             self::processCache(),
-            CurrentPaths::get(),
+            self::paths(),
         ));
         self::lang()->load('common.lang');
         if (AccessControl::current()->isAdmin() || self::adminContext()->isActive()) {
@@ -627,7 +626,7 @@ final class RequestBootstrap
             self::lang()->load('whats_new_' . VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
         }
         EventDispatcher::get()->dispatchNotify(new LoadingLang());
-        self::lang()->load('lang', CurrentPaths::get()->siteLocal, [
+        self::lang()->load('lang', self::paths()->siteLocal, [
             'no_fallback' => true,
             'local' => true,
         ]);
@@ -685,13 +684,13 @@ final class RequestBootstrap
             $admin_theme = new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
                 ->getParam('admin_theme', self::currentConfig()->adminTheme());
             $admin_theme = is_string($admin_theme) ? $admin_theme : self::currentConfig()->adminTheme();
-            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get(), CurrentPaths::get()->root . 'themes/admin', $admin_theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::paths()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = self::currentUser()->get()->theme;
             if (PageFilterHelper::scriptBasename() !== 'ws' and DeviceHelper::mobileTheme()) {
                 $theme = self::currentConfig()->mobilTheme();
             }
-            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get(), CurrentPaths::get()->root . 'themes', $theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::paths()->root . 'themes', $theme);
         }
 
         // Legacy Coupling Retirement Track A / Phase 2 global-residual
@@ -722,7 +721,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(self::lang(), AccessControl::current(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService()), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService(), self::currentConfig(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::htmlService(), self::installationFlag())
+            new NoPhotoYetRenderer(self::lang(), AccessControl::current(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService()), self::urlService(), self::paths(), self::adminContext(), self::sessionService(), EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService(), self::currentConfig(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::htmlService(), self::installationFlag())
                 ->render();
         }
 
@@ -906,6 +905,41 @@ final class RequestBootstrap
     private static function passwordService(Connection $conn): PasswordService
     {
         return new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), self::deploymentPolicy());
+    }
+
+    /**
+     * Resolves the container-shared instance instead of the CurrentPaths::
+     * get() shim -- this class already has direct Kernel::container()
+     * access (arch-tested to Bootstrap/ only), so the shim here was only
+     * ever style consistency with a neighboring call, not a structural
+     * need (singleton/service-locator elimination campaign, Phase 11
+     * sub-phase 11J).
+     */
+    private static function paths(): Paths
+    {
+        $paths = Kernel::container()->get(Paths::class);
+        if (! $paths instanceof Paths) {
+            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
+        }
+
+        return $paths;
+    }
+
+    /**
+     * Resolves the container-shared instance instead of the
+     * DbCredentials::current() shim -- same "already has direct
+     * Kernel::container() access, shim was style consistency only"
+     * reasoning as paths() above (singleton/service-locator elimination
+     * campaign, Phase 11 sub-phase 11J).
+     */
+    private static function dbCredentials(): DbCredentials
+    {
+        $dbCredentials = Kernel::container()->get(DbCredentials::class);
+        if (! $dbCredentials instanceof DbCredentials) {
+            throw new LogicException('Container returned an unexpected type for ' . DbCredentials::class);
+        }
+
+        return $dbCredentials;
     }
 
     /**

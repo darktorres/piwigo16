@@ -13,9 +13,9 @@ use Piwigo\Admin\PiwigoInfosSender;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\ImageService;
@@ -60,7 +60,7 @@ final class PageTail
         // (L4) is the one place the concrete L4 implementation gets
         // constructed. Legacy Coupling Retirement Phase 4c: UrlServiceInterface
         // is wired the same way, see PageTailRenderer's own docblock.
-        new PageTailRenderer(AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), CurrentPaths::get()), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
+        new PageTailRenderer(AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths()), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
             ->render(self::pageState()->requestStart);
     }
 
@@ -74,7 +74,7 @@ final class PageTail
     {
         self::checkForUpdates();
 
-        return new PageTailRenderer(AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), CurrentPaths::get()), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
+        return new PageTailRenderer(AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths()), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
             ->renderToString(self::pageState()->requestStart);
     }
 
@@ -92,6 +92,24 @@ final class PageTail
         }
 
         return $currentLogger;
+    }
+
+    /**
+     * Resolves the container-shared instance instead of the CurrentPaths::
+     * get() shim -- this class already has direct Kernel::container()
+     * access (arch-tested to Bootstrap/ only), so the shim here was only
+     * ever style consistency with a neighboring call, not a structural
+     * need (singleton/service-locator elimination campaign, Phase 11
+     * sub-phase 11J).
+     */
+    private static function paths(): Paths
+    {
+        $paths = Kernel::container()->get(Paths::class);
+        if (! $paths instanceof Paths) {
+            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
+        }
+
+        return $paths;
     }
 
     /**
@@ -241,7 +259,7 @@ final class PageTail
             if ($check_for_updates) {
                 $exec_id = UniqueExecLock::begins('check_for_updates');
                 if ($exec_id !== false) {
-                    new CoreUpdateService(RequestBootstrap::lang(), new ZipExtractor(), new RedirectService(RequestBootstrap::lang(), self::userService()), self::urlService(), self::currentConfigService()->get(), CurrentPaths::get(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService(), RequestBootstrap::currentConfig())
+                    new CoreUpdateService(RequestBootstrap::lang(), new ZipExtractor(), new RedirectService(RequestBootstrap::lang(), self::userService()), self::urlService(), self::currentConfigService()->get(), self::paths(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService(), RequestBootstrap::currentConfig())
                         ->notifyPiwigoNewVersions();
 
                     UniqueExecLock::ends('check_for_updates');

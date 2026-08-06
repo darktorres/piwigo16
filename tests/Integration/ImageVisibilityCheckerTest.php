@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Override;
 use Doctrine\DBAL\Connection;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\ImageVisibilityChecker;
@@ -67,23 +68,23 @@ final class ImageVisibilityCheckerTest extends IntegrationTestCase
     {
         self::setCurrentUserForbiddenCategories('0');
 
-        self::assertTrue($this->checker->isVisibleToUser(1));
-        self::assertTrue($this->checker->isVisibleToUser(4));
+        self::assertTrue($this->checker->isVisibleToUser(ImageId::from(1)));
+        self::assertTrue($this->checker->isVisibleToUser(ImageId::from(4)));
     }
 
     public function test_is_visible_to_user_returns_false_for_an_image_in_a_forbidden_category(): void
     {
         self::setCurrentUserForbiddenCategories('2');
 
-        self::assertFalse($this->checker->isVisibleToUser(4));
-        self::assertFalse($this->checker->isVisibleToUser(5));
+        self::assertFalse($this->checker->isVisibleToUser(ImageId::from(4)));
+        self::assertFalse($this->checker->isVisibleToUser(ImageId::from(5)));
     }
 
     public function test_is_visible_to_user_returns_true_for_an_image_not_in_a_forbidden_category(): void
     {
         self::setCurrentUserForbiddenCategories('2');
 
-        self::assertTrue($this->checker->isVisibleToUser(1));
+        self::assertTrue($this->checker->isVisibleToUser(ImageId::from(1)));
     }
 
     /**
@@ -96,9 +97,9 @@ final class ImageVisibilityCheckerTest extends IntegrationTestCase
     public function test_is_visible_to_user_reflects_a_revocation_on_the_same_connection(): void
     {
         self::setCurrentUserForbiddenCategories('0');
-        self::assertTrue($this->checker->isVisibleToUser(4));
+        self::assertTrue($this->checker->isVisibleToUser(ImageId::from(4)));
 
         self::setCurrentUserForbiddenCategories('2');
-        self::assertFalse($this->checker->isVisibleToUser(4));
+        self::assertFalse($this->checker->isVisibleToUser(ImageId::from(4)));
     }
 }

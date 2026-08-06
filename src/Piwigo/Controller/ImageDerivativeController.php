@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Exception;
 use Override;
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Request\ImageDerivativeRequest;
@@ -160,7 +161,7 @@ final class ImageDerivativeController implements ControllerInterface
                 }
 
                 $image_id = $row->id;
-                $this->checkDerivativePermission($conn, $image_id->value);
+                $this->checkDerivativePermission($conn, $image_id);
 
                 if ($row->width !== null) {
                     $this->originalSize = [$row->width, $row->height];
@@ -425,7 +426,7 @@ final class ImageDerivativeController implements ControllerInterface
      * guest id when none apply) before this controller ever runs -- no
      * separate session-cookie lookup needed here any more.
      */
-    private function checkDerivativePermission(Connection $conn, int $imageId): void
+    private function checkDerivativePermission(Connection $conn, ImageId $imageId): void
     {
         if (! $this->imageVisibilityChecker->isVisibleToUser($imageId)) {
             $this->ierror('Forbidden', 403);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Permission;
 
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -34,7 +35,7 @@ final readonly class ImageVisibilityChecker
         private CurrentUser $currentUser,
     ) {}
 
-    public function isVisibleToUser(int $imageId): bool
+    public function isVisibleToUser(ImageId $imageId): bool
     {
         $forbidden = trim($this->currentUser->get()->forbiddenCategories);
 

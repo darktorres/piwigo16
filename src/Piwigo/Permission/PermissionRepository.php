@@ -13,6 +13,7 @@ use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\UserAccessEntity;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
@@ -329,14 +330,14 @@ final readonly class PermissionRepository
      *
      * @param list<int> $forbiddenCategoryIds
      */
-    public function isImageOutsideForbiddenCategories(int $imageId, array $forbiddenCategoryIds): bool
+    public function isImageOutsideForbiddenCategories(ImageId $imageId, array $forbiddenCategoryIds): bool
     {
         $nb = $this->em->createQueryBuilder()
             ->select('COUNT(ic.imageId) AS nb')
             ->from(ImageCategoryEntity::class, 'ic')
             ->where('ic.imageId = :imageId')
             ->andWhere('ic.categoryId NOT IN (:forbidden)')
-            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+            ->setParameter('imageId', $imageId)
             ->setParameter('forbidden', $forbiddenCategoryIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->getSingleScalarResult();

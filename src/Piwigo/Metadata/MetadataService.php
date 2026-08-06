@@ -12,6 +12,7 @@ use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -56,7 +57,7 @@ final readonly class MetadataService
         private CurrentUser $currentUser,
         private SessionService $sessionService,
         private FilterState $filterState,
-        private \Piwigo\Core\Paths $paths,
+        private Paths $paths,
     ) {}
 
     /**

@@ -298,7 +298,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             CurrentTemplate::current(),
             HtmlServiceTestFactory::build(),
             CurrentConfig::current(),
-            \Piwigo\Core\CurrentPaths::get(),
+            CurrentPaths::get(),
         );
     }
 

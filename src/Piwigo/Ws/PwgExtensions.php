@@ -28,6 +28,7 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
@@ -61,7 +62,7 @@ final class PwgExtensions
         private readonly RedirectServiceInterface $redirectService,
         private readonly PemCatalog $pemCatalog,
         private readonly WsContext $wsContext,
-        private readonly \Piwigo\Core\Paths $paths,
+        private readonly Paths $paths,
     ) {}
 
     /**

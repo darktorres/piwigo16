@@ -14,6 +14,7 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
@@ -62,7 +63,7 @@ final class ThemesStandardPagesPageRenderer
         private readonly CurrentTemplate $currentTemplate,
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly CurrentConfig $currentConfig,
-        private readonly \Piwigo\Core\Paths $paths,
+        private readonly Paths $paths,
     ) {}
 
     public function render(): void

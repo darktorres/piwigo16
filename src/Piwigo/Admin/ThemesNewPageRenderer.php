@@ -17,6 +17,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
@@ -49,7 +50,7 @@ final class ThemesNewPageRenderer
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly CurrentConfig $currentConfig,
         private readonly CurrentUser $currentUser,
-        private readonly \Piwigo\Core\Paths $paths,
+        private readonly Paths $paths,
     ) {}
 
     /**

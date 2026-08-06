@@ -18,6 +18,7 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -70,11 +71,11 @@ final class LocalSiteReader
      * identical no-graceful-fallback shape (singleton/service-locator
      * elimination campaign, Phase 11 sub-phase 11H).
      */
-    private function paths(): \Piwigo\Core\Paths
+    private function paths(): Paths
     {
-        $paths = Kernel::container()->get(\Piwigo\Core\Paths::class);
-        if (! $paths instanceof \Piwigo\Core\Paths) {
-            throw new LogicException('Container returned an unexpected type for ' . \Piwigo\Core\Paths::class);
+        $paths = Kernel::container()->get(Paths::class);
+        if (! $paths instanceof Paths) {
+            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
         }
 
         return $paths;

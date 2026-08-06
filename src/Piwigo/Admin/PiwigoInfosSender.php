@@ -18,6 +18,7 @@ use Piwigo\Core\ArrayHelper;
 use Piwigo\Core\ContainerDetector;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UniqueExecLock;
@@ -68,7 +69,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         private readonly ImageService $imageService,
         private readonly UrlServiceInterface $urlService,
         private readonly CurrentConfig $currentConfig,
-        private readonly \Piwigo\Core\Paths $paths,
+        private readonly Paths $paths,
     ) {}
 
     #[Override]

@@ -42,6 +42,7 @@ use Piwigo\Template\Request\TemplateExtentsRequest;
 use Smarty\Debug;
 use Smarty\Smarty;
 use Smarty\Template as SmartyTemplate;
+use Smarty\TemplateBase;
 
 /**
  * Legacy Coupling Retirement Phase 8, 8d: the data_dir_checked write
@@ -1589,7 +1590,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * variable-storage API.
      *
      * @param string $source
-     * @param \Smarty\TemplateBase $smarty
+     * @param TemplateBase $smarty
      * @return string
      */
     public static function prefilter_local_css($source, $smarty, Paths $paths)

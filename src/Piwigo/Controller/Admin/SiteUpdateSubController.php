@@ -22,6 +22,7 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\TimingHelper;
@@ -141,7 +142,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly InputValidator $inputValidator,
         private readonly Translator $translator,
         private readonly FilterState $filterState,
-        private readonly \Piwigo\Core\Paths $paths,
+        private readonly Paths $paths,
     ) {}
 
     private function imageService(Connection $conn): ImageService

@@ -7,6 +7,7 @@ namespace Piwigo\Admin\Maintenance;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Image\ImageService;
 use Piwigo\Template\CurrentTemplate;
 
@@ -49,7 +50,7 @@ final class FilesystemIntegrityChecker
         private readonly CurrentConfigService $currentConfigService,
         private readonly ImageService $imageService,
         private readonly CurrentConfig $currentConfig,
-        private readonly \Piwigo\Core\Paths $paths,
+        private readonly Paths $paths,
     ) {}
 
     /**

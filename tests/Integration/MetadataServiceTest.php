@@ -12,6 +12,7 @@ declare(strict_types=1);
 // passthrough with no handlers registered, so no local stub is needed.
 namespace Piwigo\Tests\Integration {
 
+    use Piwigo\Core\CurrentPaths;
     use Override;
     use Piwigo\Core\Kernel;
     use LogicException;
@@ -70,7 +71,7 @@ final class MetadataServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $currentLogger = new CurrentLogger();
         $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-        $this->service = new MetadataService(Lang::current(), new MetadataRepository(EntityManagerFactory::build($this->conn)), $currentLogger, EventDispatcher::get(), CurrentConfig::current(), CurrentUser::current(), SessionService::get(), new FilterState(), \Piwigo\Core\CurrentPaths::get());
+        $this->service = new MetadataService(Lang::current(), new MetadataRepository(EntityManagerFactory::build($this->conn)), $currentLogger, EventDispatcher::get(), CurrentConfig::current(), CurrentUser::current(), SessionService::get(), new FilterState(), CurrentPaths::get());
 
         CurrentConfig::current()->setUseIptc(false);
         CurrentConfig::current()->setUseExif(true);

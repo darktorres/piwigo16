@@ -11,6 +11,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Group\GroupService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -44,7 +45,7 @@ final class UserListSubController implements AdminSubControllerInterface
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
-        private readonly \Piwigo\Core\Paths $paths,
+        private readonly Paths $paths,
     ) {}
 
     #[Override]

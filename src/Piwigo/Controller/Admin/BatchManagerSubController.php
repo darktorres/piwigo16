@@ -22,6 +22,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -111,7 +112,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
         private readonly FilterState $filterState,
-        private readonly \Piwigo\Core\Paths $paths,
+        private readonly Paths $paths,
     ) {}
 
     #[Override]

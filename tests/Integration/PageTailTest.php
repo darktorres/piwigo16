@@ -18,7 +18,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\UniqueExecLock;
@@ -80,7 +80,7 @@ final class PageTailTest extends IntegrationTestCase
         // footer.tpl's own {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
 
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {

@@ -16,7 +16,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Logger;
@@ -177,7 +177,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // "Undefined array key" warning under this suite's own
         // failOnWarning=true).
         LangTestFactory::get()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
 
         $execId = UniqueExecLock::begins(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
         self::assertTrue($execId);
@@ -198,7 +198,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // own comment -- Lang::setLangInfo() must run before Template's
         // own construction snapshots it.
         LangTestFactory::get()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
         // Would take the redirectHttp() branch (a bare 302, no rendered
         // body) if $refresh_time were ignored -- forcing the http method
         // here proves it's genuinely $refresh_time, not

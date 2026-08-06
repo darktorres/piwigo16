@@ -50,7 +50,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *   Both of this rewrite's real write paths for a site row
  *   (`InstallWizard`'s own site-1 seed, and `SiteManagerSubController`'s
  *   "add a new site" form -- see that controller's own inline comment)
- *   always anchor `galleries_url` to `CurrentPaths::get()->root`, an
+ *   always anchor `galleries_url` to `the live, container-bound Paths->root`, an
  *   absolute path, so no fulldir built from
  *   `CategoryService::getFulldirs()` can ever start with `../` for data
  *   this application itself wrote. It remains reachable only via a
@@ -298,7 +298,7 @@ function suRoot(): string
 /**
  * Mirrors SiteUpdateSubController's own to-delete-derivative-dir
  * computation for a top-level category `dir` directly under site 1's
- * `galleries/` root: `CurrentPaths::get()->root . CurrentConfig::
+ * `galleries/` root: `the live, container-bound Paths->root . CurrentConfig::
  * derivativeDir() . $fulldir`, where `$fulldir` is itself already
  * absolute (site 1's `galleries_url` fixture row is an absolute path) --
  * `root` is embedded twice by design, mirroring the full source path

@@ -6,7 +6,7 @@ use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
@@ -48,9 +48,9 @@ test('fromPluralWsParam returns null for an unrecognized string', function (): v
 test('scanDirectory returns each type\'s own filesystem root', function (): void {
     // P23 batch 8f-4: the PHPWG_PLUGINS_PATH define is gone --
     // Piwigo\Admin\PluginLoader::pluginsPath() is the canonical value now.
-    expect(ExtensionType::Plugin->scanDirectory(CurrentPaths::get(), CurrentConfig::current()))->toBe(PluginLoader::pluginsPath(CurrentPaths::get()))
-        ->and(ExtensionType::Theme->scanDirectory(CurrentPaths::get(), CurrentConfig::current()))->toBe(CurrentConfig::current()->themesPath())
-        ->and(ExtensionType::Language->scanDirectory(CurrentPaths::get(), CurrentConfig::current()))->toBe(CurrentPaths::get()->root . 'language/');
+    expect(ExtensionType::Plugin->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfig::current()))->toBe(PluginLoader::pluginsPath(CurrentPathsTestFactory::get()))
+        ->and(ExtensionType::Theme->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfig::current()))->toBe(CurrentConfig::current()->themesPath())
+        ->and(ExtensionType::Language->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfig::current()))->toBe(CurrentPathsTestFactory::get()->root . 'language/');
 });
 
 test('markerFilename returns each type\'s own extension marker file', function (): void {

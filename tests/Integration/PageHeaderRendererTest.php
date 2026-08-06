@@ -13,7 +13,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\PageState;
@@ -71,7 +71,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         // wiring this test never boots (same reasoning as SectionInitializerTest/
         // RedirectServiceTest/SectionPopulatorTest's own identical setUp).
         LangTestFactory::get()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
 
         $this->renderer = new PageHeaderRenderer();
     }

@@ -910,7 +910,8 @@ final class RequestBootstrap
 
     /**
      * Resolves the container-shared instance instead of the CurrentPaths::
-     * get() shim -- this class already has direct Kernel::container()
+     * get() shim (closed outright in sub-phase 12F-10) -- this class
+     * already has direct Kernel::container()
      * access (arch-tested to Bootstrap/ only), so the shim here was only
      * ever style consistency with a neighboring call, not a structural
      * need (singleton/service-locator elimination campaign, Phase 11

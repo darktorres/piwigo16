@@ -18,7 +18,7 @@ use Smarty\Extension\BCPluginsAdapter;
 use Piwigo\Template\Css;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -222,10 +222,10 @@ function template_instance_test_restore_server_keys(array $saved): void
 
 beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-template-instance-test-' . bin2hex(random_bytes(8));
-    // Captured on $this, not re-read via CurrentPaths::get() in afterEach()
+    // Captured on $this, not re-read via CurrentPathsTestFactory::get() in afterEach()
     // below -- a test using KernelContainerOverride::with() (e.g. the
     // admin-context one further down) leaves Kernel reset by the time
-    // afterEach() runs, so CurrentPaths::get() would throw there.
+    // afterEach() runs, so CurrentPathsTestFactory::get() would throw there.
     $this->root = $root;
     mkdir($root, 0o777, true);
     // Template's own ProcessCache usage now goes through a transitional
@@ -288,7 +288,7 @@ test('constructor casts compile_check to an int', function (): void {
 // --- constructor: data dir not writable -------------------------------
 
 test('constructor fatal-errors when the data directory cannot be made writable', function (): void {
-    chmod(CurrentPaths::get()->root, 0o555);
+    chmod(CurrentPathsTestFactory::get()->root, 0o555);
     CurrentConfig::current()->reset();
     CurrentConfig::current()->setDataLocation('data/');
 
@@ -297,12 +297,12 @@ test('constructor fatal-errors when the data directory cannot be made writable',
         TemplateTestFactory::build();
     } finally {
         restore_error_handler();
-        chmod(CurrentPaths::get()->root, 0o755);
+        chmod(CurrentPathsTestFactory::get()->root, 0o755);
     }
 })->throws(ResponseReadyException::class);
 
 test('constructor requests no backtrace when reporting the data-dir-not-writable error', function (): void {
-    chmod(CurrentPaths::get()->root, 0o555);
+    chmod(CurrentPathsTestFactory::get()->root, 0o555);
     CurrentConfig::current()->reset();
     CurrentConfig::current()->setDataLocation('data/');
 
@@ -314,7 +314,7 @@ test('constructor requests no backtrace when reporting the data-dir-not-writable
         $body = (string) $e->response()->getBody();
     } finally {
         restore_error_handler();
-        chmod(CurrentPaths::get()->root, 0o755);
+        chmod(CurrentPathsTestFactory::get()->root, 0o755);
     }
 
     expect($body)->not->toBeNull()
@@ -325,7 +325,7 @@ test('constructor loads admin.lang before rendering the data-dir-not-writable er
     // Real gettext fixture (same PoLoader/Translator stack LangTest.php's
     // own langTestWritePo() uses) placed under the *test* root's own
     // language/ dir -- Lang::load('admin.lang') resolves dirname from
-    // CurrentPaths::get()->root, not the repo's real top-level language/.
+    // CurrentPathsTestFactory::get()->root, not the repo's real top-level language/.
     // Without the real load('admin.lang') call, Lang::t('an error
     // happened') falls back to returning the raw key untranslated
     // (Translator::translate()'s own documented fallback) instead of this
@@ -336,12 +336,12 @@ test('constructor loads admin.lang before rendering the data-dir-not-writable er
     // form is "admin.lang.php", whose po sibling is "admin.po" (matching
     // this repo's own real ./language/*/admin.po naming), not
     // "admin.lang.po".
-    mkdir(CurrentPaths::get()->root . 'language/en_UK', 0o777, true);
+    mkdir(CurrentPathsTestFactory::get()->root . 'language/en_UK', 0o777, true);
     file_put_contents(
-        CurrentPaths::get()->root . 'language/en_UK/admin.po',
+        CurrentPathsTestFactory::get()->root . 'language/en_UK/admin.po',
         "msgid \"\"\nmsgstr \"\"\n\"Content-Type: text/plain; charset=UTF-8\\n\"\n\"Language: en_UK\\n\"\n\nmsgid \"an error happened\"\nmsgstr \"CUSTOM-ADMIN-LANG-TITLE\"\n",
     );
-    chmod(CurrentPaths::get()->root, 0o555);
+    chmod(CurrentPathsTestFactory::get()->root, 0o555);
     CurrentConfig::current()->reset();
     CurrentConfig::current()->setDataLocation('data/');
 
@@ -353,7 +353,7 @@ test('constructor loads admin.lang before rendering the data-dir-not-writable er
         $body = (string) $e->response()->getBody();
     } finally {
         restore_error_handler();
-        chmod(CurrentPaths::get()->root, 0o755);
+        chmod(CurrentPathsTestFactory::get()->root, 0o755);
         TranslatorTestFactory::get()->reset();
         LangTestFactory::get()->reset();
     }
@@ -375,7 +375,7 @@ test('constructor creates the configured data-location directory when data_dir_c
         // has already run.
     }
 
-    expect(is_dir(CurrentPaths::get()->root . 'mydata'))->toBeTrue();
+    expect(is_dir(CurrentPathsTestFactory::get()->root . 'mydata'))->toBeTrue();
 });
 
 test('constructor actually reaches CurrentConfigService::confUpdateParam() when data_dir_checked is unset, not just the local isset() check', function (): void {
@@ -398,7 +398,7 @@ test('constructor actually reaches CurrentConfigService::confUpdateParam() when 
 test('constructor creates and sets the templates_c compile dir', function (): void {
     $t = TemplateTestFactory::build();
 
-    $expected = CurrentPaths::get()->root . 'data/templates_c';
+    $expected = CurrentPathsTestFactory::get()->root . 'data/templates_c';
 
     expect(is_dir($expected))->toBeTrue()
         ->and($t->smarty->getCompileDir())->toBe($expected . '/');
@@ -474,9 +474,9 @@ test('constructor derives jquery_code and plupload_code from the lang code when 
 });
 
 test('constructor registers template-extension extents when not in admin context, later duplicates winning', function (): void {
-    mkdir(CurrentPaths::get()->root . '/template-extension/', 0o777, true);
-    file_put_contents(CurrentPaths::get()->root . '/template-extension/first.tpl', 'a');
-    file_put_contents(CurrentPaths::get()->root . '/template-extension/second.tpl', 'b');
+    mkdir(CurrentPathsTestFactory::get()->root . '/template-extension/', 0o777, true);
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/template-extension/first.tpl', 'a');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/template-extension/second.tpl', 'b');
     CurrentConfig::current()->setExtentsForTemplates([
         'first.tpl' => ['dup-handle', 'N/A', 'N/A'],
         'second.tpl' => ['dup-handle', 'N/A', 'N/A'],
@@ -484,7 +484,7 @@ test('constructor registers template-extension extents when not in admin context
 
     $t = TemplateTestFactory::build();
 
-    expect($t->get_extent('orig.tpl', 'dup-handle'))->toBe(realpath(CurrentPaths::get()->root . '/template-extension/second.tpl'));
+    expect($t->get_extent('orig.tpl', 'dup-handle'))->toBe(realpath(CurrentPathsTestFactory::get()->root . '/template-extension/second.tpl'));
 });
 
 // --- constructor: local-css header prefilter (themed, non-admin) -------
@@ -510,7 +510,7 @@ test('constructor does not register the local-css header prefilter for a themed 
     // setDataDirChecked() writes -- re-supplying the SAME already-configured
     // instance keeps Template's constructor from re-reaching the (in this
     // fresh container, uninitialised) CurrentConfigService.
-    $paths = CurrentPaths::get();
+    $paths = CurrentPathsTestFactory::get();
     $currentConfig = CurrentConfig::current();
     KernelContainerOverride::with(
         [
@@ -529,7 +529,7 @@ test('constructor does not register the local-css header prefilter for a themed 
 // --- set_theme -----------------------------------------------------------
 
 test('set_theme loads themeconf from exactly root/theme, joined with a literal slash', function (): void {
-    $root = rtrim(CurrentPaths::get()->root, '/');
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/concat-theme', ['marker' => 'root-slash-theme']);
     $t = TemplateTestFactory::build();
 
@@ -539,7 +539,7 @@ test('set_theme loads themeconf from exactly root/theme, joined with a literal s
 });
 
 test('set_theme recognizes every whitelisted auth-page basename for the standard-pages swap', function (): void {
-    $root = rtrim(CurrentPaths::get()->root, '/');
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/wl-theme', ['marker' => 'not-swapped']);
     template_instance_test_write_themeconf($root . '/standard_pages', ['marker' => 'swapped']);
     CurrentConfig::current()->setUseStandardPages(true);
@@ -561,7 +561,7 @@ test('set_theme recognizes every whitelisted auth-page basename for the standard
 });
 
 test('set_theme does not swap themes when the current page is not a whitelisted auth page', function (): void {
-    $root = rtrim(CurrentPaths::get()->root, '/');
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/not-auth-theme', ['marker' => 'not-swapped']);
     template_instance_test_write_themeconf($root . '/standard_pages', ['marker' => 'swapped']);
     CurrentConfig::current()->setUseStandardPages(true);
@@ -584,7 +584,7 @@ test('set_theme never swaps away from the "default" theme itself even on a white
     // condition (not an `or`): with theme==='default', an `or`-mutated
     // first join would let the (matching) auth-page clause alone drag the
     // whole condition true, still swapping away from 'default'.
-    $root = rtrim(CurrentPaths::get()->root, '/');
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/default', ['marker' => 'default-marker']);
     template_instance_test_write_themeconf($root . '/standard_pages', ['marker' => 'swapped']);
     CurrentConfig::current()->setUseStandardPages(true);
@@ -603,7 +603,7 @@ test('set_theme never swaps away from the "default" theme itself even on a white
 });
 
 test('set_theme swaps themes when the theme itself opts into standard pages, even if the global config does not', function (): void {
-    $root = rtrim(CurrentPaths::get()->root, '/');
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/opt-in-theme', ['marker' => 'not-swapped', 'use_standard_pages' => true]);
     template_instance_test_write_themeconf($root . '/standard_pages', ['marker' => 'swapped']);
     CurrentConfig::current()->setUseStandardPages(false);
@@ -622,7 +622,7 @@ test('set_theme swaps themes when the theme itself opts into standard pages, eve
 });
 
 test('set_theme does not swap themes when neither the theme nor the global config opts into standard pages', function (): void {
-    $root = rtrim(CurrentPaths::get()->root, '/');
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/opt-out-theme', ['marker' => 'not-swapped']);
     template_instance_test_write_themeconf($root . '/standard_pages', ['marker' => 'swapped']);
     CurrentConfig::current()->setUseStandardPages(false);
@@ -641,7 +641,7 @@ test('set_theme does not swap themes when neither the theme nor the global confi
 });
 
 test('set_theme recurses into a distinct parent theme', function (): void {
-    $root = rtrim(CurrentPaths::get()->root, '/');
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/child-theme', ['marker' => 'child', 'parent' => 'parent-theme']);
     template_instance_test_write_themeconf($root . '/parent-theme', ['marker' => 'parent']);
     $t = TemplateTestFactory::build();
@@ -658,7 +658,7 @@ test('set_theme recurses into a distinct parent theme', function (): void {
 });
 
 test('set_theme does not recurse when a theme names itself as its own parent', function (): void {
-    $root = rtrim(CurrentPaths::get()->root, '/');
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/self-parent-theme', ['marker' => 'self', 'parent' => 'self-parent-theme']);
     $t = TemplateTestFactory::build();
 
@@ -668,7 +668,7 @@ test('set_theme does not recurse when a theme names itself as its own parent', f
 });
 
 test('set_theme records both the theme id and the load_css flag on the appended themes entry', function (): void {
-    $root = rtrim(CurrentPaths::get()->root, '/');
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/plain-theme', ['marker' => 'x']);
     $t = TemplateTestFactory::build();
 
@@ -680,7 +680,7 @@ test('set_theme records both the theme id and the load_css flag on the appended 
 });
 
 test('set_theme resolves local_head to a real file path when present and load_local_head is true', function (): void {
-    $root = rtrim(CurrentPaths::get()->root, '/');
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     mkdir($root . '/lh-theme', 0o777, true);
     file_put_contents($root . '/lh-theme/local_head.tpl', 'x');
     template_instance_test_write_themeconf($root . '/lh-theme', ['marker' => 'x', 'local_head' => 'local_head.tpl']);
@@ -693,7 +693,7 @@ test('set_theme resolves local_head to a real file path when present and load_lo
 });
 
 test('set_theme treats a local_head value of "0" as absent, same as every other in_array sentinel', function (): void {
-    $root = rtrim(CurrentPaths::get()->root, '/');
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/lh-zero-theme', ['marker' => 'x', 'local_head' => '0']);
     $t = TemplateTestFactory::build();
 
@@ -703,7 +703,7 @@ test('set_theme treats a local_head value of "0" as absent, same as every other 
 });
 
 test('set_theme treats an empty-string local_head as absent', function (): void {
-    $root = rtrim(CurrentPaths::get()->root, '/');
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/lh-empty-theme', ['marker' => 'x', 'local_head' => '']);
     $t = TemplateTestFactory::build();
 
@@ -713,7 +713,7 @@ test('set_theme treats an empty-string local_head as absent', function (): void 
 });
 
 test('set_theme defaults colorscheme to the given value when the theme does not already set one', function (): void {
-    $root = rtrim(CurrentPaths::get()->root, '/');
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/cs-theme', ['marker' => 'x']);
     $t = TemplateTestFactory::build();
 
@@ -723,7 +723,7 @@ test('set_theme defaults colorscheme to the given value when the theme does not 
 });
 
 test('set_theme preserves an already-set colorscheme instead of overwriting it', function (): void {
-    $root = rtrim(CurrentPaths::get()->root, '/');
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/cs-theme2', ['marker' => 'x', 'colorscheme' => 'theme-defined']);
     $t = TemplateTestFactory::build();
 
@@ -733,7 +733,7 @@ test('set_theme preserves an already-set colorscheme instead of overwriting it',
 });
 
 test('set_theme merges themeconf directly into the flat "themeconf" template var, not nested under an index', function (): void {
-    $root = rtrim(CurrentPaths::get()->root, '/');
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/merge-theme', ['marker' => 'flat-merge-check']);
     $t = TemplateTestFactory::build();
 
@@ -751,7 +751,7 @@ test('set_template_dir does not recompute compile_id once already set', function
     $t = TemplateTestFactory::build();
     $before = $t->smarty->compile_id;
 
-    $t->set_template_dir(CurrentPaths::get()->root . '/some/other/dir');
+    $t->set_template_dir(CurrentPathsTestFactory::get()->root . '/some/other/dir');
 
     expect($t->smarty->compile_id)->toBe($before);
 });
@@ -856,7 +856,7 @@ test('set_extents returns false when a value is neither an array nor a string', 
 
 test('set_extent accepts the string-shorthand form and registers a real matching file', function (): void {
     $t = TemplateTestFactory::build();
-    $extDir = CurrentPaths::get()->root . '/ext/';
+    $extDir = CurrentPathsTestFactory::get()->root . '/ext/';
     mkdir($extDir, 0o777, true);
     file_put_contents($extDir . 'myfile.tpl', 'hello');
 
@@ -866,7 +866,7 @@ test('set_extent accepts the string-shorthand form and registers a real matching
 
 test('set_extent overwrites an already-registered handle when overwrite is true (the default)', function (): void {
     $t = TemplateTestFactory::build();
-    $extDir = CurrentPaths::get()->root . '/ext/';
+    $extDir = CurrentPathsTestFactory::get()->root . '/ext/';
     mkdir($extDir, 0o777, true);
     file_put_contents($extDir . 'first.tpl', 'a');
     file_put_contents($extDir . 'second.tpl', 'b');
@@ -879,7 +879,7 @@ test('set_extent overwrites an already-registered handle when overwrite is true 
 
 test('set_extent registers a brand-new handle even when overwrite is false (nothing to protect yet)', function (): void {
     $t = TemplateTestFactory::build();
-    $extDir = CurrentPaths::get()->root . '/ext/';
+    $extDir = CurrentPathsTestFactory::get()->root . '/ext/';
     mkdir($extDir, 0o777, true);
     file_put_contents($extDir . 'first.tpl', 'a');
 
@@ -890,7 +890,7 @@ test('set_extent registers a brand-new handle even when overwrite is false (noth
 
 test('set_extents (array form) registers a handle when handle/param/theme all read from their correct array indices', function (): void {
     $t = TemplateTestFactory::build();
-    $dir = CurrentPaths::get()->root . '/ext/';
+    $dir = CurrentPathsTestFactory::get()->root . '/ext/';
     mkdir($dir, 0o777, true);
     file_put_contents($dir . 'file.tpl', 'x');
     $savedGet = $_GET;
@@ -908,7 +908,7 @@ test('set_extents (array form) registers a handle when handle/param/theme all re
 
 test('set_extents param match requires a literal "/" separator before the GET key substring', function (): void {
     $t = TemplateTestFactory::build();
-    $dir = CurrentPaths::get()->root . '/ext/';
+    $dir = CurrentPathsTestFactory::get()->root . '/ext/';
     mkdir($dir, 0o777, true);
     file_put_contents($dir . 'file.tpl', 'x');
     $savedGet = $_GET;
@@ -926,7 +926,7 @@ test('set_extents param match requires a literal "/" separator before the GET ke
 
 test('set_extents param match requires the full param substring, not just any "/" in the GET keys', function (): void {
     $t = TemplateTestFactory::build();
-    $dir = CurrentPaths::get()->root . '/ext/';
+    $dir = CurrentPathsTestFactory::get()->root . '/ext/';
     mkdir($dir, 0o777, true);
     file_put_contents($dir . 'file.tpl', 'x');
     $savedGet = $_GET;
@@ -943,7 +943,7 @@ test('set_extents param match requires the full param substring, not just any "/
 
 test('set_extents registers when theme matches the passed theme exactly, not only via the N/A escape hatch', function (): void {
     $t = TemplateTestFactory::build();
-    $dir = CurrentPaths::get()->root . '/ext/';
+    $dir = CurrentPathsTestFactory::get()->root . '/ext/';
     mkdir($dir, 0o777, true);
     file_put_contents($dir . 'file.tpl', 'x');
 
@@ -955,7 +955,7 @@ test('set_extents registers when theme matches the passed theme exactly, not onl
 
 test('set_extents does not register when theme matches neither the passed theme nor N/A', function (): void {
     $t = TemplateTestFactory::build();
-    $dir = CurrentPaths::get()->root . '/ext/';
+    $dir = CurrentPathsTestFactory::get()->root . '/ext/';
     mkdir($dir, 0o777, true);
     file_put_contents($dir . 'file.tpl', 'x');
 
@@ -978,13 +978,13 @@ test('set_extents checks file_exists on the full dir+filename concatenation, not
     // tell a ConcatRemoveRight mutation (file_exists($dir) alone) apart
     // from the real file_exists($dir . $filename).
     $t = TemplateTestFactory::build();
-    $dir = CurrentPaths::get()->root . '/pfx-';
-    file_put_contents(CurrentPaths::get()->root . '/pfx-real.tpl', 'x');
+    $dir = CurrentPathsTestFactory::get()->root . '/pfx-';
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/pfx-real.tpl', 'x');
 
     $result = $t->set_extents(['real.tpl' => ['myhandle', 'N/A', 'N/A']], $dir, true, 'N/A');
 
     expect($result)->toBeTrue()
-        ->and($t->get_extent('orig.tpl', 'myhandle'))->toBe(realpath(CurrentPaths::get()->root . '/pfx-real.tpl'));
+        ->and($t->get_extent('orig.tpl', 'myhandle'))->toBe(realpath(CurrentPathsTestFactory::get()->root . '/pfx-real.tpl'));
 });
 
 test('set_extents does not register a handle when realpath fails despite file_exists succeeding', function (): void {
@@ -1011,7 +1011,7 @@ test('set_extents does not register a handle when realpath fails despite file_ex
 
 test('assign_var_from_handle assigns the parsed handle output (returned, not echoed) and returns true', function (): void {
     $t = TemplateTestFactory::build();
-    $tplDir = CurrentPaths::get()->root . '/tpl/';
+    $tplDir = CurrentPathsTestFactory::get()->root . '/tpl/';
     mkdir($tplDir, 0o777, true);
     file_put_contents($tplDir . 'partial.tpl', 'Hello {$name}');
     $t->set_template_dir($tplDir);
@@ -1092,7 +1092,7 @@ test('p passes full=true to display_debug so the console targets the shared __Sm
 
 test('parse assigns ROOT_URL and ROOT_PATH before compiling', function (): void {
     $t = TemplateTestFactory::build();
-    $tplDir = CurrentPaths::get()->root . '/tpl/';
+    $tplDir = CurrentPathsTestFactory::get()->root . '/tpl/';
     mkdir($tplDir, 0o777, true);
     file_put_contents($tplDir . 'x.tpl', 'x');
     $t->set_template_dir($tplDir);
@@ -1100,13 +1100,13 @@ test('parse assigns ROOT_URL and ROOT_PATH before compiling', function (): void 
 
     $t->parse('x', true);
 
-    expect($t->get_template_vars('ROOT_PATH'))->toBe(CurrentPaths::get()->root)
+    expect($t->get_template_vars('ROOT_PATH'))->toBe(CurrentPathsTestFactory::get()->root)
         ->and($t->get_template_vars('ROOT_URL'))->toBeString();
 });
 
 test('parse registers external filters before compiling (so they run) and unregisters them again afterward', function (): void {
     $t = TemplateTestFactory::build();
-    $tplDir = CurrentPaths::get()->root . '/tpl/';
+    $tplDir = CurrentPathsTestFactory::get()->root . '/tpl/';
     mkdir($tplDir, 0o777, true);
     file_put_contents($tplDir . 'x.tpl', 'hello');
     $t->set_template_dir($tplDir);
@@ -1123,7 +1123,7 @@ test('parse salts compile_id with the current lang code during compilation when 
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
     LangTestFactory::get()->setLangInfo(['code' => 'fr_FR']);
     $t = TemplateTestFactory::build();
-    $tplDir = CurrentPaths::get()->root . '/tpl/';
+    $tplDir = CurrentPathsTestFactory::get()->root . '/tpl/';
     mkdir($tplDir, 0o777, true);
     file_put_contents($tplDir . 'x.tpl', 'x');
     $t->set_template_dir($tplDir);
@@ -1150,7 +1150,7 @@ test('parse does not salt compile_id with a lang code when cache-by-language is 
     CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
     LangTestFactory::get()->setLangInfo(['code' => 'fr_FR']);
     $t = TemplateTestFactory::build();
-    $tplDir = CurrentPaths::get()->root . '/tpl/';
+    $tplDir = CurrentPathsTestFactory::get()->root . '/tpl/';
     mkdir($tplDir, 0o777, true);
     file_put_contents($tplDir . 'x.tpl', 'x');
     $t->set_template_dir($tplDir);
@@ -1596,7 +1596,7 @@ test('func_get_combined_scripts renders sync footer scripts from get_footer_scri
     // Exact match (not toContain) so positional mutations (dropping or
     // reordering the surrounding markup) are distinguishable too.
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/sync.js', 'console.log(1);');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/sync.js', 'console.log(1);');
     $t->func_combine_script(['id' => 'sync-script', 'path' => 'sync.js', 'load' => 'footer']);
 
     $result = $t->func_get_combined_scripts(['load' => 'footer']);
@@ -1606,7 +1606,7 @@ test('func_get_combined_scripts renders sync footer scripts from get_footer_scri
 
 test('func_get_combined_scripts renders async footer scripts from get_footer_scripts()[1] via a dynamic script element', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/async.js', 'console.log(1);');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/async.js', 'console.log(1);');
     $t->func_combine_script(['id' => 'async-script', 'path' => 'async.js', 'load' => 'async']);
 
     $result = $t->func_get_combined_scripts(['load' => 'footer']);
@@ -1623,7 +1623,7 @@ test('func_get_combined_scripts renders async footer scripts from get_footer_scr
 
 test('func_get_combined_scripts prefixes the root URL onto the script src, in the correct order', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/sync.js', 'console.log(1);');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/sync.js', 'console.log(1);');
     $t->func_combine_script(['id' => 'sync-script', 'path' => 'sync.js', 'load' => 'footer']);
     template_instance_test_root_path_override()->push('http://example.test/root/');
     try {
@@ -1637,8 +1637,8 @@ test('func_get_combined_scripts prefixes the root URL onto the script src, in th
 
 test('func_get_combined_scripts omits the version query string entirely for a combined (version=false) script', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/a.js', 'console.log("a");');
-    file_put_contents(CurrentPaths::get()->root . '/b.js', 'console.log("b");');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/a.js', 'console.log("a");');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/b.js', 'console.log("b");');
     $t->func_combine_script(['id' => 'a', 'path' => 'a.js', 'load' => 'footer']);
     $t->func_combine_script(['id' => 'b', 'path' => 'b.js', 'load' => 'footer']);
 
@@ -1659,7 +1659,7 @@ test('make_script_src (via func_get_combined_scripts) uses a remote script\'s ow
 
 test('make_script_src (via func_get_combined_scripts) throws when a combined_script listener returns something other than a CombinedScript instance', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/sync.js', 'console.log(1);');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/sync.js', 'console.log(1);');
     $t->func_combine_script(['id' => 'sync-script', 'path' => 'sync.js', 'load' => 'footer']);
     EventDispatcherTestFactory::get()->addEventHandler(CombinedScript::class, static fn (): int => 42);
 
@@ -1781,7 +1781,7 @@ test('func_combine_css fatal-errors when path is a non-string, non-sentinel valu
 
 test('func_combine_css derives id from md5(path) when id is missing', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css']);
 
@@ -1790,7 +1790,7 @@ test('func_combine_css derives id from md5(path) when id is missing', function (
 
 test('func_combine_css keeps a real string id when given', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css']);
 
@@ -1799,7 +1799,7 @@ test('func_combine_css keeps a real string id when given', function (): void {
 
 test('func_combine_css falls back to md5(path) when id is a non-string value', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 42]);
 
@@ -1808,7 +1808,7 @@ test('func_combine_css falls back to md5(path) when id is a non-string value', f
 
 test('func_combine_css defaults version to "0" when missing', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css']);
 
@@ -1817,7 +1817,7 @@ test('func_combine_css defaults version to "0" when missing', function (): void 
 
 test('func_combine_css keeps version=false as-is', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css', 'version' => false]);
 
@@ -1826,7 +1826,7 @@ test('func_combine_css keeps version=false as-is', function (): void {
 
 test('func_combine_css falls back to version "0" for a non-string, non-false version', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css', 'version' => 7]);
 
@@ -1835,7 +1835,7 @@ test('func_combine_css falls back to version "0" for a non-string, non-false ver
 
 test('func_combine_css defaults order to 0 when missing', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css']);
 
@@ -1844,7 +1844,7 @@ test('func_combine_css defaults order to 0 when missing', function (): void {
 
 test('func_combine_css casts a real numeric order to an int', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css', 'order' => '5']);
 
@@ -1860,7 +1860,7 @@ test('func_combine_css truncates a fractional numeric order string to an int', f
     // (int) cast first truncates to 5, giving 5*1000=5000 -- distinguishes
     // the cast from arithmetic auto-coercion, unlike a whole-number string.
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css', 'order' => '5.7']);
 
@@ -1869,7 +1869,7 @@ test('func_combine_css truncates a fractional numeric order string to an int', f
 
 test('func_combine_css falls back to order 0 for a non-numeric order', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css', 'order' => 'not-numeric']);
 
@@ -1878,7 +1878,7 @@ test('func_combine_css falls back to order 0 for a non-numeric order', function 
 
 test('func_combine_css sets is_template to true when the template param is truthy', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css', 'template' => true]);
 
@@ -1891,7 +1891,7 @@ test('func_combine_css casts a non-bool truthy template value to a real bool bef
     // 1 would be stored as-is (int(1), not bool(true)) -- toBeTrue() is a
     // strict === true check, so it only passes when the cast really ran.
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css', 'template' => 1]);
 
@@ -1900,7 +1900,7 @@ test('func_combine_css casts a non-bool truthy template value to a real bool bef
 
 test('func_combine_css defaults is_template to false when the template param is missing', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
 
     $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css']);
 
@@ -1909,7 +1909,7 @@ test('func_combine_css defaults is_template to false when the template param is 
 
 test('finalizeOutput appends a version query string for a truthy combined_css version', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
     $t->func_combine_css(['path' => 'style.css', 'version' => '7']);
     $t->output = Template::COMBINED_CSS_TAG;
 
@@ -1920,7 +1920,7 @@ test('finalizeOutput appends a version query string for a truthy combined_css ve
 
 test('finalizeOutput throws when a combined_css listener returns something other than a CombinedCss instance', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
     $t->func_combine_css(['path' => 'style.css', 'version' => '7']);
     $t->output = Template::COMBINED_CSS_TAG;
     EventDispatcherTestFactory::get()->addEventHandler(CombinedCss::class, static fn (): int => 42);
@@ -1930,7 +1930,7 @@ test('finalizeOutput throws when a combined_css listener returns something other
 
 test('finalizeOutput does not append a version query string when combined_css version is exactly false', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
     $t->func_combine_css(['path' => 'style.css', 'version' => false]);
     $t->output = Template::COMBINED_CSS_TAG;
 
@@ -1941,7 +1941,7 @@ test('finalizeOutput does not append a version query string when combined_css ve
 
 test('finalizeOutput builds the combined-css href by prefixing the root URL onto the combi path', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
     template_instance_test_root_path_override()->push('http://example.test/root/');
     try {
         $t->func_combine_css(['path' => 'style.css', 'version' => false]);
@@ -1957,7 +1957,7 @@ test('finalizeOutput builds the combined-css href by prefixing the root URL onto
 
 test('finalizeOutput clears the CSS loader so a second call does not re-emit already-flushed CSS', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
     $t->func_combine_css(['path' => 'style.css', 'version' => false]);
     $t->output = Template::COMBINED_CSS_TAG;
     $first = $t->fetchOutput();
@@ -2083,22 +2083,22 @@ test('block_html_style accumulates multiple registrations rather than overwritin
 // --- prefilter_local_css ----------------------------------------------------
 
 test('prefilter_local_css injects a combine_css tag for a real theme-specific rules file', function (): void {
-    mkdir(CurrentPaths::get()->root . '/local/css', 0o777, true);
-    file_put_contents(CurrentPaths::get()->root . '/local/css/mytheme-rules.css', 'body{}');
+    mkdir(CurrentPathsTestFactory::get()->root . '/local/css', 0o777, true);
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/local/css/mytheme-rules.css', 'body{}');
     $t = TemplateTestFactory::build();
     $t->smarty->assign('themes', [['id' => 'mytheme'], ['id' => 'no-such-theme'], 'not-an-array', ['no-id' => true]]);
 
-    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty, CurrentPaths::get());
+    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty, CurrentPathsTestFactory::get());
 
     expect($result)->toBe("before {combine_css path='local/css/mytheme-rules.css' order=10}\n{get_combined_css} after");
 });
 
 test('prefilter_local_css injects a combine_css tag for a real site-wide rules.css', function (): void {
-    mkdir(CurrentPaths::get()->root . '/local/css', 0o777, true);
-    file_put_contents(CurrentPaths::get()->root . '/local/css/rules.css', 'body{}');
+    mkdir(CurrentPathsTestFactory::get()->root . '/local/css', 0o777, true);
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/local/css/rules.css', 'body{}');
     $t = TemplateTestFactory::build();
 
-    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty, CurrentPaths::get());
+    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty, CurrentPathsTestFactory::get());
 
     expect($result)->toBe("before {combine_css path='local/css/rules.css' order=10}\n{get_combined_css} after");
 });
@@ -2106,18 +2106,18 @@ test('prefilter_local_css injects a combine_css tag for a real site-wide rules.c
 test('prefilter_local_css leaves the source untouched when no local css files exist', function (): void {
     $t = TemplateTestFactory::build();
 
-    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty, CurrentPaths::get());
+    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty, CurrentPathsTestFactory::get());
 
     expect($result)->toBe('before {get_combined_css} after');
 });
 
 test('prefilter_local_css continues past an invalid theme entry instead of stopping the whole loop', function (): void {
-    mkdir(CurrentPaths::get()->root . '/local/css', 0o777, true);
-    file_put_contents(CurrentPaths::get()->root . '/local/css/second-rules.css', 'body{}');
+    mkdir(CurrentPathsTestFactory::get()->root . '/local/css', 0o777, true);
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/local/css/second-rules.css', 'body{}');
     $t = TemplateTestFactory::build();
     $t->smarty->assign('themes', ['not-an-array', ['id' => 'second']]);
 
-    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty, CurrentPaths::get());
+    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty, CurrentPathsTestFactory::get());
 
     expect($result)->toBe("before {combine_css path='local/css/second-rules.css' order=10}\n{get_combined_css} after");
 });
@@ -2127,12 +2127,12 @@ test('prefilter_local_css continues past an invalid theme entry instead of stopp
 test('load_themeconf returns an empty array for a theme directory that does not exist', function (): void {
     $t = TemplateTestFactory::build();
 
-    expect($t->load_themeconf(CurrentPaths::get()->root . '/no-such-theme-dir'))->toBe([]);
+    expect($t->load_themeconf(CurrentPathsTestFactory::get()->root . '/no-such-theme-dir'))->toBe([]);
 });
 
 test('load_themeconf includes themeconf.inc.php, returns its $themeconf, and assigns its $theme_template_vars', function (): void {
     $t = TemplateTestFactory::build();
-    $dir = CurrentPaths::get()->root . '/theme-real';
+    $dir = CurrentPathsTestFactory::get()->root . '/theme-real';
     mkdir($dir, 0o777, true);
     file_put_contents(
         $dir . '/themeconf.inc.php',
@@ -2155,8 +2155,8 @@ test('load_themeconf caches per-directory: a second, different theme dir is not 
     // directory share one cache slot -- the second call below would then
     // wrongly return the first dir's already-cached themeconf.
     $t = TemplateTestFactory::build();
-    $dirA = CurrentPaths::get()->root . '/theme-a';
-    $dirB = CurrentPaths::get()->root . '/theme-b';
+    $dirA = CurrentPathsTestFactory::get()->root . '/theme-a';
+    $dirB = CurrentPathsTestFactory::get()->root . '/theme-b';
     mkdir($dirA, 0o777, true);
     mkdir($dirB, 0o777, true);
     file_put_contents($dirA . '/themeconf.inc.php', '<?php $themeconf = ["which" => "A"];');
@@ -2179,7 +2179,7 @@ test('load_themeconf caches under the exact "themeconf:" . $dir key shape, not a
     // entries and return its poisoned value instead of the real,
     // freshly-computed themeconf.
     $t = TemplateTestFactory::build();
-    $dir = CurrentPaths::get()->root . '/theme-format';
+    $dir = CurrentPathsTestFactory::get()->root . '/theme-format';
     mkdir($dir, 0o777, true);
     file_put_contents($dir . '/themeconf.inc.php', '<?php $themeconf = ["real" => true];');
     $realDir = (string) realpath($dir);

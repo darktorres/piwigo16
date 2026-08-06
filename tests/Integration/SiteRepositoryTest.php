@@ -9,7 +9,7 @@ use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Site\SiteEntity;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -124,7 +124,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         // L2aCoreDomain, Site is L2bExtendedDomain -- deleted the same
         // commit this method was added).
         self::assertSame(
-            [1 => CurrentPaths::get()->root . 'galleries/'],
+            [1 => CurrentPathsTestFactory::get()->root . 'galleries/'],
             $this->repo->findAllGalleriesUrls()
         );
     }
@@ -147,7 +147,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
 
         try {
             self::assertSame(
-                CurrentPaths::get()->root . 'galleries/',
+                CurrentPathsTestFactory::get()->root . 'galleries/',
                 $this->repo->findGalleriesUrlForCategory(1)
             );
         } finally {
@@ -165,7 +165,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         // (Piwigo\Core\Paths::$root . 'galleries/'), not a portable literal
         // './galleries/' -- machine-specific, so computed here the same way
         // install itself computes it, rather than a hardcoded string.
-        self::assertContains(CurrentPaths::get()->root . 'galleries/', $urls);
+        self::assertContains(CurrentPathsTestFactory::get()->root . 'galleries/', $urls);
     }
 
     public function test_find_all_includes_a_newly_inserted_site(): void

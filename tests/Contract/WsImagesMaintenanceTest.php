@@ -18,7 +18,7 @@ use Piwigo\Db\Tables;
  *
  * checkFiles() had a real bug (found while writing these tests, fixed in
  * the same commit): it called md5_file() on the bare `piwigo_images.path`
- * column value, never prefixing CurrentPaths::get()->root the way
+ * column value, never prefixing the live, container-bound Paths->root the way
  * ImagePathHelper::getElementPath() (used correctly by formatsDelete() a
  * few methods down in the same file) does -- so md5_file() always failed
  * (false, never equal to any real hash) and the method always reported

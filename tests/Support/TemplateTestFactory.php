@@ -39,7 +39,8 @@ use Piwigo\Users\CurrentUser;
  * before the schema even exists). Template resolves it lazily internally
  * instead (see Template::imageStdParams()'s own docblock). Phase 11
  * sub-phase 11H added a 9th, Paths (its own former CurrentPaths::get()
- * shim usage), falling back to the same Paths::fromRoot(sys_get_temp_dir())
+ * shim usage, closed outright in sub-phase 12F-10), falling back to the
+ * same Paths::fromRoot(sys_get_temp_dir())
  * already used for Lang's own fallback above. Phase 12 sub-phase 12A added
  * a 10th, AccessLevelChecker (extracted from the old AccessControl
  * circular-dependency shim), falling back to a fresh instance built from

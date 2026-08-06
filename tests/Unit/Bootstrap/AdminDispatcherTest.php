@@ -29,7 +29,7 @@ afterEach(function (): void {
 
 test('dispatch throws for a page slug not registered in config/admin_pages.php', function (): void {
     // AdminDispatcher::map() reads config/admin_pages.php off
-    // CurrentPaths::get()->root -- a shared, process-wide static -- set
+    // the live, container-bound Paths->root -- a shared, process-wide static -- set
     // explicitly rather than relying on some earlier-run test file to
     // have already done so.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3)));
@@ -71,14 +71,14 @@ test('dispatch resolves the map relative to CurrentPaths root and calls handle()
     // check -- the two tests above only prove the *throw* side (a real
     // wrong-type container binding); nothing yet proves a real, correctly
     // -typed controller is let through. (2) `ConcatRemoveLeft` on
-    // `CurrentPaths::get()->root . 'config/admin_pages.php'` -- under
+    // `the live, container-bound Paths->root . 'config/admin_pages.php'` -- under
     // `vendor/bin/pest`, the CLI's CWD already *is* the repo root, so a
     // mutated bare `'config/admin_pages.php'` would still resolve (via a
     // CWD-relative require) to the very same real file, silently masking
     // the mutation. A decoy root elsewhere, with its own
     // config/admin_pages.php mapping a slug the real one doesn't have,
     // forces the two to diverge: this only succeeds if `map()` genuinely
-    // read the file *at CurrentPaths::get()->root*.
+    // read the file *at the live, container-bound Paths->root*.
     $decoyRoot = sys_get_temp_dir() . '/piwigo-admin-dispatch-decoy-' . bin2hex(random_bytes(8)) . '/';
     mkdir($decoyRoot . 'config', 0755, true);
     file_put_contents(

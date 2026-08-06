@@ -600,52 +600,13 @@ test('CurrentConfigService::reset() is only called from tests/', function (): vo
  * DbCredentials::reset() turned out to have a real production caller
  * (Admin\Install\InstallWizard::performInstall(), reloading credentials
  * right after writing a fresh .env) -- both DbCredentials and CurrentPaths
- * no longer have a reset() at all (singleton/service-locator elimination
- * campaign, Phase 3 -- see their own, differently-shaped
- * 'X::get()/isSet()'/'X::current()' transitional bridge allow-list tests
- * further below instead).
+ * never had a reset() at all (singleton/service-locator elimination
+ * campaign, Phase 3 -- DbCredentials has its own differently-shaped
+ * 'X::current()' transitional bridge allow-list test further below
+ * instead; CurrentPaths's own 'get()/isSet()' allow-list test lived here
+ * too until that shim closed outright in sub-phase 12F-10, deleting the
+ * whole class).
  */
-test('CurrentPaths::get()/isSet() transitional bridge has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 3: unlike
-    // every other shimmed class in this campaign, get()/isSet() kept their
-    // original names (no `Static` suffix -- see CurrentPaths's own
-    // docblock: it was never converted to an instance itself, `Paths` is
-    // the real DI target), so every single caller below is, by definition,
-    // still on the transitional bridge -- there is no separate "real,
-    // converted" call shape to distinguish from. `set()`/`reset()` no
-    // longer exist at all (no independent state left to set/reset), so
-    // this replaces the old, now-inapplicable 'CurrentPaths::reset() is
-    // only called from tests/' arch test. Every phase that converts one
-    // more of these files to constructor-injected Paths should remove it
-    // from the allow-list below; once empty, delete CurrentPaths entirely
-    // (see its own docblock's deletion criterion). Phase 11 sub-phase
-    // 11J: Bootstrap/AdminDispatcher.php/PageTail.php/RedirectService.php/
-    // RequestBootstrap.php all closed this shim -- each already has
-    // direct Kernel::container() access (arch-tested to Bootstrap/ only),
-    // so a private paths() resolver helper replaces what was only ever
-    // style consistency with a neighboring call, not a structural need.
-    // Sub-phase 12B: Admin/Install/InstallService.php closed too -- on
-    // direct inspection its own former "no DI container exists yet"
-    // reasoning was stale (InstallBootstrap::boot() always runs, and
-    // therefore Kernel::boot() always runs, before any of its 4 static
-    // methods are ever reached); its 4 methods now take Paths (among
-    // others) as a real explicit param from their sole caller,
-    // InstallWizard, which already held one.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-    ];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentPaths::');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
 // Singleton/service-locator elimination campaign:
 // InstallationFlag::isActiveStatic() itself is fully deleted (Phase 12
 // sub-phase 12B) -- its former "transitional shim has a shrinking, known
@@ -910,7 +871,7 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
 // entry-shell define()/include round: both constants replaced by
 // Piwigo\Core\Paths/CurrentPaths -- DI-constructed classes get Paths
 // threaded through their constructor, everything else reads
-// CurrentPaths::get()). Controller/ImageDerivativeController.php's own 2
+// CurrentPathsTestFactory::get()). Controller/ImageDerivativeController.php's own 2
 // sites (genuine URL generation, not filesystem paths) were the one
 // deliberately deferred exception, closed by Workstream C3 Part III
 // (i.php joining the real routing pipeline): UrlService::

@@ -22,7 +22,7 @@ use Piwigo\Admin\UserActivityPageRenderer;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -115,7 +115,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         // other Integration test constructing a real Template directly
         // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
 
         $_GET = [];
     }

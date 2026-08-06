@@ -141,7 +141,7 @@ function idcSetImageRotationCode(int $imageId, int $rotationCode): void
 /**
  * The on-disk path a derivative of $imagePath (with the given suffix, e.g.
  * 'sm'/'xs') is cached at -- ImageDerivativeController resolves derivative
- * paths against CurrentPaths::get()->root (the repo root, one level above
+ * paths against the live, container-bound Paths->root (the repo root, one level above
  * public/ -- same root idcCreateTestPhoto()'s own orphan-file test above
  * uses) joined with CurrentConfig::derivativeDir() ('_data/i/').
  */
@@ -386,7 +386,7 @@ it('ierrors 404 "Db file path not found" for a real file never registered as an 
     $imageId = idcCreateTestPhoto($this, 'Derivative Orphan Setup Album');
     $realImagePath = H::imagePath($imageId);
     // ImageDerivativeController resolves paths against
-    // CurrentPaths::get()->root, which public/i.php builds as
+    // the live, container-bound Paths->root, which public/i.php builds as
     // Paths::fromRoot(dirname(__DIR__)) -- the repo root, one level
     // *above* public/, not public/ itself (same fix as
     // ActionControllerTest.php's format/representative tests).

@@ -22,7 +22,7 @@ use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
@@ -152,7 +152,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // root/theme='default' points Smarty's template_dir at the real
         // themes/default/template/ directory thumbnails.tpl lives in, same
         // real-root shape every real Template() construction site uses.
-        $this->template = TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default');
+        $this->template = TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default');
 
         return $this->template;
     }

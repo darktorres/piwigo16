@@ -101,13 +101,15 @@ abstract class IntegrationTestCase extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        // Piwigo\Core\CurrentPaths is a pure transitional shim now
-        // (singleton/service-locator elimination campaign, Phase 3) reading
-        // Paths::class straight out of the live container -- tests that
+        // Paths::class must be resolvable straight out of the live
+        // container -- tests that
         // construct a domain service directly (not through a real HTTP
         // request, so no root index.php ever calls Kernel::boot($paths))
-        // need a real Paths bound too, or the first CurrentPaths::get() call
-        // throws. Only boot here when nothing has booted the Kernel yet: a
+        // need a real Paths bound too, or the first real container resolve
+        // throws (singleton/service-locator elimination campaign, Phase 3;
+        // CurrentPaths itself, the former pure transitional shim reading
+        // this same binding, closed outright in sub-phase 12F-10). Only
+        // boot here when nothing has booted the Kernel yet: a
         // subclass whose own setUp() calls Kernel::boot() *after*
         // parent::setUp() (several do, for its mountDepth/isWs/isAdmin
         // params or to layer its own container wiring on top) would have
@@ -245,8 +247,8 @@ abstract class IntegrationTestCase extends TestCase
                 $installationFlag->reset();
             }
         }
-        // CurrentPaths has no state of its own to reset (Phase 3) -- it
-        // reads Paths::class from whatever container is live. Reset the
+        // Paths::class has no independent state of its own to reset (Phase
+        // 3) -- it's read directly from whatever container is live. Reset the
         // Kernel itself instead: setUp() above only boots when nothing else
         // has, so this is what returns the next test to a clean, unbooted
         // baseline -- safe even when a subclass's own tearDown() already
@@ -443,11 +445,12 @@ abstract class IntegrationTestCase extends TestCase
         // stale. tools/reimport-fixture.sh applies the identical correction
         // for its own separate (shell, not PHPUnit) import path.
         //
-        // dirname(__DIR__, 2) rather than CurrentPaths::get()->root:
+        // dirname(__DIR__, 2) rather than a real, container-bound Paths->root:
         // ContractTestCase (a real loadFixture() caller) never calls
-        // parent::setUp(), so CurrentPaths is never initialised in its own
+        // parent::setUp(), so no Paths is ever bound in its own
         // process -- confirmed live (a Contract suite run threw "CurrentPaths
-        // not initialised" here before this fix). Computed directly instead,
+        // not initialised" here before this fix, back when this read
+        // through the CurrentPaths::get() shim). Computed directly instead,
         // same technique this class's own setUp() below and
         // tests/Browser/CatModifyPageRendererTest.php both already use for
         // the identical "this checkout's real root" value -- self-contained,

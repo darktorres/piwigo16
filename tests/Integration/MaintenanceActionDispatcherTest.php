@@ -58,7 +58,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -114,7 +114,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new EventDispatcher(),
             CurrentConfig::current(),
             TranslatorTestFactory::get(),
-            CurrentPaths::get(),
+            CurrentPathsTestFactory::get(),
         );
     }
 
@@ -179,7 +179,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new CurrentConfig(),
             new InstallationFlag(),
             new ProcessCache(),
-            CurrentPaths::get(),
+            CurrentPathsTestFactory::get(),
         );
     }
 
@@ -289,7 +289,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
         $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(LangTestFactory::get(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), $configService, new FilesystemIntegrityChecker(LangTestFactory::get(), CurrentTemplate::current(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfig::current(), CurrentPaths::get()), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()), new Translator(CurrentConfig::current()), new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), new DbMaintenanceRepository(EntityManagerFactory::build($this->conn), DbCredentialsTestFactory::get()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), HtmlServiceTestFactory::build(), LangTestFactory::get(), CurrentConfig::current(), new InputValidator(), CurrentPaths::get());
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(LangTestFactory::get(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), $configService, new FilesystemIntegrityChecker(LangTestFactory::get(), CurrentTemplate::current(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfig::current(), CurrentPathsTestFactory::get()), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()), new Translator(CurrentConfig::current()), new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), new DbMaintenanceRepository(EntityManagerFactory::build($this->conn), DbCredentialsTestFactory::get()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), HtmlServiceTestFactory::build(), LangTestFactory::get(), CurrentConfig::current(), new InputValidator(), CurrentPathsTestFactory::get());
     }
 
     #[Override]
@@ -595,7 +595,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // delete_compiled_templates() runs before the persistent-cache
         // guard -- needs a real Template instance, unset by default since
         // this test never boots a full RequestBootstrap.
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
 
         // HtmlService::fatalError() always throws ResponseReadyException
         // regardless of ErrorCollector::isActive() (see its own docblock)
@@ -659,7 +659,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
     public function test_compiled_templates_purges_a_real_initialized_persistent_cache(): void
     {
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
 
         // A dedicated local instance, not $this->dispatcher (built in
         // setUp() with no persistent cache) -- constructor injection means
@@ -670,7 +670,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new RedirectService(LangTestFactory::get(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageStateTestFactory::get()),
             UrlServiceTestFactory::build(),
             $configService,
-            new FilesystemIntegrityChecker(LangTestFactory::get(), CurrentTemplate::current(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfig::current(), CurrentPaths::get()),
+            new FilesystemIntegrityChecker(LangTestFactory::get(), CurrentTemplate::current(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfig::current(), CurrentPathsTestFactory::get()),
             new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()),
             new Translator(CurrentConfig::current()),
             new EventDispatcher(),
@@ -685,8 +685,8 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             LangTestFactory::get(),
             CurrentConfig::current(),
             new InputValidator(),
-            CurrentPaths::get(),
-            new PersistentFileCache(CurrentConfig::current(), CurrentPaths::get()),
+            CurrentPathsTestFactory::get(),
+            new PersistentFileCache(CurrentConfig::current(), CurrentPathsTestFactory::get()),
         );
 
         // FileCombiner::clear_combined_files()'s own opendir() (the real

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Template\CurrentTemplate;
@@ -50,7 +50,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    current_template_test_rrmdir(CurrentPaths::get()->root);
+    current_template_test_rrmdir(CurrentPathsTestFactory::get()->root);
     CurrentConfig::current()->reset();
     Kernel::reset();
 });
@@ -96,7 +96,7 @@ test('current() falls back to a memoized instance when Kernel is not booted', fu
     // get(), which throws once Kernel is reset), then capture the root
     // and reset to reach the genuinely not-booted branch.
     $template = TemplateTestFactory::build();
-    $root = CurrentPaths::get()->root;
+    $root = CurrentPathsTestFactory::get()->root;
     Kernel::reset();
 
     $first = CurrentTemplate::current();
@@ -107,7 +107,7 @@ test('current() falls back to a memoized instance when Kernel is not booted', fu
     expect($second)->toBe($first)
         ->and($second->isInitialized())->toBeTrue();
 
-    // Restore for this test's own afterEach() (CurrentPaths::get() would
+    // Restore for this test's own afterEach() (CurrentPathsTestFactory::get() would
     // otherwise throw against the now-reset container).
     Kernel::boot(Paths::fromRoot($root));
 });

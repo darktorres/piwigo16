@@ -19,7 +19,7 @@ use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Bootstrap\RedirectService;
@@ -128,7 +128,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         Kernel::boot();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
         LangTestFactory::get()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
         CurrentConfig::current()->setSendPiwigoInfos(false);
     }
 

@@ -15,7 +15,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -43,7 +43,7 @@ use Piwigo\Template\CurrentTemplate;
  *
  * Fixture images 1-5 (tests/Fixtures/piwigo-17.0.sql, confirmed via direct
  * read) each have a real backing file already on disk at
- * `CurrentPaths::get()->root . path` (confirmed live with file_exists()),
+ * `CurrentPathsTestFactory::get()->root . path` (confirmed live with file_exists()),
  * so the sampled-up-to-50-ids "missing photos" loop (lines 99-120) never
  * trips for them -- every test below that needs to reach the duplicate-
  * paths check relies on that.
@@ -97,7 +97,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         // that reads it back with raw SQL.
         $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'fs_quick_check_last_check'");
 
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
     }
 
     #[Override]

@@ -31,6 +31,7 @@ use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\CommentCounterInterface;
@@ -225,7 +226,12 @@ return [
     // config/storage.php), so there's nothing genuinely request-scoped to
     // hold in a shared mutable instance, same "delete the facade, use a
     // plain factory" outcome as the Phase 0 pilot (CurrentPersistentCache).
-    StorageRegistry::class => factory(static fn (): StorageRegistry => StorageRegistry::fromConfig(dirname(__DIR__) . '/config/storage.php')),
+    // Sub-phase 12F-10: $paths/$currentConfig are real, autowired factory
+    // params now (config/storage.php itself needed them threaded through
+    // once its own CurrentPaths::get()/CurrentConfig::current() shim
+    // calls closed) -- same autowired-factory-closure-param pattern
+    // DeploymentPolicy::class's own binding below already established.
+    StorageRegistry::class => factory(static fn (Paths $paths, CurrentConfig $currentConfig): StorageRegistry => StorageRegistry::fromConfig(dirname(__DIR__) . '/config/storage.php', $paths, $currentConfig)),
 
     // Factory binding (singleton/service-locator elimination campaign,
     // Phase 3) -- replaces Piwigo\Db\DbCredentials's former self-managed

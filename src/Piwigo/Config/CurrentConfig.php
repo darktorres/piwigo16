@@ -24,11 +24,14 @@ use ReflectionProperty;
  * and reached via Piwigo\Config\CurrentConfigService::get() everywhere
  * else. Renamed from Config to CurrentConfig to match this codebase's own
  * established Current* convention (CurrentUser, CurrentLogger,
- * CurrentPaths, CurrentTemplate, CurrentConfigService) -- this was the one
+ * CurrentTemplate, CurrentConfigService) -- this was the one
  * class of that same shape breaking the pattern. (CurrentPersistentCache,
  * once a sibling of this same shape, was deleted by the singleton/DI
  * elimination campaign -- see config/container.php's PersistentCache
- * binding -- since its value never actually varied per request.)
+ * binding -- since its value never actually varied per request.
+ * CurrentPaths, another former sibling, was deleted the same way in
+ * sub-phase 12F-10, once its own last real caller converted to
+ * constructor-injected Paths.)
  *
  * Singleton/service-locator elimination campaign, Phase 9: converted from
  * a static-property bag to a real, container-shared instance -- no
@@ -3763,7 +3766,8 @@ final class CurrentConfig
     // === themes_dir ===
     /**
      * Root-relative path to the directory containing installed themes (compose
-     * with CurrentPaths::get()->root for an absolute filesystem path).
+     * with a real, constructor-injected Paths::$root for an absolute
+     * filesystem path).
      */
     private string $themesDir = 'themes/';
 
@@ -3909,7 +3913,8 @@ final class CurrentConfig
     // === upload_dir ===
     /**
      * Root-relative path to the directory where uploaded files are stored (compose
-     * with CurrentPaths::get()->root for an absolute filesystem path).
+     * with a real, constructor-injected Paths::$root for an absolute
+     * filesystem path).
      */
     private string $uploadDir = 'upload/';
 

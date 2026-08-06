@@ -21,7 +21,7 @@ use Piwigo\Calendar\CalendarBase;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\PageState;
@@ -127,7 +127,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         // directory at the real project root with nothing to clean it up
         // -- real bug, found live (a stray data/templates_c/index.htm
         // showed up as untracked repo debris after a coverage run).
-        calendar_renderer_test_rrmdir(CurrentPaths::get()->root . 'data');
+        calendar_renderer_test_rrmdir(CurrentPathsTestFactory::get()->root . 'data');
         LangTestFactory::get()->reset();
         TranslatorTestFactory::get()->reset();
         parent::tearDown();

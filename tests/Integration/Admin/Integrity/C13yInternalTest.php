@@ -56,8 +56,9 @@ function c13yInternalTestUserService(): UserService
 // Integration test having already called Kernel::boot() for this process.
 // boot() is idempotent (no-op once already booted), so this is safe
 // regardless of what ran before. A real Paths is required here (not a bare
-// Kernel::boot()) -- without one, CurrentPaths::get()/StorageRegistry's own
-// container factory throw for every later file in the same process that
+// Kernel::boot()) -- without one, Paths's own autowiring/StorageRegistry's
+// own container factory (which now also needs a real Paths, sub-phase
+// 12F-10) both fail for every later file in the same process that
 // relies on Kernel::isBooted() being true (this file's own boot() call
 // leaks, unreset, into every later file in the same composer test:integration
 // process) -- same "cross-file Kernel-state leak" bug class already found

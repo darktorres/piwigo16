@@ -10,7 +10,7 @@ namespace Piwigo\Tests\Integration {
 
     use Piwigo\Auth\UserFailedLoginRepository;
     use Override;
-    use Piwigo\Core\CurrentPaths;
+    use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Core\Kernel;
     use LogicException;
     use Piwigo\Db\EntityManagerFactory;
@@ -147,7 +147,7 @@ namespace Piwigo\Tests\Integration {
                 PageStateTestFactory::get(),
                 CurrentUser::current(),
                 CurrentConfig::current(),
-                CurrentPaths::get(),
+                CurrentPathsTestFactory::get(),
             );
         }
 

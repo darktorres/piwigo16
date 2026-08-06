@@ -6,7 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Override;
 use Piwigo\Bootstrap\RequestBootstrap;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
@@ -56,7 +56,7 @@ final class RequestBootstrapConfigureTest extends IntegrationTestCase
         // check without throwing, not just that PATH_INFO happened to get
         // sanitised before some earlier unrelated failure. Paths::fromRoot()
         // always normalizes to a trailing slash.
-        self::assertSame(dirname(__DIR__, 2) . '/', CurrentPaths::get()->root);
+        self::assertSame(dirname(__DIR__, 2) . '/', CurrentPathsTestFactory::get()->root);
     }
 
     public function test_configure_redirect_response_has_a_302_status_and_installphp_location(): void

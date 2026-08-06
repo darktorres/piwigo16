@@ -426,7 +426,8 @@ final class InstallWizardTest extends IntegrationTestCase
         // constructor's own LegacyFileConf::read() (a static utility with
         // no Paths of its own to receive, unlike InstallWizard's own
         // constructor-injected $this->paths) would read the wrong root via
-        // the CurrentPaths::get() shim. KernelContainerOverride::with()
+        // whatever Paths is still bound in the live container.
+        // KernelContainerOverride::with()
         // rebinds Paths::class for just this test's own scope instead.
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
             $wizard = new InstallWizard(LangTestFactory::get(), 'itest_', $this->paths, DbCredentialsTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUser::current());

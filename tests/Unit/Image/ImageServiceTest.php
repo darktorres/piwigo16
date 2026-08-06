@@ -1003,7 +1003,7 @@ test('moveImagesToCategories() actually associates images to a real, non-empty c
 
 test('addMd5sum() computes and persists a real md5sum for a readable file, prefixed by the real root path', function (): void {
     // Kills line 524's ConcatRemoveLeft/ConcatSwitchSides (whether
-    // CurrentPaths::get()->root is genuinely prefixed) and line 539's
+    // the live, container-bound Paths->root is genuinely prefixed) and line 539's
     // RemoveMethodCall (whether massUpdateMd5sums() actually persists
     // anything) together -- a wrong path fails is_readable() (md5sum
     // stays null), and a skipped persist call also leaves it null, so

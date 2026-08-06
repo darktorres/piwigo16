@@ -10,7 +10,7 @@ use LogicException;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use mysqli;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -102,7 +102,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         // Smarty's template_dir at the real themes/default/template/
         // directory that file lives in (same root shape every real
         // Template() call site uses, e.g. RequestBootstrap.php:568).
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
         session_id('fixed-test-session-id'); // CsrfService::getToken() needs a session id, not a running session.
         unset($_POST['content']);
     }

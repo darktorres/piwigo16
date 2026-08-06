@@ -11,7 +11,7 @@ use Piwigo\Tests\Support\SessionServiceTestFactory;
 use Piwigo\Core\FilterState;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Picture\PictureMetadataRenderer;
@@ -64,7 +64,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    picture_metadata_test_rrmdir(CurrentPaths::get()->root);
+    picture_metadata_test_rrmdir(CurrentPathsTestFactory::get()->root);
     CurrentTemplate::current()->reset();
     Kernel::reset();
     CurrentConfig::current()->reset();
@@ -75,7 +75,7 @@ test('render appends nothing when both show_exif and show_iptc are disabled', fu
     picture_metadata_test_current_config()->setShowIptc(false);
     $renderer = new PictureMetadataRenderer();
 
-    $renderer->render(LangTestFactory::get(), [], new CurrentLogger(), new EventDispatcher(), CurrentTemplate::current(), CurrentConfig::current(), CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), CurrentPaths::get());
+    $renderer->render(LangTestFactory::get(), [], new CurrentLogger(), new EventDispatcher(), CurrentTemplate::current(), CurrentConfig::current(), CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), CurrentPathsTestFactory::get());
 
     expect(CurrentTemplate::current()->get()->get_template_vars('metadata'))->toBeNull();
 });

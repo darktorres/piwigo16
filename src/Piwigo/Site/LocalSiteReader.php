@@ -67,9 +67,10 @@ final class LocalSiteReader
     }
 
     /**
-     * Same reasoning as lang() above -- matches CurrentPaths::get()'s own
+     * Same reasoning as lang() above -- matched CurrentPaths::get()'s own
      * identical no-graceful-fallback shape (singleton/service-locator
-     * elimination campaign, Phase 11 sub-phase 11H).
+     * elimination campaign, Phase 11 sub-phase 11H; that shim itself
+     * closed outright in sub-phase 12F-10).
      */
     private function paths(): Paths
     {

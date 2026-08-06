@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Doctrine\DBAL\DriverManager;
 use Doctrine\Persistence\ConnectionRegistry;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Job\MessengerFactory;
 use Psr\Container\ContainerInterface;
@@ -65,7 +65,7 @@ test('transport()\'s anonymous ConnectionRegistry answers "default" for getDefau
     // DoctrineTransport) is already covered by
     // tests/Integration/MessengerRoundTripTest.php, so the return value
     // isn't needed here.
-    MessengerFactory::transport($connection, CurrentPaths::get());
+    MessengerFactory::transport($connection, CurrentPathsTestFactory::get());
 
     $registryClass = null;
     foreach (get_declared_classes() as $declared) {
@@ -118,9 +118,9 @@ test('containerOf-built container throws Psr NotFoundExceptionInterface for a se
     expect($threw)->toBeTrue();
 });
 
-test('config() reads config/messenger.php relative to CurrentPaths::get()->root, not the working directory', function (): void {
+test('config() reads config/messenger.php relative to CurrentPathsTestFactory::get()->root, not the working directory', function (): void {
     // Kills line 49's ConcatRemoveLeft (`require 'config/messenger.php'`
-    // instead of `require CurrentPaths::get()->root . 'config/...'`) --
+    // instead of `require CurrentPathsTestFactory::get()->root . 'config/...'`) --
     // a bare relative require would instead resolve against the process's
     // own working directory (the real project root when tests run via
     // `vendor/bin/pest` from there), silently loading the REAL

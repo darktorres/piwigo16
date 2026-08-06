@@ -10,7 +10,7 @@ use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -116,7 +116,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
         // Same instance, not merely an equal one -- proves Kernel::boot()
         // really did bind this exact Paths into the container, not some
         // other default it built itself.
-        self::assertSame($paths, CurrentPaths::get());
+        self::assertSame($paths, CurrentPathsTestFactory::get());
 
         // No local/config/config.php -> default policy -> boot() really did
         // call ErrorCollector::install() as a side effect of this call; undo
@@ -137,7 +137,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
         // Kernel::boot()'s own `self::$booted` guard makes the 2nd call a
         // no-op -- CurrentPaths must still reflect the *first* Paths, not
         // silently swap to the second.
-        self::assertSame($first, CurrentPaths::get());
+        self::assertSame($first, CurrentPathsTestFactory::get());
 
         // The 1st boot() (no local/config/config.php -> default policy)
         // really did call ErrorCollector::install(); the 2nd was a no-op

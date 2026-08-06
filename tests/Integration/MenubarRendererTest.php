@@ -18,7 +18,7 @@ use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
@@ -102,7 +102,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         $htmlService = HtmlServiceTestFactory::build();
         $this->urlService = UrlServiceTestFactory::build($htmlService);
 
-        $this->template = TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default');
+        $this->template = TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default');
         CurrentTemplate::current()->set($this->template);
 
         // getRootUrl()/paramsForDuplication() read SectionContextRegistry

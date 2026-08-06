@@ -72,15 +72,16 @@ final class ContainerSmokeTest extends TestCase
         TemplateInterface::class,
         // Piwigo\Cache\PersistentCache's binding (singleton/service-locator
         // elimination campaign, Phase 0) resolves to PersistentFileCache,
-        // whose constructor reads Piwigo\Core\CurrentPaths::get()->root --
-        // genuinely unavailable here, same "Kernel booted with no real
+        // whose constructor now takes Paths $paths directly -- genuinely
+        // unavailable here, same "Kernel booted with no real
         // Paths" reasoning as TemplateInterface above, not a wiring bug.
         PersistentCache::class,
         // Piwigo\Storage\StorageRegistry's own factory binding requires
-        // config/storage.php, whose own top-level `$paths =
-        // CurrentPaths::get();` (config/storage.php:25) is unconditional --
-        // same "Kernel booted with no real Paths" reasoning as
-        // PersistentCache above, not a wiring bug.
+        // config/storage.php, whose own returned closure takes
+        // `Paths $paths` as a real param (singleton/service-locator
+        // elimination campaign, Phase 12 sub-phase 12F-10) -- fails to
+        // autowire for the identical "Kernel booted with no real Paths"
+        // reasoning as PersistentCache above, not a wiring bug.
         StorageRegistry::class,
         // Piwigo\Config\DeploymentPolicy's own factory binding (singleton/
         // service-locator elimination campaign, Phase 4) takes Paths $paths

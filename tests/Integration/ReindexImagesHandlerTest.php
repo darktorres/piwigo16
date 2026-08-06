@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Override;
 use Piwigo\Core\Kernel;
 use LogicException;
@@ -77,7 +77,7 @@ final class ReindexImagesHandlerTest extends IntegrationTestCase
 
     public function test_invoke_delegates_to_metadata_service_sync_metadata(): void
     {
-        $handler = new ReindexImagesHandler(new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), CurrentPaths::get()));
+        $handler = new ReindexImagesHandler(new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), CurrentPathsTestFactory::get()));
 
         // no exception/fatal is the real assertion here -- see the class
         // docblock for why a full real EXIF-sync side effect isn't

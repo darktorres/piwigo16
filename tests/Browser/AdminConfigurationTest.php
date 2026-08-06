@@ -1085,7 +1085,7 @@ it('uploads a real PNG watermark image and rejects a non-PNG upload', function (
 
         // ImageStdParams::save() persists watermark config as real JSON in
         // derivative_settings.watermark_json -- `file` is root-relative to
-        // CurrentPaths::get()->root.
+        // the live, container-bound Paths->root.
         $settings = H::snapshotDerivativeConfig()['settings'];
         $watermarkJson = is_array($settings) ? ($settings['watermark_json'] ?? null) : null;
         $watermarkDecoded = is_string($watermarkJson) ? json_decode($watermarkJson, true) : null;
@@ -1539,7 +1539,7 @@ it('main tab: warns about a deprecated $conf[\'order_by\'] set in a real local c
     // file write is safe here -- the same direct-filesystem-fixture
     // technique BrowserTestHelpers::setCustomLogo() already uses under
     // `local/`, just targeting the actual file orderByIsLocal() itself
-    // @include()s (Piwigo\Core\CurrentPaths::get()->local .
+    // @include()s (the live, container-bound Paths->local .
     // 'config/config.inc.php'), not a config-table row. Confirmed via a
     // full grep of every real @include site of this exact path
     // (Admin\UserListPageRenderer, Admin\Install\LegacyFileConf, this

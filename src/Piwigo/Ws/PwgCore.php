@@ -279,7 +279,8 @@ final class PwgCore
         // dataLocation() in this codebase (PersistentFileCache,
         // FeedController, RequestBootstrap, Template, IntroSubController,
         // MailService, CoreUpdateService) already composes it against
-        // CurrentPaths::get()->root per Paths' own class-level contract
+        // its own constructor-injected $this->paths->root per Paths' own
+        // class-level contract
         // ("Config-driven directories ... compose against data/root at the
         // call site"). This one was missed when ws_getCacheSize() was
         // ported -- the pre-rewrite legacy code got away with the bare

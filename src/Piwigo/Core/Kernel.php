@@ -38,9 +38,10 @@ use Psr\Container\ContainerInterface;
  * Container::build() -- the one point every real bootstrap path (HTTP,
  * CLI, install) already converges on a real Paths. Singleton/service-
  * locator elimination campaign, Phase 3: `CurrentPaths` used to keep its
- * own separate static copy via a `set()` call here; now it's a pure
+ * own separate static copy via a `set()` call here; it became a pure
  * transitional shim reading straight from this same container binding
- * (see its own docblock), so no separate publish step is needed.
+ * instead, then closed outright in sub-phase 12F-10 -- no separate
+ * publish step was ever needed.
  */
 final class Kernel
 {

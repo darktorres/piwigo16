@@ -6,7 +6,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\IntroSubController;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
@@ -19,7 +19,7 @@ use Piwigo\Core\Paths;
  * outbound HTTP call to a third-party service would be flaky by
  * construction (network availability, endpoint uptime). Instead these
  * tests pre-seed the on-disk cache file at the exact path the method
- * itself computes (CurrentPaths::get()->root . dataLocation() . 'cache/
+ * itself computes (CurrentPathsTestFactory::get()->root . dataLocation() . 'cache/
  * piwigo_latest_news-' . langCode . '.cache.php'), which is what the
  * method reads whenever that cache is still fresh (< 24h old) --
  * deterministically exercising the real cache-hit + unserialize() path.
@@ -29,7 +29,7 @@ function intronewsCachePath(): string
     $langCode = LangTestFactory::get()->langInfo()['code'] ?? null;
     $langCode = is_string($langCode) ? $langCode : '';
 
-    return CurrentPaths::get()->root . CurrentConfig::current()->dataLocation()
+    return CurrentPathsTestFactory::get()->root . CurrentConfig::current()->dataLocation()
         . 'cache/piwigo_latest_news-' . $langCode . '.cache.php';
 }
 
@@ -37,7 +37,7 @@ function intronewsInvoke(): mixed
 {
     $method = new ReflectionMethod(IntroSubController::class, 'getLatestNews');
 
-    return $method->invoke(null, LangTestFactory::get(), CurrentConfig::current(), CurrentPaths::get());
+    return $method->invoke(null, LangTestFactory::get(), CurrentConfig::current(), CurrentPathsTestFactory::get());
 }
 
 beforeEach(function (): void {

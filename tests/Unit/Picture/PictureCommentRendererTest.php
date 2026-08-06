@@ -14,7 +14,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
@@ -57,7 +57,7 @@ function picture_comment_test_rrmdir(string $dir): void
 
 /**
  * Template::__construct() unconditionally mkgetdir()s a real
- * "templates_c" compile directory under CurrentPaths::get()->root -- same
+ * "templates_c" compile directory under CurrentPathsTestFactory::get()->root -- same
  * "point CurrentPaths at a fresh temp root, clean it up after" shape as
  * tests/Unit/Image/DerivativeCacheServiceTest.php. setDataDirChecked('1')
  * skips the extra is_writable()/confUpdateParam() DB-touching branch for
@@ -97,7 +97,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    picture_comment_test_rrmdir(CurrentPaths::get()->root);
+    picture_comment_test_rrmdir(CurrentPathsTestFactory::get()->root);
     CurrentTemplate::current()->reset();
     Kernel::reset();
     CurrentUser::current()->reset();
@@ -326,8 +326,8 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     // completing, confirming this test distinguishes the two operators.
     CurrentConfig::current()->setCommentsForall(false);
     $_POST['content'] = 'nice photo!';
-    file_put_contents(CurrentPaths::get()->root . '/comment_list.tpl', 'STATIC-COMMENT-LIST-CONTENT');
-    CurrentTemplate::current()->get()->set_template_dir(CurrentPaths::get()->root);
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/comment_list.tpl', 'STATIC-COMMENT-LIST-CONTENT');
+    CurrentTemplate::current()->get()->set_template_dir(CurrentPathsTestFactory::get()->root);
 
     $renderer = new PictureCommentRenderer();
     // A nonexistent image id keeps countForImage()'s real COUNT(*) query

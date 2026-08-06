@@ -29,7 +29,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\CurrentConfigService;
     use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
     use Piwigo\Core\ActivityLoggerInterface;
-    use Piwigo\Core\CurrentPaths;
+    use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Core\HtmlRenderingInterface;
     use Piwigo\Core\PageState;
     use Piwigo\Tests\Support\PageStateTestFactory;
@@ -1111,7 +1111,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             // own galleries_url (this method's real data source) is
             // corrected to match at fixture-load time, see
             // IntegrationTestCase::loadFixture()'s own docblock.
-            self::assertSame(CurrentPaths::get()->root . 'galleries/sample-album/fixture-photo-1.jpg', $path);
+            self::assertSame(CurrentPathsTestFactory::get()->root . 'galleries/sample-album/fixture-photo-1.jpg', $path);
         } finally {
             $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET dir = NULL, site_id = NULL WHERE id = 1");
             $this->conn->executeStatement("UPDATE " . Tables::images() . " SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-2e7e64c7.jpg' WHERE id = 1");

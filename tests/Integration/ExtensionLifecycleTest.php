@@ -17,7 +17,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Tests\Support\UrlServiceTestFactory;
     use Piwigo\PluginConfig\EventDispatcher;
-    use Piwigo\Core\CurrentPaths;
+    use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use mysqli;
     use Piwigo\Http\ResponseReadyException;
     use Piwigo\Admin\PluginLoader;
@@ -114,7 +114,7 @@ namespace Piwigo\Tests\Integration {
             self::assertInstanceOf(AccessControl::class, $accessControl);
             $currentUser = Kernel::container()->get(CurrentUser::class);
             self::assertInstanceOf(CurrentUser::class, $currentUser);
-            $this->lifecycle = new ExtensionLifecycle(LangTestFactory::get(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger, $currentUser, CurrentPaths::get(), $currentConfig), UrlServiceTestFactory::build(), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig, $wsContext, $accessControl, CurrentPaths::get(), $currentUser, new EventDispatcher());
+            $this->lifecycle = new ExtensionLifecycle(LangTestFactory::get(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger, $currentUser, CurrentPathsTestFactory::get(), $currentConfig), UrlServiceTestFactory::build(), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig, $wsContext, $accessControl, CurrentPathsTestFactory::get(), $currentUser, new EventDispatcher());
 
             $currentConfig->setEnableExtensionsInstall(true);
             $currentConfig->setPhpExtensionInUrls(false);
@@ -122,7 +122,7 @@ namespace Piwigo\Tests\Integration {
             // for real here) reads CurrentConfig::themesDir() -- provide the
             // production value so the real filesystem check runs against
             // the real themes/ dir.
-            $currentConfig->setThemesDir(CurrentPaths::get()->root . 'themes');
+            $currentConfig->setThemesDir(CurrentPathsTestFactory::get()->root . 'themes');
             CurrentUser::current()->set(User::fromUserArray(['id' => 1]));
             CurrentUser::current()->markRealUserResolved();
             unset($_REQUEST['method'], $_REQUEST['action']);
@@ -287,7 +287,7 @@ namespace Piwigo\Tests\Integration {
             // Unlike the sibling test above, $fsEntry is non-null here, so
             // this reaches the real fs_version bookkeeping AND the
             // FilesystemHelper::deltree() call against
-            // PluginLoader::pluginsPath(CurrentPaths::get()) . $id -- a synthetic, never-
+            // PluginLoader::pluginsPath(CurrentPathsTestFactory::get()) . $id -- a synthetic, never-
             // on-disk id (see this class's own docblock), so deltree()'s
             // own `if (is_dir($path))` guard makes this a real, safe no-op.
             $id = $this->pluginId();
@@ -606,7 +606,7 @@ namespace Piwigo\Tests\Integration {
          */
         private function writePluginMaintainFile(string $id, string $ext, bool $extendsBase, string $body = ''): void
         {
-            $dir = PluginLoader::pluginsPath(CurrentPaths::get()) . $id;
+            $dir = PluginLoader::pluginsPath(CurrentPathsTestFactory::get()) . $id;
             mkdir($dir, 0o777, true);
             $classname = str_replace('-', '_', $id . '_maintain');
             $extends = $extendsBase ? ' extends \\Piwigo\\Admin\\PluginMaintain' : '';
@@ -618,7 +618,7 @@ namespace Piwigo\Tests\Integration {
 
         private function removePluginDir(string $id): void
         {
-            $this->rrmdir(PluginLoader::pluginsPath(CurrentPaths::get()) . $id);
+            $this->rrmdir(PluginLoader::pluginsPath(CurrentPathsTestFactory::get()) . $id);
         }
 
         /**
@@ -629,7 +629,7 @@ namespace Piwigo\Tests\Integration {
          */
         private function writeThemeMaintainFile(string $id, bool $extendsBase, string $body = ''): void
         {
-            $dir = CurrentPaths::get()->root . 'themes/' . $id . '/admin';
+            $dir = CurrentPathsTestFactory::get()->root . 'themes/' . $id . '/admin';
             mkdir($dir, 0o777, true);
             $classname = $id . '_maintain';
             $extends = $extendsBase ? ' extends \\Piwigo\\Admin\\ThemeMaintain' : '';
@@ -648,7 +648,7 @@ namespace Piwigo\Tests\Integration {
          */
         private function writeThemeConf(string $id, array $conf = []): void
         {
-            $dir = CurrentPaths::get()->root . 'themes/' . $id;
+            $dir = CurrentPathsTestFactory::get()->root . 'themes/' . $id;
             mkdir($dir, 0o777, true);
             $name = $conf['name'] ?? $id;
             $lines = "<?php\n/*\nTheme Name: {$name}\nVersion: 1.0\n*/\n";
@@ -663,7 +663,7 @@ namespace Piwigo\Tests\Integration {
 
         private function removeThemeDir(string $id): void
         {
-            $this->rrmdir(CurrentPaths::get()->root . 'themes/' . $id);
+            $this->rrmdir(CurrentPathsTestFactory::get()->root . 'themes/' . $id);
         }
 
         // --------------------------------------------- plugin update/errors
@@ -1029,7 +1029,7 @@ PHP);
             // call, inside the 'deactivate' case) is unreachable through the
             // public performAction() API under this class's own setUp():
             // ThemeCatalog::checkThemeInstalled() composes
-            // `CurrentPaths::get()->root . CurrentConfig::themesDir()`, but
+            // `CurrentPathsTestFactory::get()->root . CurrentConfig::themesDir()`, but
             // setUp() sets themesDir() to an ALREADY-absolute path (`root .
             // 'themes'`) for a different, unrelated reason (buildThemeMaintain()/
             // ExtensionScanner need the absolute form) -- composing root

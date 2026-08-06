@@ -18,7 +18,7 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
@@ -143,10 +143,10 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
     return new ExtensionUpdateChecker(
         LangTestFactory::get(),
         new ExtensionScanner(),
-        new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), CurrentPaths::get(), new CurrentConfig()),
+        new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), CurrentPathsTestFactory::get(), new CurrentConfig()),
         UrlServiceTestFactory::build(),
         $repo,
-        CurrentPaths::get(),
+        CurrentPathsTestFactory::get(),
         CurrentUser::current(),
         new EventDispatcher(),
         CurrentConfig::current(),

@@ -19,7 +19,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Env;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
@@ -111,7 +111,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         unset($_POST['c13y_submit_correction'], $_POST['c13y_submit_ignore'], $_POST['c13y_selection']);
 
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
     }
 
     #[Override]

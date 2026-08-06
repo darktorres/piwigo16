@@ -14,7 +14,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Db\Tables;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\CurrentThemeConfProvider;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
@@ -268,7 +268,7 @@ test('get_path() joins the current root with the resolved rel_path', function ()
         'file' => 'photo.jpg',
     ]);
 
-    expect($src->get_path())->toBe(CurrentPaths::get()->root . 'upload/2026/07/photo.jpg');
+    expect($src->get_path())->toBe(CurrentPathsTestFactory::get()->root . 'upload/2026/07/photo.jpg');
 });
 
 test('constructor finds a real per-extension mimetype icon, and get_url() embellishes the root-relative icon url', function (): void {

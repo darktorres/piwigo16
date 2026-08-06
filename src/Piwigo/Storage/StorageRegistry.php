@@ -7,6 +7,8 @@ namespace Piwigo\Storage;
 use Closure;
 use InvalidArgumentException;
 use League\Flysystem\FilesystemOperator;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Paths;
 
 /**
  * Named-disk registry. Each entry is a lazy closure that creates the
@@ -41,20 +43,24 @@ final class StorageRegistry
     ) {}
 
     /**
-     * Load factories from a plain array-returning PHP file at $configPath
+     * Load factories from a closure-returning PHP file at $configPath
      * (whatever it's given, verbatim -- generic, not project-root-relative
      * itself) -- the container's own factory(...) entry in
      * config/container.php calls this with a fixed
      * dirname(__DIR__) . '/config/storage.php' path, same "value never
      * varies per request" reasoning as Router::class's own routes.php
-     * binding. config/storage.php's own disk closures read Paths::class
-     * (via CurrentPaths::get()) internally to compute each disk's root, but
-     * that's independent of which storage.php file gets loaded here.
+     * binding. Singleton/service-locator elimination campaign, Phase 12
+     * sub-phase 12F-10: config/storage.php itself returns a closure now
+     * (was a plain array built from CurrentPaths::get()/
+     * CurrentConfig::current() reads, since a plain `require`d array file
+     * has no constructor/parameter seam of its own) -- $paths/
+     * $currentConfig are real params threaded through to it here instead.
      */
-    public static function fromConfig(string $configPath): self
+    public static function fromConfig(string $configPath, Paths $paths, CurrentConfig $currentConfig): self
     {
-        /** @var array<string, Closure():FilesystemOperator> $factories */
-        $factories = require $configPath;
+        /** @var Closure(Paths, CurrentConfig): array<string, Closure():FilesystemOperator> $configFactory */
+        $configFactory = require $configPath;
+        $factories = $configFactory($paths, $currentConfig);
 
         return new self($factories);
     }

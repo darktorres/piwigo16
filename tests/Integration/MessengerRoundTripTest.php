@@ -7,7 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Override;
 use Piwigo\Core\Kernel;
 use LogicException;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use RuntimeException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
@@ -62,7 +62,7 @@ final class MessengerRoundTripTest extends IntegrationTestCase
         // marker-suffixed subdirectory, verified before any destructive
         // operation.
         $currentConfig->setDataLocation($this->marker() . '/');
-        mkdir(CurrentPaths::get()->root . $currentConfig->derivativeDir(), 0o777, true);
+        mkdir(CurrentPathsTestFactory::get()->root . $currentConfig->derivativeDir(), 0o777, true);
 
         $this->conn = DbConnection::build();
         $this->conn->executeStatement('DROP TABLE IF EXISTS messenger_messages');
@@ -71,7 +71,7 @@ final class MessengerRoundTripTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $dir = CurrentPaths::get()->root . $this->marker();
+        $dir = CurrentPathsTestFactory::get()->root . $this->marker();
         if (is_dir($dir)) {
             $this->rrmdir($dir);
         }
@@ -114,16 +114,16 @@ final class MessengerRoundTripTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $derivDir = CurrentPaths::get()->root . $currentConfig->derivativeDir() . '2026/07';
+        $derivDir = CurrentPathsTestFactory::get()->root . $currentConfig->derivativeDir() . '2026/07';
         mkdir($derivDir, 0o777, true);
         file_put_contents($derivDir . '/photo-th.jpg', 'x');
         file_put_contents($derivDir . '/photo-sq.jpg', 'x');
 
-        $transport = MessengerFactory::transport($this->conn, CurrentPaths::get());
+        $transport = MessengerFactory::transport($this->conn, CurrentPathsTestFactory::get());
 
         // dispatch: real INSERT into messenger_messages via the Doctrine
         // transport's send()
-        $sendingBus = MessengerFactory::sendingBus($transport, CurrentPaths::get());
+        $sendingBus = MessengerFactory::sendingBus($transport, CurrentPathsTestFactory::get());
         $sendingBus->dispatch(new GenerateDerivativeJob('2026/07/photo.jpg', type: 'thumb'));
 
         self::assertSame(1, $transport->getMessageCount());
@@ -137,7 +137,7 @@ final class MessengerRoundTripTest extends IntegrationTestCase
 
         // handle: routes through GenerateDerivativeHandler, a real call
         // into DerivativeCacheService::deleteElementDerivatives()
-        $receivingBus = MessengerFactory::receivingBus(CurrentPaths::get());
+        $receivingBus = MessengerFactory::receivingBus(CurrentPathsTestFactory::get());
         $receivingBus->dispatch($envelope);
         $transport->ack($envelope);
 

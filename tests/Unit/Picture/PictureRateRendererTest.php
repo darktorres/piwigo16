@@ -9,7 +9,7 @@ use Piwigo\Rate\RateEntity;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
@@ -50,7 +50,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    picture_rate_test_rrmdir(CurrentPaths::get()->root);
+    picture_rate_test_rrmdir(CurrentPathsTestFactory::get()->root);
     CurrentTemplate::current()->reset();
     Kernel::reset();
     CurrentConfig::current()->reset();

@@ -30,7 +30,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
@@ -201,7 +201,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
         $this->filterUpdater = new CategoryCatsRendererFakeFilterUpdater();
 
-        $this->template = TemplateTestFactory::build(CurrentPaths::get()->root . 'themes', 'default');
+        $this->template = TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default');
 
         $currentLogger = new CurrentLogger();
         $currentLogger->set(new Logger(['severity' => Logger::OFF]));

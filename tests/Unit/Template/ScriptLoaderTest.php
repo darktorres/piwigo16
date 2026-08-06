@@ -1029,8 +1029,7 @@ test('compute_script_topological_order fatal-errors exactly one level past the r
     // service-locator elimination campaign, Phase 11 sub-phase 11E,
     // originally Phase 2) -- booted and reset locally, scoped to this one
     // test (other tests in this file boot their own Kernel too, each
-    // independently, via CurrentPaths::get()'s own container read --
-    // Phase 3). A real Paths is required too: ErrorCollector's container
+    // independently). A real Paths is required too: ErrorCollector's container
     // factory now needs a DeploymentPolicy, whose own factory needs Paths
     // to autowire (Phase 4).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));

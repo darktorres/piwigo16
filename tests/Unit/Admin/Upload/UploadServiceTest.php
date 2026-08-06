@@ -25,7 +25,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Logger;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
@@ -72,7 +72,7 @@ function upload_service_test_current_logger(): CurrentLogger
  * StorageRegistry is resolved fresh from the container on every call (not
  * memoized) since a handful of tests rebind Paths::class via
  * KernelContainerOverride::with() before calling this helper --
- * StorageRegistry's own factory captures CurrentPaths::get() once, at
+ * StorageRegistry's own factory captures CurrentPathsTestFactory::get() once, at
  * first resolution, so resolving here (inside any such override) rather
  * than once in beforeEach keeps every disk correctly scoped to that test's
  * own marker root.
@@ -124,7 +124,7 @@ function upload_service_test_make(): UploadService
         throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
     }
 
-    return new UploadService(LangTestFactory::get(), upload_service_test_current_logger(), $storageRegistry, EventDispatcherTestFactory::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get());
+    return new UploadService(LangTestFactory::get(), upload_service_test_current_logger(), $storageRegistry, EventDispatcherTestFactory::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get());
 }
 
 beforeEach(function (): void {
@@ -133,7 +133,7 @@ beforeEach(function (): void {
     // resolves StorageRegistry::class from the container, whose own factory
     // (config/container.php) always calls fromConfig(), which requires()
     // config/storage.php -- that file unconditionally calls
-    // CurrentPaths::get(), so a bare Kernel::boot() (no Paths bound) throws
+    // CurrentPathsTestFactory::get(), so a bare Kernel::boot() (no Paths bound) throws
     // "CurrentPaths not initialised" for every test using that helper.
     Kernel::boot(Paths::fromRoot(upload_service_test_marker()));
     // needResize() reads Piwigo\Core\CurrentLogger directly (an info-level

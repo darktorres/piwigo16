@@ -25,7 +25,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -181,7 +181,7 @@ final class ThemesStandardPagesLogoStreamWrapper
  * CurrentPaths::siteLocal (not ::root) is the one property overridden for
  * the logo-upload tests, each to its own disposable sys_get_temp_dir()
  * root -- FilesystemHelper::mkgetdir()'s own $upload_dir is
- * `CurrentPaths::get()->siteLocal . 'logo'`, so this alone controls
+ * `CurrentPathsTestFactory::get()->siteLocal . 'logo'`, so this alone controls
  * exactly the directory these tests need to create/chmod, while ::root
  * stays the real repo root so Template can still find the real
  * themes/admin/default/template/themes_standard_pages.tpl. Never touches
@@ -231,7 +231,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // for the same defensive reason PageTailRendererTest's own setUp()
         // sets it: real RequestBootstrap-only wiring this isolated test
         // never boots otherwise.
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
 
         $this->renderer = $this->makeRenderer();
 
@@ -295,24 +295,25 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // StorageRegistry is built fresh here (not container-resolved
         // once for the whole test) specifically so overrideSiteLocal()'s
         // own Kernel::boot() below is reflected in the 'local' disk
-        // it builds -- config/storage.php's own 'local' factory reads
-        // CurrentPaths::get() at fromConfig()-call time, same "must be
-        // rebuilt after CurrentPaths changes" requirement a real request
-        // never hits (CurrentPaths is fixed before the container ever
-        // resolves anything, singleton/service-locator elimination
-        // campaign, Phase 2).
+        // it builds -- config/storage.php's own 'local' factory closure
+        // captures whichever CurrentPathsTestFactory::get()/CurrentConfig::current()
+        // instance is passed in explicitly at fromConfig()-call time
+        // (singleton/service-locator elimination campaign, Phase 12
+        // sub-phase 12F-10), same "must be rebuilt after CurrentPaths
+        // changes" requirement a real request never hits (CurrentPaths is
+        // fixed before the container ever resolves anything, Phase 2).
         return new ThemesStandardPagesPageRenderer(
             LangTestFactory::get(),
             $this->accessControl(),
             new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
             UrlServiceTestFactory::build(),
             $this->configService,
-            StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php'),
+            StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php', CurrentPathsTestFactory::get(), CurrentConfig::current()),
             PageStateTestFactory::get(),
             CurrentTemplate::current(),
             HtmlServiceTestFactory::build(),
             CurrentConfig::current(),
-            CurrentPaths::get(),
+            CurrentPathsTestFactory::get(),
             CurrentUser::current(),
             EventDispatcherTestFactory::get(),
         );
@@ -361,7 +362,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // setUp()'s own set() call populated; without reseeding here,
         // this renderer's own $this->currentTemplate->get() throws "not
         // initialised" against this fresh, unseeded container.
-        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
         $this->renderer = $this->makeRenderer();
     }
 

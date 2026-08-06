@@ -89,7 +89,7 @@ final class WsTopLevelTest extends ContractTestCase
      * CurrentConfig::dataLocation() in this codebase (PersistentFileCache,
      * FeedController, RequestBootstrap, Template, IntroSubController,
      * MailService, CoreUpdateService), all of which correctly prefix it
-     * with CurrentPaths::get()->root per Paths' own class-level contract.
+     * with the live, container-bound Paths->root per Paths' own class-level contract.
      * Under this rewrite's public/ webroot, the real request-time CWD is
      * public/, not the install root, so the bare relative path silently
      * resolved `du` against public/_data/ -- an unrelated, near-empty stub

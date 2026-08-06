@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Paths;
 use Piwigo\Storage\StorageRegistry;
 
 /**
@@ -75,7 +77,12 @@ test('fromConfig loads factories from the exact given path, not a hardcoded one'
     // path -- same "value never varies per request" reasoning as
     // Router::class's own routes.php binding, see that binding's own
     // comment), fromConfig() itself is a plain, generic loader: whatever
-    // path it's given is what it requires(), verbatim.
+    // path it's given is what it requires(), verbatim. Singleton/service-
+    // locator elimination campaign, Phase 12 sub-phase 12F-10: the
+    // required file must itself return a closure now (taking Paths/
+    // CurrentConfig as real params, matching config/storage.php's own new
+    // shape), not a plain array -- this fixture's own closure never
+    // actually reads either param, so any real, cheap instance works.
     $dir = sys_get_temp_dir() . '/piwigo-storage-registry-fromconfig-' . bin2hex(random_bytes(4));
     mkdir($dir, 0o777, true);
     file_put_contents($dir . '/storage.php', <<<'PHP'
@@ -83,14 +90,16 @@ test('fromConfig loads factories from the exact given path, not a hardcoded one'
 
         declare(strict_types=1);
 
-        return [
-            'mutation-canary' => static fn (): \League\Flysystem\Filesystem => new \League\Flysystem\Filesystem(
-                new \League\Flysystem\Local\LocalFilesystemAdapter(sys_get_temp_dir()),
-            ),
-        ];
+        return static function (\Piwigo\Core\Paths $paths, \Piwigo\Config\CurrentConfig $currentConfig): array {
+            return [
+                'mutation-canary' => static fn (): \League\Flysystem\Filesystem => new \League\Flysystem\Filesystem(
+                    new \League\Flysystem\Local\LocalFilesystemAdapter(sys_get_temp_dir()),
+                ),
+            ];
+        };
         PHP);
 
-    $registry = StorageRegistry::fromConfig($dir . '/storage.php');
+    $registry = StorageRegistry::fromConfig($dir . '/storage.php', Paths::fromRoot(sys_get_temp_dir()), new CurrentConfig());
 
     expect($registry->get('mutation-canary'))->toBeInstanceOf(Filesystem::class);
 

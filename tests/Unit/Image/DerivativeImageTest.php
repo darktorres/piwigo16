@@ -10,7 +10,7 @@ use Error;
 use Exception;
 use Piwigo\Image\WatermarkParams;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
@@ -343,7 +343,7 @@ test('build() throws when the source path has no extension', function (): void {
 });
 
 test('build() strips a leading "./" from the source location and appends the custom-type url tokens', function (): void {
-    // get_path() reads CurrentPaths::get() -- set explicitly since this
+    // get_path() reads CurrentPathsTestFactory::get() -- set explicitly since this
     // is the first test in the file to call it.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-path-only'));
 
@@ -360,7 +360,7 @@ test('build() strips a leading "./" from the source location and appends the cus
     // SizingParamsTest.php's own documented finding), so the token is the
     // general 2-token form ('120x90', fractionToChar(0)='a'), not the
     // 's120x90' shorthand.
-    expect($derivative->get_path())->toBe(CurrentPaths::get()->root . '_data/i/gallery/photo-cu_120x90_a.jpg');
+    expect($derivative->get_path())->toBe(CurrentPathsTestFactory::get()->root . '_data/i/gallery/photo-cu_120x90_a.jpg');
     // No real cached file exists on disk at that path -- build()'s own
     // filemtime() check correctly falls back to the dynamic i.php?
     // URL style rather than a direct cached-file URL.
@@ -378,7 +378,7 @@ test('build() strips a leading "../" from the source location', function (): voi
 
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(64, 64)), $src,CurrentConfig::current());
 
-    expect($derivative->get_path())->toBe(CurrentPaths::get()->root . '_data/i/gallery/photo-cu_64_a.jpg');
+    expect($derivative->get_path())->toBe(CurrentPathsTestFactory::get()->root . '_data/i/gallery/photo-cu_64_a.jpg');
     // Same reasoning as the leading-"./" test above: no cached file on
     // disk means the dynamic i.php? URL style, not a direct cached URL.
     expect($derivative->get_url())->toBe('i.php?/gallery/photo-cu_64_a.jpg');
@@ -492,7 +492,7 @@ test('build() uses the source image as-is, unrotated and unwatermarked, when it 
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(200, 200)), $src,CurrentConfig::current());
 
     expect($derivative->same_as_source())->toBeTrue();
-    expect($derivative->get_path())->toBe(CurrentPaths::get()->root . 'upload/2026/07/photo.jpg');
+    expect($derivative->get_path())->toBe(CurrentPathsTestFactory::get()->root . 'upload/2026/07/photo.jpg');
 });
 
 test('build() does not strip a leading "../" look-alike that is not actually followed by a slash', function (): void {
@@ -512,7 +512,7 @@ test('build() does not strip a leading "../" look-alike that is not actually fol
 
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(64, 64)), $src,CurrentConfig::current());
 
-    expect($derivative->get_path())->toBe(CurrentPaths::get()->root . '_data/i/..2026/gallery/photo-cu_64_a.jpg');
+    expect($derivative->get_path())->toBe(CurrentPathsTestFactory::get()->root . '_data/i/..2026/gallery/photo-cu_64_a.jpg');
 });
 
 /**
@@ -631,7 +631,7 @@ test('build() substitutes a smaller already-defined identity-matching type when 
         // itself ever runs again. Only rel_path/rel_url (and therefore
         // get_path()) would still reflect the never-recomputed initial
         // '' otherwise.
-        expect($derivative->get_path())->toBe(CurrentPaths::get()->root . '_data/i/upload/2026/07/photo-th.jpg');
+        expect($derivative->get_path())->toBe(CurrentPathsTestFactory::get()->root . '_data/i/upload/2026/07/photo-th.jpg');
     } finally {
         derivativeImageTestRestoreStdParams($snapshot);
         ImageStdParamsTestFactory::get()->set_watermark($originalWatermark);

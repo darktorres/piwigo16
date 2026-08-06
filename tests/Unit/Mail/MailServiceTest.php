@@ -538,7 +538,7 @@ test('getMailTemplate resolves the real, absolute theme root and the given email
     // template disk cache (_data/templates_c/) can satisfy it from an
     // EARLIER test's correctly-resolved compile even after this specific
     // concatenation is broken. getTemplateDir() alone isn't reliable
-    // either if CurrentPaths::get()->root happens to equal the real
+    // either if the live, container-bound Paths->root happens to equal the real
     // process cwd (it does whenever `vendor/bin/pest` itself runs from
     // the project root): Smarty's addTemplateDir() resolves a RELATIVE
     // path against cwd, which then coincidentally reconstructs the exact

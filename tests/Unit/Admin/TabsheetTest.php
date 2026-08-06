@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
@@ -30,7 +30,7 @@ function tabsheetTestRrmdir(string $dir): void
 }
 
 // Template::__construct() unconditionally mkgetdir()s a real "templates_c"
-// compile directory under CurrentPaths::get()->root -- same
+// compile directory under CurrentPathsTestFactory::get()->root -- same
 // "point CurrentPaths at a fresh temp root, clean it up after" shape as
 // PictureCommentRendererTest's own makePictureCommentTestTemplate().
 // Tabsheet::assign()'s own assign_var_from_handle() call actually parses
@@ -53,7 +53,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    tabsheetTestRrmdir(CurrentPaths::get()->root);
+    tabsheetTestRrmdir(CurrentPathsTestFactory::get()->root);
     CurrentTemplate::current()->reset();
     Kernel::reset();
     CurrentConfig::current()->reset();
@@ -249,7 +249,7 @@ test('select throws when a tabsheet_before_select handler returns something othe
 });
 
 test('assign makes the sheets array available to the tabsheet.tpl template before rendering', function (): void {
-    file_put_contents(CurrentPaths::get()->root . '/tabsheet.tpl', 'CAPTION:{$tabsheet.general.caption}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/tabsheet.tpl', 'CAPTION:{$tabsheet.general.caption}');
 
     $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
     $tabsheet->add('general', 'General Settings', '/general');

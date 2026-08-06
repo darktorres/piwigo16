@@ -336,9 +336,9 @@ it('shows the latest Piwigo news message from a pre-seeded, still-fresh on-disk 
 
     // Browser tests run as plain HTTP-driving PHP-CLI processes with no
     // app bootstrap of their own (unlike Integration tests, which
-    // explicitly call Kernel::boot()) -- CurrentPaths::get()/
-    // Lang::langInfo() would either throw or return an empty default
-    // here, so the app root is computed manually instead. It's the repo
+    // explicitly call Kernel::boot()) -- resolving a real, container-bound
+    // Paths or calling Lang::langInfo() would either throw or return an
+    // empty default here, so the app root is computed manually instead. It's the repo
     // root, one level *above* public/ -- public/*.php's own
     // Paths::fromRoot(dirname(__DIR__)) call resolves the same way, and
     // _data/ lives there, not under public/ (confirmed live: with a

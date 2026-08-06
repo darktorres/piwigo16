@@ -18,7 +18,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Job\BatchUploadJob;
@@ -159,7 +159,7 @@ beforeEach(function (): void {
     // storage_registry() resolves StorageRegistry::class from the
     // container, whose own factory always calls fromConfig(), which
     // requires() config/storage.php -- that file unconditionally calls
-    // CurrentPaths::get().
+    // CurrentPathsTestFactory::get().
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     batch_upload_handler_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
     batch_upload_handler_test_current_config()->setLoungeActive(true);
@@ -182,7 +182,7 @@ test('__invoke returns the existing image id and deletes the newly uploaded file
         $sourceFilepath = sys_get_temp_dir() . '/piwigo-batch-upload-handler-test-' . bin2hex(random_bytes(8)) . '.jpg';
         file_put_contents($sourceFilepath, 'duplicate-upload-bytes');
 
-        $handler = new BatchUploadHandler(LangTestFactory::get(), UrlServiceTestFactory::build(), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), EventDispatcherTestFactory::get(), batch_upload_handler_test_config_service(), batch_upload_handler_test_entity_manager(), batch_upload_handler_test_activity_service(), batch_upload_handler_test_metadata_service(), batch_upload_handler_test_image_service(), batch_upload_handler_test_current_config(), batch_upload_handler_test_ws_context(), batch_upload_handler_test_current_user(), CurrentPaths::get(), DbCredentialsTestFactory::get());
+        $handler = new BatchUploadHandler(LangTestFactory::get(), UrlServiceTestFactory::build(), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), EventDispatcherTestFactory::get(), batch_upload_handler_test_config_service(), batch_upload_handler_test_entity_manager(), batch_upload_handler_test_activity_service(), batch_upload_handler_test_metadata_service(), batch_upload_handler_test_image_service(), batch_upload_handler_test_current_config(), batch_upload_handler_test_ws_context(), batch_upload_handler_test_current_user(), CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get());
 
         $imageId = $handler(new BatchUploadJob(
             sourceFilepath: $sourceFilepath,

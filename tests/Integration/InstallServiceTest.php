@@ -17,7 +17,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -331,7 +331,7 @@ final class InstallServiceTest extends IntegrationTestCase
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
 
-            InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcherTestFactory::get());
+            InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
 
             self::assertFalse($this->conn->fetchAssociative('SELECT id FROM ' . Tables::themes() . ' WHERE id = ' . $this->conn->quote($themeId)));
             self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
@@ -357,7 +357,7 @@ final class InstallServiceTest extends IntegrationTestCase
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
 
-            InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcherTestFactory::get());
+            InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
 
             self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
         } finally {
@@ -380,7 +380,7 @@ final class InstallServiceTest extends IntegrationTestCase
         // even a directory with real scannable plugins would still insert
         // nothing; a truly empty scan directory is the simplest honest way
         // to exercise the same real "no-op by design" behavior.
-        InstallService::activateCorePlugins(LangTestFactory::get(), CurrentPaths::get(), CurrentUser::current(), EventDispatcherTestFactory::get(), CurrentConfig::current());
+        InstallService::activateCorePlugins(LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUser::current(), EventDispatcherTestFactory::get(), CurrentConfig::current());
 
         $after = $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::plugins()));
         self::assertSame($before, $after);

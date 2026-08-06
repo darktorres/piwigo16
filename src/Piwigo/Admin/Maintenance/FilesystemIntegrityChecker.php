@@ -118,7 +118,7 @@ final class FilesystemIntegrityChecker
             // path is a NOT NULL column in the images table, root-relative
             // (Part II) -- PHP's CWD tracks the executing script's
             // directory, not necessarily the install root, so this must be
-            // composed with CurrentPaths::get()->root rather than checked
+            // composed with $this->paths->root rather than checked
             // as-is (found live: a real Visual Regression failure, a
             // spurious "some photos are missing" banner on every admin
             // dashboard load).

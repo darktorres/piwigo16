@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Psr\Container\ContainerInterface;
@@ -57,12 +57,12 @@ test('reset also resets CurrentPaths, not just its own booted/container state', 
     // CurrentPaths (singleton/service-locator elimination campaign, Phase
     // 3) is a pure shim reading Paths::class straight out of the live
     // container -- proves Kernel::reset() nulling the container is enough
-    // on its own to make CurrentPaths::get() throw again too, with no
+    // on its own to make CurrentPathsTestFactory::get() throw again too, with no
     // separate cascade call needed.
     Kernel::boot(Paths::fromRoot('/home/torres/piwigo17-rewrite'));
-    expect(CurrentPaths::get())->toBeInstanceOf(Paths::class);
+    expect(CurrentPathsTestFactory::get())->toBeInstanceOf(Paths::class);
 
     Kernel::reset();
 
-    expect(fn () => CurrentPaths::get())->toThrow(LogicException::class);
+    expect(fn () => CurrentPathsTestFactory::get())->toThrow(LogicException::class);
 });

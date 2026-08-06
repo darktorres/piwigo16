@@ -1191,7 +1191,7 @@ final class PictureController implements ControllerInterface
                     // column, root-relative (e.g. 'upload/2026/07/x.pdf'),
                     // same as every other real filesystem read of this
                     // column elsewhere in this codebase (e.g. SrcImage::
-                    // get_path()'s own `CurrentPaths::get()->root .
+                    // get_path()'s own `self::paths()->root .
                     // $this->rel_path`). countPdfPages() calls is_file()/
                     // is_readable() on whatever path it's given with no
                     // root of its own, so passing the bare relative path

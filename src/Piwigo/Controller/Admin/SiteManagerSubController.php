@@ -128,7 +128,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             // PHP-FPM started the process (typically the document root,
             // `public/`), not this project's root; a relative galleries_url
             // also never matched any existing site's own absolute value
-            // (InstallWizard seeds site 1 as CurrentPaths::get()->root .
+            // (InstallWizard seeds site 1 as $this->paths->root .
             // 'galleries/', not a relative path -- same convention
             // MetadataService::getSyncMetadata() already documents), so
             // "add a new site" silently produced both a false "directory

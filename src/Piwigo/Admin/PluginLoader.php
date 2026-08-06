@@ -44,7 +44,7 @@ final class PluginLoader
      * install/db or install/upgrade_*.php script reads that constant, so
      * no legacy-bootstrap define needs to survive). A static method rather
      * than a class constant because the underlying value (formerly
-     * PHPWG_ROOT_PATH, now Piwigo\Core\CurrentPaths) isn't guaranteed
+     * PHPWG_ROOT_PATH, now a real `Paths` param) isn't guaranteed
      * resolved at class-linking time -- same reasoning as
      * PhotosAddDirectPageRenderer::baseUrl() (P23 batch 8f-1). Lives here
      * (every real reader is L4Integration -- Admin/Admin\Extensions/

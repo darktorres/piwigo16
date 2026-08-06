@@ -206,9 +206,10 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // Kernel::reset() discards the real Paths setUp()'s own bare
         // Kernel::boot() call had silently reused from parent::setUp()'s
         // own default (idempotency-guarded) boot -- the fresh boot below
-        // must supply Paths explicitly itself, or CurrentPaths::get()
-        // (reached via Lang::load()'s own file lookup right below) throws
-        // "not initialised" against this now-Paths-less container.
+        // must supply Paths explicitly itself, or resolving Lang (reached
+        // via Lang::load()'s own file lookup right below, and itself
+        // requiring a real Paths constructor collaborator) fails against
+        // this now-Paths-less container.
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
         // Kernel::reset() also discards the container-shared Translator
         // instance setUp()'s own Lang::load('admin.lang') call populated

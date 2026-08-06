@@ -21,7 +21,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *   3 switch cases either returns an error itself before falling through,
  *   or unconditionally assigns a real, non-empty $file (images.path is a
  *   NOT NULL varchar; ImagePathHelper::getElementPath() prefixes it with
- *   CurrentPaths::get()->root either way) -- there is no route through
+ *   the live, container-bound Paths->root either way) -- there is no route through
  *   the switch that reaches line ~168 with $file still ''.
  * - `if ($format_row === null) { return $this->doError(400, ...); }`
  *   inside the history-logging `elseif ($get_part === 'f')` branch
@@ -297,7 +297,7 @@ it('serves a photo through a real registered format id, logging a "high" visit',
     @unlink($image);
 
     $realPath = actionImagePath($imageId);
-    // ActionController resolves paths against CurrentPaths::get()->root,
+    // ActionController resolves paths against the live, container-bound Paths->root,
     // which public/action.php builds as Paths::fromRoot(dirname(__DIR__))
     // -- the repo root, one level *above* public/, not public/ itself
     // (confirmed live: without this, action.php reported "Requested file

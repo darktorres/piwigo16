@@ -8,7 +8,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
 beforeEach(function (): void {
-    // getExtents()'s no-args default is anchored to CurrentPaths::get()->
+    // getExtents()'s no-args default is anchored to the live, container-bound Paths->
     // root (a real HTTP request's cwd is wherever Apache/PHP-FPM started
     // the process, not this project's root, so a `./`-relative default
     // silently resolved to nothing in production -- fixed at the source,
@@ -21,7 +21,7 @@ afterEach(function (): void {
 });
 
 test('getExtents finds every .tpl file under the real template-extension directory, stripping the resolved root prefix', function (): void {
-    // No args -> real default anchored to CurrentPaths::get()->root (the
+    // No args -> real default anchored to the live, container-bound Paths->root (the
     // repo root, same as every other test process in this suite) -- a
     // real, committed asset, not a throwaway fixture, so this asserts its
     // known real contents exactly.

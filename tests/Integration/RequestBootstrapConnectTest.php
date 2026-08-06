@@ -23,6 +23,7 @@ use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 
 /**
  * Piwigo\Bootstrap\RequestBootstrap::connect() -- Phase 2 of the HTTP boot
@@ -132,7 +133,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
             $errorCollector->reset();
         }
 
-        EventDispatcher::get()->reset();
+        EventDispatcherTestFactory::get()->reset();
         $installationFlag = Kernel::container()->get(InstallationFlag::class);
         if ($installationFlag instanceof InstallationFlag) {
             $installationFlag->reset();

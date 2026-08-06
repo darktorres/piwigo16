@@ -15,6 +15,7 @@ use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 
@@ -118,7 +119,7 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
 
         return new BeforeSendMail(false, $event->to, $event->args, $event->email);
     };
-    EventDispatcher::get()->addTypedHandler(BeforeSendMail::class, $eventHandler);
+    EventDispatcherTestFactory::get()->addTypedHandler(BeforeSendMail::class, $eventHandler);
 
     try {
         $handler = new SendNotificationEmailHandler(send_notification_email_handler_test_mail_service());
@@ -131,7 +132,7 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
         }
         expect($capturedArgs['subject'] ?? null)->toBe('Test Subject');
     } finally {
-        EventDispatcher::get()->removeEventHandler(BeforeSendMail::class, $eventHandler);
+        EventDispatcherTestFactory::get()->removeEventHandler(BeforeSendMail::class, $eventHandler);
         CurrentConfig::current()->reset();
         Kernel::reset();
     }

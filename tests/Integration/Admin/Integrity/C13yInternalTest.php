@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Template\CurrentTemplate;
@@ -30,7 +31,7 @@ function c13yInternalTestCheckIntegrity(): CheckIntegrity
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
     expect($repo)->toBeInstanceOf(IntegrityIgnoredAnomalyRepository::class);
 
-    return new CheckIntegrity(LangTestFactory::get(), $repo, new Translator(CurrentConfig::current()), EventDispatcher::get(), PageStateTestFactory::get(), CurrentTemplate::current());
+    return new CheckIntegrity(LangTestFactory::get(), $repo, new Translator(CurrentConfig::current()), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), CurrentTemplate::current());
 }
 
 function c13yInternalTestSessionService(): SessionService
@@ -85,7 +86,7 @@ afterEach(function (): void {
 test('c13y_version adds no anomaly when the running PHP/MySQL already satisfy the app\'s own minimum versions', function (): void {
     $c13y = c13yInternalTestCheckIntegrity();
 
-    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcher::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_version(new ListCheckIntegrity($c13y));
+    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_version(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)->toBe([]);
 });
@@ -94,7 +95,7 @@ test('c13y_exif adds no anomaly when exif_read_data() is available', function ()
     expect(function_exists('exif_read_data'))->toBeTrue();
 
     $c13y = c13yInternalTestCheckIntegrity();
-    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcher::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_exif(new ListCheckIntegrity($c13y));
+    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_exif(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)->toBe([]);
 });
@@ -132,7 +133,7 @@ test('c13y_user flags a configured webmaster_id that has no matching user row, a
     CurrentConfig::current()->setWebmasterId(999999);
 
     $c13y = c13yInternalTestCheckIntegrity();
-    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcher::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_user(new ListCheckIntegrity($c13y));
+    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_user(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)->toHaveCount(1);
     $anomaly = $c13y->retrieve_list[0];
@@ -142,7 +143,7 @@ test('c13y_user flags a configured webmaster_id that has no matching user row, a
     $conn = DbConnection::build();
 
     try {
-        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcher::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(999999, 'creation');
+        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(999999, 'creation');
         expect($result)->toBeTrue();
 
         $row = $conn->fetchAssociative('SELECT username FROM ' . Tables::users() . ' WHERE id = 999999');
@@ -170,7 +171,7 @@ test('c13y_user flags a real user whose status does not match the expected one, 
         $conn->executeStatement("UPDATE " . Tables::userInfos() . " SET status = 'normal' WHERE user_id = 1");
 
         $c13y = c13yInternalTestCheckIntegrity();
-        new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcher::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_user(new ListCheckIntegrity($c13y));
+        new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_user(new ListCheckIntegrity($c13y));
 
         $webmasterAnomaly = null;
         foreach ($c13y->retrieve_list as $anomaly) {
@@ -183,7 +184,7 @@ test('c13y_user flags a real user whose status does not match the expected one, 
         }
         expect($webmasterAnomaly['correction_fct_args'])->toBe(['id' => 1, 'action' => 'status']);
 
-        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcher::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(1, 'status');
+        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(1, 'status');
         expect($result)->toBeTrue();
 
         $fixedStatus = $conn->fetchOne('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
@@ -198,11 +199,11 @@ test('c13y_user flags a real user whose status does not match the expected one, 
 });
 
 test('c13y_correction_user does nothing for id 0', function (): void {
-    expect(new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcher::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(0, 'creation'))->toBeFalse();
+    expect(new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(0, 'creation'))->toBeFalse();
 });
 
 test('c13y_correction_user does nothing for an unrecognized action', function (): void {
-    expect(new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcher::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(1, 'not-a-real-action'))->toBeFalse();
+    expect(new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(1, 'not-a-real-action'))->toBeFalse();
 });
 
 test('c13y_user flags a configured default_user_id distinct from guest_id that has no matching user row', function (): void {
@@ -217,7 +218,7 @@ test('c13y_user flags a configured default_user_id distinct from guest_id that h
     CurrentConfig::current()->setWebmasterId(1);
 
     $c13y = c13yInternalTestCheckIntegrity();
-    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcher::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_user(new ListCheckIntegrity($c13y));
+    new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_user(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)->toHaveCount(1);
     $anomaly = $c13y->retrieve_list[0];
@@ -239,7 +240,7 @@ test('c13y_correction_user creates the guest_id slot for a "creation" action, re
 
     $conn = DbConnection::build();
     try {
-        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcher::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(999997, 'creation');
+        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(999997, 'creation');
         expect($result)->toBeTrue();
 
         $row = $conn->fetchAssociative('SELECT username, password FROM ' . Tables::users() . ' WHERE id = 999997');
@@ -261,7 +262,7 @@ test('c13y_correction_user creates the default_user_id slot for a "creation" act
 
     $conn = DbConnection::build();
     try {
-        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcher::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(999996, 'creation');
+        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(999996, 'creation');
         expect($result)->toBeTrue();
 
         $row = $conn->fetchAssociative('SELECT username FROM ' . Tables::users() . ' WHERE id = 999996');
@@ -287,7 +288,7 @@ test('c13y_correction_user sets a real user\'s status to "guest" when its id mat
     expect($originalStatus)->not->toBeFalse();
 
     try {
-        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcher::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(3, 'status');
+        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(3, 'status');
         expect($result)->toBeTrue();
 
         $fixedStatus = $conn->fetchOne('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 3');
@@ -311,7 +312,7 @@ test('c13y_correction_user sets a real user\'s status to "guest" when its id mat
     expect($originalStatus)->not->toBeFalse();
 
     try {
-        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcher::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(4, 'status');
+        $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfig::current())->c13y_correction_user(4, 'status');
         expect($result)->toBeTrue();
 
         $fixedStatus = $conn->fetchOne('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 4');

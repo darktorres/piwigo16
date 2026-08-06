@@ -31,6 +31,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Html\HtmlService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 use Piwigo\Url\UrlService;
@@ -100,13 +101,13 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         // without it, Tabsheet::select('user_activity') finds an empty
         // $sheets array (CoreTabs::addCoreTabs() never registered) and
         // crashes on `$keys[0]` of an empty array.
-        EventDispatcher::get()->reset();
+        EventDispatcherTestFactory::get()->reset();
         $coreTabs = Kernel::container()->get(CoreTabs::class);
         if (! $coreTabs instanceof CoreTabs) {
             throw new LogicException('Container returned an unexpected type for ' . CoreTabs::class);
         }
         $this->coreTabs = $coreTabs;
-        EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, $this->coreTabs->addCoreTabs(...));
+        EventDispatcherTestFactory::get()->addTypedHandler(TabsheetBeforeSelect::class, $this->coreTabs->addCoreTabs(...));
 
         LangTestFactory::get()->load('admin.lang');
         // Template::__construct()'s own data_dir_checked first-time-setup
@@ -134,7 +135,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         // are overwritten by whichever real request runs next -- same
         // "no reset needed" shape as every other CoreTabs-touching
         // Integration test in this suite).
-        EventDispatcher::get()->reset();
+        EventDispatcherTestFactory::get()->reset();
         Kernel::reset();
         parent::tearDown();
     }
@@ -188,7 +189,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
 
-        new UserActivityPageRenderer()->render(LangTestFactory::get(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplate::current(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcher::get());
+        new UserActivityPageRenderer()->render(LangTestFactory::get(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplate::current(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcherTestFactory::get());
 
         $template = CurrentTemplate::current()->get();
         self::assertSame([], $template->get_template_vars('ulist'));

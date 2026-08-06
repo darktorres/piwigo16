@@ -40,6 +40,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\User\TryLogUser;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
@@ -132,7 +133,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         $_REQUEST = $this->requestSnapshot;
         unset($_SESSION['connected_with'], $_SESSION['pwg_uid']);
 
-        EventDispatcher::get()->reset();
+        EventDispatcherTestFactory::get()->reset();
         CurrentUser::current()->reset();
         Kernel::reset();
         parent::tearDown();
@@ -158,7 +159,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         // exit() and is deliberately left uncovered here (see this class's
         // own docblock) -- never actually read, so a fresh, never-set()
         // instance is fine.
-        return new UserBootstrap(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
+        return new UserBootstrap(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
     }
 
     public function test_initialize_auto_registers_a_new_local_account_for_an_unknown_apache_remote_user(): void
@@ -233,7 +234,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         // call, ported verbatim) -- tryLogUser()'s 'try_log_user' event has
         // no handler at all otherwise, so it would always resolve to
         // false regardless of the real credentials below.
-        EventDispatcher::get()->addTypedHandler(TryLogUser::class, new AuthService(
+        EventDispatcherTestFactory::get()->addTypedHandler(TryLogUser::class, new AuthService(
             new AuthRepository(EntityManagerFactory::build($this->conn)),
             new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
             HtmlServiceTestFactory::build(),
@@ -241,7 +242,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             new CookieService(),
             EntityManagerFactory::build($this->conn)->getRepository(UserFailedLoginEntity::class),
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()),
-            EventDispatcher::get(),
+            EventDispatcherTestFactory::get(),
             PageStateTestFactory::get(),
             CurrentUser::current(),
             CurrentConfig::current(),

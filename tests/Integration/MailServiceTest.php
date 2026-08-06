@@ -38,6 +38,7 @@ use Piwigo\Mail\MailRecipientRepository;
 use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
@@ -161,7 +162,7 @@ final class MailServiceTest extends IntegrationTestCase
 
         return new UserService(
             LangTestFactory::get(),
-            new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcher::get(), CurrentConfig::current()),
+            new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), CurrentConfig::current()),
             EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
             $mailer,
             new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
@@ -425,7 +426,7 @@ final class MailServiceTest extends IntegrationTestCase
         $handler = static function () use (&$notified): void {
             $notified = true;
         };
-        EventDispatcher::get()->addTypedHandler(LoadingLang::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(LoadingLang::class, $handler);
 
         try {
             // A fresh $this->mailer (this file's own setUp(), a brand new
@@ -445,7 +446,7 @@ final class MailServiceTest extends IntegrationTestCase
 
             self::assertTrue($notified);
         } finally {
-            EventDispatcher::get()->removeEventHandler(LoadingLang::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(LoadingLang::class, $handler);
             $this->mailer->switchLangBack();
         }
     }

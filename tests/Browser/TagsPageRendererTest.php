@@ -203,7 +203,7 @@ it('joins real get_tag_alt_names hook results into a comma-separated alt_names v
     Description: Test-only fixture plugin (tests/Browser/TagsPageRendererTest.php).
     */
 
-    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+    \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
         \Piwigo\Event\Tag\GetTagAltNames::class,
         static function (\Piwigo\Event\Tag\GetTagAltNames $event): \Piwigo\Event\Tag\GetTagAltNames {
             if ($event->rawName === '__TAGS_PAGE_ALT_NAMES_TARGET__') {

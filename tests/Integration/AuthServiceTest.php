@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// tryLogUser() calls the real Piwigo\PluginConfig\EventDispatcher::get()->
+// tryLogUser() calls its own constructor-injected $this->eventDispatcher->
 // dispatchChange() directly, a pure passthrough with no handlers
 // registered, so no local stub is needed.
 
@@ -42,6 +42,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Event\User\TryLogUser;
     use Piwigo\Http\ResponseReadyException;
     use Piwigo\PluginConfig\EventDispatcher;
+    use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
     use Piwigo\Users\CurrentUser;
@@ -142,7 +143,7 @@ namespace Piwigo\Tests\Integration {
                 new CookieService(),
                 $this->failedLoginRepo,
                 new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()),
-                EventDispatcher::get(),
+                EventDispatcherTestFactory::get(),
                 PageStateTestFactory::get(),
                 CurrentUser::current(),
                 CurrentConfig::current(),
@@ -471,14 +472,14 @@ namespace Piwigo\Tests\Integration {
                     $event->rememberMe,
                 );
             };
-            EventDispatcher::get()->addTypedHandler(FinalizeLogin::class, $handler);
+            EventDispatcherTestFactory::get()->addTypedHandler(FinalizeLogin::class, $handler);
 
             try {
                 $result = $this->pwgLoginResult(false, 'fixture_admin', 'fixture_admin', false);
 
                 self::assertFalse($result);
             } finally {
-                EventDispatcher::get()->removeEventHandler(FinalizeLogin::class, $handler);
+                EventDispatcherTestFactory::get()->removeEventHandler(FinalizeLogin::class, $handler);
                 $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
             }
         }

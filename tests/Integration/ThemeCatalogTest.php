@@ -20,6 +20,7 @@ use Piwigo\Event\Lifecycle\GetPwgThemes;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 
 /**
  * Piwigo\Core\ThemeCatalog::getPwgThemes()/checkThemeInstalled() need a
@@ -86,7 +87,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         );
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), LangTestFactory::get());
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPaths::get(), CurrentConfig::current(), LangTestFactory::get());
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes() . " WHERE id = 'broken-theme'");
         }
@@ -109,7 +110,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $currentConfig->setMobilTheme('mobile-candidate');
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), LangTestFactory::get(), showMobile: false);
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPaths::get(), CurrentConfig::current(), LangTestFactory::get(), showMobile: false);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::themes() . " WHERE id = 'mobile-candidate'");
         }
@@ -129,7 +130,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $currentConfig->setMobilTheme('default');
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), LangTestFactory::get(), showMobile: true);
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPaths::get(), CurrentConfig::current(), LangTestFactory::get(), showMobile: true);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::themes() . " WHERE id = 'default'");
         }
@@ -146,19 +147,19 @@ final class ThemeCatalogTest extends IntegrationTestCase
         // handler is untyped from PHPStan's perspective, and this test
         // exercises dispatchChange()'s own runtime enforcement, not a
         // static one.
-        EventDispatcher::get()->addEventHandler(GetPwgThemes::class, static fn (): ?string => null);
+        EventDispatcherTestFactory::get()->addEventHandler(GetPwgThemes::class, static fn (): ?string => null);
 
         $this->expectException(Error::class);
         $this->expectExceptionMessage('must return an instance of');
 
         try {
-            ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), CurrentConfig::current(), LangTestFactory::get());
+            ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPaths::get(), CurrentConfig::current(), LangTestFactory::get());
         } finally {
             // EventDispatcher is a shared process-wide singleton -- a real
             // reset (not just removing this one handler, no such API
             // exists) so this fake filter can never intercept a later
             // Integration test's own getPwgThemes()/EventDispatcher call.
-            EventDispatcher::get()->reset();
+            EventDispatcherTestFactory::get()->reset();
         }
     }
 }

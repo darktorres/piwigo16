@@ -24,6 +24,7 @@ use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
@@ -127,12 +128,12 @@ function mail_service_capture_send(MailService $service, string|array $to, array
 
         return new BeforeSendMail(false, $event->to, $event->args, $event->email);
     };
-    EventDispatcher::get()->addTypedHandler(BeforeSendMail::class, $eventHandler);
+    EventDispatcherTestFactory::get()->addTypedHandler(BeforeSendMail::class, $eventHandler);
 
     try {
         $return = $service->mail($to, $args, $tpl);
     } finally {
-        EventDispatcher::get()->removeEventHandler(BeforeSendMail::class, $eventHandler);
+        EventDispatcherTestFactory::get()->removeEventHandler(BeforeSendMail::class, $eventHandler);
     }
 
     if (! is_array($capturedArgs) || ! $capturedEmail instanceof Email) {
@@ -721,13 +722,13 @@ test('generateResetPasswordMail throws when a render_lost_password_mail_content 
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = mail_service_test_build();
     $handler = static fn (): bool => false;
-    EventDispatcher::get()->addEventHandler(RenderLostPasswordMailContent::class, $handler);
+    EventDispatcherTestFactory::get()->addEventHandler(RenderLostPasswordMailContent::class, $handler);
 
     try {
         expect(fn () => $service->generateResetPasswordMail('jane', 'https://example.test/x', 'My Gallery', '2 hours'))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
     }
 });
 
@@ -735,12 +736,12 @@ test('generateResetPasswordMail uses the render_lost_password_mail_content handl
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = mail_service_test_build();
     $handler = static fn (RenderLostPasswordMailContent $event): RenderLostPasswordMailContent => new RenderLostPasswordMailContent('REPLACED CONTENT');
-    EventDispatcher::get()->addTypedHandler(RenderLostPasswordMailContent::class, $handler);
+    EventDispatcherTestFactory::get()->addTypedHandler(RenderLostPasswordMailContent::class, $handler);
 
     try {
         $mail = $service->generateResetPasswordMail('jane', 'https://example.test/x', 'My Gallery', '2 hours');
     } finally {
-        EventDispatcher::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
     }
 
     expect($mail['content'])->toBe('REPLACED CONTENT');
@@ -766,12 +767,12 @@ test('generateSetPasswordMail uses the render_lost_password_mail_content handler
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = mail_service_test_build();
     $handler = static fn (RenderLostPasswordMailContent $event): RenderLostPasswordMailContent => new RenderLostPasswordMailContent('REPLACED CONTENT');
-    EventDispatcher::get()->addTypedHandler(RenderLostPasswordMailContent::class, $handler);
+    EventDispatcherTestFactory::get()->addTypedHandler(RenderLostPasswordMailContent::class, $handler);
 
     try {
         $mail = $service->generateSetPasswordMail('jane', 'https://example.test/x', 'My Gallery', '48 hours');
     } finally {
-        EventDispatcher::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
     }
 
     expect($mail['content'])->toBe('REPLACED CONTENT');
@@ -1254,11 +1255,11 @@ test('mail fires the before_parse_mail_template event with the real cache key an
         $capturedCacheKey = $event->cacheKey;
         $capturedContentType = $event->contentType;
     };
-    EventDispatcher::get()->addTypedHandler(BeforeParseMailTemplate::class, $handler);
+    EventDispatcherTestFactory::get()->addTypedHandler(BeforeParseMailTemplate::class, $handler);
     try {
         mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
     } finally {
-        EventDispatcher::get()->removeEventHandler(BeforeParseMailTemplate::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(BeforeParseMailTemplate::class, $handler);
     }
 
     expect($capturedContentType)->toBe('text/plain');
@@ -1537,11 +1538,11 @@ test('switchLangTo fires the loading_lang event while reloading a language for t
     $handler = function () use (&$fired): void {
         $fired = true;
     };
-    EventDispatcher::get()->addTypedHandler(LoadingLang::class, $handler);
+    EventDispatcherTestFactory::get()->addTypedHandler(LoadingLang::class, $handler);
     try {
         $service->switchLangTo('fr_FR');
     } finally {
-        EventDispatcher::get()->removeEventHandler(LoadingLang::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(LoadingLang::class, $handler);
     }
 
     expect($fired)->toBeTrue();
@@ -1577,11 +1578,11 @@ test('switchLangTo reuses its own cache for a language already switched to once,
     $handler = function () use (&$loadingLangCalls): void {
         $loadingLangCalls++;
     };
-    EventDispatcher::get()->addTypedHandler(LoadingLang::class, $handler);
+    EventDispatcherTestFactory::get()->addTypedHandler(LoadingLang::class, $handler);
     try {
         $service->switchLangTo('fr_FR');
     } finally {
-        EventDispatcher::get()->removeEventHandler(LoadingLang::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(LoadingLang::class, $handler);
     }
 
     expect($loadingLangCalls)->toBe(0);

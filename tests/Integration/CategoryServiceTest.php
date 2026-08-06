@@ -43,6 +43,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\PluginConfig\EventDispatcher;
+    use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
     use Piwigo\Users\CurrentUser;
@@ -245,7 +246,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             $this->repo,
             new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)),
             CurrentConfig::current(),
-            EventDispatcher::get(),
+            EventDispatcherTestFactory::get(),
             TranslatorTestFactory::get(),
             new AccessLevelChecker(CurrentUser::current(), $currentConfig)
         );
@@ -555,7 +556,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // handler is untyped from PHPStan's perspective, and this test
         // exercises dispatchChange()'s own runtime enforcement, not a
         // static one.
-        EventDispatcher::get()->addEventHandler(GetCategoryPreferredImageOrders::class, static fn (): string => 'not-an-array');
+        EventDispatcherTestFactory::get()->addEventHandler(GetCategoryPreferredImageOrders::class, static fn (): string => 'not-an-array');
 
         $this->expectException(Error::class);
         $this->expectExceptionMessage('must return an instance of');
@@ -563,13 +564,13 @@ final class CategoryServiceTest extends IntegrationTestCase
         try {
             $this->service->getPreferredImageOrders();
         } finally {
-            EventDispatcher::get()->reset();
+            EventDispatcherTestFactory::get()->reset();
         }
     }
 
     public function test_get_preferred_image_orders_skips_a_malformed_entry_from_the_event_handler(): void
     {
-        EventDispatcher::get()->addTypedHandler(
+        EventDispatcherTestFactory::get()->addTypedHandler(
             GetCategoryPreferredImageOrders::class,
             // Missing the 3rd (visibility) element -- malformed, must be
             // skipped rather than crash on an undefined offset.
@@ -582,7 +583,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         try {
             $orders = $this->service->getPreferredImageOrders();
         } finally {
-            EventDispatcher::get()->reset();
+            EventDispatcherTestFactory::get()->reset();
         }
 
         self::assertSame([['Real Order', 'hit DESC', true]], $orders);
@@ -792,7 +793,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // image.
         $this->conn->executeStatement("INSERT INTO " . Tables::imageCategory() . " (image_id, category_id) VALUES (1, {$tempId})");
 
-        $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcher::get(), 'delete_orphans');
+        $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcherTestFactory::get(), 'delete_orphans');
 
         self::assertNull($this->repo->findById($tempId));
         $stillLinked = $this->conn->createQueryBuilder()
@@ -837,15 +838,15 @@ final class CategoryServiceTest extends IntegrationTestCase
         $handler = static function (DeleteSite $e) use ($siteRepo): void {
             $siteRepo->delete($e->siteId);
         };
-        EventDispatcher::get()->addTypedHandler(DeleteSite::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(DeleteSite::class, $handler);
 
         try {
-            $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcher::get());
+            $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcherTestFactory::get());
 
             self::assertNull($this->repo->findById((int) $categoryId));
             self::assertNull($siteRepo->findGalleriesUrlById($siteId));
         } finally {
-            EventDispatcher::get()->removeEventHandler(DeleteSite::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(DeleteSite::class, $handler);
         }
     }
 

@@ -62,9 +62,9 @@ test('reset clears the published instance so get throws again', function (): voi
 })->throws(LogicException::class);
 
 test('CurrentConfigServiceTestFactory::get falls back to a memoized instance when Kernel is not booted', function (): void {
-    // Memoized (not fresh-per-call), same reasoning as EventDispatcher::get()/
-    // CurrentTemplate::current() (and formerly Translator::get(), closed
-    // in sub-phase 12F-6): a caller that
+    // Memoized (not fresh-per-call), same reasoning as
+    // CurrentTemplate::current() (and formerly EventDispatcher::get()/
+    // Translator::get(), closed in sub-phases 12F-6/12F-9): a caller that
     // writes via current() in one call and reads via current() in a later
     // call must see the same instance, or the write would be lost.
     $configService = current_config_service_test_config_service();

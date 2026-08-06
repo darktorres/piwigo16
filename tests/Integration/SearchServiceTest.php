@@ -43,6 +43,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Permission\PermissionService;
     use Piwigo\Permission\SqlCondition;
     use Piwigo\PluginConfig\EventDispatcher;
+    use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Search\Event\QsearchGetImagesSqlScopes;
     use Piwigo\Search\Event\QsearchResults;
     use Piwigo\Search\QExpression;
@@ -331,8 +332,8 @@ final class SearchServiceTest extends IntegrationTestCase
             ),
             $this->mailService(),
             HtmlServiceTestFactory::build(),
-            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()),
-            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcher::get(),
+            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcherTestFactory::get(),
             CurrentUser::current(),
             LangTestFactory::get(),
             CurrentConfig::current(),
@@ -400,8 +401,8 @@ final class SearchServiceTest extends IntegrationTestCase
             ),
             $this->mailService(),
             $htmlRenderer,
-            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()),
-            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcher::get(),
+            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcherTestFactory::get(),
             CurrentUser::current(),
             LangTestFactory::get(),
             CurrentConfig::current(),
@@ -1228,7 +1229,7 @@ final class SearchServiceTest extends IntegrationTestCase
             $event->token,
             $event->expr
         );
-        EventDispatcher::get()->addTypedHandler(QsearchGetImagesSqlScopes::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(QsearchGetImagesSqlScopes::class, $handler);
 
         try {
             $scopes = [new QSearchScope('custom_field', [], true)];
@@ -1239,7 +1240,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
             self::assertSame([1], $qsr->images_iids[0]);
         } finally {
-            EventDispatcher::get()->removeEventHandler(QsearchGetImagesSqlScopes::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(QsearchGetImagesSqlScopes::class, $handler);
         }
     }
 
@@ -1253,7 +1254,7 @@ final class SearchServiceTest extends IntegrationTestCase
             $event->token,
             $event->expr
         );
-        EventDispatcher::get()->addTypedHandler(QsearchGetImagesSqlScopes::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(QsearchGetImagesSqlScopes::class, $handler);
 
         try {
             $scopes = [new QSearchScope('custom_field', [], true)];
@@ -1266,7 +1267,7 @@ final class SearchServiceTest extends IntegrationTestCase
             sort($imageIds);
             self::assertSame([1, 2], $imageIds);
         } finally {
-            EventDispatcher::get()->removeEventHandler(QsearchGetImagesSqlScopes::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(QsearchGetImagesSqlScopes::class, $handler);
         }
     }
 
@@ -1409,7 +1410,7 @@ final class SearchServiceTest extends IntegrationTestCase
         // exercises dispatchChange()'s own runtime enforcement, not a
         // static one.
         $handler = static fn (): mixed => null;
-        EventDispatcher::get()->addEventHandler(QsearchGetScopes::class, $handler);
+        EventDispatcherTestFactory::get()->addEventHandler(QsearchGetScopes::class, $handler);
 
         $this->expectException(Error::class);
         $this->expectExceptionMessage('must return an instance of');
@@ -1417,7 +1418,7 @@ final class SearchServiceTest extends IntegrationTestCase
         try {
             $this->service->getQuickSearchResultsNoCache('family', []);
         } finally {
-            EventDispatcher::get()->removeEventHandler(QsearchGetScopes::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(QsearchGetScopes::class, $handler);
         }
     }
 
@@ -1430,12 +1431,12 @@ final class SearchServiceTest extends IntegrationTestCase
 
             return new QsearchResults($searchResults, $event->expression, $event->qsr);
         };
-        EventDispatcher::get()->addTypedHandler(QsearchResults::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(QsearchResults::class, $handler);
 
         try {
             $results = $this->service->getQuickSearchResultsNoCache('family', []);
         } finally {
-            EventDispatcher::get()->removeEventHandler(QsearchResults::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(QsearchResults::class, $handler);
         }
 
         // The hook only corrupts $searchResults['items']/['qs'] -- both
@@ -1457,12 +1458,12 @@ final class SearchServiceTest extends IntegrationTestCase
 
             return new QsearchResults($searchResults, $event->expression, $event->qsr);
         };
-        EventDispatcher::get()->addTypedHandler(QsearchResults::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(QsearchResults::class, $handler);
 
         try {
             $results = $this->service->getQuickSearchResultsNoCache('family', []);
         } finally {
-            EventDispatcher::get()->removeEventHandler(QsearchResults::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(QsearchResults::class, $handler);
         }
 
         $items = $results['items'];

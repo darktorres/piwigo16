@@ -9,6 +9,7 @@ use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Common\ValueObject\Email;
@@ -51,7 +52,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcher::get(), $currentConfig);
+        $this->repo = new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), $currentConfig);
     }
 
     public function test_find_id_by_username_returns_a_fixture_user(): void

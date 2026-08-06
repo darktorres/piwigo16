@@ -366,7 +366,7 @@ it('admin popuphelp fatal-errors when a real get_popup_help_content hook returns
     Description: Test-only fixture plugin (tests/Browser/AdminUncoveredPagesSmokeTest.php).
     */
 
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(
+    \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addEventHandler(
         \Piwigo\Event\Admin\GetPopupHelpContent::class,
         static fn (): mixed => null
     );

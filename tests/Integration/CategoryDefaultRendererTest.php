@@ -34,6 +34,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
@@ -126,7 +127,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
         }
 
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcher::get(), ImageStdParamsTestFactory::get(), CurrentUser::current(), CurrentConfig::current(), LangTestFactory::get(), $processCache, PageStateTestFactory::get());
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcherTestFactory::get(), ImageStdParamsTestFactory::get(), CurrentUser::current(), CurrentConfig::current(), LangTestFactory::get(), $processCache, PageStateTestFactory::get());
     }
 
     #[Override]
@@ -286,7 +287,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // handler is untyped from PHPStan's perspective, and this test
         // exercises dispatchChange()'s own runtime enforcement, not a
         // static one.
-        EventDispatcher::get()->addEventHandler(LocIndexThumbnailsSelection::class, static fn (): int => 42);
+        EventDispatcherTestFactory::get()->addEventHandler(LocIndexThumbnailsSelection::class, static fn (): int => 42);
 
         $this->expectException(Error::class);
         $this->expectExceptionMessage('must return an instance of');
@@ -295,7 +296,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
             $this->seedUser(showNbHits: false, showNbComments: false);
             $this->renderer->render([3, 1, 2], 0, 3, '');
         } finally {
-            EventDispatcher::get()->reset();
+            EventDispatcherTestFactory::get()->reset();
         }
     }
 

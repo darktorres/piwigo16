@@ -1066,7 +1066,7 @@ it('fatal-errors instead of silently swallowing a perform_batch_manager_prefilte
         Description: Test-only fixture plugin (tests/Browser/BatchManagerSubControllerTest.php).
         */
 
-        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addTypedHandler(
+        \\Piwigo\\Core\\Kernel::container()->get(\\Piwigo\\PluginConfig\\EventDispatcher::class)->addTypedHandler(
             \\Piwigo\\Event\\Admin\\PerformBatchManagerPrefilters::class,
             static function (\\Piwigo\\Event\\Admin\\PerformBatchManagerPrefilters \$event): mixed {
                 if (\$event->prefilter === '{$marker}') {
@@ -1135,7 +1135,7 @@ it('fatal-errors instead of silently swallowing a batch_manager_perform_filters 
         Description: Test-only fixture plugin (tests/Browser/BatchManagerSubControllerTest.php).
         */
 
-        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addTypedHandler(
+        \\Piwigo\\Core\\Kernel::container()->get(\\Piwigo\\PluginConfig\\EventDispatcher::class)->addTypedHandler(
             \\Piwigo\\Event\\Admin\\BatchManagerPerformFilters::class,
             static function (\\Piwigo\\Event\\Admin\\BatchManagerPerformFilters \$event): mixed {
                 if ((\$event->bulkManagerFilter['prefilter'] ?? null) === '{$marker}') {

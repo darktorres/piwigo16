@@ -17,6 +17,7 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -135,7 +136,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1';
 
-        $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
+        $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
             ->parse();
 
         self::assertSame('../../', $context->rootPath);
@@ -147,7 +148,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1/start-20';
 
-        $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
+        $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
             ->parse();
 
         self::assertSame('../../../', $context->rootPath);
@@ -157,7 +158,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1';
 
-        $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
+        $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
             ->parse();
 
         self::assertNull($context->imageId);
@@ -169,7 +170,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/42';
 
-        $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
+        $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
             ->parse();
 
         self::assertSame('42', $context->imageId);
@@ -182,7 +183,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/42-my-photo';
 
-        $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
+        $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
             ->parse();
 
         self::assertSame('42', $context->imageId);
@@ -197,7 +198,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         // happened rather than this being a hardcoded default.
         $_SERVER['PATH_INFO'] = '/most_visited';
 
-        $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
+        $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
             ->parse();
 
         self::assertSame('most_visited', $context->parsed['section'] ?? null);
@@ -214,7 +215,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $body = null;
         $status = null;
         try {
-            new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
+            new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
                 ->parse();
         } catch (ResponseReadyException $e) {
             $response = $e->response();
@@ -244,7 +245,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $body = null;
         $status = null;
         try {
-            new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
+            new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfig::current())
                 ->parse();
         } catch (ResponseReadyException $e) {
             $response = $e->response();

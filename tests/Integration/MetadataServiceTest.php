@@ -7,9 +7,9 @@ declare(strict_types=1);
 // own setUp() already seeds it against this repo's real root, matching
 // this file's own '_data/...'-relative fixture paths below.
 //
-// trigger_change() calls go directly through the real
-// Piwigo\PluginConfig\EventDispatcher::get() singleton now, a pure
-// passthrough with no handlers registered, so no local stub is needed.
+// trigger_change() calls go directly through the service's own
+// constructor-injected $this->eventDispatcher now, a pure passthrough
+// with no handlers registered, so no local stub is needed.
 namespace Piwigo\Tests\Integration {
 
     use Piwigo\Core\CurrentPaths;
@@ -20,6 +20,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\PluginConfig\EventDispatcher;
+    use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Tests\Support\SessionServiceTestFactory;
     use Piwigo\Core\FilterState;
@@ -72,7 +73,7 @@ final class MetadataServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $currentLogger = new CurrentLogger();
         $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-        $this->service = new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), $currentLogger, EventDispatcher::get(), CurrentConfig::current(), CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), CurrentPaths::get());
+        $this->service = new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), $currentLogger, EventDispatcherTestFactory::get(), CurrentConfig::current(), CurrentUser::current(), SessionServiceTestFactory::get(), new FilterState(), CurrentPaths::get());
 
         CurrentConfig::current()->setUseIptc(false);
         CurrentConfig::current()->setUseExif(true);
@@ -427,14 +428,14 @@ final class MetadataServiceTest extends IntegrationTestCase
     public function test_clean_iptc_value_lets_a_plugin_handler_override_the_value(): void
     {
         $handler = static fn (CleanIptcValue $event): CleanIptcValue => new CleanIptcValue('plugin-override');
-        EventDispatcher::get()->addTypedHandler(CleanIptcValue::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(CleanIptcValue::class, $handler);
 
         try {
             $result = $this->service->cleanIptcValue("raw \x92 value");
 
             self::assertSame('plugin-override', $result);
         } finally {
-            EventDispatcher::get()->removeEventHandler(CleanIptcValue::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(CleanIptcValue::class, $handler);
         }
     }
 
@@ -495,7 +496,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getExifData($path, []);
@@ -503,7 +504,7 @@ final class MetadataServiceTest extends IntegrationTestCase
             self::assertEqualsWithDelta(41.9027, $result['latitude'], 0.001);
             self::assertEqualsWithDelta(12.5, $result['longitude'], 0.001);
         } finally {
-            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -525,7 +526,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getExifData($path, []);
@@ -533,7 +534,7 @@ final class MetadataServiceTest extends IntegrationTestCase
             self::assertArrayNotHasKey('latitude', $result);
             self::assertArrayNotHasKey('longitude', $result);
         } finally {
-            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -548,14 +549,14 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getExifData($path, ['multi' => 'MultiField']);
 
             self::assertSame(['multi' => ['one', 'two']], $result);
         } finally {
-            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -570,14 +571,14 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getExifData($path, ['author' => 'Artist']);
 
             self::assertSame(['author' => 'alert(1)Jane'], $result);
         } finally {
-            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -602,7 +603,7 @@ final class MetadataServiceTest extends IntegrationTestCase
         // this shape now means not returning a FormatExifData instance
         // at all, which fails loud instead of falling back to [].
         $handler = static fn (): string => 'plugin-supplied-non-array-exif';
-        EventDispatcher::get()->addEventHandler(FormatExifData::class, $handler);
+        EventDispatcherTestFactory::get()->addEventHandler(FormatExifData::class, $handler);
 
         $this->expectException(Error::class);
         $this->expectExceptionMessage('must return an instance of');
@@ -612,7 +613,7 @@ final class MetadataServiceTest extends IntegrationTestCase
             $this->service->getExifData($path, ['author' => 'Artist']);
         } finally {
             restore_error_handler();
-            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -689,14 +690,14 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncExifData($path);
 
             self::assertSame('2024-03-15 10:20:30', $result['date_creation']);
         } finally {
-            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -714,14 +715,14 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncExifData($path);
 
             self::assertSame('2024-03-15', $result['date_creation']);
         } finally {
-            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -742,14 +743,14 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncExifData($path);
 
             self::assertArrayNotHasKey('date_creation', $result);
         } finally {
-            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -765,14 +766,14 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncExifData($path);
 
             self::assertArrayNotHasKey('date_creation', $result);
         } finally {
-            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -788,14 +789,14 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return new FormatExifData($exif, $event->filename, $event->map);
         };
-        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncExifData($path);
 
             self::assertSame('nature,travel,family', $result['keywords']);
         } finally {
-            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -840,7 +841,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
             return $event;
         };
-        EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
+        EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncMetadata([
@@ -848,7 +849,7 @@ final class MetadataServiceTest extends IntegrationTestCase
                 'representative_ext' => 'jpg',
             ]);
         } finally {
-            EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(FormatExifData::class, $handler);
             @unlink($representativeDir . '/tiff-original.jpg');
             @rmdir($representativeDir);
         }

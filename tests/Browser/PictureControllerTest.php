@@ -1587,7 +1587,7 @@ it('logs a PHP warning and still renders when a plugin-registered user_comment_c
         Description: Test-only fixture plugin (tests/Browser/PictureControllerTest.php).
         */
 
-        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addTypedHandler(
+        \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
             \\Piwigo\\Event\\User\\UserCommentCheck::class,
             static function (\\Piwigo\\Event\\User\\UserCommentCheck \$event): \\Piwigo\\Event\\User\\UserCommentCheck {
                 \$content = is_string(\$event->comm['content'] ?? null) ? \$event->comm['content'] : '';
@@ -2066,7 +2066,7 @@ it('short-circuits the default element-content renderer when an earlier render_e
         Description: Test-only fixture plugin (tests/Browser/PictureControllerTest.php).
         */
 
-        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addTypedHandler(
+        \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
             \\Piwigo\\Event\\Picture\\RenderElementContent::class,
             static function (\\Piwigo\\Event\\Picture\\RenderElementContent \$event): \\Piwigo\\Event\\Picture\\RenderElementContent {
                 \$id = \$event->currentPicture['id'] ?? null;

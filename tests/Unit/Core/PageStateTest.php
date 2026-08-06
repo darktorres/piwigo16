@@ -105,9 +105,9 @@ test('setUpdatedVersion/markAuthKeyInvalid set their respective fields', functio
 });
 
 test('PageStateTestFactory::get falls back to a memoized instance when Kernel is not booted', function (): void {
-    // Memoized (not fresh-per-call), same reasoning as EventDispatcher::get()
-    // (and formerly ImageStdParams::current()/Translator::get(), closed in
-    // sub-phases 12F-4/12F-6): a caller that
+    // Memoized (not fresh-per-call), same reasoning as CurrentUser::current()
+    // (and formerly EventDispatcher::get()/ImageStdParams::current()/
+    // Translator::get(), closed in sub-phases 12F-4/12F-6/12F-9): a caller that
     // writes via current() in one call and reads via current() in a
     // later call must see the same instance, or the write would be lost.
     // reset() first: the memoized fallback is one real object shared by

@@ -555,7 +555,7 @@ it('fatal-errors instead of silently falling back when a picture_modify_before_u
         Description: Test-only fixture plugin (tests/Browser/PictureModifyPageRendererTest.php).
         */
 
-        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addTypedHandler(
+        \\Piwigo\\Core\\Kernel::container()->get(\\Piwigo\\PluginConfig\\EventDispatcher::class)->addTypedHandler(
             \\Piwigo\\Event\\Picture\\PictureModifyBeforeUpdate::class,
             static function (\\Piwigo\\Event\\Picture\\PictureModifyBeforeUpdate \$event): mixed {
                 if (is_string(\$event->data['comment'] ?? null) && str_contains(\$event->data['comment'], '{$marker}')) {

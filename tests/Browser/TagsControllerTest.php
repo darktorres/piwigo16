@@ -105,7 +105,7 @@ it('fatal-errors instead of silently swallowing a real render_tag_name hook that
     Description: Test-only fixture plugin (tests/Browser/TagsControllerTest.php).
     */
 
-    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+    \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
         \Piwigo\Event\Tag\RenderTagName::class,
         static fn (mixed $event): mixed => null
     );

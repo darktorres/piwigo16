@@ -22,6 +22,7 @@ use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
@@ -91,7 +92,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
     {
         CurrentUser::current()->reset();
         CurrentTemplate::current()->reset();
-        EventDispatcher::get()->reset();
+        EventDispatcherTestFactory::get()->reset();
         PageStateTestFactory::get()->reset();
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -222,7 +223,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
 
         RequestBootstrap::finalize();
 
-        $result = EventDispatcher::get()->dispatchChange(new GetElementUrl(
+        $result = EventDispatcherTestFactory::get()->dispatchChange(new GetElementUrl(
             'http://original.example/x.jpg',
             ['id' => 42, 'path' => 'x.jpg']
         ));

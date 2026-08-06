@@ -41,6 +41,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Search\QSingleToken;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
@@ -90,7 +91,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
 
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
-        $userService = new UserService(LangTestFactory::get(), new UserRepository($this->em, EventDispatcher::get(), CurrentConfig::current()), $this->em->getRepository(GroupEntity::class), $mailer, new ActivityService($this->em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcher::get(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPaths::get());
+        $userService = new UserService(LangTestFactory::get(), new UserRepository($this->em, EventDispatcherTestFactory::get(), CurrentConfig::current()), $this->em->getRepository(GroupEntity::class), $mailer, new ActivityService($this->em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcherTestFactory::get(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPaths::get());
 
         $filterState = Kernel::container()->get(FilterState::class);
         if (! $filterState instanceof FilterState) {
@@ -113,9 +114,9 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             ),
             $mailer,
             HtmlServiceTestFactory::build(),
-            new RedirectService(LangTestFactory::get(), $userService, EventDispatcher::get(), PageStateTestFactory::get()),
+            new RedirectService(LangTestFactory::get(), $userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
             new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()),
-            EventDispatcher::get(),
+            EventDispatcherTestFactory::get(),
             CurrentUser::current(),
             LangTestFactory::get(),
             CurrentConfig::current(),

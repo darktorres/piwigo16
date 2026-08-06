@@ -8,6 +8,7 @@ use Piwigo\Image\ImageService;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Rate\RateService;
@@ -165,7 +166,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
         return new UserService(
             LangTestFactory::get(),
-            new UserRepository(EntityManagerFactory::build($conn), EventDispatcher::get(), CurrentConfig::current()),
+            new UserRepository(EntityManagerFactory::build($conn), EventDispatcherTestFactory::get(), CurrentConfig::current()),
             EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
             $mailer,
             $this->maintenanceActionDispatcherTestActivityService(),

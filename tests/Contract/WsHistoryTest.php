@@ -966,7 +966,7 @@ final class WsHistoryTest extends ContractTestCase
     }
 
     /**
-     * historySearch()'s `EventDispatcher::get()->dispatchChange(new
+     * historySearch()'s `EventDispatcherTestFactory::get()->dispatchChange(new
      * GetHistory([], ...))` fails loud now (Track B typed-event-object gap
      * closure, WS batch): a GetHistory handler that returns something other
      * than a GetHistory instance makes dispatchChange() throw \Error,
@@ -1035,7 +1035,7 @@ final class WsHistoryTest extends ContractTestCase
                 Description: Test-only fixture plugin (tests/Contract/WsHistoryTest.php).
                 */
 
-                \\Piwigo\\PluginConfig\\EventDispatcher::get()->addEventHandler(
+                \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addEventHandler(
                     \\Piwigo\\Event\\Ws\\GetHistory::class,
                     static function (\\Piwigo\\Event\\Ws\\GetHistory \$event): mixed {
                         \$fields = \$event->search['fields'] ?? null;

@@ -37,6 +37,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\PluginConfig\EventDispatcher;
+    use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Tag\TagService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Users\User;
@@ -83,7 +84,7 @@ namespace Piwigo\Tests\Integration {
             }
 
             $this->conn = DbConnection::build();
-            $this->service = new TagService(LangTestFactory::get(), EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), EventDispatcher::get(), CurrentUser::current(), CurrentConfig::current(), $currentLogger, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfig::current()));
+            $this->service = new TagService(LangTestFactory::get(), EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentUser::current(), CurrentConfig::current(), $currentLogger, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfig::current()));
         }
 
         #[Override]
@@ -510,7 +511,7 @@ namespace Piwigo\Tests\Integration {
             // exercises dispatchChange()'s own runtime enforcement, not a
             // static one.
             $name = 'weird url name ' . uniqid();
-            EventDispatcher::get()->addEventHandler(RenderTagUrl::class, static fn (): int => 42);
+            EventDispatcherTestFactory::get()->addEventHandler(RenderTagUrl::class, static fn (): int => 42);
 
             $this->expectException(Error::class);
             $this->expectExceptionMessage('must return an instance of');
@@ -518,7 +519,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 $this->service->tagIdFromTagName($name);
             } finally {
-                EventDispatcher::get()->reset();
+                EventDispatcherTestFactory::get()->reset();
                 $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$name]);
             }
         }
@@ -537,7 +538,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_tag_id_from_tag_name_matches_via_a_plugin_supplied_like_pattern(): void
         {
-            EventDispatcher::get()->addTypedHandler(
+            EventDispatcherTestFactory::get()->addTypedHandler(
                 GetTagNameLikeWhere::class,
                 static fn (GetTagNameLikeWhere $event): GetTagNameLikeWhere => new GetTagNameLikeWhere(['nature'], $event->tagName)
             );
@@ -545,7 +546,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 self::assertEquals(TagId::from(1), $this->service->tagIdFromTagName('totally-unrelated-name-' . uniqid()));
             } finally {
-                EventDispatcher::get()->reset();
+                EventDispatcherTestFactory::get()->reset();
             }
         }
 
@@ -559,7 +560,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_tag_id_from_tag_name_treats_a_plugin_supplied_sql_injection_attempt_as_a_literal_value(): void
         {
-            EventDispatcher::get()->addTypedHandler(
+            EventDispatcherTestFactory::get()->addTypedHandler(
                 GetTagNameLikeWhere::class,
                 static fn (GetTagNameLikeWhere $event): GetTagNameLikeWhere => new GetTagNameLikeWhere(["' OR '1'='1"], $event->tagName)
             );
@@ -581,7 +582,7 @@ namespace Piwigo\Tests\Integration {
                         ->fetchOne()
                 );
             } finally {
-                EventDispatcher::get()->reset();
+                EventDispatcherTestFactory::get()->reset();
                 $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$tagName]);
             }
         }
@@ -643,7 +644,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_get_tag_list_by_ids_includes_surviving_alt_names_when_not_restricted_to_user_language(): void
         {
-            EventDispatcher::get()->addTypedHandler(
+            EventDispatcherTestFactory::get()->addTypedHandler(
                 GetTagAltNames::class,
                 static fn (GetTagAltNames $event): GetTagAltNames => new GetTagAltNames($event->rawName === 'nature' ? ['nature', 'Nature (alt)'] : [], $event->rawName)
             );
@@ -659,7 +660,7 @@ namespace Piwigo\Tests\Integration {
                     self::assertSame('~~1~~', $row['id']);
                 }
             } finally {
-                EventDispatcher::get()->reset();
+                EventDispatcherTestFactory::get()->reset();
             }
         }
 

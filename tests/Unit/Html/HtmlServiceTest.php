@@ -37,6 +37,7 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\CurrentUser;
@@ -521,13 +522,13 @@ test('renderElementName throws when a render_element_name handler returns someth
     // code, so this test registers the same way to genuinely exercise
     // dispatchChange()'s own runtime enforcement, not a static one.
     $handler = static fn (): int => 42;
-    EventDispatcher::get()->addEventHandler(RenderElementName::class, $handler);
+    EventDispatcherTestFactory::get()->addEventHandler(RenderElementName::class, $handler);
 
     try {
         expect(static fn () => $service->renderElementName(['name' => 'My Photo Title']))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler(RenderElementName::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(RenderElementName::class, $handler);
     }
 });
 
@@ -563,12 +564,12 @@ test('renderElementDescription never triggers render_element_description for a g
     // difference.
     $service = HtmlServiceTestFactory::build();
     $handler = static fn (RenderElementDescription $e): RenderElementDescription => new RenderElementDescription('MODIFIED', $e->action);
-    EventDispatcher::get()->addTypedHandler(RenderElementDescription::class, $handler);
+    EventDispatcherTestFactory::get()->addTypedHandler(RenderElementDescription::class, $handler);
 
     try {
         expect($service->renderElementDescription(['comment' => '']))->toBe('');
     } finally {
-        EventDispatcher::get()->removeEventHandler(RenderElementDescription::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(RenderElementDescription::class, $handler);
     }
 });
 
@@ -581,13 +582,13 @@ test('renderElementDescription throws when a render_element_description handler 
     // See RenderElementName's own sibling test above for why this uses
     // addEventHandler(), not addTypedHandler().
     $handler = static fn (): int => 42;
-    EventDispatcher::get()->addEventHandler(RenderElementDescription::class, $handler);
+    EventDispatcherTestFactory::get()->addEventHandler(RenderElementDescription::class, $handler);
 
     try {
         expect(static fn () => $service->renderElementDescription(['comment' => 'A lovely shot.']))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler(RenderElementDescription::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(RenderElementDescription::class, $handler);
     }
 });
 
@@ -862,13 +863,13 @@ test('getThumbnailTitle throws when a get_thumbnail_title handler returns someth
     // See RenderElementName's own sibling test above for why this uses
     // addEventHandler(), not addTypedHandler().
     $handler = static fn (): int => 42;
-    EventDispatcher::get()->addEventHandler(GetThumbnailTitle::class, $handler);
+    EventDispatcherTestFactory::get()->addEventHandler(GetThumbnailTitle::class, $handler);
 
     try {
         expect(static fn () => $service->getThumbnailTitle([], 'My Photo'))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler(GetThumbnailTitle::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(GetThumbnailTitle::class, $handler);
     }
 });
 
@@ -877,13 +878,13 @@ test('getCatDisplayName throws when a render_category_name handler returns somet
     // addEventHandler(), not addTypedHandler().
     $service = HtmlServiceTestFactory::build();
     $handler = static fn (): int => 42;
-    EventDispatcher::get()->addEventHandler(RenderCategoryName::class, $handler);
+    EventDispatcherTestFactory::get()->addEventHandler(RenderCategoryName::class, $handler);
 
     try {
         expect(static fn () => $service->getCatDisplayName([['id' => 1, 'name' => 'Nature']], null))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler(RenderCategoryName::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(RenderCategoryName::class, $handler);
     }
 });
 
@@ -982,13 +983,13 @@ test('getCatDisplayNameCache throws when a render_category_name handler returns 
     // addEventHandler(), not addTypedHandler().
     $service = HtmlServiceTestFactory::build();
     $handler = static fn (): int => 7;
-    EventDispatcher::get()->addEventHandler(RenderCategoryName::class, $handler);
+    EventDispatcherTestFactory::get()->addEventHandler(RenderCategoryName::class, $handler);
 
     try {
         expect(static fn () => $service->getCatDisplayNameCache('5', null))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler(RenderCategoryName::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(RenderCategoryName::class, $handler);
     }
 });
 
@@ -1182,7 +1183,7 @@ test('setStatusHeader resolves the exact well-known reason phrase for every know
     $handler = static function (SetStatusHeader $event) use (&$captured): void {
         $captured[$event->code] = $event->text;
     };
-    EventDispatcher::get()->addTypedHandler(SetStatusHeader::class, $handler);
+    EventDispatcherTestFactory::get()->addTypedHandler(SetStatusHeader::class, $handler);
     $service = HtmlServiceTestFactory::build();
 
     try {
@@ -1205,7 +1206,7 @@ test('setStatusHeader resolves the exact well-known reason phrase for every know
 
         expect($captured)->toBe($expected);
     } finally {
-        EventDispatcher::get()->removeEventHandler(SetStatusHeader::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
 });
 
@@ -1218,7 +1219,7 @@ test('setStatusHeader keeps the given text unchanged when it is genuinely non-em
     $handler = static function (SetStatusHeader $event) use (&$captured): void {
         $captured = $event->text;
     };
-    EventDispatcher::get()->addTypedHandler(SetStatusHeader::class, $handler);
+    EventDispatcherTestFactory::get()->addTypedHandler(SetStatusHeader::class, $handler);
     $service = HtmlServiceTestFactory::build();
 
     try {
@@ -1226,7 +1227,7 @@ test('setStatusHeader keeps the given text unchanged when it is genuinely non-em
 
         expect($captured)->toBe('My Custom Reason');
     } finally {
-        EventDispatcher::get()->removeEventHandler(SetStatusHeader::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
 });
 

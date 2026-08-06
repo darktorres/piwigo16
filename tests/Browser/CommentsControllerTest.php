@@ -592,7 +592,7 @@ it('trigger_errors on an unrecognized comment_action from a real user_comment_ch
     Description: Test-only fixture plugin (tests/Browser/CommentsControllerTest.php).
     */
 
-    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+    \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
         \Piwigo\Event\User\UserCommentCheck::class,
         static fn (\Piwigo\Event\User\UserCommentCheck $event): \Piwigo\Event\User\UserCommentCheck => new \Piwigo\Event\User\UserCommentCheck('ct_unknown_action', $event->comm)
     );

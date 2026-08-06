@@ -8,6 +8,7 @@ use Override;
 use LogicException;
 use RuntimeException;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Install\InstallService;
 use Piwigo\Config\ConfigLoader;
@@ -258,7 +259,8 @@ final class InstallServiceTest extends IntegrationTestCase
     // REQUIRED_MYSQL_VERSION, '<')`) is left uncovered: REQUIRED_MYSQL_VERSION
     // is '5.0.0' (a `public const string`, immutable -- no seam to lower
     // it from a test), and installDbConnect() builds its own Connection
-    // internally via DbConnection::build()/DbCredentialsTestFactory::get() with no
+    // internally via DbConnection::build() (which resolves DbCredentials
+    // via its own private dbCredentials() helper) with no
     // parameter to substitute a fake one reporting an old `SELECT
     // VERSION()` result. Reaching this branch for real would need an
     // actual MySQL/MariaDB server built before 5.0 (released 2005)
@@ -329,7 +331,7 @@ final class InstallServiceTest extends IntegrationTestCase
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
 
-            InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcher::get());
+            InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcherTestFactory::get());
 
             self::assertFalse($this->conn->fetchAssociative('SELECT id FROM ' . Tables::themes() . ' WHERE id = ' . $this->conn->quote($themeId)));
             self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
@@ -355,7 +357,7 @@ final class InstallServiceTest extends IntegrationTestCase
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
 
-            InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcher::get());
+            InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPaths::get(), EventDispatcherTestFactory::get());
 
             self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
         } finally {
@@ -378,7 +380,7 @@ final class InstallServiceTest extends IntegrationTestCase
         // even a directory with real scannable plugins would still insert
         // nothing; a truly empty scan directory is the simplest honest way
         // to exercise the same real "no-op by design" behavior.
-        InstallService::activateCorePlugins(LangTestFactory::get(), CurrentPaths::get(), CurrentUser::current(), EventDispatcher::get(), CurrentConfig::current());
+        InstallService::activateCorePlugins(LangTestFactory::get(), CurrentPaths::get(), CurrentUser::current(), EventDispatcherTestFactory::get(), CurrentConfig::current());
 
         $after = $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::plugins()));
         self::assertSame($before, $after);

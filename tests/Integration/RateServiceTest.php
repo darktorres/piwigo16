@@ -26,6 +26,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\Tables;
     use Piwigo\Event\Picture\UpdateRatingScore;
     use Piwigo\PluginConfig\EventDispatcher;
+    use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Rate\RateService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Users\User;
@@ -71,7 +72,7 @@ namespace Piwigo\Tests\Integration {
             if (! $accessControl instanceof AccessControl) {
                 throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
             }
-            $this->service = new RateService($accessControl, EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class), new CookieService(), EventDispatcher::get(), CurrentUser::current(), CurrentConfig::current());
+            $this->service = new RateService($accessControl, EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class), new CookieService(), EventDispatcherTestFactory::get(), CurrentUser::current(), CurrentConfig::current());
         }
 
         public function test_rate_returns_false_for_a_null_rate(): void
@@ -207,7 +208,7 @@ namespace Piwigo\Tests\Integration {
         public function test_update_rating_score_returns_a_plugin_handlers_replacement_verbatim(): void
         {
             $override = ['score' => 999, 'average' => 9.9, 'count' => 42];
-            EventDispatcher::get()->addTypedHandler(
+            EventDispatcherTestFactory::get()->addTypedHandler(
                 UpdateRatingScore::class,
                 static fn (UpdateRatingScore $event): UpdateRatingScore => new UpdateRatingScore($override, $event->elementId)
             );
@@ -215,7 +216,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 self::assertSame($override, $this->service->updateRatingScore(5));
             } finally {
-                EventDispatcher::get()->reset();
+                EventDispatcherTestFactory::get()->reset();
             }
         }
 

@@ -30,6 +30,7 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 use Piwigo\Users\CurrentUser;
@@ -93,7 +94,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
             'username' => 'fixture_admin',
         ]));
 
-        EventDispatcher::get()->reset();
+        EventDispatcherTestFactory::get()->reset();
 
         $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
         // Template::__construct()'s own data_dir_checked first-time-setup
@@ -144,7 +145,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         }
         $currentConfig->reset();
         CurrentTemplate::current()->reset();
-        EventDispatcher::get()->reset();
+        EventDispatcherTestFactory::get()->reset();
         Kernel::reset();
         if (is_dir($this->fixtureRoot)) {
             FilesystemHelper::deltree($this->fixtureRoot);

@@ -718,97 +718,6 @@ test('MailService::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('EventDispatcher::get() transitional bridge has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 4: same shape
-    // as Translator::get()'s former shim (closed in sub-phase 12F-6) --
-    // no Static suffix, since there was no competing real instance method
-    // to disambiguate from. EventDispatcher
-    // is the widest single-class ripple in the campaign so far (~80 real
-    // production files touched) -- the vast majority took real constructor
-    // injection or an explicit method/render() parameter; only these stay
-    // on the shim, each for one of the same 3 reasons already established
-    // by earlier phases: **Phase-6-entangled, still
-    // manually `new`'d at dozens of sites** (formerly UrlService.php/
-    // RedirectService.php/MenubarRenderer.php -- the same UrlService-bridge
-    // trio plus its own known-entangled callers, all 3 since closed);
-    // **genuinely static-context
-    // or structurally locked, no `$this` to inject through** (CategoryService.php --
-    // several read-only menu-rendering methods never threaded with the
-    // explicit-param treatment `deleteCategories()`/`deleteSite()` got, since
-    // they never construct anything requiring EventDispatcher themselves;
-    // every Ws/Pwg*.php file + WsInitializer.php took real constructor
-    // injection during their own Phase 10 sub-batches, so none remain on
-    // this allow-list). RequestBootstrap.php gained a new public
-    // eventDispatcher() resolver, matching coreTabs()/sessionService()/
-    // translator()'s own precedent, for public/admin.php's own
-    // legacy-style `new AdminShell(...)` manual construction. Sub-phase
-    // 12B: RequestBootstrap.php itself closed too -- its own 26
-    // EventDispatcher::get() call sites were a pure leftover bug (the file
-    // already had this exact resolver, right next to every one of them,
-    // unused by any of them until now), same shape as InstallWizard.php's
-    // own closure below.
-    // Admin/Install/InstallWizard.php closed this shim in Phase 11
-    // sub-phase 11K -- its 3 sites were a real, previously-unnoticed
-    // leftover bug, not a genuine need: the class already had
-    // $this->eventDispatcher as a real constructor property (used
-    // elsewhere in the file), these 3 sites just never used it.
-    // Phase 11 sub-phase 11B: Users/UserRepository.php
-    // removed from this allow-list -- no longer a Doctrine repository with
-    // an ORM-fixed constructor, it now takes EventDispatcher via real
-    // constructor injection like everything else in this campaign. Phase
-    // 11 sub-phase 11E: Admin/Tabsheet.php removed too -- select() now
-    // takes EventDispatcher as an explicit method param (matching
-    // CurrentTemplate's own established precedent for this exact file
-    // from Phase 5), threaded through all 29 real call sites.
-    // Mail/MailService.php, Template/Template.php, and Html/HtmlService.php
-    // itself also removed -- real constructor injection, the "too many
-    // manual construction sites" reasoning no longer holds. Phase 11
-    // sub-phase 11F: Image/SrcImage.php/DerivativeImage.php, Template/
-    // CssLoader.php/ScriptLoader.php removed too -- each resolves
-    // EventDispatcher via its own private static container-resolve
-    // helper (CssLoader.php via an explicit method param instead,
-    // extending its own pre-existing get_css(UrlServiceInterface)
-    // pattern) rather than the shim. Phase 11 sub-phase 11G:
-    // Category/CategoryService.php and Menu/MenubarRenderer.php both
-    // removed -- confirmed stale allow-list entries, both take
-    // EventDispatcher as a real constructor/explicit render() param now.
-    // Site/LocalSiteReader.php closed it too -- its own metadataService()
-    // fallback now resolves EventDispatcher via a new private lazy
-    // eventDispatcher() helper instead, matching the shim's own identical
-    // pre-boot graceful fallback. Sub-phase 12B: Bootstrap/PageTail.php
-    // closed too -- gained its own new private eventDispatcher() resolver
-    // (matching every one of its dozen sibling resolvers' own idiom
-    // exactly), its 2 real call sites just never used it.
-    // Bootstrap/RedirectService.php closed too -- found live, a real
-    // leftover bug (PageState::current()'s own former allow-list test
-    // found the identical finding, before that shim closed in sub-phase
-    // 12F-7): EventDispatcher is now
-    // a real required constructor param (`$this->eventDispatcher`), same
-    // shape as PageState. Sub-phase 12D: Admin/Extensions/ExtensionScanner.php
-    // closed too -- its own "no constructor at all" reasoning was true but
-    // beside the point: scan()/scanTheme() are real instance methods (just
-    // on a class with no constructor), so EventDispatcher/CurrentUser/
-    // CurrentConfig now thread through as explicit params instead (NOCTOR
-    // shape), matching this class's own already-established `Lang $lang`
-    // explicit param. Rippled through every real caller (13 production
-    // files + ExtensionLifecycle.php/ExtensionUpdateChecker.php, both of
-    // which also call scan() internally and needed the same 3 params
-    // added to their own constructors).
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-    ];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'EventDispatcher::get(');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
 test('CurrentTemplate::reset() is only called from tests/', function (): void {
     $repoRoot = __DIR__ . '/../..';
 
@@ -936,10 +845,14 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
     // InstallService.php closed too -- its 4 static methods now take
     // CurrentUser (among others) as a real explicit param from their sole
     // caller, InstallWizard, which already held one. Sub-phase 12D:
-    // Admin/Extensions/ExtensionScanner.php closed too -- see the
-    // EventDispatcher::get() allow-list's own comment above for the full
-    // trace (same 3-param NOCTOR addition, same ripple through every real
-    // caller).
+    // Admin/Extensions/ExtensionScanner.php closed too -- scan()/
+    // scanTheme() are real instance methods (just on a class with no
+    // constructor), so EventDispatcher/CurrentUser/CurrentConfig thread
+    // through as explicit params instead (NOCTOR shape), rippled through
+    // every real caller (13 production files +
+    // ExtensionLifecycle.php/ExtensionUpdateChecker.php, both of which
+    // also call scan() internally and needed the same 3 params added to
+    // their own constructors).
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
@@ -1249,9 +1162,12 @@ test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_
     // Phase 3 event dispatch retarget sweep (2026-07-19): the free-function
     // bridge (src/Piwigo/PluginConfig/functions.php, a pure 1-line
     // delegate to EventDispatcher::get()) is deleted -- all 241 real call
-    // sites across 84 files now call
+    // sites across 84 files now called
     // Piwigo\PluginConfig\EventDispatcher::get()->
-    // {addEventHandler,triggerChange,triggerNotify}() directly. Needed a
+    // {addEventHandler,triggerChange,triggerNotify}() directly at the time
+    // (that shim itself has since closed outright, sub-phase 12F-9 -- every
+    // real caller takes EventDispatcher via constructor injection now).
+    // Needed a
     // deptrac.yaml layer split first (EventDispatcher moved
     // L2bExtendedDomain -> L1Infrastructure, split from its namespace-mate
     // PluginRepository) since 14 real callers live in L1Infrastructure/

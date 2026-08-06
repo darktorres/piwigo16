@@ -10,6 +10,7 @@ use Piwigo\Image\ImageService;
 use Piwigo\Core\WsContext;
 use Piwigo\Users\CurrentUser;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Bootstrap\InfrastructureAccessor;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Image\ImageStdParams;
@@ -123,7 +124,7 @@ function upload_service_test_make(): UploadService
         throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
     }
 
-    return new UploadService(LangTestFactory::get(), upload_service_test_current_logger(), $storageRegistry, EventDispatcher::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get());
+    return new UploadService(LangTestFactory::get(), upload_service_test_current_logger(), $storageRegistry, EventDispatcherTestFactory::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser, CurrentPaths::get(), DbCredentialsTestFactory::get());
 }
 
 beforeEach(function (): void {

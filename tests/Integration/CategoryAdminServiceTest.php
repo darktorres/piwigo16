@@ -17,6 +17,7 @@ use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -357,7 +358,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function test_save_image_order_updates_the_category_row_only_when_subcats_is_false(): void
     {
-        $this->service->saveImageOrder(2, '`rank` ASC', false, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()));
+        $this->service->saveImageOrder(2, '`rank` ASC', false, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()));
 
         $cat1 = $this->fetchCategory(1);
         $cat2 = $this->fetchCategory(2);
@@ -372,7 +373,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         // Category 2's own uppercats ('1,2') includes category 1 --
         // saving on category 1 with $applySubcats=true matches every row
         // whose uppercats starts with '1,', which includes category 2.
-        $this->service->saveImageOrder(1, 'id ASC', true, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()));
+        $this->service->saveImageOrder(1, 'id ASC', true, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()));
 
         $cat1 = $this->fetchCategory(1);
         $cat2 = $this->fetchCategory(2);

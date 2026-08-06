@@ -10,6 +10,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 
 function tabsheetTestRrmdir(string $dir): void
@@ -136,7 +137,7 @@ test('select picks the requested tab when it exists', function (): void {
     $tabsheet->add('general', 'General', '/general');
     $tabsheet->add('advanced', 'Advanced', '/advanced');
 
-    $tabsheet->select('advanced', EventDispatcher::get());
+    $tabsheet->select('advanced', EventDispatcherTestFactory::get());
 
     expect($tabsheet->selected)->toBe('advanced');
     expect($tabsheet->get_selected())->toBe(['caption' => 'Advanced', 'url' => '/advanced']);
@@ -147,7 +148,7 @@ test('select falls back to the first remaining tab when the requested name does 
     $tabsheet->add('general', 'General', '/general');
     $tabsheet->add('advanced', 'Advanced', '/advanced');
 
-    $tabsheet->select('not-a-real-tab', EventDispatcher::get());
+    $tabsheet->select('not-a-real-tab', EventDispatcherTestFactory::get());
 
     expect($tabsheet->selected)->toBe('general');
 });
@@ -161,14 +162,14 @@ test('select applies a tabsheet_before_select handler that filters and appends t
 
         return $event;
     };
-    EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, $handler);
+    EventDispatcherTestFactory::get()->addTypedHandler(TabsheetBeforeSelect::class, $handler);
 
     try {
         $tabsheet = new Tabsheet();
         $tabsheet->add('removed-by-handler', 'Removed', '/removed');
         $tabsheet->add('kept', 'Kept', '/kept');
 
-        $tabsheet->select('added-by-handler', EventDispatcher::get());
+        $tabsheet->select('added-by-handler', EventDispatcherTestFactory::get());
 
         expect($tabsheet->sheets)->toBe([
             'kept' => ['caption' => 'Kept', 'url' => '/kept'],
@@ -176,7 +177,7 @@ test('select applies a tabsheet_before_select handler that filters and appends t
         ]);
         expect($tabsheet->selected)->toBe('added-by-handler');
     } finally {
-        EventDispatcher::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
     }
 });
 
@@ -189,17 +190,17 @@ test('select discards a handler-returned entry that does not match the expected 
 
         return $event;
     };
-    EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, $handler);
+    EventDispatcherTestFactory::get()->addTypedHandler(TabsheetBeforeSelect::class, $handler);
 
     try {
         $tabsheet = new Tabsheet();
         $tabsheet->add('general', 'General', '/general');
 
-        $tabsheet->select('general', EventDispatcher::get());
+        $tabsheet->select('general', EventDispatcherTestFactory::get());
 
         expect($tabsheet->sheets)->toBe(['general' => ['caption' => 'General', 'url' => '/general']]);
     } finally {
-        EventDispatcher::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
     }
 });
 
@@ -216,17 +217,17 @@ test('select discards a well-shaped sheet entry keyed by an int, not just a malf
 
         return $event;
     };
-    EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, $handler);
+    EventDispatcherTestFactory::get()->addTypedHandler(TabsheetBeforeSelect::class, $handler);
 
     try {
         $tabsheet = new Tabsheet();
         $tabsheet->add('general', 'General', '/general');
 
-        $tabsheet->select('general', EventDispatcher::get());
+        $tabsheet->select('general', EventDispatcherTestFactory::get());
 
         expect($tabsheet->sheets)->toBe(['general' => ['caption' => 'General', 'url' => '/general']]);
     } finally {
-        EventDispatcher::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
     }
 });
 
@@ -234,16 +235,16 @@ test('select throws when a tabsheet_before_select handler returns something othe
     // See RenderElementName's own sibling test in HtmlServiceTest.php for
     // why this uses addEventHandler(), not addTypedHandler().
     $handler = fn (): string => 'not-an-array';
-    EventDispatcher::get()->addEventHandler(TabsheetBeforeSelect::class, $handler);
+    EventDispatcherTestFactory::get()->addEventHandler(TabsheetBeforeSelect::class, $handler);
 
     try {
         $tabsheet = new Tabsheet();
         $tabsheet->add('general', 'General', '/general');
 
-        expect(static fn () => $tabsheet->select('general', EventDispatcher::get()))
+        expect(static fn () => $tabsheet->select('general', EventDispatcherTestFactory::get()))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
     }
 });
 

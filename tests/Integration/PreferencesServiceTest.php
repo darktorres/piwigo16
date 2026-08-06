@@ -9,6 +9,7 @@ use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
@@ -48,7 +49,7 @@ final class PreferencesServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->service = new PreferencesService(new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcher::get(), $currentConfig), CurrentUser::current());
+        $this->service = new PreferencesService(new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), $currentConfig), CurrentUser::current());
 
         CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'preferences' => []]));
     }

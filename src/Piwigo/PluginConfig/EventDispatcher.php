@@ -7,26 +7,19 @@ namespace Piwigo\PluginConfig;
 use Closure;
 use Error;
 use LogicException;
-use Piwigo\Core\Kernel;
 use ReflectionFunction;
 
 /**
- * Plugin event-handler registry -- self-managed singleton, same bridging
- * pattern as Piwigo\Session\SessionService::get(). Holds the state
- * previously carried by include/functions_plugins.inc.php's `global
- * $pwg_event_handlers` (grep-confirmed: never read from outside that file,
- * safe to fully internalize instead of keeping a parallel global in sync).
+ * Plugin event-handler registry -- container-shared instance (former
+ * `get()` transitional bridge shim closed outright in sub-phase 12F-9,
+ * same bridging pattern Piwigo\Session\SessionService::get()'s own former
+ * shim had). Holds the state previously carried by include/
+ * functions_plugins.inc.php's `global $pwg_event_handlers`
+ * (grep-confirmed: never read from outside that file, safe to fully
+ * internalize instead of keeping a parallel global in sync).
  */
 final class EventDispatcher
 {
-    /**
-     * Fallback instance for callers reached before/without Kernel::boot()
-     * -- see get()'s own docblock for why this is memoized (same reasoning
-     * as Piwigo\Lang\Translator::get()'s former shim, closed in sub-phase
-     * 12F-6) rather than a fresh instance per call.
-     */
-    private static ?self $fallback = null;
-
     // 'function' is declared string|array|object rather than PHPStan's
     // usual `callable` -- PHP's native `callable` type hint validates
     // callability EAGERLY, at registration time. A real pre-existing bug
@@ -44,37 +37,6 @@ final class EventDispatcher
      * @var array<string, array<int, list<EventHandler>>>
      */
     private array $handlers = [];
-
-    /**
-     * @deprecated transitional bridge for callers not yet converted to
-     * constructor injection -- singleton/service-locator elimination
-     * campaign, Phase 4. Resolves the container-shared instance once
-     * Kernel::boot() has run, same shape as SessionService::get()'s former
-     * shim/Translator::get()'s former shim (closed in sub-phases
-     * 12F-2/12F-6). Unlike SessionService's shim, the Kernel-not-booted
-     * fallback is memoized (not fresh per call): EventDispatcher accumulates
-     * handler registrations across many separate addEventHandler() calls,
-     * then dispatches to them from other call sites entirely -- a fresh
-     * instance per call would silently lose every handler registered since
-     * the last call, exactly the "compute-then-blind-read-back" corruption
-     * shape this campaign's own ProcessCache execution note already found
-     * and fixed once. EventDispatcherTest.php's own tests rely on this
-     * memoization (register then dispatch in the same test, no
-     * Kernel::boot() anywhere in the file).
-     */
-    public static function get(): self
-    {
-        if (Kernel::isBooted()) {
-            $dispatcher = Kernel::container()->get(self::class);
-            if (! $dispatcher instanceof self) {
-                throw new LogicException('Container returned an unexpected type for ' . self::class);
-            }
-
-            return $dispatcher;
-        }
-
-        return self::$fallback ??= new self();
-    }
 
     /**
      * Test-only. Clears every registered handler back to a pristine state

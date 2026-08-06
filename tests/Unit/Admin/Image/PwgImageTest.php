@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Admin\Image\ImageInterface;
 use Piwigo\Admin\Image\ImageProcessingException;
@@ -85,7 +86,7 @@ function pwgImageTestMarker(): string
  */
 function pwgImageTestMake(string $sourceFilepath, ?string $library = null): PwgImage
 {
-    return new PwgImage($sourceFilepath, new CurrentLogger(), EventDispatcher::get(), new CurrentConfig(), $library);
+    return new PwgImage($sourceFilepath, new CurrentLogger(), EventDispatcherTestFactory::get(), new CurrentConfig(), $library);
 }
 
 /**
@@ -536,7 +537,7 @@ test('constructor uses a plugin-provided image instance and skips its own librar
         }
         $target->image = $fake;
     };
-    EventDispatcher::get()->addTypedHandler(LoadImageLibrary::class, $handler);
+    EventDispatcherTestFactory::get()->addTypedHandler(LoadImageLibrary::class, $handler);
 
     try {
         // A path this class's own real library resolution would reject
@@ -548,7 +549,7 @@ test('constructor uses a plugin-provided image instance and skips its own librar
         expect($img->get_width())->toBe(123);
         expect($img->library)->toBe('');
     } finally {
-        EventDispatcher::get()->removeEventHandler(LoadImageLibrary::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(LoadImageLibrary::class, $handler);
     }
 });
 

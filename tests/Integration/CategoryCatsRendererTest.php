@@ -47,6 +47,7 @@ use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
@@ -220,7 +221,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $imageRepo,
             $urlService,
             $currentLogger,
-            EventDispatcher::get(),
+            EventDispatcherTestFactory::get(),
             ImageStdParamsTestFactory::get(),
             CurrentUser::current(),
             CurrentConfig::current(),
@@ -504,7 +505,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // exercises dispatchChange()'s own runtime enforcement, not a
         // static one.
         $this->seedUser();
-        EventDispatcher::get()->addEventHandler(RenderCategoryName::class, static fn (): int => 42);
+        EventDispatcherTestFactory::get()->addEventHandler(RenderCategoryName::class, static fn (): int => 42);
 
         $this->expectException(Error::class);
         $this->expectExceptionMessage('must return an instance of');
@@ -512,7 +513,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         try {
             $this->renderer->render('', null, 0);
         } finally {
-            EventDispatcher::get()->reset();
+            EventDispatcherTestFactory::get()->reset();
         }
     }
 }

@@ -419,8 +419,10 @@ final readonly class AuthService
         // 'authenticated' (bool): set to true if the plugin handles
         // log_user() itself.
         //
-        // Example plugin implementation:
-        //   EventDispatcher::get()->addEventHandler(FinalizeLogin::class, my_2fa_check(...));
+        // Example plugin implementation (a plugin has no constructor-
+        // injection access of its own, so it must resolve a real
+        // EventDispatcher instance from the DI container first):
+        //   $eventDispatcher->addEventHandler(FinalizeLogin::class, my_2fa_check(...));
         //   function my_2fa_check(FinalizeLogin $event): FinalizeLogin {
         //     if (!verify_2fa_code()) {
         //       return new FinalizeLogin(

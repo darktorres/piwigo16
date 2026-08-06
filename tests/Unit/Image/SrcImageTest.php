@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Unit\Image;
 use RuntimeException;
 use Exception;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Error;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -411,7 +412,7 @@ test('constructor throws when a get_mimetype_location handler returns something 
     srcImageTestMakePng($root . '/themes/default/icon/mimetypes/zzz.png', 16, 12);
 
     $handler = static fn (): int => 42;
-    EventDispatcher::get()->addEventHandler(GetMimetypeLocation::class, $handler);
+    EventDispatcherTestFactory::get()->addEventHandler(GetMimetypeLocation::class, $handler);
 
     try {
         expect(fn () => new SrcImage([
@@ -420,7 +421,7 @@ test('constructor throws when a get_mimetype_location handler returns something 
             'file' => 'file.zzz',
         ]))->toThrow(Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler(GetMimetypeLocation::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(GetMimetypeLocation::class, $handler);
         srcImageTestRrmdir($root);
     }
 });
@@ -581,7 +582,7 @@ test('get_url() throws when a get_src_image_url handler returns something other 
         // is untyped from PHPStan's perspective, and this test exercises
         // dispatchChange()'s own runtime enforcement, not a static one.
         $handler = static fn (): int => 42;
-        EventDispatcher::get()->addEventHandler(GetSrcImageUrl::class, $handler);
+        EventDispatcherTestFactory::get()->addEventHandler(GetSrcImageUrl::class, $handler);
 
         try {
             $src = new SrcImage([
@@ -593,7 +594,7 @@ test('get_url() throws when a get_src_image_url handler returns something other 
             expect(static fn () => $src->get_url())
                 ->toThrow(Error::class, 'must return an instance of');
         } finally {
-            EventDispatcher::get()->removeEventHandler(GetSrcImageUrl::class, $handler);
+            EventDispatcherTestFactory::get()->removeEventHandler(GetSrcImageUrl::class, $handler);
         }
     });
 });

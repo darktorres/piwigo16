@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Fixtures\PluginConfig\TestChangeEvent;
 use Piwigo\Tests\Fixtures\PluginConfig\TestNotifyEvent;
 
@@ -48,9 +49,9 @@ function eventDispatcherHandlersAt(EventDispatcher $dispatcher, string $event, i
  */
 function testNotifyHandler(TestNotifyEvent $e): void {}
 
-test('get() lazily builds and reuses the same instance', function (): void {
-    $first = EventDispatcher::get();
-    $second = EventDispatcher::get();
+test('EventDispatcherTestFactory::get lazily builds and reuses the same instance', function (): void {
+    $first = EventDispatcherTestFactory::get();
+    $second = EventDispatcherTestFactory::get();
 
     expect($first)->toBe($second);
 });

@@ -27,6 +27,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\Event\CombinedCss;
 use Piwigo\Template\Event\CombinedScript;
 use Piwigo\Template\PwgTemplateAdapter;
@@ -248,7 +249,7 @@ afterEach(function (): void {
     template_instance_test_rrmdir(is_string($this->root) ? $this->root : '');
     CurrentUser::current()->reset();
     CurrentConfig::current()->reset();
-    EventDispatcher::get()->reset();
+    EventDispatcherTestFactory::get()->reset();
     Kernel::reset();
 });
 
@@ -1660,12 +1661,12 @@ test('make_script_src (via func_get_combined_scripts) throws when a combined_scr
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPaths::get()->root . '/sync.js', 'console.log(1);');
     $t->func_combine_script(['id' => 'sync-script', 'path' => 'sync.js', 'load' => 'footer']);
-    EventDispatcher::get()->addEventHandler(CombinedScript::class, static fn (): int => 42);
+    EventDispatcherTestFactory::get()->addEventHandler(CombinedScript::class, static fn (): int => 42);
 
     try {
         $t->func_get_combined_scripts(['load' => 'footer']);
     } finally {
-        EventDispatcher::get()->reset();
+        EventDispatcherTestFactory::get()->reset();
     }
 })->throws(Error::class, 'must return an instance of');
 
@@ -1922,7 +1923,7 @@ test('finalizeOutput throws when a combined_css listener returns something other
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
     $t->func_combine_css(['path' => 'style.css', 'version' => '7']);
     $t->output = Template::COMBINED_CSS_TAG;
-    EventDispatcher::get()->addEventHandler(CombinedCss::class, static fn (): int => 42);
+    EventDispatcherTestFactory::get()->addEventHandler(CombinedCss::class, static fn (): int => 42);
 
     $t->fetchOutput();
 })->throws(Error::class, 'must return an instance of');

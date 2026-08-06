@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Image;
 
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Error;
 use Exception;
 use Piwigo\Image\WatermarkParams;
@@ -206,14 +207,14 @@ test('url() computes the derivative url via a real build() call, prefixed by the
 });
 
 test('url() throws when a get_derivative_url handler returns something other than a GetDerivativeUrl instance', function (): void {
-    // Kernel must boot before the handler is registered -- EventDispatcher::get()
+    // Kernel must boot before the handler is registered -- EventDispatcherTestFactory::get()
     // resolves the pre-boot memoized fallback instance until Kernel::boot()
     // builds the container's own (different) shared instance; registering
     // before boot would silently register on an instance DerivativeImage's
     // own get()-shim call never sees once the container exists.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-url-filter-only'));
     $handler = static fn (): int => 42;
-    EventDispatcher::get()->addEventHandler(GetDerivativeUrl::class, $handler);
+    EventDispatcherTestFactory::get()->addEventHandler(GetDerivativeUrl::class, $handler);
 
     try {
         $src = new SrcImage([
@@ -225,7 +226,7 @@ test('url() throws when a get_derivative_url handler returns something other tha
         expect(fn () => DerivativeImage::url(new DerivativeParams(SizingParams::classic(80, 60)), $src))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler(GetDerivativeUrl::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(GetDerivativeUrl::class, $handler);
     }
 });
 
@@ -783,7 +784,7 @@ test('get_url() throws when a get_derivative_url handler returns something other
     // url() test's own comment above for why.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-filter-only'));
     $handler = static fn (): int => 42;
-    EventDispatcher::get()->addEventHandler(GetDerivativeUrl::class, $handler);
+    EventDispatcherTestFactory::get()->addEventHandler(GetDerivativeUrl::class, $handler);
 
     try {
         $src = new SrcImage([
@@ -796,7 +797,7 @@ test('get_url() throws when a get_derivative_url handler returns something other
 
         expect(fn () => $derivative->get_url())->toThrow(Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler(GetDerivativeUrl::class, $handler);
+        EventDispatcherTestFactory::get()->removeEventHandler(GetDerivativeUrl::class, $handler);
     }
 });
 

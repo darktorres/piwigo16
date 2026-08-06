@@ -81,7 +81,7 @@ it('fatal-errors instead of silently swallowing a real render_category_name hook
     Description: Test-only fixture plugin (tests/Browser/AlbumSubControllerTest.php).
     */
 
-    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+    \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
         \Piwigo\Event\Template\RenderCategoryName::class,
         static fn (mixed $event): mixed => null
     );

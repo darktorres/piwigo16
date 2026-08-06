@@ -29,6 +29,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 
 /**
@@ -106,7 +107,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         DbConnection::build()->executeStatement('DELETE FROM ' . Tables::integrityIgnoredAnomalies());
 
         self::$queuedAnomalies = [];
-        EventDispatcher::get()->addTypedHandler(ListCheckIntegrity::class, [self::class, 'pushQueuedAnomalies']);
+        EventDispatcherTestFactory::get()->addTypedHandler(ListCheckIntegrity::class, [self::class, 'pushQueuedAnomalies']);
 
         unset($_POST['c13y_submit_correction'], $_POST['c13y_submit_ignore'], $_POST['c13y_selection']);
 
@@ -116,7 +117,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        EventDispatcher::get()->removeEventHandler(ListCheckIntegrity::class, [self::class, 'pushQueuedAnomalies']);
+        EventDispatcherTestFactory::get()->removeEventHandler(ListCheckIntegrity::class, [self::class, 'pushQueuedAnomalies']);
         unset($_POST['c13y_submit_correction'], $_POST['c13y_submit_ignore'], $_POST['c13y_selection']);
         DbConnection::build()->executeStatement('DELETE FROM ' . Tables::integrityIgnoredAnomalies());
         CurrentTemplate::current()->reset();
@@ -140,7 +141,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     private function newCheckIntegrity(): CheckIntegrity
     {
-        return new CheckIntegrity(LangTestFactory::get(), $this->buildIntegrityRepo(), new Translator(CurrentConfig::current()), EventDispatcher::get(), PageStateTestFactory::get(), CurrentTemplate::current());
+        return new CheckIntegrity(LangTestFactory::get(), $this->buildIntegrityRepo(), new Translator(CurrentConfig::current()), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), CurrentTemplate::current());
     }
 
     public function test_check_reports_no_header_note_when_zero_anomalies_are_found(): void

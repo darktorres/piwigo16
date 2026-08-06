@@ -452,7 +452,7 @@ final class WsTagsMutationTest extends ContractTestCase
             Description: Test-only fixture plugin (tests/Contract/WsTagsMutationTest.php).
             */
 
-            \\Piwigo\\PluginConfig\\EventDispatcher::get()->addTypedHandler(
+            \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
                 \\Piwigo\\Event\\Tag\\RenderTagUrl::class,
                 static function (\\Piwigo\\Event\\Tag\\RenderTagUrl \$event): mixed {
                     if (\$event->tagName === '{$renameMarker}') {
@@ -523,7 +523,7 @@ final class WsTagsMutationTest extends ContractTestCase
             Description: Test-only fixture plugin (tests/Contract/WsTagsMutationTest.php).
             */
 
-            \\Piwigo\\PluginConfig\\EventDispatcher::get()->addTypedHandler(
+            \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
                 \\Piwigo\\Event\\Tag\\RenderTagUrl::class,
                 static function (\\Piwigo\\Event\\Tag\\RenderTagUrl \$event): mixed {
                     if (\$event->tagName === '{$duplicateMarker}') {

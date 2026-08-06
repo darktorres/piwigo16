@@ -236,7 +236,7 @@ it('resolves a settings URL from a real get_admin_plugin_menu_links hook via bot
     Description: Test-only fixture plugin (tests/Browser/PluginsInstalledPageRendererTest.php).
     */
 
-    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+    \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
         \Piwigo\Event\Admin\GetAdminPluginMenuLinks::class,
         static function (\Piwigo\Event\Admin\GetAdminPluginMenuLinks $event): \Piwigo\Event\Admin\GetAdminPluginMenuLinks {
             $links = $event->value;
@@ -318,7 +318,7 @@ it('skips malformed get_admin_plugin_menu_links entries instead of erroring, and
     Description: Test-only fixture plugin (tests/Browser/PluginsInstalledPageRendererTest.php).
     */
 
-    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+    \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
         \Piwigo\Event\Admin\GetAdminPluginMenuLinks::class,
         static function (\Piwigo\Event\Admin\GetAdminPluginMenuLinks $event): \Piwigo\Event\Admin\GetAdminPluginMenuLinks {
             $links = $event->value;

@@ -11,6 +11,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Template\CombinedCssPostfilter;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\Combinable;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Event\CombinablePreparse;
@@ -907,16 +908,16 @@ test('process_css throws when a combined_css_postfilter listener returns somethi
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-postfilter-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/css', 0o777, true);
     file_put_contents($root . '/themes/default/css/foo.css', "body{color:red;}\n");
-    EventDispatcher::get()->addEventHandler(CombinedCssPostfilter::class, static fn (): int => 42);
+    EventDispatcherTestFactory::get()->addEventHandler(CombinedCssPostfilter::class, static fn (): int => 42);
 
     $combinable = new Combinable('foo-css', 'themes/default/css/foo.css');
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), EventDispatcher::get(), CurrentTemplate::current(), CurrentConfig::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), EventDispatcherTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current(), []);
 
     try {
         $header = '';
         invokeProcessCombinable($combiner, $combinable, true, false, $header);
     } finally {
-        EventDispatcher::get()->reset();
+        EventDispatcherTestFactory::get()->reset();
         file_combiner_test_rrmdir($root);
     }
 })->throws(Error::class, 'must return an instance of');
@@ -1277,11 +1278,11 @@ test('process_combinable notifies combinable_preparse listeners before parsing a
     CurrentConfig::current()->setDataDirChecked('1');
 
     $notifiedWith = null;
-    EventDispatcher::get()->addTypedHandler(CombinablePreparse::class, function (CombinablePreparse $event) use (&$notifiedWith): void {
+    EventDispatcherTestFactory::get()->addTypedHandler(CombinablePreparse::class, function (CombinablePreparse $event) use (&$notifiedWith): void {
         $notifiedWith = $event;
     });
 
-    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), EventDispatcher::get(), CurrentTemplate::current(), CurrentConfig::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot($root), EventDispatcherTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current(), []);
 
     try {
         CurrentTemplate::current()->set(TemplateTestFactory::build());
@@ -1299,7 +1300,7 @@ test('process_combinable notifies combinable_preparse listeners before parsing a
         expect($notifiedWith)->not->toBeNull()
             ->and($notifiedWith->combinable)->toBe($combinable);
     } finally {
-        EventDispatcher::get()->reset();
+        EventDispatcherTestFactory::get()->reset();
         CurrentTemplate::current()->reset();
         file_combiner_test_rrmdir($root);
         Kernel::reset();

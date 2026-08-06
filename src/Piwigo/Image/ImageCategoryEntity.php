@@ -6,6 +6,7 @@ namespace Piwigo\Image;
 
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\ImageId;
 
 /**
  * Maps the `image_category` table (image-to-album membership) --
@@ -16,11 +17,10 @@ use Piwigo\Common\ValueObject\CategoryId;
  * consumer (`Category`, same layer; `Comment`/`Rate`, L2bExtendedDomain)
  * can legally depend on it from here per `deptrac.yaml`'s ruleset.
  *
- * `imageId` stays plain int, same "FK into an un-VO'd domain stays raw"
- * call {@see \Piwigo\Tag\ImageTagEntity} already made -- no `ImageIdType`
- * exists yet. `categoryId` uses the existing `category_id` custom
- * Doctrine Type, matching {@see \Piwigo\Group\GroupAccessEntity}'s own
- * convention for a mapped foreign id.
+ * `imageId` uses the `image_id` custom Doctrine Type; `categoryId` uses
+ * the existing `category_id` custom Doctrine Type, matching
+ * {@see \Piwigo\Group\GroupAccessEntity}'s own convention for a mapped
+ * foreign id.
  *
  * `rank`'s column name is explicitly backtick-quoted (Doctrine's own
  * documented mechanism for a reserved SQL keyword column) -- `RANK` is a
@@ -40,8 +40,8 @@ final class ImageCategoryEntity
 {
     public function __construct(
         #[ORM\Id]
-        #[ORM\Column(name: 'image_id', type: 'integer')]
-        public int $imageId,
+        #[ORM\Column(name: 'image_id', type: 'image_id')]
+        public ImageId $imageId,
         #[ORM\Id]
         #[ORM\Column(name: 'category_id', type: 'category_id')]
         public CategoryId $categoryId,

@@ -658,7 +658,7 @@ final class ImageRepository extends EntityRepository
 
         return array_map(
             static fn (LoungeEntity $l): array => [
-                'image_id' => $l->imageId,
+                'image_id' => $l->imageId->value,
                 'category_id' => $l->categoryId->value,
             ],
             $entities
@@ -841,11 +841,11 @@ final class ImageRepository extends EntityRepository
 
             $categoryId = $row['categoryId'];
             $imageId = $row['imageId'];
-            if (! $categoryId instanceof CategoryId || ! is_numeric($imageId)) {
+            if (! $categoryId instanceof CategoryId || ! $imageId instanceof ImageId) {
                 continue;
             }
 
-            $existing[$categoryId->value][] = (int) $imageId;
+            $existing[$categoryId->value][] = $imageId->value;
         }
 
         return $existing;
@@ -2984,7 +2984,7 @@ final class ImageRepository extends EntityRepository
             }
 
             $result[] = [
-                'image_id' => is_numeric($row['imageId']) ? (int) $row['imageId'] : 0,
+                'image_id' => $row['imageId'] instanceof ImageId ? $row['imageId']->value : (is_numeric($row['imageId']) ? (int) $row['imageId'] : 0),
                 'category_id' => $row['categoryId'] instanceof CategoryId ? $row['categoryId']->value : (is_numeric($row['categoryId']) ? (int) $row['categoryId'] : 0),
             ];
         }

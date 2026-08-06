@@ -912,12 +912,11 @@ final class CategoryRepository
      * @return list<int>
      *
      * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
-     * `ic.imageId` is plain int (no custom Doctrine Type), so
-     * getSingleColumnResult() returns ordinary ints/numeric strings, same
-     * as any other plain-typed column (Gotcha #4 doesn't apply here, only
-     * `ic.categoryId` is custom-typed and it's never selected, only
-     * filtered on).
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table.
+     * `ic.imageId` uses the `image_id` custom Doctrine Type, but
+     * `getSingleColumnResult()` uses `HYDRATE_SCALAR_COLUMN`, which never
+     * applies a field's custom Type regardless (Gotcha #4) -- so this
+     * still returns ordinary ints/numeric strings.
      */
     public function findDistinctLinkedImageIds(array $ids): array
     {
@@ -1745,10 +1744,10 @@ final class CategoryRepository
      * blocker, MySQL's `RAND()`, now has a portable custom DQL function
      * ({@see \Piwigo\Db\DqlFunction\RandFunction}, per-platform dispatch,
      * MySQL/MariaDB verified, PostgreSQL/SQLite unverified against a real
-     * install -- see that class's own docblock). `imageId` is a plain
-     * `int` column (no custom Type), so `getSingleColumnResult()` +
-     * `setMaxResults(1)` is safe here (unlike a custom-Typed field --
-     * this audit's own gotcha #4).
+     * install -- see that class's own docblock). `imageId` uses the
+     * `image_id` custom Doctrine Type, but `getSingleColumnResult()` +
+     * `setMaxResults(1)` stays safe regardless -- `HYDRATE_SCALAR_COLUMN`
+     * never applies a field's custom Type (this audit's own gotcha #4).
      */
     public function findRandomImageIdInCategory(int $categoryId): ?int
     {

@@ -336,7 +336,7 @@ final readonly class PermissionRepository
             ->from(ImageCategoryEntity::class, 'ic')
             ->where('ic.imageId = :imageId')
             ->andWhere('ic.categoryId NOT IN (:forbidden)')
-            ->setParameter('imageId', $imageId)
+            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
             ->setParameter('forbidden', $forbiddenCategoryIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->getSingleScalarResult();

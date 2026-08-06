@@ -334,7 +334,7 @@ final class BatchManagerUnitPageRenderer
 
                 $image_file = $row['file'];
 
-                $tag_selection = $tagService->getTagListForImage((int) $row_id_str, $htmlRenderer);
+                $tag_selection = $tagService->getTagListForImage(ImageId::from((int) $row_id_str), $htmlRenderer);
 
                 $row_file = is_string($row['file']) ? $row['file'] : '';
                 $legend = $htmlRenderer->renderElementName($row);

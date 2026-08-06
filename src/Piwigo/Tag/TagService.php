@@ -6,6 +6,7 @@ namespace Piwigo\Tag;
 
 use LogicException;
 use Piwigo\Cache\CachePools;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
@@ -769,7 +770,7 @@ final readonly class TagService
      *
      * @return array<int, array{name: mixed, id: string}>
      */
-    public function getTagListForImage(int $imageId, HtmlRenderingInterface $htmlRenderer, bool $onlyUserLanguage = true): array
+    public function getTagListForImage(ImageId $imageId, HtmlRenderingInterface $htmlRenderer, bool $onlyUserLanguage = true): array
     {
         return $this->buildTagList($this->repo->findTagsForImage($imageId), $htmlRenderer, $onlyUserLanguage);
     }

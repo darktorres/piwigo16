@@ -259,7 +259,7 @@ final class PictureModifyPageRenderer
 
         // tags
         $tag_selection = $this->tagService
-            ->getTagListForImage($image_id, $htmlRenderer);
+            ->getTagListForImage(ImageId::from($image_id), $htmlRenderer);
 
         // getImageInfos($image_id, $htmlRenderer, true) fatal_errors (never returns) when the
         // photo doesn't exist, so $page['image'] is guaranteed to be a real

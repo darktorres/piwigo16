@@ -9,6 +9,7 @@ use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Image\ImageFilterCriteria;
 use Doctrine\DBAL\Connection;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
@@ -510,7 +511,7 @@ final class TagRepositoryTest extends IntegrationTestCase
     public function test_find_tags_for_image_returns_every_tag_linked_to_that_image(): void
     {
         // Fixture image_tag: image 1 has tags 1 (nature), 2 (travel), 3 (family).
-        $names = array_column($this->repo->findTagsForImage(1), 'name');
+        $names = array_column($this->repo->findTagsForImage(ImageId::from(1)), 'name');
         sort($names);
 
         self::assertSame(['family', 'nature', 'travel'], $names);
@@ -518,7 +519,7 @@ final class TagRepositoryTest extends IntegrationTestCase
 
     public function test_find_tags_for_image_returns_empty_for_an_image_with_no_tags(): void
     {
-        self::assertSame([], $this->repo->findTagsForImage(999_999));
+        self::assertSame([], $this->repo->findTagsForImage(ImageId::from(999_999)));
     }
 
     public function test_find_tags_by_ids_returns_empty_for_no_ids(): void

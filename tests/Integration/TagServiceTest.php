@@ -18,6 +18,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Session\SessionService;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
+    use Piwigo\Common\ValueObject\ImageId;
     use Piwigo\Common\ValueObject\UserId;
     use Piwigo\Tag\Projection\TagBrief;
     use Error;
@@ -609,7 +610,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_get_tag_list_for_image_returns_the_images_tags_sorted_alphabetically(): void
         {
-            $result = $this->service->getTagListForImage(1, HtmlServiceTestFactory::build());
+            $result = $this->service->getTagListForImage(ImageId::from(1), HtmlServiceTestFactory::build());
 
             self::assertSame(
                 ['~~3~~' => 'family', '~~1~~' => 'nature', '~~2~~' => 'travel'],
@@ -619,7 +620,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_tag_list_for_image_returns_empty_for_an_image_with_no_tags(): void
         {
-            self::assertSame([], $this->service->getTagListForImage(999_999, HtmlServiceTestFactory::build()));
+            self::assertSame([], $this->service->getTagListForImage(ImageId::from(999_999), HtmlServiceTestFactory::build()));
         }
 
         // --- getTagListByIds() -----------------------------------------------------

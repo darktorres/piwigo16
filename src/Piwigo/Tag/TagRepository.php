@@ -9,6 +9,7 @@ use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
@@ -410,13 +411,13 @@ final class TagRepository extends EntityRepository
             ->select('it')
             ->from(ImageTagEntity::class, 'it')
             ->where('it.imageId IN (:imageIds)')
-            ->setParameter('imageIds', array_map(intval(...), $imageIds))
+            ->setParameter('imageIds', array_map(intval(...), $imageIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getResult();
 
         return array_map(
             static fn (ImageTagEntity $it): array => [
-                'image_id' => $it->imageId,
+                'image_id' => $it->imageId->value,
                 'tag_id' => $it->tagId,
             ],
             $entities,
@@ -442,7 +443,7 @@ final class TagRepository extends EntityRepository
             ->getQuery()
             ->getResult();
 
-        return array_map(static fn (ImageTagEntity $it): int => $it->imageId, $entities);
+        return array_map(static fn (ImageTagEntity $it): int => $it->imageId->value, $entities);
     }
 
     /**
@@ -478,7 +479,7 @@ final class TagRepository extends EntityRepository
         $em->createQueryBuilder()
             ->delete(ImageTagEntity::class, 'it')
             ->where('it.imageId IN (:imageIds)')
-            ->setParameter('imageIds', array_map(intval(...), $imageIds))
+            ->setParameter('imageIds', array_map(intval(...), $imageIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -500,7 +501,7 @@ final class TagRepository extends EntityRepository
             ->delete(ImageTagEntity::class, 'it')
             ->where('it.imageId IN (:imageIds)')
             ->andWhere('it.tagId IN (:tagIds)')
-            ->setParameter('imageIds', array_values(array_map(intval(...), $imageIds)))
+            ->setParameter('imageIds', array_values(array_map(intval(...), $imageIds)), ArrayParameterType::INTEGER)
             ->setParameter('tagIds', array_map(static fn (TagId $id): int => $id->value, $tagIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
@@ -722,7 +723,7 @@ final class TagRepository extends EntityRepository
      *
      * @return list<array{id: int, name: string}>
      */
-    public function findTagsForImage(int $imageId): array
+    public function findTagsForImage(ImageId $imageId): array
     {
         $rows = $this->createQueryBuilder('t')
             ->select('t.id', 't.name')
@@ -919,11 +920,12 @@ final class TagRepository extends EntityRepository
             }
 
             $imageId = $row['image_id'] ?? null;
-            if (! is_numeric($imageId)) {
+            $imageIdInt = $imageId instanceof ImageId ? $imageId->value : (is_numeric($imageId) ? (int) $imageId : null);
+            if ($imageIdInt === null) {
                 continue;
             }
 
-            $byImageId[(int) $imageId] = is_scalar($row['tag_ids'] ?? null) ? (string) $row['tag_ids'] : '';
+            $byImageId[$imageIdInt] = is_scalar($row['tag_ids'] ?? null) ? (string) $row['tag_ids'] : '';
         }
 
         return $byImageId;

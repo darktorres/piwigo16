@@ -33,6 +33,7 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
@@ -224,7 +225,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             CurrentConfig::current(),
             Lang::current(),
             $processCache,
-            PageState::current(),
+            PageStateTestFactory::get(),
         );
     }
 

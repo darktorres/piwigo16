@@ -17,6 +17,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
@@ -36,7 +37,7 @@ use Piwigo\Tests\Support\KernelContainerOverride;
  * autoupdatePlugin()'s own "filesystem version is newer" body (real
  * `Version:` header parsing, dynamically loading a real
  * `{$plugin_id}_maintain` class from a real maintain.class.php, the
- * PageState::current()->errors round-trip through PluginMaintain::update()'s
+ * PageStateTestFactory::get()->errors round-trip through PluginMaintain::update()'s
  * by-reference $errors param, persisting via PluginRepository::updateVersion(),
  * and logging the 'autoupdate' activity row) IS covered below now, via the
  * same "write a real throwaway maintain.class.php declaring a
@@ -173,7 +174,7 @@ final class PluginLoaderTest extends IntegrationTestCase
     {
         CurrentConfig::current()->setEnablePlugins(false);
 
-        PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current(), CurrentPaths::get());
+        PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPaths::get());
 
         expect($this->loadedPlugins->get())->toBe([]);
     }
@@ -189,7 +190,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current(), CurrentPaths::get());
+            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPaths::get());
 
             expect($this->loadedPlugins->get())->toBe([]);
         });
@@ -212,7 +213,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($marker): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current(), CurrentPaths::get());
+            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPaths::get());
 
             expect($this->loadedPlugins->get())->toHaveKey('loadable-plugin');
             expect($this->loadedPlugins->get()['loadable-plugin']['version'])->toBe('1.0');
@@ -233,7 +234,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current(), CurrentPaths::get());
+            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPaths::get());
 
             expect($this->loadedPlugins->get())->toBe([]);
         });
@@ -248,7 +249,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         $this->writeVersionedPluginMainFile($root, $id, '2.0');
         // update()'s real body pushes a message through the by-reference
         // $errors param -- proves autoupdatePlugin() actually round-trips
-        // PageState::current()->errors into the call and the mutated array
+        // PageStateTestFactory::get()->errors into the call and the mutated array
         // back out (not just that the call happens without erroring).
         $this->writePluginMaintainClass($root, $id, extendsBase: true, body: <<<'PHP'
     public function update($old_version, $new_version, &$errors = [])
@@ -264,9 +265,9 @@ PHP);
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($id): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current(), CurrentPaths::get());
+            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPaths::get());
 
-            expect(PageState::current()->errors)->toBe(['updated from 1.0 to 2.0']);
+            expect(PageStateTestFactory::get()->errors)->toBe(['updated from 1.0 to 2.0']);
             expect($this->loadedPlugins->get()[$id]['version'])->toBe('2.0');
 
             $storedVersion = DbConnection::build()->fetchOne(
@@ -324,7 +325,7 @@ PHP);
         $this->expectExceptionMessage("PluginLoader::autoupdatePlugin(): {$classname} does not extend PluginMaintain");
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current(), CurrentPaths::get());
+            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPaths::get());
         });
     }
 
@@ -349,7 +350,7 @@ PHP);
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($id): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageState::current(), CurrentPaths::get());
+            PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfig::current(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPaths::get());
 
             $storedVersion = DbConnection::build()->fetchOne(
                 'SELECT version FROM ' . Tables::plugins() . ' WHERE id = ?',

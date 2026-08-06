@@ -20,6 +20,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\UrlServiceTestFactory;
     use Piwigo\Users\User;
     use Piwigo\Core\PageState;
+    use Piwigo\Tests\Support\PageStateTestFactory;
     use ReflectionProperty;
     use Exception;
     use Doctrine\DBAL\Connection;
@@ -348,7 +349,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_and_save_user_infos_rejects_an_empty_username(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'username' => '   '], PageState::current());
+            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'username' => '   '], PageStateTestFactory::get());
 
             self::assertSame(
                 ['error' => ['code' => WsError::INVALID_PARAM, 'message' => 'Name field must not be empty']],
@@ -358,7 +359,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_and_save_user_infos_rejects_a_nonexistent_user_id(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [999999]], PageState::current());
+            $result = $this->service->checkAndSaveUserInfos(['user_id' => [999999]], PageStateTestFactory::get());
 
             self::assertSame(
                 ['error' => ['code' => WsError::INVALID_PARAM, 'message' => 'This user does not exist.']],
@@ -368,7 +369,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_and_save_user_infos_rejects_a_username_already_used_by_another_user(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'username' => 'fixture_admin'], PageState::current());
+            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'username' => 'fixture_admin'], PageStateTestFactory::get());
 
             self::assertSame(
                 ['error' => ['code' => WsError::INVALID_PARAM, 'message' => Lang::current()->t('this login is already used')]],
@@ -378,7 +379,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_and_save_user_infos_rejects_a_username_containing_html_tags(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'username' => '<b>evil</b>'], PageState::current());
+            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'username' => '<b>evil</b>'], PageStateTestFactory::get());
 
             self::assertSame(
                 ['error' => ['code' => WsError::INVALID_PARAM, 'message' => Lang::current()->t('html tags are not allowed in login')]],
@@ -388,7 +389,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_and_save_user_infos_rejects_an_invalid_email(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'email' => 'not-an-email'], PageState::current());
+            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'email' => 'not-an-email'], PageStateTestFactory::get());
 
             self::assertArrayHasKey('error', $result);
             self::assertIsArray($result['error']);
@@ -402,7 +403,7 @@ namespace Piwigo\Tests\Integration {
             // regardless of who the current user is -- the default guest
             // current user (id 2, per CurrentConfig::guestId() above)
             // suffices, no CurrentUser::current()->set() needed.
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [1], 'password' => 'newpass123'], PageState::current());
+            $result = $this->service->checkAndSaveUserInfos(['user_id' => [1], 'password' => 'newpass123'], PageStateTestFactory::get());
 
             self::assertSame(
                 [
@@ -422,7 +423,7 @@ namespace Piwigo\Tests\Integration {
             CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Webmaster));
 
             try {
-                $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'password' => 'newpass123'], PageState::current());
+                $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'password' => 'newpass123'], PageStateTestFactory::get());
 
                 self::assertArrayNotHasKey('error', $result);
                 self::assertIsArray($result['account']);
@@ -435,7 +436,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_and_save_user_infos_rejects_granting_webmaster_status_by_a_non_webmaster(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'status' => 'webmaster'], PageState::current());
+            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'status' => 'webmaster'], PageStateTestFactory::get());
 
             // Real production typo: the array key is 'code ' (trailing
             // space), not 'code' -- confirmed live via a standalone
@@ -454,7 +455,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_and_save_user_infos_rejects_an_invalid_status_value(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'status' => 'not-a-real-status'], PageState::current());
+            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'status' => 'not-a-real-status'], PageStateTestFactory::get());
 
             self::assertSame(
                 ['error' => ['code' => WsError::INVALID_PARAM, 'message' => 'Invalid status']],
@@ -464,7 +465,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_and_save_user_infos_rejects_an_invalid_level(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'level' => 99], PageState::current());
+            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'level' => 99], PageStateTestFactory::get());
 
             self::assertSame(
                 ['error' => ['code' => WsError::INVALID_PARAM, 'message' => 'Invalid level']],
@@ -474,7 +475,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_and_save_user_infos_rejects_an_invalid_language(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'language' => 'xx-not-real'], PageState::current());
+            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'language' => 'xx-not-real'], PageStateTestFactory::get());
 
             self::assertSame(
                 ['error' => ['code' => WsError::INVALID_PARAM, 'message' => 'Invalid language']],
@@ -487,7 +488,7 @@ namespace Piwigo\Tests\Integration {
             // The fixture's own piwigo_themes table is empty (confirmed
             // live), so any value at all is "invalid" here -- no need for
             // an implausible-sounding fake theme name.
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'theme' => 'anything'], PageState::current());
+            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'theme' => 'anything'], PageStateTestFactory::get());
 
             self::assertSame(
                 ['error' => ['code' => WsError::INVALID_PARAM, 'message' => 'Invalid theme']],
@@ -506,7 +507,7 @@ namespace Piwigo\Tests\Integration {
                     'user_id' => [4],
                     'username' => $newLogin,
                     'email' => 'temp13@example.test',
-                ], PageState::current());
+                ], PageStateTestFactory::get());
 
                 self::assertSame(
                     ['user_id' => [4], 'infos' => [], 'account' => ['username' => $newLogin, 'mail_address' => 'temp13@example.test']],
@@ -541,7 +542,7 @@ namespace Piwigo\Tests\Integration {
                     'show_nb_comments' => true,
                     'show_nb_hits' => false,
                     'enabled_high' => true,
-                ], PageState::current());
+                ], PageStateTestFactory::get());
 
                 $expectedInfos = [
                     'level' => 1,
@@ -599,7 +600,7 @@ namespace Piwigo\Tests\Integration {
                     'user_id' => [3, 4],
                     'username' => 'should-be-ignored',
                     'level' => 2,
-                ], PageState::current());
+                ], PageStateTestFactory::get());
 
                 self::assertSame(['user_id' => [3, 4], 'infos' => ['level' => 2], 'account' => []], $result);
 
@@ -615,7 +616,7 @@ namespace Piwigo\Tests\Integration {
         public function test_check_and_save_user_infos_status_guest_deletes_sessions_for_the_affected_users(): void
         {
             try {
-                $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'status' => 'guest'], PageState::current());
+                $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'status' => 'guest'], PageStateTestFactory::get());
 
                 self::assertArrayNotHasKey('error', $result);
                 $status = $this->conn->fetchOne('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 4');
@@ -637,7 +638,7 @@ namespace Piwigo\Tests\Integration {
             CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Admin));
 
             try {
-                $result = $this->service->checkAndSaveUserInfos(['user_id' => [1], 'status' => 'normal'], PageState::current());
+                $result = $this->service->checkAndSaveUserInfos(['user_id' => [1], 'status' => 'normal'], PageStateTestFactory::get());
             } finally {
                 CurrentUser::current()->reset();
             }
@@ -651,7 +652,7 @@ namespace Piwigo\Tests\Integration {
         {
             // Fixture: user 4 (power_user) starts in group 3 only.
             try {
-                $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'group_id' => [1, 2]], PageState::current());
+                $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'group_id' => [1, 2]], PageStateTestFactory::get());
 
                 self::assertArrayNotHasKey('error', $result);
                 $groups = $this->conn->fetchFirstColumn(
@@ -667,7 +668,7 @@ namespace Piwigo\Tests\Integration {
         public function test_check_and_save_user_infos_group_id_with_only_a_nonexistent_group_clears_membership_without_reinserting(): void
         {
             try {
-                $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'group_id' => [999999]], PageState::current());
+                $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'group_id' => [999999]], PageStateTestFactory::get());
 
                 self::assertArrayNotHasKey('error', $result);
                 $groups = $this->conn->fetchFirstColumn('SELECT group_id FROM ' . Tables::userGroup() . ' WHERE user_id = 4');

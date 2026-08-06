@@ -19,6 +19,7 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Template\CurrentTemplate;
@@ -144,7 +145,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         $body = null;
         $status = null;
         try {
-            new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageState::current())->redirectHtml('http://example.test/target.php', 'A custom redirect message');
+            new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get())->redirectHtml('http://example.test/target.php', 'A custom redirect message');
         } catch (ResponseReadyException $e) {
             $response = $e->response();
             $status = $response->getStatusCode();
@@ -181,7 +182,7 @@ final class RedirectServiceTest extends IntegrationTestCase
 
         $body = null;
         try {
-            new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageState::current())->redirectHtml('http://example.test/other.php', '');
+            new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get())->redirectHtml('http://example.test/other.php', '');
         } catch (ResponseReadyException $e) {
             $body = (string) $e->response()->getBody();
         }
@@ -208,7 +209,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         $status = null;
         $body = null;
         try {
-            new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageState::current())->redirect('http://example.test/refresh-target.php', 'Refresh redirect', 5);
+            new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get())->redirect('http://example.test/refresh-target.php', 'Refresh redirect', 5);
         } catch (ResponseReadyException $e) {
             $response = $e->response();
             $status = $response->getStatusCode();

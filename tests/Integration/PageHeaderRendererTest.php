@@ -16,6 +16,7 @@ use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Page\PageHeaderRenderer;
@@ -24,7 +25,7 @@ use Piwigo\Template\CurrentTemplate;
 /**
  * Only the 2 branches every other real page-render Integration/Browser
  * test happens to leave untouched: header_notes assignment (only reached
- * when PageState::current()->headerNotes is non-empty -- FilterService's
+ * when PageStateTestFactory::get()->headerNotes is non-empty -- FilterService's
  * own "Photos posted within the last N days" note is the one real
  * production populator, per its own docblock) and the metaRef()-disabled
  * noindex/nofollow branch (metaRef defaults to true everywhere else).
@@ -78,15 +79,15 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         CurrentTemplate::current()->reset();
-        PageState::current()->reset();
+        PageStateTestFactory::get()->reset();
         parent::tearDown();
     }
 
     public function test_render_includes_the_header_notes_when_page_state_has_any(): void
     {
-        PageState::current()->addHeaderNote('Photos posted within the last 3 days.');
+        PageStateTestFactory::get()->addHeaderNote('Photos posted within the last 3 days.');
 
-        $this->renderer->render('Header Notes Test', new EventDispatcher(), PageState::current(), CurrentTemplate::current(), CurrentConfig::current());
+        $this->renderer->render('Header Notes Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current());
 
         $output = CurrentTemplate::current()->get()->fetchOutput();
         self::assertStringContainsString('Photos posted within the last 3 days.', $output);
@@ -94,7 +95,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
 
     public function test_render_omits_the_header_notes_container_when_page_state_has_none(): void
     {
-        $this->renderer->render('No Header Notes Test', new EventDispatcher(), PageState::current(), CurrentTemplate::current(), CurrentConfig::current());
+        $this->renderer->render('No Header Notes Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current());
 
         $output = CurrentTemplate::current()->get()->fetchOutput();
         self::assertStringNotContainsString('Photos posted within the last', $output);
@@ -108,9 +109,9 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         }
         $currentConfig->setMetaRef(false);
 
-        $this->renderer->render('Meta Robots Test', new EventDispatcher(), PageState::current(), CurrentTemplate::current(), CurrentConfig::current());
+        $this->renderer->render('Meta Robots Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current());
 
-        self::assertSame(['noindex' => 1, 'nofollow' => 1], PageState::current()->metaRobots);
+        self::assertSame(['noindex' => 1, 'nofollow' => 1], PageStateTestFactory::get()->metaRobots);
 
         $output = CurrentTemplate::current()->get()->fetchOutput();
         self::assertStringContainsString('<meta name="robots" content="noindex,nofollow">', $output);
@@ -124,8 +125,8 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         }
         $currentConfig->setMetaRef(true);
 
-        $this->renderer->render('Meta Ref Enabled Test', new EventDispatcher(), PageState::current(), CurrentTemplate::current(), CurrentConfig::current());
+        $this->renderer->render('Meta Ref Enabled Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current());
 
-        self::assertSame([], PageState::current()->metaRobots);
+        self::assertSame([], PageStateTestFactory::get()->metaRobots);
     }
 }

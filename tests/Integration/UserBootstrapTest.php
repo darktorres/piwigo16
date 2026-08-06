@@ -14,6 +14,7 @@ use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
@@ -156,7 +157,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         // exit() and is deliberately left uncovered here (see this class's
         // own docblock) -- never actually read, so a fresh, never-set()
         // instance is fine.
-        return new UserBootstrap(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageState::current()), UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
+        return new UserBootstrap(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
     }
 
     public function test_initialize_auto_registers_a_new_local_account_for_an_unknown_apache_remote_user(): void
@@ -240,7 +241,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             EntityManagerFactory::build($this->conn)->getRepository(UserFailedLoginEntity::class),
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()),
             EventDispatcher::get(),
-            PageState::current(),
+            PageStateTestFactory::get(),
             CurrentUser::current(),
             CurrentConfig::current(),
             CurrentPaths::get(),

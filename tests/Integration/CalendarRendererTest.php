@@ -23,6 +23,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -132,7 +133,7 @@ final class CalendarRendererTest extends IntegrationTestCase
 
     private function makeRenderer(): CalendarRenderer
     {
-        return new CalendarRenderer(Lang::current(), $this->htmlService, TemplateTestFactory::build(), $this->urlService, CurrentUser::current(), CurrentConfig::current(), EventDispatcher::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageState::current());
+        return new CalendarRenderer(Lang::current(), $this->htmlService, TemplateTestFactory::build(), $this->urlService, CurrentUser::current(), CurrentConfig::current(), EventDispatcher::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get());
     }
 
     /**
@@ -265,7 +266,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_groups_multiple_years_and_months_for_the_default_monthly_calendar_view(): void
     {
         $template = TemplateTestFactory::build();
-        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current(), EventDispatcher::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageState::current());
+        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current(), EventDispatcher::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get());
 
         $result = $renderer->render(
             section: 'items',
@@ -313,7 +314,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_normalizes_chronology_date_to_ints_and_next_prev_navigation_still_works(): void
     {
         $template = TemplateTestFactory::build();
-        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current(), EventDispatcher::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageState::current());
+        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current(), EventDispatcher::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get());
 
         $result = $renderer->render(
             section: 'items',

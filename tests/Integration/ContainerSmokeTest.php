@@ -58,8 +58,8 @@ final class ContainerSmokeTest extends TestCase
      * bind to trivially-autowireable concrete classes with no request-scoped
      * prerequisite) -- it's the correct, by-design behavior of a per-request
      * singleton facade, same category as the other request-scoped facades
-     * this codebase already has (CurrentUser::get()/PageState::current()
-     * throw the identical way before their own attachGlobals() runs).
+     * this codebase already has (CurrentUser::get() throws the identical
+     * way before its own attachGlobals() runs).
      * Constructing a real Template here to make this resolve would need
      * PHPWG_ROOT_PATH + a full $conf + real filesystem writes to a compile
      * dir -- disproportionate weight for a smoke test, and order-dependent

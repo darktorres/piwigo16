@@ -9,6 +9,7 @@ namespace Piwigo\Tests\Integration {
     use RuntimeException;
     use Piwigo\Core\Kernel;
     use Piwigo\Core\PageState;
+    use Piwigo\Tests\Support\PageStateTestFactory;
     use Piwigo\Core\Lang;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Comment\CommentEntity;
@@ -217,12 +218,12 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::current()->setEmailAdminOnCommentEdition(false);
             CurrentConfig::current()->setEmailAdminOnCommentDeletion(false);
             CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin', 'email' => 'fixture_admin@example.test']));
-            PageState::current()->reset();
+            PageStateTestFactory::get()->reset();
 
             $this->conn = DbConnection::build();
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
-            $this->service = new CommentService(Lang::current(), EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class), new EphemeralKeyService(CurrentConfig::current()), $mailer, HtmlServiceTestFactory::build(), UrlServiceTestFactory::build(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentConfig::current(), $this->accessLevelChecker());
+            $this->service = new CommentService(Lang::current(), EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class), new EphemeralKeyService(CurrentConfig::current()), $mailer, HtmlServiceTestFactory::build(), UrlServiceTestFactory::build(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUser::current(), CurrentConfig::current(), $this->accessLevelChecker());
         }
 
         private function accessControl(): AccessControl
@@ -869,7 +870,7 @@ namespace Piwigo\Tests\Integration {
          */
         private function postCr(): array
         {
-            return PageState::current()->commentRejectionReasons;
+            return PageStateTestFactory::get()->commentRejectionReasons;
         }
 
         /**
@@ -877,7 +878,7 @@ namespace Piwigo\Tests\Integration {
          */
         private function pageErrors(): array
         {
-            return PageState::current()->errors;
+            return PageStateTestFactory::get()->errors;
         }
 
         /**
@@ -896,7 +897,7 @@ namespace Piwigo\Tests\Integration {
                 HtmlServiceTestFactory::build(),
                 UrlServiceTestFactory::build(),
                 new EventDispatcher(),
-                PageState::current(),
+                PageStateTestFactory::get(),
                 CurrentUser::current(),
                 CurrentConfig::current(),
                 $this->accessLevelChecker(),
@@ -922,7 +923,7 @@ namespace Piwigo\Tests\Integration {
                 $htmlRenderer,
                 UrlServiceTestFactory::build(),
                 new EventDispatcher(),
-                PageState::current(),
+                PageStateTestFactory::get(),
                 CurrentUser::current(),
                 CurrentConfig::current(),
                 $this->accessLevelChecker(),

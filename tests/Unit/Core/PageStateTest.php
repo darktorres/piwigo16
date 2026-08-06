@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\Paths;
 
 // Container-shared instance (singleton/service-locator elimination
@@ -103,7 +104,7 @@ test('setUpdatedVersion/markAuthKeyInvalid set their respective fields', functio
         ->and($state->authKeyInvalid)->toBeTrue();
 });
 
-test('current() falls back to a memoized instance when Kernel is not booted', function (): void {
+test('PageStateTestFactory::get falls back to a memoized instance when Kernel is not booted', function (): void {
     // Memoized (not fresh-per-call), same reasoning as EventDispatcher::get()
     // (and formerly ImageStdParams::current()/Translator::get(), closed in
     // sub-phases 12F-4/12F-6): a caller that
@@ -114,20 +115,20 @@ test('current() falls back to a memoized instance when Kernel is not booted', fu
     // files' own NotificationByMailSubController-style shim calls can
     // leave prior errors on it), so this test must start from a clean
     // slate rather than assume it's the first ever caller.
-    $first = PageState::current();
+    $first = PageStateTestFactory::get();
     $first->reset();
     $first->addError('bad thing');
 
-    $second = PageState::current();
+    $second = PageStateTestFactory::get();
 
     expect($second)->toBe($first)
         ->and($second->errors)->toBe(['bad thing']);
 });
 
-test('current() resolves the container-shared instance once Kernel is booted', function (): void {
+test('PageStateTestFactory::get resolves the container-shared instance once Kernel is booted', function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-page-state-test'));
 
     $instance = Kernel::container()->get(PageState::class);
 
-    expect(PageState::current())->toBe($instance);
+    expect(PageStateTestFactory::get())->toBe($instance);
 });

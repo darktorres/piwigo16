@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Controller\Admin\NotificationByMailSubController;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
@@ -54,9 +55,9 @@ function nbmSubReflectSender(float $startTime, bool $isSendmailTimeout): Notific
  * 12D) -- a reflected, no-constructor instance with just those 2
  * properties hand-set needs no DB/mail/template dependency either,
  * matching nbmSubReflectSender()'s own precedent just above. Both are
- * set to the real PageState::current()/TranslatorTestFactory::get() pre-boot
+ * set to the real PageStateTestFactory::get()/TranslatorTestFactory::get() pre-boot
  * fallback instances (this file never calls Kernel::boot()) so the
- * tests' own PageState::current()->errors/Translator-driven message
+ * tests' own PageStateTestFactory::get()->errors/Translator-driven message
  * assertions below keep reading back the same shared state
  * doTimeoutTreatment() itself just wrote to.
  */
@@ -65,7 +66,7 @@ function nbmSubReflectController(): NotificationByMailSubController
     $controller = new ReflectionClass(NotificationByMailSubController::class)->newInstanceWithoutConstructor();
 
     $pageStateProp = new ReflectionProperty(NotificationByMailSubController::class, 'pageState');
-    $pageStateProp->setValue($controller, PageState::current());
+    $pageStateProp->setValue($controller, PageStateTestFactory::get());
 
     $translatorProp = new ReflectionProperty(NotificationByMailSubController::class, 'translator');
     $translatorProp->setValue($controller, TranslatorTestFactory::get());
@@ -103,7 +104,7 @@ test('doTimeoutTreatment computes a real, positive estimated-time when some (but
     $sender = nbmSubReflectSender(TimingHelper::getMoment() - 5.0, true);
 
     $post = ['cat_true' => ['ct_treated_1', 'ct_treated_2', 'ct_untreated']];
-    $errorCountBefore = count(PageState::current()->errors);
+    $errorCountBefore = count(PageStateTestFactory::get()->errors);
 
     $result = nbmSubCallDoTimeoutTreatment($sender, 'cat_true', $post, ['ct_treated_1', 'ct_treated_2']);
 
@@ -113,7 +114,7 @@ test('doTimeoutTreatment computes a real, positive estimated-time when some (but
     assert(is_array($post['cat_true']));
     expect(array_values($post['cat_true']))->toBe(['ct_untreated']);
 
-    $errors = PageState::current()->errors;
+    $errors = PageStateTestFactory::get()->errors;
     expect(count($errors))->toBe($errorCountBefore + 1);
     $message = $errors[count($errors) - 1];
     // English plural, untranslated (no admin.lang loaded in this Unit
@@ -142,11 +143,11 @@ test('doTimeoutTreatment computes the exact ceil()\'d estimated-time, not floor(
     $sender = nbmSubReflectSender($before - 10.0, true);
 
     $post = ['cat_true' => ['t1', 't2']];
-    $errorCountBefore = count(PageState::current()->errors);
+    $errorCountBefore = count(PageStateTestFactory::get()->errors);
 
     nbmSubCallDoTimeoutTreatment($sender, 'cat_true', $post, ['t1', 't2']);
 
-    $errors = PageState::current()->errors;
+    $errors = PageStateTestFactory::get()->errors;
     $message = $errors[count($errors) - 1];
     expect($message)->toEndWith('[Estimated time: 11 seconds].');
     expect(count($errors))->toBe($errorCountBefore + 1);
@@ -166,7 +167,7 @@ test('doTimeoutTreatment leaves the estimated-time at exactly 0 when nobody has 
 
     nbmSubCallDoTimeoutTreatment($sender, 'cat_true', $post, []);
 
-    $errors = PageState::current()->errors;
+    $errors = PageStateTestFactory::get()->errors;
     $message = $errors[count($errors) - 1];
     expect($message)->toEndWith('[Estimated time: 0 seconds].');
 });
@@ -178,12 +179,12 @@ test('doTimeoutTreatment does nothing when the post key is set but not an array'
     // them (isset() true, is_array() false).
     $sender = nbmSubReflectSender(TimingHelper::getMoment() - 5.0, true);
     $post = ['cat_true' => 'not-an-array'];
-    $errorCountBefore = count(PageState::current()->errors);
+    $errorCountBefore = count(PageStateTestFactory::get()->errors);
 
     $result = nbmSubCallDoTimeoutTreatment($sender, 'cat_true', $post, ['t1']);
 
     expect($result)->toBeFalse();
-    expect(count(PageState::current()->errors))->toBe($errorCountBefore);
+    expect(count(PageStateTestFactory::get()->errors))->toBe($errorCountBefore);
 });
 
 test('doTimeoutTreatment drops non-string entries from the reposted selection', function (): void {

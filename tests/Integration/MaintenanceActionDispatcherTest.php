@@ -41,6 +41,7 @@ use Piwigo\Core\CurrentLogger;
 use Override;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Validation\InputValidator;
@@ -286,7 +287,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
         $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(Lang::current(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageState::current()), UrlServiceTestFactory::build(), $configService, new FilesystemIntegrityChecker(Lang::current(), CurrentTemplate::current(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfig::current(), CurrentPaths::get()), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()), new Translator(CurrentConfig::current()), new EventDispatcher(), PageState::current(), CurrentTemplate::current(), new DbMaintenanceRepository(EntityManagerFactory::build($this->conn), DbCredentialsTestFactory::get()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), HtmlServiceTestFactory::build(), Lang::current(), CurrentConfig::current(), new InputValidator(), CurrentPaths::get());
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(Lang::current(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), $configService, new FilesystemIntegrityChecker(Lang::current(), CurrentTemplate::current(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfig::current(), CurrentPaths::get()), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()), new Translator(CurrentConfig::current()), new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), new DbMaintenanceRepository(EntityManagerFactory::build($this->conn), DbCredentialsTestFactory::get()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), HtmlServiceTestFactory::build(), Lang::current(), CurrentConfig::current(), new InputValidator(), CurrentPaths::get());
     }
 
     #[Override]
@@ -317,7 +318,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // a copy-paste of the 'c13y' case's "Reinitialize check integrity".
         self::assertContains(
             'Purge search history : action successfully performed.',
-            PageState::current()->infos
+            PageStateTestFactory::get()->infos
         );
     }
 
@@ -444,7 +445,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
         self::assertContains(
             "Update albums' information : action successfully performed.",
-            PageState::current()->infos
+            PageStateTestFactory::get()->infos
         );
     }
 
@@ -454,7 +455,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
         self::assertContains(
             "Update photos' information : action successfully performed.",
-            PageState::current()->infos
+            PageStateTestFactory::get()->infos
         );
     }
 
@@ -480,7 +481,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         self::assertLessThan($before, $this->countRows(Tables::tags()));
         self::assertContains(
             'Delete orphan tags : action successfully performed.',
-            PageState::current()->infos
+            PageStateTestFactory::get()->infos
         );
     }
 
@@ -490,7 +491,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
         self::assertContains(
             'Purge user cache : action successfully performed.',
-            PageState::current()->infos
+            PageStateTestFactory::get()->infos
         );
     }
 
@@ -500,7 +501,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
         self::assertContains(
             'Purge sessions : action successfully performed.',
-            PageState::current()->infos
+            PageStateTestFactory::get()->infos
         );
     }
 
@@ -510,7 +511,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
         self::assertContains(
             'Purge never used notification feeds : action successfully performed.',
-            PageState::current()->infos
+            PageStateTestFactory::get()->infos
         );
     }
 
@@ -520,7 +521,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
         self::assertContains(
             'All optimizations have been successfully completed.',
-            PageState::current()->infos
+            PageStateTestFactory::get()->infos
         );
     }
 
@@ -530,7 +531,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
         self::assertContains(
             'Reinitialize integrity check : action successfully performed.',
-            PageState::current()->infos
+            PageStateTestFactory::get()->infos
         );
     }
 
@@ -544,7 +545,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // from a real non-zero count this suite has no lounge fixture for.
         self::assertContains(
             '0 photos were moved from the upload lounge to their albums',
-            PageState::current()->infos
+            PageStateTestFactory::get()->infos
         );
     }
 
@@ -566,7 +567,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             unset($_GET['type']);
         }
 
-        self::assertContains('action successfully performed.', PageState::current()->infos);
+        self::assertContains('action successfully performed.', PageStateTestFactory::get()->infos);
     }
 
     public function test_derivatives_with_underscore_joined_types_clears_each_one(): void
@@ -581,7 +582,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             unset($_GET['type']);
         }
 
-        self::assertContains('action successfully performed.', PageState::current()->infos);
+        self::assertContains('action successfully performed.', PageStateTestFactory::get()->infos);
     }
 
     public function test_compiled_templates_fatal_errors_when_the_persistent_cache_is_not_initialized(): void
@@ -631,7 +632,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // MaintenanceActionDispatcher itself.
         $this->dispatcher->dispatch('check_upgrade');
 
-        self::assertContains('Unable to check for upgrade.', PageState::current()->errors);
+        self::assertContains('Unable to check for upgrade.', PageStateTestFactory::get()->errors);
     }
 
     // The entire `else` branch of the 'check_upgrade' case above (the
@@ -664,14 +665,14 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // set()/reset() ceremony needed.
         $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
         $dispatcher = new MaintenanceActionDispatcher(
-            new RedirectService(Lang::current(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageState::current()),
+            new RedirectService(Lang::current(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), PageStateTestFactory::get()),
             UrlServiceTestFactory::build(),
             $configService,
             new FilesystemIntegrityChecker(Lang::current(), CurrentTemplate::current(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfig::current(), CurrentPaths::get()),
             new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()),
             new Translator(CurrentConfig::current()),
             new EventDispatcher(),
-            PageState::current(),
+            PageStateTestFactory::get(),
             CurrentTemplate::current(),
             new DbMaintenanceRepository(EntityManagerFactory::build($this->conn), DbCredentialsTestFactory::get()),
             $this->maintenanceActionDispatcherTestActivityService(),
@@ -699,7 +700,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
             self::assertContains(
                 'Purge compiled templates : action successfully performed.',
-                PageState::current()->infos
+                PageStateTestFactory::get()->infos
             );
         } finally {
             restore_error_handler();

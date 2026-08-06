@@ -12,6 +12,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Permalink\PermalinkRepository;
@@ -44,10 +45,10 @@ final class PermalinkServiceTest extends IntegrationTestCase
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        PageState::current()->reset();
+        PageStateTestFactory::get()->reset();
 
         $this->repo = new PermalinkRepository(EntityManagerFactory::build(DbConnection::build()));
-        $this->service = new PermalinkService(Lang::current(), $this->repo, new ProcessCache(), PageState::current());
+        $this->service = new PermalinkService(Lang::current(), $this->repo, new ProcessCache(), PageStateTestFactory::get());
 
         $this->repo->clearCategoryPermalink(1);
     }
@@ -75,7 +76,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         $result = $this->service->setCatPermalink(1, '12345', false);
 
         self::assertFalse($result);
-        self::assertNotSame([], PageState::current()->errors);
+        self::assertNotSame([], PageStateTestFactory::get()->errors);
     }
 
     public function test_set_cat_permalink_rejects_disallowed_characters(): void
@@ -138,7 +139,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         $result = $this->service->deleteOldPermalinkByValue('never-used-' . bin2hex(random_bytes(4)));
 
         self::assertFalse($result);
-        self::assertNotSame([], PageState::current()->errors);
+        self::assertNotSame([], PageStateTestFactory::get()->errors);
     }
 
     public function test_delete_cat_permalink_with_save_rejects_when_the_live_permalink_was_historically_owned_by_a_different_category(): void
@@ -161,7 +162,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
             $result = $this->service->deleteCatPermalink(1, true);
 
             self::assertFalse($result);
-            self::assertNotSame([], PageState::current()->errors);
+            self::assertNotSame([], PageStateTestFactory::get()->errors);
             self::assertSame($slug, $this->repo->findPermalinkByCategoryId(1), 'a rejected delete must leave the live permalink untouched');
         } finally {
             $this->repo->deleteOldPermalink(2, $slug);

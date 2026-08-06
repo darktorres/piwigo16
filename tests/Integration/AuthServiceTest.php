@@ -20,6 +20,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
     use Piwigo\Config\DeploymentPolicy;
     use Piwigo\Core\PageState;
+    use Piwigo\Tests\Support\PageStateTestFactory;
     use Piwigo\Mail\MailService;
     use Piwigo\Core\Lang;
     use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -141,7 +142,7 @@ namespace Piwigo\Tests\Integration {
                 $this->failedLoginRepo,
                 new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()),
                 EventDispatcher::get(),
-                PageState::current(),
+                PageStateTestFactory::get(),
                 CurrentUser::current(),
                 CurrentConfig::current(),
                 CurrentPaths::get(),

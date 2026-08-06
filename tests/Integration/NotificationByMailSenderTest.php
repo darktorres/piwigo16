@@ -22,6 +22,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
@@ -158,7 +159,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         ];
 
         $this->sender = PresentationAccessor::notificationByMailSender();
-        PageState::current()->reset();
+        PageStateTestFactory::get()->reset();
     }
 
     #[Override]
@@ -174,7 +175,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         CurrentConfig::current()->setSmtpHost('');
         CurrentConfig::current()->setNbmListAllEnabledUsersToSend(false);
         CurrentConfig::current()->setNbmSendDetailedContent(true);
-        PageState::current()->reset();
+        PageStateTestFactory::get()->reset();
         Kernel::reset();
         parent::tearDown();
     }
@@ -290,7 +291,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
 
         self::assertSame(
             ['Mail sent to fixture_admin [admin@example.test].'],
-            PageState::current()->infos
+            PageStateTestFactory::get()->infos
         );
     }
 
@@ -300,7 +301,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
 
         self::assertSame(
             ['Error when sending email to fixture_admin [admin@example.test].'],
-            PageState::current()->errors
+            PageStateTestFactory::get()->errors
         );
     }
 
@@ -308,42 +309,42 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     {
         $this->sender->displayCounterInfo();
 
-        self::assertSame(['No mail to be sent.'], PageState::current()->infos);
-        self::assertSame([], PageState::current()->errors);
+        self::assertSame(['No mail to be sent.'], PageStateTestFactory::get()->infos);
+        self::assertSame([], PageStateTestFactory::get()->errors);
     }
 
     public function test_displayCounterInfo_reports_only_a_success_count_when_nothing_failed(): void
     {
         $this->sender->incMailSentSuccess($this->fakeUser());
-        PageState::current()->reset();
+        PageStateTestFactory::get()->reset();
 
         $this->sender->displayCounterInfo();
 
-        self::assertSame(['1 mail has been sent.'], PageState::current()->infos);
-        self::assertSame([], PageState::current()->errors);
+        self::assertSame(['1 mail has been sent.'], PageStateTestFactory::get()->infos);
+        self::assertSame([], PageStateTestFactory::get()->errors);
     }
 
     public function test_displayCounterInfo_reports_both_failure_and_success_counts_when_some_succeeded(): void
     {
         $this->sender->incMailSentSuccess($this->fakeUser());
         $this->sender->incMailSentFailed($this->fakeUser());
-        PageState::current()->reset();
+        PageStateTestFactory::get()->reset();
 
         $this->sender->displayCounterInfo();
 
-        self::assertSame(['1 mail has not been sent.'], PageState::current()->errors);
-        self::assertSame(['1 mail has been sent.'], PageState::current()->infos);
+        self::assertSame(['1 mail has not been sent.'], PageStateTestFactory::get()->errors);
+        self::assertSame(['1 mail has been sent.'], PageStateTestFactory::get()->infos);
     }
 
     public function test_displayCounterInfo_reports_only_a_failure_count_when_nothing_succeeded(): void
     {
         $this->sender->incMailSentFailed($this->fakeUser());
-        PageState::current()->reset();
+        PageStateTestFactory::get()->reset();
 
         $this->sender->displayCounterInfo();
 
-        self::assertSame(['1 mail has not been sent.'], PageState::current()->errors);
-        self::assertSame([], PageState::current()->infos);
+        self::assertSame(['1 mail has not been sent.'], PageStateTestFactory::get()->errors);
+        self::assertSame([], PageStateTestFactory::get()->infos);
     }
 
     public function test_assignVarsNbmMailContent_builds_a_real_mail_template_without_error(): void
@@ -374,7 +375,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         $result = $this->sender->sendMailNotifications('send', ['this-check-key-does-not-exist']);
 
         self::assertSame([], $result);
-        self::assertSame(['No user to be notified by mail.'], PageState::current()->errors);
+        self::assertSame(['No user to be notified by mail.'], PageStateTestFactory::get()->errors);
     }
 
     public function test_sendMailNotifications_list_to_send_returns_only_users_with_pending_news(): void
@@ -389,7 +390,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertCount(1, $result);
         self::assertInstanceOf(UserMailNotification::class, $result[0]);
         self::assertSame($this->user1OriginalRow['check_key'], $result[0]->checkKey);
-        self::assertSame([], PageState::current()->errors);
+        self::assertSame([], PageStateTestFactory::get()->errors);
     }
 
     public function test_sendMailNotifications_list_to_send_excludes_a_user_with_no_pending_news(): void
@@ -441,9 +442,9 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
                 'Error when sending email to fixture_admin [fixture_admin@example.test].',
                 '1 mail has not been sent.',
             ],
-            PageState::current()->errors
+            PageStateTestFactory::get()->errors
         );
-        self::assertSame([], PageState::current()->infos);
+        self::assertSame([], PageStateTestFactory::get()->infos);
     }
 
     public function test_sendMailNotifications_send_action_uses_the_newsExists_only_branch_when_detailed_content_is_disabled(): void
@@ -460,7 +461,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
                 'Error when sending email to fixture_admin [fixture_admin@example.test].',
                 '1 mail has not been sent.',
             ],
-            PageState::current()->errors
+            PageStateTestFactory::get()->errors
         );
     }
 
@@ -525,8 +526,8 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         $result = $this->sender->doSubscribeUnsubscribeNotificationByMail(true, false, []);
 
         self::assertSame([], $result);
-        self::assertSame(['0 users updated.'], PageState::current()->infos);
-        self::assertSame([], PageState::current()->errors);
+        self::assertSame(['0 users updated.'], PageStateTestFactory::get()->infos);
+        self::assertSame([], PageStateTestFactory::get()->errors);
     }
 
     public function test_doSubscribeUnsubscribeNotificationByMail_records_a_failed_mail_and_leaves_enabled_unchanged_on_delivery_failure(): void
@@ -555,9 +556,9 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
                 '1 mail has not been sent.',
                 '1 user not updated.',
             ],
-            PageState::current()->errors
+            PageStateTestFactory::get()->errors
         );
-        self::assertSame(['0 users updated.'], PageState::current()->infos);
+        self::assertSame(['0 users updated.'], PageStateTestFactory::get()->infos);
         // $doUpdate stayed false on delivery failure, so the batched
         // massUpdate() never included this row -- enabled is untouched.
         self::assertSame(1, $this->user1Enabled());
@@ -575,14 +576,14 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame([], $result);
         self::assertSame(
             ['The time to send mail is limited. Others mails have been skipped.'],
-            PageState::current()->errors
+            PageStateTestFactory::get()->errors
         );
         // displayCounterInfo() runs unconditionally after the loop (even
         // though the loop broke on its very first iteration, before
         // treating any user) -- with nothing sent and nothing failed, its
         // own "no mail to send" info message lands first, then the final
         // updated-count summary below it.
-        self::assertSame(['No mail to be sent.', '0 users updated.'], PageState::current()->infos);
+        self::assertSame(['No mail to be sent.', '0 users updated.'], PageStateTestFactory::get()->infos);
     }
 
     public function test_sendMailNotifications_list_to_send_stops_early_when_the_sendmail_timeout_is_already_exceeded(): void
@@ -595,9 +596,9 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame([], $result);
         self::assertSame(
             ['The time to prepare the list of users who will be sent mail is limited. Other users are not listed.'],
-            PageState::current()->infos
+            PageStateTestFactory::get()->infos
         );
-        self::assertSame([], PageState::current()->errors);
+        self::assertSame([], PageStateTestFactory::get()->errors);
     }
 
     public function test_sendMailNotifications_send_action_stops_early_when_the_sendmail_timeout_is_already_exceeded(): void
@@ -610,11 +611,11 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame([], $result);
         self::assertSame(
             ['The time to send mail is limited. Others mails have been skipped.'],
-            PageState::current()->errors
+            PageStateTestFactory::get()->errors
         );
         // displayCounterInfo() still runs after the loop for a 'send'
         // action regardless of the early break (0 sent, 0 failed).
-        self::assertSame(['No mail to be sent.'], PageState::current()->infos);
+        self::assertSame(['No mail to be sent.'], PageStateTestFactory::get()->infos);
     }
 
     public function test_sendMailNotifications_send_action_builds_an_auth_key_link_and_a_never_sent_before_and_custom_content_mail_for_an_eligible_user(): void
@@ -654,7 +655,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
                 'Error when sending email to power_user [temp4@example.test].',
                 '1 mail has not been sent.',
             ],
-            PageState::current()->errors
+            PageStateTestFactory::get()->errors
         );
 
         $authKeyCount = $this->conn->fetchOne(

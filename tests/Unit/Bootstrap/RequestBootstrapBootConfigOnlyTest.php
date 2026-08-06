@@ -32,11 +32,12 @@ use Sentry\SentrySdk;
  *   no-op method bodies today (`public static function applyDefaults():
  *   void {}` -- confirmed via direct source read, same finding already
  *   documented in Piwigo\Bootstrap\CliBootstrap's own source comment).
- * - `PageState::attachGlobals()` is `self::$instance ??= new self();` --
- *   byte-identical to what `PageState::current()` already does on its
- *   own on first real access, so removing the eager call here changes
- *   nothing any consumer can observe (unlike Lang::attachGlobals() just
- *   below, which does a real, non-idempotent snapshot copy).
+ * - The eager `self::pageState();` priming call is a bare container
+ *   resolve with no side effect of its own -- byte-identical to what any
+ *   later real caller's own container resolve already does on first real
+ *   access, so removing it here changes nothing any consumer can observe
+ *   (unlike Lang::attachGlobals() just below, which does a real,
+ *   non-idempotent snapshot copy).
  */
 beforeEach(function (): void {
     Kernel::reset();

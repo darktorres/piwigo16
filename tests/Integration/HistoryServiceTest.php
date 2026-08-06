@@ -16,6 +16,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
@@ -80,7 +81,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         // overrides don't apply).
         $currentConfig->setLogConf(true);
         CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin']));
-        PageState::current()->reset();
+        PageStateTestFactory::get()->reset();
         $GLOBALS['logger'] = new Logger(['severity' => Logger::OFF]);
 
         $this->conn = DbConnection::build();
@@ -90,7 +91,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         if (! $accessControl instanceof AccessControl) {
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
-        $this->service = new HistoryService($accessControl, EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $currentLogger, new EventDispatcher(), PageState::current(), CurrentUser::current(), $currentConfig);
+        $this->service = new HistoryService($accessControl, EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentUser::current(), $currentConfig);
     }
 
     #[Override]

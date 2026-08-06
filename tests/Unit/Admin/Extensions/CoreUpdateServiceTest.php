@@ -17,6 +17,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Mail\MailService;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Admin\Extensions\CoreUpdateService;
@@ -111,7 +112,7 @@ function core_update_service(): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service(), new EventDispatcher(), PageState::current()), UrlServiceTestFactory::build(), new ConfigService($repo, new EventDispatcher(), CurrentConfig::current()), Paths::fromRoot(dirname(__DIR__, 4)), PageState::current(), CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfig::current());
+    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service(), new EventDispatcher(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ConfigService($repo, new EventDispatcher(), CurrentConfig::current()), Paths::fromRoot(dirname(__DIR__, 4)), PageStateTestFactory::get(), CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfig::current());
 }
 
 test('containerVersionCompare orders by semantic version first', function (): void {
@@ -160,7 +161,7 @@ function core_update_service_at(string $root): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service(), new EventDispatcher(), PageState::current()), UrlServiceTestFactory::build(), new ConfigService($repo, new EventDispatcher(), CurrentConfig::current()), Paths::fromRoot($root), PageState::current(), CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfig::current());
+    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service(), new EventDispatcher(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ConfigService($repo, new EventDispatcher(), CurrentConfig::current()), Paths::fromRoot($root), PageStateTestFactory::get(), CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfig::current());
 }
 
 function core_update_service_step_is(int|string $step, int $target): bool

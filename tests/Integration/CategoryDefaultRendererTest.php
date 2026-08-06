@@ -24,6 +24,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocIndexThumbnailsSelection;
@@ -124,7 +125,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
         }
 
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcher::get(), ImageStdParamsTestFactory::get(), CurrentUser::current(), CurrentConfig::current(), Lang::current(), $processCache, PageState::current());
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcher::get(), ImageStdParamsTestFactory::get(), CurrentUser::current(), CurrentConfig::current(), Lang::current(), $processCache, PageStateTestFactory::get());
     }
 
     #[Override]

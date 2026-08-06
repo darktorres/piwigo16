@@ -17,6 +17,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\TelemetrySenderInterface;
@@ -90,7 +91,7 @@ final class PageTailRendererTest extends IntegrationTestCase
             },
             UrlServiceTestFactory::build(),
             new EventDispatcher(),
-            PageState::current(),
+            PageStateTestFactory::get(),
             CurrentTemplate::current(),
             CurrentConfig::current(),
             new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfig::current())
@@ -101,7 +102,7 @@ final class PageTailRendererTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         CurrentTemplate::current()->reset();
-        PageState::current()->reset();
+        PageStateTestFactory::get()->reset();
         CurrentUser::current()->reset();
         $_SESSION = [];
         parent::tearDown();
@@ -111,7 +112,7 @@ final class PageTailRendererTest extends IntegrationTestCase
     {
         CurrentConfig::current()->setShowQueries(true);
         CurrentConfig::current()->setShowGt(false);
-        PageState::current()->debugOutput = '<li>SELECT 1 -- pagetailrenderer test query</li>';
+        PageStateTestFactory::get()->debugOutput = '<li>SELECT 1 -- pagetailrenderer test query</li>';
 
         $output = $this->renderer->renderToString(microtime(true));
 
@@ -123,7 +124,7 @@ final class PageTailRendererTest extends IntegrationTestCase
     {
         CurrentConfig::current()->setShowQueries(false);
         CurrentConfig::current()->setShowGt(false);
-        PageState::current()->debugOutput = '<li>should-not-appear</li>';
+        PageStateTestFactory::get()->debugOutput = '<li>should-not-appear</li>';
 
         $output = $this->renderer->renderToString(microtime(true));
 
@@ -135,8 +136,8 @@ final class PageTailRendererTest extends IntegrationTestCase
     {
         CurrentConfig::current()->setShowQueries(false);
         CurrentConfig::current()->setShowGt(true);
-        PageState::current()->countQueries = 7;
-        PageState::current()->queriesTime = 1.234567;
+        PageStateTestFactory::get()->countQueries = 7;
+        PageStateTestFactory::get()->queriesTime = 1.234567;
 
         $output = $this->renderer->renderToString(microtime(true) - 2.0);
 

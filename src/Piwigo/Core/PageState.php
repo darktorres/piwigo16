@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-use LogicException;
-
 /**
  * Typed reader/writer for the per-request page state.
  *
@@ -15,9 +13,11 @@ use LogicException;
  * 'msg'` directly. Re-investigated and confirmed dead ("nothing is frozen"
  * gap-closure): `global $page` has zero hits repo-wide, and the two real
  * consumers this docblock used to cite (PageHeaderRenderer.php,
- * RequestBootstrap.php) already read `PageState::current()->headerNotes`/
- * `headerMessages`, never the raw global. The bridge and
- * `include/common.inc.php`'s own `$page`/`$GLOBALS['header_msgs']`/
+ * RequestBootstrap.php) already read `headerNotes`/`headerMessages` off a
+ * real instance, never the raw global -- PageHeaderRenderer.php's own
+ * render() now takes `PageState` as an explicit parameter, and
+ * RequestBootstrap resolves it via its own `pageState()` accessor. The
+ * bridge and `include/common.inc.php`'s own `$page`/`$GLOBALS['header_msgs']`/
  * `$GLOBALS['header_notes']` seeding are both gone.
  *
  * Singleton/service-locator elimination campaign, Phase 4: converted to a
@@ -26,9 +26,9 @@ use LogicException;
  * `attachGlobals()` seeding-point marker is gone entirely: constructing
  * this class no longer has any globals-bridging work to do, and
  * `RequestBootstrap` now simply resolves the shared instance from the
- * container like every other converted class in this campaign.
- * `current()` is the transitional `@deprecated` shim for callers not yet
- * converted to constructor injection -- see its own docblock.
+ * container like every other converted class in this campaign. The former
+ * `current()` transitional `@deprecated` shim for callers not yet
+ * converted to constructor injection closed outright in sub-phase 12F-7.
  *
  * Deliberately no `keyedErrors`/`setKeyedError()` (present in the plan
  * doc's inline sketch) -- no legacy correspondent and no real caller exist
@@ -72,8 +72,6 @@ use LogicException;
  */
 final class PageState
 {
-    private static ?self $fallback = null;
-
     /**
      * @var list<string>
      */
@@ -199,35 +197,6 @@ final class PageState
     public array $commentRejectionReasons = [];
 
     public function __construct() {}
-
-    /**
-     * @deprecated transitional bridge for callers not yet converted to
-     * constructor injection -- singleton/service-locator elimination
-     * campaign, Phase 4. Memoized fallback (not fresh-per-call), same
-     * reasoning as EventDispatcher::get() (and formerly
-     * ImageStdParams::current()/Translator::get(), closed in sub-phases
-     * 12F-4/12F-6): this class accumulates state written by
-     * one caller (e.g. addError()) and read by another later in the same
-     * request (PageHeaderRenderer's own hasErrors() read) -- a fresh
-     * instance per not-booted call would silently lose every write
-     * between calls. Real production code never hits the not-booted
-     * branch (RequestBootstrap resolves this container-shared instance
-     * early in finalize()/bootConfigOnly(), before any real caller runs),
-     * but a pure-Unit test reaching deep into a class using PageState
-     * shouldn't have to bootstrap a full Kernel first.
-     */
-    public static function current(): self
-    {
-        if (Kernel::isBooted()) {
-            $instance = Kernel::container()->get(self::class);
-            if (! $instance instanceof self) {
-                throw new LogicException('Container returned an unexpected type for ' . self::class);
-            }
-            return $instance;
-        }
-
-        return self::$fallback ??= new self();
-    }
 
     /**
      * Test-only -- re-initializes every property back to its constructed

@@ -808,8 +808,8 @@ final class WsCategoriesMutationTest extends ContractTestCase
     /**
      * CategoryService::moveCategories()'s own uppercats-prefix guard (`you
      * cannot move a category into a sub-category or itself`) records its
-     * failure onto PageState::current() via addError() rather than
-     * returning it directly -- move()'s own `$pageState->hasErrors()` check
+     * failure onto its own `PageState $pageState` parameter via addError()
+     * rather than returning it directly -- move()'s own `$pageState->hasErrors()` check
      * afterwards is what turns that into the WS-level PwgError this test
      * verifies. Genuinely reachable via a real WS call: attempting to move
      * a parent album into its own child.

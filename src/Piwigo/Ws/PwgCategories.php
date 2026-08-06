@@ -1328,9 +1328,10 @@ final class PwgCategories
         );
         PermissionCacheInvalidator::invalidate();
 
-        // moveCategories() writes onto PageState::current() directly (Legacy
-        // Coupling Retirement Track A batch A5) -- reading it back through
-        // the same $pageState instance reflects the mutation without
+        // moveCategories() writes onto the real, constructor-injected
+        // PageState directly (Legacy Coupling Retirement Track A batch A5)
+        // -- reading it back through the same $pageState instance reflects
+        // the mutation without
         // needing get_defined_vars(). hasErrors() (a real method call, not
         // a bare property re-read) is what stops PHPStan from treating the
         // property as still statically `[]` from the reset a few lines

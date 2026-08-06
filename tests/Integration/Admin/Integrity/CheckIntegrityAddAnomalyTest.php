@@ -6,6 +6,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Core\AppInfo;
 use Piwigo\Admin\Integrity\CheckIntegrity;
@@ -44,7 +45,7 @@ function checkIntegrityAddAnomalyNew(): CheckIntegrity
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
     expect($repo)->toBeInstanceOf(IntegrityIgnoredAnomalyRepository::class);
 
-    return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(CurrentConfig::current()), EventDispatcher::get(), PageState::current(), CurrentTemplate::current());
+    return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(CurrentConfig::current()), EventDispatcher::get(), PageStateTestFactory::get(), CurrentTemplate::current());
 }
 
 test('add_anomaly records a new anomaly with is_callable computed from a real function name', function (): void {

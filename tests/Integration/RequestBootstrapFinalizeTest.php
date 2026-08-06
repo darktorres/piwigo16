@@ -17,6 +17,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -90,7 +91,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         CurrentUser::current()->reset();
         CurrentTemplate::current()->reset();
         EventDispatcher::get()->reset();
-        PageState::current()->reset();
+        PageStateTestFactory::get()->reset();
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -101,7 +102,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
 
     public function test_finalize_adds_a_stale_auth_key_error_message(): void
     {
-        PageState::current()->markAuthKeyInvalid();
+        PageStateTestFactory::get()->markAuthKeyInvalid();
 
         RequestBootstrap::finalize();
 
@@ -111,7 +112,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
                 UrlServiceTestFactory::build()->getRootUrl() . 'identification.php',
                 Lang::current()->t('Login')
             )],
-            PageState::current()->errors
+            PageStateTestFactory::get()->errors
         );
     }
 
@@ -178,7 +179,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
 
         RequestBootstrap::finalize();
 
-        // finalize() itself flushes PageState::current()->headerMessages
+        // finalize() itself flushes PageStateTestFactory::get()->headerMessages
         // into the template's own 'header_msgs' var and resets the
         // PageState-side list back to [] in the same method body -- the
         // template var is the only place left to observe it afterwards.

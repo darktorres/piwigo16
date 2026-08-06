@@ -10,6 +10,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
@@ -129,7 +130,7 @@ test('render does nothing when no related category is commentable', function ():
     $renderer->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, 42, 0, makePictureCommentUrlService(), [
         ['commentable' => false],
         ['commentable' => 0],
-    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
 
     expect(CurrentTemplate::current()->get()->get_template_vars('comments'))->toBeNull()
         ->and(CurrentTemplate::current()->get()->get_template_vars('comment_add'))->toBeNull();
@@ -201,7 +202,7 @@ test('render only counts the first commentable related category then stops (`bre
         $renderer->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => true],
             ['id' => 999], // no 'commentable' key -- only reached by `continue`
-        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     } finally {
@@ -226,7 +227,7 @@ test('render rejects a posted comment as "ugly spammer" when no related category
     try {
         $renderer->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => false],
-        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
@@ -258,7 +259,7 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
     try {
         $renderer->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => true],
-        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+        ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
@@ -291,7 +292,7 @@ test('render lets a guest post a comment when comments_forall is on', function (
     $renderer = new PictureCommentRenderer();
     $renderer->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, 42, 0, makePictureCommentUrlService(), [
         ['commentable' => false],
-    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
 
     expect(CurrentTemplate::current()->get()->get_template_vars('comments'))->toBeNull();
 });
@@ -334,7 +335,7 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     // is never entered either.
     $renderer->render(Lang::current(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), null, 999999999, 0, makePictureCommentUrlService(), [
         ['commentable' => true],
-    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageState::current(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
+    ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
 
     expect(CurrentTemplate::current()->get()->get_template_vars('COMMENT_LIST'))->toBe('STATIC-COMMENT-LIST-CONTENT')
         ->and(CurrentTemplate::current()->get()->get_template_vars('comments'))->toBe([]);

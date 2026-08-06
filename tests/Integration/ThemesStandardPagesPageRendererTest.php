@@ -12,6 +12,7 @@ use Piwigo\Users\UserService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Users\CurrentUser;
 use RuntimeException;
@@ -301,11 +302,11 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         return new ThemesStandardPagesPageRenderer(
             Lang::current(),
             $this->accessControl(),
-            new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageState::current()),
+            new RedirectService(Lang::current(), $this->userService(), EventDispatcher::get(), PageStateTestFactory::get()),
             UrlServiceTestFactory::build(),
             $this->configService,
             StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php'),
-            PageState::current(),
+            PageStateTestFactory::get(),
             CurrentTemplate::current(),
             HtmlServiceTestFactory::build(),
             CurrentConfig::current(),

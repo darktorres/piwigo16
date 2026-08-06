@@ -16,6 +16,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Filter\FilterService;
 use Piwigo\Lang\Translator;
@@ -81,7 +82,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'status' => 'admin', 'level' => 8, 'forbidden_categories' => '', 'recent_period' => 7]));
 
         $_SESSION = [];
-        PageState::current()->reset();
+        PageStateTestFactory::get()->reset();
         $this->filterState = new FilterState();
         $this->sessionService = new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current());
         $this->translator = new Translator(CurrentConfig::current());
@@ -93,7 +94,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         $_SESSION = [];
         unset($_GET['filter']);
         CurrentUser::current()->reset();
-        PageState::current()->reset();
+        PageStateTestFactory::get()->reset();
         parent::tearDown();
     }
 
@@ -128,7 +129,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     {
         $_GET['filter'] = 'start-recent-30';
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageState::current(), CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUser::current());
 
         self::assertTrue($this->filterState->isEnabled());
         $categories = $this->filterState->categories();
@@ -143,7 +144,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
 
         self::assertSame(
             ['Photos posted within the last 30 days.'],
-            PageState::current()->headerNotes
+            PageStateTestFactory::get()->headerNotes
         );
 
         // Session persistence -- the exact shape read back by a later call.
@@ -162,7 +163,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     public function test_initialize_reads_cached_categories_from_the_session_without_recomputing_when_not_stale(): void
     {
         $_GET['filter'] = 'start-recent-14';
-        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageState::current(), CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUser::current());
         self::assertSame(2, $this->filterState->categories()[2]['nb_images']);
 
         // A brand-new, real "recent" image inserted into category 2 -- a
@@ -181,7 +182,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         try {
             unset($_GET['filter']);
             $this->filterState->reset();
-            new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageState::current(), CurrentUser::current());
+            new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUser::current());
 
             self::assertTrue($this->filterState->isEnabled());
             self::assertSame(2, $this->filterState->categories()[2]['nb_images']);
@@ -200,7 +201,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
             'date' => date('Ymd'),
         ];
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageState::current(), CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUser::current());
 
         self::assertTrue($this->filterState->isEnabled());
         // Recomputed (not left at the stale/absent cached value) -- the
@@ -220,7 +221,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
             'date' => date('Ymd'),
         ];
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageState::current(), CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUser::current());
 
         self::assertTrue($this->filterState->isEnabled());
         $checkKey = $_SESSION['pwg_filter_check_key'];
@@ -230,7 +231,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     public function test_initialize_disables_and_clears_the_session_when_the_page_filter_is_cancelled(): void
     {
         $_GET['filter'] = 'start-recent-7';
-        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageState::current(), CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUser::current());
         self::assertTrue($_SESSION['pwg_filter_enabled']);
 
         unset($_GET['filter']);
@@ -241,7 +242,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         $currentConfig->setFilterPages(['default' => ['used' => true, 'cancel' => true, 'add_notes' => true]]);
         $this->filterState->reset();
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageState::current(), CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUser::current());
 
         self::assertFalse($this->filterState->isEnabled());
         self::assertArrayNotHasKey('pwg_filter_enabled', $_SESSION);
@@ -255,7 +256,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     {
         // Never touched $_GET['filter'] or $_SESSION at all -- the plain
         // "nothing ever enabled this" default path.
-        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageState::current(), CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUser::current());
 
         self::assertFalse($this->filterState->isEnabled());
     }
@@ -264,7 +265,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     {
         $_GET['filter'] = 'not-a-real-filter-token';
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageState::current(), CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUser::current());
 
         self::assertFalse($this->filterState->isEnabled());
     }
@@ -282,7 +283,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         // rather than one this method itself could ever have written.
         $_SESSION['pwg_filter_check_key'] = 'not-an-array';
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageState::current(), CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUser::current());
 
         self::assertTrue($this->filterState->isEnabled());
         // Recomputed from the fallback default (time=0 unconditionally
@@ -309,7 +310,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'status' => 'admin', 'level' => 8, 'forbidden_categories' => '1,2', 'recent_period' => 7]));
         $_GET['filter'] = 'start-recent-30';
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageState::current(), CurrentUser::current());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, Lang::current(), CurrentConfig::current(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUser::current());
 
         self::assertTrue($this->filterState->isEnabled());
         self::assertSame([], $this->filterState->categories());

@@ -22,6 +22,7 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Env;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
@@ -138,16 +139,16 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     private function newCheckIntegrity(): CheckIntegrity
     {
-        return new CheckIntegrity(Lang::current(), $this->buildIntegrityRepo(), new Translator(CurrentConfig::current()), EventDispatcher::get(), PageState::current(), CurrentTemplate::current());
+        return new CheckIntegrity(Lang::current(), $this->buildIntegrityRepo(), new Translator(CurrentConfig::current()), EventDispatcher::get(), PageStateTestFactory::get(), CurrentTemplate::current());
     }
 
     public function test_check_reports_no_header_note_when_zero_anomalies_are_found(): void
     {
-        $before = count(PageState::current()->headerNotes);
+        $before = count(PageStateTestFactory::get()->headerNotes);
 
         $this->newCheckIntegrity()->check();
 
-        self::assertCount($before, PageState::current()->headerNotes);
+        self::assertCount($before, PageStateTestFactory::get()->headerNotes);
     }
 
     public function test_check_reports_a_singular_header_note_for_exactly_one_anomaly(): void
@@ -158,7 +159,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         $this->newCheckIntegrity()->check();
 
-        self::assertContains('1 anomaly has been detected.', PageState::current()->headerNotes);
+        self::assertContains('1 anomaly has been detected.', PageStateTestFactory::get()->headerNotes);
     }
 
     public function test_check_reports_a_plural_header_note_for_multiple_anomalies(): void
@@ -170,7 +171,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         $this->newCheckIntegrity()->check();
 
-        self::assertContains('2 anomalies have been detected.', PageState::current()->headerNotes);
+        self::assertContains('2 anomalies have been detected.', PageStateTestFactory::get()->headerNotes);
     }
 
     public function test_check_correction_mode_reports_the_corrected_count_for_a_successful_fix(): void
@@ -186,7 +187,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         $c13y = $this->newCheckIntegrity();
         $c13y->check();
 
-        self::assertContains('1 anomaly has been corrected.', PageState::current()->infos);
+        self::assertContains('1 anomaly has been corrected.', PageStateTestFactory::get()->infos);
         self::assertTrue($c13y->retrieve_list[0]['corrected'] ?? false);
     }
 
@@ -203,7 +204,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         $c13y = $this->newCheckIntegrity();
         $c13y->check();
 
-        self::assertContains('1 anomaly has not been corrected.', PageState::current()->errors);
+        self::assertContains('1 anomaly has not been corrected.', PageStateTestFactory::get()->errors);
         self::assertFalse($c13y->retrieve_list[0]['corrected'] ?? false);
     }
 
@@ -220,7 +221,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         $c13y = $this->newCheckIntegrity();
         $c13y->check();
 
-        self::assertContains('1 anomaly has been ignored.', PageState::current()->infos);
+        self::assertContains('1 anomaly has been ignored.', PageStateTestFactory::get()->infos);
         self::assertTrue($c13y->retrieve_list[0]['ignored'] ?? false);
         self::assertSame([$id], $c13y->build_ignore_list);
 

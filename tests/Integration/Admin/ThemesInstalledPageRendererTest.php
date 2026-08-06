@@ -14,6 +14,7 @@ use Piwigo\Core\WsContext;
 use Piwigo\Core\Lang;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Bootstrap\RedirectService;
@@ -123,7 +124,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         if (! $accessControl instanceof AccessControl) {
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
-        $this->renderer = new ThemesInstalledPageRenderer(Lang::current(), $accessControl, new RedirectService(Lang::current(), $userService, new EventDispatcher(), PageState::current()), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageState::current(), CurrentTemplate::current(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfig::current(), $wsContext, CurrentUser::current(), CurrentPaths::get());
+        $this->renderer = new ThemesInstalledPageRenderer(Lang::current(), $accessControl, new RedirectService(Lang::current(), $userService, new EventDispatcher(), PageStateTestFactory::get()), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfig::current(), $wsContext, CurrentUser::current(), CurrentPaths::get());
 
         $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\TimingHelper;
 
 /**
@@ -78,7 +79,7 @@ test('microSeconds puts the real timestamp first and the real leading 6 fraction
  * Confirmed-equivalent: line 52's RemoveDoubleCast (`$now2_float =
  * $now[1] . '.' . $now2[1];` instead of wrapping it in `(float)`). The
  * un-cast value is only ever used in `number_format($now2_float -
- * PageState::current()->requestStart, ...)` -- PHP's own `-` operator
+ * PageStateTestFactory::get()->requestStart, ...)` -- PHP's own `-` operator
  * already coerces a numeric string operand to a number identically to
  * an explicit cast (the same cast-redundant-with-implicit-operator-
  * coercion pattern already established elsewhere in this sweep).
@@ -86,12 +87,12 @@ test('microSeconds puts the real timestamp first and the real leading 6 fraction
  * cast removed.
  */
 test('debug appends a formatted line with elapsed time and query count to PageState\'s debug output', function (): void {
-    PageState::current()->requestStart = microtime(true);
-    PageState::current()->countQueries = 5;
-    $before = PageState::current()->debugOutput;
+    PageStateTestFactory::get()->requestStart = microtime(true);
+    PageStateTestFactory::get()->countQueries = 5;
+    $before = PageStateTestFactory::get()->debugOutput;
 
-    TimingHelper::debug('hello world', PageState::current());
+    TimingHelper::debug('hello world', PageStateTestFactory::get());
 
-    $appended = substr(PageState::current()->debugOutput, strlen($before));
+    $appended = substr(PageStateTestFactory::get()->debugOutput, strlen($before));
     expect($appended)->toMatch('/^<p>\[\d+\.\d{3} s, 5 queries\] : hello world<\/p>\n$/');
 });

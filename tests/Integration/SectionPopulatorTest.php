@@ -39,6 +39,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupEntity;
@@ -150,7 +151,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
         $this->userService = new UserService(Lang::current(), new UserRepository($em, new EventDispatcher(), CurrentConfig::current()), $em->getRepository(GroupEntity::class), $mailer, new ActivityService($em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, $this->sessionService, new EventDispatcher(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPaths::get());
-        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, HtmlServiceTestFactory::build(), new RedirectService(Lang::current(), $this->userService, EventDispatcher::get(), PageState::current()), $this->sessionService, new EventDispatcher(), CurrentUser::current(), Lang::current(), CurrentConfig::current(), new CurrentLogger(), new DeploymentPolicy(), CurrentPaths::get(), $this->tagService);
+        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, HtmlServiceTestFactory::build(), new RedirectService(Lang::current(), $this->userService, EventDispatcher::get(), PageStateTestFactory::get()), $this->sessionService, new EventDispatcher(), CurrentUser::current(), Lang::current(), CurrentConfig::current(), new CurrentLogger(), new DeploymentPolicy(), CurrentPaths::get(), $this->tagService);
         $this->sectionRepo = new SectionRepository($em);
         $this->currentLogger = new CurrentLogger();
         $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
@@ -179,7 +180,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         unset($_SESSION['pwg_image_order'], $_GET['action']);
         CurrentUser::current()->reset();
         CurrentTemplate::current()->reset();
-        PageState::current()->reset();
+        PageStateTestFactory::get()->reset();
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -206,7 +207,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->tagService,
             $this->searchService,
             $this->userService,
-            new RedirectService(Lang::current(), $this->userService, EventDispatcher::get(), PageState::current()),
+            new RedirectService(Lang::current(), $this->userService, EventDispatcher::get(), PageStateTestFactory::get()),
             UrlServiceTestFactory::build(),
             $this->filterState,
             $this->currentLogger,
@@ -214,7 +215,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             new RequestMountDepth(),
             $this->sessionService,
             new EventDispatcher(),
-            PageState::current(),
+            PageStateTestFactory::get(),
             CurrentUser::current(),
             CurrentConfig::current(),
             TranslatorTestFactory::get(),

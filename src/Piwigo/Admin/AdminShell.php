@@ -63,8 +63,9 @@ use Piwigo\Validation\InputValidator;
  * $conf;`/`global $page;` reads/writes in run() are gone -- $conf was
  * dead (never referenced), $page's keys (page_banner/body_id/
  * nb_pending_comments/no_md5sum_number/nb_orphans/nb_photos_total) are
- * all PageState::current() calls now, consumed by IntroSubController/
- * PageHeaderRenderer/FilterPanelRenderer/SiteUpdateSubController.
+ * all real PageState reads/writes now (constructor-injected
+ * $this->pageState since sub-phase 12F-7's shim closure), consumed by
+ * IntroSubController/PageHeaderRenderer/FilterPanelRenderer/SiteUpdateSubController.
  */
 final class AdminShell
 {

@@ -29,7 +29,8 @@ use Piwigo\Template\CurrentTemplate;
  * MenubarSubController::handle()'s) own method scope, that write silently
  * landed in a method-local variable discarded on return -- a non-webmaster
  * admin editing this page never saw the warning. Retargeting onto
- * PageState::current() (Legacy Coupling Retirement Track A batch A5)
+ * PageState (Legacy Coupling Retirement Track A batch A5, real
+ * constructor injection since sub-phase 12F-7's shim closure)
  * structurally closes off this whole bug class here: no `global`
  * declaration is needed to reach it from any scope.
  */

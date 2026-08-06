@@ -586,73 +586,6 @@ test('CurrentConfigService::reset() is only called from tests/', function (): vo
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('PageState::current() transitional bridge has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 4: current()
-    // kept its original name (no `Static` suffix, matching
-    // ImageStdParams/DeploymentPolicy/DbCredentials's own precedent -- no
-    // competing real instance method to disambiguate from). Every phase
-    // that converts one more of these files to constructor-injected
-    // PageState should remove it from the allow-list below.
-    // Admin/PluginLoader.php closed
-    // this shim in Phase 11 sub-phase 11G -- loadPlugins()/loadPlugin()/
-    // autoupdatePlugin() (already fully NOCTOR, every other collaborator
-    // an explicit static param) take PageState the same way.
-    // Every Ws/Pwg*.php file took real constructor injection during its
-    // own Phase 10 sub-batch, so none remain on this allow-list.
-    // Mail/MailService.php, Template/Template.php, and
-    // Html/HtmlService.php itself all closed this shim in Phase 11
-    // sub-phase 11E -- real constructor injection (MailService's own
-    // former authService() lazy-default helper now reads
-    // $this->deploymentPolicy instead). Admin/Install/InstallWizard.php
-    // closed this shim in Phase 11 sub-phase 11K -- its one site was a
-    // real, previously-unnoticed leftover bug, not a genuine need: the
-    // class already had $this->pageState as a real constructor property
-    // (used everywhere else in the file), this one AuthService
-    // construction site just never used it. Bootstrap/RedirectService.php
-    // closed too (Phase 12 sub-phase 12B) -- found live, a real leftover
-    // bug: EventDispatcher/PageState were passed through to
-    // Template/PageHeaderRenderer via the shim on every call despite this
-    // class already taking Lang/UserService via real constructor
-    // injection; both are now real required constructor params
-    // (`$this->eventDispatcher`/`$this->pageState`), same shape. Sub-phase
-    // 12D: Core/Logger.php closed too -- ~80 real `new Logger(...)` sites
-    // rules out a required constructor param, so formatMessage() reads a
-    // new private lazy pageState() resolver instead (same
-    // Kernel::isBooted()-checked shape as Activity/ActivityService's own
-    // currentUser()/currentConfig(); PageState's own constructor is a
-    // trivial no-arg `public function __construct() {}`, unlike
-    // ImageStdParams, so an unmemoized fresh fallback pre-boot is safe --
-    // only ever degrades executionUuid to its own already-empty default).
-    // Core/TimingHelper.php closed too -- debug() takes PageState as an
-    // explicit param instead (NOCTOR shape, only 4 real call sites:
-    // Category/CategoryDefaultRenderer.php/CategoryCatsRenderer.php each
-    // gained PageState as a real constructor param; Calendar/
-    // CalendarRenderer.php did too, threaded from its one real
-    // construction site, Section/SectionPopulator.php, which already held
-    // it). Controller/Admin/NotificationByMailSubController.php closed
-    // too -- its 2 sites (inside doTimeoutTreatment()/
-    // insertNewDataUserMailNotification()) turned out to be a real
-    // leftover bug, not the genuine "no $this" shape this comment used to
-    // claim (the same stale-assumption pattern found for
-    // Category/CategoryService.php this same sub-phase): both are called
-    // via `self::`/`$this->` from real instance-method call sites, so
-    // both dropped `static` and now read $this->pageState (a new
-    // constructor param, zero real `new NotificationByMailSubController(...)`
-    // sites to update -- container-resolved only) instead.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PageState::current(');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
 /**
  * P23 Stage 1f (finding #15, testable half): 24 more classes gained the
  * same "static reset() exists purely for test isolation between cases"
@@ -842,8 +775,9 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     // (matching every one of its dozen sibling resolvers' own idiom
     // exactly), its 2 real call sites just never used it.
     // Bootstrap/RedirectService.php closed too -- found live, a real
-    // leftover bug (see this file's own "PageState::current() transitional
-    // bridge" test docblock for the same finding): EventDispatcher is now
+    // leftover bug (PageState::current()'s own former allow-list test
+    // found the identical finding, before that shim closed in sub-phase
+    // 12F-7): EventDispatcher is now
     // a real required constructor param (`$this->eventDispatcher`), same
     // shape as PageState. Sub-phase 12D: Admin/Extensions/ExtensionScanner.php
     // closed too -- its own "no constructor at all" reasoning was true but

@@ -6,6 +6,7 @@ namespace Piwigo\Admin\BatchManager;
 
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageDuplicateField;
 use Piwigo\Image\ImageService;
@@ -52,7 +53,7 @@ final readonly class FilterResolver
      * @param array<string, mixed> $bulkFilter
      * @return list<int>|null
      */
-    public function resolvePrefilter(string $prefilter, array $bulkFilter, int $userId, string $orderBy): ?array
+    public function resolvePrefilter(string $prefilter, array $bulkFilter, UserId $userId, string $orderBy): ?array
     {
         return match ($prefilter) {
             'caddie' => $this->caddiePhotoIds($userId),
@@ -69,17 +70,17 @@ final readonly class FilterResolver
     /**
      * @return list<int>
      */
-    private function caddiePhotoIds(int $userId): array
+    private function caddiePhotoIds(UserId $userId): array
     {
-        return $this->caddieRepo->findElementIdsForUser($userId);
+        return $this->caddieRepo->findElementIdsForUser($userId->value);
     }
 
     /**
      * @return list<int>
      */
-    private function favoritePhotoIds(int $userId): array
+    private function favoritePhotoIds(UserId $userId): array
     {
-        return $this->userService->getFavoriteImageIds(UserId::from($userId));
+        return $this->userService->getFavoriteImageIds($userId);
     }
 
     /**
@@ -177,9 +178,9 @@ final readonly class FilterResolver
         return $this->imageService->getIdsWithConditions([], [], $orderBy);
     }
 
-    public function categoryExists(int $categoryId): bool
+    public function categoryExists(CategoryId $categoryId): bool
     {
-        return $this->categoryService->existsById($categoryId);
+        return $this->categoryService->existsById($categoryId->value);
     }
 
     /**

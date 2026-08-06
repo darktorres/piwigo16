@@ -15,7 +15,9 @@ use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\TagId;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Request\BatchManagerRequest;
 use Piwigo\Core\CurrentLogger;
@@ -113,7 +115,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         $batchManagerRequest = BatchManagerRequest::fromGlobals($this->inputValidator);
 
         $user_id = $this->currentUser->get()
-            ->id->value;
+            ->id;
 
         $available_permission_levels = $this->currentConfig->availablePermissionLevels();
         $conf_order_by = $this->currentConfig->orderBy();
@@ -191,7 +193,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         }
     }
 
-    private function handleGetActions(BatchManagerRequest $batchManagerRequest, string $getPage, int $userId): void
+    private function handleGetActions(BatchManagerRequest $batchManagerRequest, string $getPage, UserId $userId): void
     {
         $action = $batchManagerRequest->action;
         if ($action === null) {
@@ -203,7 +205,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             EntityManagerFactory::build(DbConnection::build())->getRepository(CaddieEntity::class)
-                ->replaceForUser($userId, []);
+                ->replaceForUser($userId->value, []);
 
             $_SESSION['page_infos'] = [
                 $this->lang->t('Information data registered in database'),
@@ -550,7 +552,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         FilterResolver $filterResolver,
         array $bulkFilter,
         string $getPage,
-        int $userId,
+        UserId $userId,
         string $confOrderBy,
         ?array &$duplicatesOnFields = null,
     ): array {
@@ -584,7 +586,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             $category_id = (int) $bulkFilter['category'];
 
             // we need to check the category still exists (it may have been deleted since it was added in the session)
-            if (! $filterResolver->categoryExists($category_id)) {
+            if (! $filterResolver->categoryExists(CategoryId::from($category_id))) {
                 unset($_SESSION['bulk_manager_filter']);
                 $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=' . $getPage);
             }

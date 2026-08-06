@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\Md5Sum;
+use Piwigo\Common\ValueObject\RelPath;
+use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Maps the `images` table (`piwigo_images` once Piwigo\Db\TablePrefixListener
@@ -13,6 +18,18 @@ use Doctrine\ORM\Mapping as ORM;
  * \DateTimeImmutable -- matches Image\Projection\Image's own
  * already-documented decision (every real consumer wants the raw DB
  * DATETIME string form).
+ *
+ * Re-examined fresh during the typed-primitives adoption campaign
+ * (Common\ValueObject\MysqlDate/MysqlDateTime now exist): traced every
+ * real consumer of these 4 properties and found none do arithmetic or
+ * typed comparison -- Image\Projection\Image::fromArray()/toArray() just
+ * round-trip the raw string unchanged for template/JSON output.
+ * MysqlDateTime::from() would add real construction-time calendar
+ * validation, which is a behavior change with legacy-data risk (a
+ * pre-existing MySQL zero-date row would throw on hydration, not just on
+ * a new write) for zero real benefit given how these fields are actually
+ * consumed. Decision reaffirmed, not revisited again without new
+ * information.
  *
  * The single-row-by-id ImageRepository methods
  * (findById/findByPath/updateCoi/updateRotation/updateDimensions) go
@@ -32,8 +49,8 @@ final class ImageEntity
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
-    public ?int $id = null;
+    #[ORM\Column(type: 'image_id')]
+    public ?ImageId $id = null;
 
     public function __construct(
         #[ORM\Column(type: 'string', length: 255)]
@@ -64,16 +81,16 @@ final class ImageEntity
         public ?string $dateMetadataUpdate,
         #[ORM\Column(name: 'rating_score', type: 'float', nullable: true)]
         public ?float $ratingScore,
-        #[ORM\Column(type: 'string', length: 255)]
-        public string $path,
-        #[ORM\Column(name: 'storage_category_id', type: 'smallint', nullable: true)]
-        public ?int $storageCategoryId,
+        #[ORM\Column(type: 'rel_path', length: 255)]
+        public RelPath $path,
+        #[ORM\Column(name: 'storage_category_id', type: 'category_id', nullable: true)]
+        public ?CategoryId $storageCategoryId,
         #[ORM\Column(type: 'smallint')]
         public int $level,
-        #[ORM\Column(type: 'string', length: 32, nullable: true)]
-        public ?string $md5sum,
-        #[ORM\Column(name: 'added_by', type: 'integer', nullable: true)]
-        public ?int $addedBy,
+        #[ORM\Column(type: 'md5sum', length: 32, nullable: true)]
+        public ?Md5Sum $md5sum,
+        #[ORM\Column(name: 'added_by', type: 'user_id', nullable: true)]
+        public ?UserId $addedBy,
         #[ORM\Column(type: 'smallint', nullable: true)]
         public ?int $rotation,
         #[ORM\Column(type: 'float', nullable: true)]

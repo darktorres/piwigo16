@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration {
 use Override;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\RedirectServiceInterface;
@@ -125,7 +126,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
 
     private function makeCalendar(): CalendarWeekly
     {
-        $calendar = new CalendarWeekly(Lang::current(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParams::current());
+        $calendar = new CalendarWeekly(Lang::current(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParamsTestFactory::get());
         $calendar->chronology_field = 'posted';
         $calendar->initialize(new CalendarQueryScope(
             new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)'),

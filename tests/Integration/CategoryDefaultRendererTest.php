@@ -30,6 +30,7 @@ use Piwigo\Event\Location\LocIndexThumbnailsSelection;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
@@ -95,7 +96,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // display flag CategoryDefaultRenderer/thumbnails.tpl reads.
         $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
         $configService->loadConfFromDb();
-        ImageStdParams::current()->load_from_db();
+        ImageStdParamsTestFactory::get()->load_from_db();
 
         $this->conn = DbConnection::build();
         $em = EntityManagerFactory::build($this->conn);
@@ -123,7 +124,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
         }
 
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcher::get(), ImageStdParams::current(), CurrentUser::current(), CurrentConfig::current(), Lang::current(), $processCache, PageState::current());
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcher::get(), ImageStdParamsTestFactory::get(), CurrentUser::current(), CurrentConfig::current(), Lang::current(), $processCache, PageState::current());
     }
 
     #[Override]

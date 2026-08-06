@@ -19,6 +19,7 @@ use LogicException;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
@@ -215,7 +216,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             CurrentUser::current(),
             CurrentConfig::current(),
             Translator::get(),
-            ImageStdParams::current(),
+            ImageStdParamsTestFactory::get(),
         );
     }
 

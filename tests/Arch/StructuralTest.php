@@ -645,49 +645,6 @@ test('CurrentConfigService::current() transitional bridge has a shrinking, known
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
-test('ImageStdParams::current() transitional bridge has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 4: current()
-    // kept its original name (no `Static` suffix, matching
-    // DeploymentPolicy/DbCredentials's own precedent -- no competing real
-    // instance method to disambiguate from). Every phase that converts
-    // one more of these files to constructor-injected ImageStdParams
-    // should remove it from the allow-list below. Phase 10 closed out the
-    // 4 Ws/Pwg*.php + WsDefaultMethods.php entries this list used to carry
-    // (PwgCategories.php/PwgCore.php/PwgImages.php/WsDefaultMethods.php),
-    // once those classes were instance-based. Template/Template.php
-    // closed this shim in Phase 11 sub-phase 11E -- real constructor
-    // injection, same as its other collaborators. Image/DerivativeImage.php
-    // closed it in Phase 11 sub-phase 11F -- resolves ImageStdParams via
-    // its own private static container-resolve helper instead (same
-    // reasoning as its CurrentConfig::current() closure above). Phase 11
-    // sub-phase 11G: Calendar/CalendarMonthly.php took ImageStdParams via
-    // CalendarBase's own real constructor injection (shared by
-    // CalendarWeekly.php too), and Image/DerivativeParams.php's own
-    // will_watermark() -- a plain DTO with ~58 real construction sites --
-    // took it as an explicit method parameter instead, matching Tabsheet's
-    // own established NOCTOR precedent. Admin/Upload/UploadService.php's
-    // remaining site is inside getOptimalDimensionsForRepresentative(), a
-    // `private static` helper reached only from this file's own static
-    // uploadFileXxx() event handlers -- same established exception as its
-    // former CurrentLogger::getStatic() entry elsewhere in this file
-    // (Phase 11 sub-phase 11I's own genuinely-static-only bucket; that
-    // shim closed via a private static resolver in sub-phase 12F-1).
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-        '/src/Piwigo/Admin/Upload/UploadService.php',
-    ];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ImageStdParams::current(');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
 test('PageState::current() transitional bridge has a shrinking, known allow-list', function (): void {
     // Singleton/service-locator elimination campaign, Phase 4: current()
     // kept its original name (no `Static` suffix, matching

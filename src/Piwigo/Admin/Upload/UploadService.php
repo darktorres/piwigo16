@@ -106,6 +106,11 @@ final class UploadService
      */
     private const int DUP_DETECT_LOCK_TIMEOUT_SECONDS = 30;
 
+    /**
+     * @see UploadService::imageStdParams()
+     */
+    private static ?ImageStdParams $imageStdParamsFallback = null;
+
     public function __construct(
         private readonly Lang $lang,
         private readonly CurrentLogger $currentLogger,
@@ -1386,6 +1391,39 @@ final class UploadService
         ]);
     }
 
+    /**
+     * Singleton/service-locator elimination campaign, Phase 12 sub-phase
+     * 12F-4: same "must stay static, resolves the container-shared
+     * instance directly" reasoning as currentLogger() above --
+     * getOptimalDimensionsForRepresentative() (the sole caller) is itself
+     * a `private static` helper reached only from the static
+     * uploadFileXxx() handlers. Unlike currentLogger()'s fresh-per-call
+     * fallback, this replicates ImageStdParams::current()'s own former
+     * MEMOIZED pre-boot fallback exactly (a `private static` property here,
+     * populated via a real load_from_db() read on first not-booted
+     * access) -- ImageStdParams is "load once, read/write many times" per
+     * request, so a fresh instance per call would silently lose writes
+     * between calls.
+     */
+    private static function imageStdParams(): ImageStdParams
+    {
+        if (Kernel::isBooted()) {
+            $instance = Kernel::container()->get(ImageStdParams::class);
+            if (! $instance instanceof ImageStdParams) {
+                throw new LogicException('Container returned an unexpected type for ' . ImageStdParams::class);
+            }
+
+            return $instance;
+        }
+
+        if (! self::$imageStdParamsFallback instanceof ImageStdParams) {
+            self::$imageStdParamsFallback = new ImageStdParams();
+            self::$imageStdParamsFallback->load_from_db();
+        }
+
+        return self::$imageStdParamsFallback;
+    }
+
     private function needResize(string $image_filepath, int $max_width, int $max_height): bool
     {
         $logger = $this->currentLogger->get();
@@ -1607,8 +1645,8 @@ final class UploadService
      */
     private static function getOptimalDimensionsForRepresentative(): array
     {
-        $enabled = ImageStdParams::current()->get_defined_type_map();
-        $disabled = ImageStdParams::current()->get_disabled_type_map();
+        $enabled = self::imageStdParams()->get_defined_type_map();
+        $disabled = self::imageStdParams()->get_disabled_type_map();
 
         $w = $h = 2000; // safe default values
 

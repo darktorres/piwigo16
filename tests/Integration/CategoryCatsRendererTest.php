@@ -40,6 +40,7 @@ use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -150,7 +151,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
         $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
         $configService->loadConfFromDb();
-        ImageStdParams::current()->load_from_db();
+        ImageStdParamsTestFactory::get()->load_from_db();
 
         // render() builds its own internal CategoryTreeCache from
         // CachePools::categoryTree() (not injectable) -- a stale repr_*/
@@ -217,7 +218,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $urlService,
             $currentLogger,
             EventDispatcher::get(),
-            ImageStdParams::current(),
+            ImageStdParamsTestFactory::get(),
             CurrentUser::current(),
             CurrentConfig::current(),
             Lang::current(),

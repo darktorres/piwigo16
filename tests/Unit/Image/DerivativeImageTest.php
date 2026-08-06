@@ -17,6 +17,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\Event\GetDerivativeUrl;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Image\SizingParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -66,7 +67,7 @@ use RuntimeException;
  */
 function derivativeImageTestSnapshotStdParams(): array
 {
-    $instance = ImageStdParams::current();
+    $instance = ImageStdParamsTestFactory::get();
     $typeMap = new ReflectionProperty(ImageStdParams::class, 'type_map')->getValue($instance);
     $allTypeMap = new ReflectionProperty(ImageStdParams::class, 'all_type_map')->getValue($instance);
     $undefinedTypeMap = new ReflectionProperty(ImageStdParams::class, 'undefined_type_map')->getValue($instance);
@@ -96,7 +97,7 @@ function derivativeImageTestSeedStdParams(array $typeMap, array $undefinedMap = 
         $allTypeMap[$undefinedType] = $typeMap[$target];
     }
 
-    $instance = ImageStdParams::current();
+    $instance = ImageStdParamsTestFactory::get();
     new ReflectionProperty(ImageStdParams::class, 'type_map')->setValue($instance, $typeMap);
     new ReflectionProperty(ImageStdParams::class, 'all_type_map')->setValue($instance, $allTypeMap);
     new ReflectionProperty(ImageStdParams::class, 'undefined_type_map')->setValue($instance, $undefinedMap);
@@ -107,7 +108,7 @@ function derivativeImageTestSeedStdParams(array $typeMap, array $undefinedMap = 
  */
 function derivativeImageTestRestoreStdParams(array $snapshot): void
 {
-    $instance = ImageStdParams::current();
+    $instance = ImageStdParamsTestFactory::get();
     new ReflectionProperty(ImageStdParams::class, 'type_map')->setValue($instance, $snapshot[0]);
     new ReflectionProperty(ImageStdParams::class, 'all_type_map')->setValue($instance, $snapshot[1]);
     new ReflectionProperty(ImageStdParams::class, 'undefined_type_map')->setValue($instance, $snapshot[2]);
@@ -232,7 +233,7 @@ test('get_all() coerces a plain info array into a SrcImage and keys the result b
     // get_all() coerces the plain array via `new SrcImage(...)`, which now
     // needs a booted Kernel too (Phase 9: SrcImage's own pictureExtensions()
     // read) -- boot before snapshotting/seeding ImageStdParams so every
-    // ImageStdParams::current() call in this test resolves the same
+    // ImageStdParamsTestFactory::get() call in this test resolves the same
     // (container-shared) instance, not a pre-boot fallback later abandoned.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-get-all-1'));
     $snapshot = derivativeImageTestSnapshotStdParams();
@@ -266,7 +267,7 @@ test('get_all() maps a disabled type to the SAME instance as its fallback enable
     //
     // Boot first for the same reason as the sibling get_all() test above --
     // get_all() constructs a SrcImage internally, which now needs a booted
-    // Kernel, and ImageStdParams::current() must resolve the same instance
+    // Kernel, and ImageStdParamsTestFactory::get() must resolve the same instance
     // throughout.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-get-all-2'));
     $snapshot = derivativeImageTestSnapshotStdParams();
@@ -395,12 +396,12 @@ test('build() searches the whole defined-type list without an out-of-bounds read
     // raises.
     //
     // Boot first -- this test constructs a real SrcImage below (Phase 9:
-    // needs a booted Kernel), and ImageStdParams::current() must resolve
+    // needs a booted Kernel), and ImageStdParamsTestFactory::get() must resolve
     // the same instance throughout, not a pre-boot fallback abandoned once
     // Kernel::boot() runs later.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-defined-type-search'));
     $snapshot = derivativeImageTestSnapshotStdParams();
-    $originalWatermark = ImageStdParams::current()->get_watermark();
+    $originalWatermark = ImageStdParamsTestFactory::get()->get_watermark();
 
     try {
         $thumbParams = new DerivativeParams(SizingParams::classic(50, 50));
@@ -415,7 +416,7 @@ test('build() searches the whole defined-type list without an out-of-bounds read
         $watermark = new WatermarkParams();
         $watermark->file = 'watermark.png';
         $watermark->min_size = [5, 5];
-        ImageStdParams::current()->set_watermark($watermark);
+        ImageStdParamsTestFactory::get()->set_watermark($watermark);
         $mysteryParams->use_watermark = true;
 
         $src = new SrcImage([
@@ -442,7 +443,7 @@ test('build() searches the whole defined-type list without an out-of-bounds read
         expect($warnings)->toBe([]);
     } finally {
         derivativeImageTestRestoreStdParams($snapshot);
-        ImageStdParams::current()->set_watermark($originalWatermark);
+        ImageStdParamsTestFactory::get()->set_watermark($originalWatermark);
     }
 });
 
@@ -568,7 +569,7 @@ test('build() treats a cached file as fresh when its mtime exactly equals last_m
 
 test('build() substitutes a smaller already-defined identity-matching type when watermarking would otherwise apply, recursing until none remains', function (): void {
     // Kernel::boot() must run before the snapshot/get_watermark() reads
-    // below -- ImageStdParams::current() resolves a different (fresh,
+    // below -- ImageStdParamsTestFactory::get() resolves a different (fresh,
     // container-built) instance once Kernel is booted than the pre-boot
     // memoized fallback it returns beforehand, and build() (inside the
     // real DerivativeImage construction further down) always reads
@@ -577,7 +578,7 @@ test('build() substitutes a smaller already-defined identity-matching type when 
     // campaign.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-substitute-only'));
     $snapshot = derivativeImageTestSnapshotStdParams();
-    $originalWatermark = ImageStdParams::current()->get_watermark();
+    $originalWatermark = ImageStdParamsTestFactory::get()->get_watermark();
 
     try {
         $thumbParams = new DerivativeParams(SizingParams::classic(50, 50));
@@ -593,7 +594,7 @@ test('build() substitutes a smaller already-defined identity-matching type when 
         $watermark = new WatermarkParams();
         $watermark->file = 'watermark.png';
         $watermark->min_size = [30, 30];
-        ImageStdParams::current()->set_watermark($watermark);
+        ImageStdParamsTestFactory::get()->set_watermark($watermark);
         // apply_global() compares the watermark's min_size against each
         // type's own ideal_size (not the source size) -- both 'thumb'
         // (50x50) and 'medium' (200x200) satisfy 30<=ideal here, so both
@@ -632,7 +633,7 @@ test('build() substitutes a smaller already-defined identity-matching type when 
         expect($derivative->get_path())->toBe(CurrentPaths::get()->root . '_data/i/upload/2026/07/photo-th.jpg');
     } finally {
         derivativeImageTestRestoreStdParams($snapshot);
-        ImageStdParams::current()->set_watermark($originalWatermark);
+        ImageStdParamsTestFactory::get()->set_watermark($originalWatermark);
     }
 });
 
@@ -661,11 +662,11 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
     // process) -- accepted as a real, reasoned-through kill instead.
     //
     // Boot first -- same "SrcImage below needs a booted Kernel, keep
-    // ImageStdParams::current() consistent throughout" reasoning as the
+    // ImageStdParamsTestFactory::get() consistent throughout" reasoning as the
     // sibling defined-type-search test above.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-same-size-mismatch'));
     $snapshot = derivativeImageTestSnapshotStdParams();
-    $originalWatermark = ImageStdParams::current()->get_watermark();
+    $originalWatermark = ImageStdParamsTestFactory::get()->get_watermark();
 
     try {
         $thumbParams = new DerivativeParams(SizingParams::classic(50, 50));
@@ -682,7 +683,7 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
         $watermark = new WatermarkParams();
         $watermark->file = 'watermark.png';
         $watermark->min_size = [5, 5];
-        ImageStdParams::current()->set_watermark($watermark);
+        ImageStdParamsTestFactory::get()->set_watermark($watermark);
         $thumbParams->use_watermark = true;
         $mediumParams->use_watermark = true;
 
@@ -700,7 +701,7 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
         expect($derivative->same_as_source())->toBeFalse();
     } finally {
         derivativeImageTestRestoreStdParams($snapshot);
-        ImageStdParams::current()->set_watermark($originalWatermark);
+        ImageStdParamsTestFactory::get()->set_watermark($originalWatermark);
     }
 });
 

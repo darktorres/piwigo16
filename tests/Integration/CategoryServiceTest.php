@@ -35,6 +35,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
     use Piwigo\Event\Site\DeleteSite;
     use Piwigo\Image\ImageStdParams;
+    use Piwigo\Tests\Support\ImageStdParamsTestFactory;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\PluginConfig\EventDispatcher;
@@ -257,7 +258,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // NotificationByMailSenderTest's own identical setUp.
         // ImageStdParams::load_from_db() itself needs CurrentConfigService.
         CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
-        ImageStdParams::current()->load_from_db();
+        ImageStdParamsTestFactory::get()->load_from_db();
     }
 
     #[Override]

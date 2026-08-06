@@ -8,6 +8,7 @@ use Override;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Users\CurrentUser;
 use Doctrine\DBAL\Connection;
 use Piwigo\Bootstrap\PresentationAccessor;
@@ -132,7 +133,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // real-config-row wiring as CategoryDefaultRendererTest/
         // CalendarMonthlyTest's own identical setUp.
         $configService->loadConfFromDb();
-        ImageStdParams::current()->load_from_db();
+        ImageStdParamsTestFactory::get()->load_from_db();
 
         $this->conn = $conn;
         $row = $this->conn->fetchAssociative(

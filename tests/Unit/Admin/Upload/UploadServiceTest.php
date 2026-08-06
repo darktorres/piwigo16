@@ -13,6 +13,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Bootstrap\InfrastructureAccessor;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Admin\Image\ImageProcessingException;
@@ -1265,7 +1266,7 @@ test('getOptimalDimensionsForRepresentative computes the exact 1.5x margin from 
     // prove the loop's own array_key_exists()/instanceof/(bool)/(float)
     // cast/1.5 multiplication chain actually runs and computes correctly,
     // rather than just returning the untouched safe default.
-    $stdParams = ImageStdParams::current();
+    $stdParams = ImageStdParamsTestFactory::get();
     $typeMapProp = new ReflectionProperty(ImageStdParams::class, 'type_map');
     $disabledMapProp = new ReflectionProperty(ImageStdParams::class, 'disabled_type_map');
     $originalTypeMap = $typeMapProp->getValue($stdParams);
@@ -1290,7 +1291,7 @@ test('getOptimalDimensionsForRepresentative computes the exact 1.5x margin from 
 test('getOptimalDimensionsForRepresentative also reads a disabled-by-default type, not just an enabled one', function (): void {
     // Distinguishes `$disabled[$type] ?? null` from a dropped left side --
     // the type above only ever exercised the *enabled* map.
-    $stdParams = ImageStdParams::current();
+    $stdParams = ImageStdParamsTestFactory::get();
     $typeMapProp = new ReflectionProperty(ImageStdParams::class, 'type_map');
     $disabledMapProp = new ReflectionProperty(ImageStdParams::class, 'disabled_type_map');
     $originalTypeMap = $typeMapProp->getValue($stdParams);
@@ -1313,7 +1314,7 @@ test('getOptimalDimensionsForRepresentative also reads a disabled-by-default typ
 });
 
 test('getOptimalDimensionsForRepresentative falls back to the exact 2000x2000 safe default when no type is defined at all', function (): void {
-    $stdParams = ImageStdParams::current();
+    $stdParams = ImageStdParamsTestFactory::get();
     $typeMapProp = new ReflectionProperty(ImageStdParams::class, 'type_map');
     $disabledMapProp = new ReflectionProperty(ImageStdParams::class, 'disabled_type_map');
     $originalTypeMap = $typeMapProp->getValue($stdParams);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Image\SizingParams;
 use Piwigo\Image\WatermarkParams;
 
@@ -93,7 +94,7 @@ test('will_watermark is always false when use_watermark is off', function (): vo
     $params = new DerivativeParams(SizingParams::classic(800, 600));
     $params->use_watermark = false;
 
-    expect($params->will_watermark([600, 400], ImageStdParams::current()))->toBeFalse();
+    expect($params->will_watermark([600, 400], ImageStdParamsTestFactory::get()))->toBeFalse();
 });
 
 test('__serialize exposes last_mod_time, sizing, and sharpen -- not type or use_watermark', function (): void {
@@ -121,20 +122,20 @@ test('__serialize exposes last_mod_time, sizing, and sharpen -- not type or use_
 });
 
 test('will_watermark is true once the output is at least as large as the watermark\'s min_size on either dimension', function (): void {
-    $originalWatermark = ImageStdParams::current()->get_watermark();
+    $originalWatermark = ImageStdParamsTestFactory::get()->get_watermark();
 
     try {
         $watermark = new WatermarkParams();
         $watermark->min_size = [500, 500];
-        ImageStdParams::current()->set_watermark($watermark);
+        ImageStdParamsTestFactory::get()->set_watermark($watermark);
 
         $params = new DerivativeParams(SizingParams::classic(800, 600));
         $params->use_watermark = true;
 
-        expect($params->will_watermark([600, 400], ImageStdParams::current()))->toBeTrue();
-        expect($params->will_watermark([400, 400], ImageStdParams::current()))->toBeFalse();
+        expect($params->will_watermark([600, 400], ImageStdParamsTestFactory::get()))->toBeTrue();
+        expect($params->will_watermark([400, 400], ImageStdParamsTestFactory::get()))->toBeFalse();
     } finally {
-        ImageStdParams::current()->set_watermark($originalWatermark);
+        ImageStdParamsTestFactory::get()->set_watermark($originalWatermark);
     }
 });
 
@@ -145,12 +146,12 @@ test('will_watermark compares each dimension independently, against exactly its 
     // element swap on either comparison changes nothing observable. A
     // non-square min_size, plus boundary (`<=` vs `<`) values, is
     // required to distinguish all 5.
-    $originalWatermark = ImageStdParams::current()->get_watermark();
+    $originalWatermark = ImageStdParamsTestFactory::get()->get_watermark();
 
     try {
         $watermark = new WatermarkParams();
         $watermark->min_size = [100, 300];
-        ImageStdParams::current()->set_watermark($watermark);
+        ImageStdParamsTestFactory::get()->set_watermark($watermark);
 
         $params = new DerivativeParams(SizingParams::classic(800, 600));
         $params->use_watermark = true;
@@ -160,18 +161,18 @@ test('will_watermark compares each dimension independently, against exactly its 
         // comparison's `<=`->`<` (would now read 100<100, false) and its
         // min_size[0]->min_size[1] swap (would compare 300<=100, also
         // false), either of which would wrongly flip this to false.
-        expect($params->will_watermark([100, 50], ImageStdParams::current()))->toBeTrue();
+        expect($params->will_watermark([100, 50], ImageStdParamsTestFactory::get()))->toBeTrue();
         // Exactly meets the HEIGHT condition (300 <= 300) at the
         // boundary; fails the width condition outright -- kills the
         // second comparison's `<=`->`<` and its out_size[1]->out_size[0]
         // swap (would compare 300<=50, false), either of which would
         // wrongly flip this to false.
-        expect($params->will_watermark([50, 300], ImageStdParams::current()))->toBeTrue();
+        expect($params->will_watermark([50, 300], ImageStdParamsTestFactory::get()))->toBeTrue();
         // Fails both conditions when read straight -- but the second
         // comparison's min_size[1]->min_size[0] swap would instead check
         // 100<=150 (true), wrongly flipping this to true.
-        expect($params->will_watermark([50, 150], ImageStdParams::current()))->toBeFalse();
+        expect($params->will_watermark([50, 150], ImageStdParamsTestFactory::get()))->toBeFalse();
     } finally {
-        ImageStdParams::current()->set_watermark($originalWatermark);
+        ImageStdParamsTestFactory::get()->set_watermark($originalWatermark);
     }
 });

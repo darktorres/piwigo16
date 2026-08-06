@@ -14,6 +14,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 
@@ -49,7 +50,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
-        ImageStdParams::current()->load_from_db();
+        ImageStdParamsTestFactory::get()->load_from_db();
         CurrentUser::current()->attachGlobals();
 
         $this->template = TemplateTestFactory::build();

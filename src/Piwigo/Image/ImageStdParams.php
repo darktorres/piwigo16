@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
-use LogicException;
-use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 
@@ -47,8 +45,6 @@ use Piwigo\Db\EntityManagerFactory;
  */
 final class ImageStdParams
 {
-    private static ?self $fallback = null;
-
     public const string SQUARE = 'square';
 
     public const string THUMB = 'thumb';
@@ -121,39 +117,6 @@ final class ImageStdParams
     private array $custom = [];
 
     private int $quality = 95;
-
-    /**
-     * @deprecated transitional bridge for callers not yet converted to
-     * constructor injection -- singleton/service-locator elimination
-     * campaign, Phase 4. Memoized fallback (not fresh-per-call), same
-     * reasoning as Translator::get()/EventDispatcher::get(): this class is
-     * "load once via load_from_db(), read/write many times" per request
-     * (ConfigurationSubController's own admin save handler writes through
-     * set_and_save()/etc. and expects a later get_defined_type_map() call
-     * in the same request to see it) -- a fresh instance per not-booted
-     * call would silently lose every write between calls. Real production
-     * code never hits the not-booted branch (RequestBootstrap resolves
-     * this container-shared instance early in connect(), before any real
-     * caller runs), but a pure-Unit test reaching deep into a class using
-     * ImageStdParams shouldn't have to bootstrap a full Kernel first.
-     */
-    public static function current(): self
-    {
-        if (Kernel::isBooted()) {
-            $instance = Kernel::container()->get(self::class);
-            if (! $instance instanceof self) {
-                throw new LogicException('Container returned an unexpected type for ' . self::class);
-            }
-            return $instance;
-        }
-
-        if (! self::$fallback instanceof self) {
-            self::$fallback = new self();
-            self::$fallback->load_from_db();
-        }
-
-        return self::$fallback;
-    }
 
     /**
      * @return string[]

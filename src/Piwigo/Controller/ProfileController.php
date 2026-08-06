@@ -20,6 +20,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
@@ -90,6 +91,7 @@ final class ProfileController implements ControllerInterface
         private readonly CurrentConfig $currentConfig,
         private readonly Translator $translator,
         private readonly CurrentLogger $currentLogger,
+        private readonly Paths $paths,
     ) {}
 
     #[Override]
@@ -125,7 +127,7 @@ final class ProfileController implements ControllerInterface
                 $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
             }
-            if (! array_key_exists($cookie_lang, LangService::getLanguages())) {
+            if (! array_key_exists($cookie_lang, LangService::getLanguages($this->paths))) {
                 $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
@@ -182,7 +184,7 @@ final class ProfileController implements ControllerInterface
             $userdata = array_merge($userdata, $default_user);
         }
 
-        $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlService, $this->mailService, $this->currentConfig);
+        $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlService, $this->mailService, $this->currentConfig, $this->paths);
 
         $page_errors = $this->pageState->errors;
         $profileFormHandler->saveFromPost($userdata, $page_errors);
@@ -222,7 +224,7 @@ final class ProfileController implements ControllerInterface
 
         // Get list of languages
         $language_options = [];
-        foreach (LangService::getLanguages() as $language_code => $language_name) {
+        foreach (LangService::getLanguages($this->paths) as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
 

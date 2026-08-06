@@ -17,6 +17,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -126,9 +127,10 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
     return new ExtensionUpdateChecker(
         Lang::current(),
         new ExtensionScanner(),
-        new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig())),
+        new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), CurrentPaths::get()),
         UrlServiceTestFactory::build(),
         $repo,
+        CurrentPaths::get(),
     );
 }
 

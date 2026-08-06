@@ -29,6 +29,7 @@ use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
@@ -95,7 +96,7 @@ final class InstallService
         $lifecycle = new ExtensionLifecycle(
             Lang::current(),
             new ExtensionRepository(EntityManagerFactory::build($conn)),
-            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), CurrentUser::current()),
+            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), CurrentUser::current(), CurrentPaths::get()),
             $urlService,
             CurrentConfigService::current()->get(),
             EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class),
@@ -105,9 +106,10 @@ final class InstallService
             CurrentConfig::current(),
             InfrastructureAccessor::wsContext(),
             CoreDomainAccessor::accessControl(),
+            CurrentPaths::get(),
         );
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $urlService, Lang::current());
+            ->scan(ExtensionType::Theme, $urlService, Lang::current(), CurrentPaths::get());
         foreach ($fs_themes as $theme_id => $fs_theme) {
             if (in_array($theme_id, [AppInfo::DEFAULT_TEMPLATE], true)) {
                 $lifecycle->performAction(ExtensionType::Theme, 'activate', $theme_id, $fs_theme);
@@ -123,7 +125,7 @@ final class InstallService
         // No core plugins are auto-activated at install time (empty list,
         // matching the original's own empty in_array() haystack).
         new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, PresentationAccessor::urlService(), Lang::current());
+            ->scan(ExtensionType::Plugin, PresentationAccessor::urlService(), Lang::current(), CurrentPaths::get());
     }
 
     /**

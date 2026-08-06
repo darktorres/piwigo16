@@ -177,10 +177,10 @@ final class RedirectService implements RedirectServiceInterface
                 'no_fallback' => true,
                 'local' => true,
             ]);
-            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), $paths->root . 'themes', $this->userService->getDefaultTheme());
+            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, $paths->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         } elseif (self::adminContext()->isActive()) {
-            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get()->root . 'themes', $this->userService->getDefaultTheme());
+            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), EventDispatcher::get(), PageState::current(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get(), CurrentPaths::get()->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         }
 

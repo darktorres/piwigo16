@@ -24,7 +24,6 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Request\PictureRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
@@ -149,6 +148,7 @@ final class PictureController implements ControllerInterface
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
         private readonly Translator $translator,
+        private readonly \Piwigo\Core\Paths $paths,
     ) {}
 
     private function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
@@ -652,7 +652,7 @@ final class PictureController implements ControllerInterface
             $row['file_ext'] = strtolower(StringHelper::getExtension($row['file']));
 
             if ($i === 'current') {
-                $row['element_path'] = ImagePathHelper::getElementPath($row, $urlService);
+                $row['element_path'] = ImagePathHelper::getElementPath($row, $urlService, $this->paths);
 
                 $row_id = $row['id'];
 
@@ -1200,7 +1200,7 @@ final class PictureController implements ControllerInterface
                     // returning false (never a real page count) on every
                     // live request; confirmed live via a real PDF upload.
                     'PDF_NB_PAGES' => $this->imageService
-                        ->countPdfPages(CurrentPaths::get()->root . $picture['current']['path']),
+                        ->countPdfPages($this->paths->root . $picture['current']['path']),
                 ]
             );
         }
@@ -1248,7 +1248,7 @@ final class PictureController implements ControllerInterface
         }
         if ($metadata_showable and $this->sessionService->getSessionVar('show_metadata') !== null) {
             new PictureMetadataRenderer()
-                ->render($this->lang, $picture, $this->currentLogger, $this->eventDispatcher, $this->currentTemplate, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState);
+                ->render($this->lang, $picture, $this->currentLogger, $this->eventDispatcher, $this->currentTemplate, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState, $this->paths);
         }
 
         // include menubar

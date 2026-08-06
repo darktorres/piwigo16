@@ -74,7 +74,7 @@ test('render appends nothing when both show_exif and show_iptc are disabled', fu
     picture_metadata_test_current_config()->setShowIptc(false);
     $renderer = new PictureMetadataRenderer();
 
-    $renderer->render(Lang::current(), [], new CurrentLogger(), new EventDispatcher(), CurrentTemplate::current(), CurrentConfig::current(), CurrentUser::current(), SessionService::get(), new FilterState());
+    $renderer->render(Lang::current(), [], new CurrentLogger(), new EventDispatcher(), CurrentTemplate::current(), CurrentConfig::current(), CurrentUser::current(), SessionService::get(), new FilterState(), CurrentPaths::get());
 
     expect(CurrentTemplate::current()->get()->get_template_vars('metadata'))->toBeNull();
 });

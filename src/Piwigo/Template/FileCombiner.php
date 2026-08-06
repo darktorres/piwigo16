@@ -14,7 +14,6 @@ namespace Piwigo\Template;
 use Exception;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
@@ -47,9 +46,9 @@ final class FileCombiner
     /**
      * Deletes all combined files from cache directory.
      */
-    public static function clear_combined_files(CurrentConfig $currentConfig): void
+    public static function clear_combined_files(CurrentConfig $currentConfig, Paths $paths): void
     {
-        $root = CurrentPaths::get()->root;
+        $root = $paths->root;
         $dir = opendir($root . $currentConfig->combinedDir());
         if ($dir === false) {
             return;

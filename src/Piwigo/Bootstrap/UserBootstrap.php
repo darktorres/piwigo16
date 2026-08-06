@@ -24,6 +24,7 @@ use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
@@ -105,6 +106,10 @@ final class UserBootstrap
         if (! $installationFlag instanceof InstallationFlag) {
             throw new LogicException('Container returned an unexpected type for ' . InstallationFlag::class);
         }
+        $paths = Kernel::container()->get(Paths::class);
+        if (! $paths instanceof Paths) {
+            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
+        }
         $authService = new AuthService(
             new AuthRepository(EntityManagerFactory::build($conn)),
             new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
@@ -117,6 +122,7 @@ final class UserBootstrap
             $pageState,
             $currentUser,
             RequestBootstrap::currentConfig(),
+            $paths,
         );
         $userService = new UserService(
             RequestBootstrap::lang(),
@@ -133,6 +139,7 @@ final class UserBootstrap
             RequestBootstrap::currentConfig(),
             $installationFlag,
             RequestBootstrap::processCache(),
+            $paths,
         );
 
         $guest_id_int = RequestBootstrap::currentConfig()->guestId();

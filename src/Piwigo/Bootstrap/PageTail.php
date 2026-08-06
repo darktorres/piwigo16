@@ -60,7 +60,7 @@ final class PageTail
         // (L4) is the one place the concrete L4 implementation gets
         // constructed. Legacy Coupling Retirement Phase 4c: UrlServiceInterface
         // is wired the same way, see PageTailRenderer's own docblock.
-        new PageTailRenderer(AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig()), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
+        new PageTailRenderer(AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), CurrentPaths::get()), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
             ->render(self::pageState()->requestStart);
     }
 
@@ -74,7 +74,7 @@ final class PageTail
     {
         self::checkForUpdates();
 
-        return new PageTailRenderer(AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig()), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
+        return new PageTailRenderer(AccessControl::current(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), CurrentPaths::get()), self::urlService(), EventDispatcher::get(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig())
             ->renderToString(self::pageState()->requestStart);
     }
 

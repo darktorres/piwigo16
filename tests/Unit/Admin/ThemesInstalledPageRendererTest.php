@@ -33,6 +33,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
@@ -264,7 +265,7 @@ function themesInstalledLifecycle(): ExtensionLifecycle
         throw new LogicException('Container returned an unexpected type');
     }
 
-    return new ExtensionLifecycle(Lang::current(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, new CurrentUser(new CurrentConfig())), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), new CurrentConfig(), $wsContext, $accessControl);
+    return new ExtensionLifecycle(Lang::current(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, new CurrentUser(new CurrentConfig()), CurrentPaths::get()), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), new CurrentConfig(), $wsContext, $accessControl, CurrentPaths::get());
 }
 
 /**
@@ -295,6 +296,7 @@ function themesInstalledLifecycleUserService(): UserService
         new CurrentConfig(),
         new InstallationFlag(),
         new ProcessCache(),
+        CurrentPaths::get(),
     );
 }
 

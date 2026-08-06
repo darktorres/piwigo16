@@ -65,7 +65,7 @@ test('__invoke delegates to DerivativeCacheService::deleteElementDerivatives wit
     // configured (dataLocation='data/') -- a fresh new CurrentConfig()
     // would carry only its own hardcoded defaults, computing a different
     // derivative directory than $derivDir above.
-    $handler = new GenerateDerivativeHandler(new DerivativeCacheService(generate_derivative_handler_test_current_config()));
+    $handler = new GenerateDerivativeHandler(new DerivativeCacheService(generate_derivative_handler_test_current_config(), CurrentPaths::get()));
     $handler(new GenerateDerivativeJob(path: '2026/07/photo.jpg', type: 'thumb'));
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse()
@@ -77,7 +77,7 @@ test('__invoke forwards representativeExt as representative_ext, rewriting the p
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
 
-    $handler = new GenerateDerivativeHandler(new DerivativeCacheService(generate_derivative_handler_test_current_config()));
+    $handler = new GenerateDerivativeHandler(new DerivativeCacheService(generate_derivative_handler_test_current_config(), CurrentPaths::get()));
     $handler(new GenerateDerivativeJob(path: '2026/07/photo.pdf', representativeExt: 'jpg', type: 'thumb'));
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse();

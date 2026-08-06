@@ -17,6 +17,7 @@ use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\User\LoginFailure;
 use Piwigo\Event\User\LoginFailureBeforeLogUser;
@@ -76,6 +77,7 @@ final readonly class AuthService
         private PageState $pageState,
         private CurrentUser $currentUser,
         private CurrentConfig $currentConfig,
+        private Paths $paths,
     ) {}
 
     /**
@@ -165,7 +167,7 @@ final readonly class AuthService
             if (! is_string($lang_cookie)) {
                 $this->htmlRenderer->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
             }
-            if (! array_key_exists($lang_cookie, LangService::getLanguages())) {
+            if (! array_key_exists($lang_cookie, LangService::getLanguages($this->paths))) {
                 $this->htmlRenderer->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
             }
 

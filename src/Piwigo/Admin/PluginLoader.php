@@ -13,8 +13,8 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\VersionHelper;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
@@ -51,15 +51,15 @@ final class PluginLoader
      * Controller -- or a root entry script) on the class that owns
      * per-request plugin loading.
      */
-    public static function pluginsPath(): string
+    public static function pluginsPath(Paths $paths): string
     {
-        return CurrentPaths::get()->plugins;
+        return $paths->plugins;
     }
 
     /**
      * Loads all the registered plugins.
      */
-    public static function loadPlugins(LoadedPlugins $loadedPlugins, EventDispatcher $eventDispatcher, ActivityService $activityService, CurrentConfig $currentConfig, WsContext $wsContext, AccessControl $accessControl, PageState $pageState): void
+    public static function loadPlugins(LoadedPlugins $loadedPlugins, EventDispatcher $eventDispatcher, ActivityService $activityService, CurrentConfig $currentConfig, WsContext $wsContext, AccessControl $accessControl, PageState $pageState, Paths $paths): void
     {
         $loadedPlugins->set([]);
         if ($currentConfig->enablePlugins()) {
@@ -70,7 +70,7 @@ final class PluginLoader
                 // param, which a readonly Plugin object can't support (same
                 // "unbox where genuinely needed" shape as
                 // CategoryCatsRenderer's own unboxing).
-                self::loadPlugin($plugin->toArray(), $loadedPlugins, $activityService, $wsContext, $accessControl, $pageState);
+                self::loadPlugin($plugin->toArray(), $loadedPlugins, $activityService, $wsContext, $accessControl, $pageState, $paths);
             }
             $eventDispatcher->dispatchNotify(new PluginsLoaded());
         }
@@ -85,13 +85,13 @@ final class PluginLoader
      *   loadPlugins(), unboxes the repository's typed row there since this
      *   method needs mutable array semantics, not a readonly object)
      */
-    private static function loadPlugin(array $plugin, LoadedPlugins $loadedPlugins, ActivityService $activityService, WsContext $wsContext, AccessControl $accessControl, PageState $pageState): void
+    private static function loadPlugin(array $plugin, LoadedPlugins $loadedPlugins, ActivityService $activityService, WsContext $wsContext, AccessControl $accessControl, PageState $pageState, Paths $paths): void
     {
         $plugin_id = $plugin['id'];
 
-        $file_name = self::pluginsPath() . $plugin_id . '/main.inc.php';
+        $file_name = self::pluginsPath($paths) . $plugin_id . '/main.inc.php';
         if (file_exists($file_name)) {
-            self::autoupdatePlugin($plugin, $activityService, $wsContext, $accessControl, $pageState);
+            self::autoupdatePlugin($plugin, $activityService, $wsContext, $accessControl, $pageState, $paths);
             $loadedPlugins->add($plugin_id, $plugin);
             include_once $file_name;
         }
@@ -105,12 +105,12 @@ final class PluginLoader
      *   be updated if version changes - matches loadPlugin()'s own param
      *   shape (its only caller, already guards 'id' to string)
      */
-    private static function autoupdatePlugin(array &$plugin, ActivityService $activityService, WsContext $wsContext, AccessControl $accessControl, PageState $pageState): void
+    private static function autoupdatePlugin(array &$plugin, ActivityService $activityService, WsContext $wsContext, AccessControl $accessControl, PageState $pageState, Paths $paths): void
     {
         $plugin_id = $plugin['id'];
 
         // try to find the filesystem version in lines 2 to 10 of main.inc.php
-        $fh = fopen(self::pluginsPath() . $plugin_id . '/main.inc.php', 'r');
+        $fh = fopen(self::pluginsPath($paths) . $plugin_id . '/main.inc.php', 'r');
         $fs_version = null;
         $i = -1;
 
@@ -142,7 +142,7 @@ final class PluginLoader
 
             $plugin['version'] = $fs_version;
 
-            $maintain_file = self::pluginsPath() . $plugin_id . '/maintain.class.php';
+            $maintain_file = self::pluginsPath($paths) . $plugin_id . '/maintain.class.php';
 
             // autoupdate is applicable only to plugins with 2.7 architecture
             if (file_exists($maintain_file)) {

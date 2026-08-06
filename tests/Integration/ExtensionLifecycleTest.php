@@ -113,7 +113,7 @@ namespace Piwigo\Tests\Integration {
             self::assertInstanceOf(AccessControl::class, $accessControl);
             $currentUser = Kernel::container()->get(CurrentUser::class);
             self::assertInstanceOf(CurrentUser::class, $currentUser);
-            $this->lifecycle = new ExtensionLifecycle(Lang::current(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger, $currentUser), UrlServiceTestFactory::build(), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig, $wsContext, $accessControl);
+            $this->lifecycle = new ExtensionLifecycle(Lang::current(), $this->repo, new PemCatalog(new ZipExtractor(), $currentLogger, $currentUser, CurrentPaths::get()), UrlServiceTestFactory::build(), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig), $this->pluginMigrationRepo, $activityService, $userService, $htmlService, $currentConfig, $wsContext, $accessControl, CurrentPaths::get());
 
             $currentConfig->setEnableExtensionsInstall(true);
             $currentConfig->setPhpExtensionInUrls(false);
@@ -286,7 +286,7 @@ namespace Piwigo\Tests\Integration {
             // Unlike the sibling test above, $fsEntry is non-null here, so
             // this reaches the real fs_version bookkeeping AND the
             // FilesystemHelper::deltree() call against
-            // PluginLoader::pluginsPath() . $id -- a synthetic, never-
+            // PluginLoader::pluginsPath(CurrentPaths::get()) . $id -- a synthetic, never-
             // on-disk id (see this class's own docblock), so deltree()'s
             // own `if (is_dir($path))` guard makes this a real, safe no-op.
             $id = $this->pluginId();
@@ -605,7 +605,7 @@ namespace Piwigo\Tests\Integration {
          */
         private function writePluginMaintainFile(string $id, string $ext, bool $extendsBase, string $body = ''): void
         {
-            $dir = PluginLoader::pluginsPath() . $id;
+            $dir = PluginLoader::pluginsPath(CurrentPaths::get()) . $id;
             mkdir($dir, 0o777, true);
             $classname = str_replace('-', '_', $id . '_maintain');
             $extends = $extendsBase ? ' extends \\Piwigo\\Admin\\PluginMaintain' : '';
@@ -617,7 +617,7 @@ namespace Piwigo\Tests\Integration {
 
         private function removePluginDir(string $id): void
         {
-            $this->rrmdir(PluginLoader::pluginsPath() . $id);
+            $this->rrmdir(PluginLoader::pluginsPath(CurrentPaths::get()) . $id);
         }
 
         /**

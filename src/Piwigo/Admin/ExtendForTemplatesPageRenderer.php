@@ -10,10 +10,10 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\CurrentTemplate;
 
@@ -35,7 +35,7 @@ use Piwigo\Template\CurrentTemplate;
  */
 final class ExtendForTemplatesPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ConfigService $configService, PageState $pageState, CurrentTemplate $currentTemplate, CategoryService $categoryService, CurrentConfig $currentConfig): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ConfigService $configService, PageState $pageState, CurrentTemplate $currentTemplate, CategoryService $categoryService, CurrentConfig $currentConfig, Paths $paths): void
     {
         $template = $currentTemplate->get();
 
@@ -57,7 +57,7 @@ final class ExtendForTemplatesPageRenderer
                 ];
             }
         }
-        $new_extensions = AdminUiHelper::getExtents();
+        $new_extensions = AdminUiHelper::getExtents($paths);
 
         /* Selective URLs keyword */
         $relevant_parameters = [
@@ -122,7 +122,7 @@ final class ExtendForTemplatesPageRenderer
             [
                 'N/A' => '----------',
             ],
-            FilesystemHelper::getDirs(CurrentPaths::get()->themes)
+            FilesystemHelper::getDirs($paths->themes)
         );
 
         $extendSubmit = ExtendForTemplatesSubmitRequest::fromGlobals();

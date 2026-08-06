@@ -119,11 +119,11 @@ final class MessengerRoundTripTest extends IntegrationTestCase
         file_put_contents($derivDir . '/photo-th.jpg', 'x');
         file_put_contents($derivDir . '/photo-sq.jpg', 'x');
 
-        $transport = MessengerFactory::transport($this->conn);
+        $transport = MessengerFactory::transport($this->conn, CurrentPaths::get());
 
         // dispatch: real INSERT into messenger_messages via the Doctrine
         // transport's send()
-        $sendingBus = MessengerFactory::sendingBus($transport);
+        $sendingBus = MessengerFactory::sendingBus($transport, CurrentPaths::get());
         $sendingBus->dispatch(new GenerateDerivativeJob('2026/07/photo.jpg', type: 'thumb'));
 
         self::assertSame(1, $transport->getMessageCount());
@@ -137,7 +137,7 @@ final class MessengerRoundTripTest extends IntegrationTestCase
 
         // handle: routes through GenerateDerivativeHandler, a real call
         // into DerivativeCacheService::deleteElementDerivatives()
-        $receivingBus = MessengerFactory::receivingBus();
+        $receivingBus = MessengerFactory::receivingBus(CurrentPaths::get());
         $receivingBus->dispatch($envelope);
         $transport->ack($envelope);
 

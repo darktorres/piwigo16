@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -33,7 +33,7 @@ final class AdminUiHelper
      * @param string $start (internal use)
      * @return string[]
      */
-    public static function getExtents(string $start = ''): array
+    public static function getExtents(Paths $paths, string $start = ''): array
     {
         if ($start === '') {
             // Anchored to the real install root, not a `./`-relative path
@@ -44,7 +44,7 @@ final class AdminUiHelper
             // nonexistent directory (opendir() returning false) on every
             // real request, confirmed live: the whole "extend for templates"
             // feature never applied a single replacement in production.
-            $start = rtrim(CurrentPaths::get()->root, '/') . '/template-extension';
+            $start = rtrim($paths->root, '/') . '/template-extension';
         }
 
         return self::collectExtents($start, strlen($start) + 1);

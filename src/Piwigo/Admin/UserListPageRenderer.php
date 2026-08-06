@@ -7,10 +7,10 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Request\UserListFilterRequest;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ThemeCatalog;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
@@ -32,7 +32,7 @@ use Piwigo\Validation\InputValidator;
  */
 final class UserListPageRenderer
 {
-    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, InputValidator $inputValidator): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, InputValidator $inputValidator, Paths $paths): void
     {
         $template = $currentTemplate->get();
 
@@ -127,9 +127,9 @@ final class UserListPageRenderer
                     ->getToken(),
                 'NB_IMAGE_PAGE' => $default_user['nb_image_page'],
                 'RECENT_PERIOD' => $default_user['recent_period'],
-                'theme_options' => ThemeCatalog::getPwgThemes($eventDispatcher),
+                'theme_options' => ThemeCatalog::getPwgThemes($eventDispatcher, $paths),
                 'theme_selected' => $userService->getDefaultTheme(),
-                'language_options' => LangService::getLanguages(),
+                'language_options' => LangService::getLanguages($paths),
                 'language_selected' => $userService->getDefaultLanguage(),
                 'association_options' => $groups,
                 'protected_users' => implode(',', array_unique($protected_users)),
@@ -220,7 +220,7 @@ final class UserListPageRenderer
             $template->assign('pagination', $preferencesService->getParam('user-manager-pagination', 10));
         }
 
-        if (self::webmasterIdIsLocal()) {
+        if (self::webmasterIdIsLocal($paths)) {
             $pageState->addWarning($lang->t('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
         }
 
@@ -230,7 +230,7 @@ final class UserListPageRenderer
     // PHPStan can't see the @include below mutating $conf, so it thinks
     // this never returns true.
     // @phpstan-ignore return.tooWideBool
-    private static function webmasterIdIsLocal(): bool
+    private static function webmasterIdIsLocal(Paths $paths): bool
     {
         // A presence check ("did the site owner override webmaster_id in
         // their OWN local/config/config.inc.php"), not a value read --
@@ -250,7 +250,6 @@ final class UserListPageRenderer
         // default now). Note the deliberate absence of `global $conf;`
         // here -- this $conf is a fresh local shadow the include below
         // populates from scratch, never the real DB-synced global.
-        $paths = CurrentPaths::get();
         $conf = [];
         @include $paths->local . 'config/config.inc.php';
         // @phpstan-ignore isset.offset

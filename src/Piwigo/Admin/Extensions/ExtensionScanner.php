@@ -9,10 +9,10 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CharsetHelper;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -52,9 +52,9 @@ final class ExtensionScanner
      * @return array<string, array<string, mixed>> keyed by extension id
      *   (directory name)
      */
-    public function scan(ExtensionType $type, UrlServiceInterface $urlService, Lang $lang, ?string $targetCharset = null): array
+    public function scan(ExtensionType $type, UrlServiceInterface $urlService, Lang $lang, Paths $paths, ?string $targetCharset = null): array
     {
-        $dir = opendir($type->scanDirectory());
+        $dir = opendir($type->scanDirectory($paths));
         if ($dir === false) {
             return [];
         }
@@ -69,9 +69,9 @@ final class ExtensionScanner
             }
 
             $entry = match ($type) {
-                ExtensionType::Plugin => $this->scanPlugin($lang, $file),
-                ExtensionType::Theme => $this->scanTheme($lang, $file, $urlService),
-                ExtensionType::Language => $this->scanLanguage($file, $targetCharset),
+                ExtensionType::Plugin => $this->scanPlugin($lang, $file, $paths),
+                ExtensionType::Theme => $this->scanTheme($lang, $file, $urlService, $paths),
+                ExtensionType::Language => $this->scanLanguage($file, $targetCharset, $paths),
             };
 
             if ($entry !== null) {
@@ -95,7 +95,7 @@ final class ExtensionScanner
                 new CurrentConfig(),
                 new EventDispatcher(),
                 new ProcessCache(),
-                new ErrorCollector(new DeploymentPolicy()),
+                new ErrorCollector(new DeploymentPolicy(), $paths),
                 new CurrentUser(new CurrentConfig()),
                 new CurrentTemplate(),
                 new PageState(),
@@ -109,9 +109,9 @@ final class ExtensionScanner
     /**
      * @return array{name: string, version: string, uri: string, description: string, author: string, hasSettings: bool, 'author uri'?: string, extension?: string}|null
      */
-    private function scanPlugin(Lang $lang, string $pluginId): ?array
+    private function scanPlugin(Lang $lang, string $pluginId, Paths $paths): ?array
     {
-        $path = PluginLoader::pluginsPath() . $pluginId;
+        $path = PluginLoader::pluginsPath($paths) . $pluginId;
         if (! is_dir($path) || is_link($path) || ! file_exists($path . '/main.inc.php')) {
             return null;
         }
@@ -195,9 +195,9 @@ final class ExtensionScanner
      *   admin_uri?: string,
      * }|null
      */
-    private function scanTheme(Lang $lang, string $themeId, UrlServiceInterface $urlService): ?array
+    private function scanTheme(Lang $lang, string $themeId, UrlServiceInterface $urlService, Paths $paths): ?array
     {
-        $path = ExtensionType::Theme->scanDirectory() . $themeId;
+        $path = ExtensionType::Theme->scanDirectory($paths) . $themeId;
         if (! is_dir($path) || ! file_exists($path . '/themeconf.inc.php')) {
             return null;
         }
@@ -319,9 +319,9 @@ final class ExtensionScanner
      *
      * @return array{name: string, code: string, version: string, uri: string, author: string}|null
      */
-    private function scanLanguage(string $languageId, ?string $targetCharset): ?array
+    private function scanLanguage(string $languageId, ?string $targetCharset, Paths $paths): ?array
     {
-        $path = CurrentPaths::get()->root . 'language/' . $languageId;
+        $path = $paths->root . 'language/' . $languageId;
         if (! is_dir($path) || is_link($path) || ! file_exists($path . '/common.po')) {
             return null;
         }

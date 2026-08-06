@@ -19,6 +19,7 @@ use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
@@ -84,6 +85,7 @@ final class PictureModifyPageRenderer
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
         private readonly Translator $translator,
+        private readonly Paths $paths,
     ) {}
 
     public function render(string $adminPhotoBaseUrl): void
@@ -107,7 +109,7 @@ final class PictureModifyPageRenderer
         $template = $this->currentTemplate->get();
 
         $conn = DbConnection::build();
-        $imageService = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
+        $imageService = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator, $this->paths);
         $htmlRenderer = $this->htmlRenderer;
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);

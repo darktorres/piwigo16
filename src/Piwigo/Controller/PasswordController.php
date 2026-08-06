@@ -23,6 +23,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
@@ -94,6 +95,7 @@ final class PasswordController implements ControllerInterface
         private readonly InputValidator $inputValidator,
         private readonly Translator $translator,
         private readonly CurrentLogger $currentLogger,
+        private readonly Paths $paths,
     ) {}
 
     /**
@@ -278,7 +280,7 @@ final class PasswordController implements ControllerInterface
         // pages
         $cookie_lang = $_COOKIE['lang'] ?? null;
         if (is_string($cookie_lang) and $this->currentUser->get()->language !== $cookie_lang) {
-            if (! array_key_exists($cookie_lang, LangService::getLanguages())) {
+            if (! array_key_exists($cookie_lang, LangService::getLanguages($this->paths))) {
                 $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
@@ -290,7 +292,7 @@ final class PasswordController implements ControllerInterface
         }
 
         $language_options = [];
-        foreach (LangService::getLanguages() as $language_code => $language_name) {
+        foreach (LangService::getLanguages($this->paths) as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
 

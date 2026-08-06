@@ -12,6 +12,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\CurrentTemplate;
 use Psr\Http\Message\ServerRequestInterface;
@@ -40,12 +41,13 @@ final class ExtendForTemplatesSubController implements AdminSubControllerInterfa
         private readonly CurrentTemplate $currentTemplate,
         private readonly CategoryService $categoryService,
         private readonly CurrentConfig $currentConfig,
+        private readonly Paths $paths,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new ExtendForTemplatesPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->categoryService, $this->currentConfig);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->categoryService, $this->currentConfig, $this->paths);
     }
 }

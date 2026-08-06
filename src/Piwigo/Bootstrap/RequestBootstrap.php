@@ -476,7 +476,7 @@ final class RequestBootstrap
         self::imageStdParams();
 
         session_start();
-        PluginLoader::loadPlugins(self::loadedPlugins(), EventDispatcher::get(), self::activityService($conn), self::currentConfig(), self::wsContext(), self::accessControl(), self::pageState());
+        PluginLoader::loadPlugins(self::loadedPlugins(), EventDispatcher::get(), self::activityService($conn), self::currentConfig(), self::wsContext(), self::accessControl(), self::pageState(), CurrentPaths::get());
 
         if (self::currentConfig()->piwigoInstalledVersion() === null) {
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
@@ -511,7 +511,7 @@ final class RequestBootstrap
         }
 
         if (LoungeMaintenance::needsEmptying()) {
-            new ImageService(self::lang(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::activityService($conn), self::sessionService(), EventDispatcher::get(), self::currentConfig(), self::translator())
+            new ImageService(self::lang(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::activityService($conn), self::sessionService(), EventDispatcher::get(), self::currentConfig(), self::translator(), CurrentPaths::get())
                 ->emptyLounge();
         }
 
@@ -549,7 +549,7 @@ final class RequestBootstrap
             new AuthRepository(EntityManagerFactory::build($conn)),
             self::activityService($conn),
             self::htmlService(),
-            new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), self::deploymentPolicy()),
+            self::passwordService($conn),
             new CookieService(),
             EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class),
             self::sessionService(),
@@ -557,6 +557,7 @@ final class RequestBootstrap
             self::pageState(),
             self::currentUser(),
             self::currentConfig(),
+            CurrentPaths::get(),
         )->pwgLogin(...));
         new UserBootstrap(
             AccessControl::current(),
@@ -617,6 +618,7 @@ final class RequestBootstrap
             self::currentConfig(),
             self::installationFlag(),
             self::processCache(),
+            CurrentPaths::get(),
         ));
         self::lang()->load('common.lang');
         if (AccessControl::current()->isAdmin() || self::adminContext()->isActive()) {
@@ -659,7 +661,7 @@ final class RequestBootstrap
             $notify_username = self::currentUser()->get()->username;
             $notify_email = self::currentUser()->get()->email;
             $apiKeyRepo = new ApiKeyRepository(EntityManagerFactory::build($conn));
-            $is_mail_send = new ApiKeyService(self::lang(), self::mailService(), $apiKeyRepo, new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), self::deploymentPolicy()), self::urlService(), self::sessionService(), self::currentConfig())
+            $is_mail_send = new ApiKeyService(self::lang(), self::mailService(), $apiKeyRepo, self::passwordService($conn), self::urlService(), self::sessionService(), self::currentConfig())
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
 
             if ($is_mail_send) {
@@ -683,13 +685,13 @@ final class RequestBootstrap
             $admin_theme = new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
                 ->getParam('admin_theme', self::currentConfig()->adminTheme());
             $admin_theme = is_string($admin_theme) ? $admin_theme : self::currentConfig()->adminTheme();
-            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get()->root . 'themes/admin', $admin_theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get(), CurrentPaths::get()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = self::currentUser()->get()->theme;
             if (PageFilterHelper::scriptBasename() !== 'ws' and DeviceHelper::mobileTheme()) {
                 $theme = self::currentConfig()->mobilTheme();
             }
-            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get()->root . 'themes', $theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), CurrentPaths::get(), CurrentPaths::get()->root . 'themes', $theme);
         }
 
         // Legacy Coupling Retirement Track A / Phase 2 global-residual
@@ -899,6 +901,11 @@ final class RequestBootstrap
     private static function activityService(Connection $conn): ActivityService
     {
         return new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class));
+    }
+
+    private static function passwordService(Connection $conn): PasswordService
+    {
+        return new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), self::deploymentPolicy());
     }
 
     /**

@@ -13,12 +13,12 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -68,6 +68,7 @@ final readonly class ImageService
         private EventDispatcher $eventDispatcher,
         private CurrentConfig $currentConfig,
         private Translator $translator,
+        private Paths $paths,
     ) {}
 
     /**
@@ -312,7 +313,7 @@ final readonly class ImageService
             $representativeExt = is_string($representativeExt) && $representativeExt !== '' ? $representativeExt : null;
 
             $files = [];
-            $files[] = ImagePathHelper::getElementPath($row, $urlService);
+            $files[] = ImagePathHelper::getElementPath($row, $urlService, $this->paths);
 
             if ($representativeExt !== null) {
                 $files[] = ImagePathHelper::originalToRepresentative($files[0], $representativeExt);
@@ -342,7 +343,7 @@ final readonly class ImageService
                 if ($representativeExt !== null) {
                     $derivativeInfos['representative_ext'] = $representativeExt;
                 }
-                new DerivativeCacheService($this->currentConfig)
+                new DerivativeCacheService($this->currentConfig, $this->paths)
                     ->deleteElementDerivatives($derivativeInfos);
                 $newIds[] = $rowId;
             } else {
@@ -625,7 +626,7 @@ final readonly class ImageService
         $updates = [];
 
         foreach ($pathForId as $id => $path) {
-            $absPath = CurrentPaths::get()->root . $path;
+            $absPath = $this->paths->root . $path;
             $md5sum = is_readable($absPath) ? md5_file($absPath) : false;
             // md5_file() returns false when the file can't be read -- skip
             // rather than writing a bogus md5sum that would then read as

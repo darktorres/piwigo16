@@ -36,7 +36,7 @@ function seedCollected(ErrorCollector $errorCollector, array $entries): void
 test('reset actually clears isActive back to false, not leaving it true', function (): void {
     // install() is deliberately never called in this file (see the top
     // docblock), so isActive is set directly via reflection instead.
-    $errorCollector = new ErrorCollector(new DeploymentPolicy());
+    $errorCollector = new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir()));
     $prop = new ReflectionProperty(ErrorCollector::class, 'active');
     $prop->setValue($errorCollector, true);
     expect($errorCollector->isActive())->toBeTrue();
@@ -47,18 +47,18 @@ test('reset actually clears isActive back to false, not leaving it true', functi
 });
 
 test('drain returns an empty array when nothing was collected', function (): void {
-    expect(new ErrorCollector(new DeploymentPolicy())->drain())->toBe([]);
+    expect(new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir()))->drain())->toBe([]);
 });
 
 test('drain returns exactly what was collected', function (): void {
-    $errorCollector = new ErrorCollector(new DeploymentPolicy());
+    $errorCollector = new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir()));
     seedCollected($errorCollector, ['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2']);
 
     expect($errorCollector->drain())->toBe(['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2']);
 });
 
 test('drain clears the buffer, unlike collected()', function (): void {
-    $errorCollector = new ErrorCollector(new DeploymentPolicy());
+    $errorCollector = new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir()));
     seedCollected($errorCollector, ['[WARNING] foo in bar.php:1']);
 
     $errorCollector->drain();
@@ -67,7 +67,7 @@ test('drain clears the buffer, unlike collected()', function (): void {
 });
 
 test('a second drain after a first returns empty', function (): void {
-    $errorCollector = new ErrorCollector(new DeploymentPolicy());
+    $errorCollector = new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir()));
     seedCollected($errorCollector, ['[WARNING] foo in bar.php:1']);
 
     $errorCollector->drain();
@@ -98,25 +98,29 @@ test('a second drain after a first returns empty', function (): void {
  * a genuinely separate PHP subprocess instead of this shared worker. See
  * the dedicated subprocess test further down.
  */
-test('writeTestErrorsLog is a no-op when test mode is not active, never touching CurrentPaths', function (): void {
-    // CurrentPaths is deliberately left uninitialised: if the
+test('writeTestErrorsLog is a no-op when test mode is not active, never touching the log file', function (): void {
+    // The passed-in $paths deliberately points nowhere real (a throwaway
+    // fromRoot(), never written to by anything else in this test): if the
     // testModeIsActive() guard were ever removed, the very next line
-    // (CurrentPaths::get()->logs) would throw LogicException instead of
-    // silently returning -- that would-be exception is the real assertion.
+    // ($paths->logs) would attempt a real write to that bogus path instead
+    // of silently returning -- that would-be write is the real assertion,
+    // verified below by asserting the directory it would land in was never
+    // created.
     Kernel::reset();
     $original = $_SERVER['HTTP_X_PIWIGO_ENV'] ?? null;
     unset($_SERVER['HTTP_X_PIWIGO_ENV']);
+    $root = sys_get_temp_dir() . '/piwigo-error-collector-noop-' . bin2hex(random_bytes(8)) . '/';
 
     try {
         $method = new ReflectionMethod(ErrorCollector::class, 'writeTestErrorsLog');
-        $method->invoke(null, '[WARNING] irrelevant in file.php:1');
+        $method->invoke(null, '[WARNING] irrelevant in file.php:1', Paths::fromRoot($root));
     } finally {
         if ($original !== null) {
             $_SERVER['HTTP_X_PIWIGO_ENV'] = $original;
         }
     }
 
-    expect(true)->toBeTrue(); // reaching here without CurrentPaths ever throwing is the assertion
+    expect(is_dir($root))->toBeFalse(); // the root directory itself was never even created, let alone written into
 });
 
 test('writeTestErrorsLog creates _data/logs/ when it does not exist yet, instead of silently failing', function (): void {
@@ -139,7 +143,7 @@ test('writeTestErrorsLog creates _data/logs/ when it does not exist yet, instead
         // PersistentFileCacheTest.php's own established pattern.
         set_error_handler(static fn (): bool => true);
         try {
-            $method->invoke(null, '[WARNING] irrelevant in file.php:1');
+            $method->invoke(null, '[WARNING] irrelevant in file.php:1', Paths::fromRoot($root));
         } finally {
             restore_error_handler();
         }
@@ -170,8 +174,8 @@ test('writeTestErrorsLog appends the entry directly when _data/logs/ already exi
         Kernel::boot(Paths::fromRoot($root));
 
         $method = new ReflectionMethod(ErrorCollector::class, 'writeTestErrorsLog');
-        $method->invoke(null, '[WARNING] first in file.php:1');
-        $method->invoke(null, '[NOTICE] second in file.php:2');
+        $method->invoke(null, '[WARNING] first in file.php:1', Paths::fromRoot($root));
+        $method->invoke(null, '[NOTICE] second in file.php:2', Paths::fromRoot($root));
 
         $logPath = $root . '_data/logs/test_errors.log';
         expect(file_get_contents($logPath))->toBe("[WARNING] first in file.php:1\n[NOTICE] second in file.php:2\n");
@@ -225,7 +229,7 @@ test('flush does not record a non-fatal error_get_last() type as if it were fata
     $script = '<?php' . "\n"
         . 'require ' . var_export($autoloadPath, true) . ";\n"
         . "@trigger_error('non-fatal warning for mutation coverage', E_USER_WARNING);\n"
-        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector(new \\Piwigo\\Config\\DeploymentPolicy());\n"
+        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector(new \\Piwigo\\Config\\DeploymentPolicy(), \\Piwigo\\Core\\Paths::fromRoot(sys_get_temp_dir()));\n"
         . "\$method = new ReflectionMethod(\\Piwigo\\Core\\ErrorCollector::class, 'flush');\n"
         . "\$method->invoke(\$errorCollector);\n"
         . 'file_put_contents(' . var_export($marker, true) . ", json_encode(\$errorCollector->collected()));\n";
@@ -288,7 +292,7 @@ test('flush records a synthetic entry for a genuine E_PARSE fatal (malformed req
 
     $script = '<?php' . "\n"
         . 'require ' . var_export($autoloadPath, true) . ";\n"
-        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector(new \\Piwigo\\Config\\DeploymentPolicy());\n"
+        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector(new \\Piwigo\\Config\\DeploymentPolicy(), \\Piwigo\\Core\\Paths::fromRoot(sys_get_temp_dir()));\n"
         . "\$errorCollector->install();\n"
         . "register_shutdown_function(function () use (\$errorCollector) {\n"
         . '    file_put_contents(' . var_export($marker, true) . ", json_encode(\$errorCollector->collected()));\n"
@@ -334,7 +338,7 @@ test('flush records a synthetic entry for a genuine E_PARSE fatal (malformed req
 });
 
 test('flush returns immediately when nothing was collected', function (): void {
-    $errorCollector = new ErrorCollector(new DeploymentPolicy());
+    $errorCollector = new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir()));
     seedCollected($errorCollector, []);
 
     $method = new ReflectionMethod(ErrorCollector::class, 'flush');
@@ -361,7 +365,7 @@ test('flush records a synthetic entry for a genuine E_ERROR fatal (memory-limit 
     $script = '<?php' . "\n"
         . "ini_set('memory_limit', '32M');\n"
         . 'require ' . var_export($autoloadPath, true) . ";\n"
-        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector(new \\Piwigo\\Config\\DeploymentPolicy());\n"
+        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector(new \\Piwigo\\Config\\DeploymentPolicy(), \\Piwigo\\Core\\Paths::fromRoot(sys_get_temp_dir()));\n"
         . "\$errorCollector->install();\n"
         . "register_shutdown_function(function () use (\$errorCollector) {\n"
         . '    file_put_contents(' . var_export($marker, true) . ", json_encode(\$errorCollector->collected()));\n"
@@ -505,7 +509,7 @@ test('label falls back to the PHP code for a type matching none of the known cat
  * dead for the identical reason -- not chased further.
  */
 test('flush leaves a non-empty buffer untouched when headers are already sent', function (): void {
-    $errorCollector = new ErrorCollector(new DeploymentPolicy());
+    $errorCollector = new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir()));
     $seeded = ['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2'];
     seedCollected($errorCollector, $seeded);
 

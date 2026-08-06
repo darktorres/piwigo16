@@ -10,7 +10,6 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringHelper;
@@ -57,6 +56,7 @@ final readonly class MetadataService
         private CurrentUser $currentUser,
         private SessionService $sessionService,
         private FilterState $filterState,
+        private \Piwigo\Core\Paths $paths,
     ) {}
 
     /**
@@ -410,7 +410,7 @@ final readonly class MetadataService
         // confirmed live: metadata sync silently failed with "File/directory
         // read error" for every photo synced via the "Synchronize" tool on a
         // fresh install.
-        $originalFile = str_starts_with($path, '/') ? $path : CurrentPaths::get()->root . $path;
+        $originalFile = str_starts_with($path, '/') ? $path : $this->paths->root . $path;
         $file = $originalFile;
         if (! is_readable($file)) {
             return false;

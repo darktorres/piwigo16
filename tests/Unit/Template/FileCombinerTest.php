@@ -494,7 +494,7 @@ test('clear_combined_files deletes only .js and .css files from the combined dir
     CurrentConfig::current()->setDataLocation('_data/');
 
     try {
-        FileCombiner::clear_combined_files(CurrentConfig::current());
+        FileCombiner::clear_combined_files(CurrentConfig::current(), Paths::fromRoot($root));
 
         expect(file_exists($root . '/_data/combined/a.js'))->toBeFalse();
         expect(file_exists($root . '/_data/combined/b.css'))->toBeFalse();
@@ -516,7 +516,7 @@ test('clear_combined_files returns without error when the combined dir does not 
 
     set_error_handler(static fn (): bool => true);
     try {
-        FileCombiner::clear_combined_files(CurrentConfig::current());
+        FileCombiner::clear_combined_files(CurrentConfig::current(), Paths::fromRoot($root));
         $ranToCompletion = true;
     } finally {
         restore_error_handler();

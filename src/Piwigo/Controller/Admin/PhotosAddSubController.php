@@ -16,6 +16,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
 use Piwigo\Image\ImageService;
 use Piwigo\Metadata\MetadataService;
@@ -57,6 +58,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         private readonly CurrentConfig $currentConfig,
         private readonly WsContext $wsContext,
         private readonly CurrentUser $currentUser,
+        private readonly Paths $paths,
     ) {}
 
     #[Override]
@@ -67,7 +69,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         // upload form config is loaded here to match the original page's
         // own behavior (validated/used by the tab templates), even though
         // this sub-controller doesn't read it directly itself.
-        new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)
+        new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, $this->paths)
             ->getUploadFormConfig();
 
         // admin.php's own shared check_input_parameter('section', ...,

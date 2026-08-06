@@ -20,6 +20,7 @@ use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
@@ -79,6 +80,7 @@ final class PhotosAddDirectPageRenderer
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
         private readonly WsContext $wsContext,
+        private readonly Paths $paths,
     ) {}
 
     /**
@@ -241,7 +243,7 @@ final class PhotosAddDirectPageRenderer
 
         $htmlRenderer = $this->htmlRenderer;
 
-        $uploadService = new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser);
+        $uploadService = new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, $this->paths);
 
         // +-------------------------------------------------------------------+
         // | Photo selection                                                    |

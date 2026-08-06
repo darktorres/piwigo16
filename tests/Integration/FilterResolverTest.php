@@ -21,6 +21,7 @@ use Piwigo\Users\UserRepository;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityService;
@@ -79,6 +80,8 @@ final class FilterResolverTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
 
         $em = EntityManagerFactory::build($this->conn);
+        $paths = Kernel::container()->get(Paths::class);
+        self::assertInstanceOf(Paths::class, $paths);
         $sessionService = new SessionService($em->getRepository(SessionEntity::class),CurrentConfig::current());
         $imageService = new ImageService(
             Lang::current(),
@@ -88,6 +91,7 @@ final class FilterResolverTest extends IntegrationTestCase
             new EventDispatcher(),
             CurrentConfig::current(),
             Translator::get(),
+            $paths,
         );
         $filterState = Kernel::container()->get(FilterState::class);
         if (! $filterState instanceof FilterState) {
@@ -125,6 +129,7 @@ final class FilterResolverTest extends IntegrationTestCase
             CurrentConfig::current(),
             new InstallationFlag(),
             new ProcessCache(),
+            $paths,
         );
 
         $this->resolver = new FilterResolver($imageService, $categoryService, $caddieRepo, $userService);

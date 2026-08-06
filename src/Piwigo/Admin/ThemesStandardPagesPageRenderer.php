@@ -10,7 +10,6 @@ use Piwigo\Admin\Request\ThemesStandardPagesSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -63,6 +62,7 @@ final class ThemesStandardPagesPageRenderer
         private readonly CurrentTemplate $currentTemplate,
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly CurrentConfig $currentConfig,
+        private readonly \Piwigo\Core\Paths $paths,
     ) {}
 
     public function render(): void
@@ -140,7 +140,7 @@ final class ThemesStandardPagesPageRenderer
                     ]
                 );
             } else {
-                $upload_dir = CurrentPaths::get()->siteLocal . 'logo';
+                $upload_dir = $this->paths->siteLocal . 'logo';
                 if (FilesystemHelper::mkgetdir($upload_dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
                     $pathinfo = pathinfo($stdPagesSubmit->logoName);
 
@@ -196,7 +196,7 @@ final class ThemesStandardPagesPageRenderer
 
         // We want to now if any themes use standard pages and which ones
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $this->urlService, $this->lang);
+            ->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths);
 
         $is_standard_pages_used = false;
         $standard_pages_used_by = [];

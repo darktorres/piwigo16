@@ -22,12 +22,12 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Request\IntroActionRequest;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
@@ -109,6 +109,7 @@ final class IntroSubController implements AdminSubControllerInterface
         private readonly CategoryService $categoryService,
         private readonly UserService $userService,
         private readonly CurrentConfig $currentConfig,
+        private readonly Paths $paths,
     ) {}
 
     #[Override]
@@ -261,7 +262,7 @@ final class IntroSubController implements AdminSubControllerInterface
         }
 
         if ($this->currentConfig->showPiwigoLatestNews()) {
-            $latest_news = self::getLatestNews($this->lang, $this->currentConfig);
+            $latest_news = self::getLatestNews($this->lang, $this->currentConfig, $this->paths);
 
             // getLatestNews() is declared to return mixed (it can come straight
             // back out of unserialize() on the cache file), so every field needs a
@@ -604,14 +605,14 @@ final class IntroSubController implements AdminSubControllerInterface
      * view-shaping stays inline" precedent this class's own docblock
      * already establishes for its other dashboard queries.
      */
-    private static function getLatestNews(Lang $lang, CurrentConfig $currentConfig): mixed
+    private static function getLatestNews(Lang $lang, CurrentConfig $currentConfig, Paths $paths): mixed
     {
         $news = null;
 
         $data_location = $currentConfig->dataLocation();
         $lang_code = $lang->langInfo()['code'] ?? null;
         $lang_code = is_string($lang_code) ? $lang_code : '';
-        $cache_path = CurrentPaths::get()->root . $data_location . 'cache/piwigo_latest_news-' . $lang_code . '.cache.php';
+        $cache_path = $paths->root . $data_location . 'cache/piwigo_latest_news-' . $lang_code . '.cache.php';
         if (! is_file($cache_path) or filemtime($cache_path) < strtotime('24 hours ago')) {
             $url = AppInfo::URL . '/ws.php?method=porg.news.getLatest&format=json';
 

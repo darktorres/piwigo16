@@ -13,6 +13,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Tag\DeleteTags;
@@ -92,7 +93,21 @@ final readonly class TagService
      */
     private function newImageService(): ImageService
     {
-        return new ImageService($this->lang, EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), $this->activityLogger, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator());
+        return new ImageService($this->lang, EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), $this->activityLogger, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator(), $this->paths());
+    }
+
+    /**
+     * Same "avoid a 2nd touch of every manual `new TagService(...)` call
+     * site" reasoning as translator() above.
+     */
+    private function paths(): Paths
+    {
+        $paths = Kernel::container()->get(Paths::class);
+        if (! $paths instanceof Paths) {
+            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
+        }
+
+        return $paths;
     }
 
     /**

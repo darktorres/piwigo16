@@ -8,7 +8,7 @@ use Closure;
 use Doctrine\DBAL\Connection as DbalConnection;
 use Doctrine\Persistence\ConnectionRegistry;
 use Override;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use RuntimeException;
@@ -36,12 +36,12 @@ final class MessengerFactory
     /**
      * @return array{transport_table: string, transport_queue: string, routing: array<class-string, string>, handlers: array<class-string, Closure():callable>}
      */
-    public static function config(): array
+    public static function config(Paths $paths): array
     {
         /**
          * @var array{transport_table: string, transport_queue: string, routing: array<class-string, string>, handlers: array<class-string, Closure():callable>}
          */
-        return require CurrentPaths::get()->root . 'config/messenger.php';
+        return require $paths->root . 'config/messenger.php';
     }
 
     /**
@@ -59,9 +59,9 @@ final class MessengerFactory
      * MessageCountAwareInterface (used by the round-trip integration
      * test to assert the transport's queue depth directly).
      */
-    public static function transport(DbalConnection $connection): TransportInterface&MessageCountAwareInterface
+    public static function transport(DbalConnection $connection, Paths $paths): TransportInterface&MessageCountAwareInterface
     {
-        $config = self::config();
+        $config = self::config($paths);
         $registry = new readonly class($connection) implements ConnectionRegistry {
             public function __construct(
                 private DbalConnection $connection,
@@ -117,9 +117,9 @@ final class MessengerFactory
      * Real production dispatch path: sends the message onto the async
      * transport instead of handling it immediately.
      */
-    public static function sendingBus(TransportInterface $transport): MessageBusInterface
+    public static function sendingBus(TransportInterface $transport, Paths $paths): MessageBusInterface
     {
-        $config = self::config();
+        $config = self::config($paths);
         $senders = array_fill_keys(array_keys($config['routing']), ['async']);
         $container = self::containerOf([
             'async' => static fn (): TransportInterface => $transport,
@@ -133,9 +133,9 @@ final class MessengerFactory
      * Envelopes off the transport and dispatches them through this bus to
      * actually invoke handlers.
      */
-    public static function receivingBus(): MessageBusInterface
+    public static function receivingBus(Paths $paths): MessageBusInterface
     {
-        $config = self::config();
+        $config = self::config($paths);
         $handlersMap = [];
         foreach ($config['handlers'] as $messageClass => $factory) {
             $handlersMap[$messageClass] = [$factory()];

@@ -48,6 +48,7 @@ final class ErrorCollector
 
     public function __construct(
         private readonly DeploymentPolicy $deploymentPolicy,
+        private readonly Paths $paths,
     ) {}
 
     public function install(): void
@@ -175,7 +176,7 @@ final class ErrorCollector
 
         // Keep the Apache error log as the authoritative server-side record.
         error_log("PHP {$label}: {$errstr} in {$errfile} on line {$errline}");
-        self::writeTestErrorsLog($entry);
+        self::writeTestErrorsLog($entry, $this->paths);
 
         return true; // Suppress PHP's built-in inline output.
     }
@@ -188,13 +189,13 @@ final class ErrorCollector
      * not a general-purpose log, `_data/logs/piwigo.log` (Monolog) already
      * is one.
      */
-    private static function writeTestErrorsLog(string $entry): void
+    private static function writeTestErrorsLog(string $entry, Paths $paths): void
     {
         if (! Env::testModeIsActive()) {
             return;
         }
 
-        $path = CurrentPaths::get()->logs . 'test_errors.log';
+        $path = $paths->logs . 'test_errors.log';
         $written = @file_put_contents($path, $entry . "\n", FILE_APPEND);
         if ($written === false) {
             // _data/logs/ isn't guaranteed to exist yet -- Monolog's own
@@ -219,7 +220,7 @@ final class ErrorCollector
             $short = basename($last['file']) . ':' . $last['line'];
             $entry = "[{$label}] {$last['message']} in {$short}";
             $this->collected[] = $entry;
-            self::writeTestErrorsLog($entry);
+            self::writeTestErrorsLog($entry, $this->paths);
         }
 
         if ($this->collected === [] || headers_sent()) {

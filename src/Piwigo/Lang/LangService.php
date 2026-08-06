@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Lang;
 
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Db\EntityManagerFactory;
@@ -63,8 +62,9 @@ final readonly class LangService
      * P23 batch 8d: relocated from include/functions.inc.php's
      * get_languages(), unchanged logic -- static since it needs no other
      * instance state, matching InputValidator's own mixed static/instance
-     * precedent; reads Paths via CurrentPaths::get() rather than $this->paths
-     * since a static method can't reach constructor-injected state.
+     * precedent; takes Paths as an explicit parameter rather than
+     * $this->paths since a static method can't reach constructor-injected
+     * state, same as loadLanguageForPlugin()'s own $locale parameter.
      *
      * Part B: LangRepository is now ORM-backed (EntityRepository can't be
      * `new`'d), so this resolves it via EntityManagerFactory::build()
@@ -73,13 +73,13 @@ final readonly class LangService
      *
      * @return array<string, string>
      */
-    public static function getLanguages(): array
+    public static function getLanguages(Paths $paths): array
     {
         $repo = EntityManagerFactory::build()->getRepository(LanguageEntity::class);
 
         $languages = [];
         foreach ($repo->findAllRows() as $row) {
-            if (is_dir(CurrentPaths::get()->root . 'language/' . $row['id'])) {
+            if (is_dir($paths->root . 'language/' . $row['id'])) {
                 $languages[$row['id']] = $row['name'];
             }
         }

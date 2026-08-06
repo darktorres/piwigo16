@@ -213,7 +213,7 @@ final class InstallWizard
         private readonly ErrorCollector $errorCollector,
         private readonly ProcessCache $processCache,
     ) {
-        $conf_data_location = LegacyFileConf::read()['data_location'] ?? null;
+        $conf_data_location = LegacyFileConf::read($this->paths)['data_location'] ?? null;
         if (! is_string($conf_data_location)) {
             throw new LogicException("Invalid \$conf['data_location'] configuration: expected a string.");
         }
@@ -366,7 +366,7 @@ final class InstallWizard
         }
 
         $this->fsLanguages = new ExtensionScanner()
-            ->scan(ExtensionType::Language, PresentationAccessor::urlService(), $this->lang, 'utf-8');
+            ->scan(ExtensionType::Language, PresentationAccessor::urlService(), $this->lang, $this->paths, 'utf-8');
 
         if ($this->request->languageParam !== null) {
             $language = $this->request->languageParam;
@@ -405,7 +405,7 @@ final class InstallWizard
         }
 
         // --------------------------------------------- template initialization
-        $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths->root . 'themes/admin', 'clear');
+        $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, $this->paths->root . 'themes/admin', 'clear');
         CurrentTemplate::current()->set($template);
         $template->set_filenames([
             'install' => 'install.tpl',
@@ -432,7 +432,7 @@ final class InstallWizard
     private function userService(?Connection $conn = null): UserService
     {
         $conn ??= DbConnection::build();
-        return new UserService($this->lang, new UserRepository(EntityManagerFactory::build($conn), EventDispatcher::get(), $this->currentConfig), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), PresentationAccessor::mailService(), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $conn, new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), EventDispatcher::get(), DeploymentPolicy::current(), CurrentUser::current(), $this->currentConfig, new InstallationFlag(), new ProcessCache());
+        return new UserService($this->lang, new UserRepository(EntityManagerFactory::build($conn), EventDispatcher::get(), $this->currentConfig), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), PresentationAccessor::mailService(), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $conn, new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), EventDispatcher::get(), DeploymentPolicy::current(), CurrentUser::current(), $this->currentConfig, new InstallationFlag(), new ProcessCache(), $this->paths);
     }
 
     /**
@@ -691,7 +691,7 @@ define(\'DB_COLLATE\', \'\');
         new ExtensionLifecycle(
             $this->lang,
             new ExtensionRepository(EntityManagerFactory::build($languageActivationConn)),
-            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), CurrentUser::current()),
+            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), CurrentUser::current(), $this->paths),
             $urlService,
             $configService,
             EntityManagerFactory::build($languageActivationConn)->getRepository(PluginMigrationEntity::class),
@@ -701,6 +701,7 @@ define(\'DB_COLLATE\', \'\');
             $this->currentConfig,
             InfrastructureAccessor::wsContext(),
             CoreDomainAccessor::accessControl(),
+            $this->paths,
         )->performAction(ExtensionType::Language, 'activate', $this->language, $this->fsLanguages[$this->language] ?? null);
 
         // fill CurrentConfig::$data from the freshly-seeded config table
@@ -855,7 +856,7 @@ define(\'DB_COLLATE\', \'\');
             // data; this mirrors that method's own two calls verbatim.
             CurrentUser::current()->set(User::fromUserArray($user));
             CurrentUser::current()->markRealUserResolved();
-            new AuthService(new AuthRepository(EntityManagerFactory::build($conn)), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $this->passwordService($conn), new CookieService(), EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), EventDispatcher::get(), PageState::current(), CurrentUser::current(), $this->currentConfig)
+            new AuthService(new AuthRepository(EntityManagerFactory::build($conn)), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $this->passwordService($conn), new CookieService(), EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), EventDispatcher::get(), PageState::current(), CurrentUser::current(), $this->currentConfig, $this->paths)
                 ->logUser($login_user_id, false);
             $_SESSION['connected_with'] = 'pwg_ui';
 

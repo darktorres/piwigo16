@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration {
 
     use Piwigo\Core\ProcessCache;
     use Override;
+    use Piwigo\Core\CurrentPaths;
     use Piwigo\Core\Kernel;
     use Piwigo\Core\InstallationFlag;
     use LogicException;
@@ -115,7 +116,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
-            $this->service = new UserService(Lang::current(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfig::current()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), new EventDispatcher(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), $installationFlag, $this->processCache);
+            $this->service = new UserService(Lang::current(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfig::current()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), new EventDispatcher(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), $installationFlag, $this->processCache, CurrentPaths::get());
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
@@ -1103,7 +1104,7 @@ namespace Piwigo\Tests\Integration {
             if (! $installationFlag instanceof InstallationFlag) {
                 throw new LogicException('Container returned an unexpected type for ' . InstallationFlag::class);
             }
-            $service = new UserService(Lang::current(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfig::current()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), new EventDispatcher(), new DeploymentPolicy(externalAuthentification: true), CurrentUser::current(), CurrentConfig::current(), $installationFlag, new ProcessCache());
+            $service = new UserService(Lang::current(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfig::current()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), new EventDispatcher(), new DeploymentPolicy(externalAuthentification: true), CurrentUser::current(), CurrentConfig::current(), $installationFlag, new ProcessCache(), CurrentPaths::get());
 
             try {
                 self::assertSame(0, $this->fetchOneInt(

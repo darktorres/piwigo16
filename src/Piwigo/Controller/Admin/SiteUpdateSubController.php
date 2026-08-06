@@ -17,7 +17,6 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Request\SiteUpdateRequest;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -142,11 +141,12 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly InputValidator $inputValidator,
         private readonly Translator $translator,
         private readonly FilterState $filterState,
+        private readonly \Piwigo\Core\Paths $paths,
     ) {}
 
     private function imageService(Connection $conn): ImageService
     {
-        return new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
+        return new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator, $this->paths);
     }
 
     #[Override]
@@ -227,7 +227,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             $this->htmlRenderer
                 ->fatalError('remote sites not supported');
         } else {
-            $site_reader = new LocalSiteReader($site_url, $this->currentConfig, new MetadataService($this->lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState));
+            $site_reader = new LocalSiteReader($site_url, $this->currentConfig, new MetadataService($this->lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState, $this->paths));
         }
 
         if ($this->pageState->noMd5sumNumber !== null) {
@@ -548,7 +548,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 if (substr_compare($fulldir, '../', 0, 3) === 0) {
                     $fulldir = substr($fulldir, 3);
                 }
-                $to_delete_derivative_dirs[] = CurrentPaths::get()->root . $this->currentConfig->derivativeDir() . $fulldir;
+                $to_delete_derivative_dirs[] = $this->paths->root . $this->currentConfig->derivativeDir() . $fulldir;
             }
 
             if (count($to_delete) > 0) {
@@ -556,7 +556,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     $this->categoryService->deleteCategories($to_delete, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher);
                     foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                         if (is_dir($to_delete_dir)) {
-                            new DerivativeCacheService($this->currentConfig)
+                            new DerivativeCacheService($this->currentConfig, $this->paths)
                                 ->clearDerivativeCacheRecursive($to_delete_dir, '#.+#');
                         }
                     }

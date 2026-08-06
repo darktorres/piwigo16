@@ -56,7 +56,7 @@ test('__invoke delegates to DerivativeCacheService::clearDerivativeCache with th
     // derivativeDir() at a directory that doesn't hold the fixture files
     // created above, silently no-oping clearDerivativeCache() and failing
     // the assertions below for the wrong reason.
-    $handler = new RegenerateAllDerivativesHandler(new DerivativeCacheService(CurrentConfig::current()));
+    $handler = new RegenerateAllDerivativesHandler(new DerivativeCacheService(CurrentConfig::current(), CurrentPaths::get()));
     $handler(new RegenerateAllDerivativesJob(['thumb']));
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse()

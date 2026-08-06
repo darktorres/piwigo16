@@ -13,8 +13,8 @@ namespace Piwigo\Cache;
 
 use Override;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\Paths;
 
 /**
  * Implementation of a persistent cache using files.
@@ -25,9 +25,10 @@ final class PersistentFileCache extends PersistentCache
 
     public function __construct(
         private readonly CurrentConfig $currentConfig,
+        private readonly Paths $paths,
     ) {
         $data_location = $this->currentConfig->dataLocation();
-        $this->dir = CurrentPaths::get()->root . $data_location . 'cache/';
+        $this->dir = $this->paths->root . $data_location . 'cache/';
     }
 
     #[Override]

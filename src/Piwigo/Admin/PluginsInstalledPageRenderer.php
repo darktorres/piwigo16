@@ -16,6 +16,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
@@ -61,7 +62,7 @@ final class PluginsInstalledPageRenderer
      * slug statically (it's the only class registered for the 'plugins'
      * slug in config/admin_pages.php).
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CurrentLogger $currentLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, PreferencesService $preferencesService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CurrentUser $currentUser): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CurrentLogger $currentLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, PreferencesService $preferencesService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CurrentUser $currentUser, Paths $paths): void
     {
         $template = $currentTemplate->get();
 
@@ -88,14 +89,14 @@ final class PluginsInstalledPageRenderer
 
         $conn = DbConnection::build();
         $extension_repository = new ExtensionRepository(EntityManagerFactory::build($conn));
-        $pem_catalog = new PemCatalog(new ZipExtractor(), $currentLogger, $currentUser);
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $currentLogger, $currentUser, $paths);
         // ExtensionScanner::scan()'s own declared return type is a generic
         // array<string, array<string, mixed>> dispatch shape by design (see
         // that method's own docblock) -- every $fs_plugin read below
         // follows its documented convention and reads specific keys
         // defensively instead.
         $fs_plugins = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService, $lang);
+            ->scan(ExtensionType::Plugin, $urlService, $lang, $paths);
         uasort($fs_plugins, $htmlRenderer->nameCompare(...));
         $db_plugins_by_id = $extension_repository->findAll(ExtensionType::Plugin);
 

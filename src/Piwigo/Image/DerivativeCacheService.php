@@ -6,7 +6,7 @@ namespace Piwigo\Image;
 
 use Exception;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
 
 /**
  * Derivative-cache invalidation. Piwigo's real derivative-generation design
@@ -22,6 +22,7 @@ final class DerivativeCacheService
 {
     public function __construct(
         private readonly CurrentConfig $currentConfig,
+        private readonly Paths $paths,
     ) {}
 
     /**
@@ -61,7 +62,7 @@ final class DerivativeCacheService
         }
         $pattern .= '\.[a-zA-Z0-9]{3,4}$#';
 
-        $root = CurrentPaths::get()->root . $this->currentConfig->derivativeDir();
+        $root = $this->paths->root . $this->currentConfig->derivativeDir();
         $contents = @opendir($root);
         if ($contents !== false) {
             while (($node = readdir($contents)) !== false) {
@@ -100,7 +101,7 @@ final class DerivativeCacheService
         }
         $path = substr_replace($path, $pattern, $dot, 0);
 
-        $glob = glob(CurrentPaths::get()->root . $this->currentConfig->derivativeDir() . $path);
+        $glob = glob($this->paths->root . $this->currentConfig->derivativeDir() . $path);
         if ($glob !== false) {
             foreach ($glob as $file) {
                 @unlink($file);

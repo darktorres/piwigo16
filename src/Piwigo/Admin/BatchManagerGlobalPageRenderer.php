@@ -97,6 +97,7 @@ final class BatchManagerGlobalPageRenderer
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
         private readonly FilterState $filterState,
+        private readonly \Piwigo\Core\Paths $paths,
     ) {}
 
     /**
@@ -204,7 +205,7 @@ final class BatchManagerGlobalPageRenderer
             $redirect = false;
 
             $tagService = $this->tagService;
-            $imageService = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
+            $imageService = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator, $this->paths);
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = $this->currentUser->get()
@@ -446,7 +447,7 @@ final class BatchManagerGlobalPageRenderer
                     }
                     foreach ($post['del_derivatives_type'] as $type) {
                         if (is_string($type)) {
-                            new DerivativeCacheService($this->currentConfig)
+                            new DerivativeCacheService($this->currentConfig, $this->paths)
                                 ->deleteElementDerivatives($derivative_infos, $type);
                         }
                     }
@@ -518,7 +519,7 @@ final class BatchManagerGlobalPageRenderer
         );
 
         // metadata
-        $site_reader = new LocalSiteReader('./', $this->currentConfig, new MetadataService($this->lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState));
+        $site_reader = new LocalSiteReader('./', $this->currentConfig, new MetadataService($this->lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState, $this->paths));
         $used_metadata = implode(', ', $site_reader->get_metadata_attributes());
 
         $template->assign(

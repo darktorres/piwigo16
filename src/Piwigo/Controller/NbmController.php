@@ -11,10 +11,10 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Lifecycle\LoadingLang;
@@ -62,6 +62,7 @@ final class NbmController implements ControllerInterface
         private readonly CurrentConfig $currentConfig,
         private readonly Translator $translator,
         private readonly CurrentLogger $currentLogger,
+        private readonly Paths $paths,
     ) {}
 
     #[Override]
@@ -73,7 +74,7 @@ final class NbmController implements ControllerInterface
         $this->lang->load('admin.lang');
         // Need to update a second time.
         $this->eventDispatcher->dispatchNotify(new LoadingLang());
-        $this->lang->load('lang', CurrentPaths::get()->siteLocal, [
+        $this->lang->load('lang', $this->paths->siteLocal, [
             'no_fallback' => true,
             'local' => true,
         ]);

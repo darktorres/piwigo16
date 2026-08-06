@@ -19,6 +19,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -73,6 +74,7 @@ final class RegisterController implements ControllerInterface
         private readonly CurrentConfig $currentConfig,
         private readonly Translator $translator,
         private readonly CurrentLogger $currentLogger,
+        private readonly Paths $paths,
     ) {}
 
     #[Override]
@@ -260,7 +262,7 @@ final class RegisterController implements ControllerInterface
                 $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
             }
-            if (! array_key_exists($lang_cookie, LangService::getLanguages())) {
+            if (! array_key_exists($lang_cookie, LangService::getLanguages($this->paths))) {
                 $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
             }
@@ -272,7 +274,7 @@ final class RegisterController implements ControllerInterface
         }
 
         $language_options = [];
-        foreach (LangService::getLanguages() as $language_code => $language_name) {
+        foreach (LangService::getLanguages($this->paths) as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
 

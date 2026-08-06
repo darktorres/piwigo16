@@ -18,10 +18,10 @@ use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
@@ -59,6 +59,7 @@ final class LanguagesNewPageRenderer
         private readonly CurrentConfig $currentConfig,
         private readonly WsContext $wsContext,
         private readonly CurrentUser $currentUser,
+        private readonly Paths $paths,
     ) {}
 
     /**
@@ -88,16 +89,16 @@ final class LanguagesNewPageRenderer
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
 
         $extension_repository = new ExtensionRepository(EntityManagerFactory::build(DbConnection::build()));
-        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser);
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = EntityManagerFactory::build(DbConnection::build())->getRepository(PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl);
+        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl, $this->paths);
 
         // +-----------------------------------------------------------------------+
         // |                           setup check                                 |
         // +-----------------------------------------------------------------------+
 
-        $languages_dir = CurrentPaths::get()->root . 'language';
+        $languages_dir = $this->paths->root . 'language';
         if (! is_writable($languages_dir)) {
             $this->pageState->addError($this->lang->t('Add write access to the "%s" directory', 'language'));
         }
@@ -126,7 +127,7 @@ final class LanguagesNewPageRenderer
                 // PemCatalog::extractArchive() only extracts, it doesn't know about
                 // the lifecycle state machine.
                 if ($install_status === 'ok' && $extraction['id'] !== null) {
-                    $fs_language_entry = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang)[$extraction['id']] ?? null;
+                    $fs_language_entry = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang, $this->paths)[$extraction['id']] ?? null;
                     $extension_lifecycle->performAction(ExtensionType::Language, 'activate', $extraction['id'], $fs_language_entry);
                 }
 
@@ -153,7 +154,7 @@ final class LanguagesNewPageRenderer
         // |                     start template output                             |
         // +-----------------------------------------------------------------------+
         $fs_language_ids = [];
-        foreach ($extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang) as $fs_language) {
+        foreach ($extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang, $this->paths) as $fs_language) {
             $extension = $fs_language['extension'] ?? null;
             if (is_scalar($extension)) {
                 $fs_language_ids[] = (string) $extension;

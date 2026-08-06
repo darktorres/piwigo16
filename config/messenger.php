@@ -88,10 +88,11 @@ return [
             CoreDomainAccessor::imageService(),
             RequestBootstrap::currentConfig(),
             InfrastructureAccessor::wsContext(),
-            RequestBootstrap::currentUser()
+            RequestBootstrap::currentUser(),
+            Paths::fromRoot(dirname(__DIR__))
         ),
-        GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService(RequestBootstrap::currentConfig())),
-        RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService(RequestBootstrap::currentConfig())),
+        GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService(RequestBootstrap::currentConfig(), Paths::fromRoot(dirname(__DIR__)))),
+        RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService(RequestBootstrap::currentConfig(), Paths::fromRoot(dirname(__DIR__)))),
         ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(new MetadataService(
             new Lang(
                 new Translator(RequestBootstrap::currentConfig()),
@@ -105,7 +106,8 @@ return [
             RequestBootstrap::currentConfig(),
             RequestBootstrap::currentUser(),
             RequestBootstrap::sessionService(),
-            RequestBootstrap::filterState()
+            RequestBootstrap::filterState(),
+            Paths::fromRoot(dirname(__DIR__))
         )),
         SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(new MailService(
             new Lang(

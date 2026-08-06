@@ -7,9 +7,9 @@ namespace Piwigo\Admin\Extensions;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Logger;
+use Piwigo\Core\Paths;
 use Piwigo\Core\VersionHelper;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Users\CurrentUser;
@@ -43,6 +43,7 @@ final readonly class PemCatalog
         private ZipExtractor $zipExtractor,
         private CurrentLogger $currentLogger,
         private CurrentUser $currentUser,
+        private Paths $paths,
     ) {}
 
     /**
@@ -287,7 +288,7 @@ final readonly class PemCatalog
     {
         $logger = $this->currentLogger->get();
 
-        $scanDirectory = $type->scanDirectory();
+        $scanDirectory = $type->scanDirectory($this->paths);
         $archive = tempnam($scanDirectory, 'zip');
         if ($archive === false) {
             return [
@@ -388,7 +389,7 @@ final readonly class PemCatalog
             return;
         }
 
-        $trashPath = $type->scanDirectory() . 'trash';
+        $trashPath = $type->scanDirectory($this->paths) . 'trash';
 
         foreach ($oldFiles as $oldFile) {
             $oldFile = trim($oldFile);
@@ -429,7 +430,7 @@ final readonly class PemCatalog
      */
     public function getLocallyMergedExtensions(): array
     {
-        $file = CurrentPaths::get()->root . 'install/obsolete_extensions.list';
+        $file = $this->paths->root . 'install/obsolete_extensions.list';
         $mergedExtensions = [];
 
         if (file_exists($file)) {

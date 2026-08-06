@@ -19,7 +19,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\DeviceHelper;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilesystemHelper;
@@ -28,6 +27,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\ThemeConfProviderInterface;
@@ -41,6 +41,7 @@ use Piwigo\Template\Event\CombinedScript;
 use Piwigo\Template\Request\TemplateExtentsRequest;
 use Smarty\Debug;
 use Smarty\Smarty;
+use Smarty\Template as SmartyTemplate;
 
 /**
  * Legacy Coupling Retirement Phase 8, 8d: the data_dir_checked write
@@ -136,6 +137,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         private readonly ErrorCollector $errorCollector,
         private readonly ProcessCache $processCache,
         private readonly CurrentConfigService $currentConfigService,
+        private readonly Paths $paths,
         string $root = '.',
         string $theme = '',
         string $path = 'template'
@@ -166,7 +168,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $conf_data_location = $this->currentConfig->dataLocation();
 
         if ($this->currentConfig->dataDirChecked() === null) {
-            $dir = CurrentPaths::get()->root . $conf_data_location;
+            $dir = $this->paths->root . $conf_data_location;
             FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
             if (! is_writable($dir)) {
                 $this->lang->load('admin.lang');
@@ -236,7 +238,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             }
         }
 
-        $compile_dir = CurrentPaths::get()->root . $conf_data_location . 'templates_c';
+        $compile_dir = $this->paths->root . $conf_data_location . 'templates_c';
         FilesystemHelper::mkgetdir($compile_dir);
 
         $this->smarty->setCompileDir($compile_dir);
@@ -307,7 +309,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         if ($theme !== '') {
             $this->set_theme($root, $theme, $path);
             if (! $this->adminContext->isActive()) {
-                $this->set_prefilter('header', self::prefilter_local_css(...));
+                $this->set_prefilter('header', fn (string $source, SmartyTemplate $smarty): string => self::prefilter_local_css($source, $smarty, $this->paths));
             }
         } else {
             $this->set_template_dir($root);
@@ -326,7 +328,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->smarty->assign('lang_info', $lang_info);
 
         if (! $this->adminContext->isActive()) {
-            $this->set_extents($this->currentConfig->extentsForTemplates(), CurrentPaths::get()->root . 'template-extension/', true, $theme);
+            $this->set_extents($this->currentConfig->extentsForTemplates(), $this->paths->root . 'template-extension/', true, $theme);
         }
     }
 
@@ -808,7 +810,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         // check (datepicker.inc.tpl/photos_add_direct.tpl's own
         // `{if $ROOT_PATH|@cat:...|@file_exists}`), not a URL -- ROOT_URL
         // above is request-relative and wrong for file_exists().
-        $this->smarty->assign('ROOT_PATH', CurrentPaths::get()->root);
+        $this->smarty->assign('ROOT_PATH', $this->paths->root);
 
         $save_compile_id = $this->smarty->compile_id;
         $this->load_external_filters($handle);
@@ -874,7 +876,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             } // else maybe error or warning ?
         }
 
-        $css = $this->cssLoader->get_css(self::urlService(), $this->eventDispatcher, $this->currentTemplate(), $this->currentConfig);
+        $css = $this->cssLoader->get_css(self::urlService(), $this->eventDispatcher, $this->currentTemplate(), $this->currentConfig, $this->paths);
 
         $content = [];
         foreach ($css as $combi) {
@@ -1574,13 +1576,24 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     /**
      * Prefilter used to add theme local CSS files.
      *
+     * Registered against a real Smarty compile pass (see the constructor's
+     * own set_prefilter() call below), Smarty always invokes this with the
+     * currently-compiling Smarty\Template, not the top-level Smarty\Smarty
+     * engine -- confirmed live (a bare `Smarty $smarty` closure param there
+     * throws a real TypeError). This method's own $smarty param is typed to
+     * their shared common ancestor instead of the narrower Smarty\Template,
+     * since it only ever calls getTemplateVars() (declared on that shared
+     * base), and this file's own Unit tests call it directly against
+     * $this->smarty (the Smarty\Smarty engine) rather than a real compiling
+     * Smarty\Template, a legitimate substitution given both share the same
+     * variable-storage API.
+     *
      * @param string $source
-     * @param Smarty $smarty
+     * @param \Smarty\TemplateBase $smarty
      * @return string
      */
-    public static function prefilter_local_css($source, $smarty)
+    public static function prefilter_local_css($source, $smarty, Paths $paths)
     {
-        $paths = CurrentPaths::get();
         // The relative directory name (e.g. 'local/' or a PIWIGO_LOCAL_DIR
         // override) -- combine_css's own path= attribute needs a
         // root-relative string, same shape the retired PWG_LOCAL_DIR

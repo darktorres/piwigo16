@@ -112,7 +112,7 @@ final class LegacyFileConfTest extends IntegrationTestCase
         // and still exercises the exact same "no keys overridden" outcome.
         file_put_contents($paths->local . 'config/config.inc.php', "<?php\n// no overrides\n");
 
-        $result = LegacyFileConf::read();
+        $result = LegacyFileConf::read($paths);
 
         // The present-but-empty config.inc.php sets nothing, so the raw
         // CurrentConfig::defaultsArray() output comes back completely
@@ -139,7 +139,7 @@ final class LegacyFileConfTest extends IntegrationTestCase
             "<?php\n\$conf['data_location'] = 'custom_data_dir/';\n\$conf['webmaster_id'] = 7;\n"
         );
 
-        $result = LegacyFileConf::read();
+        $result = LegacyFileConf::read($paths);
 
         // The override touches only the 2 keys it assigns; every other
         // default key (guest_id/rate/rate_anonymous/default_user_id) comes
@@ -174,7 +174,7 @@ final class LegacyFileConfTest extends IntegrationTestCase
             "<?php\n\$conf['data_location'] = 'from_site_local/';\n"
         );
 
-        $result = LegacyFileConf::read();
+        $result = LegacyFileConf::read($paths);
 
         self::assertSame('from_local/', $result['data_location']);
         self::assertArrayNotHasKey('local_dir_site', $result);
@@ -193,7 +193,7 @@ final class LegacyFileConfTest extends IntegrationTestCase
             "<?php\n\$conf['data_location'] = 'from_site_local/';\n"
         );
 
-        $result = LegacyFileConf::read();
+        $result = LegacyFileConf::read($paths);
 
         // The site-local include runs strictly after the local one, so its
         // own assignment to the same key wins.

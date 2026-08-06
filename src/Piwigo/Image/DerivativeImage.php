@@ -13,8 +13,8 @@ namespace Piwigo\Image;
 
 use Exception;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\Event\GetDerivativeUrl;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -103,6 +103,23 @@ final class DerivativeImage
         }
 
         return $currentConfig;
+    }
+
+    /**
+     * Same reasoning as currentConfig() above (singleton/service-locator
+     * elimination campaign, Phase 11 sub-phase 11H).
+     */
+    private static function paths(): Paths
+    {
+        if (! Kernel::isBooted()) {
+            throw new RuntimeException('DerivativeImage: no Paths set (RequestBootstrap not run yet?)');
+        }
+        $paths = Kernel::container()->get(Paths::class);
+        if (! $paths instanceof Paths) {
+            throw new RuntimeException('DerivativeImage: no Paths set (RequestBootstrap not run yet?)');
+        }
+
+        return $paths;
     }
 
     /**
@@ -299,7 +316,7 @@ final class DerivativeImage
 
         $url_style = $currentConfig->derivativeUrlStyle();
         if (! (bool) $url_style) {
-            $abs_path = CurrentPaths::get()->root . $rel_path;
+            $abs_path = self::paths()->root . $rel_path;
             $mtime = file_exists($abs_path) ? filemtime($abs_path) : false;
             if ($mtime === false or $mtime < $params->last_mod_time) {
                 $is_cached = false;
@@ -325,7 +342,7 @@ final class DerivativeImage
 
     public function get_path(): string
     {
-        return CurrentPaths::get()->root . $this->rel_path;
+        return self::paths()->root . $this->rel_path;
     }
 
     public function get_url(): string

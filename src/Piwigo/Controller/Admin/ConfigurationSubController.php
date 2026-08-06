@@ -24,12 +24,12 @@ use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
@@ -157,6 +157,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
         private readonly WsContext $wsContext,
+        private readonly Paths $paths,
     ) {}
 
     /**
@@ -510,7 +511,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->imageStdParams->restore_default();
-            new DerivativeCacheService($this->currentConfig)
+            new DerivativeCacheService($this->currentConfig, $this->paths)
                 ->clearDerivativeCache();
 
             // reset conf
@@ -658,7 +659,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 // P22: profile.php's own save_profile_from_post()/
                 // load_profile_in_template() ported to Piwigo\Controller\
                 // ProfileFormHandler in P23 batch 8c.
-                $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlRenderer, $this->mailService, $this->currentConfig);
+                $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlRenderer, $this->mailService, $this->currentConfig, $this->paths);
 
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
@@ -770,7 +771,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
             case 'watermark':
 
-                $paths = CurrentPaths::get();
+                $paths = $this->paths;
                 $watermark_files = [];
                 if (($glob = glob($paths->root . 'themes/default/watermarks/*.png')) !== false) {
                     foreach ($glob as $file) {
@@ -878,7 +879,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // content isn't knowable statically. Whether $conf ends up with
         // these keys genuinely depends on a file that may not exist and
         // isn't part of this codebase.
-        $paths = CurrentPaths::get();
+        $paths = $this->paths;
         $conf = CurrentConfig::defaultsArray();
         @include $paths->local . 'config/config.inc.php';
         if (isset($conf['local_dir_site'])) {
@@ -1008,7 +1009,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // PluginLoader::autoupdatePlugin()).
         $page_errors = $this->pageState->errors;
 
-        new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser)
+        new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, $this->paths)
             ->saveUploadFormConfig($updates, $page_errors, $errors);
 
         $this->pageState->errors = array_values($page_errors);
@@ -1201,7 +1202,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             $this->imageStdParams->set_and_save_disabled($disabled);
 
             if ((bool) count($changed_types)) {
-                new DerivativeCacheService($this->currentConfig)
+                new DerivativeCacheService($this->currentConfig, $this->paths)
                     ->clearDerivativeCache($changed_types);
             }
 
@@ -1291,7 +1292,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     'PNG'
                 );
             } else {
-                $paths = CurrentPaths::get();
+                $paths = $this->paths;
                 $upload_dir = $paths->siteLocal . 'watermarks';
                 if (FilesystemHelper::mkgetdir($upload_dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
                     // file name may include exotic chars like single quote, we need a safe name
@@ -1452,7 +1453,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             $this->imageStdParams->save();
 
             if ((bool) count($changed_types)) {
-                new DerivativeCacheService($this->currentConfig)
+                new DerivativeCacheService($this->currentConfig, $this->paths)
                     ->clearDerivativeCache($changed_types);
             }
 

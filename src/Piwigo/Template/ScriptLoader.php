@@ -14,9 +14,9 @@ namespace Piwigo\Template;
 use LogicException;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\PluginConfig\EventDispatcher;
 use RuntimeException;
@@ -161,6 +161,23 @@ final class ScriptLoader
         }
 
         return $currentConfig;
+    }
+
+    /**
+     * Same reasoning as currentConfig() above (singleton/service-locator
+     * elimination campaign, Phase 11 sub-phase 11H).
+     */
+    private static function paths(): Paths
+    {
+        if (! Kernel::isBooted()) {
+            throw new RuntimeException('ScriptLoader: no Paths set (RequestBootstrap not run yet?)');
+        }
+        $paths = Kernel::container()->get(Paths::class);
+        if (! $paths instanceof Paths) {
+            throw new RuntimeException('ScriptLoader: no Paths set (RequestBootstrap not run yet?)');
+        }
+
+        return $paths;
     }
 
     final public function clear(): void
@@ -327,7 +344,7 @@ final class ScriptLoader
      */
     private static function do_combine(array $scripts, int $load_mode): array
     {
-        $combiner = new FileCombiner(AccessControl::currentForCaching(), 'js', self::urlService(), CurrentPaths::get(), self::eventDispatcher(), self::currentTemplate(), self::currentConfig(), $scripts);
+        $combiner = new FileCombiner(AccessControl::currentForCaching(), 'js', self::urlService(), self::paths(), self::eventDispatcher(), self::currentTemplate(), self::currentConfig(), $scripts);
         return $combiner->combine();
     }
 

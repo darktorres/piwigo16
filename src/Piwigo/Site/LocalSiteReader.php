@@ -62,7 +62,22 @@ final class LocalSiteReader
     private function metadataService(): MetadataService
     {
         return $this->metadataService
-            ?? new MetadataService($this->lang(), new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), new CurrentLogger(), $this->eventDispatcher(), $this->currentConfig, new CurrentUser($this->currentConfig), $this->sessionService(), new FilterState());
+            ?? new MetadataService($this->lang(), new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), new CurrentLogger(), $this->eventDispatcher(), $this->currentConfig, new CurrentUser($this->currentConfig), $this->sessionService(), new FilterState(), $this->paths());
+    }
+
+    /**
+     * Same reasoning as lang() above -- matches CurrentPaths::get()'s own
+     * identical no-graceful-fallback shape (singleton/service-locator
+     * elimination campaign, Phase 11 sub-phase 11H).
+     */
+    private function paths(): \Piwigo\Core\Paths
+    {
+        $paths = Kernel::container()->get(\Piwigo\Core\Paths::class);
+        if (! $paths instanceof \Piwigo\Core\Paths) {
+            throw new LogicException('Container returned an unexpected type for ' . \Piwigo\Core\Paths::class);
+        }
+
+        return $paths;
     }
 
     /**

@@ -25,7 +25,7 @@ test('getExtents finds every .tpl file under the real template-extension directo
     // repo root, same as every other test process in this suite) -- a
     // real, committed asset, not a throwaway fixture, so this asserts its
     // known real contents exactly.
-    $result = AdminUiHelper::getExtents();
+    $result = AdminUiHelper::getExtents(Paths::fromRoot(dirname(__DIR__, 3)));
 
     sort($result);
     expect($result)->toBe([
@@ -47,7 +47,7 @@ test('getExtents returns an empty array when the directory does not exist', func
     // own established pattern.
     set_error_handler(static fn (): bool => true);
     try {
-        expect(AdminUiHelper::getExtents('/definitely/does/not/exist-' . uniqid()))->toBe([]);
+        expect(AdminUiHelper::getExtents(Paths::fromRoot(dirname(__DIR__, 3)), '/definitely/does/not/exist-' . uniqid()))->toBe([]);
     } finally {
         restore_error_handler();
     }
@@ -68,7 +68,7 @@ test('getExtents skips symlinked .tpl files and non-.tpl files', function (): vo
         // (a genuine file, not itself a symlink) both survive as bare
         // filenames; only the symlink itself (symlinked.tpl) and the
         // non-.tpl file are excluded.
-        $result = AdminUiHelper::getExtents($dir);
+        $result = AdminUiHelper::getExtents(Paths::fromRoot(dirname(__DIR__, 3)), $dir);
         sort($result);
 
         expect($result)->toBe(['link-target.tpl', 'real.tpl']);
@@ -90,7 +90,7 @@ test('getExtents recurses into subdirectories', function (): void {
         file_put_contents($dir . '/nested/mid.tpl', 'mid');
         file_put_contents($dir . '/nested/deeper/bottom.tpl', 'bottom');
 
-        $result = AdminUiHelper::getExtents($dir);
+        $result = AdminUiHelper::getExtents(Paths::fromRoot(dirname(__DIR__, 3)), $dir);
 
         expect($result)->toHaveCount(3);
     } finally {

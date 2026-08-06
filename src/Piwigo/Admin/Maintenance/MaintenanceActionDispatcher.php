@@ -18,6 +18,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -89,6 +90,7 @@ final class MaintenanceActionDispatcher
         private readonly Lang $lang,
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
+        private readonly Paths $paths,
         private readonly ?PersistentCache $persistentCache = null,
     ) {}
 
@@ -206,7 +208,7 @@ final class MaintenanceActionDispatcher
 
             case 'empty_lounge':
 
-                $rows = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator)
+                $rows = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator, $this->paths)
                     ->emptyLounge();
                 $this->pageState->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
                 break;
@@ -221,7 +223,7 @@ final class MaintenanceActionDispatcher
 
                 $this->currentTemplate->get()
                     ->delete_compiled_templates();
-                FileCombiner::clear_combined_files($this->currentConfig);
+                FileCombiner::clear_combined_files($this->currentConfig, $this->paths);
                 if (! $this->persistentCache instanceof PersistentCache) {
                     $this->htmlRenderer
                         ->fatalError('persistent cache not initialized');
@@ -234,12 +236,12 @@ final class MaintenanceActionDispatcher
 
                 $types_str = DerivativesTypeRequest::fromGlobals($this->inputValidator)->typesStr;
                 if ($types_str === 'all') {
-                    new DerivativeCacheService($this->currentConfig)
+                    new DerivativeCacheService($this->currentConfig, $this->paths)
                         ->clearDerivativeCache($types_str);
                 } else {
                     $types = explode('_', $types_str);
                     foreach ($types as $type_to_clear) {
-                        new DerivativeCacheService($this->currentConfig)
+                        new DerivativeCacheService($this->currentConfig, $this->paths)
                             ->clearDerivativeCache($type_to_clear);
                     }
                 }

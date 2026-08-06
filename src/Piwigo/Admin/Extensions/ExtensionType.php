@@ -7,7 +7,7 @@ namespace Piwigo\Admin\Extensions;
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
 
 /**
@@ -71,12 +71,12 @@ enum ExtensionType: string
         };
     }
 
-    public function scanDirectory(): string
+    public function scanDirectory(Paths $paths): string
     {
         return match ($this) {
-            self::Plugin => PluginLoader::pluginsPath(),
+            self::Plugin => PluginLoader::pluginsPath($paths),
             self::Theme => CurrentConfig::current()->themesPath(),
-            self::Language => CurrentPaths::get()->root . 'language/',
+            self::Language => $paths->root . 'language/',
         };
     }
 

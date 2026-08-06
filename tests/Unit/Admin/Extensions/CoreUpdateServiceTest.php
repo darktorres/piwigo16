@@ -71,6 +71,7 @@ function core_update_service_test_user_service(): UserService
         new CurrentConfig(),
         new InstallationFlag(),
         new ProcessCache(),
+        Paths::fromRoot(sys_get_temp_dir()),
     );
 }
 

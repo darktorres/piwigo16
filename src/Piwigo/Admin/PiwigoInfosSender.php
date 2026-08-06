@@ -68,6 +68,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         private readonly ImageService $imageService,
         private readonly UrlServiceInterface $urlService,
         private readonly CurrentConfig $currentConfig,
+        private readonly \Piwigo\Core\Paths $paths,
     ) {}
 
     #[Override]
@@ -238,7 +239,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
 
         $urlService = $this->urlService;
         $fsPlugins = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService, $this->lang);
+            ->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths);
         $dbPluginsById = new ExtensionRepository(EntityManagerFactory::build($conn))
             ->findAll(ExtensionType::Plugin);
         $piwigoInfos['general_stats']['nb_private_plugins'] = 0;
@@ -291,7 +292,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         $piwigoInfos['general_stats']['nb_plugins'] = $piwigoInfos['general_stats']['nb_private_plugins'] + count($piwigoInfos['plugins']);
 
         $fsThemes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $urlService, $this->lang);
+            ->scan(ExtensionType::Theme, $urlService, $this->lang, $this->paths);
         $dbThemesById = new ExtensionRepository(EntityManagerFactory::build($conn))
             ->findAll(ExtensionType::Theme);
         $piwigoInfos['general_stats']['nb_private_themes'] = 0;

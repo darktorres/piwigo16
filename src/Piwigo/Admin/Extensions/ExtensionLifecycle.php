@@ -15,11 +15,11 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
@@ -87,6 +87,7 @@ final readonly class ExtensionLifecycle
         private CurrentConfig $currentConfig,
         private WsContext $wsContext,
         private AccessControl $accessControl,
+        private Paths $paths,
     ) {}
 
     /**
@@ -173,7 +174,7 @@ final readonly class ExtensionLifecycle
 
                 if ($errors[0] === 'ok') {
                     $newFsEntry = new ExtensionScanner()
-                        ->scan(ExtensionType::Plugin, $this->urlService, $this->lang)[$id] ?? null;
+                        ->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths)[$id] ?? null;
                     $newVersion = $this->stringOrDefault($newFsEntry['version'] ?? null, '0');
                     $activityDetails['to_version'] = $newVersion;
 
@@ -265,7 +266,7 @@ final readonly class ExtensionLifecycle
                 }
                 $activityDetails['fs_version'] = $fsEntry['version'] ?? null;
 
-                FilesystemHelper::deltree(PluginLoader::pluginsPath() . $id, PluginLoader::pluginsPath() . 'trash');
+                FilesystemHelper::deltree(PluginLoader::pluginsPath($this->paths) . $id, PluginLoader::pluginsPath($this->paths) . 'trash');
                 break;
         }
 
@@ -428,7 +429,7 @@ final readonly class ExtensionLifecycle
 
                 $this->repo->reassignUsersFromLanguage($id, $this->userService->getDefaultLanguage());
 
-                $languagesDir = CurrentPaths::get()->root . 'language/';
+                $languagesDir = $this->paths->root . 'language/';
                 FilesystemHelper::deltree($languagesDir . $id, $languagesDir . 'trash');
                 break;
 
@@ -456,7 +457,7 @@ final readonly class ExtensionLifecycle
         }
 
         $parentFsEntry = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $this->urlService, $this->lang)[$parent] ?? null;
+            ->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths)[$parent] ?? null;
         if ($parentFsEntry === null) {
             return $parent;
         }
@@ -473,7 +474,7 @@ final readonly class ExtensionLifecycle
     public function getChildrenThemes(string $themeId): array
     {
         $children = [];
-        foreach (new ExtensionScanner()->scan(ExtensionType::Theme, $this->urlService, $this->lang) as $candidate) {
+        foreach (new ExtensionScanner()->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths) as $candidate) {
             if (($candidate['parent'] ?? null) === $themeId) {
                 $name = $candidate['name'] ?? null;
                 if (is_string($name)) {
@@ -508,7 +509,7 @@ final readonly class ExtensionLifecycle
 
     private function buildPluginMaintain(string $pluginId): PluginMaintain
     {
-        $fileToInclude = PluginLoader::pluginsPath() . $pluginId . '/maintain';
+        $fileToInclude = PluginLoader::pluginsPath($this->paths) . $pluginId . '/maintain';
         // piwigo-videojs and piwigo-openstreetmap have a "-" in their
         // folder name (=plugin_id); a class name can't have a "-".
         $classname = str_replace('-', '_', $pluginId . '_maintain');

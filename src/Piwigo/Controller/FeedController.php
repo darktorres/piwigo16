@@ -12,12 +12,12 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Request\FeedRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CharsetHelper;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -59,6 +59,7 @@ final class FeedController implements ControllerInterface
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
+        private readonly Paths $paths,
     ) {}
 
     #[Override]
@@ -228,7 +229,7 @@ final class FeedController implements ControllerInterface
 
         $data_location = $this->currentConfig->dataLocation();
 
-        $fileName = CurrentPaths::get()->root . $data_location . 'tmp';
+        $fileName = $this->paths->root . $data_location . 'tmp';
         FilesystemHelper::mkgetdir($fileName); // just in case
         $fileName .= '/feed.xml';
         file_put_contents($fileName, $feed_content);

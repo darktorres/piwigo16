@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install;
 
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
 
 /**
  * Real-defaults-plus-raw-site-override $conf array for keys that
@@ -45,10 +45,8 @@ final class LegacyFileConf
      *
      * @return array<string, mixed>
      */
-    public static function read(): array
+    public static function read(Paths $paths): array
     {
-        $paths = CurrentPaths::get();
-
         $conf = CurrentConfig::defaultsArray();
         @include $paths->local . 'config/config.inc.php';
         if (isset($conf['local_dir_site'])) {

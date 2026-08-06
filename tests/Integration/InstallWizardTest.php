@@ -339,7 +339,7 @@ final class InstallWizardTest extends IntegrationTestCase
             'PIWIGO_DB_PREFIX' => $prefix,
         ]);
 
-        $wizard = new InstallWizard(Lang::current(), $prefix, $this->paths, $dbCredentials, CurrentConfigService::current(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy()), new ProcessCache());
+        $wizard = new InstallWizard(Lang::current(), $prefix, $this->paths, $dbCredentials, CurrentConfigService::current(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache());
         $wizard->boot();
 
         return $wizard;
@@ -425,7 +425,7 @@ final class InstallWizardTest extends IntegrationTestCase
         // the CurrentPaths::get() shim. KernelContainerOverride::with()
         // rebinds Paths::class for just this test's own scope instead.
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            $wizard = new InstallWizard(Lang::current(), 'itest_', $this->paths, DbCredentials::current(), CurrentConfigService::current(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy()), new ProcessCache());
+            $wizard = new InstallWizard(Lang::current(), 'itest_', $this->paths, DbCredentials::current(), CurrentConfigService::current(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache());
 
             self::assertSame('_data/', $this->reflectPrivate($wizard, 'confDataLocation'));
         });
@@ -439,7 +439,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $this->expectExceptionMessage("Invalid \$conf['data_location'] configuration: expected a string.");
 
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            new InstallWizard(Lang::current(), 'itest_', $this->paths, DbCredentials::current(), CurrentConfigService::current(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy()), new ProcessCache());
+            new InstallWizard(Lang::current(), 'itest_', $this->paths, DbCredentials::current(), CurrentConfigService::current(), CurrentConfig::current(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache());
         });
     }
 

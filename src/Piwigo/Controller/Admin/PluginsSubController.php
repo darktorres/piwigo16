@@ -20,6 +20,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
@@ -79,6 +80,7 @@ final class PluginsSubController implements AdminSubControllerInterface
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
         private readonly CurrentUser $currentUser,
+        private readonly Paths $paths,
     ) {}
 
     #[Override]
@@ -108,7 +110,7 @@ final class PluginsSubController implements AdminSubControllerInterface
                 ->render('plugins', $tab);
         } else {
             new PluginsInstalledPageRenderer()
-                ->render($this->lang, $this->accessControl, 'plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate, $this->preferencesService, $this->htmlRenderer, $this->currentConfig, $this->currentUser);
+                ->render($this->lang, $this->accessControl, 'plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate, $this->preferencesService, $this->htmlRenderer, $this->currentConfig, $this->currentUser, $this->paths);
         }
     }
 }

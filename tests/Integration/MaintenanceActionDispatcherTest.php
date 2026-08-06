@@ -108,6 +108,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new EventDispatcher(),
             CurrentConfig::current(),
             Translator::get(),
+            CurrentPaths::get(),
         );
     }
 
@@ -173,6 +174,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new CurrentConfig(),
             new InstallationFlag(),
             new ProcessCache(),
+            CurrentPaths::get(),
         );
     }
 
@@ -280,7 +282,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
         $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(Lang::current(), $this->maintenanceActionDispatcherTestUserService()), UrlServiceTestFactory::build(), $configService, new FilesystemIntegrityChecker(Lang::current(), CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfig::current()), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()), new Translator(CurrentConfig::current()), new EventDispatcher(), PageState::current(), CurrentTemplate::current(), new DbMaintenanceRepository(EntityManagerFactory::build($this->conn), DbCredentials::current()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), HtmlServiceTestFactory::build(), Lang::current(), CurrentConfig::current(), new InputValidator());
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(Lang::current(), $this->maintenanceActionDispatcherTestUserService()), UrlServiceTestFactory::build(), $configService, new FilesystemIntegrityChecker(Lang::current(), CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfig::current(), CurrentPaths::get()), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()), new Translator(CurrentConfig::current()), new EventDispatcher(), PageState::current(), CurrentTemplate::current(), new DbMaintenanceRepository(EntityManagerFactory::build($this->conn), DbCredentials::current()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), HtmlServiceTestFactory::build(), Lang::current(), CurrentConfig::current(), new InputValidator(), CurrentPaths::get());
     }
 
     #[Override]
@@ -661,7 +663,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new RedirectService(Lang::current(), $this->maintenanceActionDispatcherTestUserService()),
             UrlServiceTestFactory::build(),
             $configService,
-            new FilesystemIntegrityChecker(Lang::current(), CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfig::current()),
+            new FilesystemIntegrityChecker(Lang::current(), CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfig::current(), CurrentPaths::get()),
             new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()),
             new Translator(CurrentConfig::current()),
             new EventDispatcher(),
@@ -676,7 +678,8 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             Lang::current(),
             CurrentConfig::current(),
             new InputValidator(),
-            new PersistentFileCache(CurrentConfig::current()),
+            CurrentPaths::get(),
+            new PersistentFileCache(CurrentConfig::current(), CurrentPaths::get()),
         );
 
         // FileCombiner::clear_combined_files()'s own opendir() (the real

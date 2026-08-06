@@ -36,7 +36,7 @@ function intronewsInvoke(): mixed
 {
     $method = new ReflectionMethod(IntroSubController::class, 'getLatestNews');
 
-    return $method->invoke(null, Lang::current(), CurrentConfig::current());
+    return $method->invoke(null, Lang::current(), CurrentConfig::current(), CurrentPaths::get());
 }
 
 beforeEach(function (): void {

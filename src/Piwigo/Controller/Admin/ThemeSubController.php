@@ -11,6 +11,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Request\ThemeIdRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
@@ -37,6 +38,7 @@ final class ThemeSubController implements AdminSubControllerInterface
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
+        private readonly Paths $paths,
     ) {}
 
     #[Override]
@@ -45,7 +47,7 @@ final class ThemeSubController implements AdminSubControllerInterface
         $theme = ThemeIdRequest::fromGlobals($this->inputValidator)->themeId;
 
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $this->urlService, $this->lang);
+            ->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths);
         if (! in_array($theme, array_keys($fs_themes), true)) {
             $this->htmlRenderer
                 ->fatalError('Invalid theme');

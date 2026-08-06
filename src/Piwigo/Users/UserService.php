@@ -40,6 +40,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\ThemeCatalog;
 use Piwigo\Core\UrlServiceInterface;
@@ -100,6 +101,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         private CurrentConfig $currentConfig,
         private InstallationFlag $installationFlag,
         private ProcessCache $processCache,
+        private Paths $paths,
     ) {}
 
     /**
@@ -400,7 +402,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $userId = $this->repo->insertUser(
             $login,
-            new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), $this->deploymentPolicy)
+            $this->passwordService()
                 ->hash($password),
             $mailAddress,
         );
@@ -714,7 +716,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // 1. the user_infos.theme was not found in the themes table, thus themes.name is null
         // 2. the theme is not really installed on the filesystem
         $theme = $user['theme'] ?? null;
-        if (! isset($user['theme_name']) or ! is_string($theme) or ! ThemeCatalog::checkThemeInstalled($theme)) {
+        if (! isset($user['theme_name']) or ! is_string($theme) or ! ThemeCatalog::checkThemeInstalled($theme, $this->paths)) {
             $user['theme'] = $this->getDefaultTheme();
             $user['theme_name'] = $user['theme'];
         }
@@ -980,12 +982,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         if (! is_string($theme)) {
             $theme = AppInfo::DEFAULT_TEMPLATE;
         }
-        if (ThemeCatalog::checkThemeInstalled($theme)) {
+        if (ThemeCatalog::checkThemeInstalled($theme, $this->paths)) {
             return $theme;
         }
 
         // let's find the first available theme
-        $active_themes = array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher));
+        $active_themes = array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths));
         return isset($active_themes[0]) ? (string) $active_themes[0] : 'default';
     }
 
@@ -1096,7 +1098,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // list all enabled language codes in the Piwigo installation
         // in both full and short forms, and case insensitive
         $languages_available = [];
-        foreach (LangService::getLanguages() as $language_code => $language_name) {
+        foreach (LangService::getLanguages($this->paths) as $language_code => $language_name) {
             $lowercase_full = strtolower($language_code);
             $lowercase_parts = explode('_', $lowercase_full, 2);
             $lowercase_prefix = $lowercase_parts[0];
@@ -1441,7 +1443,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (! self::emptyValue($params['language'] ?? null)) {
             $language_param = $params['language'] ?? null;
-            if (! in_array($language_param, array_keys(LangService::getLanguages()), true)) {
+            if (! in_array($language_param, array_keys(LangService::getLanguages($this->paths)), true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1454,7 +1456,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (! self::emptyValue($params['theme'] ?? null)) {
             $theme_param = $params['theme'] ?? null;
-            if (! in_array($theme_param, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher)), true)) {
+            if (! in_array($theme_param, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths)), true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1504,6 +1506,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $pageState,
             $this->currentUser,
             $this->currentConfig,
+            $this->paths,
         );
 
         if ($password_update !== null) {

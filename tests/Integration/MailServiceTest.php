@@ -154,6 +154,8 @@ final class MailServiceTest extends IntegrationTestCase
     {
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
+        $paths = Kernel::container()->get(Paths::class);
+        self::assertInstanceOf(Paths::class, $paths);
 
         return new UserService(
             Lang::current(),
@@ -170,6 +172,7 @@ final class MailServiceTest extends IntegrationTestCase
             CurrentConfig::current(),
             new InstallationFlag(),
             new ProcessCache(),
+            $paths,
         );
     }
 

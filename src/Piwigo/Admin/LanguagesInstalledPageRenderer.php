@@ -20,6 +20,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
@@ -68,6 +69,7 @@ final class LanguagesInstalledPageRenderer
         private readonly InputValidator $inputValidator,
         private readonly WsContext $wsContext,
         private readonly CurrentUser $currentUser,
+        private readonly Paths $paths,
     ) {}
 
     /**
@@ -95,12 +97,12 @@ final class LanguagesInstalledPageRenderer
 
         $conn = DbConnection::build();
         $extension_repository = new ExtensionRepository(EntityManagerFactory::build($conn));
-        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser);
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger, $this->currentUser, $this->paths);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl);
+        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl, $this->paths);
 
-        $fs_languages = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang);
+        $fs_languages = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang, $this->paths);
         $db_languages = $extension_repository->findAll(ExtensionType::Language);
 
         // --------------------------------------------------perform requested actions

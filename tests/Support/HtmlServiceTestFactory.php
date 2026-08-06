@@ -11,6 +11,7 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
@@ -43,7 +44,7 @@ final class HtmlServiceTestFactory
             self::resolve(CurrentConfig::class) ?? new CurrentConfig(),
             self::resolve(EventDispatcher::class) ?? new EventDispatcher(),
             self::resolve(ProcessCache::class) ?? new ProcessCache(),
-            self::resolve(ErrorCollector::class) ?? new ErrorCollector(new DeploymentPolicy()),
+            self::resolve(ErrorCollector::class) ?? new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir())),
             self::resolve(CurrentUser::class) ?? new CurrentUser(new CurrentConfig()),
             self::resolve(CurrentTemplate::class) ?? new CurrentTemplate(),
             self::resolve(PageState::class) ?? new PageState(),

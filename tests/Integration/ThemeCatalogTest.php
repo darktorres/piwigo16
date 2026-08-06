@@ -10,6 +10,7 @@ use LogicException;
 use Error;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ThemeCatalog;
 use Piwigo\Db\DbConnection;
@@ -83,7 +84,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         );
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get());
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get());
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes() . " WHERE id = 'broken-theme'");
         }
@@ -106,7 +107,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $currentConfig->setMobilTheme('mobile-candidate');
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), showMobile: false);
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), showMobile: false);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::themes() . " WHERE id = 'mobile-candidate'");
         }
@@ -126,7 +127,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $currentConfig->setMobilTheme('default');
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), showMobile: true);
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get(), showMobile: true);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::themes() . " WHERE id = 'default'");
         }
@@ -149,7 +150,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $this->expectExceptionMessage('must return an instance of');
 
         try {
-            ThemeCatalog::getPwgThemes(EventDispatcher::get());
+            ThemeCatalog::getPwgThemes(EventDispatcher::get(), CurrentPaths::get());
         } finally {
             // EventDispatcher is a shared process-wide singleton -- a real
             // reset (not just removing this one handler, no such API

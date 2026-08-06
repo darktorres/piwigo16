@@ -21,6 +21,7 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RecentIconResolver;
 use Piwigo\Core\RedirectServiceInterface;
@@ -143,7 +144,23 @@ final readonly class CategoryService
      */
     private function imageService(ActivityLoggerInterface $activityLogger, SessionService $sessionService, EventDispatcher $eventDispatcher): ImageService
     {
-        return new ImageService($this->lang, EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), $activityLogger, $sessionService, $eventDispatcher, $this->currentConfig, $this->translator);
+        return new ImageService($this->lang, EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), $activityLogger, $sessionService, $eventDispatcher, $this->currentConfig, $this->translator, $this->paths());
+    }
+
+    /**
+     * Same "avoid a 2nd touch of every manual `new CategoryService(...)`
+     * call site" reasoning as this class's own other lazy container-resolve
+     * helpers (userRepository() etc.) -- only imageService()'s own callers
+     * need this collaborator.
+     */
+    private function paths(): Paths
+    {
+        $paths = Kernel::container()->get(Paths::class);
+        if (! $paths instanceof Paths) {
+            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
+        }
+
+        return $paths;
     }
 
     private function userRepository(): UserRepository

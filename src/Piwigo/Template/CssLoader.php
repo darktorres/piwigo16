@@ -13,7 +13,7 @@ namespace Piwigo\Template;
 
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\PluginConfig\EventDispatcher;
 
@@ -43,9 +43,9 @@ final class CssLoader
     /**
      * @return Combinable[] array of combined CSS.
      */
-    public function get_css(UrlServiceInterface $urlService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig): array
+    public function get_css(UrlServiceInterface $urlService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, Paths $paths): array
     {
-        $combiner = new FileCombiner(AccessControl::currentForCaching(), 'css', $urlService, CurrentPaths::get(), $eventDispatcher, $currentTemplate, $currentConfig, $this->sortedRegisteredCss());
+        $combiner = new FileCombiner(AccessControl::currentForCaching(), 'css', $urlService, $paths, $eventDispatcher, $currentTemplate, $currentConfig, $this->sortedRegisteredCss());
         return $combiner->combine();
     }
 

@@ -9,6 +9,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -34,6 +35,7 @@ final class PictureCoiPageRenderer
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
+        private readonly Paths $paths,
     ) {}
 
     public function render(): void
@@ -70,11 +72,11 @@ final class PictureCoiPageRenderer
 
             foreach ($this->imageStdParams->get_defined_type_map() as $params) {
                 if ($params->sizing->max_crop !== 0.0) {
-                    new DerivativeCacheService($this->currentConfig)
+                    new DerivativeCacheService($this->currentConfig, $this->paths)
                         ->deleteElementDerivatives($derivative_infos, $params->type);
                 }
             }
-            new DerivativeCacheService($this->currentConfig)
+            new DerivativeCacheService($this->currentConfig, $this->paths)
                 ->deleteElementDerivatives($derivative_infos, ImageStdParams::CUSTOM);
             $uid = '&b=' . time();
             $this->currentConfig->setQuestionMarkInUrls(true);

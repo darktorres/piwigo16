@@ -2083,7 +2083,7 @@ test('prefilter_local_css injects a combine_css tag for a real theme-specific ru
     $t = TemplateTestFactory::build();
     $t->smarty->assign('themes', [['id' => 'mytheme'], ['id' => 'no-such-theme'], 'not-an-array', ['no-id' => true]]);
 
-    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty);
+    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty, CurrentPaths::get());
 
     expect($result)->toBe("before {combine_css path='local/css/mytheme-rules.css' order=10}\n{get_combined_css} after");
 });
@@ -2093,7 +2093,7 @@ test('prefilter_local_css injects a combine_css tag for a real site-wide rules.c
     file_put_contents(CurrentPaths::get()->root . '/local/css/rules.css', 'body{}');
     $t = TemplateTestFactory::build();
 
-    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty);
+    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty, CurrentPaths::get());
 
     expect($result)->toBe("before {combine_css path='local/css/rules.css' order=10}\n{get_combined_css} after");
 });
@@ -2101,7 +2101,7 @@ test('prefilter_local_css injects a combine_css tag for a real site-wide rules.c
 test('prefilter_local_css leaves the source untouched when no local css files exist', function (): void {
     $t = TemplateTestFactory::build();
 
-    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty);
+    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty, CurrentPaths::get());
 
     expect($result)->toBe('before {get_combined_css} after');
 });
@@ -2112,7 +2112,7 @@ test('prefilter_local_css continues past an invalid theme entry instead of stopp
     $t = TemplateTestFactory::build();
     $t->smarty->assign('themes', ['not-an-array', ['id' => 'second']]);
 
-    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty);
+    $result = Template::prefilter_local_css('before {get_combined_css} after', $t->smarty, CurrentPaths::get());
 
     expect($result)->toBe("before {combine_css path='local/css/second-rules.css' order=10}\n{get_combined_css} after");
 });

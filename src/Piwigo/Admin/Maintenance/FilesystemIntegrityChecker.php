@@ -6,7 +6,6 @@ namespace Piwigo\Admin\Maintenance;
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Image\ImageService;
 use Piwigo\Template\CurrentTemplate;
@@ -50,6 +49,7 @@ final class FilesystemIntegrityChecker
         private readonly CurrentConfigService $currentConfigService,
         private readonly ImageService $imageService,
         private readonly CurrentConfig $currentConfig,
+        private readonly \Piwigo\Core\Paths $paths,
     ) {}
 
     /**
@@ -121,7 +121,7 @@ final class FilesystemIntegrityChecker
             // as-is (found live: a real Visual Regression failure, a
             // spurious "some photos are missing" banner on every admin
             // dashboard load).
-            if (! file_exists(CurrentPaths::get()->root . $path)) {
+            if (! file_exists($this->paths->root . $path)) {
                 $template = $this->currentTemplate->get();
 
                 $template->assign(

@@ -100,8 +100,8 @@ final readonly class NoPhotoYetRenderer
                 // the "no photo yet" feature
                 $user_theme = $this->currentUser->get()
                     ->theme;
-                $user_theme = $user_theme !== '' ? $user_theme : new UserService($this->lang, new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class), $this->mailer, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, $this->installationFlag, $this->processCache)->getDefaultTheme();
-                $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths->root . 'themes', $user_theme);
+                $user_theme = $user_theme !== '' ? $user_theme : new UserService($this->lang, new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class), $this->mailer, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, $this->installationFlag, $this->processCache, $this->paths)->getDefaultTheme();
+                $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, $this->paths->root . 'themes', $user_theme);
                 $this->currentTemplate->set($template);
 
                 $noPhotoYetAction = NoPhotoYetRequest::fromGlobals()->action;

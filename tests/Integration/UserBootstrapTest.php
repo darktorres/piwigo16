@@ -30,6 +30,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
@@ -241,6 +242,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             PageState::current(),
             CurrentUser::current(),
             CurrentConfig::current(),
+            CurrentPaths::get(),
         )->pwgLogin(...));
 
         $_SERVER = [];

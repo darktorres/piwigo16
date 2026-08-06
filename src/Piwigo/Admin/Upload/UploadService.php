@@ -20,10 +20,10 @@ use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
@@ -116,6 +116,7 @@ final class UploadService
         private readonly CurrentConfig $currentConfig,
         private readonly WsContext $wsContext,
         private readonly CurrentUser $currentUser,
+        private readonly Paths $paths,
     ) {}
 
     /**
@@ -384,7 +385,7 @@ final class UploadService
                 // $file_path already is. Prefixing here, once, right after the
                 // DB read, keeps both branches producing the same absolute
                 // shape for the rest of the method.
-                $file_path = CurrentPaths::get()->root . $file_path;
+                $file_path = $this->paths->root . $file_path;
 
                 // delete all physical files related to the photo (thumbnail, web site, HD)
                 $this->imageService
@@ -418,7 +419,7 @@ final class UploadService
                 // already applies a few lines up ($upload_root).
                 $conf_upload_dir = rtrim($this->currentConfig->uploadDir(), '/');
                 $upload_dir = sprintf(
-                    CurrentPaths::get()->root . $conf_upload_dir . '/%s/%s/%s',
+                    $this->paths->root . $conf_upload_dir . '/%s/%s/%s',
                     $year,
                     $month,
                     $day
@@ -505,7 +506,7 @@ final class UploadService
             // upload garbage-collection guarantee), matching what move_uploaded_file()
             // used to do immediately; the "already local" (rename()) branch still
             // needs an explicit unlink() since nothing else will remove that source.
-            $upload_root = rtrim(CurrentPaths::get()->root . $this->currentConfig->uploadDir(), '/');
+            $upload_root = rtrim($this->paths->root . $this->currentConfig->uploadDir(), '/');
             $upload_rel_path = StorageRegistry::stripRoot($upload_root, $file_path);
             $upload_stream = fopen($source_filepath, 'rb');
             if ($upload_stream !== false) {
@@ -591,7 +592,7 @@ final class UploadService
                     // exact same instant, matching what the DB default would
                     // have produced for a single INSERT.
                     'lastmodified' => $dbnow,
-                    'path' => preg_replace('#^' . preg_quote(CurrentPaths::get()->root) . '#', '', $file_path),
+                    'path' => preg_replace('#^' . preg_quote($this->paths->root) . '#', '', $file_path),
                     'filesize' => $file_infos['filesize'],
                     'width' => $file_infos['width'],
                     'height' => $file_infos['height'],
@@ -818,7 +819,7 @@ final class UploadService
         // (the document root, public/, on a real request), silently
         // creating a stray "public/upload/..." directory tree instead of
         // the real one -- a real, previously-shipped bug fixed here.
-        $paths = CurrentPaths::get();
+        $paths = $this->paths;
         $format_root = $paths->root . $this->currentConfig->uploadDir();
         $format_abs_path = $paths->root . ltrim(str_replace(['\\', '/./'], ['/', '/'], $format_path), '/');
         $format_rel_path = StorageRegistry::stripRoot($format_root, $format_abs_path);
@@ -1533,7 +1534,7 @@ final class UploadService
         // while $relative_dir stays the short, root-relative form for
         // display (replaces the former PHPWG_ROOT_PATH-stripped './' read).
         $relative_dir = $this->currentConfig->uploadDir();
-        $upload_dir = CurrentPaths::get()->root . $relative_dir;
+        $upload_dir = $this->paths->root . $relative_dir;
 
         if (! is_dir($upload_dir)) {
             if (! is_writable(dirname($upload_dir))) {

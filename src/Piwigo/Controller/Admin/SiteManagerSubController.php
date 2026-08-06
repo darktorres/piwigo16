@@ -12,10 +12,10 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Request\SiteManagerRequest;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
@@ -76,6 +76,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         private readonly CategoryService $categoryService,
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly CurrentConfig $currentConfig,
+        private readonly Paths $paths,
     ) {}
 
     #[Override]
@@ -134,7 +135,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             // does not exist" rejection and, had that check been bypassed,
             // an inconsistent DB row relative to every other site.
             if (! str_starts_with($url, '/')) {
-                $url = CurrentPaths::get()->root . $url;
+                $url = $this->paths->root . $url;
             }
 
             // site must not exists

@@ -30,7 +30,7 @@ final class ThemeCatalog
      *
      * @return array<int|string, string>
      */
-    public static function getPwgThemes(EventDispatcher $eventDispatcher, bool $showMobile = false): array
+    public static function getPwgThemes(EventDispatcher $eventDispatcher, Paths $paths, bool $showMobile = false): array
     {
 
         $themes = [];
@@ -48,7 +48,7 @@ final class ThemeCatalog
                 }
                 $name .= ' (' . Lang::current()->t('Mobile') . ')';
             }
-            if (self::checkThemeInstalled($id)) {
+            if (self::checkThemeInstalled($id, $paths)) {
                 $themes[$id] = $name;
             }
         }
@@ -70,17 +70,17 @@ final class ThemeCatalog
     /**
      * check if a theme is installed (directory exists)
      */
-    public static function checkThemeInstalled(string $themeId): bool
+    public static function checkThemeInstalled(string $themeId, Paths $paths): bool
     {
 
         // CurrentConfig::themesDir() is root-relative (Part II) -- compose with
-        // CurrentPaths::get()->root for a real filesystem check, don't rely
+        // $paths->root for a real filesystem check, don't rely
         // on PHP's CWD (which tracks the executing script's directory, not
         // necessarily the install root -- this "happened" to still resolve
         // correctly pre-fix only because public/themes is itself a symlink
         // back to the real themes/, not because the CWD-relative read was
         // actually safe).
-        $themes_dir = CurrentPaths::get()->root . CurrentConfig::current()->themesDir();
+        $themes_dir = $paths->root . CurrentConfig::current()->themesDir();
 
         return file_exists($themes_dir . '/' . $themeId . '/themeconf.inc.php');
     }

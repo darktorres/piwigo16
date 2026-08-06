@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 
 /**
@@ -56,7 +56,7 @@ final class ImagePathHelper
      *
      * @param array<string, mixed> $elementInfo element information from db (at least 'path')
      */
-    public static function getElementPath(array $elementInfo, UrlServiceInterface $urlService): string
+    public static function getElementPath(array $elementInfo, UrlServiceInterface $urlService, Paths $paths): string
     {
         $path = $elementInfo['path'];
         // images.path is `varchar(255) NOT NULL` in the schema — a genuine DB
@@ -64,7 +64,7 @@ final class ImagePathHelper
         assert(is_string($path));
 
         if (! $urlService->urlIsRemote($path)) {
-            $path = CurrentPaths::get()->root . $path;
+            $path = $paths->root . $path;
         }
         return $path;
     }

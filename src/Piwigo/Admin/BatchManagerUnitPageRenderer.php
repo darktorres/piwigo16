@@ -16,6 +16,7 @@ use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\PaginationService;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
@@ -104,6 +105,7 @@ final class BatchManagerUnitPageRenderer
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
         private readonly Translator $translator,
+        private readonly Paths $paths,
     ) {}
 
     /**
@@ -334,7 +336,7 @@ final class BatchManagerUnitPageRenderer
             }
 
             $tagService = $this->tagService;
-            $imageService = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator);
+            $imageService = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator, $this->paths);
 
             foreach ($images as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this

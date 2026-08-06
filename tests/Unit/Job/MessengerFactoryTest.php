@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Doctrine\DBAL\DriverManager;
 use Doctrine\Persistence\ConnectionRegistry;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Paths;
 use Piwigo\Job\MessengerFactory;
 use Psr\Container\ContainerInterface;
@@ -64,7 +65,7 @@ test('transport()\'s anonymous ConnectionRegistry answers "default" for getDefau
     // DoctrineTransport) is already covered by
     // tests/Integration/MessengerRoundTripTest.php, so the return value
     // isn't needed here.
-    MessengerFactory::transport($connection);
+    MessengerFactory::transport($connection, CurrentPaths::get());
 
     $registryClass = null;
     foreach (get_declared_classes() as $declared) {
@@ -143,7 +144,7 @@ test('config() reads config/messenger.php relative to CurrentPaths::get()->root,
     Kernel::boot(Paths::fromRoot($root));
 
     try {
-        expect(MessengerFactory::config())->toBe([
+        expect(MessengerFactory::config(Paths::fromRoot($root)))->toBe([
             'transport_table' => 'mutation_sweep_messages',
             'transport_queue' => 'mutation_sweep_queue',
             'routing' => [],
@@ -151,7 +152,7 @@ test('config() reads config/messenger.php relative to CurrentPaths::get()->root,
         ]);
 
         $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
-        $transport = MessengerFactory::transport($connection);
+        $transport = MessengerFactory::transport($connection, Paths::fromRoot($root));
 
         $transport->send(new Envelope(new stdClass()));
 

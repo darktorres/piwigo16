@@ -14,6 +14,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\FilterState;
@@ -85,7 +86,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
 
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
-        $userService = new UserService(Lang::current(), new UserRepository($this->em, EventDispatcher::get(), CurrentConfig::current()), $this->em->getRepository(GroupEntity::class), $mailer, new ActivityService($this->em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcher::get(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache());
+        $userService = new UserService(Lang::current(), new UserRepository($this->em, EventDispatcher::get(), CurrentConfig::current()), $this->em->getRepository(GroupEntity::class), $mailer, new ActivityService($this->em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcher::get(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPaths::get());
 
         $filterState = Kernel::container()->get(FilterState::class);
         if (! $filterState instanceof FilterState) {
@@ -114,6 +115,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             CurrentConfig::current(),
             new CurrentLogger(),
             new DeploymentPolicy(),
+            CurrentPaths::get(),
         );
     }
 

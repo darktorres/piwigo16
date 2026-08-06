@@ -61,6 +61,7 @@ final class PwgExtensions
         private readonly RedirectServiceInterface $redirectService,
         private readonly PemCatalog $pemCatalog,
         private readonly WsContext $wsContext,
+        private readonly \Piwigo\Core\Paths $paths,
     ) {}
 
     /**
@@ -84,7 +85,7 @@ final class PwgExtensions
          *   'author uri'?: string, extension?: string}> $fs_plugins
          */
         $fs_plugins = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService, $this->lang);
+            ->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths);
         uasort($fs_plugins, $this->htmlRenderer->nameCompare(...));
         $db_plugins_by_id = new ExtensionRepository(EntityManagerFactory::build(DbConnection::build()))->findAll(ExtensionType::Plugin);
         $plugin_list = [];
@@ -157,9 +158,10 @@ final class PwgExtensions
             $this->currentConfig,
             $this->wsContext,
             $this->accessControl,
+            $this->paths,
         );
         $fsEntry = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService, $this->lang)[$params['plugin']] ?? null;
+            ->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths)[$params['plugin']] ?? null;
         $errors = $lifecycle->performAction(ExtensionType::Plugin, $params['action'], $params['plugin'], $fsEntry);
 
         if ($errors !== []) {
@@ -212,9 +214,10 @@ final class PwgExtensions
             $this->currentConfig,
             $this->wsContext,
             $this->accessControl,
+            $this->paths,
         );
         $fsEntry = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $urlService, $this->lang)[$params['theme']] ?? null;
+            ->scan(ExtensionType::Theme, $urlService, $this->lang, $this->paths)[$params['theme']] ?? null;
         $errors = $lifecycle->performAction(ExtensionType::Theme, $params['action'], $params['theme'], $fsEntry);
 
         if ($errors !== []) {
@@ -274,7 +277,7 @@ final class PwgExtensions
         $repo = new ExtensionRepository(EntityManagerFactory::build($conn));
         $pemCatalog = $this->pemCatalog;
         $pluginMigrationRepo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
-        $lifecycle = new ExtensionLifecycle($this->lang, $repo, $pemCatalog, $urlService, $this->configService, $pluginMigrationRepo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl);
+        $lifecycle = new ExtensionLifecycle($this->lang, $repo, $pemCatalog, $urlService, $this->configService, $pluginMigrationRepo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl, $this->paths);
 
         if ($type === ExtensionType::Plugin) {
             $dbPluginsById = $repo->findAll(ExtensionType::Plugin);
@@ -282,7 +285,7 @@ final class PwgExtensions
                 isset($dbPluginsById[$extension_id])
                 and $dbPluginsById[$extension_id]['state'] === 'active'
             ) {
-                $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang)[$extension_id] ?? null;
+                $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths)[$extension_id] ?? null;
                 $lifecycle->performAction(ExtensionType::Plugin, 'deactivate', $extension_id, $fsEntry);
 
                 $this->redirectService
@@ -299,18 +302,18 @@ final class PwgExtensions
                     );
             }
 
-            $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang)[$extension_id] ?? null;
+            $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths)[$extension_id] ?? null;
             $upgrade_status = $lifecycle->performAction(ExtensionType::Plugin, 'update', $extension_id, $fsEntry, [
                 'revision' => $revision,
             ])[0] ?? null;
-            $extension_name = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang)[$extension_id]['name'] ?? $extension_id;
+            $extension_name = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths)[$extension_id]['name'] ?? $extension_id;
 
             if (isset($params['reactivate'])) {
-                $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang)[$extension_id] ?? null;
+                $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths)[$extension_id] ?? null;
                 $lifecycle->performAction(ExtensionType::Plugin, 'activate', $extension_id, $fsEntry);
             }
         } elseif ($type === ExtensionType::Theme) {
-            $fsThemesBefore = $scanner->scan(ExtensionType::Theme, $urlService, $this->lang);
+            $fsThemesBefore = $scanner->scan(ExtensionType::Theme, $urlService, $this->lang, $this->paths);
             $extension_name = $fsThemesBefore[$extension_id]['name'] ?? $extension_id;
 
             $extraction = $pemCatalog->extractArchive(ExtensionType::Theme, 'upgrade', $revision, $extension_id);
@@ -322,7 +325,7 @@ final class PwgExtensions
             ];
 
             if ($upgrade_status === 'ok') {
-                $fsThemesAfter = $scanner->scan(ExtensionType::Theme, $urlService, $this->lang); // refresh list
+                $fsThemesAfter = $scanner->scan(ExtensionType::Theme, $urlService, $this->lang, $this->paths); // refresh list
                 $activity_details['to_version'] = $fsThemesAfter[$extension_id]['version'] ?? null;
             } else {
                 $activity_details['result'] = 'error';
@@ -332,7 +335,7 @@ final class PwgExtensions
         } elseif ($type === ExtensionType::Language) {
             $extraction = $pemCatalog->extractArchive(ExtensionType::Language, 'upgrade', $revision, $extension_id);
             $upgrade_status = $extraction['status'];
-            $extension_name = $scanner->scan(ExtensionType::Language, $urlService, $this->lang)[$extension_id]['name'] ?? $extension_id;
+            $extension_name = $scanner->scan(ExtensionType::Language, $urlService, $this->lang, $this->paths)[$extension_id]['name'] ?? $extension_id;
         } else {
             // Unreachable: $type is derived from $params['type'], already
             // restricted to plugins/themes/languages by the in_array()

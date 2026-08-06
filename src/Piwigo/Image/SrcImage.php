@@ -13,10 +13,10 @@ namespace Piwigo\Image;
 
 use Exception;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\CurrentThemeConfProvider;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Picture\GetMimetypeLocation;
@@ -97,6 +97,25 @@ final class SrcImage
         }
 
         return $currentConfig;
+    }
+
+    /**
+     * Same "~20 real raw `new SrcImage($infos)` construction sites, no DI
+     * involved" constraint as the other collaborator methods here --
+     * resolves fresh from the container on every call (singleton/
+     * service-locator elimination campaign, Phase 11 sub-phase 11H).
+     */
+    private static function paths(): Paths
+    {
+        if (! Kernel::isBooted()) {
+            throw new RuntimeException('SrcImage: no Paths set (RequestBootstrap not run yet?)');
+        }
+        $paths = Kernel::container()->get(Paths::class);
+        if (! $paths instanceof Paths) {
+            throw new RuntimeException('SrcImage: no Paths set (RequestBootstrap not run yet?)');
+        }
+
+        return $paths;
     }
 
     /**
@@ -189,7 +208,7 @@ final class SrcImage
             $default_mimetype_location = self::themeConf('mime_icon_dir') . $ext . '.png';
             $this->rel_path = self::eventDispatcher()->dispatchChange(new GetMimetypeLocation($default_mimetype_location, $ext))->location;
             $this->flags |= self::IS_MIMETYPE;
-            $mimetype_abs_path = CurrentPaths::get()->root . $this->rel_path;
+            $mimetype_abs_path = self::paths()->root . $this->rel_path;
             $size = file_exists($mimetype_abs_path) ? getimagesize($mimetype_abs_path) : false;
             if ($size === false) {
                 if ($ext === 'svg') {
@@ -197,7 +216,7 @@ final class SrcImage
                 } else {
                     $this->rel_path = 'themes/default/icon/mimetypes/unknown.png';
                 }
-                $fallback_abs_path = CurrentPaths::get()->root . $this->rel_path;
+                $fallback_abs_path = self::paths()->root . $this->rel_path;
                 $size = file_exists($fallback_abs_path) ? getimagesize($fallback_abs_path) : false;
                 if ($size === false) {
                     throw new Exception('SrcImage: unable to read size of fallback icon ' . $this->rel_path);
@@ -238,7 +257,7 @@ final class SrcImage
 
     public function get_path(): string
     {
-        return CurrentPaths::get()->root . $this->rel_path;
+        return self::paths()->root . $this->rel_path;
     }
 
     public function get_url(): string

@@ -31,8 +31,11 @@ use Piwigo\Template\Template;
  * unconditionally hits the DB (`load_from_db()`), which made it unsafe as
  * a required constructor param (confirmed live: it broke public/install.php
  * before the schema even exists). Template resolves it lazily internally
- * instead (see Template::imageStdParams()'s own docblock). Resolves each
- * of the real 8 from the real container-shared instance when one exists
+ * instead (see Template::imageStdParams()'s own docblock). Phase 11
+ * sub-phase 11H added a 9th, Paths (its own former CurrentPaths::get()
+ * shim usage), falling back to the same Paths::fromRoot(sys_get_temp_dir())
+ * already used for Lang's own fallback above. Resolves each
+ * of the real 9 from the real container-shared instance when one exists
  * (matching what every real production caller already gets, including
  * honoring any test-seeded state on those instances), falling back to a
  * fresh, DB-free, bare instance for the many plain Unit tests that never
@@ -50,9 +53,10 @@ final class TemplateTestFactory
             self::resolve(AdminContext::class) ?? new AdminContext(),
             self::resolve(EventDispatcher::class) ?? new EventDispatcher(),
             self::resolve(PageState::class) ?? new PageState(),
-            self::resolve(ErrorCollector::class) ?? new ErrorCollector(new DeploymentPolicy()),
+            self::resolve(ErrorCollector::class) ?? new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir())),
             self::resolve(ProcessCache::class) ?? new ProcessCache(),
             self::resolve(CurrentConfigService::class) ?? new CurrentConfigService(),
+            self::resolve(Paths::class) ?? Paths::fromRoot(sys_get_temp_dir()),
             $root,
             $theme,
             $path,

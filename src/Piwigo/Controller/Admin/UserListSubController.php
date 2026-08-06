@@ -44,12 +44,13 @@ final class UserListSubController implements AdminSubControllerInterface
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
+        private readonly \Piwigo\Core\Paths $paths,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new UserListPageRenderer()
-            ->render($this->lang, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->userService, $this->preferencesService, $this->groupService, $this->htmlRenderer, $this->currentConfig, $this->inputValidator);
+            ->render($this->lang, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->userService, $this->preferencesService, $this->groupService, $this->htmlRenderer, $this->currentConfig, $this->inputValidator, $this->paths);
     }
 }

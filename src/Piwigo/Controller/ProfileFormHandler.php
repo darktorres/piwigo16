@@ -21,6 +21,7 @@ use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ThemeCatalog;
 use Piwigo\Csrf\CsrfService;
@@ -67,6 +68,7 @@ final class ProfileFormHandler
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly MailService $mailService,
         private readonly CurrentConfig $currentConfig,
+        private readonly Paths $paths,
     ) {}
 
     // ------------------------------------------------------ update & customization
@@ -140,12 +142,12 @@ final class ProfileFormHandler
                 $errors[] = $this->lang->t('Recent period must be a positive integer value');
             }
 
-            if (! in_array($post['language'] ?? null, array_keys(LangService::getLanguages()), true)) {
+            if (! in_array($post['language'] ?? null, array_keys(LangService::getLanguages($this->paths)), true)) {
                 $this->htmlRenderer
                     ->fatalError('Hacking attempt, incorrect language value');
             }
 
-            if (! in_array($post['theme'] ?? null, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher)), true)) {
+            if (! in_array($post['theme'] ?? null, array_keys(ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths)), true)) {
                 $this->htmlRenderer
                     ->fatalError('Hacking attempt, incorrect theme value');
             }
@@ -349,12 +351,12 @@ final class ProfileFormHandler
         );
 
         $template->assign('template_selection', $userdata['theme']);
-        $template->assign('template_options', ThemeCatalog::getPwgThemes($this->eventDispatcher));
+        $template->assign('template_options', ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths));
 
         $profileFormSubmitRequest = ProfileFormSubmitRequest::fromGlobals();
 
         $language_options = [];
-        foreach (LangService::getLanguages() as $language_code => $language_name) {
+        foreach (LangService::getLanguages($this->paths) as $language_code => $language_name) {
             if ($profileFormSubmitRequest->isSubmitPresent or (is_string($userdata['language']) and $userdata['language'] === $language_code)) {
                 $template->assign('language_selection', $language_code);
             }

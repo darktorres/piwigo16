@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration {
     use Override;
     use LogicException;
     use RuntimeException;
+    use Piwigo\Core\CurrentPaths;
     use Piwigo\Core\FilterState;
     use Piwigo\Core\Kernel;
     use Piwigo\Core\ProcessCache;
@@ -331,6 +332,7 @@ final class SearchServiceTest extends IntegrationTestCase
             CurrentConfig::current(),
             new CurrentLogger(),
             new DeploymentPolicy(),
+            CurrentPaths::get(),
         );
     }
 
@@ -396,6 +398,7 @@ final class SearchServiceTest extends IntegrationTestCase
             CurrentConfig::current(),
             new CurrentLogger(),
             new DeploymentPolicy(),
+            CurrentPaths::get(),
         );
     }
 

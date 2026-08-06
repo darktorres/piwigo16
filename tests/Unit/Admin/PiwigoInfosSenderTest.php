@@ -177,6 +177,7 @@ test('send returns immediately without touching the DB or network when telemetry
         new CurrentConfig(),
         new InstallationFlag(),
         new ProcessCache(),
+        Paths::fromRoot(sys_get_temp_dir()),
     );
     $imageService = new ImageService(
         piwigoInfosSenderTestLang(),
@@ -186,6 +187,7 @@ test('send returns immediately without touching the DB or network when telemetry
         new EventDispatcher(),
         new CurrentConfig(),
         new Translator(new CurrentConfig()),
+        Paths::fromRoot(sys_get_temp_dir()),
     );
     $permissionService = new PermissionService(
         new PermissionRepository(EntityManagerFactory::build()),
@@ -226,7 +228,7 @@ test('send returns immediately without touching the DB or network when telemetry
     // Never actually read either -- same "send() returns before touching
     // anything past the guard" reasoning as $configService above.
     $urlService = UrlServiceTestFactory::build();
-    new PiwigoInfosSender(piwigoInfosSenderTestLang(), $currentLogger, new ImageStdParams(), $configService, $installationStats, $activityService, $userService, $imageService, $urlService, $currentConfig)->send();
+    new PiwigoInfosSender(piwigoInfosSenderTestLang(), $currentLogger, new ImageStdParams(), $configService, $installationStats, $activityService, $userService, $imageService, $urlService, $currentConfig, \Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()))->send();
 
     expect(true)->toBeTrue();
 });

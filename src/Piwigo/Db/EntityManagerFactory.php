@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
 use Piwigo\Cache\CachePools;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DqlFunction\DateFormatMonthDayFunction;
 use Piwigo\Db\DqlFunction\DateFormatYearMonthFunction;
 use Piwigo\Db\DqlFunction\DateSubFunction;
@@ -45,6 +46,27 @@ use Piwigo\Db\Type\UserIdType;
  */
 final class EntityManagerFactory
 {
+    /**
+     * Direct container resolve, not the DbCredentials::current() shim --
+     * this class is a purely static factory (see this class's own
+     * docblock), matching FilesystemHelper's own established "no wrapper
+     * instance" precedent. Mirrors DbCredentials::current()'s own graceful
+     * degradation (a fresh fromEnv() read, not a throw) when Kernel isn't
+     * booted -- most callers of build() are plain Unit tests that never
+     * boot a Kernel at all.
+     */
+    private static function dbCredentials(): DbCredentials
+    {
+        if (Kernel::isBooted()) {
+            $dbCredentials = Kernel::container()->get(DbCredentials::class);
+            if ($dbCredentials instanceof DbCredentials) {
+                return $dbCredentials;
+            }
+        }
+
+        return DbCredentials::fromEnv();
+    }
+
     public static function build(?Connection $conn = null): EntityManagerInterface
     {
         // Guarded by hasType() since this factory is deliberately not
@@ -63,7 +85,7 @@ final class EntityManagerFactory
             }
         }
 
-        // The DbCredentials::current()->prefix half of this cache key is
+        // The dbCredentials()->prefix half of this cache key is
         // load-bearing, not defensive: TablePrefixListener below (registered
         // on Events::loadClassMetadata) only fires on a real metadata
         // *miss* -- it's what turns an entity's bare table name ('config')
@@ -85,7 +107,7 @@ final class EntityManagerFactory
         $config = ORMSetup::createAttributeMetadataConfig(
             paths: [dirname(__DIR__)],
             isDevMode: true,
-            cache: CachePools::doctrineMetadata(self::entityMtimeHash() . '.' . md5(DbCredentials::current()->prefix)),
+            cache: CachePools::doctrineMetadata(self::entityMtimeHash() . '.' . md5(self::dbCredentials()->prefix)),
         );
         $config->enableNativeLazyObjects(true);
         $config->addCustomStringFunction('REGEXP', RegexpFunction::class);
@@ -108,7 +130,7 @@ final class EntityManagerFactory
 
         $em = new EntityManager($conn ?? DbConnection::build(), $config);
         $em->getEventManager()
-            ->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentials::current()));
+            ->addEventListener(Events::loadClassMetadata, new TablePrefixListener(self::dbCredentials()));
 
         return $em;
     }

@@ -208,9 +208,29 @@ final class UniqueExecLock
         return $held !== false;
     }
 
+    /**
+     * Direct container resolve, not the DbCredentials::current() shim --
+     * this class is a purely static utility (no instance to speak of, see
+     * this class's own docblock), matching FilesystemHelper's own
+     * established "no wrapper instance" precedent. Mirrors
+     * DbCredentials::current()'s own graceful degradation (a fresh
+     * fromEnv() read, not a throw) when Kernel isn't booted.
+     */
+    private static function dbCredentials(): DbCredentials
+    {
+        if (Kernel::isBooted()) {
+            $dbCredentials = Kernel::container()->get(DbCredentials::class);
+            if ($dbCredentials instanceof DbCredentials) {
+                return $dbCredentials;
+            }
+        }
+
+        return DbCredentials::fromEnv();
+    }
+
     private static function lockName(string $tokenName): string
     {
-        $prefix = DbCredentials::current()->prefix;
+        $prefix = self::dbCredentials()->prefix;
 
         return 'piwigo_exec_' . sha1($prefix . ':unique_exec:' . $tokenName);
     }

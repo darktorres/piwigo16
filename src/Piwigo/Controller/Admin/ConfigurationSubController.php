@@ -36,6 +36,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Group\GroupService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeParams;
@@ -158,6 +159,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly InputValidator $inputValidator,
         private readonly WsContext $wsContext,
         private readonly Paths $paths,
+        private readonly DbCredentials $dbCredentials,
     ) {}
 
     /**
@@ -1009,7 +1011,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // PluginLoader::autoupdatePlugin()).
         $page_errors = $this->pageState->errors;
 
-        new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, $this->paths)
+        new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, $this->paths, $this->dbCredentials)
             ->saveUploadFormConfig($updates, $page_errors, $errors);
 
         $this->pageState->errors = array_values($page_errors);

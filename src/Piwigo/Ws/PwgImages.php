@@ -102,6 +102,7 @@ final class PwgImages
         private readonly ImageRepository $imageRepository,
         private readonly ImageStdParams $imageStdParams,
         private readonly WsHelper $wsHelper,
+        private readonly DbCredentials $dbCredentials,
     ) {}
 
     /**
@@ -1333,7 +1334,7 @@ final class PwgImages
                 // folded into the hashed input (not just a literal prefix) so it
                 // still contributes to collision-avoidance against unrelated
                 // applications on a shared MySQL server, same reasoning as Item 18.
-                $uniqueness_lock_name = 'piwigo_iu_' . sha1(DbCredentials::current()->prefix . ':' . $uniqueness_column . ':' . $uniqueness_value);
+                $uniqueness_lock_name = 'piwigo_iu_' . sha1($this->dbCredentials->prefix . ':' . $uniqueness_column . ':' . $uniqueness_value);
                 $uniqueness_lock_ok = AdvisorySessionLock::acquire(
                     $uniqueness_lock_conn,
                     $uniqueness_lock_name,
@@ -2249,7 +2250,7 @@ final class PwgImages
             }
 
             $files = [];
-            $image_path = ImagePathHelper::getElementPath($image_row, $urlService);
+            $image_path = ImagePathHelper::getElementPath($image_row, $urlService, $this->paths);
 
             if (isset($formats_of[$image_row['id']])) {
                 foreach ($formats_of[$image_row['id']] as $format_ext) {
@@ -2303,7 +2304,8 @@ final class PwgImages
             [
                 'path' => $path,
             ],
-            $this->urlService
+            $this->urlService,
+            $this->paths
         );
 
         $ret = [];

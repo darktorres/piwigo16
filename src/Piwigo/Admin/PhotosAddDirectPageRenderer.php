@@ -26,6 +26,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocEndPhotoAddDirect;
 use Piwigo\Image\DerivativeImage;
@@ -81,6 +82,7 @@ final class PhotosAddDirectPageRenderer
         private readonly InputValidator $inputValidator,
         private readonly WsContext $wsContext,
         private readonly Paths $paths,
+        private readonly DbCredentials $dbCredentials,
     ) {}
 
     /**
@@ -243,7 +245,7 @@ final class PhotosAddDirectPageRenderer
 
         $htmlRenderer = $this->htmlRenderer;
 
-        $uploadService = new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, $this->paths);
+        $uploadService = new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, $this->paths, $this->dbCredentials);
 
         // +-------------------------------------------------------------------+
         // | Photo selection                                                    |

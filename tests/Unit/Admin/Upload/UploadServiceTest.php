@@ -23,6 +23,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -120,7 +121,7 @@ function upload_service_test_make(): UploadService
         throw new LogicException('Container returned an unexpected type for ' . CurrentUser::class);
     }
 
-    return new UploadService(Lang::current(), upload_service_test_current_logger(), $storageRegistry, EventDispatcher::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser, CurrentPaths::get());
+    return new UploadService(Lang::current(), upload_service_test_current_logger(), $storageRegistry, EventDispatcher::get(), $configService, $entityManager, $activityService, $metadataService, $imageService, $currentConfig, $wsContext, $currentUser, CurrentPaths::get(), DbCredentials::current());
 }
 
 beforeEach(function (): void {

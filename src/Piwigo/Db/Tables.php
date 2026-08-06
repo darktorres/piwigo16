@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Db;
 
+use Piwigo\Core\Kernel;
+
 /**
  * Table-name resolution for procedural code that writes raw SQL outside a
  * repository -- deferred at P14 ("no real consumer yet"), finished here now
@@ -20,198 +22,220 @@ namespace Piwigo\Db;
  */
 final class Tables
 {
+    /**
+     * Direct container resolve, not the DbCredentials::current() shim --
+     * this class is a purely static utility (39 methods, no instance to
+     * speak of, see this class's own docblock), matching FilesystemHelper's
+     * own established "no wrapper instance" precedent. Mirrors
+     * DbCredentials::current()'s own graceful degradation (a fresh
+     * fromEnv() read, not a throw) when Kernel isn't booted -- the vast
+     * majority of this class's own callers are plain Unit tests that never
+     * boot a Kernel at all.
+     */
+    private static function dbCredentials(): DbCredentials
+    {
+        if (Kernel::isBooted()) {
+            $dbCredentials = Kernel::container()->get(DbCredentials::class);
+            if ($dbCredentials instanceof DbCredentials) {
+                return $dbCredentials;
+            }
+        }
+
+        return DbCredentials::fromEnv();
+    }
+
     public static function activity(): string
     {
-        return DbCredentials::current()->prefix . 'activity';
+        return self::dbCredentials()->prefix . 'activity';
     }
 
     public static function auditLog(): string
     {
-        return DbCredentials::current()->prefix . 'audit_log';
+        return self::dbCredentials()->prefix . 'audit_log';
     }
 
     public static function caddie(): string
     {
-        return DbCredentials::current()->prefix . 'caddie';
+        return self::dbCredentials()->prefix . 'caddie';
     }
 
     public static function categories(): string
     {
-        return DbCredentials::current()->prefix . 'categories';
+        return self::dbCredentials()->prefix . 'categories';
     }
 
     public static function comments(): string
     {
-        return DbCredentials::current()->prefix . 'comments';
+        return self::dbCredentials()->prefix . 'comments';
     }
 
     public static function config(): string
     {
-        return DbCredentials::current()->prefix . 'config';
+        return self::dbCredentials()->prefix . 'config';
     }
 
     public static function derivativeSettings(): string
     {
-        return DbCredentials::current()->prefix . 'derivative_settings';
+        return self::dbCredentials()->prefix . 'derivative_settings';
     }
 
     public static function derivativeSize(): string
     {
-        return DbCredentials::current()->prefix . 'derivative_size';
+        return self::dbCredentials()->prefix . 'derivative_size';
     }
 
     public static function extensionIgnoredUpdates(): string
     {
-        return DbCredentials::current()->prefix . 'extension_ignored_updates';
+        return self::dbCredentials()->prefix . 'extension_ignored_updates';
     }
 
     public static function favorites(): string
     {
-        return DbCredentials::current()->prefix . 'favorites';
+        return self::dbCredentials()->prefix . 'favorites';
     }
 
     public static function groupAccess(): string
     {
-        return DbCredentials::current()->prefix . 'group_access';
+        return self::dbCredentials()->prefix . 'group_access';
     }
 
     public static function groups(): string
     {
-        return DbCredentials::current()->prefix . 'groups';
+        return self::dbCredentials()->prefix . 'groups';
     }
 
     public static function history(): string
     {
-        return DbCredentials::current()->prefix . 'history';
+        return self::dbCredentials()->prefix . 'history';
     }
 
     public static function historySummary(): string
     {
-        return DbCredentials::current()->prefix . 'history_summary';
+        return self::dbCredentials()->prefix . 'history_summary';
     }
 
     public static function imageCategory(): string
     {
-        return DbCredentials::current()->prefix . 'image_category';
+        return self::dbCredentials()->prefix . 'image_category';
     }
 
     public static function imageFormat(): string
     {
-        return DbCredentials::current()->prefix . 'image_format';
+        return self::dbCredentials()->prefix . 'image_format';
     }
 
     public static function imageTag(): string
     {
-        return DbCredentials::current()->prefix . 'image_tag';
+        return self::dbCredentials()->prefix . 'image_tag';
     }
 
     public static function images(): string
     {
-        return DbCredentials::current()->prefix . 'images';
+        return self::dbCredentials()->prefix . 'images';
     }
 
     public static function integrityIgnoredAnomalies(): string
     {
-        return DbCredentials::current()->prefix . 'integrity_ignored_anomalies';
+        return self::dbCredentials()->prefix . 'integrity_ignored_anomalies';
     }
 
     public static function languages(): string
     {
-        return DbCredentials::current()->prefix . 'languages';
+        return self::dbCredentials()->prefix . 'languages';
     }
 
     public static function lounge(): string
     {
-        return DbCredentials::current()->prefix . 'lounge';
+        return self::dbCredentials()->prefix . 'lounge';
     }
 
     public static function oldPermalinks(): string
     {
-        return DbCredentials::current()->prefix . 'old_permalinks';
+        return self::dbCredentials()->prefix . 'old_permalinks';
     }
 
     public static function pluginMigrations(): string
     {
-        return DbCredentials::current()->prefix . 'plugin_migrations';
+        return self::dbCredentials()->prefix . 'plugin_migrations';
     }
 
     public static function plugins(): string
     {
-        return DbCredentials::current()->prefix . 'plugins';
+        return self::dbCredentials()->prefix . 'plugins';
     }
 
     public static function rate(): string
     {
-        return DbCredentials::current()->prefix . 'rate';
+        return self::dbCredentials()->prefix . 'rate';
     }
 
     public static function search(): string
     {
-        return DbCredentials::current()->prefix . 'search';
+        return self::dbCredentials()->prefix . 'search';
     }
 
     public static function searchFilterView(): string
     {
-        return DbCredentials::current()->prefix . 'search_filter_view';
+        return self::dbCredentials()->prefix . 'search_filter_view';
     }
 
     public static function sessions(): string
     {
-        return DbCredentials::current()->prefix . 'sessions';
+        return self::dbCredentials()->prefix . 'sessions';
     }
 
     public static function sites(): string
     {
-        return DbCredentials::current()->prefix . 'sites';
+        return self::dbCredentials()->prefix . 'sites';
     }
 
     public static function tags(): string
     {
-        return DbCredentials::current()->prefix . 'tags';
+        return self::dbCredentials()->prefix . 'tags';
     }
 
     public static function themes(): string
     {
-        return DbCredentials::current()->prefix . 'themes';
+        return self::dbCredentials()->prefix . 'themes';
     }
 
     public static function userAccess(): string
     {
-        return DbCredentials::current()->prefix . 'user_access';
+        return self::dbCredentials()->prefix . 'user_access';
     }
 
     public static function userAuthKeys(): string
     {
-        return DbCredentials::current()->prefix . 'user_auth_keys';
+        return self::dbCredentials()->prefix . 'user_auth_keys';
     }
 
     public static function userFailedLogins(): string
     {
-        return DbCredentials::current()->prefix . 'user_failed_logins';
+        return self::dbCredentials()->prefix . 'user_failed_logins';
     }
 
     public static function userFeed(): string
     {
-        return DbCredentials::current()->prefix . 'user_feed';
+        return self::dbCredentials()->prefix . 'user_feed';
     }
 
     public static function userGroup(): string
     {
-        return DbCredentials::current()->prefix . 'user_group';
+        return self::dbCredentials()->prefix . 'user_group';
     }
 
     public static function userInfos(): string
     {
-        return DbCredentials::current()->prefix . 'user_infos';
+        return self::dbCredentials()->prefix . 'user_infos';
     }
 
     public static function userMailNotification(): string
     {
-        return DbCredentials::current()->prefix . 'user_mail_notification';
+        return self::dbCredentials()->prefix . 'user_mail_notification';
     }
 
     public static function users(): string
     {
-        return DbCredentials::current()->prefix . 'users';
+        return self::dbCredentials()->prefix . 'users';
     }
 }

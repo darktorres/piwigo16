@@ -9,6 +9,7 @@ use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Controller\Admin\Request\PluginSectionRequest;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Paths;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -38,6 +39,7 @@ final class PluginSubController implements AdminSubControllerInterface
         private readonly LoadedPlugins $loadedPlugins,
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly InputValidator $inputValidator,
+        private readonly Paths $paths,
     ) {}
 
     #[Override]
@@ -50,7 +52,7 @@ final class PluginSubController implements AdminSubControllerInterface
                 ->fatalError('Invalid URL - plugin ' . $pluginSection->pluginId . ' not active');
         }
 
-        $filename = PluginLoader::pluginsPath() . implode('/', $pluginSection->sections);
+        $filename = PluginLoader::pluginsPath($this->paths) . implode('/', $pluginSection->sections);
         if (is_file($filename)) {
             include_once $filename;
         } else {

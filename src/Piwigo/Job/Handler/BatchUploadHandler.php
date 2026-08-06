@@ -14,6 +14,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Image\ImageService;
 use Piwigo\Job\BatchUploadJob;
 use Piwigo\Metadata\MetadataService;
@@ -56,11 +57,12 @@ final class BatchUploadHandler
         private readonly WsContext $wsContext,
         private readonly CurrentUser $currentUser,
         private readonly Paths $paths,
+        private readonly DbCredentials $dbCredentials,
     ) {}
 
     public function __invoke(BatchUploadJob $job): int
     {
-        return new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, $this->paths)
+        return new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, $this->paths, $this->dbCredentials)
             ->addUploadedFile(
                 $job->sourceFilepath,
                 $this->urlService,

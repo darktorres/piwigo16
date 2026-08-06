@@ -6,6 +6,7 @@ namespace Piwigo\Db;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
+use Piwigo\Core\Kernel;
 
 /**
  * Factory for the shared Doctrine DBAL connection.
@@ -27,6 +28,27 @@ use Doctrine\DBAL\DriverManager;
  */
 final class DbConnection
 {
+    /**
+     * Direct container resolve, not the DbCredentials::current() shim --
+     * this class is a purely static factory (see this class's own
+     * docblock), matching FilesystemHelper's own established "no wrapper
+     * instance" precedent. Mirrors DbCredentials::current()'s own graceful
+     * degradation (a fresh fromEnv() read, not a throw) when Kernel isn't
+     * booted -- most callers of build() are plain Unit tests that never
+     * boot a Kernel at all.
+     */
+    private static function dbCredentials(): DbCredentials
+    {
+        if (Kernel::isBooted()) {
+            $dbCredentials = Kernel::container()->get(DbCredentials::class);
+            if ($dbCredentials instanceof DbCredentials) {
+                return $dbCredentials;
+            }
+        }
+
+        return DbCredentials::fromEnv();
+    }
+
     public static function build(): Connection
     {
         return DriverManager::getConnection(self::params());
@@ -50,7 +72,7 @@ final class DbConnection
      */
     public static function params(): array
     {
-        $credentials = DbCredentials::current();
+        $credentials = self::dbCredentials();
         $host = $credentials->host;
         $port = $credentials->port;
 

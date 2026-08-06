@@ -9,6 +9,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Request\ActionRequest;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
@@ -78,6 +79,7 @@ final class ActionController implements ControllerInterface
         private readonly ImageService $imageService,
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
+        private readonly Paths $paths,
     ) {}
 
     #[Override]
@@ -156,7 +158,7 @@ final class ActionController implements ControllerInterface
                         return $this->doError(401, 'Access denied e');
                     }
                 }
-                $file = ImagePathHelper::getElementPath($element_info, $this->urlService);
+                $file = ImagePathHelper::getElementPath($element_info, $this->urlService, $this->paths);
                 break;
             case 'r':
                 $representative_ext = $element_info['representative_ext'] ?? null;
@@ -167,14 +169,14 @@ final class ActionController implements ControllerInterface
                 if (! is_string($representative_ext) || $representative_ext === '' || $representative_ext === '0') {
                     return $this->doError(404, 'Requested file not found');
                 }
-                $file = ImagePathHelper::originalToRepresentative(ImagePathHelper::getElementPath($element_info, $this->urlService), $representative_ext);
+                $file = ImagePathHelper::originalToRepresentative(ImagePathHelper::getElementPath($element_info, $this->urlService, $this->paths), $representative_ext);
                 break;
             case 'f':
                 if ($format_row === null) {
                     return $this->doError(400, 'Invalid request - format');
                 }
                 $format_ext = $format_row->ext;
-                $file = ImagePathHelper::originalToFormat(ImagePathHelper::getElementPath($element_info, $this->urlService), $format_ext);
+                $file = ImagePathHelper::originalToFormat(ImagePathHelper::getElementPath($element_info, $this->urlService, $this->paths), $format_ext);
                 $original_file = $element_info['file'];
                 $element_info['file'] = StringHelper::getFilenameWoExtension($original_file) . '.' . $format_ext;
                 break;

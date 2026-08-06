@@ -246,7 +246,11 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Validation/InputValidator.php',
         '/src/Piwigo/Core/FilesystemHelper.php',
         '/src/Piwigo/Core/CurrentPaths.php',
+        '/src/Piwigo/Core/UniqueExecLock.php',
         '/src/Piwigo/Db/DbCredentials.php',
+        '/src/Piwigo/Db/DbConnection.php',
+        '/src/Piwigo/Db/EntityManagerFactory.php',
+        '/src/Piwigo/Db/Tables.php',
         '/src/Piwigo/Session/SessionService.php',
         '/src/Piwigo/Lang/Translator.php',
         '/src/Piwigo/PluginConfig/EventDispatcher.php',
@@ -758,35 +762,24 @@ test('CurrentPaths::get()/isSet() transitional bridge has a shrinking, known all
 });
 
 test('DbCredentials::current() transitional bridge has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 3: same shape
-    // as CurrentPaths above (no Static suffix -- there is no competing
-    // real instance method to disambiguate from, set()/reset() are gone
-    // entirely). Tables.php's own 39 static methods are the dominant real
-    // caller (one file, not 39 allow-list entries -- this test checks file
-    // paths), a pure static-utility class with no instance context to
-    // receive constructor injection through, matching FilesystemHelper's
-    // own "no wrapper needed" precedent. DbConnection.php/
-    // EntityManagerFactory.php are the same shape. RequestBootstrap.php is
-    // inside Bootstrap/ (already allowed direct Kernel::container() access)
-    // but uses this shim for style consistency with its own neighboring
-    // DbConnection::build() call. UniqueExecLock.php is the same
-    // pure-static-utility shape as Tables.php (no instance/constructor at
-    // all -- every method is `public static`). UploadService.php/
-    // Ws/PwgImages.php read the prefix only inside a GET_LOCK() name-hashing
-    // helper, immediately alongside their own `DbConnection::build()` call
-    // -- same style-consistency reasoning as RequestBootstrap.php;
-    // PwgImages.php is additionally still-static Ws\Pwg* dispatch (Phase
-    // 10), not yet DI-converted at all.
+    // Singleton/service-locator elimination campaign, Phase 11 sub-phase
+    // 11I: Tables.php/DbConnection.php/EntityManagerFactory.php/
+    // UniqueExecLock.php (pure static utilities, no instance context to
+    // receive constructor injection through) now resolve a private
+    // dbCredentials() helper doing a direct Kernel::container() resolve
+    // instead (with the same graceful fromEnv() fallback the shim itself
+    // has), matching FilesystemHelper's own established "no wrapper
+    // instance" precedent -- not this shim. UploadService.php/
+    // Ws/PwgImages.php took a real DbCredentials constructor param the
+    // same sub-phase. RequestBootstrap.php is inside Bootstrap/ (already
+    // allowed direct Kernel::container() access) but uses this shim for
+    // style consistency with its own neighboring DbConnection::build()
+    // call -- deferred to sub-phase 11J alongside its other remaining
+    // style-only shim usage.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Admin/Upload/UploadService.php',
         '/src/Piwigo/Bootstrap/RequestBootstrap.php',
-        '/src/Piwigo/Core/UniqueExecLock.php',
-        '/src/Piwigo/Db/DbConnection.php',
-        '/src/Piwigo/Db/EntityManagerFactory.php',
-        '/src/Piwigo/Db/Tables.php',
-        '/src/Piwigo/Ws/PwgImages.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'DbCredentials::current(');

@@ -117,6 +117,7 @@ final class UploadService
         private readonly WsContext $wsContext,
         private readonly CurrentUser $currentUser,
         private readonly Paths $paths,
+        private readonly DbCredentials $dbCredentials,
     ) {}
 
     /**
@@ -323,7 +324,7 @@ final class UploadService
             // prefix folded into the hashed input for the same collision-avoidance
             // reasoning as add()'s own lock, see PwgImages::add()) rather than
             // concatenated literally.
-            $dup_detect_lock_name = 'piwigo_iud_' . sha1(DbCredentials::current()->prefix . ':' . $md5sum);
+            $dup_detect_lock_name = 'piwigo_iud_' . sha1($this->dbCredentials->prefix . ':' . $md5sum);
             $dup_detect_lock_acquired = AdvisorySessionLock::acquire(
                 $dup_detect_lock_conn,
                 $dup_detect_lock_name,

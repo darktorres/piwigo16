@@ -16,6 +16,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Job\BatchUploadJob;
@@ -89,7 +90,8 @@ return [
             RequestBootstrap::currentConfig(),
             InfrastructureAccessor::wsContext(),
             RequestBootstrap::currentUser(),
-            Paths::fromRoot(dirname(__DIR__))
+            Paths::fromRoot(dirname(__DIR__)),
+            DbCredentials::current()
         ),
         GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService(RequestBootstrap::currentConfig(), Paths::fromRoot(dirname(__DIR__)))),
         RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService(RequestBootstrap::currentConfig(), Paths::fromRoot(dirname(__DIR__)))),

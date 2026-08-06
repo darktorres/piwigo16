@@ -24,9 +24,17 @@ afterEach(function () use (&$originalPrefix): void {
 test('every static method returns the db prefix plus its snake_case table name', function (): void {
     $reflection = new ReflectionClass(Tables::class);
 
+    // ReflectionClass::getMethods()'s own $filter bitmask is OR-combined,
+    // not AND -- a method matching *either* IS_STATIC or IS_PUBLIC passes,
+    // so this needs its own explicit isStatic()/isPublic() check too.
+    // Real gap this caught: Tables.php's own private static dbCredentials()
+    // helper (singleton/service-locator elimination campaign, Phase 11
+    // sub-phase 11I) is static but not public, and would otherwise have
+    // been treated as one more table-name getter here.
     $methods = array_filter(
         $reflection->getMethods(ReflectionMethod::IS_STATIC | ReflectionMethod::IS_PUBLIC),
-        static fn (ReflectionMethod $m): bool => $m->getDeclaringClass()->getName() === Tables::class,
+        static fn (ReflectionMethod $m): bool => $m->getDeclaringClass()->getName() === Tables::class
+            && $m->isStatic() && $m->isPublic(),
     );
 
     expect($methods)->not->toBeEmpty();

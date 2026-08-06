@@ -47,7 +47,7 @@ final class PictureFormatsPageRenderer
         $image = $imageRow->toArray();
 
         $formats = [];
-        foreach (EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)->findFormatsForImage($image_id->value) as $formatRow) {
+        foreach (EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)->findFormatsForImage($image_id) as $formatRow) {
             $format = $formatRow->toArray();
             $format['download_url'] = 'action.php?format=' . $formatRow->formatId . '&amp;download';
 

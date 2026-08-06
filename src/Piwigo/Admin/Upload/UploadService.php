@@ -17,6 +17,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -838,7 +839,7 @@ final class UploadService
             $format_id = $existing_format_id;
             $add_status = 'update';
         } else {
-            $format_id = $this->imageService->insertFormat((int) $format_of, $format_ext, $filesize);
+            $format_id = $this->imageService->insertFormat(ImageId::from((int) $format_of), $format_ext, $filesize);
             $add_status = 'add';
         }
 

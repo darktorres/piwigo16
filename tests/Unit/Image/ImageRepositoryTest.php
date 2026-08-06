@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
@@ -220,7 +221,7 @@ test('deleteImages cascades away rows from every real referencing table, and cle
     // database itself. One real row is seeded in every table to prove
     // that live, not just cite the schema.
     $repo = imageRepositoryTestRepo();
-    $cached = $repo->find(1);
+    $cached = $repo->find(ImageId::from(1));
     expect($cached)->not->toBeNull();
 
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/references-test.jpg');
@@ -268,7 +269,7 @@ test('deleteImages cascades away rows from every real referencing table, and cle
         $bystanderCount = $conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::comments() . " WHERE image_id = {$bystanderId}");
         expect(is_numeric($bystanderCount) ? (int) $bystanderCount : -1)->toBe(1);
 
-        $refetched = $repo->find(1);
+        $refetched = $repo->find(ImageId::from(1));
         expect($refetched)->not->toBe($cached);
     } finally {
         // The image row is already gone via deleteImages() itself above
@@ -285,7 +286,7 @@ test('deleteImages removes the row for real, and clears the identity map', funct
     // deleted row itself would read back as null either way regardless
     // of whether the identity map was cleared.
     $repo = imageRepositoryTestRepo();
-    $cached = $repo->find(1);
+    $cached = $repo->find(ImageId::from(1));
     expect($cached)->not->toBeNull();
 
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/delete-images-test.jpg');
@@ -295,7 +296,7 @@ test('deleteImages removes the row for real, and clears the identity map', funct
     $stillThere = DbConnection::build()->fetchOne('SELECT COUNT(*) FROM ' . Tables::images() . " WHERE id = {$imageId}");
     expect(is_numeric($stillThere) ? (int) $stillThere : -1)->toBe(0);
 
-    $refetched = $repo->find(1);
+    $refetched = $repo->find(ImageId::from(1));
     expect($refetched)->not->toBe($cached);
 });
 
@@ -395,7 +396,7 @@ test('massInsertImageCategory persists every real row it is given', function ():
     // via the same unrelated-cached-entity technique as the sibling
     // tests above).
     $repo = imageRepositoryTestRepo();
-    $cached = $repo->find(1);
+    $cached = $repo->find(ImageId::from(1));
     expect($cached)->not->toBeNull();
 
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/mass-insert-test.jpg');
@@ -407,7 +408,7 @@ test('massInsertImageCategory persists every real row it is given', function ():
 
         $rank = DbConnection::build()->fetchOne('SELECT `rank` FROM ' . Tables::imageCategory() . " WHERE image_id = {$imageId} AND category_id = 1");
         expect($rank)->toBe(3);
-        $refetched = $repo->find(1);
+        $refetched = $repo->find(ImageId::from(1));
         expect($refetched)->not->toBe($cached);
     } finally {
         DbConnection::build()->createQueryBuilder()->delete(Tables::imageCategory())
@@ -436,7 +437,7 @@ test('tryAcquireLoungeLock persists a real, JSON-round-trippable value, and clea
     // (ImageServiceTest.php's emptyLounge() tests) for a full 10s each,
     // for the rest of the process.
     try {
-        $cached = $repo->find(1);
+        $cached = $repo->find(ImageId::from(1));
         expect($cached)->not->toBeNull();
 
         $conn->createQueryBuilder()->delete('piwigo_config')
@@ -451,7 +452,7 @@ test('tryAcquireLoungeLock persists a real, JSON-round-trippable value, and clea
             // If $em->clear() didn't run, this find() would return the SAME
             // PHP object identity as $cached (the pre-clear() cached
             // instance) rather than a freshly-hydrated one.
-            $refetched = $repo->find(1);
+            $refetched = $repo->find(ImageId::from(1));
             expect($refetched)->not->toBe($cached);
         } finally {
             $conn->createQueryBuilder()->delete('piwigo_config')
@@ -480,7 +481,7 @@ test('massUpdateMd5sums updates only the md5sum column, keyed by id, and clears 
     // either leaves the row's md5sum untouched), and line 1488's
     // RemoveMethodCall ($em->clear()).
     $repo = imageRepositoryTestRepo();
-    $cached = $repo->find(1);
+    $cached = $repo->find(ImageId::from(1));
     expect($cached)->not->toBeNull();
 
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/md5-test.jpg', 'old0old0old0old0old0old0old0old0');
@@ -494,7 +495,7 @@ test('massUpdateMd5sums updates only the md5sum column, keyed by id, and clears 
             ->where('id = :id')->setParameter('id', $imageId)->fetchOne();
         expect($md5sum)->toBe('new0new0new0new0new0new0new0new0');
 
-        $refetched = $repo->find(1);
+        $refetched = $repo->find(ImageId::from(1));
         expect($refetched)->not->toBe($cached);
     } finally {
         imageRepositoryTestDeleteImage($imageId);
@@ -519,15 +520,22 @@ test('findById reads a numeric-string id, not just a native int', function (): v
     // Kills line 1371's RemoveIntegerCast -- find() takes the primary
     // key; without normalizing a numeric STRING id to a real int
     // first, Doctrine's own identity-map/parameter-binding may not
-    // resolve it the same way.
+    // resolve it the same way. That normalization now lives in
+    // ImageId::from() itself (findById() just reads ->value), but this
+    // still proves the numeric-string path works end-to-end through
+    // the real repository call, not just ImageId's own unit tests.
     $repo = imageRepositoryTestRepo();
 
-    $found = $repo->findById('1');
+    $imageId = ImageId::tryFrom('1');
+    if ($imageId === null) {
+        throw new RuntimeException('expected ImageId::tryFrom() to accept a numeric string');
+    }
+    $found = $repo->findById($imageId);
 
     if ($found === null) {
         throw new RuntimeException('expected a real Image instance');
     }
-    expect($found->id)->toBe(1);
+    expect($found->id->value)->toBe(1);
 });
 
 test('findById returns null for an id that does not exist, not a real Image', function (): void {
@@ -538,7 +546,7 @@ test('findById returns null for an id that does not exist, not a real Image', fu
     // regression would also be caught.
     $repo = imageRepositoryTestRepo();
 
-    expect($repo->findById(999_999))->toBeNull();
+    expect($repo->findById(ImageId::from(999_999)))->toBeNull();
 });
 
 test('findIdsByFilenameInCategory returns real ints for a matching filename/category pair', function (): void {
@@ -636,12 +644,12 @@ test('findAddMethodBreakdown reports real string/int columns for at least one re
 test('deleteNonStorageCategoryLinks clears the identity map after a raw write outside the ORM', function (): void {
     // Kills line 919's RemoveMethodCall ($em->clear()).
     $repo = imageRepositoryTestRepo();
-    $cached = $repo->find(1);
+    $cached = $repo->find(ImageId::from(1));
     expect($cached)->not->toBeNull();
 
     $repo->deleteNonStorageCategoryLinks([1], []);
 
-    $refetched = $repo->find(1);
+    $refetched = $repo->find(ImageId::from(1));
     expect($refetched)->not->toBe($cached);
 });
 

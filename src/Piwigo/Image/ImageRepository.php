@@ -108,7 +108,7 @@ final class ImageRepository extends EntityRepository
      * the identity map afterward since this bypasses the ORM for a row
      * {@see ImageEntity} may already have cached.
      */
-    public function incrementVisitCounter(int $imageId): void
+    public function incrementVisitCounter(ImageId $imageId): void
     {
         $em = $this->getEntityManager();
         $em->createQueryBuilder()
@@ -116,7 +116,7 @@ final class ImageRepository extends EntityRepository
             ->set('i.hit', 'i.hit + 1')
             ->set('i.lastmodified', 'i.lastmodified')
             ->where('i.id = :id')
-            ->setParameter('id', $imageId)
+            ->setParameter('id', $imageId->value)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -126,7 +126,7 @@ final class ImageRepository extends EntityRepository
      * Sets (or clears, when $coi is null) an image's crop-of-interest
      * 4-character code (admin/picture_coi.php, the only caller).
      */
-    public function updateCoi(int $imageId, ?string $coi): void
+    public function updateCoi(ImageId $imageId, ?string $coi): void
     {
         $entity = $this->find($imageId);
         if ($entity === null) {
@@ -146,7 +146,7 @@ final class ImageRepository extends EntityRepository
      * fields are never intentionally nulled through this path.
      */
     public function updateDescriptiveFields(
-        int $imageId,
+        ImageId $imageId,
         ?string $name = null,
         ?string $author = null,
         ?string $comment = null,
@@ -187,7 +187,11 @@ final class ImageRepository extends EntityRepository
             return [];
         }
 
-        return $this->getEntityManager()
+        // f.imageId is the custom `image_id` Doctrine Type -- a partial
+        // DQL select of a custom-typed field still hydrates through that
+        // Type, so it comes back as ImageId here, not int. Unwrapped
+        // below to keep this method's own documented int contract.
+        $rows = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('f.imageId AS image_id', 'f.ext AS ext')
             ->from(ImageFormatEntity::class, 'f')
@@ -195,6 +199,14 @@ final class ImageRepository extends EntityRepository
             ->setParameter('imageIds', $imageIds)
             ->getQuery()
             ->getResult();
+
+        return array_map(
+            static fn (array $row): array => [
+                'image_id' => $row['image_id'] instanceof ImageId ? $row['image_id']->value : (is_numeric($row['image_id']) ? (int) $row['image_id'] : 0),
+                'ext' => $row['ext'],
+            ],
+            $rows
+        );
     }
 
     public function findFormatById(int $formatId): ?ImageFormat
@@ -226,7 +238,7 @@ final class ImageRepository extends EntityRepository
      * Inserts a brand-new format row -- Admin\Upload\UploadService::
      * addFormat()'s own "no existing row for this (image, ext)" branch.
      */
-    public function insertFormat(int $imageId, string $ext, ?int $filesize): int
+    public function insertFormat(ImageId $imageId, string $ext, ?int $filesize): int
     {
         $em = $this->getEntityManager();
         $entity = new ImageFormatEntity($imageId, $ext, $filesize);
@@ -257,7 +269,7 @@ final class ImageRepository extends EntityRepository
 
         $em = $this->getEntityManager();
         foreach ($inserts as $insert) {
-            $em->persist(new ImageFormatEntity($insert['image_id'], $insert['ext'], $insert['filesize']));
+            $em->persist(new ImageFormatEntity(ImageId::from($insert['image_id']), $insert['ext'], $insert['filesize']));
         }
 
         $em->flush();
@@ -278,7 +290,12 @@ final class ImageRepository extends EntityRepository
             return [];
         }
 
-        return $this->getEntityManager()
+        // f.imageId is the custom `image_id` Doctrine Type -- a partial
+        // DQL select of a custom-typed field still hydrates through that
+        // Type (same gotcha as scalar enum selects), so it comes back as
+        // ImageId here, not int. Unwrapped below to keep this method's
+        // own documented int contract for its WS-layer consumer.
+        $rows = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('f.imageId AS image_id', 'f.ext AS ext')
             ->from(ImageFormatEntity::class, 'f')
@@ -286,6 +303,14 @@ final class ImageRepository extends EntityRepository
             ->setParameter('formatIds', $formatIds)
             ->getQuery()
             ->getResult();
+
+        return array_map(
+            static fn (array $row): array => [
+                'image_id' => $row['image_id'] instanceof ImageId ? $row['image_id']->value : (is_numeric($row['image_id']) ? (int) $row['image_id'] : 0),
+                'ext' => $row['ext'],
+            ],
+            $rows
+        );
     }
 
     /**
@@ -314,14 +339,14 @@ final class ImageRepository extends EntityRepository
     /**
      * @return list<ImageFormat>
      */
-    public function findFormatsForImage(int $imageId): array
+    public function findFormatsForImage(ImageId $imageId): array
     {
         $entities = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('f')
             ->from(ImageFormatEntity::class, 'f')
             ->where('f.imageId = :imageId')
-            ->setParameter('imageId', $imageId)
+            ->setParameter('imageId', $imageId->value)
             ->getQuery()
             ->getResult();
 
@@ -356,6 +381,13 @@ final class ImageRepository extends EntityRepository
      */
     public function findPathsForFileDeletion(array $imageIds): array
     {
+        // i.id/i.path are the custom `image_id`/`rel_path` Doctrine Types --
+        // a partial DQL select of a custom-typed field still hydrates
+        // through that Type, so they come back as ImageId/RelPath here,
+        // not int/string. Unwrapped below to keep this method's own
+        // documented contract (id/path feed real file-deletion logic, so
+        // silently defaulting to 0/'' on a narrowing miss would be a real
+        // data-loss risk, not just a lint nitpick).
         $rows = $this->createQueryBuilder('i')
             ->select('i.id', 'i.path', 'i.representativeExt AS representative_ext')
             ->where('i.id IN (:ids)')
@@ -370,8 +402,8 @@ final class ImageRepository extends EntityRepository
             }
 
             $result[] = [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
-                'path' => is_string($row['path']) ? $row['path'] : '',
+                'id' => $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
+                'path' => $row['path'] instanceof RelPath ? $row['path']->value : (is_string($row['path']) ? $row['path'] : ''),
                 'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
             ];
         }
@@ -407,8 +439,8 @@ final class ImageRepository extends EntityRepository
             }
 
             $result[] = [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
-                'path' => is_string($row['path']) ? $row['path'] : '',
+                'id' => $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
+                'path' => $row['path'] instanceof RelPath ? $row['path']->value : (is_string($row['path']) ? $row['path'] : ''),
                 'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
                 'level' => is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
             ];
@@ -577,7 +609,7 @@ final class ImageRepository extends EntityRepository
         $em->createQueryBuilder()
             ->delete(ImageEntity::class, 'i')
             ->where('i.id IN (:ids)')
-            ->setParameter('ids', $ids)
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -868,7 +900,7 @@ final class ImageRepository extends EntityRepository
     public function findDissociableImageIds(array $images, int|string $category): array
     {
         return array_values(array_map(
-            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            static fn (mixed $v): int => $v instanceof ImageId ? $v->value : (is_numeric($v) ? (int) $v : 0),
             $this->getEntityManager()
                 ->createQueryBuilder()
                 ->select('i.id')
@@ -960,14 +992,14 @@ final class ImageRepository extends EntityRepository
             ->getArrayResult();
 
         foreach ($rows as $row) {
-            if (! is_array($row) || ! is_numeric($row['id'] ?? null)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof ImageId) {
                 continue;
             }
 
             $qb = $em->createQueryBuilder()
                 ->delete(ImageCategoryEntity::class, 'ic')
                 ->where('ic.imageId = :imageId')
-                ->setParameter('imageId', (int) $row['id'], ParameterType::INTEGER);
+                ->setParameter('imageId', $row['id']->value, ParameterType::INTEGER);
 
             if ($categories !== []) {
                 $qb->andWhere('ic.categoryId NOT IN (:categories)')
@@ -977,9 +1009,9 @@ final class ImageRepository extends EntityRepository
             // storage_category_id IS NULL -- every link for this image is
             // non-storage, no extra exclusion needed (matches the
             // original's own `storage_category_id IS NULL OR ...` half).
-            if (is_numeric($row['storageCategoryId'] ?? null)) {
+            if (($row['storageCategoryId'] ?? null) instanceof CategoryId) {
                 $qb->andWhere('ic.categoryId != :storageCategoryId')
-                    ->setParameter('storageCategoryId', (int) $row['storageCategoryId'], ParameterType::INTEGER);
+                    ->setParameter('storageCategoryId', $row['storageCategoryId']->value, ParameterType::INTEGER);
             }
 
             $qb->getQuery()
@@ -995,7 +1027,7 @@ final class ImageRepository extends EntityRepository
     public function findImageIdsWithoutMd5sum(): array
     {
         return array_values(array_map(
-            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            static fn (mixed $v): int => $v instanceof ImageId ? $v->value : (is_numeric($v) ? (int) $v : 0),
             $this->createQueryBuilder('i')
                 ->select('i.id')
                 ->where('i.md5sum IS NULL')
@@ -1019,11 +1051,11 @@ final class ImageRepository extends EntityRepository
 
         $paths = [];
         foreach ($rows as $row) {
-            if (! is_array($row) || ! is_numeric($row['id'] ?? null)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof ImageId) {
                 continue;
             }
 
-            $paths[(int) $row['id']] = is_scalar($row['path']) ? (string) $row['path'] : '';
+            $paths[$row['id']->value] = $row['path'] instanceof RelPath ? $row['path']->value : (is_scalar($row['path']) ? (string) $row['path'] : '');
         }
 
         return $paths;
@@ -1055,9 +1087,9 @@ final class ImageRepository extends EntityRepository
         }
 
         return [
-            'path' => is_string($row['path']) ? $row['path'] : '',
+            'path' => $row['path'] instanceof RelPath ? $row['path']->value : (is_string($row['path']) ? $row['path'] : ''),
             'file' => is_string($row['file']) ? $row['file'] : '',
-            'md5sum' => is_string($row['md5sum'] ?? null) ? $row['md5sum'] : null,
+            'md5sum' => ($row['md5sum'] ?? null) instanceof Md5Sum ? $row['md5sum']->value : (is_string($row['md5sum'] ?? null) ? $row['md5sum'] : null),
             'width' => is_numeric($row['width'] ?? null) ? (int) $row['width'] : null,
             'height' => is_numeric($row['height'] ?? null) ? (int) $row['height'] : null,
             'filesize' => is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : null,
@@ -1158,7 +1190,7 @@ final class ImageRepository extends EntityRepository
             }
 
             $result[] = [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                'id' => $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
                 'file' => is_string($row['file']) ? $row['file'] : '',
             ];
         }
@@ -1187,7 +1219,7 @@ final class ImageRepository extends EntityRepository
             }
 
             $result[] = [
-                'image_id' => is_numeric($row['image_id']) ? (int) $row['image_id'] : 0,
+                'image_id' => $row['image_id'] instanceof ImageId ? $row['image_id']->value : (is_numeric($row['image_id']) ? (int) $row['image_id'] : 0),
                 'ext' => is_string($row['ext']) ? $row['ext'] : '',
             ];
         }
@@ -1330,8 +1362,8 @@ final class ImageRepository extends EntityRepository
         foreach ($rows as $row) {
             if (is_array($row)) {
                 $result[] = [
-                    'id' => $row['id'] ?? null,
-                    'path' => $row['path'] ?? null,
+                    'id' => ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : ($row['id'] ?? null),
+                    'path' => ($row['path'] ?? null) instanceof RelPath ? $row['path']->value : ($row['path'] ?? null),
                     'representative_ext' => $row['representative_ext'] ?? null,
                     'width' => $row['width'] ?? null,
                     'height' => $row['height'] ?? null,
@@ -1434,16 +1466,16 @@ final class ImageRepository extends EntityRepository
 
         $byId = [];
         foreach ($rows as $row) {
-            if (! is_array($row) || ! isset($row['id']) || (! is_int($row['id']) && ! is_string($row['id']))) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof ImageId) {
                 continue;
             }
 
-            $byId[$row['id']] = [
-                'id' => $row['id'],
+            $byId[$row['id']->value] = [
+                'id' => $row['id']->value,
                 'label' => $row['label'] ?? null,
                 'filesize' => $row['filesize'] ?? null,
                 'file' => $row['file'] ?? null,
-                'path' => $row['path'] ?? null,
+                'path' => $row['path'] instanceof RelPath ? $row['path']->value : ($row['path'] ?? null),
                 'representative_ext' => $row['representative_ext'] ?? null,
             ];
         }
@@ -1484,7 +1516,7 @@ final class ImageRepository extends EntityRepository
                 ->setParameter('loungedIds', $loungedIds, ArrayParameterType::INTEGER);
         }
 
-        return array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->getQuery()->getSingleColumnResult()));
+        return array_values(array_map(static fn (mixed $v): int => $v instanceof ImageId ? $v->value : (is_numeric($v) ? (int) $v : 0), $qb->getQuery()->getSingleColumnResult()));
     }
 
     /**
@@ -1510,7 +1542,7 @@ final class ImageRepository extends EntityRepository
 
     public function findById(ImageId $imageId): ?Image
     {
-        $entity = $this->find($imageId->value);
+        $entity = $this->find($imageId);
 
         return $entity === null ? null : Image::fromEntity($entity);
     }
@@ -1530,7 +1562,7 @@ final class ImageRepository extends EntityRepository
 
     public function updateRotation(ImageId $imageId, int $rotationCode): void
     {
-        $entity = $this->find($imageId->value);
+        $entity = $this->find($imageId);
         if ($entity === null) {
             return;
         }
@@ -1632,7 +1664,8 @@ final class ImageRepository extends EntityRepository
 
     public function updateDimensions(int $imageId, int $width, int $height): void
     {
-        $entity = $this->find($imageId);
+        $imageIdVo = ImageId::tryFrom($imageId);
+        $entity = $imageIdVo === null ? null : $this->find($imageIdVo);
         if ($entity === null) {
             return;
         }
@@ -1731,9 +1764,9 @@ final class ImageRepository extends EntityRepository
         foreach ($rows as $row) {
             if (is_array($row)) {
                 $result[] = [
-                    'id' => $row['id'] ?? null,
+                    'id' => ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : ($row['id'] ?? null),
                     'file' => $row['file'] ?? null,
-                    'path' => $row['path'] ?? null,
+                    'path' => ($row['path'] ?? null) instanceof RelPath ? $row['path']->value : ($row['path'] ?? null),
                     'representative_ext' => $row['representative_ext'] ?? null,
                     'width' => $row['width'] ?? null,
                     'height' => $row['height'] ?? null,
@@ -2029,7 +2062,7 @@ final class ImageRepository extends EntityRepository
             ->getArrayResult() as $row) {
             if (is_array($row)) {
                 $result[] = [
-                    'id' => $row['id'] ?? null,
+                    'id' => ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : ($row['id'] ?? null),
                     'date_creation' => $row['date_creation'] ?? null,
                 ];
             }
@@ -2185,7 +2218,7 @@ final class ImageRepository extends EntityRepository
     public function findIssue1827CandidateImageIds(int $limit): array
     {
         return array_values(array_map(
-            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            static fn (mixed $v): int => $v instanceof ImageId ? $v->value : (is_numeric($v) ? (int) $v : 0),
             $this->createQueryBuilder('i')
                 ->select('i.id')
                 ->where("i.dateAvailable < '2022-12-08 00:00:00'")
@@ -2206,7 +2239,7 @@ final class ImageRepository extends EntityRepository
     public function findImageIdsSample(int $limit): array
     {
         return array_values(array_map(
-            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            static fn (mixed $v): int => $v instanceof ImageId ? $v->value : (is_numeric($v) ? (int) $v : 0),
             $this->createQueryBuilder('i')
                 ->select('i.id')
                 ->setMaxResults($limit)
@@ -2225,7 +2258,7 @@ final class ImageRepository extends EntityRepository
     public function findDuplicatePaths(): array
     {
         return array_values(array_map(
-            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            static fn (mixed $v): string => $v instanceof RelPath ? $v->value : (is_scalar($v) ? (string) $v : ''),
             $this->createQueryBuilder('i')
                 ->select('i.path')
                 ->groupBy('i.path')
@@ -2316,7 +2349,7 @@ final class ImageRepository extends EntityRepository
         }
 
         return [
-            'id' => $row['id'] ?? null,
+            'id' => ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : ($row['id'] ?? null),
             'file' => $row['file'] ?? null,
             'level' => $row['level'] ?? null,
         ];
@@ -2331,7 +2364,7 @@ final class ImageRepository extends EntityRepository
     public function findIdsByFilenameInCategory(string $filename, int $categoryId): array
     {
         return array_values(array_map(
-            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            static fn (mixed $v): int => $v instanceof ImageId ? $v->value : (is_numeric($v) ? (int) $v : 0),
             $this->createQueryBuilder('i')
                 ->select('i.id')
                 ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
@@ -2357,7 +2390,11 @@ final class ImageRepository extends EntityRepository
             ->getQuery()
             ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
-        return is_array($row) && is_string($row['path']) ? $row['path'] : null;
+        if (! is_array($row)) {
+            return null;
+        }
+
+        return $row['path'] instanceof RelPath ? $row['path']->value : (is_string($row['path']) ? $row['path'] : null);
     }
 
     /**
@@ -2381,10 +2418,10 @@ final class ImageRepository extends EntityRepository
         }
 
         return [
-            'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+            'id' => $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
             'name' => is_string($row['name'] ?? null) ? $row['name'] : null,
             'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
-            'path' => is_string($row['path']) ? $row['path'] : '',
+            'path' => $row['path'] instanceof RelPath ? $row['path']->value : (is_string($row['path']) ? $row['path'] : ''),
         ];
     }
 
@@ -2641,7 +2678,7 @@ final class ImageRepository extends EntityRepository
     public function findIdsByMd5sum(string $md5sum): array
     {
         return array_values(array_map(
-            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            static fn (mixed $v): int => $v instanceof ImageId ? $v->value : (is_numeric($v) ? (int) $v : 0),
             $this->createQueryBuilder('i')
                 ->select('i.id')
                 ->where('i.md5sum = :md5sum')
@@ -2674,8 +2711,8 @@ final class ImageRepository extends EntityRepository
 
         $idByMd5sum = [];
         foreach ($rows as $row) {
-            if (is_array($row) && is_string($row['md5sum'] ?? null) && is_numeric($row['id'] ?? null)) {
-                $idByMd5sum[$row['md5sum']] = (int) $row['id'];
+            if (is_array($row) && ($row['md5sum'] ?? null) instanceof Md5Sum && ($row['id'] ?? null) instanceof ImageId) {
+                $idByMd5sum[$row['md5sum']->value] = $row['id']->value;
             }
         }
 
@@ -2705,8 +2742,8 @@ final class ImageRepository extends EntityRepository
 
         $idByFilename = [];
         foreach ($rows as $row) {
-            if (is_array($row) && is_string($row['file'] ?? null) && is_numeric($row['id'] ?? null)) {
-                $idByFilename[$row['file']] = (int) $row['id'];
+            if (is_array($row) && is_string($row['file'] ?? null) && ($row['id'] ?? null) instanceof ImageId) {
+                $idByFilename[$row['file']] = $row['id']->value;
             }
         }
 
@@ -2999,11 +3036,11 @@ final class ImageRepository extends EntityRepository
             }
 
             $id = $row['id'];
-            if (! is_numeric($id) || ! is_string($row['path'])) {
+            if (! $id instanceof ImageId || ! $row['path'] instanceof RelPath) {
                 continue;
             }
 
-            $byId[(int) $id] = $row['path'];
+            $byId[$id->value] = $row['path']->value;
         }
 
         return $byId;
@@ -3050,7 +3087,7 @@ final class ImageRepository extends EntityRepository
     {
         if ($categoryIds === []) {
             return array_values(array_map(
-                static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+                static fn (mixed $v): int => $v instanceof ImageId ? $v->value : (is_numeric($v) ? (int) $v : 0),
                 $this->createQueryBuilder('i')
                     ->select('i.id')
                     ->getQuery()
@@ -3066,7 +3103,7 @@ final class ImageRepository extends EntityRepository
             ->getDQL();
 
         return array_values(array_map(
-            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            static fn (mixed $v): int => $v instanceof ImageId ? $v->value : (is_numeric($v) ? (int) $v : 0),
             $this->createQueryBuilder('i')
                 ->select('i.id')
                 ->where("i.id NOT IN ({$subQuery})")
@@ -3103,7 +3140,9 @@ final class ImageRepository extends EntityRepository
 
         $result = [];
         foreach ($ids as $id) {
-            if (is_numeric($id)) {
+            if ($id instanceof ImageId) {
+                $result[] = $id->value;
+            } elseif (is_numeric($id)) {
                 $result[] = (int) $id;
             }
         }
@@ -3414,7 +3453,8 @@ final class ImageRepository extends EntityRepository
                 continue;
             }
 
-            $path = is_string($row['path'] ?? null) ? $row['path'] : '';
+            $pathValue = $row['path'] ?? null;
+            $path = $pathValue instanceof RelPath ? $pathValue->value : (is_string($pathValue) ? $pathValue : '');
             $dotPosition = strrpos($path, '.');
             $ext = $dotPosition === false ? $path : substr($path, $dotPosition + 1);
             $filesize = is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0;

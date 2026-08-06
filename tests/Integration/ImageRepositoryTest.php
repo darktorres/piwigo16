@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Override;
+use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
@@ -21,6 +23,7 @@ use Piwigo\Image\ImageTextField;
 use Piwigo\Image\ImageUniquenessColumn;
 use Piwigo\Image\MissingDerivativesCriteria;
 use Piwigo\Image\Projection\Image;
+use Piwigo\Image\Projection\ImageFormat;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 
@@ -74,7 +77,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
             ->fetchOne();
         $before = is_numeric($before) ? (int) $before : 0;
 
-        $this->repo->incrementVisitCounter(1);
+        $this->repo->incrementVisitCounter(ImageId::from(1));
 
         $after = $this->conn->createQueryBuilder()
             ->select('hit')
@@ -97,7 +100,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
             ->fetchOne();
         $before = is_numeric($before) ? (int) $before : 0;
 
-        $this->repo->incrementVisitCounter(1);
+        $this->repo->incrementVisitCounter(ImageId::from(1));
 
         $after = $this->conn->createQueryBuilder()
             ->select('hit')
@@ -112,7 +115,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_update_coi_sets_the_column(): void
     {
-        $this->repo->updateCoi(1, 'ABCD');
+        $this->repo->updateCoi(ImageId::from(1), 'ABCD');
 
         $coi = $this->conn->createQueryBuilder()
             ->select('coi')
@@ -126,9 +129,9 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_update_coi_with_null_clears_the_column(): void
     {
-        $this->repo->updateCoi(1, 'ABCD');
+        $this->repo->updateCoi(ImageId::from(1), 'ABCD');
 
-        $this->repo->updateCoi(1, null);
+        $this->repo->updateCoi(ImageId::from(1), null);
 
         $coi = $this->conn->createQueryBuilder()
             ->select('coi')
@@ -142,10 +145,10 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_by_id_returns_a_typed_image_projection(): void
     {
-        $image = $this->repo->findById(1);
+        $image = $this->repo->findById(ImageId::from(1));
 
         self::assertInstanceOf(Image::class, $image);
-        self::assertSame(1, $image->id);
+        self::assertSame(1, $image->id->value);
         self::assertSame('fixture-photo-1.jpg', $image->file);
         self::assertSame(200, $image->width);
         self::assertSame(150, $image->height);
@@ -153,7 +156,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_by_id_returns_null_for_a_nonexistent_image(): void
     {
-        self::assertNull($this->repo->findById(999999));
+        self::assertNull($this->repo->findById(ImageId::from(999999)));
     }
 
     public function test_find_by_path_returns_the_matching_image(): void
@@ -166,16 +169,16 @@ final class ImageRepositoryTest extends IntegrationTestCase
             ->fetchOne();
         self::assertIsString($path);
 
-        $image = $this->repo->findByPath($path);
+        $image = $this->repo->findByPath(RelPath::from($path));
 
         self::assertInstanceOf(Image::class, $image);
-        self::assertSame(1, $image->id);
-        self::assertSame($path, $image->path);
+        self::assertSame(1, $image->id->value);
+        self::assertSame($path, $image->path->value);
     }
 
     public function test_find_by_path_returns_null_for_an_unknown_path(): void
     {
-        self::assertNull($this->repo->findByPath('upload/does/not/exist.jpg'));
+        self::assertNull($this->repo->findByPath(RelPath::from('upload/does/not/exist.jpg')));
     }
 
     public function test_find_by_ids_returns_typed_images_keyed_by_id(): void
@@ -188,8 +191,8 @@ final class ImageRepositoryTest extends IntegrationTestCase
         foreach ($images as $key => $image) {
             // PHP canonicalises a numeric-string array key ('1') back to an
             // int key (1) -- the key is always int, never the original string.
-            self::assertSame($key, $image->id);
-            $ids[] = $image->id;
+            self::assertSame($key, $image->id->value);
+            $ids[] = $image->id->value;
         }
         sort($ids);
         self::assertSame([1, 2], $ids);
@@ -208,7 +211,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         self::assertNotNull($format);
         self::assertSame($formatId, $format->formatId);
-        self::assertSame(1, $format->imageId);
+        self::assertSame(1, $format->imageId->value);
         self::assertSame('webp', $format->ext);
         self::assertSame(12345, $format->filesize);
     }
@@ -224,7 +227,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $this->insertFormat(1, 'avif', 200);
         $this->insertFormat(2, 'webp', 300);
 
-        $formats = $this->repo->findFormatsForImage(1);
+        $formats = $this->repo->findFormatsForImage(ImageId::from(1));
 
         self::assertCount(2, $formats);
         $exts = array_column($formats, 'ext');
@@ -234,7 +237,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_formats_for_image_returns_empty_for_an_image_with_no_formats(): void
     {
-        self::assertSame([], $this->repo->findFormatsForImage(1));
+        self::assertSame([], $this->repo->findFormatsForImage(ImageId::from(1)));
     }
 
     public function test_find_full_formats_by_image_ids_returns_every_matching_row(): void
@@ -245,7 +248,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $formats = $this->repo->findFullFormatsByImageIds([1, 2]);
 
         self::assertCount(2, $formats);
-        $imageIds = array_column($formats, 'imageId');
+        $imageIds = array_map(static fn (ImageFormat $format): int => $format->imageId->value, $formats);
         sort($imageIds);
         self::assertSame([1, 2], $imageIds);
     }
@@ -302,7 +305,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_update_coi_is_a_noop_for_a_nonexistent_image(): void
     {
-        $this->repo->updateCoi(999_999, 'ABCD');
+        $this->repo->updateCoi(ImageId::from(999_999), 'ABCD');
 
         $coi = $this->conn->createQueryBuilder()
             ->select('coi')
@@ -376,7 +379,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     public function test_update_rotation_sets_the_column_for_an_existing_image(): void
     {
         try {
-            $this->repo->updateRotation(1, 3);
+            $this->repo->updateRotation(ImageId::from(1), 3);
 
             $rotation = $this->conn->createQueryBuilder()
                 ->select('rotation')
@@ -393,7 +396,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_update_rotation_is_a_noop_for_a_nonexistent_image(): void
     {
-        $this->repo->updateRotation(999_999, 2);
+        $this->repo->updateRotation(ImageId::from(999_999), 2);
 
         $rotation = $this->conn->createQueryBuilder()
             ->select('rotation')
@@ -470,7 +473,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
             ->executeQuery()
             ->fetchOne();
 
-        $this->repo->updateDescriptiveFields(999_999, name: 'Should Not Apply');
+        $this->repo->updateDescriptiveFields(ImageId::from(999_999), name: 'Should Not Apply');
 
         $nameAfter = $this->conn->createQueryBuilder()
             ->select('name')
@@ -485,7 +488,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     public function test_update_descriptive_fields_sets_date_creation_when_supplied(): void
     {
         try {
-            $this->repo->updateDescriptiveFields(1, dateCreation: '2020-05-01 00:00:00');
+            $this->repo->updateDescriptiveFields(ImageId::from(1), dateCreation: '2020-05-01 00:00:00');
 
             $dateCreation = $this->conn->createQueryBuilder()
                 ->select('date_creation')

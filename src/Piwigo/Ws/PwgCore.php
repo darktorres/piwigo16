@@ -21,6 +21,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
@@ -782,8 +783,9 @@ final class PwgCore
 
         // when visiting a photo (which is currently, in version 14, the only event registered
         // by pwg.history.log) we should also increment images.hit
-        if ($params['image_id'] !== 0) {
-            $this->imageRepository->incrementVisitCounter($params['image_id']);
+        $historyImageId = ImageId::tryFrom($params['image_id']);
+        if ($historyImageId !== null) {
+            $this->imageRepository->incrementVisitCounter($historyImageId);
         }
 
         $image_type = 'picture';

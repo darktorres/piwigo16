@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image\Projection;
 
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Image\ImageFormatEntity;
 
 /**
@@ -25,7 +26,7 @@ final readonly class ImageFormat
 {
     public function __construct(
         public int $formatId,
-        public int $imageId,
+        public ImageId $imageId,
         public string $ext,
         public ?int $filesize,
     ) {}
@@ -47,7 +48,7 @@ final readonly class ImageFormat
     {
         return new self(
             formatId: is_numeric($row['format_id'] ?? null) ? (int) $row['format_id'] : 0,
-            imageId: is_numeric($row['image_id'] ?? null) ? (int) $row['image_id'] : 0,
+            imageId: ImageId::from(is_numeric($row['image_id'] ?? null) ? (int) $row['image_id'] : 0),
             ext: is_string($row['ext'] ?? null) ? $row['ext'] : '',
             filesize: is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : null,
         );
@@ -60,7 +61,7 @@ final readonly class ImageFormat
     {
         return [
             'format_id' => $this->formatId,
-            'image_id' => $this->imageId,
+            'image_id' => $this->imageId->value,
             'ext' => $this->ext,
             'filesize' => $this->filesize,
         ];

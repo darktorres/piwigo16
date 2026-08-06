@@ -762,7 +762,7 @@ final readonly class ImageService
      * ImageRepository::updateDescriptiveFields()'s own docblock.
      */
     public function updateDescriptiveFields(
-        int $imageId,
+        ImageId $imageId,
         ?string $name = null,
         ?string $author = null,
         ?string $comment = null,
@@ -800,7 +800,7 @@ final readonly class ImageService
         $this->repo->updateFormatFilesize($formatId, $filesize);
     }
 
-    public function insertFormat(int $imageId, string $ext, ?int $filesize): int
+    public function insertFormat(ImageId $imageId, string $ext, ?int $filesize): int
     {
         return $this->repo->insertFormat($imageId, $ext, $filesize);
     }

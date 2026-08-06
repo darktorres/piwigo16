@@ -647,7 +647,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     // find formats for existing photos (already in database)
                     $existing_ids_int = array_values(array_map(intval(...), array_filter($existing_ids, is_numeric(...))));
                     foreach (EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)->findFullFormatsByImageIds($existing_ids_int) as $formatRow) {
-                        $format_image_id = $formatRow->imageId;
+                        $format_image_id = $formatRow->imageId->value;
                         if (! isset($db_formats[$format_image_id])) {
                             $db_formats[$format_image_id] = [];
                         }

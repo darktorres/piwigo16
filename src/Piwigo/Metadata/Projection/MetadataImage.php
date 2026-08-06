@@ -41,8 +41,8 @@ final readonly class MetadataImage
     public static function fromEntity(ImageEntity $entity): self
     {
         return new self(
-            id: $entity->id ?? 0,
-            path: $entity->path,
+            id: $entity->id->value ?? 0,
+            path: $entity->path->value,
             representativeExt: $entity->representativeExt,
         );
     }

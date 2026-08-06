@@ -55,7 +55,7 @@ final class PictureCoiPageRenderer
 
         if ($pictureCoiRequest->isSubmitted) {
             EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
-                ->updateCoi($image_id->value, $pictureCoiRequest->coi);
+                ->updateCoi($image_id, $pictureCoiRequest->coi);
         }
 
         $image = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)

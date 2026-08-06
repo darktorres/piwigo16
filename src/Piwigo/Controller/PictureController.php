@@ -19,6 +19,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
@@ -588,7 +589,7 @@ final class PictureController implements ControllerInterface
         // don't increment if adding a comment
         if ($this->eventDispatcher->dispatchChange(new AllowIncrementElementHitCount($inc_hit_count, $image_id))->incHitCount) {
             EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
-                ->incrementVisitCounter($image_id);
+                ->incrementVisitCounter(ImageId::from($image_id));
         }
 
         // -------------------------------------------------- related categories
@@ -615,13 +616,13 @@ final class PictureController implements ControllerInterface
 
         foreach (EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)->findByIds($ids) as $imageRow) {
             $row = $imageRow->toArray();
-            if ($previous_item !== null and $imageRow->id === (int) $previous_item) {
+            if ($previous_item !== null and $imageRow->id->value === (int) $previous_item) {
                 $i = 'previous';
-            } elseif ($next_item !== null and $imageRow->id === (int) $next_item) {
+            } elseif ($next_item !== null and $imageRow->id->value === (int) $next_item) {
                 $i = 'next';
-            } elseif ($first_item !== null and $imageRow->id === (int) $first_item) {
+            } elseif ($first_item !== null and $imageRow->id->value === (int) $first_item) {
                 $i = 'first';
-            } elseif ($last_item !== null and $imageRow->id === (int) $last_item) {
+            } elseif ($last_item !== null and $imageRow->id->value === (int) $last_item) {
                 $i = 'last';
             } else {
                 $i = 'current';
@@ -820,7 +821,7 @@ final class PictureController implements ControllerInterface
                 $formats = array_map(
                     static fn (ImageFormat $format): array => $format->toArray(),
                     EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
-                        ->findFormatsForImage($picture_id)
+                        ->findFormatsForImage(ImageId::from($picture_id))
                 );
 
                 // let's add the original as a format among others. It

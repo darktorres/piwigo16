@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Image;
 
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Activity\ActivityService;
@@ -1731,7 +1732,7 @@ test('countPdfPages() returns false when the path passes is_file()/is_readable()
 test('updateFormatFilesize() delegates straight through to the repository', function (): void {
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/updformatfilesize.jpg');
-    $formatId = $repo->insertFormat($imageId, 'webp', null);
+    $formatId = $repo->insertFormat(ImageId::from($imageId), 'webp', null);
 
     try {
         $service = imageServiceTestNewService($repo, $conn);

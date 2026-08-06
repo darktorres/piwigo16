@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 use PHPUnit\Framework\Assert;
 use Piwigo\Admin\Request\PictureCoiRequest;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Validation\InputValidator;
 
 test('fromArrays returns defaults for an empty GET/POST', function (): void {
     $request = PictureCoiRequest::fromArrays([], [], new InputValidator());
 
-    expect($request->imageId)->toBe(0)
+    expect($request->imageId)->toBeNull()
         ->and($request->isSubmitted)->toBeFalse()
         ->and($request->coi)->toBeNull();
 });
@@ -17,7 +18,7 @@ test('fromArrays returns defaults for an empty GET/POST', function (): void {
 test('fromArrays parses a numeric image_id', function (): void {
     $request = PictureCoiRequest::fromArrays(['image_id' => '12'], [], new InputValidator());
 
-    expect($request->imageId)->toBe(12);
+    expect($request->imageId)->toEqual(ImageId::from(12));
 });
 
 test('fromArrays rejects a non-digit image_id', function (): void {

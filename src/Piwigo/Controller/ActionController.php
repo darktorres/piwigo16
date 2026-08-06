@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Request\ActionRequest;
 use Piwigo\Core\AccessLevel;
@@ -96,7 +97,7 @@ final class ActionController implements ControllerInterface
                 return $this->doError(400, 'Invalid request - format');
             }
 
-            $image_id = $format->imageId;
+            $image_id = ImageId::from($format->imageId);
             $get_part = 'f'; // "f" for "format"
         } else {
             if ($actionRequest->id === null or $actionRequest->part === null) {
@@ -132,7 +133,7 @@ final class ActionController implements ControllerInterface
         if (
             ! $is_admin_download
             and ! $this->imageService
-                ->isImageAccessibleViaCategoryWithCondition($image_id, $permissionCriteria)
+                ->isImageAccessibleViaCategoryWithCondition($image_id->value, $permissionCriteria)
         ) {
             return $this->doError(401, 'Access denied');
         }
@@ -178,7 +179,7 @@ final class ActionController implements ControllerInterface
             return $this->doError(404, 'Requested file not found');
         }
 
-        $image_id_val = $image_id;
+        $image_id_val = $image_id->value;
         if ($get_part === 'e') {
             $this->historyService
                 ->logVisit($image_id_val, 'high');

@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Image\Projection;
 
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\Md5Sum;
+use Piwigo\Common\ValueObject\RelPath;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 
 /**
@@ -27,7 +32,7 @@ use Piwigo\Image\ImageEntity;
 final readonly class Image
 {
     public function __construct(
-        public int $id,
+        public ImageId $id,
         public string $file,
         public ?string $dateAvailable,
         public ?string $dateCreation,
@@ -42,11 +47,11 @@ final readonly class Image
         public ?string $representativeExt,
         public ?string $dateMetadataUpdate,
         public ?float $ratingScore,
-        public string $path,
-        public ?int $storageCategoryId,
+        public RelPath $path,
+        public ?CategoryId $storageCategoryId,
         public int $level,
-        public ?string $md5sum,
-        public ?int $addedBy,
+        public ?Md5Sum $md5sum,
+        public ?UserId $addedBy,
         public ?int $rotation,
         public ?float $latitude,
         public ?float $longitude,
@@ -56,7 +61,7 @@ final readonly class Image
     public static function fromEntity(ImageEntity $entity): self
     {
         return new self(
-            id: $entity->id ?? 0,
+            id: $entity->id ?? throw new \LogicException('ImageEntity::$id is only null before persist; fromEntity() expects an already-persisted entity'),
             file: $entity->file,
             dateAvailable: $entity->dateAvailable,
             dateCreation: $entity->dateCreation,
@@ -89,7 +94,7 @@ final readonly class Image
     public static function fromRow(array $row): self
     {
         return new self(
-            id: is_numeric($row['id']) ? (int) $row['id'] : 0,
+            id: ImageId::from(is_numeric($row['id']) ? (int) $row['id'] : 0),
             file: is_string($row['file']) ? $row['file'] : '',
             dateAvailable: is_string($row['date_available']) ? $row['date_available'] : null,
             dateCreation: is_string($row['date_creation'] ?? null) ? $row['date_creation'] : null,
@@ -104,11 +109,11 @@ final readonly class Image
             representativeExt: is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
             dateMetadataUpdate: is_string($row['date_metadata_update'] ?? null) ? $row['date_metadata_update'] : null,
             ratingScore: is_numeric($row['rating_score'] ?? null) ? (float) $row['rating_score'] : null,
-            path: is_string($row['path'] ?? null) ? $row['path'] : '',
-            storageCategoryId: is_numeric($row['storage_category_id'] ?? null) ? (int) $row['storage_category_id'] : null,
+            path: RelPath::from(is_string($row['path'] ?? null) ? $row['path'] : ''),
+            storageCategoryId: is_numeric($row['storage_category_id'] ?? null) ? CategoryId::from((int) $row['storage_category_id']) : null,
             level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
-            md5sum: is_string($row['md5sum'] ?? null) ? $row['md5sum'] : null,
-            addedBy: is_numeric($row['added_by'] ?? null) ? (int) $row['added_by'] : null,
+            md5sum: is_string($row['md5sum'] ?? null) ? Md5Sum::from($row['md5sum']) : null,
+            addedBy: is_numeric($row['added_by'] ?? null) ? UserId::from((int) $row['added_by']) : null,
             rotation: is_numeric($row['rotation'] ?? null) ? (int) $row['rotation'] : null,
             latitude: is_numeric($row['latitude'] ?? null) ? (float) $row['latitude'] : null,
             longitude: is_numeric($row['longitude'] ?? null) ? (float) $row['longitude'] : null,
@@ -127,7 +132,7 @@ final readonly class Image
     public function toArray(): array
     {
         return [
-            'id' => $this->id,
+            'id' => $this->id->value,
             'file' => $this->file,
             'date_available' => $this->dateAvailable,
             'date_creation' => $this->dateCreation,
@@ -142,11 +147,11 @@ final readonly class Image
             'representative_ext' => $this->representativeExt,
             'date_metadata_update' => $this->dateMetadataUpdate,
             'rating_score' => $this->ratingScore,
-            'path' => $this->path,
-            'storage_category_id' => $this->storageCategoryId,
+            'path' => $this->path->value,
+            'storage_category_id' => $this->storageCategoryId?->value,
             'level' => $this->level,
-            'md5sum' => $this->md5sum,
-            'added_by' => $this->addedBy,
+            'md5sum' => $this->md5sum?->value,
+            'added_by' => $this->addedBy?->value,
             'rotation' => $this->rotation,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,

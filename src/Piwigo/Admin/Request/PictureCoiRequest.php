@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Request;
 
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Validation\InputValidator;
@@ -15,11 +16,18 @@ use Piwigo\Validation\InputValidator;
  * absent/empty) -- a self-contained, side-effect-free transform of
  * `l`/`t`/`r`/`b` via the pure `DerivativeUrlCodec::fractionToChar()`
  * utility, with no dependency on renderer-local state.
+ *
+ * `imageId` is `?ImageId`, not a `0`-sentinel `int` -- absent/invalid
+ * `image_id` now surfaces as `null` (via `ImageId::tryFrom()`) instead of
+ * a fake id that used to rely on the eventual `findById()` lookup
+ * returning nothing. `ImageId::from(0)` throws, so the caller must check
+ * for `null` itself rather than passing a sentinel through to the
+ * repository layer.
  */
 final readonly class PictureCoiRequest
 {
     private function __construct(
-        public int $imageId,
+        public ?ImageId $imageId,
         public bool $isSubmitted,
         public ?string $coi,
     ) {}
@@ -38,10 +46,7 @@ final readonly class PictureCoiRequest
         $inputValidator
             ->validate('image_id', $get, false, ValidationPattern::ID);
 
-        $image_id = 0;
-        if (isset($get['image_id']) && is_numeric($get['image_id'])) {
-            $image_id = (int) $get['image_id'];
-        }
+        $image_id = ImageId::tryFrom($get['image_id'] ?? null);
 
         $coi_l = $post['l'] ?? null;
         $coi_l_str = is_string($coi_l) ? $coi_l : '';

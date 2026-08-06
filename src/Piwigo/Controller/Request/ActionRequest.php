@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Request;
 
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Validation\InputValidator;
 
@@ -34,7 +35,7 @@ use Piwigo\Validation\InputValidator;
 final readonly class ActionRequest
 {
     private function __construct(
-        public ?int $id,
+        public ?ImageId $id,
         public ?string $part,
         public bool $formatRequested,
         public ?int $formatId,
@@ -52,10 +53,7 @@ final readonly class ActionRequest
      */
     public static function fromArray(array $get, bool $isFormatsEnabled, InputValidator $inputValidator): self
     {
-        $id = null;
-        if (isset($get['id']) and is_numeric($get['id'])) {
-            $id = (int) $get['id'];
-        }
+        $id = ImageId::tryFrom($get['id'] ?? null);
 
         $part_raw = $get['part'] ?? null;
         $part = (is_string($part_raw) and in_array($part_raw, ['e', 'r', 'f'], true)) ? $part_raw : null;

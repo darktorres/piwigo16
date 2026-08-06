@@ -14,6 +14,9 @@ use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\Md5Sum;
+use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
@@ -1505,9 +1508,9 @@ final class ImageRepository extends EntityRepository
         $em->clear();
     }
 
-    public function findById(int|string $imageId): ?Image
+    public function findById(ImageId $imageId): ?Image
     {
-        $entity = $this->find((int) $imageId);
+        $entity = $this->find($imageId->value);
 
         return $entity === null ? null : Image::fromEntity($entity);
     }
@@ -1516,7 +1519,7 @@ final class ImageRepository extends EntityRepository
      * ImageDerivativeController (i.php)'s own source-file-to-image-row
      * lookup.
      */
-    public function findByPath(string $path): ?Image
+    public function findByPath(RelPath $path): ?Image
     {
         $entity = $this->findOneBy([
             'path' => $path,
@@ -1525,9 +1528,9 @@ final class ImageRepository extends EntityRepository
         return $entity === null ? null : Image::fromEntity($entity);
     }
 
-    public function updateRotation(int $imageId, int $rotationCode): void
+    public function updateRotation(ImageId $imageId, int $rotationCode): void
     {
-        $entity = $this->find($imageId);
+        $entity = $this->find($imageId->value);
         if ($entity === null) {
             return;
         }
@@ -1540,8 +1543,9 @@ final class ImageRepository extends EntityRepository
     /**
      * Fetches full {@see ImageEntity} objects and reuses
      * {@see \Piwigo\Image\Projection\Image::fromEntity()} rather than
-     * fromRow() -- every `ImageEntity` column is a plain scalar type, no
-     * custom Doctrine Type involved.
+     * fromRow(). `i.id` uses the custom `image_id` Doctrine Type --
+     * still a direct swap, `setParameter()`/`IN (:ids)` bind against the
+     * raw scalar column regardless of the mapped PHP-side type.
      *
      * @param  list<int|string>  $ids
      * @return array<int, Image> keyed by image id -- PHP canonicalises a
@@ -1563,7 +1567,7 @@ final class ImageRepository extends EntityRepository
         $byId = [];
         foreach ($entities as $entity) {
             if ($entity->id !== null) {
-                $byId[$entity->id] = Image::fromEntity($entity);
+                $byId[$entity->id->value] = Image::fromEntity($entity);
             }
         }
 

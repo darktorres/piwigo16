@@ -10,6 +10,7 @@ use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Dto\PaginatedResult;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\ActivityLoggerInterface;
@@ -994,7 +995,12 @@ final readonly class ImageService
             $htmlRenderer->fatalError('[' . __FUNCTION__ . '] invalid image identifier ' . htmlentities($imageId));
         }
 
-        $image = $this->repo->findById($imageId);
+        // A numeric-but-non-positive value (e.g. 0) is format-valid but
+        // never a real image id -- treated the same as "not found" below,
+        // not as the format-invalid case above (ImageId::tryFrom() would
+        // reject it for the same reason findById() will never find it).
+        $imageIdVo = ImageId::tryFrom($imageId);
+        $image = $imageIdVo === null ? null : $this->repo->findById($imageIdVo);
         if ($image === null) {
             if ($dieOnMissing) {
                 $htmlRenderer->fatalError('photo ' . $imageId . ' does not exist');
@@ -1112,7 +1118,9 @@ final readonly class ImageService
      */
     public function getImageRow(int|string $imageId): ?array
     {
-        return $this->repo->findById($imageId)?->toArray();
+        $imageIdVo = ImageId::tryFrom($imageId);
+
+        return $imageIdVo === null ? null : $this->repo->findById($imageIdVo)?->toArray();
     }
 
     public function getTotalImageCount(): int

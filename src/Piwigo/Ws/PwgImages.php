@@ -21,6 +21,7 @@ use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Comment\Projection\CommentSummary;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
@@ -690,7 +691,7 @@ final class PwgImages
                 // which need real array semantics.
                 $row = $imageRow->toArray();
                 $image = [];
-                $image['is_favorite'] = isset($favorite_ids[$imageRow->id]);
+                $image['is_favorite'] = isset($favorite_ids[$imageRow->id->value]);
                 foreach (['id', 'width', 'height', 'hit'] as $k) {
                     if (isset($row[$k])) {
                         $image[$k] = $row[$k];
@@ -1677,14 +1678,15 @@ final class PwgImages
             rename("{$filePath}.part", $filePath);
 
             if (isset($params['format_of'])) {
-                $imageRow = $this->imageRepository->findById($params['format_of']);
+                $formatOfId = ImageId::tryFrom($params['format_of']);
+                $imageRow = $formatOfId === null ? null : $this->imageRepository->findById($formatOfId);
                 if ($imageRow === null) {
                     return new PwgError(404, __FUNCTION__ . ' : image_id not found');
                 }
                 $image = $imageRow->toArray();
 
                 $add_status = $this->uploadService
-                    ->addFormat($filePath, $format_ext, $imageRow->id);
+                    ->addFormat($filePath, $format_ext, $imageRow->id->value);
 
                 return [
                     'image_id' => $image['id'],
@@ -2339,7 +2341,8 @@ final class PwgImages
             return new PwgError(403, 'Invalid security token');
         }
 
-        $imageRow = $this->imageRepository->findById($params['image_id']);
+        $imageId = ImageId::tryFrom($params['image_id']);
+        $imageRow = $imageId === null ? null : $this->imageRepository->findById($imageId);
 
         if ($imageRow === null) {
             return new PwgError(404, 'image_id not found');

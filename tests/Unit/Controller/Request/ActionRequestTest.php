@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Controller\Request\ActionRequest;
 use Piwigo\Validation\InputValidator;
 
@@ -19,7 +20,7 @@ test('fromArray returns defaults for an empty GET', function (): void {
 test('fromArray parses id/part for a valid direct request', function (): void {
     $request = ActionRequest::fromArray(['id' => '42', 'part' => 'e'], true, new InputValidator());
 
-    expect($request->id)->toBe(42)
+    expect($request->id)->toEqual(ImageId::from(42))
         ->and($request->part)->toBe('e');
 });
 

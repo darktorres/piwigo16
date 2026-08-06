@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Exception;
 use Override;
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Request\ImageDerivativeRequest;
 use Piwigo\Core\CurrentLogger;
@@ -152,13 +153,14 @@ final class ImageDerivativeController implements ControllerInterface
             && ! str_contains($this->srcLocation, 'themes/')
             && ! str_contains($this->srcLocation, 'plugins/')) {
             try {
-                $row = $imageRepo->findByPath($this->srcLocation);
+                $srcLocationPath = RelPath::tryFrom($this->srcLocation);
+                $row = $srcLocationPath === null ? null : $imageRepo->findByPath($srcLocationPath);
                 if ($row === null) {
                     $this->ierror('Db file path not found', 404);
                 }
 
                 $image_id = $row->id;
-                $this->checkDerivativePermission($conn, $image_id);
+                $this->checkDerivativePermission($conn, $image_id->value);
 
                 if ($row->width !== null) {
                     $this->originalSize = [$row->width, $row->height];
@@ -365,7 +367,7 @@ final class ImageDerivativeController implements ControllerInterface
             // derivative type (trySwitchSource()'s own permission-checked
             // redirect, see its own comment).
             if ($image_id !== null) {
-                $this->ierror($this->urlService->getActionUrl($image_id, 'e', false), 301, [
+                $this->ierror($this->urlService->getActionUrl($image_id->value, 'e', false), 301, [
                     'X-i' => 'No change',
                 ]);
             }

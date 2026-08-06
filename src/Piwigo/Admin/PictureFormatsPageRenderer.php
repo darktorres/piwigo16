@@ -32,18 +32,22 @@ final class PictureFormatsPageRenderer
         $accessControl->checkStatus(AccessLevel::Administrator);
 
         $image_id = PictureFormatsImageIdRequest::fromGlobals($inputValidator)->imageId;
+        if ($image_id === null) {
+            $htmlRenderer
+                ->fatalError('image_id does not exist');
+        }
 
         $conn = DbConnection::build();
         $imageRow = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
             ->findById($image_id);
         if ($imageRow === null) {
             $htmlRenderer
-                ->fatalError('image_id #' . $image_id . ' does not exist');
+                ->fatalError('image_id #' . $image_id->value . ' does not exist');
         }
         $image = $imageRow->toArray();
 
         $formats = [];
-        foreach (EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)->findFormatsForImage($image_id) as $formatRow) {
+        foreach (EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)->findFormatsForImage($image_id->value) as $formatRow) {
             $format = $formatRow->toArray();
             $format['download_url'] = 'action.php?format=' . $formatRow->formatId . '&amp;download';
 

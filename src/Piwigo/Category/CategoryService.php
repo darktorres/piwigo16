@@ -11,6 +11,7 @@ use LogicException;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Common\Dto\PaginatedResult;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
@@ -1601,7 +1602,8 @@ final readonly class CategoryService
      */
     public function getCategoryRepresentantProperties(int|string $imageId, UrlServiceInterface $urlService, ?string $size = null): array
     {
-        $row = EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class)->findById($imageId);
+        $imageIdVo = ImageId::tryFrom($imageId);
+        $row = $imageIdVo === null ? null : EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class)->findById($imageIdVo);
         if ($row === null) {
             throw new Exception("getCategoryRepresentantProperties(): image {$imageId} does not exist (stale representative_picture_id?)");
         }

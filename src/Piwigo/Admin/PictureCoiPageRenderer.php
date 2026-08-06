@@ -49,10 +49,13 @@ final class PictureCoiPageRenderer
 
         $pictureCoiRequest = PictureCoiRequest::fromGlobals($this->inputValidator);
         $image_id = $pictureCoiRequest->imageId;
+        if ($image_id === null) {
+            $htmlRenderer->pageNotFound($this->redirectService, 'Requested photo does not exist');
+        }
 
         if ($pictureCoiRequest->isSubmitted) {
             EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
-                ->updateCoi($image_id, $pictureCoiRequest->coi);
+                ->updateCoi($image_id->value, $pictureCoiRequest->coi);
         }
 
         $image = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)

@@ -21,6 +21,7 @@ use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Comment\Projection\CommentSummary;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
@@ -109,7 +110,7 @@ final class PwgImages
      * @param string $categories_string - "cat_id[,rank];cat_id[,rank]"
      * @param bool $replace_mode - removes old associations
      */
-    private function addImageCategoryRelations(int $image_id, string $categories_string, bool $replace_mode = false): true|PwgError
+    private function addImageCategoryRelations(ImageId $image_id, string $categories_string, bool $replace_mode = false): true|PwgError
     {
         $categoryService = $this->categoryService;
 
@@ -126,7 +127,7 @@ final class PwgImages
 
         if ($categories_string === '') {
             if ($replace_mode) {
-                $this->imageService->deleteImageCategoryRowsForImageIds([$image_id]);
+                $this->imageService->deleteImageCategoryRowsForImageIds([$image_id->value]);
                 $categoryService->updateCategory([]);
             }
             return true;
@@ -153,7 +154,7 @@ final class PwgImages
 
         if (count($cat_ids) === 0) {
             if ($replace_mode) {
-                $this->imageService->deleteImageCategoryRowsForImageIds([$image_id]);
+                $this->imageService->deleteImageCategoryRowsForImageIds([$image_id->value]);
                 $categoryService->updateCategory([]);
             }
             return true;
@@ -210,7 +211,7 @@ final class PwgImages
 
         foreach ($new_cat_ids as $cat_id) {
             $inserts[] = [
-                'image_id' => $image_id,
+                'image_id' => $image_id->value,
                 'category_id' => $cat_id,
                 'rank' => $rank_on_category[$cat_id],
             ];
@@ -337,7 +338,7 @@ final class PwgImages
 
         $permissionCriteria = $this->permissionService->getPermissionCriteria();
 
-        if (! $this->imageService->isImageCommentableWithCondition($params['image_id'], $permissionCriteria)) {
+        if (! $this->imageService->isImageCommentableWithCondition(ImageId::from($params['image_id']), $permissionCriteria)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid image_id');
         }
 
@@ -384,7 +385,7 @@ final class PwgImages
     {
 
         $image_row = $this->imageService->getRowWithCondition(
-            $params['image_id'],
+            ImageId::from($params['image_id']),
             $this->permissionService->getPermissionCriteria()
         );
         if ($image_row === null) {
@@ -416,7 +417,7 @@ final class PwgImages
 
         // -------------------------------------------------------- related categories
         $related_category_rows = $this->imageService->getRelatedCategoriesForImage(
-            $image_id,
+            ImageId::from($image_id),
             $this->permissionService->getPermissionCriteria()
         );
 
@@ -591,7 +592,7 @@ final class PwgImages
     public function rate(array $params, PwgServer $service): PwgError|array
     {
         $accessible = $this->imageService->isImageAccessibleWithCondition(
-            $params['image_id'],
+            ImageId::from($params['image_id']),
             $this->permissionService->getPermissionCriteria()
         );
         if (! $accessible) {
@@ -1068,7 +1069,7 @@ final class PwgImages
                     $params['image_id']
                 );
 
-            $image_ids = $this->imageService->getImageIdsOrderedByRankForCategory($params['category_id']);
+            $image_ids = $this->imageService->getImageIdsOrderedByRankForCategory(CategoryId::from($params['category_id']));
 
             // return data for client
             return [
@@ -1088,18 +1089,21 @@ final class PwgImages
             return new PwgError(WsError::MISSING_PARAM, 'rank is missing');
         }
 
+        $imageId = ImageId::from($params['image_id']);
+        $categoryId = CategoryId::from($params['category_id']);
+
         // does the image really exist?
-        if (! $this->imageService->existsById($params['image_id'])) {
+        if (! $this->imageService->existsById($imageId)) {
             return new PwgError(404, 'image_id not found');
         }
 
         // is the image associated to this category?
-        if (! $this->imageService->isImageInCategory($params['image_id'], $params['category_id'])) {
+        if (! $this->imageService->isImageInCategory($imageId, $categoryId)) {
             return new PwgError(404, 'This image is not associated to this category');
         }
 
         // what is the current higher rank for this category?
-        $max_rank = $this->imageService->getMaxRankForCategory($params['category_id']);
+        $max_rank = $this->imageService->getMaxRankForCategory($categoryId);
 
         if ($max_rank !== null) {
             if ($params['rank'] > $max_rank) {
@@ -1110,10 +1114,10 @@ final class PwgImages
         }
 
         // update rank for all other photos in the same category
-        $this->imageService->incrementRanksFromForCategory($params['category_id'], $params['rank']);
+        $this->imageService->incrementRanksFromForCategory($categoryId, $params['rank']);
 
         // set the new rank for the photo
-        $this->imageService->updateRankForImageInCategory($params['image_id'], $params['category_id'], $params['rank']);
+        $this->imageService->updateRankForImageInCategory($imageId, $categoryId, $params['rank']);
 
         // return data for client
         return [
@@ -1193,7 +1197,7 @@ final class PwgImages
         $logger->debug(__FUNCTION__, 'WS', $params);
 
         // what is the path and other infos about the photo?
-        $image = $this->imageService->getUploadInfoById($params['image_id']);
+        $image = $this->imageService->getUploadInfoById(ImageId::from($params['image_id']));
         if ($image === null) {
             return new PwgError(404, 'image_id not found');
         }
@@ -1283,7 +1287,7 @@ final class PwgImages
         }
 
         if ($params['image_id'] > 0) {
-            if (! $this->imageService->existsById($params['image_id'])) {
+            if (! $this->imageService->existsById(ImageId::from($params['image_id']))) {
                 return new PwgError(404, 'image_id not found');
             }
         }
@@ -1408,7 +1412,7 @@ final class PwgImages
 
         // let's add links between the image and the categories
         if (isset($params['categories'])) {
-            $this->addImageCategoryRelations($image_id, $params['categories']);
+            $this->addImageCategoryRelations(ImageId::from($image_id), $params['categories']);
 
             if ((bool) preg_match('/^\d+/', $params['categories'], $matches)) {
                 $category_id = $matches[0];
@@ -1481,7 +1485,7 @@ final class PwgImages
         }
 
         if ($params['image_id'] > 0) {
-            if (! $this->imageService->existsById($params['image_id'])) {
+            if (! $this->imageService->existsById(ImageId::from($params['image_id']))) {
                 return new PwgError(404, 'image_id not found');
             }
         }
@@ -1701,7 +1705,7 @@ final class PwgImages
             $id_image = null; // null by default
 
             if ($params['update_mode']) {
-                $existing_ids = $this->imageService->getIdsByFilenameInCategory($name, $params['category'][0]);
+                $existing_ids = $this->imageService->getIdsByFilenameInCategory($name, CategoryId::from($params['category'][0]));
                 if ($existing_ids !== []) {
                     $id_image = $existing_ids[0]; // take the id of the already existing image to replace it
                     $add_status = 'update';
@@ -1720,13 +1724,14 @@ final class PwgImages
                     $service
                 );
 
-            $image_infos = $this->imageService->getUploadResultInfoById($image_id);
+            $image_infos = $this->imageService->getUploadResultInfoById(ImageId::from($image_id));
             if ($image_infos === null) {
                 throw new Exception('ws_images_upload(): image fetch failed right after inserting it');
             }
 
-            $nb_photos_in_category = $this->imageService->countImagesInCategory($params['category'][0]);
-            $nb_photos_lounge = $this->imageService->countLoungeImagesPendingForCategory($params['category'][0]);
+            $categoryId = CategoryId::from($params['category'][0]);
+            $nb_photos_in_category = $this->imageService->countImagesInCategory($categoryId);
+            $nb_photos_lounge = $this->imageService->countLoungeImagesPendingForCategory($categoryId);
 
             $category_name = $this->htmlService
                 ->getCatDisplayNameFromId($params['category'][0], null);
@@ -1781,7 +1786,7 @@ final class PwgImages
         }
 
         if ($params['image_id'] > 0) {
-            if (! $this->imageService->existsById($params['image_id'])) {
+            if (! $this->imageService->existsById(ImageId::from($params['image_id']))) {
                 return new PwgError(404, __FUNCTION__ . ' : image_id not found');
             }
         }
@@ -2273,7 +2278,7 @@ final class PwgImages
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
-        $path = $this->imageService->getPathById($params['image_id']);
+        $path = $this->imageService->getPathById(ImageId::from($params['image_id']));
 
         if ($path === null) {
             return new PwgError(404, 'image_id not found');
@@ -2406,7 +2411,7 @@ final class PwgImages
         }
 
         if (count(array_keys($update)) > 0) {
-            $this->imageService->updateFields($params['image_id'], $update);
+            $this->imageService->updateFields($imageId, $update);
             $this->entityManager->clear();
 
             $this->activityService->record('photo', $params['image_id'], 'edit');
@@ -2414,7 +2419,7 @@ final class PwgImages
 
         if (isset($params['categories'])) {
             $this->addImageCategoryRelations(
-                $params['image_id'],
+                $imageId,
                 $params['categories'],
                 ($params['multiple_value_mode'] === 'replace' ? true : false)
             );
@@ -2606,7 +2611,7 @@ final class PwgImages
         $moved_from_lounge = $this->imageService
             ->emptyLounge();
 
-        $nb_photos = $this->imageService->countImagesInCategory($params['category_id']);
+        $nb_photos = $this->imageService->countImagesInCategory(CategoryId::from($params['category_id']));
         $category_name = $this->htmlService
             ->getCatDisplayNameFromId($params['category_id'], null);
 

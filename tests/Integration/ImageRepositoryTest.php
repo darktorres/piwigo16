@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Override;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Core\Kernel;
@@ -619,7 +620,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
             ->executeQuery()
             ->fetchOne();
 
-        $this->repo->updateFields(1, []);
+        $this->repo->updateFields(ImageId::from(1), []);
 
         $after = $this->conn->createQueryBuilder()
             ->select('name')
@@ -673,7 +674,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         // (1,1),(2,1),(3,1),(4,2),(5,2)).
         $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageCategory() . ' WHERE image_id = 1');
 
-        $this->repo->deleteImageCategoryLinksForCategoryIds(1, []);
+        $this->repo->deleteImageCategoryLinksForCategoryIds(ImageId::from(1), []);
 
         $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageCategory() . ' WHERE image_id = 1');
         self::assertSame($before, $after);
@@ -764,19 +765,19 @@ final class ImageRepositoryTest extends IntegrationTestCase
     public function test_find_ids_by_filename_in_category_returns_matching_image_ids(): void
     {
         // Fixture: image 1 is 'fixture-photo-1.jpg', linked to category 1.
-        self::assertSame([1], $this->repo->findIdsByFilenameInCategory('fixture-photo-1.jpg', 1));
+        self::assertSame([1], $this->repo->findIdsByFilenameInCategory('fixture-photo-1.jpg', CategoryId::from(1)));
     }
 
     public function test_find_ids_by_filename_in_category_returns_empty_for_a_filename_not_in_that_category(): void
     {
         // Image 1 matches the filename but is only linked to category 1,
         // not category 2 (category 2 holds images 4 and 5).
-        self::assertSame([], $this->repo->findIdsByFilenameInCategory('fixture-photo-1.jpg', 2));
+        self::assertSame([], $this->repo->findIdsByFilenameInCategory('fixture-photo-1.jpg', CategoryId::from(2)));
     }
 
     public function test_find_upload_result_info_by_id_returns_null_for_a_nonexistent_image(): void
     {
-        self::assertNull($this->repo->findUploadResultInfoById(999_999));
+        self::assertNull($this->repo->findUploadResultInfoById(ImageId::from(999_999)));
     }
 
     public function test_find_ids_by_md5sums_returns_empty_array_for_empty_input(): void
@@ -933,7 +934,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_is_image_accessible_with_condition_is_true_with_no_restriction(): void
     {
-        self::assertTrue($this->repo->isImageAccessibleWithCondition(1, self::noPermissionRestriction()));
+        self::assertTrue($this->repo->isImageAccessibleWithCondition(ImageId::from(1), self::noPermissionRestriction()));
     }
 
     public function test_is_image_accessible_with_condition_applies_the_given_condition(): void
@@ -941,12 +942,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
         // fixture: image 1 belongs to category 1 -- excluding it via
         // forbiddenCategoryIds (checked against ic.category_id) excludes
         // image 1.
-        self::assertFalse($this->repo->isImageAccessibleWithCondition(1, new PermissionCriteria([1], null, null, null, null, null)));
+        self::assertFalse($this->repo->isImageAccessibleWithCondition(ImageId::from(1), new PermissionCriteria([1], null, null, null, null, null)));
     }
 
     public function test_find_row_with_condition_returns_the_matching_row(): void
     {
-        $row = $this->repo->findRowWithCondition(1, self::noPermissionRestriction());
+        $row = $this->repo->findRowWithCondition(ImageId::from(1), self::noPermissionRestriction());
 
         self::assertNotNull($row);
         self::assertSame('fixture-photo-1.jpg', $row['file']);
@@ -954,12 +955,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_row_with_condition_returns_null_when_the_condition_excludes_it(): void
     {
-        self::assertNull($this->repo->findRowWithCondition(1, new PermissionCriteria(null, null, [999_999], null, null, null)));
+        self::assertNull($this->repo->findRowWithCondition(ImageId::from(1), new PermissionCriteria(null, null, [999_999], null, null, null)));
     }
 
     public function test_find_related_categories_for_image_returns_matching_rows(): void
     {
-        $rows = $this->repo->findRelatedCategoriesForImage(1, self::noPermissionRestriction());
+        $rows = $this->repo->findRelatedCategoriesForImage(ImageId::from(1), self::noPermissionRestriction());
 
         self::assertCount(1, $rows);
         self::assertSame(1, $rows[0]['id']);
@@ -968,22 +969,22 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_related_categories_for_image_applies_the_given_condition(): void
     {
-        self::assertSame([], $this->repo->findRelatedCategoriesForImage(1, new PermissionCriteria([1], null, null, null, null, null)));
+        self::assertSame([], $this->repo->findRelatedCategoriesForImage(ImageId::from(1), new PermissionCriteria([1], null, null, null, null, null)));
     }
 
     public function test_is_image_commentable_with_condition_is_true_for_a_commentable_category(): void
     {
-        self::assertTrue($this->repo->isImageCommentableWithCondition(1, self::noPermissionRestriction()));
+        self::assertTrue($this->repo->isImageCommentableWithCondition(ImageId::from(1), self::noPermissionRestriction()));
     }
 
     public function test_is_image_commentable_with_condition_applies_the_given_condition(): void
     {
-        self::assertFalse($this->repo->isImageCommentableWithCondition(1, new PermissionCriteria([1], null, null, null, null, null)));
+        self::assertFalse($this->repo->isImageCommentableWithCondition(ImageId::from(1), new PermissionCriteria([1], null, null, null, null, null)));
     }
 
     public function test_find_visible_categories_for_image_returns_matching_rows(): void
     {
-        $rows = $this->repo->findVisibleCategoriesForImage(1, self::noPermissionRestriction());
+        $rows = $this->repo->findVisibleCategoriesForImage(ImageId::from(1), self::noPermissionRestriction());
 
         self::assertCount(1, $rows);
         self::assertSame(1, $rows[0]['id']);
@@ -991,7 +992,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_visible_categories_for_image_applies_the_given_condition(): void
     {
-        self::assertSame([], $this->repo->findVisibleCategoriesForImage(1, new PermissionCriteria([1], null, null, null, null, null)));
+        self::assertSame([], $this->repo->findVisibleCategoriesForImage(ImageId::from(1), new PermissionCriteria([1], null, null, null, null, null)));
     }
 
     public function test_has_accessible_image_with_author_is_false_when_no_image_has_an_author(): void
@@ -1012,12 +1013,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_is_image_accessible_via_category_with_condition_is_true_with_no_restriction(): void
     {
-        self::assertTrue($this->repo->isImageAccessibleViaCategoryWithCondition(1, self::noPermissionRestriction()));
+        self::assertTrue($this->repo->isImageAccessibleViaCategoryWithCondition(ImageId::from(1), self::noPermissionRestriction()));
     }
 
     public function test_is_image_accessible_via_category_with_condition_applies_the_given_condition(): void
     {
-        self::assertFalse($this->repo->isImageAccessibleViaCategoryWithCondition(1, new PermissionCriteria([1], null, null, null, null, null)));
+        self::assertFalse($this->repo->isImageAccessibleViaCategoryWithCondition(ImageId::from(1), new PermissionCriteria([1], null, null, null, null, null)));
     }
 
     public function test_find_with_conditions_paginated_returns_matching_rows_and_total(): void
@@ -1106,7 +1107,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $this->conn->insert(Tables::lounge(), ['image_id' => $imageId, 'category_id' => 1]);
 
         try {
-            self::assertSame(1, $this->repo->countLoungeImagesPendingForCategory(1));
+            self::assertSame(1, $this->repo->countLoungeImagesPendingForCategory(CategoryId::from(1)));
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
         }
@@ -1114,29 +1115,29 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_is_image_in_category_is_true_for_a_real_link(): void
     {
-        self::assertTrue($this->repo->isImageInCategory(1, 1));
+        self::assertTrue($this->repo->isImageInCategory(ImageId::from(1), CategoryId::from(1)));
     }
 
     public function test_is_image_in_category_is_false_for_no_link(): void
     {
-        self::assertFalse($this->repo->isImageInCategory(1, 2));
+        self::assertFalse($this->repo->isImageInCategory(ImageId::from(1), CategoryId::from(2)));
     }
 
     public function test_find_max_rank_for_category_returns_the_highest_rank(): void
     {
-        self::assertSame(3, $this->repo->findMaxRankForCategory(1));
+        self::assertSame(3, $this->repo->findMaxRankForCategory(CategoryId::from(1)));
     }
 
     public function test_find_max_rank_for_category_returns_null_for_no_ranked_images(): void
     {
-        self::assertNull($this->repo->findMaxRankForCategory(999_999));
+        self::assertNull($this->repo->findMaxRankForCategory(CategoryId::from(999_999)));
     }
 
     public function test_increment_ranks_from_for_category_bumps_ranks_at_or_above_the_given_rank(): void
     {
         $rankIdentifier = $this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
         try {
-            $this->repo->incrementRanksFromForCategory(1, 2);
+            $this->repo->incrementRanksFromForCategory(CategoryId::from(1), 2);
 
             $ranks = $this->conn->createQueryBuilder()
                 ->select('image_id', $rankIdentifier)
@@ -1160,7 +1161,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $rankIdentifier = $this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
         try {
-            $this->repo->updateRankForImageInCategory(1, 1, 99);
+            $this->repo->updateRankForImageInCategory(ImageId::from(1), CategoryId::from(1), 99);
 
             $rank = $this->conn->createQueryBuilder()
                 ->select($rankIdentifier)
@@ -1177,12 +1178,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_count_images_in_category_counts_linked_images(): void
     {
-        self::assertSame(3, $this->repo->countImagesInCategory(1));
+        self::assertSame(3, $this->repo->countImagesInCategory(CategoryId::from(1)));
     }
 
     public function test_find_associated_category_ids_returns_the_real_categories(): void
     {
-        self::assertSame([1], $this->repo->findAssociatedCategoryIds(1));
+        self::assertSame([1], $this->repo->findAssociatedCategoryIds(ImageId::from(1)));
     }
 
     public function test_update_level_for_images_sets_the_level_and_returns_the_affected_count(): void
@@ -1292,7 +1293,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_category_links_for_image_returns_the_real_category(): void
     {
-        $rows = $this->repo->findCategoryLinksForImage(1);
+        $rows = $this->repo->findCategoryLinksForImage(ImageId::from(1));
 
         self::assertSame([[
             'category_id' => 1,
@@ -1364,8 +1365,8 @@ final class ImageRepositoryTest extends IntegrationTestCase
         try {
             $this->repo->deleteImageCategoryLinks([1], 1);
 
-            self::assertFalse($this->repo->isImageInCategory(1, 1));
-            self::assertTrue($this->repo->isImageInCategory(2, 1));
+            self::assertFalse($this->repo->isImageInCategory(ImageId::from(1), CategoryId::from(1)));
+            self::assertTrue($this->repo->isImageInCategory(ImageId::from(2), CategoryId::from(1)));
         } finally {
             $this->conn->rollBack();
         }
@@ -1388,19 +1389,19 @@ final class ImageRepositoryTest extends IntegrationTestCase
     public function test_find_thumbnail_rows_for_category_ordered_by_rank_returns_real_rows_in_rank_order(): void
     {
         // Fixture: category 1 has images 1,2,3 at ranks 1,2,3.
-        $rows = $this->repo->findThumbnailRowsForCategoryOrderedByRank(1);
+        $rows = $this->repo->findThumbnailRowsForCategoryOrderedByRank(CategoryId::from(1));
 
         self::assertSame([1, 2, 3], array_column($rows, 'id'));
     }
 
     public function test_find_image_ids_ordered_by_rank_for_category_returns_real_ids_in_rank_order(): void
     {
-        self::assertSame([1, 2, 3], $this->repo->findImageIdsOrderedByRankForCategory(1));
+        self::assertSame([1, 2, 3], $this->repo->findImageIdsOrderedByRankForCategory(CategoryId::from(1)));
     }
 
     public function test_find_category_ids_for_image_returns_the_real_categories(): void
     {
-        self::assertSame([1], $this->repo->findCategoryIdsForImage(1));
+        self::assertSame([1], $this->repo->findCategoryIdsForImage(ImageId::from(1)));
     }
 
     public function test_find_orphan_image_category_link_ids_returns_empty_when_every_link_has_a_real_image(): void

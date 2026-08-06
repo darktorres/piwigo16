@@ -251,7 +251,7 @@ final class PictureController implements ControllerInterface
                         ->accessDenied($this->redirectService);
                 } else {// try to see if we can access it differently
                     $accessible = $this->imageService->isImageAccessibleWithCondition(
-                        $image_id,
+                        ImageId::from($image_id),
                         $this->permissionService->getPermissionCriteria()
                     );
                     if (! $accessible) {
@@ -597,7 +597,7 @@ final class PictureController implements ControllerInterface
         // PictureCommentRenderer::render()'s own param docblock for the
         // real per-column breakdown.
         $related_categories = $this->imageService->getVisibleCategoriesForImage(
-            $image_id,
+            ImageId::from($image_id),
             $this->permissionService->getPermissionCriteria()
         );
         usort($related_categories, CategoryService::compareByGlobalRank(...));

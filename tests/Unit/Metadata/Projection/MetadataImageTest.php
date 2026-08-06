@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Metadata\Projection\MetadataImage;
 
@@ -28,7 +30,7 @@ function metadataImageTestEntity(?string $representativeExt = 'jpg'): ImageEntit
         representativeExt: $representativeExt,
         dateMetadataUpdate: null,
         ratingScore: null,
-        path: 'upload/2026/08/01/photo.jpg',
+        path: RelPath::from('upload/2026/08/01/photo.jpg'),
         storageCategoryId: null,
         level: 0,
         md5sum: null,
@@ -38,7 +40,7 @@ function metadataImageTestEntity(?string $representativeExt = 'jpg'): ImageEntit
         longitude: null,
         lastmodified: '2026-08-01 12:00:00',
     );
-    $entity->id = 42;
+    $entity->id = ImageId::from(42);
 
     return $entity;
 }

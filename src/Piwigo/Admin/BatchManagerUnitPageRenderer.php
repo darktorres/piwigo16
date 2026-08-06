@@ -11,6 +11,7 @@ use Piwigo\Admin\Request\BatchManagerUnitRequest;
 use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
@@ -356,7 +357,7 @@ final class BatchManagerUnitPageRenderer
                 // a fatal_error() path that never returns.
                 assert($media['image'] !== null);
 
-                foreach ($imageService->getCategoryLinksForImage((int) $row_id) as $item) {
+                foreach ($imageService->getCategoryLinksForImage(ImageId::from((int) $row_id)) as $item) {
                     // Tables::imageCategory()/Tables::categories().category_id/uppercats are
                     // NOT NULL; this guard only defends against the generic mixed
                     // element type a fetched row carries for every column.
@@ -397,7 +398,7 @@ final class BatchManagerUnitPageRenderer
                 $authorizeds = array_diff(
                     array_map(
                         strval(...),
-                        $imageService->getCategoryIdsForImage((int) $row_id)
+                        $imageService->getCategoryIdsForImage(ImageId::from((int) $row_id))
                     ),
                     explode(
                         ',',

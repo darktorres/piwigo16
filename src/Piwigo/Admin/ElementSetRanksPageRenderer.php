@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Request\ElementSetRanksRequest;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -179,7 +180,7 @@ final class ElementSetRanksPageRenderer
         // +-------------------------------------------------------------------+
 
         $thumbnail_rows = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
-            ->findThumbnailRowsForCategoryOrderedByRank($category_id);
+            ->findThumbnailRowsForCategoryOrderedByRank(CategoryId::from($category_id));
         if (count($thumbnail_rows) > 0) {
             // template thumbnail initialization
             $current_rank = 1;

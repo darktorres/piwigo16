@@ -16,6 +16,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -721,7 +722,7 @@ final class PwgUsers
         }
 
         // does the image really exist?
-        if (! $this->imageService->existsById($params['image_id'])) {
+        if (! $this->imageService->existsById(ImageId::from($params['image_id']))) {
             return new PwgError(404, 'image_id not found');
         }
 
@@ -744,7 +745,7 @@ final class PwgUsers
         }
 
         // does the image really exist?
-        if (! $this->imageService->existsById($params['image_id'])) {
+        if (! $this->imageService->existsById(ImageId::from($params['image_id']))) {
             return new PwgError(404, 'image_id not found');
         }
 

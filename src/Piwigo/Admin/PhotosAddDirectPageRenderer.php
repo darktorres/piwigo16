@@ -12,6 +12,7 @@ use Piwigo\Admin\Request\PhotosAddDirectRequest;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
@@ -167,7 +168,7 @@ final class PhotosAddDirectPageRenderer
                 $formats_image_id = $formats_original_info['id'];
 
                 $formats = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
-                    ->findFormatsForImage($formats_image_id);
+                    ->findFormatsForImage(ImageId::from($formats_image_id));
 
                 if ($formats !== []) {
                     $format_strings = [];

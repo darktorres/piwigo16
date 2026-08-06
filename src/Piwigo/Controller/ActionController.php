@@ -132,7 +132,7 @@ final class ActionController implements ControllerInterface
         if (
             ! $is_admin_download
             and ! $this->imageService
-                ->isImageAccessibleViaCategoryWithCondition($image_id->value, $permissionCriteria)
+                ->isImageAccessibleViaCategoryWithCondition($image_id, $permissionCriteria)
         ) {
             return $this->doError(401, 'Access denied');
         }

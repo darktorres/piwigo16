@@ -10,6 +10,7 @@ use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Dto\PaginatedResult;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
@@ -774,7 +775,7 @@ final readonly class ImageService
     /**
      * @param array<string, mixed> $updates
      */
-    public function updateFields(int $imageId, array $updates): void
+    public function updateFields(ImageId $imageId, array $updates): void
     {
         $this->repo->updateFields($imageId, $updates);
     }
@@ -843,7 +844,7 @@ final readonly class ImageService
     /**
      * @return list<array<string, mixed>>
      */
-    public function getCategoryLinksForImage(int $imageId): array
+    public function getCategoryLinksForImage(ImageId $imageId): array
     {
         return $this->repo->findCategoryLinksForImage($imageId);
     }
@@ -851,7 +852,7 @@ final readonly class ImageService
     /**
      * @return list<int>
      */
-    public function getCategoryIdsForImage(int $imageId): array
+    public function getCategoryIdsForImage(ImageId $imageId): array
     {
         return $this->repo->findCategoryIdsForImage($imageId);
     }
@@ -908,7 +909,7 @@ final readonly class ImageService
     /**
      * @param list<int|string> $categoryIds
      */
-    public function deleteImageCategoryLinksForCategoryIds(int $imageId, array $categoryIds): void
+    public function deleteImageCategoryLinksForCategoryIds(ImageId $imageId, array $categoryIds): void
     {
         $this->repo->deleteImageCategoryLinksForCategoryIds($imageId, $categoryIds);
     }
@@ -1020,12 +1021,12 @@ final readonly class ImageService
         return $this->repo->findByIdOrFilePattern($imageId, $imageFile);
     }
 
-    public function isImageAccessibleWithCondition(int $imageId, PermissionCriteria $criteria): bool
+    public function isImageAccessibleWithCondition(ImageId $imageId, PermissionCriteria $criteria): bool
     {
         return $this->repo->isImageAccessibleWithCondition($imageId, $criteria);
     }
 
-    public function isImageAccessibleViaCategoryWithCondition(int $imageId, PermissionCriteria $criteria): bool
+    public function isImageAccessibleViaCategoryWithCondition(ImageId $imageId, PermissionCriteria $criteria): bool
     {
         return $this->repo->isImageAccessibleViaCategoryWithCondition($imageId, $criteria);
     }
@@ -1033,7 +1034,7 @@ final readonly class ImageService
     /**
      * @return ?array<string, mixed>
      */
-    public function getRowWithCondition(int $imageId, PermissionCriteria $criteria): ?array
+    public function getRowWithCondition(ImageId $imageId, PermissionCriteria $criteria): ?array
     {
         return $this->repo->findRowWithCondition($imageId, $criteria);
     }
@@ -1041,12 +1042,12 @@ final readonly class ImageService
     /**
      * @return list<array<string, mixed>>
      */
-    public function getRelatedCategoriesForImage(int $imageId, PermissionCriteria $criteria): array
+    public function getRelatedCategoriesForImage(ImageId $imageId, PermissionCriteria $criteria): array
     {
         return $this->repo->findRelatedCategoriesForImage($imageId, $criteria);
     }
 
-    public function isImageCommentableWithCondition(int $imageId, PermissionCriteria $criteria): bool
+    public function isImageCommentableWithCondition(ImageId $imageId, PermissionCriteria $criteria): bool
     {
         return $this->repo->isImageCommentableWithCondition($imageId, $criteria);
     }
@@ -1054,7 +1055,7 @@ final readonly class ImageService
     /**
      * @return list<array<string, mixed>>
      */
-    public function getVisibleCategoriesForImage(int $imageId, PermissionCriteria $criteria): array
+    public function getVisibleCategoriesForImage(ImageId $imageId, PermissionCriteria $criteria): array
     {
         return $this->repo->findVisibleCategoriesForImage($imageId, $criteria);
     }
@@ -1062,7 +1063,7 @@ final readonly class ImageService
     /**
      * @return list<int>
      */
-    public function getAssociatedCategoryIds(int $imageId): array
+    public function getAssociatedCategoryIds(ImageId $imageId): array
     {
         return $this->repo->findAssociatedCategoryIds($imageId);
     }
@@ -1093,7 +1094,7 @@ final readonly class ImageService
         return $this->repo->findIdsByFilenames($filenames);
     }
 
-    public function getFormatIdByImageAndExt(int $imageId, string $ext): ?int
+    public function getFormatIdByImageAndExt(ImageId $imageId, string $ext): ?int
     {
         return $this->repo->findFormatIdByImageAndExt($imageId, $ext);
     }
@@ -1202,7 +1203,7 @@ final readonly class ImageService
         return $this->repo->hasAccessibleImageWithAuthor($criteria);
     }
 
-    public function existsById(int $id): bool
+    public function existsById(ImageId $id): bool
     {
         return $this->repo->existsById($id);
     }
@@ -1219,12 +1220,12 @@ final readonly class ImageService
     /**
      * @return ?array{path: string, file: string, md5sum: ?string, width: ?int, height: ?int, filesize: ?int}
      */
-    public function getUploadInfoById(int $imageId): ?array
+    public function getUploadInfoById(ImageId $imageId): ?array
     {
         return $this->repo->findUploadInfoById($imageId);
     }
 
-    public function getPathById(int $imageId): ?string
+    public function getPathById(ImageId $imageId): ?string
     {
         return $this->repo->findPathById($imageId);
     }
@@ -1237,7 +1238,7 @@ final readonly class ImageService
     /**
      * @return list<int>
      */
-    public function getIdsByFilenameInCategory(string $filename, int $categoryId): array
+    public function getIdsByFilenameInCategory(string $filename, CategoryId $categoryId): array
     {
         return $this->repo->findIdsByFilenameInCategory($filename, $categoryId);
     }
@@ -1245,17 +1246,17 @@ final readonly class ImageService
     /**
      * @return ?array{id: int, name: ?string, representative_ext: ?string, path: string}
      */
-    public function getUploadResultInfoById(int $imageId): ?array
+    public function getUploadResultInfoById(ImageId $imageId): ?array
     {
         return $this->repo->findUploadResultInfoById($imageId);
     }
 
-    public function countImagesInCategory(int $categoryId): int
+    public function countImagesInCategory(CategoryId $categoryId): int
     {
         return $this->repo->countImagesInCategory($categoryId);
     }
 
-    public function countLoungeImagesPendingForCategory(int $categoryId): int
+    public function countLoungeImagesPendingForCategory(CategoryId $categoryId): int
     {
         return $this->repo->countLoungeImagesPendingForCategory($categoryId);
     }
@@ -1263,27 +1264,27 @@ final readonly class ImageService
     /**
      * @return list<int|string>
      */
-    public function getImageIdsOrderedByRankForCategory(int $categoryId): array
+    public function getImageIdsOrderedByRankForCategory(CategoryId $categoryId): array
     {
         return $this->repo->findImageIdsOrderedByRankForCategory($categoryId);
     }
 
-    public function isImageInCategory(int $imageId, int $categoryId): bool
+    public function isImageInCategory(ImageId $imageId, CategoryId $categoryId): bool
     {
         return $this->repo->isImageInCategory($imageId, $categoryId);
     }
 
-    public function getMaxRankForCategory(int $categoryId): ?int
+    public function getMaxRankForCategory(CategoryId $categoryId): ?int
     {
         return $this->repo->findMaxRankForCategory($categoryId);
     }
 
-    public function incrementRanksFromForCategory(int $categoryId, int $rank): void
+    public function incrementRanksFromForCategory(CategoryId $categoryId, int $rank): void
     {
         $this->repo->incrementRanksFromForCategory($categoryId, $rank);
     }
 
-    public function updateRankForImageInCategory(int $imageId, int $categoryId, int $rank): void
+    public function updateRankForImageInCategory(ImageId $imageId, CategoryId $categoryId, int $rank): void
     {
         $this->repo->updateRankForImageInCategory($imageId, $categoryId, $rank);
     }

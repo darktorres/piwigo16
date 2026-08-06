@@ -13,6 +13,7 @@ use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
@@ -187,7 +188,7 @@ final class PictureModifyPageRenderer
                 ->data;
 
             unset($data['id']);
-            $imageService->updateFields($image_id, $data);
+            $imageService->updateFields(ImageId::from($image_id), $data);
             $this->entityManager->clear();
 
             // time to deal with tags
@@ -375,7 +376,7 @@ final class PictureModifyPageRenderer
         }
 
         $formats = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
-            ->findFormatsForImage($image_id);
+            ->findFormatsForImage(ImageId::from($image_id));
 
         if ($formats !== []) {
             $format_strings = [];
@@ -408,7 +409,7 @@ final class PictureModifyPageRenderer
         $related_categories = [];
         $related_categories_ids = [];
 
-        foreach ($imageService->getCategoryLinksForImage($image_id) as $cat_row) {
+        foreach ($imageService->getCategoryLinksForImage(ImageId::from($image_id)) as $cat_row) {
             $raw_row_category_id = $cat_row['category_id'];
             $row_category_id = (is_int($raw_row_category_id) || is_string($raw_row_category_id)) ? (string) $raw_row_category_id : '';
             $row_uppercats = is_string($cat_row['uppercats']) ? $cat_row['uppercats'] : '';
@@ -454,7 +455,7 @@ final class PictureModifyPageRenderer
         } elseif ($this->currentUser->get()->level >= $image_level) {
             $authorized_category_ids = array_map(
                 strval(...),
-                $imageService->getCategoryIdsForImage($image_id)
+                $imageService->getCategoryIdsForImage(ImageId::from($image_id))
             );
 
             $authorizeds = array_diff(
@@ -485,7 +486,7 @@ final class PictureModifyPageRenderer
         }
 
         // associate to albums
-        $associated_albums = $imageService->getAssociatedCategoryIds($image_id);
+        $associated_albums = $imageService->getAssociatedCategoryIds(ImageId::from($image_id));
 
         $template->assign([
             'associated_albums' => $associated_albums,

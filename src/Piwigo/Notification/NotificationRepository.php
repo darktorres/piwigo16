@@ -264,7 +264,7 @@ final class NotificationRepository
         $byId = [];
         foreach ($entities as $entity) {
             if ($entity->id !== null) {
-                $byId[$entity->id] = Image::fromEntity($entity)->toArray();
+                $byId[$entity->id->value] = Image::fromEntity($entity)->toArray();
             }
         }
 

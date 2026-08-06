@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\Md5Sum;
+use Piwigo\Common\ValueObject\RelPath;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\Projection\Image;
 
@@ -28,7 +33,7 @@ function transientImageEntity(): ImageEntity
         representativeExt: null,
         dateMetadataUpdate: null,
         ratingScore: null,
-        path: 'upload/2026/08/01/photo.jpg',
+        path: RelPath::from('upload/2026/08/01/photo.jpg'),
         storageCategoryId: null,
         level: 0,
         md5sum: null,
@@ -40,20 +45,18 @@ function transientImageEntity(): ImageEntity
     );
 }
 
-test('fromEntity maps a real, already-persisted entity\'s own id, not the ?? 0 fallback', function (): void {
+test('fromEntity maps a real, already-persisted entity\'s own id', function (): void {
     $entity = transientImageEntity();
-    $entity->id = 42;
+    $entity->id = ImageId::from(42);
 
-    expect(Image::fromEntity($entity)->id)->toBe(42);
+    expect(Image::fromEntity($entity)->id)->toEqual(ImageId::from(42));
 });
 
-test('fromEntity defaults id to exactly 0 for a transient (not-yet-persisted) entity, whose real id is still null', function (): void {
-    // Kills line 59's DecrementInteger/IncrementInteger (`?? -1`/`?? 1`
-    // instead of `?? 0`) -- unlike fromRow()'s own NOT-NULL-column
-    // fallbacks (never reachable against a real DB row), $entity->id is
-    // genuinely nullable pre-flush, so this default is real, reachable
-    // behavior, not a defensive guard.
-    expect(Image::fromEntity(transientImageEntity())->id)->toBe(0);
+test('fromEntity throws for a transient (not-yet-persisted) entity, whose real id is still null', function (): void {
+    // $id is the ImageId VO, which has no valid zero-value to fall back
+    // to -- fromEntity() throws instead of defaulting.
+    expect(fn () => Image::fromEntity(transientImageEntity()))
+        ->toThrow(LogicException::class, 'ImageEntity::$id is only null before persist; fromEntity() expects an already-persisted entity');
 });
 
 /**
@@ -80,7 +83,7 @@ function fullImageRow(): array
         'path' => 'upload/2026/08/01/photo.jpg',
         'storage_category_id' => '3',
         'level' => '1',
-        'md5sum' => 'abc123',
+        'md5sum' => 'd41d8cd98f00b204e9800998ecf8427e',
         'added_by' => '5',
         'rotation' => '2',
         'latitude' => '48.8566',
@@ -92,7 +95,7 @@ function fullImageRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $image = Image::fromRow(fullImageRow());
 
-    expect($image->id)->toBe(42)
+    expect($image->id)->toEqual(ImageId::from(42))
         ->and($image->file)->toBe('photo.jpg')
         ->and($image->dateAvailable)->toBe('2026-08-01 12:00:00')
         ->and($image->dateCreation)->toBe('2026-07-30 08:00:00')
@@ -107,11 +110,11 @@ test('fromRow narrows every column to its real type', function (): void {
         ->and($image->representativeExt)->toBe('jpg')
         ->and($image->dateMetadataUpdate)->toBe('2026-07-31')
         ->and($image->ratingScore)->toBe(4.5)
-        ->and($image->path)->toBe('upload/2026/08/01/photo.jpg')
-        ->and($image->storageCategoryId)->toBe(3)
+        ->and($image->path)->toEqual(RelPath::from('upload/2026/08/01/photo.jpg'))
+        ->and($image->storageCategoryId)->toEqual(CategoryId::from(3))
         ->and($image->level)->toBe(1)
-        ->and($image->md5sum)->toBe('abc123')
-        ->and($image->addedBy)->toBe(5)
+        ->and($image->md5sum)->toEqual(Md5Sum::from('d41d8cd98f00b204e9800998ecf8427e'))
+        ->and($image->addedBy)->toEqual(UserId::from(5))
         ->and($image->rotation)->toBe(2)
         ->and($image->latitude)->toBe(48.8566)
         ->and($image->longitude)->toBe(2.3522)
@@ -189,7 +192,7 @@ test('toArray round-trips the exact same DB column shape fromRow narrowed', func
         'path' => 'upload/2026/08/01/photo.jpg',
         'storage_category_id' => 3,
         'level' => 1,
-        'md5sum' => 'abc123',
+        'md5sum' => 'd41d8cd98f00b204e9800998ecf8427e',
         'added_by' => 5,
         'rotation' => 2,
         'latitude' => 48.8566,

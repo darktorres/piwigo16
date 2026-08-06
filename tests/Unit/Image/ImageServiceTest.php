@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Image;
 
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
@@ -1761,8 +1762,8 @@ test('getIdsByFilenameInCategory() delegates straight through to the repository'
     try {
         $service = imageServiceTestNewService($repo, $conn);
 
-        expect($service->getIdsByFilenameInCategory('filenameincat.jpg', 1))->toBe([$imageId]);
-        expect($service->getIdsByFilenameInCategory('no-such-file.jpg', 1))->toBe([]);
+        expect($service->getIdsByFilenameInCategory('filenameincat.jpg', CategoryId::from(1)))->toBe([$imageId]);
+        expect($service->getIdsByFilenameInCategory('no-such-file.jpg', CategoryId::from(1)))->toBe([]);
     } finally {
         $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
         $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);

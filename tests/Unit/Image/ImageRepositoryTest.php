@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -562,7 +563,7 @@ test('findIdsByFilenameInCategory returns real ints for a matching filename/cate
         ->executeStatement();
 
     try {
-        $result = imageRepositoryTestRepo()->findIdsByFilenameInCategory('filename-test.jpg', 1);
+        $result = imageRepositoryTestRepo()->findIdsByFilenameInCategory('filename-test.jpg', CategoryId::from(1));
 
         expect($result)->toBe([$imageId]);
     } finally {

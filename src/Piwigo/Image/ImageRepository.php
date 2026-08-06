@@ -542,7 +542,7 @@ final class ImageRepository extends EntityRepository
      *
      * @param array<string, mixed> $updates
      */
-    public function updateFields(int $imageId, array $updates): void
+    public function updateFields(ImageId $imageId, array $updates): void
     {
         if ($updates === []) {
             return;
@@ -550,7 +550,7 @@ final class ImageRepository extends EntityRepository
 
         new BatchWriter($this->getEntityManager()->getConnection())
             ->singleUpdate(Tables::images(), $updates, [
-                'id' => $imageId,
+                'id' => $imageId->value,
             ]);
     }
 
@@ -703,7 +703,7 @@ final class ImageRepository extends EntityRepository
      * `image_category` -- Ws\PwgImages::upload()'s own "how many photos
      * are still awaiting validation in this category" response field.
      */
-    public function countLoungeImagesPendingForCategory(int $categoryId): int
+    public function countLoungeImagesPendingForCategory(CategoryId $categoryId): int
     {
         $subQuery = $this->getEntityManager()
             ->createQueryBuilder()
@@ -717,7 +717,7 @@ final class ImageRepository extends EntityRepository
             ->from(LoungeEntity::class, 'l')
             ->where('l.categoryId = :categoryId')
             ->andWhere("l.imageId NOT IN ({$subQuery})")
-            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->setParameter('categoryId', $categoryId)
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -943,7 +943,7 @@ final class ImageRepository extends EntityRepository
      *
      * @param list<int|string> $categoryIds
      */
-    public function deleteImageCategoryLinksForCategoryIds(int $imageId, array $categoryIds): void
+    public function deleteImageCategoryLinksForCategoryIds(ImageId $imageId, array $categoryIds): void
     {
         if ($categoryIds === []) {
             return;
@@ -954,7 +954,7 @@ final class ImageRepository extends EntityRepository
             ->delete(ImageCategoryEntity::class, 'ic')
             ->where('ic.imageId = :imageId')
             ->andWhere('ic.categoryId IN (:categoryIds)')
-            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+            ->setParameter('imageId', $imageId)
             ->setParameter('categoryIds', array_map(strval(...), $categoryIds), ArrayParameterType::STRING)
             ->getQuery()
             ->execute();
@@ -1072,12 +1072,12 @@ final class ImageRepository extends EntityRepository
      *
      * @return ?array{path: string, file: string, md5sum: ?string, width: ?int, height: ?int, filesize: ?int}
      */
-    public function findUploadInfoById(int $imageId): ?array
+    public function findUploadInfoById(ImageId $imageId): ?array
     {
         $row = $this->createQueryBuilder('i')
             ->select('i.path', 'i.file', 'i.md5sum', 'i.width', 'i.height', 'i.filesize')
             ->where('i.id = :imageId')
-            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+            ->setParameter('imageId', $imageId)
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult(Query::HYDRATE_ARRAY);
@@ -1749,14 +1749,14 @@ final class ImageRepository extends EntityRepository
      *
      * @return list<array<string, mixed>>
      */
-    public function findThumbnailRowsForCategoryOrderedByRank(int $categoryId): array
+    public function findThumbnailRowsForCategoryOrderedByRank(CategoryId $categoryId): array
     {
         $rows = $this->createQueryBuilder('i')
             ->select('i.id', 'i.file', 'i.path', 'i.representativeExt AS representative_ext', 'i.width', 'i.height', 'i.rotation', 'i.name', 'ic.rank')
             ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
             ->where('ic.categoryId = :categoryId')
             ->orderBy('ic.rank')
-            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->setParameter('categoryId', $categoryId)
             ->getQuery()
             ->getArrayResult();
 
@@ -1787,7 +1787,7 @@ final class ImageRepository extends EntityRepository
      *
      * @return list<int|string>
      */
-    public function findImageIdsOrderedByRankForCategory(int $categoryId): array
+    public function findImageIdsOrderedByRankForCategory(CategoryId $categoryId): array
     {
         return array_values(array_filter(
             $this->getEntityManager()
@@ -1796,7 +1796,7 @@ final class ImageRepository extends EntityRepository
                 ->from(ImageCategoryEntity::class, 'ic')
                 ->where('ic.categoryId = :categoryId')
                 ->orderBy('ic.rank', 'ASC')
-                ->setParameter('categoryId', CategoryId::from($categoryId))
+                ->setParameter('categoryId', $categoryId)
                 ->getQuery()
                 ->getSingleColumnResult(),
             static fn (mixed $v): bool => is_int($v) || is_string($v)
@@ -1807,7 +1807,7 @@ final class ImageRepository extends EntityRepository
      * Whether $imageId is associated to $categoryId -- Ws\PwgImages::
      * setRank()'s own "is this image even in that category" guard.
      */
-    public function isImageInCategory(int $imageId, int $categoryId): bool
+    public function isImageInCategory(ImageId $imageId, CategoryId $categoryId): bool
     {
         $value = $this->getEntityManager()
             ->createQueryBuilder()
@@ -1815,8 +1815,8 @@ final class ImageRepository extends EntityRepository
             ->from(ImageCategoryEntity::class, 'ic')
             ->where('ic.imageId = :imageId')
             ->andWhere('ic.categoryId = :categoryId')
-            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
-            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->setParameter('imageId', $imageId)
+            ->setParameter('categoryId', $categoryId)
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -1833,14 +1833,14 @@ final class ImageRepository extends EntityRepository
      * (NULL when nothing matches), so getSingleScalarResult() never
      * throws here.
      */
-    public function findMaxRankForCategory(int $categoryId): ?int
+    public function findMaxRankForCategory(CategoryId $categoryId): ?int
     {
         $maxRank = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('MAX(ic.rank)')
             ->from(ImageCategoryEntity::class, 'ic')
             ->where('ic.categoryId = :categoryId')
-            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->setParameter('categoryId', $categoryId)
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -1852,7 +1852,7 @@ final class ImageRepository extends EntityRepository
      * $rank -- Ws\PwgImages::setRank()'s own "make room" step before
      * inserting a new rank value.
      */
-    public function incrementRanksFromForCategory(int $categoryId, int $rank): void
+    public function incrementRanksFromForCategory(CategoryId $categoryId, int $rank): void
     {
         $this->getEntityManager()
             ->createQueryBuilder()
@@ -1861,7 +1861,7 @@ final class ImageRepository extends EntityRepository
             ->where('ic.categoryId = :categoryId')
             ->andWhere('ic.rank IS NOT NULL')
             ->andWhere('ic.rank >= :rank')
-            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->setParameter('categoryId', $categoryId)
             ->setParameter('rank', $rank, ParameterType::INTEGER)
             ->getQuery()
             ->execute();
@@ -1871,7 +1871,7 @@ final class ImageRepository extends EntityRepository
      * Sets `rank` for one (imageId, categoryId) image_category row --
      * Ws\PwgImages::setRank()'s own final write.
      */
-    public function updateRankForImageInCategory(int $imageId, int $categoryId, int $rank): void
+    public function updateRankForImageInCategory(ImageId $imageId, CategoryId $categoryId, int $rank): void
     {
         $this->getEntityManager()
             ->createQueryBuilder()
@@ -1880,8 +1880,8 @@ final class ImageRepository extends EntityRepository
             ->where('ic.imageId = :imageId')
             ->andWhere('ic.categoryId = :categoryId')
             ->setParameter('rank', $rank, ParameterType::INTEGER)
-            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
-            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->setParameter('imageId', $imageId)
+            ->setParameter('categoryId', $categoryId)
             ->getQuery()
             ->execute();
     }
@@ -2147,7 +2147,7 @@ final class ImageRepository extends EntityRepository
      *
      * @return list<array<string, mixed>>
      */
-    public function findCategoryLinksForImage(int $imageId): array
+    public function findCategoryLinksForImage(ImageId $imageId): array
     {
         $rows = $this->getEntityManager()
             ->createQueryBuilder()
@@ -2155,7 +2155,7 @@ final class ImageRepository extends EntityRepository
             ->from(ImageCategoryEntity::class, 'ic')
             ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'c.id = ic.categoryId')
             ->where('ic.imageId = :imageId')
-            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+            ->setParameter('imageId', $imageId)
             ->getQuery()
             ->getArrayResult();
 
@@ -2191,7 +2191,7 @@ final class ImageRepository extends EntityRepository
      *
      * @return list<int>
      */
-    public function findCategoryIdsForImage(int $imageId): array
+    public function findCategoryIdsForImage(ImageId $imageId): array
     {
         return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
@@ -2200,7 +2200,7 @@ final class ImageRepository extends EntityRepository
                 ->select('ic.categoryId')
                 ->from(ImageCategoryEntity::class, 'ic')
                 ->where('ic.imageId = :imageId')
-                ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+                ->setParameter('imageId', $imageId)
                 ->getQuery()
                 ->getSingleColumnResult()
         ));
@@ -2361,7 +2361,7 @@ final class ImageRepository extends EntityRepository
      *
      * @return list<int>
      */
-    public function findIdsByFilenameInCategory(string $filename, int $categoryId): array
+    public function findIdsByFilenameInCategory(string $filename, CategoryId $categoryId): array
     {
         return array_values(array_map(
             static fn (mixed $v): int => $v instanceof ImageId ? $v->value : (is_numeric($v) ? (int) $v : 0),
@@ -2371,7 +2371,7 @@ final class ImageRepository extends EntityRepository
                 ->where('i.file = :filename')
                 ->andWhere('ic.categoryId = :categoryId')
                 ->setParameter('filename', $filename)
-                ->setParameter('categoryId', CategoryId::from($categoryId))
+                ->setParameter('categoryId', $categoryId)
                 ->getQuery()
                 ->getSingleColumnResult()
         ));
@@ -2381,12 +2381,16 @@ final class ImageRepository extends EntityRepository
      * `path` for $imageId, or null if it doesn't exist -- Ws\PwgImages::
      * checkFiles()'s own "does the client's local file match ours" lookup.
      */
-    public function findPathById(int $imageId): ?string
+    /**
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE on the primary key.
+     */
+    public function findPathById(ImageId $imageId): ?string
     {
         $row = $this->createQueryBuilder('i')
             ->select('i.path AS path')
             ->where('i.id = :imageId')
-            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+            ->setParameter('imageId', $imageId)
             ->getQuery()
             ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
@@ -2404,12 +2408,12 @@ final class ImageRepository extends EntityRepository
      *
      * @return ?array{id: int, name: ?string, representative_ext: ?string, path: string}
      */
-    public function findUploadResultInfoById(int $imageId): ?array
+    public function findUploadResultInfoById(ImageId $imageId): ?array
     {
         $row = $this->createQueryBuilder('i')
             ->select('i.id', 'i.name', 'i.representativeExt AS representative_ext', 'i.path')
             ->where('i.id = :imageId')
-            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+            ->setParameter('imageId', $imageId)
             ->getQuery()
             ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
@@ -2429,14 +2433,14 @@ final class ImageRepository extends EntityRepository
      * Number of images linked to $categoryId -- Ws\PwgImages::upload()'s
      * own "how many photos are now in this category" response field.
      */
-    public function countImagesInCategory(int $categoryId): int
+    public function countImagesInCategory(CategoryId $categoryId): int
     {
         $value = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('COUNT(ic.imageId)')
             ->from(ImageCategoryEntity::class, 'ic')
             ->where('ic.categoryId = :categoryId')
-            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->setParameter('categoryId', $categoryId)
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -2454,7 +2458,7 @@ final class ImageRepository extends EntityRepository
      * correctly gating Ws\PwgImages::rate()'s own caller, which performs
      * no such check itself.
      */
-    public function isImageAccessibleWithCondition(int $imageId, PermissionCriteria $criteria): bool
+    public function isImageAccessibleWithCondition(ImageId $imageId, PermissionCriteria $criteria): bool
     {
         $qb = $this->getEntityManager()
             ->createQueryBuilder()
@@ -2463,7 +2467,7 @@ final class ImageRepository extends EntityRepository
             ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
             ->where('i.id = :imageId')
             ->setMaxResults(1)
-            ->setParameter('imageId', $imageId, ParameterType::INTEGER);
+            ->setParameter('imageId', $imageId);
 
         self::applyCondition($qb, SqlCondition::combine(
             'AND',
@@ -2493,7 +2497,7 @@ final class ImageRepository extends EntityRepository
      *
      * @return ?array<string, mixed>
      */
-    public function findRowWithCondition(int $imageId, PermissionCriteria $criteria): ?array
+    public function findRowWithCondition(ImageId $imageId, PermissionCriteria $criteria): ?array
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -2502,7 +2506,7 @@ final class ImageRepository extends EntityRepository
             ->from(Tables::images())
             ->where('id = :imageId')
             ->setMaxResults(1)
-            ->setParameter('imageId', $imageId, ParameterType::INTEGER);
+            ->setParameter('imageId', $imageId->value, ParameterType::INTEGER);
 
         self::applyCondition($qb, SqlCondition::combine(
             'AND',
@@ -2529,7 +2533,7 @@ final class ImageRepository extends EntityRepository
      *
      * @return list<array<string, mixed>>
      */
-    public function findRelatedCategoriesForImage(int $imageId, PermissionCriteria $criteria): array
+    public function findRelatedCategoriesForImage(ImageId $imageId, PermissionCriteria $criteria): array
     {
         $qb = $this->getEntityManager()
             ->createQueryBuilder()
@@ -2537,7 +2541,7 @@ final class ImageRepository extends EntityRepository
             ->from(ImageCategoryEntity::class, 'ic')
             ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'ic.categoryId = c.id')
             ->where('ic.imageId = :imageId')
-            ->setParameter('imageId', $imageId, ParameterType::INTEGER);
+            ->setParameter('imageId', $imageId);
 
         self::applyCondition($qb, $criteria->forbiddenCategoriesCondition('ic.categoryId'));
 
@@ -2567,7 +2571,7 @@ final class ImageRepository extends EntityRepository
      * $criteria->imageAccessIds both apply here, against `ic.imageId`
      * (not maxLevel).
      */
-    public function isImageCommentableWithCondition(int $imageId, PermissionCriteria $criteria): bool
+    public function isImageCommentableWithCondition(ImageId $imageId, PermissionCriteria $criteria): bool
     {
         $qb = $this->getEntityManager()
             ->createQueryBuilder()
@@ -2577,7 +2581,7 @@ final class ImageRepository extends EntityRepository
             ->where('c.commentable = :true')
             ->andWhere('ic.imageId = :imageId')
             ->setParameter('true', true)
-            ->setParameter('imageId', $imageId, ParameterType::INTEGER);
+            ->setParameter('imageId', $imageId);
 
         self::applyCondition($qb, SqlCondition::combine(
             'AND',
@@ -2606,7 +2610,7 @@ final class ImageRepository extends EntityRepository
      *
      * @return list<array<string, mixed>>
      */
-    public function findVisibleCategoriesForImage(int $imageId, PermissionCriteria $criteria): array
+    public function findVisibleCategoriesForImage(ImageId $imageId, PermissionCriteria $criteria): array
     {
         $qb = $this->getEntityManager()
             ->createQueryBuilder()
@@ -2614,7 +2618,7 @@ final class ImageRepository extends EntityRepository
             ->from(ImageCategoryEntity::class, 'ic')
             ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'ic.categoryId = c.id')
             ->where('ic.imageId = :imageId')
-            ->setParameter('imageId', $imageId, ParameterType::INTEGER);
+            ->setParameter('imageId', $imageId);
 
         self::applyCondition($qb, SqlCondition::combine(
             'AND',
@@ -2650,7 +2654,7 @@ final class ImageRepository extends EntityRepository
      *
      * @return list<int>
      */
-    public function findAssociatedCategoryIds(int $imageId): array
+    public function findAssociatedCategoryIds(ImageId $imageId): array
     {
         return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
@@ -2660,7 +2664,7 @@ final class ImageRepository extends EntityRepository
                 ->from(CategoryEntity::class, 'c')
                 ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'c.id = ic.categoryId')
                 ->where('ic.imageId = :imageId')
-                ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+                ->setParameter('imageId', $imageId)
                 ->getQuery()
                 ->getSingleColumnResult()
         ));
@@ -2759,7 +2763,7 @@ final class ImageRepository extends EntityRepository
      * row could in principle match; setMaxResults(1) is paired with
      * getOneOrNullResult() to avoid a throw in that case.
      */
-    public function findFormatIdByImageAndExt(int $imageId, string $ext): ?int
+    public function findFormatIdByImageAndExt(ImageId $imageId, string $ext): ?int
     {
         $row = $this->getEntityManager()
             ->createQueryBuilder()
@@ -2816,7 +2820,7 @@ final class ImageRepository extends EntityRepository
      * $criteria->forbiddenCategoryIds applies against `ic.categoryId` and
      * imageAccessIds against `ic.imageId`, not maxLevel.
      */
-    public function isImageAccessibleViaCategoryWithCondition(int $imageId, PermissionCriteria $criteria): bool
+    public function isImageAccessibleViaCategoryWithCondition(ImageId $imageId, PermissionCriteria $criteria): bool
     {
         $qb = $this->getEntityManager()
             ->createQueryBuilder()
@@ -2825,7 +2829,7 @@ final class ImageRepository extends EntityRepository
             ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.categoryId = c.id')
             ->where('ic.imageId = :imageId')
             ->setMaxResults(1)
-            ->setParameter('imageId', $imageId, ParameterType::INTEGER);
+            ->setParameter('imageId', $imageId);
 
         self::applyCondition($qb, SqlCondition::combine(
             'AND',
@@ -2914,12 +2918,16 @@ final class ImageRepository extends EntityRepository
      * Whether an image with this id exists -- Ws\PwgCategories::
      * setRepresentative()'s own existence check.
      */
-    public function existsById(int $id): bool
+    /**
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE on the primary key.
+     */
+    public function existsById(ImageId $id): bool
     {
         $value = $this->createQueryBuilder('i')
             ->select('COUNT(i.id)')
             ->where('i.id = :id')
-            ->setParameter('id', $id, ParameterType::INTEGER)
+            ->setParameter('id', $id)
             ->getQuery()
             ->getSingleScalarResult();
 

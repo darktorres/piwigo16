@@ -22,6 +22,7 @@ use Piwigo\Category\CategoryListCriteria;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryTreeCache;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -1022,7 +1023,7 @@ final class PwgCategories
         }
 
         // does the image really exist?
-        if (! $this->imageService->existsById($params['image_id'])) {
+        if (! $this->imageService->existsById(ImageId::from($params['image_id']))) {
             return new PwgError(404, 'image_id not found');
         }
 

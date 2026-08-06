@@ -564,7 +564,7 @@ final class UploadService
                     $update['level'] = $level;
                 }
 
-                $this->imageService->updateFields($image_id, $update);
+                $this->imageService->updateFields(ImageId::from($image_id), $update);
             } else {
                 // database registration
                 $file = $original_filename ?? basename($file_path);
@@ -833,7 +833,7 @@ final class UploadService
 
         $filesize = (int) $file_infos['filesize'];
 
-        $existing_format_id = $this->imageService->getFormatIdByImageAndExt((int) $format_of, $format_ext);
+        $existing_format_id = $this->imageService->getFormatIdByImageAndExt(ImageId::from((int) $format_of), $format_ext);
         if ($existing_format_id !== null) {
             $this->imageService->updateFormatFilesize($existing_format_id, $filesize);
             $format_id = $existing_format_id;

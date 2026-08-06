@@ -2,10 +2,14 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\Md5Sum;
+use Piwigo\Common\ValueObject\RelPath;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 
 /**
- * @return array{file: string, dateAvailable: ?string, dateCreation: ?string, name: ?string, comment: ?string, author: ?string, hit: int, filesize: ?int, width: ?int, height: ?int, coi: ?string, representativeExt: ?string, dateMetadataUpdate: ?string, ratingScore: ?float, path: string, storageCategoryId: ?int, level: int, md5sum: ?string, addedBy: ?int, rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: string}
+ * @return array{file: string, dateAvailable: ?string, dateCreation: ?string, name: ?string, comment: ?string, author: ?string, hit: int, filesize: ?int, width: ?int, height: ?int, coi: ?string, representativeExt: ?string, dateMetadataUpdate: ?string, ratingScore: ?float, path: RelPath, storageCategoryId: ?CategoryId, level: int, md5sum: ?Md5Sum, addedBy: ?UserId, rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: string}
  */
 function baseImageArgs(): array
 {
@@ -24,11 +28,11 @@ function baseImageArgs(): array
         'representativeExt' => 'webp',
         'dateMetadataUpdate' => '2026-07-19',
         'ratingScore' => 4.75,
-        'path' => 'galleries/2026/07/sunset-beach.jpg',
-        'storageCategoryId' => 9,
+        'path' => RelPath::from('galleries/2026/07/sunset-beach.jpg'),
+        'storageCategoryId' => CategoryId::from(9),
         'level' => 2,
-        'md5sum' => '9e107d9d372bb6826bd81d3542a419d6',
-        'addedBy' => 11,
+        'md5sum' => Md5Sum::from('9e107d9d372bb6826bd81d3542a419d6'),
+        'addedBy' => UserId::from(11),
         'rotation' => 3,
         'latitude' => 43.2965,
         'longitude' => 5.3698,
@@ -54,11 +58,11 @@ test('constructs with distinct values for every property', function (): void {
         ->and($image->representativeExt)->toBe('webp')
         ->and($image->dateMetadataUpdate)->toBe('2026-07-19')
         ->and($image->ratingScore)->toBe(4.75)
-        ->and($image->path)->toBe('galleries/2026/07/sunset-beach.jpg')
-        ->and($image->storageCategoryId)->toBe(9)
+        ->and($image->path)->toEqual(RelPath::from('galleries/2026/07/sunset-beach.jpg'))
+        ->and($image->storageCategoryId)->toEqual(CategoryId::from(9))
         ->and($image->level)->toBe(2)
-        ->and($image->md5sum)->toBe('9e107d9d372bb6826bd81d3542a419d6')
-        ->and($image->addedBy)->toBe(11)
+        ->and($image->md5sum)->toEqual(Md5Sum::from('9e107d9d372bb6826bd81d3542a419d6'))
+        ->and($image->addedBy)->toEqual(UserId::from(11))
         ->and($image->rotation)->toBe(3)
         ->and($image->latitude)->toBe(43.2965)
         ->and($image->longitude)->toBe(5.3698)

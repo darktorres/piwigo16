@@ -15,6 +15,7 @@ use Doctrine\DBAL\ParameterType;
 use Piwigo\Comment\CommentApiCriteria;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -228,15 +229,15 @@ final class CommentRepositoryTest extends IntegrationTestCase
         // is ever touched by insertFixtureComment() (hardcoded to
         // image_id 1), so both stay deterministic across this class's
         // full test run regardless of test order.
-        self::assertSame(1, $this->repo->countForImage(2, true));
-        self::assertSame(1, $this->repo->countForImage(2, false));
-        self::assertSame(0, $this->repo->countForImage(4, true));
-        self::assertSame(1, $this->repo->countForImage(4, false));
+        self::assertSame(1, $this->repo->countForImage(ImageId::from(2), true));
+        self::assertSame(1, $this->repo->countForImage(ImageId::from(2), false));
+        self::assertSame(0, $this->repo->countForImage(ImageId::from(4), true));
+        self::assertSame(1, $this->repo->countForImage(ImageId::from(4), false));
     }
 
     public function test_count_for_image_returns_zero_for_an_image_with_no_comments(): void
     {
-        self::assertSame(0, $this->repo->countForImage(999999, false));
+        self::assertSame(0, $this->repo->countForImage(ImageId::from(999999), false));
     }
 
     public function test_find_summaries_for_image_returns_the_matching_summary(): void
@@ -244,7 +245,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         // fixture: image 2 has comment 2 (validated), untouched by
         // insertFixtureComment() (hardcoded to image_id 1) -- deterministic
         // across this class's full test run regardless of test order.
-        $summaries = $this->repo->findSummariesForImage(2, false, 10, 0);
+        $summaries = $this->repo->findSummariesForImage(ImageId::from(2), false, 10, 0);
 
         self::assertCount(1, $summaries);
         self::assertSame(2, $summaries[0]->id->value);
@@ -255,8 +256,8 @@ final class CommentRepositoryTest extends IntegrationTestCase
     public function test_find_summaries_for_image_excludes_unvalidated_when_restricted(): void
     {
         // fixture: image 4 has only comment 5, unvalidated.
-        self::assertSame([], $this->repo->findSummariesForImage(4, true, 10, 0));
-        self::assertCount(1, $this->repo->findSummariesForImage(4, false, 10, 0));
+        self::assertSame([], $this->repo->findSummariesForImage(ImageId::from(4), true, 10, 0));
+        self::assertCount(1, $this->repo->findSummariesForImage(ImageId::from(4), false, 10, 0));
     }
 
     public function test_find_summaries_for_image_respects_the_limit(): void
@@ -264,8 +265,8 @@ final class CommentRepositoryTest extends IntegrationTestCase
         $this->repo->insert(['author' => 'fsfi_a', 'authorId' => 1, 'anonymousId' => '10.30.0.30', 'content' => 'fsfi content A', 'validated' => true, 'imageId' => 5, 'websiteUrl' => null, 'email' => null]);
         $this->repo->insert(['author' => 'fsfi_b', 'authorId' => 1, 'anonymousId' => '10.30.0.31', 'content' => 'fsfi content B', 'validated' => true, 'imageId' => 5, 'websiteUrl' => null, 'email' => null]);
 
-        self::assertCount(2, $this->repo->findSummariesForImage(5, false, 10, 0));
-        self::assertCount(1, $this->repo->findSummariesForImage(5, false, 1, 0));
+        self::assertCount(2, $this->repo->findSummariesForImage(ImageId::from(5), false, 10, 0));
+        self::assertCount(1, $this->repo->findSummariesForImage(ImageId::from(5), false, 1, 0));
     }
 
     public function test_find_for_image_returns_matching_rows_joined_with_user_email(): void
@@ -274,7 +275,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         // own mail_address is NULL -- this exercises the LEFT JOIN's own
         // "known user, no email on file" case, not "unknown/anonymous
         // author" (author_id IS NULL), which findForImage() also allows.
-        $rows = $this->repo->findForImage(2, true, 'ASC', 10, 0);
+        $rows = $this->repo->findForImage(ImageId::from(2), true, 'ASC', 10, 0);
 
         self::assertCount(1, $rows);
         self::assertEquals(CommentId::from(2), $rows[0]->id);
@@ -285,12 +286,12 @@ final class CommentRepositoryTest extends IntegrationTestCase
     public function test_find_for_image_excludes_unvalidated_when_restricted(): void
     {
         // fixture: image 4 has only comment 5, which is unvalidated.
-        self::assertSame([], $this->repo->findForImage(4, true, 'ASC', 10, 0));
+        self::assertSame([], $this->repo->findForImage(ImageId::from(4), true, 'ASC', 10, 0));
     }
 
     public function test_find_for_image_includes_unvalidated_when_not_restricted(): void
     {
-        $rows = $this->repo->findForImage(4, false, 'ASC', 10, 0);
+        $rows = $this->repo->findForImage(ImageId::from(4), false, 'ASC', 10, 0);
 
         self::assertCount(1, $rows);
         self::assertEquals(CommentId::from(5), $rows[0]->id);
@@ -306,10 +307,10 @@ final class CommentRepositoryTest extends IntegrationTestCase
         $this->repo->insert(['author' => 'pager_a', 'authorId' => 1, 'anonymousId' => '10.20.0.1', 'content' => 'Page test A', 'validated' => true, 'imageId' => 3, 'websiteUrl' => null, 'email' => null]);
         $this->repo->insert(['author' => 'pager_b', 'authorId' => 1, 'anonymousId' => '10.20.0.2', 'content' => 'Page test B', 'validated' => true, 'imageId' => 3, 'websiteUrl' => null, 'email' => null]);
 
-        self::assertSame(3, $this->repo->countForImage(3, true));
+        self::assertSame(3, $this->repo->countForImage(ImageId::from(3), true));
 
-        $firstPage = $this->repo->findForImage(3, true, 'ASC', 2, 0);
-        $secondPage = $this->repo->findForImage(3, true, 'ASC', 2, 2);
+        $firstPage = $this->repo->findForImage(ImageId::from(3), true, 'ASC', 2, 0);
+        $secondPage = $this->repo->findForImage(ImageId::from(3), true, 'ASC', 2, 2);
 
         self::assertCount(2, $firstPage);
         self::assertCount(1, $secondPage);
@@ -322,7 +323,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
     public function test_find_for_image_returns_empty_for_an_image_with_no_comments(): void
     {
-        self::assertSame([], $this->repo->findForImage(999999, false, 'ASC', 10, 0));
+        self::assertSame([], $this->repo->findForImage(ImageId::from(999999), false, 'ASC', 10, 0));
     }
 
     public function test_count_validated_by_image_ids_short_circuits_on_an_empty_list(): void

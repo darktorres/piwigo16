@@ -16,7 +16,9 @@ interface CommentCounterInterface
 {
     /**
      * @param  list<int|string>  $imageIds
-     * @return array<string, int> keyed by image id
+     * @return array<int, int> keyed by image id -- PHP canonicalises a
+     *   numeric-string array key back to an int key, so this is always
+     *   int-keyed at runtime regardless of $imageIds' own element types.
      */
     public function countValidatedByImageIds(array $imageIds): array;
 }

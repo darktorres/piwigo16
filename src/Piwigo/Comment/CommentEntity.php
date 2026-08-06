@@ -6,6 +6,7 @@ namespace Piwigo\Comment;
 
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Common\ValueObject\ImageId;
 
 /**
  * Maps the `comments` table (`piwigo_comments` once
@@ -34,8 +35,8 @@ final class CommentEntity
     public ?CommentId $id = null;
 
     public function __construct(
-        #[ORM\Column(name: 'image_id', type: 'integer')]
-        public int $imageId,
+        #[ORM\Column(name: 'image_id', type: 'image_id')]
+        public ImageId $imageId,
         #[ORM\Column(type: 'string', length: 19, nullable: true)]
         public ?string $date,
         #[ORM\Column(type: 'string', length: 255, nullable: true)]

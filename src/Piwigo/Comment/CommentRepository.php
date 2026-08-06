@@ -16,6 +16,7 @@ use Piwigo\Comment\Projection\Comment;
 use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\Env;
 use Piwigo\Db\Tables;
@@ -62,7 +63,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->format('Y-m-d H:i:s');
 
         $entity = new CommentEntity(
-            imageId: $data['imageId'],
+            imageId: ImageId::from($data['imageId']),
             date: $now,
             author: $data['author'],
             email: $data['email'],
@@ -428,7 +429,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         }
 
         if ($criteria->imageId !== null && $criteria->imageId !== 0) {
-            $criteriaObj->andWhere($expr->eq('imageId', $criteria->imageId));
+            $criteriaObj->andWhere($expr->eq('imageId', ImageId::from($criteria->imageId)));
         }
 
         if ($criteria->minDate !== null) {
@@ -498,7 +499,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * viewers). Single-table, static WHERE -- no join or aggregate here
      * that DQL can't express.
      */
-    public function countForImage(int $imageId, bool $onlyValidated): int
+    public function countForImage(ImageId $imageId, bool $onlyValidated): int
     {
         $qb = $this->getEntityManager()
             ->createQueryBuilder()
@@ -527,7 +528,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      *
      * @return list<CommentSummary>
      */
-    public function findSummariesForImage(int $imageId, bool $onlyValidated, int $limit, int $offset): array
+    public function findSummariesForImage(ImageId $imageId, bool $onlyValidated, int $limit, int $offset): array
     {
         $qb = $this->getEntityManager()
             ->createQueryBuilder()
@@ -574,15 +575,20 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
+     * Further SQL-modernization audit, Item 14: converted to real DQL --
+     * single-table, static WHERE/GROUP BY, no join DQL can't express.
+     * `imageId` uses the `image_id` custom Doctrine Type, so the selected
+     * `c.imageId` hydrates as a real {@see ImageId} under
+     * `getArrayResult()`, unwrapped below.
+     *
      * Validated comment count per image, for a batch of images at once
      * (`CategoryDefaultRenderer`'s main-page thumbnail grid, one query
-     * instead of one `countForImage()` call per thumbnail). Single-table,
-     * static WHERE/GROUP BY -- no join here that DQL can't express;
-     * imageId/COUNT(c.id) are plain integers, no custom Doctrine Type
-     * involved (unlike c.id elsewhere in this class).
+     * instead of one `countForImage()` call per thumbnail).
      *
      * @param  list<int|string>  $imageIds
-     * @return array<string, int> keyed by image id
+     * @return array<int, int> keyed by image id -- PHP canonicalises a
+     *   numeric-string array key back to an int key, so this is always
+     *   int-keyed at runtime regardless of $imageIds' own element types.
      */
     #[Override]
     public function countValidatedByImageIds(array $imageIds): array
@@ -611,8 +617,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
             $imageId = $row['imageId'] ?? null;
             $nbComments = $row['nbComments'] ?? null;
-            if (is_scalar($imageId) && is_numeric($nbComments)) {
-                $byImageId[(string) $imageId] = (int) $nbComments;
+            if ($imageId instanceof ImageId && is_numeric($nbComments)) {
+                $byImageId[(string) $imageId->value] = (int) $nbComments;
             }
         }
 
@@ -635,7 +641,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * @return list<Comment>
      */
     public function findForImage(
-        int $imageId,
+        ImageId $imageId,
         bool $onlyValidated,
         string $order,
         int $limit,

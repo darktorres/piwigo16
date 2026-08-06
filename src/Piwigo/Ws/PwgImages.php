@@ -501,13 +501,13 @@ final class PwgImages
         $only_validated_comments = ! $this->accessControl->isAdmin();
         $commentService = $this->commentService;
 
-        $nb_comments = $commentService->countForImage($image_id, $only_validated_comments);
+        $nb_comments = $commentService->countForImage(ImageId::from($image_id), $only_validated_comments);
 
         if ($nb_comments > 0 and $params['comments_per_page'] > 0) {
             $related_comments = array_map(
                 static fn (CommentSummary $summary): array => $summary->toArray(),
                 $commentService->getSummariesForImage(
-                    $image_id,
+                    ImageId::from($image_id),
                     $only_validated_comments,
                     $params['comments_per_page'],
                     $params['comments_per_page'] * $params['comments_page']

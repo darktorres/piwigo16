@@ -9,6 +9,7 @@ use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -115,7 +116,7 @@ final readonly class CommentService
         return $this->repo->countUnvalidated();
     }
 
-    public function countForImage(int $imageId, bool $onlyValidated): int
+    public function countForImage(ImageId $imageId, bool $onlyValidated): int
     {
         return $this->repo->countForImage($imageId, $onlyValidated);
     }
@@ -123,7 +124,7 @@ final readonly class CommentService
     /**
      * @return list<CommentSummary>
      */
-    public function getSummariesForImage(int $imageId, bool $onlyValidated, int $limit, int $offset): array
+    public function getSummariesForImage(ImageId $imageId, bool $onlyValidated, int $limit, int $offset): array
     {
         return $this->repo->findSummariesForImage($imageId, $onlyValidated, $limit, $offset);
     }

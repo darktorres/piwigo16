@@ -6,6 +6,7 @@ namespace Piwigo\Comment\Projection;
 
 use InvalidArgumentException;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Common\ValueObject\ImageId;
 
 /**
  * Typed row shape for `piwigo_comments` (P17-23 Stage 1b, Comment domain --
@@ -84,7 +85,7 @@ final readonly class Comment
             authorId: is_numeric($row['author_id'] ?? null) ? (int) $row['author_id'] : null,
             userEmail: is_string($row['user_email'] ?? null) ? $row['user_email'] : null,
             date: is_string($row['date'] ?? null) ? $row['date'] : null,
-            imageId: is_numeric($row['image_id'] ?? null) ? (int) $row['image_id'] : 0,
+            imageId: ($row['image_id'] ?? null) instanceof ImageId ? $row['image_id']->value : (is_numeric($row['image_id'] ?? null) ? (int) $row['image_id'] : 0),
             websiteUrl: is_string($row['website_url'] ?? null) ? $row['website_url'] : null,
             email: is_string($row['email'] ?? null) ? $row['email'] : null,
             content: is_string($row['content'] ?? null) ? $row['content'] : null,

@@ -10,6 +10,7 @@ use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -153,7 +154,7 @@ final class PictureCommentRenderer
         $onlyValidated = ! $accessLevelChecker->isAdmin();
 
         // number of comments for this picture
-        $nbComments = $commentRepository->countForImage($imageId, $onlyValidated);
+        $nbComments = $commentRepository->countForImage(ImageId::from($imageId), $onlyValidated);
 
         // navigation bar creation
         $nbCommentPage = $currentConfig->nbCommentPage();
@@ -186,7 +187,7 @@ final class PictureCommentRenderer
             ]);
 
             $rows = $commentRepository->findForImage(
-                $imageId,
+                ImageId::from($imageId),
                 $onlyValidated,
                 $commentsOrder,
                 $nbCommentPage,

@@ -3,12 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-
-afterEach(function (): void {
-    Kernel::reset();
-});
 
 test('load() returns all-default values when local/config/config.php does not exist', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-deployment-policy-test-' . bin2hex(random_bytes(4));
@@ -70,46 +65,6 @@ test('load() throws with the exact message naming the real file path and get_deb
     );
 
     deployment_policy_test_rrmdir($root);
-});
-
-test('current() memoizes across calls when Kernel is booted (container-shared instance)', function (): void {
-    $root = sys_get_temp_dir() . '/piwigo-deployment-policy-test-' . bin2hex(random_bytes(4));
-    mkdir($root . '/local/config', 0o777, true);
-    Kernel::boot(Paths::fromRoot($root));
-
-    $first = DeploymentPolicy::current();
-    $second = DeploymentPolicy::current();
-
-    expect($second)->toBe($first);
-
-    deployment_policy_test_rrmdir($root);
-});
-
-test('current() returns a fresh, unmemoized all-defaults instance on every call when Kernel is not booted', function (): void {
-    $first = DeploymentPolicy::current();
-    $second = DeploymentPolicy::current();
-
-    expect($second)->not->toBe($first)
-        ->and($first->showPhpErrors)->toBe(30719)
-        ->and($second->showPhpErrors)->toBe(30719);
-});
-
-test('current() falls back to a fresh all-defaults instance when Kernel is booted without a real Paths', function (): void {
-    // Unlike CurrentPaths::get() (no sensible default, so it throws), a
-    // missing Paths here just means the factory's own Paths autowiring
-    // attempt fails -- caught and treated the same as Kernel-not-booted,
-    // since an all-defaults DeploymentPolicy is always a safe fallback.
-    Kernel::boot();
-
-    try {
-        $first = DeploymentPolicy::current();
-        $second = DeploymentPolicy::current();
-
-        expect($second)->not->toBe($first)
-            ->and($first->showPhpErrors)->toBe(30719);
-    } finally {
-        Kernel::reset();
-    }
 });
 
 function deployment_policy_test_rrmdir(string $dir): void

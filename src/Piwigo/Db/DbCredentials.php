@@ -33,17 +33,22 @@ use Psr\Container\ContainerExceptionInterface;
  * mid-request `seed()` call must still see the freshly-submitted values
  * afterward, not a stale copy captured at construction time.
  *
- * `current()` is the `@deprecated` transitional bridge for the
+ * `current()` was originally the `@deprecated` transitional bridge for the
  * static-utility classes with no constructor at all (`Tables`,
- * `DbConnection`) -- unlike every other shim backing a value with no safe
- * default in this campaign, it gracefully falls back to a fresh
- * `fromEnv()` read (bypassing the container entirely) when `Kernel` isn't
- * booted, rather than throwing: env vars are always meaningfully available
- * regardless of DI wiring, and the vast majority of this codebase's own
- * Unit tests construct a `Connection`/read a `Tables::*()` name without
- * ever calling `Kernel::boot()` at all, exactly the "one-shot process, a
- * fresh read doesn't matter" reasoning `fromEnv()` itself already existed
- * for.
+ * `DbConnection`) -- both closed it in Phase 11 sub-phase 11I (their own
+ * private `dbCredentials()` container-resolve helpers replaced it). Its
+ * one remaining, permanent reason to exist: `public/install.php`/
+ * `public/ready.php`, the campaign's own documented "raw entry-shell root
+ * file, runs before Kernel::boot()" exception category -- no object graph
+ * exists yet for those files to receive this via constructor injection
+ * through. Unlike every other shim backing a value with no safe default in
+ * this campaign, it gracefully falls back to a fresh `fromEnv()` read
+ * (bypassing the container entirely) when `Kernel` isn't booted, rather
+ * than throwing: env vars are always meaningfully available regardless of
+ * DI wiring, and the vast majority of this codebase's own Unit tests
+ * construct a `Connection`/read a `Tables::*()` name without ever calling
+ * `Kernel::boot()` at all, exactly the "one-shot process, a fresh read
+ * doesn't matter" reasoning `fromEnv()` itself already existed for.
  *
  * toMysqlArgs() mirrors tools/restore-drill.sh's own mysql_args
  * construction exactly, so backup/restore commands shell out to the

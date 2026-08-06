@@ -20,13 +20,20 @@ use Piwigo\Core\Kernel;
  * legacy `global $template;` bridge (singleton/service-locator elimination
  * campaign, Phase 5).
  *
- * `current()` is a memoized `@deprecated` transitional bridge for callers
- * not yet converted to constructor injection -- same "load once, read/write
- * many times per request" reasoning as `Translator`/`EventDispatcher`/
- * `ImageStdParams`/`PageState`/`CurrentUser`: the not-booted fallback is
- * memoized (`self::$fallback ??= new self()`), not fresh-per-call, so a
- * caller that writes via `current()` in one call and reads via `current()`
- * in a later call sees the same instance.
+ * `current()` was originally a transitional bridge for production callers
+ * not yet converted to constructor injection -- Phase 11 sub-phase 11L
+ * confirmed zero remaining production (`src/Piwigo`) callers, so that role
+ * is closed. It stays as a permanent accessor for two real, ongoing uses:
+ * (1) the pre-boot fallback path itself (memoized via
+ * `self::$fallback ??= new self()`, same "load once, read/write many
+ * times per request" shape `Translator`/`EventDispatcher`/`ImageStdParams`/
+ * `PageState`/`CurrentUser` share), and (2) Unit/Integration test setup --
+ * ~230 call sites across ~30 test files reach the shared/fallback instance
+ * directly through `current()` to seed or assert template state, matching
+ * `reset()`'s own "test-only" role below. Neither use carries the
+ * SEC-60 worker-mode risk this campaign exists to close (tests never run
+ * inside a FrankenPHP worker serving concurrent real requests), so no
+ * further migration is planned.
  *
  * Not every `Template` instance in the app goes through this registry --
  * e.g. `MailService`'s email-rendering `Template` instances are genuinely

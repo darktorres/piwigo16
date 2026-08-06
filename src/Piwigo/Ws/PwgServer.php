@@ -110,7 +110,21 @@ final class PwgServer
             @header('Content-Type: text/plain');
             echo 'Cannot process your request. Unknown response format.
 Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_responseFormat . "\n";
-            var_export($this);
+            // var_export($this) directly would recursively serialize this
+            // class's own DI-injected collaborators too -- accessControl's
+            // own dependency chain reaches HtmlService/MailService/UrlService
+            // and every one of their own collaborators, so a real request
+            // hitting this branch (any client sending an unrecognized
+            // `?format=`) would exhaust the request's memory limit walking
+            // that whole graph, not just report this class's own shallow
+            // request/response debug state. Export only that state instead.
+            var_export([
+                '_requestHandler' => $this->_requestHandler,
+                '_requestFormat' => $this->_requestFormat,
+                '_responseEncoder' => $this->_responseEncoder,
+                '_responseFormat' => $this->_responseFormat,
+                '_methods' => $this->_methods,
+            ]);
             die(0);
         }
 

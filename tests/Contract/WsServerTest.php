@@ -99,9 +99,17 @@ final class WsServerTest extends ContractTestCase
         self::assertSame(400, $status);
         self::assertStringContainsString('Cannot process your request. Unknown response format.', $body);
         self::assertStringContainsString('Request format: rest Response format: not-a-real-format', $body);
-        // var_export($this)'s own output -- confirms the die(0) branch
-        // really ran to completion rather than stopping earlier.
-        self::assertStringContainsString('\\Piwigo\\Ws\\PwgServer::__set_state(array(', $body);
+        // var_export()'s own output of PwgServer's own shallow request/
+        // response debug state -- confirms the die(0) branch really ran to
+        // completion rather than stopping earlier. Singleton/service-locator
+        // elimination campaign, Phase 11 sub-phase 11L: no longer
+        // var_export($this) directly -- PwgServer's own DI-injected
+        // collaborators (accessControl's own chain reaches HtmlService/
+        // MailService/UrlService and every one of their own collaborators)
+        // made a full var_export($this) exhaust the request's memory limit.
+        self::assertStringContainsString("'_requestFormat' => 'rest'", $body);
+        self::assertStringContainsString("'_responseFormat' => 'not-a-real-format'", $body);
+        self::assertStringContainsString("'_methods' => \n  array (\n  )", $body);
     }
 
     /**

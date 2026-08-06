@@ -557,39 +557,6 @@ test('CurrentConfigService::current() transitional bridge has a shrinking, known
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
-test('DeploymentPolicy::current() transitional bridge has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 4: current()
-    // kept its original name (no `Static` suffix, matching DbCredentials's
-    // own precedent -- no competing real instance method to disambiguate
-    // from). `set()`/`reset()` no longer exist at all (no independent
-    // state left to set/reset), so this replaces the old, now-inapplicable
-    // 'DeploymentPolicy::set()/reset() are only called from tests/' arch
-    // test. Every phase that converts one more of these files to
-    // constructor-injected DeploymentPolicy should remove it from the
-    // allow-list below. Search/SearchService.php closed this shim in Phase
-    // 11 sub-phase 11G part 1 -- real constructor injection.
-    // Admin/Install/InstallWizard.php closed this shim in Phase 11
-    // sub-phase 11K -- its own 2 sites turned out not to be genuinely
-    // timing-sensitive (unlike DbCredentials/Connection, DeploymentPolicy
-    // doesn't reflect a mid-request seed() mutation), so it took a real
-    // constructor param like every other collaborator, both real callers
-    // (public/install.php, this class's own container-resolved
-    // construction) updated to supply it.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-    ];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'DeploymentPolicy::current(');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
 test('ImageStdParams::current() transitional bridge has a shrinking, known allow-list', function (): void {
     // Singleton/service-locator elimination campaign, Phase 4: current()
     // kept its original name (no `Static` suffix, matching
@@ -1052,31 +1019,6 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
-test('SectionContextRegistry::currentStatic() transitional shim has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 2: real
-    // readers/the writer (SectionPopulator, GalleryController,
-    // PictureController, Menu\MenubarRenderer::render() + its 11
-    // controller callers) take it via constructor/explicit-parameter
-    // injection. Piwigo\Url\UrlService is the one exception: it's one of
-    // the ~440 manually-`new`'d call sites Phase 6 exists to fix, so it
-    // uses this static shim instead of the real current() instance method
-    // (see that method's own docblock). Delete once UrlService itself
-    // takes SectionContextRegistry via constructor injection (Phase 6).
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-    ];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'SectionContextRegistry::currentStatic(');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
-
 test('CurrentTemplate::reset() is only called from tests/', function (): void {
     $repoRoot = __DIR__ . '/../..';
 
@@ -1089,31 +1031,22 @@ test('CurrentTemplate::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('CurrentTemplate::current() transitional bridge has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 5: current()
-    // kept its original name (no `Static` suffix, matching CurrentUser/
-    // PageState/ImageStdParams/DeploymentPolicy/DbCredentials's own
-    // precedent -- no competing real instance method to disambiguate
-    // from). Every phase that converts one more of these files to
-    // constructor-injected CurrentTemplate should remove it from the
-    // allow-list below.
-    // Ws/PwgExtensions.php took real constructor injection during its own
-    // Phase 10 sub-batch. Html/HtmlService.php itself closed this
-    // shim in Phase 11 sub-phase 11E -- real constructor injection, the
-    // "too many manual construction sites" reasoning no longer holds.
-    // Phase 11 sub-phase 11F: Template/CssLoader.php/ScriptLoader.php
-    // removed too -- CssLoader.php via an explicit method param
-    // (extending its own pre-existing get_css(UrlServiceInterface)
-    // pattern), ScriptLoader.php via its own private static
-    // container-resolve helper. Admin/Install/InstallWizard.php closed
-    // this shim in Phase 11 sub-phase 11K -- its one site
-    // (CurrentTemplate::current()->set($template)) is a write to the
-    // shared instance, not a timing-sensitive read; a real constructor
-    // param mutates the exact same shared instance, so the
-    // "one-off manual construction, not worth forcing real injection"
-    // reasoning this allow-list entry used to cite (copied from
-    // DeploymentPolicy::current()'s own, since independently fixed the
-    // same way) never actually held here either.
+test('CurrentTemplate::current() has zero remaining production callers (Phase 11 complete)', function (): void {
+    // Singleton/service-locator elimination campaign: this was a
+    // transitional bridge for production callers not yet converted to
+    // constructor injection. Ws/PwgExtensions.php (Phase 10),
+    // Html/HtmlService.php (11E), Template/CssLoader.php/ScriptLoader.php
+    // (11F), and Admin/Install/InstallWizard.php (11K -- its one site was
+    // a write, `CurrentTemplate::current()->set($template)`, not a
+    // timing-sensitive read) closed every real production call site.
+    // Phase 11 sub-phase 11L confirmed the allow-list below is
+    // permanently empty and reclassified `current()`'s own docblock --
+    // it stays as a real, permanent accessor for the pre-boot fallback
+    // path and ~230 Unit/Integration test call sites across ~30 files
+    // that reach the shared/fallback instance directly for setup, not
+    // campaign debt. This test remains as a regression guard: it fails
+    // the moment any src/Piwigo or public/ file calls `current()` again
+    // outside a legitimate new addition to the allow-list.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [

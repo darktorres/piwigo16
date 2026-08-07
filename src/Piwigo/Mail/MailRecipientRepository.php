@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Override;
 use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Mail\Projection\MailRecipient;
@@ -91,8 +92,14 @@ final readonly class MailRecipientRepository implements MailRecipientRepositoryI
             ->setParameter('groupId', GroupId::from($groupId));
 
         if ($languageFilter !== null && $languageFilter !== '') {
+            $languageFilterVo = LangCode::tryFrom($languageFilter);
+            if ($languageFilterVo === null) {
+                // A malformed filter value can never match a real row --
+                // every real ui.language value is a valid LangCode.
+                return [];
+            }
             $qb->andWhere('ui.language = :language')
-                ->setParameter('language', $languageFilter);
+                ->setParameter('language', $languageFilterVo);
         }
 
         $rows = $qb->getQuery()
@@ -118,7 +125,7 @@ final readonly class MailRecipientRepository implements MailRecipientRepositoryI
             ->andWhere("u.mailAddress <> ''")
             ->andWhere('ui.language = :language')
             ->setParameter('groupId', GroupId::from($groupId))
-            ->setParameter('language', $language)
+            ->setParameter('language', LangCode::from($language))
             ->getQuery()
             ->getArrayResult();
 

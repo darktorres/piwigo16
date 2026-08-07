@@ -16,6 +16,7 @@ use Piwigo\Auth\UserAuthKeyEntity;
 use Piwigo\Category\UserAccessEntity;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
@@ -482,7 +483,7 @@ final class UserRepository implements WebmasterMailProviderInterface
             // DB-constrained `enum(...)` column, not arbitrary caller
             // input).
             status: is_string($row['status'] ?? null) ? (UserStatus::tryFrom($row['status']) ?? UserStatus::Guest) : UserStatus::Guest,
-            language: is_string($row['language'] ?? null) ? $row['language'] : 'en_UK',
+            language: LangCode::tryFrom($row['language'] ?? null) ?? LangCode::from('en_UK'),
             expand: (bool) ($row['expand'] ?? false),
             showNbComments: (bool) ($row['show_nb_comments'] ?? false),
             showNbHits: (bool) ($row['show_nb_hits'] ?? false),
@@ -891,7 +892,7 @@ final class UserRepository implements WebmasterMailProviderInterface
             'user_id' => $userInfo->userId->value,
             'nb_image_page' => $userInfo->nbImagePage,
             'status' => $userInfo->status->value,
-            'language' => $userInfo->language,
+            'language' => $userInfo->language->value,
             'expand' => $userInfo->expand,
             'show_nb_comments' => $userInfo->showNbComments,
             'show_nb_hits' => $userInfo->showNbHits,
@@ -1330,8 +1331,13 @@ final class UserRepository implements WebmasterMailProviderInterface
             assert(is_scalar($value));
             [$property, $isBoolean] = $fieldEnum->dqlPropertyAndIsBoolean();
             $placeholder = 'v_' . $field;
+            $boundValue = match (true) {
+                $isBoolean => (bool) $value,
+                $fieldEnum === UserInfoField::Language => LangCode::from((string) $value),
+                default => $value,
+            };
             $qb->set('ui.' . $property, ':' . $placeholder)
-                ->setParameter($placeholder, $isBoolean ? (bool) $value : $value);
+                ->setParameter($placeholder, $boundValue);
         }
 
         $qb->getQuery()
@@ -1435,8 +1441,12 @@ final class UserRepository implements WebmasterMailProviderInterface
      * PiwigoInfosSender's own telemetry language-usage breakdown.
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * column/property, plain string `language` (no custom-type hydration
-     * concern).
+     * column/property.
+     *
+     * UserInfoEntity::$language is LangCode-typed -- `ui.language`
+     * array-hydrates as a LangCode instance, not a raw string; using it
+     * directly as an array key would throw ("Illegal offset type"), so
+     * this unwraps ->value explicitly.
      *
      * @return array<string, int> keyed by language
      */
@@ -1451,7 +1461,10 @@ final class UserRepository implements WebmasterMailProviderInterface
 
         $byLanguage = [];
         foreach ($rows as $row) {
-            $byLanguage[$row['language']] = $row['languageCounter'];
+            if (! $row['language'] instanceof LangCode) {
+                continue;
+            }
+            $byLanguage[$row['language']->value] = $row['languageCounter'];
         }
 
         return $byLanguage;
@@ -1866,7 +1879,10 @@ final class UserRepository implements WebmasterMailProviderInterface
                 // hydration returns a real instance, unwrapped to
                 // `.value` here.
                 'status' => ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : null,
-                'language' => $row['language'] ?? null,
+                // `language` is LangCode-typed -- array hydration returns
+                // a real instance, unwrapped to `.value` here, same
+                // reasoning as `status`.
+                'language' => ($row['language'] ?? null) instanceof LangCode ? $row['language']->value : null,
                 'email' => $row['email'] ?? null,
                 'username' => $row['username'] ?? null,
             ];

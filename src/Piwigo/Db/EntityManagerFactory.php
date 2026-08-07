@@ -30,6 +30,7 @@ use Piwigo\Db\Type\CommentIdType;
 use Piwigo\Db\Type\GroupIdType;
 use Piwigo\Db\Type\ImageIdType;
 use Piwigo\Db\Type\IpAddressType;
+use Piwigo\Db\Type\LangCodeType;
 use Piwigo\Db\Type\Md5SumType;
 use Piwigo\Db\Type\PermalinkType;
 use Piwigo\Db\Type\PluginIdType;
@@ -91,6 +92,7 @@ final class EntityManagerFactory
             'permalink' => PermalinkType::class,
             'theme_id' => ThemeIdType::class,
             'plugin_id' => PluginIdType::class,
+            'lang_code' => LangCodeType::class,
         ] as $name => $class) {
             if (! Type::hasType($name)) {
                 Type::addType($name, $class);

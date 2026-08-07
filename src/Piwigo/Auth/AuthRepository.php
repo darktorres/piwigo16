@@ -10,6 +10,7 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Auth\Projection\AuthKeyDetails;
 use Piwigo\Auth\Projection\AuthUser;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Users\UserEntity;
 use Piwigo\Users\UserInfoEntity;
@@ -75,7 +76,7 @@ final readonly class AuthRepository
             return;
         }
 
-        $entity->language = $language;
+        $entity->language = LangCode::from($language);
         $this->em->flush();
     }
 

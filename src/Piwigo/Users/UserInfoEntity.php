@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
@@ -49,6 +50,14 @@ use Piwigo\Common\ValueObject\UserId;
  *
  * The `users` table (login/password/email) is mapped separately, see
  * {@see UserEntity}.
+ *
+ * `language` is `LangCode`-typed -- every real write path
+ * (AuthRepository::updateLanguage(), UserService::checkAndSaveUserInfos(),
+ * ProfileFormHandler/ProfileController's own cookie-sync writes,
+ * InstallWizard's admin-account creation) validates against
+ * LangService::getLanguages() (real installed `language/ll_RR`
+ * directories) before persisting, so the hydration boundary is safe to
+ * type strictly.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'user_infos')]
@@ -62,8 +71,8 @@ final class UserInfoEntity
         public int $nbImagePage,
         #[ORM\Column(type: 'string', length: 20, enumType: UserStatus::class)]
         public UserStatus $status,
-        #[ORM\Column(type: 'string', length: 50)]
-        public string $language,
+        #[ORM\Column(type: 'lang_code', length: 50)]
+        public LangCode $language,
         #[ORM\Column(type: 'boolean')]
         public bool $expand,
         #[ORM\Column(name: 'show_nb_comments', type: 'boolean')]

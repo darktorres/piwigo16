@@ -1047,8 +1047,11 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_language_usage_counts_delegates_to_the_repository(): void
         {
+            // user_infos.language is LangCode-typed (strict `ll_RR`
+            // shape) -- a random-but-shape-valid code avoids colliding
+            // with real fixture data.
             $username = 'p24-longtail-lang-' . bin2hex(random_bytes(4));
-            $language = 'p24-longtail-lang-' . bin2hex(random_bytes(4));
+            $language = chr(random_int(97, 122)) . chr(random_int(97, 122)) . '_' . chr(random_int(65, 90)) . chr(random_int(65, 90));
             $this->conn->executeStatement(
                 "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES (?, NULL, NULL)",
                 [$username]

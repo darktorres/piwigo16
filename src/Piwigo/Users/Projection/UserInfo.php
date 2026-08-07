@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Users\Projection;
 
 use InvalidArgumentException;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\ArrayHelper;
 use Piwigo\Users\UserInfoEntity;
@@ -81,7 +82,7 @@ final readonly class UserInfo
             userId: $userId,
             nbImagePage: is_numeric($row['nb_image_page'] ?? null) ? (int) $row['nb_image_page'] : 0,
             status: is_string($row['status'] ?? null) ? $row['status'] : 'guest',
-            language: is_string($row['language'] ?? null) ? $row['language'] : '',
+            language: ($row['language'] ?? null) instanceof LangCode ? $row['language']->value : (is_string($row['language'] ?? null) ? $row['language'] : ''),
             expand: (bool) ($row['expand'] ?? false),
             showNbComments: (bool) ($row['show_nb_comments'] ?? false),
             showNbHits: (bool) ($row['show_nb_hits'] ?? false),
@@ -107,7 +108,7 @@ final readonly class UserInfo
             userId: $entity->userId,
             nbImagePage: $entity->nbImagePage,
             status: $entity->status->value,
-            language: $entity->language,
+            language: $entity->language->value,
             expand: $entity->expand,
             showNbComments: $entity->showNbComments,
             showNbHits: $entity->showNbHits,

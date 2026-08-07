@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Users\UserInfoEntity;
 use RuntimeException;
@@ -247,12 +248,18 @@ final readonly class ExtensionRepository
      */
     public function reassignUsersFromLanguage(string $oldLanguage, string $newLanguage): void
     {
+        $oldLanguageVo = LangCode::tryFrom($oldLanguage);
+        $newLanguageVo = LangCode::tryFrom($newLanguage);
+        if ($oldLanguageVo === null || $newLanguageVo === null) {
+            return;
+        }
+
         $this->em->createQueryBuilder()
             ->update(UserInfoEntity::class, 'ui')
             ->set('ui.language', ':new')
             ->where('ui.language = :old')
-            ->setParameter('new', $newLanguage)
-            ->setParameter('old', $oldLanguage)
+            ->setParameter('new', $newLanguageVo)
+            ->setParameter('old', $oldLanguageVo)
             ->getQuery()
             ->execute();
         $this->em->clear();
@@ -263,11 +270,16 @@ final readonly class ExtensionRepository
      */
     public function setLanguageForUserIds(string $language, int $defaultUserId, int $guestId): void
     {
+        $languageVo = LangCode::tryFrom($language);
+        if ($languageVo === null) {
+            return;
+        }
+
         $this->em->createQueryBuilder()
             ->update(UserInfoEntity::class, 'ui')
             ->set('ui.language', ':language')
             ->where('ui.userId IN (:ids)')
-            ->setParameter('language', $language)
+            ->setParameter('language', $languageVo)
             ->setParameter('ids', [$defaultUserId, $guestId])
             ->getQuery()
             ->execute();

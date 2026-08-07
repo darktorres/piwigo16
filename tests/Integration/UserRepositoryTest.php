@@ -416,8 +416,11 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_find_language_usage_counts_includes_a_freshly_inserted_user(): void
     {
+        // user_infos.language is LangCode-typed (strict `ll_RR` shape) --
+        // a random-but-shape-valid code avoids colliding with real
+        // fixture data.
         $username = 'p18-test-' . bin2hex(random_bytes(4));
-        $language = 'p18-test-lang-' . bin2hex(random_bytes(4));
+        $language = chr(random_int(97, 122)) . chr(random_int(97, 122)) . '_' . chr(random_int(65, 90)) . chr(random_int(65, 90));
 
         $id = $this->repo->insertUser($username, 'irrelevant-hash', null);
         $this->repo->insertUserInfos([$id], [
@@ -425,13 +428,15 @@ final class UserRepositoryTest extends IntegrationTestCase
             'language' => $language,
         ]);
 
-        $counts = $this->repo->findLanguageUsageCounts();
+        try {
+            $counts = $this->repo->findLanguageUsageCounts();
 
-        self::assertArrayHasKey($language, $counts);
-        self::assertSame(1, $counts[$language]);
-
-        $this->conn->executeStatement('DELETE FROM ' . Tables::userInfos() . ' WHERE user_id = ' . $id->value);
-        $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
+            self::assertArrayHasKey($language, $counts);
+            self::assertSame(1, $counts[$language]);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::userInfos() . ' WHERE user_id = ' . $id->value);
+            $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
+        }
     }
 
     public function test_find_notification_recipients_by_ids_with_no_ids_returns_empty(): void

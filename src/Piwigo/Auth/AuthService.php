@@ -96,12 +96,12 @@ final readonly class AuthService
             ];
         }
 
-        $username = stripslashes($found['username']);
+        $username = stripslashes($found->username);
         $data = $time . $userId . $username;
         // secret_key is a random string generated at install time (see
         // install/index.php), always a string in a working install
         $secret_key = $this->currentConfig->secretKey();
-        $key = base64_encode(hash_hmac('sha256', $data, $secret_key . $found['password'], true));
+        $key = base64_encode(hash_hmac('sha256', $data, $secret_key . $found->password, true));
 
         return [
             'key' => $key,
@@ -121,7 +121,7 @@ final readonly class AuthService
     {
         $found = $this->repo->findUsernameAndPassword($userId);
 
-        return $found['password'] ?? null;
+        return $found?->password;
     }
 
     /**

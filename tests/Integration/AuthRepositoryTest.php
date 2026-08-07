@@ -56,8 +56,8 @@ final class AuthRepositoryTest extends IntegrationTestCase
         $found = $this->repo->findUsernameAndPassword(UserId::from(1));
 
         self::assertNotNull($found);
-        self::assertSame('fixture_admin', $found['username']);
-        self::assertStringStartsWith('$2y$', $found['password']);
+        self::assertSame('fixture_admin', $found->username);
+        self::assertStringStartsWith('$2y$', $found->password);
     }
 
     public function test_find_username_and_password_returns_null_for_a_missing_user(): void

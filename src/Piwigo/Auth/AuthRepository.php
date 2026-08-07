@@ -10,6 +10,7 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Auth\Projection\AuthKeyDetails;
 use Piwigo\Auth\Projection\AuthUser;
+use Piwigo\Auth\Projection\UsernamePassword;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\SqlDateTime;
@@ -49,10 +50,7 @@ final readonly class AuthRepository
         private EntityManagerInterface $em,
     ) {}
 
-    /**
-     * @return array{username: string, password: string}|null
-     */
-    public function findUsernameAndPassword(UserId $userId): ?array
+    public function findUsernameAndPassword(UserId $userId): ?UsernamePassword
     {
         $row = $this->em->createQueryBuilder()
             ->select('u.username AS username', 'u.password AS password')
@@ -68,10 +66,10 @@ final readonly class AuthRepository
 
         $username = $row['username'] ?? null;
 
-        return [
-            'username' => $username instanceof Username ? $username->value : '',
-            'password' => is_string($row['password'] ?? null) ? $row['password'] : '',
-        ];
+        return new UsernamePassword(
+            username: $username instanceof Username ? $username->value : '',
+            password: is_string($row['password'] ?? null) ? $row['password'] : '',
+        );
     }
 
     public function updateLanguage(UserId $userId, string $language): void

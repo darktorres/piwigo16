@@ -83,7 +83,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         $this->configService->loadConfFromDb('send_piwigo_infos_last_notice', false);
 
         $doSend = false;
-        $lastNotice = $this->currentConfig->sendPiwigoInfosLastNotice() ?? null;
+        $lastNotice = $this->currentConfig->sendPiwigoInfosLastNotice();
         // conf_get_param()/load_conf_from_db() both feed $conf through a
         // loosely-typed mixed pipeline, but this particular param is always a
         // MySQL datetime string once set; only strtotime()'s argument needs the
@@ -261,7 +261,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
                     }
                 }
 
-                if (in_array($eid, [null, 0, '0', ''], true)) {
+                if (in_array($eid, [null, '0'], true)) {
                     // let's search in the data fetched from PEM
                     $pemPluginsCategory = $this->currentConfig->pemPluginsCategory();
                     $eid = $officialExts[$pemPluginsCategory][$pluginId] ?? null;
@@ -315,7 +315,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
                 }
             }
 
-            if (in_array($eid, [null, 0, '0', ''], true)) {
+            if (in_array($eid, [null, '0'], true)) {
                 // let's search in the data fetched from PEM
                 $pemThemesCategory = $this->currentConfig->pemThemesCategory();
                 $eid = $officialExts[$pemThemesCategory][$themeId] ?? null;
@@ -523,7 +523,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         $logger = $this->currentLogger->get();
 
         // let's fake a last_notice so that we only try 1 day later
-        $existingLastNotice = $this->currentConfig->sendPiwigoInfosLastNotice() ?? null;
+        $existingLastNotice = $this->currentConfig->sendPiwigoInfosLastNotice();
         $lastNotice = is_string($existingLastNotice) ? strtotime($existingLastNotice) : time();
         $lastNotice = ($lastNotice === false ? time() : $lastNotice) + $waitTime;
 

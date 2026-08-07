@@ -228,7 +228,7 @@ final readonly class CategoryService
 
             return array_filter(
                 $allRows,
-                static fn (array $row): bool => ($row['id_uppercat'] ?? null) === null
+                static fn (array $row): bool => $row['id_uppercat'] === null
                     || in_array($row['id_uppercat'], $uppercatIds, true)
             );
         }
@@ -480,7 +480,7 @@ final readonly class CategoryService
                 $parent['count_images'] += $nbImages;
                 $parent['count_categories']++;
 
-                $parentMaxDateLast = $parent['max_date_last'] ?? null;
+                $parentMaxDateLast = $parent['max_date_last'];
                 if ($parentMaxDateLast === null || $parentMaxDateLast === '' || $parentMaxDateLast < $cat['date_last']) {
                     $parent['max_date_last'] = $cat['date_last'];
                 }
@@ -497,7 +497,7 @@ final readonly class CategoryService
 
         if ($filterDays !== null) {
             foreach ($cats as $category) {
-                $categoryMaxDateLast = $category['max_date_last'] ?? null;
+                $categoryMaxDateLast = $category['max_date_last'];
                 if ($categoryMaxDateLast === null || $categoryMaxDateLast === '') {
                     self::removeComputedCategory($cats, $category);
                 }
@@ -747,7 +747,7 @@ final readonly class CategoryService
             // be an int depending on how that array was populated -- matches
             // the original's loose ==, which PHPStan disallows outright.
             $rowIdStr = (string) $row['id'];
-            $rowGlobalRank = $row['global_rank'] ?? null;
+            $rowGlobalRank = $row['global_rank'];
             $childDateLast = @$row['max_date_last'] > @$row['date_last'];
             $selectedId = $selectedCategory['id'] ?? null;
             $selectedIdStr = is_scalar($selectedId) ? (string) $selectedId : null;
@@ -775,7 +775,7 @@ final readonly class CategoryService
                 ]
             );
             if ($this->currentConfig->indexNewIcon()) {
-                $maxDateLast = $row['max_date_last'] ?? null;
+                $maxDateLast = $row['max_date_last'];
                 $recentPeriodForIcon = is_numeric($user->rawAttributes['recent_period'] ?? null) ? (int) $user->rawAttributes['recent_period'] : 0;
                 $row['icon_ts'] = RecentIconResolver::getIcon(is_string($maxDateLast) ? $maxDateLast : '', $recentPeriodForIcon, $this->processCache(), $this->lang, $childDateLast);
             }

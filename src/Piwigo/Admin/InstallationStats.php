@@ -87,11 +87,11 @@ final class InstallationStats
 
         $candidate = $this->userService->getRegistrationDateById(2);
 
-        if (in_array($candidate, [null, false, 0, '0', '', []], true) or strtotime($candidate) < strtotime($piwigo_origins)) {
+        if (in_array($candidate, [null, '0', ''], true) or strtotime($candidate) < strtotime($piwigo_origins)) {
             $candidate = $this->userService->getMinRegistrationDateAfter($piwigo_origins);
         }
 
-        if (in_array($candidate, [null, false, 0, '0', '', []], true) or strtotime($candidate) < strtotime($piwigo_origins)) {
+        if (in_array($candidate, [null, '0', ''], true) or strtotime($candidate) < strtotime($piwigo_origins)) {
             // let's find another candidate
             $candidate = $this->imageService->getEarliestDateAvailable();
         }

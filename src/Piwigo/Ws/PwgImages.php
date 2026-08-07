@@ -697,7 +697,7 @@ final class PwgImages
                     }
                 }
                 foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
-                    $image[$k] = $row[$k] ?? null;
+                    $image[$k] = $row[$k];
                 }
 
                 $nameEvent2 = $this->eventDispatcher->dispatchChange(new RenderElementName(is_string($image['name']) ? $image['name'] : '', __FUNCTION__));
@@ -1395,10 +1395,10 @@ final class PwgImages
 
         $this->imageService->updateDescriptiveFields(
             $image_id,
-            name: is_string($params['name'] ?? null) ? $params['name'] : null,
-            author: is_string($params['author'] ?? null) ? $params['author'] : null,
-            comment: is_string($params['comment'] ?? null) ? $params['comment'] : null,
-            dateCreation: is_string($params['date_creation'] ?? null) ? $params['date_creation'] : null,
+            name: is_string($params['name']) ? $params['name'] : null,
+            author: is_string($params['author']) ? $params['author'] : null,
+            comment: is_string($params['comment']) ? $params['comment'] : null,
+            dateCreation: is_string($params['date_creation']) ? $params['date_creation'] : null,
         );
 
         $url_params = [
@@ -1506,9 +1506,9 @@ final class PwgImages
 
         $this->imageService->updateDescriptiveFields(
             $image_id,
-            name: is_string($params['name'] ?? null) ? $params['name'] : null,
-            author: is_string($params['author'] ?? null) ? $params['author'] : null,
-            comment: is_string($params['comment'] ?? null) ? $params['comment'] : null,
+            name: is_string($params['name']) ? $params['name'] : null,
+            author: is_string($params['author']) ? $params['author'] : null,
+            comment: is_string($params['comment']) ? $params['comment'] : null,
             dateCreation: is_string($params['date_creation'] ?? null) ? $params['date_creation'] : null,
         );
         $this->entityManager->clear();
@@ -1955,10 +1955,10 @@ final class PwgImages
         // time to set other infos
         $this->imageService->updateDescriptiveFields(
             $image_id,
-            name: is_string($params['name'] ?? null) ? $params['name'] : null,
-            author: is_string($params['author'] ?? null) ? $params['author'] : null,
-            comment: is_string($params['comment'] ?? null) ? $params['comment'] : null,
-            dateCreation: is_string($params['date_creation'] ?? null) ? $params['date_creation'] : null,
+            name: is_string($params['name']) ? $params['name'] : null,
+            author: is_string($params['author']) ? $params['author'] : null,
+            comment: is_string($params['comment']) ? $params['comment'] : null,
+            dateCreation: is_string($params['date_creation']) ? $params['date_creation'] : null,
         );
 
         // final step, reset user cache

@@ -521,7 +521,7 @@ final class PwgCore
     public function getActivityList(array $param, PwgServer &$service): PwgError|array
     {
         foreach (['date_min', 'date_max'] as $datefield) {
-            $datefield_value = $param[$datefield] ?? null;
+            $datefield_value = $param[$datefield];
             if (! in_array($datefield_value, [null, ''], true) and ! DateHelper::isValidMysqlDatetime($datefield_value)) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid ' . $datefield);
             }
@@ -542,8 +542,8 @@ final class PwgCore
         // condition that sets them here is true again.
         $min = null;
         $max = null;
-        $date_min_raw = $param['date_min'] ?? null;
-        $date_max_raw = $param['date_max'] ?? null;
+        $date_min_raw = $param['date_min'];
+        $date_max_raw = $param['date_max'];
         if (! in_array($date_min_raw, [null, ''], true)) {
             // is_valid_mysql_datetime() above already validated date_min; a
             // valid Y-m-d[ H:i:s] string always parses
@@ -577,9 +577,9 @@ final class PwgCore
         }
 
         $criteria = new ActivityListCriteria(
-            performedBy: $param['uid'] ?? null,
-            action: is_string($param['action'] ?? null) ? $param['action'] : null,
-            object: is_string($param['object'] ?? null) ? $param['object'] : null,
+            performedBy: $param['uid'],
+            action: is_string($param['action']) ? $param['action'] : null,
+            object: is_string($param['object']) ? $param['object'] : null,
             minDate: ! in_array($date_min_raw, [null, ''], true) ? $min : null,
             maxDate: ! in_array($date_max_raw, [null, ''], true) ? $max : null,
             objectId: ($param['id'] !== null and $param['id'] !== 0) ? $param['id'] : null,

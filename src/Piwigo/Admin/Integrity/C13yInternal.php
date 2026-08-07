@@ -177,7 +177,7 @@ final class C13yInternal
                         'action' => 'creation',
                     ]
                 );
-            } elseif (! in_array($data['status'] ?? null, [null, false, 0, '0', '', []], true) and ($status[$id] ?? '') !== $data['status']) {
+            } elseif (($data['status'] ?? null) !== null and ($status[$id] ?? '') !== $data['status']) {
                 $c13y->add_anomaly(
                     $this->lang->t($data['l10n_bad_status']),
                     'c13y_correction_user',

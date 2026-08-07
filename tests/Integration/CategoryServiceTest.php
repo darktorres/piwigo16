@@ -21,6 +21,7 @@ namespace Piwigo\Tests\Integration {
     use Doctrine\DBAL\Connection;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\CategoryService;
+    use Piwigo\Common\ValueObject\CategoryId;
     use Piwigo\Config\ConfigService;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -1178,13 +1179,13 @@ final class CategoryServiceTest extends IntegrationTestCase
 
             // category 1's own fixture groups (1, 2, 3) must all have been
             // copied onto the new child.
-            $groupIds = $this->repo->findAccessGroupIds($newId);
+            $groupIds = $this->repo->findAccessGroupIds(CategoryId::from($newId));
             sort($groupIds);
             self::assertSame([1, 2, 3], $groupIds);
 
             // the user_access row just added to category 1 must also have
             // been copied.
-            self::assertSame([3], $this->repo->findAccessUserIds($newId));
+            self::assertSame([3], $this->repo->findAccessUserIds(CategoryId::from($newId)));
 
             $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $newId);
         } finally {

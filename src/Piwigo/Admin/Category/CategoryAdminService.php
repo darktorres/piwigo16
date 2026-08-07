@@ -185,7 +185,7 @@ final class CategoryAdminService
         $permissionRepository = new PermissionRepository(EntityManagerFactory::build($conn));
 
         // groups
-        $groupsGranted = $this->categoryService->getAccessGroupIds($catId);
+        $groupsGranted = $this->categoryService->getAccessGroupIds(CategoryId::from($catId));
 
         $denyGroups = array_diff($groupsGranted, $groupIds);
         if (count($denyGroups) > 0) {
@@ -221,7 +221,7 @@ final class CategoryAdminService
         }
 
         // users
-        $usersGranted = $this->categoryService->getAccessUserIds($catId);
+        $usersGranted = $this->categoryService->getAccessUserIds(CategoryId::from($catId));
 
         $denyUsers = array_diff($usersGranted, $userIds);
         if (count($denyUsers) > 0) {
@@ -242,7 +242,7 @@ final class CategoryAdminService
      */
     public function saveImageOrder(int $catId, ?string $imageOrder, bool $applySubcats, RedirectServiceInterface $redirectService): void
     {
-        $this->categoryService->updateImageOrder($catId, $imageOrder);
+        $this->categoryService->updateImageOrder(CategoryId::from($catId), $imageOrder);
 
         if (! $applySubcats) {
             return;

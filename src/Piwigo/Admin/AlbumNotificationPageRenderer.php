@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Request\AlbumNotificationSubmitRequest;
 use Piwigo\Auth\AuthService;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
@@ -291,7 +292,7 @@ final class AlbumNotificationPageRenderer
             if ($category['status'] === 'private') {
                 $template->assign('permission_url', $admin_album_base_url . '-permissions');
 
-                $group_ids = $this->categoryService->getAccessGroupIds($category_id);
+                $group_ids = $this->categoryService->getAccessGroupIds(CategoryId::from($category_id));
             } else {
                 $group_ids = $all_group_ids;
             }
@@ -321,7 +322,7 @@ final class AlbumNotificationPageRenderer
 
             $user_ids_access_direct = array_map(
                 strval(...),
-                $this->categoryService->getAccessUserIds($category_id)
+                $this->categoryService->getAccessUserIds(CategoryId::from($category_id))
             );
 
             $user_ids_access = array_unique(array_merge($user_ids_access_direct, $user_ids_access_indirect));

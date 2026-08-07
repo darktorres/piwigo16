@@ -11,6 +11,7 @@ use LogicException;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Common\Dto\PaginatedResult;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
@@ -1349,7 +1350,7 @@ final readonly class CategoryService
     /**
      * @param array<string, mixed> $data
      */
-    public function updateFields(int $categoryId, array $data): void
+    public function updateFields(CategoryId $categoryId, array $data): void
     {
         $this->repo->updateFields($categoryId, $data);
     }
@@ -1500,8 +1501,8 @@ final readonly class CategoryService
                 foreach (CategoryAccessTarget::cases() as $target) {
                     // what are the permissions user/group of the reference album
                     $refAccess = $target === CategoryAccessTarget::UserAccess
-                        ? $this->repo->findAccessUserIds($refCatId)
-                        : $this->repo->findAccessGroupIds($refCatId);
+                        ? $this->repo->findAccessUserIds(CategoryId::from($refCatId))
+                        : $this->repo->findAccessGroupIds(CategoryId::from($refCatId));
 
                     if (count($refAccess) === 0) {
                         $refAccess[] = -1;
@@ -1530,7 +1531,7 @@ final readonly class CategoryService
     /**
      * @return list<int>
      */
-    public function getAccessGroupIds(int $catId): array
+    public function getAccessGroupIds(CategoryId $catId): array
     {
         return $this->repo->findAccessGroupIds($catId);
     }
@@ -1538,7 +1539,7 @@ final readonly class CategoryService
     /**
      * @return list<int>
      */
-    public function getAccessUserIds(int $catId): array
+    public function getAccessUserIds(CategoryId $catId): array
     {
         return $this->repo->findAccessUserIds($catId);
     }
@@ -1587,7 +1588,7 @@ final readonly class CategoryService
         return $this->repo->findUppercatsById($ids);
     }
 
-    public function updateImageOrder(int $catId, ?string $imageOrder): void
+    public function updateImageOrder(CategoryId $catId, ?string $imageOrder): void
     {
         $this->repo->updateImageOrder($catId, $imageOrder);
     }
@@ -1738,7 +1739,7 @@ final readonly class CategoryService
         $fulldirs = $this->getFulldirs($catIds, $siteGalleriesUrlLookup);
 
         foreach ($catIds as $catId) {
-            $this->repo->updateImagePathsForCategory($catId, $fulldirs[$catId]);
+            $this->repo->updateImagePathsForCategory(CategoryId::from($catId), $fulldirs[$catId]);
         }
     }
 
@@ -1934,7 +1935,7 @@ final readonly class CategoryService
 
         $insertIdUppercat = $insert['id_uppercat'] ?? null;
         if ($insert['status'] === CategoryStatus::Private->value && $insertIdUppercat !== null && $insertIdUppercat !== 0 && ((isset($options['inherit']) && (bool) $options['inherit']) || $this->currentConfig->inheritanceByDefault())) {
-            $grantedGrps = $this->repo->findAccessGroupIds($insertIdUppercat);
+            $grantedGrps = $this->repo->findAccessGroupIds(CategoryId::from($insertIdUppercat));
             $inserts = [];
             foreach ($grantedGrps as $grantedGrp) {
                 $inserts[] = [
@@ -1944,7 +1945,7 @@ final readonly class CategoryService
             }
             $this->repo->massInsertGroupAccess($inserts);
 
-            $grantedUsers = $this->repo->findAccessUserIds($insertIdUppercat);
+            $grantedUsers = $this->repo->findAccessUserIds(CategoryId::from($insertIdUppercat));
             $this->permissionService->addPermissionOnCategory((int) $insertedId, $grantedUsers);
         } elseif ($insert['status'] === CategoryStatus::Private->value) {
             $currentUserId = $currentUser->get()
@@ -1999,9 +2000,9 @@ final readonly class CategoryService
      * EntityManager afterward (same contract as
      * {@see setRepresentativeImage()} above).
      */
-    public function clearRepresentativeImage(int $categoryId): void
+    public function clearRepresentativeImage(CategoryId $categoryId): void
     {
-        $this->repo->clearRepresentativePictureIds([$categoryId]);
+        $this->repo->clearRepresentativePictureIds([$categoryId->value]);
     }
 
     /**

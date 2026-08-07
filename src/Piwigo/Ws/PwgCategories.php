@@ -22,6 +22,7 @@ use Piwigo\Category\CategoryListCriteria;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryTreeCache;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
@@ -997,7 +998,7 @@ final class PwgCategories
         if ($perform_update) {
             $updateFields = $update;
             unset($updateFields['id']);
-            $categoryService->updateFields($params['category_id'], $updateFields);
+            $categoryService->updateFields(CategoryId::from($params['category_id']), $updateFields);
         }
 
         $this->activityService->record('album', $params['category_id'], 'edit', [
@@ -1069,7 +1070,7 @@ final class PwgCategories
             return new PwgError(401, 'not permitted');
         }
 
-        $this->categoryService->clearRepresentativeImage($params['category_id']);
+        $this->categoryService->clearRepresentativeImage(CategoryId::from($params['category_id']));
         $this->entityManager->clear();
 
         $this->activityService->record('album', $params['category_id'], 'edit');

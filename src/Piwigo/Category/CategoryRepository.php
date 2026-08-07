@@ -1477,9 +1477,9 @@ final class CategoryRepository
      * CategoryAdminService::saveImageOrder()'s own category (admin/
      * element_set_ranks.php).
      */
-    public function updateImageOrder(int $catId, ?string $imageOrder): void
+    public function updateImageOrder(CategoryId $catId, ?string $imageOrder): void
     {
-        $entity = $this->find($catId);
+        $entity = $this->find($catId->value);
         if ($entity === null) {
             return;
         }
@@ -1542,15 +1542,19 @@ final class CategoryRepository
 
     /**
      * @return list<int>
+     *
+     * $catId takes CategoryId directly, unwrapped to ->value here since
+     * UserAccessEntity::$catId/$userId are still plain int (see
+     * PermissionRepository's own equivalent docblock note).
      */
-    public function findAccessUserIds(int $catId): array
+    public function findAccessUserIds(CategoryId $catId): array
     {
         $entities = $this->em
             ->createQueryBuilder()
             ->select('ua')
             ->from(UserAccessEntity::class, 'ua')
             ->where('ua.catId = :catId')
-            ->setParameter('catId', $catId)
+            ->setParameter('catId', $catId->value)
             ->getQuery()
             ->getResult();
 
@@ -1560,7 +1564,7 @@ final class CategoryRepository
     /**
      * @return list<int>
      */
-    public function findAccessGroupIds(int $catId): array
+    public function findAccessGroupIds(CategoryId $catId): array
     {
         // Single-value DQL parameter against a custom-typed field -- the
         // well-supported path (unlike the IN-clause array case above),
@@ -1571,7 +1575,7 @@ final class CategoryRepository
             ->select('ga')
             ->from(GroupAccessEntity::class, 'ga')
             ->where('ga.catId = :catId')
-            ->setParameter('catId', CategoryId::from($catId))
+            ->setParameter('catId', $catId)
             ->getQuery()
             ->getResult();
 
@@ -1899,8 +1903,10 @@ final class CategoryRepository
      * self-referential-arithmetic SET precedent established this
      * primitive works for non-trivial SET expressions.
      */
-    public function updateImagePathsForCategory(int $categoryId, string $fulldir): void
+    public function updateImagePathsForCategory(CategoryId $categoryId, string $fulldir): void
     {
+        // i.storageCategoryId is CategoryId-typed -- binds the VO
+        // directly, not ->value.
         $this->em
             ->createQueryBuilder()
             ->update(ImageEntity::class, 'i')
@@ -2564,7 +2570,7 @@ final class CategoryRepository
      * Item 14 DQL audit: stays on DBAL -- dynamic caller-supplied
      * column=>value map, same reason as {@see insertCategory()} above.
      */
-    public function updateFields(int $id, array $data): void
+    public function updateFields(CategoryId $id, array $data): void
     {
         if ($data === []) {
             return;
@@ -2573,7 +2579,7 @@ final class CategoryRepository
         $em = $this->em;
         new BatchWriter($em->getConnection())
             ->singleUpdate(Tables::categories(), $data, [
-                'id' => $id,
+                'id' => $id->value,
             ]);
         $em->clear();
     }

@@ -15,6 +15,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Category\CategoryRefDateField;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\Projection\Category;
+    use Piwigo\Common\ValueObject\CategoryId;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
@@ -429,7 +430,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         try {
             $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = 1 WHERE id = 1');
 
-            $this->repo->updateImagePathsForCategory(1, 'galleries/renamed-album');
+            $this->repo->updateImagePathsForCategory(CategoryId::from(1), 'galleries/renamed-album');
 
             $path = $this->conn->fetchOne('SELECT path FROM ' . Tables::images() . ' WHERE id = 1');
             self::assertSame('galleries/renamed-album/fixture-photo-1.jpg', $path);
@@ -557,7 +558,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     {
         // 999999 doesn't exist -- find() returns null and the method
         // returns early instead of dereferencing a null entity.
-        $this->repo->updateImageOrder(999999, 'name ASC');
+        $this->repo->updateImageOrder(CategoryId::from(999999), 'name ASC');
 
         self::assertNull($this->repo->findById(999999));
     }
@@ -688,7 +689,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_update_fields_is_a_no_op_for_no_data(): void
     {
-        $this->repo->updateFields(1, []);
+        $this->repo->updateFields(CategoryId::from(1), []);
 
         $cat = $this->repo->findById(1);
         self::assertNotNull($cat);

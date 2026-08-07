@@ -67,11 +67,11 @@
     "icanhazstring/composer-unused": "^0.9",
     "justinrainbow/json-schema": "^6.8",
     "maglnet/composer-require-checker": "^4.16",
-    "pestphp/pest": "^4.7",
-    "pestphp/pest-plugin-arch": "^4.0",
-    "pestphp/pest-plugin-browser": "^4.3",
-    "pestphp/pest-plugin-mutate": "^4.0",
-    "pestphp/pest-plugin-type-coverage": "^4.0",
+    "pestphp/pest": "^5.0",
+    "pestphp/pest-plugin-arch": "^5.0",
+    "pestphp/pest-plugin-browser": "^5.0",
+    "pestphp/pest-plugin-mutate": "^5.0",
+    "pestphp/pest-plugin-type-coverage": "^5.0",
     "phpbench/phpbench": "^1.4",
     "phpstan/extension-installer": "^1.4",
     "phpstan/phpstan": "^2.1",
@@ -80,8 +80,7 @@
     "rector/rector": "^2.0",
     "roave/security-advisories": "dev-latest",
     "symfony/yaml": "^8.1",
-    "symplify/easy-coding-standard": "^13.1",
-    "vimeo/psalm": "^6.16"
+    "symplify/easy-coding-standard": "^13.1"
   },
   "autoload": {
     "psr-4": {
@@ -100,7 +99,6 @@
   "scripts": {
     "lint:php": "@php vendor/bin/ecs check",
     "analyse:phpstan": "@php vendor/bin/phpstan analyse",
-    "analyse:psalm": "@php vendor/bin/psalm",
     "analyse": [
       "@analyse:phpstan"
     ],
@@ -152,10 +150,9 @@
   "extra": {
     "patches": {
       "pestphp/pest-plugin-browser": {
-        "Fix expectScreenshot() unconditionally failing when the tolerant threshold comparison actually passes (missing return after Page.php's foreach loop)": "patches/pest-plugin-browser-4.3.1-expect-screenshot-success-path.patch",
-        "Add Chromium launch flags for deterministic screenshot rendering on Linux (font hinting/LCD text/color profile) -- the plugin's own maintainers don't trust screenshot assertions on Linux/CI without this class of mitigation, see PR pestphp/pest-plugin-browser#175": "patches/pest-plugin-browser-4.3.1-deterministic-screenshot-flags.patch",
-        "Fix Execution::resetAssertions() passing Assert::class instead of null as ReflectionProperty::setValue()'s first argument for a static property (PHP 8.1 deprecation)": "patches/pest-plugin-browser-4.3.1-reset-assertions-static-property.patch",
-        "Fix the playwright run-server process leaking past pest's own exit: start it via an argv array instead of a shell string so proc_open() execve()s it directly (no shell, nothing left for stop()'s SIGTERM to miss) -- root-caused live via /proc inspection, matches the still-open upstream fix in PR pestphp/pest-plugin-browser#169": "patches/pest-plugin-browser-4.3.1-stop-server-without-shell.patch"
+        "Fix expectScreenshot() unconditionally failing when the tolerant threshold comparison actually passes (missing return after Page.php's foreach loop)": "patches/pest-plugin-browser-5.0.0-expect-screenshot-success-path.patch",
+        "Add Chromium launch flags for deterministic screenshot rendering on Linux (font hinting/LCD text/color profile) -- the plugin's own maintainers don't trust screenshot assertions on Linux/CI without this class of mitigation, see PR pestphp/pest-plugin-browser#175": "patches/pest-plugin-browser-5.0.0-deterministic-screenshot-flags.patch",
+        "Fix Execution::resetAssertions() passing Assert::class instead of null as ReflectionProperty::setValue()'s first argument for a static property (PHP 8.1 deprecation)": "patches/pest-plugin-browser-5.0.0-reset-assertions-static-property.patch"
       }
     },
     "phpstan/extension-installer": {

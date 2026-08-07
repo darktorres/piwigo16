@@ -1,11 +1,11 @@
 {
-    "_hash": "97eb54fb76919288436a7ed9504e9f0f9ce1816e04999f30226684dc5155e627",
+    "_hash": "3659f6b706aac23004d207c946d0315cf13709ab8a15df1931aee1cd5240374c",
     "patches": {
         "pestphp/pest-plugin-browser": [
             {
                 "package": "pestphp/pest-plugin-browser",
                 "description": "Fix expectScreenshot() unconditionally failing when the tolerant threshold comparison actually passes (missing return after Page.php's foreach loop)",
-                "url": "patches/pest-plugin-browser-4.3.1-expect-screenshot-success-path.patch",
+                "url": "patches/pest-plugin-browser-5.0.0-expect-screenshot-success-path.patch",
                 "sha256": "6a627675d0ef2aa8736eabddf68e7ebdf6c4b0b749aed01de39fd6cd43cce27a",
                 "depth": 1,
                 "extra": {
@@ -15,7 +15,7 @@
             {
                 "package": "pestphp/pest-plugin-browser",
                 "description": "Add Chromium launch flags for deterministic screenshot rendering on Linux (font hinting/LCD text/color profile) -- the plugin's own maintainers don't trust screenshot assertions on Linux/CI without this class of mitigation, see PR pestphp/pest-plugin-browser#175",
-                "url": "patches/pest-plugin-browser-4.3.1-deterministic-screenshot-flags.patch",
+                "url": "patches/pest-plugin-browser-5.0.0-deterministic-screenshot-flags.patch",
                 "sha256": "e689bb2a394cfd1831f18ac30d13efeea83a874c9af03fa598afeae598c5d3d3",
                 "depth": 1,
                 "extra": {
@@ -25,18 +25,8 @@
             {
                 "package": "pestphp/pest-plugin-browser",
                 "description": "Fix Execution::resetAssertions() passing Assert::class instead of null as ReflectionProperty::setValue()'s first argument for a static property (PHP 8.1 deprecation)",
-                "url": "patches/pest-plugin-browser-4.3.1-reset-assertions-static-property.patch",
+                "url": "patches/pest-plugin-browser-5.0.0-reset-assertions-static-property.patch",
                 "sha256": "19bad60c52344ddfa334413daf0656919632f56df48f7d5896407c97f846f4e5",
-                "depth": 1,
-                "extra": {
-                    "provenance": "root"
-                }
-            },
-            {
-                "package": "pestphp/pest-plugin-browser",
-                "description": "Fix the playwright run-server process leaking past pest's own exit: start it via an argv array instead of a shell string so proc_open() execve()s it directly (no shell, nothing left for stop()'s SIGTERM to miss) -- root-caused live via /proc inspection, matches the still-open upstream fix in PR pestphp/pest-plugin-browser#169",
-                "url": "patches/pest-plugin-browser-4.3.1-stop-server-without-shell.patch",
-                "sha256": "6d8d0240b977531bf17a0231dc7d15dc67b6a9bec87f85ed6cdca66b24922137",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

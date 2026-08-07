@@ -6,6 +6,7 @@ namespace Piwigo\Users\Projection;
 
 use InvalidArgumentException;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ArrayHelper;
@@ -33,10 +34,15 @@ use Piwigo\Users\UserInfoEntity;
  * boolean column; a repository-layer projection is the correct place to
  * finish that conversion to a real PHP `bool` once.
  *
- * `registration_date`/`last_visit`/`activation_key`/`activation_key_expire`
- * stay `?string`, not `\DateTimeImmutable` -- every real consumer today
+ * `registration_date`/`last_visit`/`activation_key_expire` stay `?string`
+ * here (this Projection's own convention) -- every real consumer today
  * expects the raw DB DATETIME string form, same reasoning as
- * {@see \Piwigo\Image\Projection\Image}. `preferences` is `?array`, decoded
+ * {@see \Piwigo\Image\Projection\Image}. `UserInfoEntity`'s own
+ * `$registrationDate`/`$activationKeyExpire`/`$lastVisit` are
+ * `SqlDateTime`-typed (Phase 5) -- `fromEntity()` unwraps `->value`,
+ * `fromRow()` accepts either a real instance (a `getArrayResult()`
+ * -hydrated row) or a raw string. `activation_key` stays `?string` at the
+ * entity level too (not a datetime column). `preferences` is `?array`, decoded
  * via `ArrayHelper::safeJsonDecode()` -- the column is JSON (gap-closure
  * Stage 1a-bis item 3), matching {@see \Piwigo\Users\User::fromUserArray()}'s
  * own already-decoded-array expectation for the same data.
@@ -91,12 +97,18 @@ final readonly class UserInfo
             showNbHits: (bool) ($row['show_nb_hits'] ?? false),
             recentPeriod: is_numeric($row['recent_period'] ?? null) ? (int) $row['recent_period'] : 0,
             theme: is_string($row['theme'] ?? null) ? $row['theme'] : '',
-            registrationDate: is_string($row['registration_date'] ?? null) ? $row['registration_date'] : null,
+            registrationDate: ($row['registration_date'] ?? null) instanceof SqlDateTime
+                ? $row['registration_date']->value
+                : (is_string($row['registration_date'] ?? null) ? $row['registration_date'] : null),
             enabledHigh: (bool) ($row['enabled_high'] ?? false),
             level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
             activationKey: is_string($row['activation_key'] ?? null) ? $row['activation_key'] : null,
-            activationKeyExpire: is_string($row['activation_key_expire'] ?? null) ? $row['activation_key_expire'] : null,
-            lastVisit: is_string($row['last_visit'] ?? null) ? $row['last_visit'] : null,
+            activationKeyExpire: ($row['activation_key_expire'] ?? null) instanceof SqlDateTime
+                ? $row['activation_key_expire']->value
+                : (is_string($row['activation_key_expire'] ?? null) ? $row['activation_key_expire'] : null),
+            lastVisit: ($row['last_visit'] ?? null) instanceof SqlDateTime
+                ? $row['last_visit']->value
+                : (is_string($row['last_visit'] ?? null) ? $row['last_visit'] : null),
             lastVisitFromHistory: (bool) ($row['last_visit_from_history'] ?? false),
             lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : '',
             preferences: is_string($preferencesRaw)
@@ -117,12 +129,12 @@ final readonly class UserInfo
             showNbHits: $entity->showNbHits,
             recentPeriod: $entity->recentPeriod,
             theme: $entity->theme,
-            registrationDate: $entity->registrationDate,
+            registrationDate: $entity->registrationDate?->value,
             enabledHigh: $entity->enabledHigh,
             level: $entity->level,
             activationKey: $entity->activationKey,
-            activationKeyExpire: $entity->activationKeyExpire,
-            lastVisit: $entity->lastVisit,
+            activationKeyExpire: $entity->activationKeyExpire?->value,
+            lastVisit: $entity->lastVisit?->value,
             lastVisitFromHistory: $entity->lastVisitFromHistory,
             lastmodified: $entity->lastmodified,
             preferences: $entity->preferences,

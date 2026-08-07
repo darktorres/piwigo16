@@ -274,7 +274,7 @@ final readonly class AuthRepository
         }
 
         $entity->activationKey = $hash;
-        $entity->activationKeyExpire = $expire->format(self::DATETIME_FORMAT);
+        $entity->activationKeyExpire = SqlDateTime::from($expire->format(self::DATETIME_FORMAT));
         $this->em->flush();
     }
 

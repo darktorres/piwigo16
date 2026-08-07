@@ -6,6 +6,7 @@ namespace Piwigo\Users;
 
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
@@ -40,10 +41,13 @@ use Piwigo\Common\ValueObject\UserId;
  * raw string and a UserStatus instance bind correctly against this
  * column, so no caller constructing a `setParameter('status', ...)`
  * needs to account for it.
- * `registration_date`/`activation_key_expire`/`last_visit` stay plain
- * ?string, not \DateTimeImmutable -- every real consumer today expects the
- * raw DB DATETIME string form, same reasoning as UserInfo::fromRow()'s own
- * decision. `preferences` maps as native Doctrine `json` (the column
+ * `registration_date`/`activation_key_expire`/`last_visit` are
+ * `SqlDateTime`-typed (Phase 5) -- every real write path
+ * (`UserRepository::buildUserInfoEntity()`, `AuthRepository::
+ * setActivationKey()`/`clearActivationKey()`) traces to an
+ * `Env::now()`-derived or caller-supplied-and-validated value.
+ * `Users\Projection\UserInfo` keeps its own plain-string convention for
+ * all 3. `preferences` maps as native Doctrine `json` (the column
  * really is JSON, unlike Config\ConfigEntry's still-text `value` column) --
  * no round-trip-fidelity requirement forces a raw-string exception here,
  * unlike Audit\AuditLogEntity's hash-chain columns.
@@ -83,18 +87,18 @@ final class UserInfoEntity
         public int $recentPeriod,
         #[ORM\Column(type: 'string', length: 255)]
         public string $theme,
-        #[ORM\Column(name: 'registration_date', type: 'string', length: 19, nullable: true)]
-        public ?string $registrationDate,
+        #[ORM\Column(name: 'registration_date', type: 'sql_datetime', length: 19, nullable: true)]
+        public ?SqlDateTime $registrationDate,
         #[ORM\Column(name: 'enabled_high', type: 'boolean')]
         public bool $enabledHigh,
         #[ORM\Column(type: 'smallint')]
         public int $level,
         #[ORM\Column(name: 'activation_key', type: 'string', length: 255, nullable: true)]
         public ?string $activationKey,
-        #[ORM\Column(name: 'activation_key_expire', type: 'string', length: 19, nullable: true)]
-        public ?string $activationKeyExpire,
-        #[ORM\Column(name: 'last_visit', type: 'string', length: 19, nullable: true)]
-        public ?string $lastVisit,
+        #[ORM\Column(name: 'activation_key_expire', type: 'sql_datetime', length: 19, nullable: true)]
+        public ?SqlDateTime $activationKeyExpire,
+        #[ORM\Column(name: 'last_visit', type: 'sql_datetime', length: 19, nullable: true)]
+        public ?SqlDateTime $lastVisit,
         #[ORM\Column(name: 'last_visit_from_history', type: 'boolean')]
         public bool $lastVisitFromHistory,
         #[ORM\Column(type: 'string', length: 19)]

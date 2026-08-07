@@ -17,6 +17,7 @@ use Piwigo\Category\UserAccessEntity;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
@@ -492,12 +493,12 @@ final class UserRepository implements WebmasterMailProviderInterface
             showNbHits: (bool) ($row['show_nb_hits'] ?? false),
             recentPeriod: is_numeric($row['recent_period'] ?? null) ? (int) $row['recent_period'] : 7,
             theme: is_string($row['theme'] ?? null) ? $row['theme'] : 'default',
-            registrationDate: is_string($row['registration_date'] ?? null) ? $row['registration_date'] : null,
+            registrationDate: SqlDateTime::tryFrom($row['registration_date'] ?? null),
             enabledHigh: (bool) ($row['enabled_high'] ?? true),
             level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
             activationKey: is_string($row['activation_key'] ?? null) ? $row['activation_key'] : null,
-            activationKeyExpire: is_string($row['activation_key_expire'] ?? null) ? $row['activation_key_expire'] : null,
-            lastVisit: is_string($row['last_visit'] ?? null) ? $row['last_visit'] : null,
+            activationKeyExpire: SqlDateTime::tryFrom($row['activation_key_expire'] ?? null),
+            lastVisit: SqlDateTime::tryFrom($row['last_visit'] ?? null),
             lastVisitFromHistory: (bool) ($row['last_visit_from_history'] ?? false),
             lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : Env::now()->format('Y-m-d H:i:s'),
             preferences: is_array($preferencesRaw) ? array_filter($preferencesRaw, is_string(...), ARRAY_FILTER_USE_KEY) : null,
@@ -904,12 +905,12 @@ final class UserRepository implements WebmasterMailProviderInterface
             'show_nb_hits' => $userInfo->showNbHits,
             'recent_period' => $userInfo->recentPeriod,
             'theme' => $userInfo->theme,
-            'registration_date' => $userInfo->registrationDate,
+            'registration_date' => $userInfo->registrationDate?->value,
             'enabled_high' => $userInfo->enabledHigh,
             'level' => $userInfo->level,
             'activation_key' => $userInfo->activationKey,
-            'activation_key_expire' => $userInfo->activationKeyExpire,
-            'last_visit' => $userInfo->lastVisit,
+            'activation_key_expire' => $userInfo->activationKeyExpire?->value,
+            'last_visit' => $userInfo->lastVisit?->value,
             'last_visit_from_history' => $userInfo->lastVisitFromHistory,
             'lastmodified' => $userInfo->lastmodified,
             'preferences' => $userInfo->preferences,
@@ -1395,9 +1396,11 @@ final class UserRepository implements WebmasterMailProviderInterface
      * check for the mobile-app promotion banner.
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * column/property, plain string `registrationDate` (no custom-type
-     * hydration concern). setMaxResults(1) reproduces the original's LIMIT
-     * 1.
+     * column/property. `registrationDate` is `SqlDateTime`-typed (Phase 5),
+     * but `getSingleColumnResult()` (`HYDRATE_SCALAR_COLUMN`, this
+     * codebase's own Gotcha #4) never applies a column's custom Type, so
+     * this stays a plain string regardless. setMaxResults(1) reproduces
+     * the original's LIMIT 1.
      */
     public function findEarliestRegistrationDate(): ?string
     {
@@ -1485,8 +1488,10 @@ final class UserRepository implements WebmasterMailProviderInterface
      * "can't express the grouping in DQL" shape as a GROUP BY alias.
      * Fetches `registrationDate` per row instead and computes the distinct
      * set in PHP -- an admin-only dropdown filter, not a hot path.
-     * `registrationDate` is a `Y-m-d H:i:s` string
-     * (`UserInfoEntity`'s own `length: 19`), so slicing it directly
+     * `registrationDate` is `SqlDateTime`-typed (Phase 5); `getArrayResult()`
+     * (Gotcha #1) applies that Type during hydration, so the row mapper
+     * below unwraps via `instanceof` before slicing it in its canonical
+     * `Y-m-d H:i:s` form (`UserInfoEntity`'s own `length: 19`), which
      * reproduces `MONTH()`/`YEAR()`'s output exactly, already zero-padded.
      * A null `registrationDate` (real for some users --
      * {@see findEarliestRegistrationDate()}'s own docblock) reproduces the
@@ -1511,6 +1516,7 @@ final class UserRepository implements WebmasterMailProviderInterface
             }
 
             $registrationDate = $row['registration_date'] ?? null;
+            $registrationDate = $registrationDate instanceof SqlDateTime ? $registrationDate->value : $registrationDate;
             $yearMonth = is_string($registrationDate)
                 ? substr($registrationDate, 0, 4) . '-' . substr($registrationDate, 5, 2)
                 : '-00';
@@ -1963,7 +1969,7 @@ final class UserRepository implements WebmasterMailProviderInterface
             return null;
         }
 
-        return $this->find($id)?->registrationDate;
+        return $this->find($id)?->registrationDate?->value;
     }
 
     /**

@@ -51,11 +51,11 @@ The scaffolding every other phase rests on. Arch tests enforce the "no legacy ba
 
 ### 1.1 Repo layout + Composer
 
-- [ ] Create top-level tree per plan §32 (public/, src/, tests/, templates/, themes/, plugins/, database/, config/, bootstrap/, bin/, docs/, var/, _data/).
+- [ ] Create top-level tree per plan §32 (public/, src/, tests/, templates/, themes/, plugins/, database/, config/, bootstrap/, bin/, docs/, var/, storage/).
 - [ ] Write `composer.json` with: `php ^8.5`, `nyholm/psr7`, `nyholm/psr7-server`, `nikic/fast-route`, `relay/relay`, `php-di/php-di`, `league/event`, `monolog/monolog`, `symfony/console`, `symfony/messenger`, `symfony/mailer`, `symfony/translation`, `symfony/cache`, `symfony/scheduler`, `vlucas/phpdotenv`, `jcupitt/vips`, `latte/latte`, `ramsey/uuid`, `open-telemetry/sdk`. Dev: `pestphp/pest`, `pestphp/pest-plugin-arch`, `phpstan/phpstan`, `laravel/pint`, `infection/infection`, `symfony/panther`.
 - [ ] Commit `composer.lock`.
 - [ ] Write `package.json` + `bun.lockb` with Vite + a minimal CSS/JS setup.
-- [ ] `.gitignore` — vendor, node_modules, var/, _data/, .env, dist/.
+- [ ] `.gitignore` — vendor, node_modules, var/, storage/, .env, dist/.
 - [ ] `.editorconfig`.
 
 ### 1.2 Config + DI + CLI bootstrap
@@ -64,9 +64,9 @@ The scaffolding every other phase rests on. Arch tests enforce the "no legacy ba
 - [ ] Implement `AppConfig`, `DatabaseConfig`, `SessionConfig`, `MailConfig`, `DerivativeConfig` — readonly classes with `fromEnv()` constructors. (§3)
 - [ ] Commit `.env.example` with every recognized key and inline comments.
 - [ ] Wire PHP-DI container in `bootstrap/app.php` with dev (autowiring) and prod (compiled) modes. (§3)
-- [ ] Compiled-container output path `var/cache/container.php`; `php bin/piwigo container:build` CLI command.
-- [ ] `bin/piwigo` entry script; Symfony Console application registered with a minimal `about` command.
-- [ ] `php bin/piwigo about` prints environment summary (PHP version, extensions, DB DSN, worker status).
+- [ ] Compiled-container output path `var/cache/container.php`; `php bin/gallery container:build` CLI command.
+- [ ] `bin/gallery` entry script; Symfony Console application registered with a minimal `about` command.
+- [ ] `php bin/gallery about` prints environment summary (PHP version, extensions, DB DSN, worker status).
 
 ### 1.3 PSR-15 middleware pipeline
 
@@ -85,7 +85,7 @@ The scaffolding every other phase rests on. Arch tests enforce the "no legacy ba
 - [ ] Implement the `#[Route]` attribute and a scanner. (§9)
 - [ ] First route: `GET /healthz` returning `{ "status": "ok" }`. (§12)
 - [ ] First route: `GET /` returning a hello-world Latte template.
-- [ ] `php bin/piwigo route:list`.
+- [ ] `php bin/gallery route:list`.
 
 ### 1.5 Database layer
 
@@ -96,7 +96,7 @@ The scaffolding every other phase rests on. Arch tests enforce the "no legacy ba
 - [ ] CLI commands: `migrate`, `migrate:status`, `migrate:rollback`, `migrate:fresh`, `migrate:make`. (§4)
 - [ ] Initial migration `database/migrations/20260501120000_initial_schema.sql` creating every table from plan §16. (§16)
 - [ ] Seed migration `database/seeds/00_guest_user.sql` + `01_root_album.sql`. (§4)
-- [ ] `php bin/piwigo db:seed`.
+- [ ] `php bin/gallery db:seed`.
 - [ ] `DatabaseSessionHandler` stub — `SessionHandlerInterface` over the `sessions` table. (§8)
 
 ### 1.6 Testing harness
@@ -110,7 +110,7 @@ The scaffolding every other phase rests on. Arch tests enforce the "no legacy ba
 - [ ] PHPStan level max config (`phpstan.neon`); zero errors.
 - [ ] Pint config (`pint.json`); passing.
 - [ ] Infection config (`infection.json5`); excluded from per-PR runs.
-- [ ] `php bin/piwigo ci` command — runs pint, phpstan, pest in order.
+- [ ] `php bin/gallery ci` command — runs pint, phpstan, pest in order.
 
 ### 1.7 Template engine
 
@@ -123,7 +123,7 @@ The scaffolding every other phase rests on. Arch tests enforce the "no legacy ba
 ### 1.8 Runtime
 
 - [ ] `franken-worker.php` entry point per plan §2. (§2)
-- [ ] `franken-worker-i.php` derivative worker entry point. (§2)
+- [ ] `franken-worker-media.php` derivative worker entry point. (§2)
 - [ ] `Caddyfile` for prod; `Caddyfile.dev` for dev. (§2)
 - [ ] `Dockerfile` using `dunglas/frankenphp:1-php8.5`. (§2)
 - [ ] `docker-compose.dev.yml` with MySQL, Redis, Mailpit, MinIO. (§19)
@@ -131,15 +131,15 @@ The scaffolding every other phase rests on. Arch tests enforce the "no legacy ba
 ### 1.9 CI
 
 - [ ] GitHub Actions workflow `.github/workflows/ci.yml` — runs `pint --test`, `phpstan analyse`, `pest --parallel --coverage --min=70`, `pest tests/Browser`.
-- [ ] Matrix: PHP 8.5, MySQL 8.4 + PostgreSQL 16.
+- [ ] Matrix: PHP 8.5, MySQL 9.7 LTS + MariaDB 11.8 LTS + PostgreSQL 18.
 - [ ] Nightly workflow `.github/workflows/nightly.yml` — Infection mutation testing, performance benchmarks, `composer audit`, `bun audit`.
 - [ ] OpenAPI-spec drift check (will do nothing until Phase 9, but the hook exists).
 - [ ] Badge in README.
 
 ### Phase 1 Definition of Done
 
-- `php bin/piwigo migrate` creates every table in the initial schema.
-- `php bin/piwigo db:seed` populates defaults.
+- `php bin/gallery migrate` creates every table in the initial schema.
+- `php bin/gallery db:seed` populates defaults.
 - `GET /` returns 200 with a hello-world page.
 - `GET /healthz` returns 200 JSON.
 - CI is green.
@@ -226,7 +226,7 @@ Login, registration, sessions, access levels — the base for every later featur
 
 ### 2.11 CLI
 
-- [ ] `php bin/piwigo admin:create --username --email [--password]`. (§14 install)
+- [ ] `php bin/gallery admin:create --username --email [--password]`. (§14 install)
 - [ ] `user:create`, `user:list`, `user:promote {username} {level}`.
 
 ### 2.12 Tests
@@ -362,7 +362,7 @@ The heaviest domain phase. Upload pipeline, libvips wrapper, derivative generati
 - [ ] `DerivativeConfig::resolvePreset($name)`. (§3, §5)
 - [ ] Derivative presets: `thumbnail`, `small`, `medium`, `large`, `xlarge` — defined in `config/derivative-presets.php`.
 - [ ] `DerivativeService::serve($request)` — cache hit / miss / generate flow. (§5)
-- [ ] URL grammar `/i/{preset}/{uuid}.{ext}` + `/i/custom/{uuid}?...&s=...`. (§5)
+- [ ] URL grammar `/media/{preset}/{uuid}.{ext}` + `/media/custom/{uuid}?...&s=...`. (§5)
 - [ ] `DerivativeController::serve` + `::serveNegotiated` + `::serveCustom`. (§9)
 - [ ] Signed URLs via HMAC-SHA256. (§5)
 - [ ] Format negotiation from `Accept`. (§5)
@@ -381,8 +381,8 @@ The heaviest domain phase. Upload pipeline, libvips wrapper, derivative generati
 
 ### 4.8 Derivative worker
 
-- [ ] `franken-worker-i.php` bootstrap (from Phase 1) runs `DerivativeController::serve`.
-- [ ] Caddy routes `/i/*` to the derivative worker pool. (§2)
+- [ ] `franken-worker-media.php` bootstrap (from Phase 1) runs `DerivativeController::serve`.
+- [ ] Caddy routes `/media/*` to the derivative worker pool. (§2)
 - [ ] Locking + thundering-herd test. (§5)
 
 ### 4.9 Golden-image tests
@@ -647,7 +647,7 @@ Make extensibility first-class. The core ships a minimal example plugin to prove
 
 - [ ] `PluginInterface`. (§7)
 - [ ] `BasicPlugin` trait with no-op lifecycle defaults. (§7)
-- [ ] `PluginLoader` — scans `plugins/*/*/composer.json` + installed Composer packages with `type: piwigo-plugin`. (§7)
+- [ ] `PluginLoader` — scans `plugins/*/*/composer.json` + installed Composer packages with `type: gallery-plugin`. (§7)
 - [ ] `PluginRegistry` — tracks enabled/disabled state in DB; topologically sorts on dependency graph. (§7)
 - [ ] `plugins` table migration: name, version, enabled, installed_at.
 - [ ] `#[Subscribe]` attribute + scanner for auto-subscribing listeners. (§7)
@@ -660,9 +660,9 @@ Make extensibility first-class. The core ships a minimal example plugin to prove
 - [ ] Implement every event class from plan §23.
 - [ ] Wire each dispatch point in the core (most were stubbed in earlier phases; now make them real).
 - [ ] `CancellableEventInterface` where relevant.
-- [ ] `docs/events.md` generator: `php bin/piwigo events:dump`.
-- [ ] `php bin/piwigo events:list [--filter=X]`.
-- [ ] `php bin/piwigo events:show {EventClass}` — payload schema + current subscribers.
+- [ ] `docs/events.md` generator: `php bin/gallery events:dump`.
+- [ ] `php bin/gallery events:list [--filter=X]`.
+- [ ] `php bin/gallery events:show {EventClass}` — payload schema + current subscribers.
 
 ### 8.3 Plugin admin
 
@@ -674,7 +674,7 @@ Make extensibility first-class. The core ships a minimal example plugin to prove
 ### 8.4 Example plugin
 
 - [ ] `plugins/example/copyright/` — adds "© $author" to picture pages. (§7)
-- [ ] Package published to Packagist (or example registry) under `example/piwigo-copyright`.
+- [ ] Package published to Packagist (or example registry) under `example/gallery-copyright`.
 - [ ] Tests cover the example plugin's event subscription + rendering.
 
 ### 8.5 Plugin asset pipeline
@@ -692,7 +692,7 @@ Make extensibility first-class. The core ships a minimal example plugin to prove
 
 ### Phase 8 Definition of Done
 
-- `php bin/piwigo plugin:install example/piwigo-copyright`, enable in admin, see the plugin's output in the gallery.
+- `php bin/gallery plugin:install example/gallery-copyright`, enable in admin, see the plugin's output in the gallery.
 - Plugin API documented end-to-end in `docs/`.
 
 ---
@@ -756,7 +756,7 @@ For each resource: `index`, `show`, `create`, `update`, `delete` where applicabl
 ### 9.6 OpenAPI
 
 - [ ] `#[OpenApi\Operation]`, `#[OpenApi\Filter]`, `#[OpenApi\Sort]` attributes. (§22)
-- [ ] `php bin/piwigo openapi:dump > docs/api/v1/openapi.yaml`. (§22)
+- [ ] `php bin/gallery openapi:dump > docs/api/v1/openapi.yaml`. (§22)
 - [ ] Ship Scalar or Swagger UI at `/api/v1/docs`.
 - [ ] CI check: regenerate spec, fail if it differs from the committed copy.
 

@@ -208,7 +208,7 @@ yourdomain.com {
 
     # Derivatives — served by PHP the first time (generates on miss),
     # then by Caddy directly once written to the cache directory
-    @derivatives path /i/*
+    @derivatives path /media/*
     handle @derivatives {
         try_files {path} @php
     }
@@ -278,7 +278,7 @@ Architecture tests enforce the safe patterns. A checklist in `CONTRIBUTING.md` c
 Derivative generation benefits from worker mode too: libvips has a sizeable warm-up cost (loading color profiles, spinning up thread pools) that is paid once per worker instead of once per request.
 
 ```php
-// franken-worker-i.php
+// franken-worker-media.php
 declare(strict_types=1);
 
 require __DIR__ . '/vendor/autoload.php';
@@ -295,7 +295,7 @@ while (frankenphp_handle_request(static function () use ($derivativeApp): void {
 }
 ```
 
-A separate worker pool for derivative generation keeps slow image operations from starving gallery page requests. Caddy routes `/i/*` to this pool.
+A separate worker pool for derivative generation keeps slow image operations from starving gallery page requests. Caddy routes `/media/*` to this pool.
 
 ### Benchmarks (informal, for scale)
 
@@ -737,7 +737,7 @@ Mitigations:
 
 ### Multi-database adapters
 
-MySQL and PostgreSQL are both supported. A `DatabaseAdapterInterface` abstracts the dialect-specific operations:
+MySQL 9.7 LTS, MariaDB 11.8 LTS, and PostgreSQL 18 are all supported. A `DatabaseAdapterInterface` abstracts the dialect-specific operations:
 
 ```php
 interface DatabaseAdapterInterface
@@ -764,7 +764,7 @@ interface DatabaseAdapterInterface
 }
 ```
 
-`MySqlAdapter` and `PostgresAdapter` implement this. Everything dialect-specific lives in these two files — repositories call `$adapter->upsertSql(...)` without branching.
+`MySqlAdapter`, `MariaDbAdapter`, and `PostgresAdapter` implement this. Everything dialect-specific lives in these three files — repositories call `$adapter->upsertSql(...)` without branching. `MariaDbAdapter` extends `MySqlAdapter` and overrides only the places MariaDB diverges: the `JSON` type is a `LONGTEXT`-with-check-constraint alias rather than a native type, so functional JSON indexes go through `JSON_VALUE(... RETURNING ...)`; collations use `utf8mb4_uca1400_ai_ci` (MariaDB 10.10+) instead of `utf8mb4_0900_ai_ci`; and `UUID` is a native type (MariaDB 10.7+) so `BINARY(16)` is not needed.
 
 ### Schema design principles
 
@@ -775,8 +775,8 @@ The new schema is **not** a port of the Piwigo 14 schema. Key principles:
 - **Timestamps everywhere.** `created_at`, `updated_at` on every row; `deleted_at` on soft-deletable entities (users, comments — not images or albums, which are hard-deleted).
 - **Foreign keys with `ON DELETE CASCADE`** for owned relationships (image tags cascade on image delete); `ON DELETE SET NULL` for non-owning (album parent_id).
 - **No polymorphic columns.** `taggable_type` / `taggable_id` anti-patterns stay out; separate join tables instead.
-- **UTF-8 / utf8mb4 everywhere.** No Latin-1 fallbacks. PostgreSQL uses `UTF8` encoding with `C.UTF-8` collation; MySQL uses `utf8mb4_0900_ai_ci`.
-- **Binary UUIDs** for externally-exposed identifiers (API resources), stored as `BINARY(16)` on MySQL and `UUID` on Postgres. Sequential `bigint id`s stay internal.
+- **UTF-8 / utf8mb4 everywhere.** No Latin-1 fallbacks. PostgreSQL uses `UTF8` encoding with `C.UTF-8` collation; MySQL uses `utf8mb4_0900_ai_ci`; MariaDB uses `utf8mb4_uca1400_ai_ci`.
+- **Binary UUIDs** for externally-exposed identifiers (API resources), stored as `BINARY(16)` on MySQL, native `UUID` on Postgres and on MariaDB 10.7+. Sequential `bigint id`s stay internal.
 - **Explicit indexes on every foreign key and every WHERE column.** No implicit assumptions about MySQL's behavior.
 
 The full ERD lives in `database/SCHEMA.md` once the rewrite starts.
@@ -984,30 +984,30 @@ Presets (`thumbnail`, `medium`, `large`, `xlarge`) are defined in config as `Der
 
 ### URL grammar
 
-The new derivative URL is its own design — not a port of Piwigo's `/i/...` grammar:
+The new derivative URL is its own design — not a port of Piwigo's `/i/...` grammar. We use `/media/` to keep the path open for future video derivatives without a breaking URL split:
 
 ```
-/i/{preset}/{image_uuid}.{format}
+/media/{preset}/{image_uuid}.{format}
 ```
 
 Examples:
 
 ```
-/i/thumbnail/0198f3c5-7e5a-7c2d-9b1a-b37a2f0c8100.webp
-/i/large/0198f3c5-7e5a-7c2d-9b1a-b37a2f0c8100.avif
+/media/thumbnail/0198f3c5-7e5a-7c2d-9b1a-b37a2f0c8100.webp
+/media/large/0198f3c5-7e5a-7c2d-9b1a-b37a2f0c8100.avif
 ```
 
 Signed URLs (for custom params, or for private images with time-limited access) add a signature query:
 
 ```
-/i/custom/{image_uuid}.{format}?w=1024&h=768&crop=coi&s={signature}&exp={unix_ts}
+/media/custom/{image_uuid}.{format}?w=1024&h=768&crop=coi&s={signature}&exp={unix_ts}
 ```
 
 Signature is HMAC-SHA256 over the URL components using a per-install secret. Unsigned custom URLs are rejected with 403.
 
 ### Format negotiation
 
-The `/i/{preset}/{uuid}` URL (with no extension) returns the best format the client accepts:
+The `/media/{preset}/{uuid}` URL (with no extension) returns the best format the client accepts:
 
 - `Accept: image/avif` → AVIF, falls back to WebP then JPEG
 - `Accept: image/webp` → WebP, falls back to JPEG
@@ -1019,7 +1019,7 @@ Caddy handles the negotiation via `Vary: Accept`, so a CDN can cache each varian
 
 `DerivativeStorage` abstracts over:
 
-- **Local disk** — `_data/i/{first-2-of-uuid}/{uuid}/{hash}.{ext}`. Caddy serves these directly after the first generation.
+- **Local disk** — `var/derivatives/{first-2-of-uuid}/{uuid}/{hash}.{ext}`. Caddy serves these directly after the first generation.
 - **S3-compatible** — via `league/flysystem-aws-s3-v3`, for deployments that want CDN-backed storage.
 
 The interface:
@@ -1080,7 +1080,7 @@ Watermarks are configured as an overlay image + positioning rules:
 
 ```php
 $watermark = new Watermark(
-    imagePath: '/var/www/piwigo/_data/watermark.png',
+    imagePath: '/var/www/piwigo/storage/watermark.png',
     position: WatermarkPosition::BottomRight,
     opacity: 0.6,
     minSize: 640, // don't watermark thumbnails
@@ -1403,10 +1403,10 @@ Declared in `composer.json`:
 
 ```json
 {
-    "name": "example/piwigo-gps-map",
-    "type": "piwigo-plugin",
+    "name": "example/gallery-gps-map",
+    "type": "gallery-plugin",
     "require": {
-        "piwigo/piwigo": "^1.0"
+        "gallery/gallery": "^1.0"
     },
     "autoload": {
         "psr-4": {
@@ -1414,7 +1414,7 @@ Declared in `composer.json`:
         }
     },
     "extra": {
-        "piwigo-plugin": {
+        "gallery-plugin": {
             "name": "GPS Map",
             "bootstrap": "Example\\GpsMap\\GpsMapPlugin",
             "min-core-version": "1.0.0",
@@ -1427,7 +1427,7 @@ Declared in `composer.json`:
 
 Plugin discovery at boot:
 
-1. Scan `plugins/*/*/composer.json` and any globally-installed Composer packages with `type: piwigo-plugin`.
+1. Scan `plugins/*/*/composer.json` and any globally-installed Composer packages with `type: gallery-plugin`.
 2. Build a dependency graph (plugins may depend on other plugins).
 3. Topologically sort — dependencies initialize first.
 4. Check each plugin's enabled status (stored in DB).
@@ -1954,9 +1954,9 @@ GET    /api/v1/search                 → Api\V1\SearchController::index
 GET    /api/v1/tags                   → Api\V1\TagController::index
 
 # Derivatives
-GET    /i/{preset}/{uuid}.{ext}       → DerivativeController::serve
-GET    /i/{preset}/{uuid}             → DerivativeController::serveNegotiated
-GET    /i/custom/{uuid}               → DerivativeController::serveCustom   (signed)
+GET    /media/{preset}/{uuid}.{ext}       → DerivativeController::serve
+GET    /media/{preset}/{uuid}             → DerivativeController::serveNegotiated
+GET    /media/custom/{uuid}           → DerivativeController::serveCustom   (signed)
 
 # Misc
 GET    /sitemap.xml                   → SitemapController::index
@@ -2241,7 +2241,7 @@ No shared `tests/fixtures/sample_data.sql`. No `setUp()` chains with 20 factory 
 
 - **SQLite in-memory** for most integration tests — zero setup, zero cleanup, faster than a real DB.
 - **PostgreSQL via `testcontainers`** when a test exercises Postgres-specific behavior (JSONB, array types, full-text). Spun up once per test suite, shared within it.
-- **MySQL 8 via `testcontainers`** for MySQL-specific behavior.
+- **MySQL 9.7 LTS via `testcontainers`** for MySQL-specific behavior. A second job runs **MariaDB 11.8 LTS** through the same adapter as a compatibility gate.
 - **No "golden test DB"** that all tests share. The next test shouldn't care what the previous one did.
 
 Migrations run at the start of each test DB creation; transactions wrap each test so changes roll back. For tests that themselves commit (rare — transaction-boundary tests), a `RefreshDatabase` trait drops-and-recreates.
@@ -2344,7 +2344,7 @@ Schemas live in `api/schemas/v1/`; breaking-change detection compares committed 
 Each PR runs tests across:
 
 - PHP: 8.5 (primary), 8.4 (compat verification)
-- DB: MySQL 8.4, PostgreSQL 16
+- DB: MySQL 9.7 LTS (primary), MariaDB 11.8 LTS (compat), PostgreSQL 18
 - OS: Ubuntu 22.04 (primary), macOS 14 (smoke test)
 
 The full matrix runs on main-branch pushes; per-PR jobs run only the primary cell to keep feedback fast.
@@ -2747,8 +2747,8 @@ If `SENTRY_DSN` is set, unhandled exceptions report to Sentry. Fields:
 CLI equivalents:
 
 ```
-php bin/piwigo healthcheck                 # exits 0/1 — suitable for monit / systemd
-php bin/piwigo healthcheck --verbose       # dumps each check's result
+php bin/gallery healthcheck                 # exits 0/1 — suitable for monit / systemd
+php bin/gallery healthcheck --verbose       # dumps each check's result
 ```
 
 ### Monitoring dashboards
@@ -2794,7 +2794,7 @@ Two distinct stores, answering different questions:
 ### Log retention
 
 - Structured logs: the app doesn't store them. Log aggregation (Loki, Elasticsearch, Datadog, Grafana Cloud, etc.) is the deployment's responsibility.
-- Audit log: configurable retention (default 365 days); `php bin/piwigo audit:prune` removes rows older than the window.
+- Audit log: configurable retention (default 365 days); `php bin/gallery audit:prune` removes rows older than the window.
 
 ### Operational runbooks
 
@@ -2924,7 +2924,7 @@ Four named queues with distinct concurrency profiles:
 Each queue is a long-lived process:
 
 ```
-php bin/piwigo messenger:consume images \
+php bin/gallery messenger:consume images \
     --limit=1000 \
     --time-limit=3600 \
     --memory-limit=256M
@@ -2938,7 +2938,7 @@ Description=Piwigo worker (%i queue)
 After=network-online.target
 
 [Service]
-ExecStart=/usr/bin/php /app/bin/piwigo messenger:consume %i --limit=1000 --time-limit=3600
+ExecStart=/usr/bin/php /app/bin/gallery messenger:consume %i --limit=1000 --time-limit=3600
 Restart=always
 User=piwigo
 WorkingDirectory=/app
@@ -2996,7 +2996,7 @@ final readonly class DefaultSchedule implements ScheduleProviderInterface
 Runs as its own process:
 
 ```
-php bin/piwigo messenger:consume scheduler_default
+php bin/gallery messenger:consume scheduler_default
 ```
 
 No crontab entries on the host — scheduler is PHP, versioned with the app.
@@ -3223,7 +3223,7 @@ $cache->invalidateTags(['album.17']);
 CLI command for post-deploy warm-up:
 
 ```
-php bin/piwigo cache:warm --routes --permissions --top-albums=10
+php bin/gallery cache:warm --routes --permissions --top-albums=10
 ```
 
 Pre-computes the route table, common permission resolves, and the first page of the N most-viewed albums. Optional — for installs that can't afford the first post-deploy request being slow.
@@ -3256,11 +3256,11 @@ The app has several categories of persistent data. Each has its own retention, b
 
 | Category | What it is | Where it lives | Recovery priority |
 |---|---|---|---|
-| **Originals** | User-uploaded source files, never modified after write | `_data/originals/` or S3 bucket | Non-negotiable — losing this is data loss |
-| **Derivatives** | On-demand-regeneratable thumbnails / medium / large / AVIF | `_data/derivatives/` or S3 bucket | Regenerable — acceptable to lose |
+| **Originals** | User-uploaded source files, never modified after write | `storage/originals/` or S3 bucket | Non-negotiable — losing this is data loss |
+| **Derivatives** | On-demand-regeneratable thumbnails / medium / large / AVIF | `var/derivatives/` or S3 bucket | Regenerable — acceptable to lose |
 | **Database** | All metadata: users, permissions, albums, tags, comments, audit log | MySQL / PostgreSQL | Non-negotiable |
 | **Session store** | Sessions, CSRF tokens, remember-me tokens | DB or Redis | Disposable — users re-login |
-| **Temporary uploads** | In-flight multipart uploads before validation | `_data/uploads/tmp/` | Disposable — ephemeral |
+| **Temporary uploads** | In-flight multipart uploads before validation | `var/uploads/tmp/` | Disposable — ephemeral |
 | **Logs (operational)** | Application stdout/file logs | Log aggregator | Operational — short retention |
 | **Logs (audit)** | Security-relevant events | DB table | Long retention (365+ days) |
 
@@ -3269,7 +3269,7 @@ The app has several categories of persistent data. Each has its own retention, b
 Content-addressed with a date-prefixed tree:
 
 ```
-_data/originals/
+storage/originals/
 ├── 2026/
 │   ├── 04/
 │   │   ├── 0198f3c5-7e5a-7c2d-9b1a-b37a2f0c8100.jpg
@@ -3289,7 +3289,7 @@ The DB column `images.storage_path` records the relative path. Migrating between
 ### Derivatives layout
 
 ```
-_data/derivatives/
+var/derivatives/
 ├── 01/                                     # first 2 chars of UUID
 │   └── 98/                                 # next 2 chars
 │       └── 0198f3c5.../
@@ -3338,7 +3338,7 @@ Hybrid deployments (originals on S3, derivative cache on local disk) work — th
 
 ### Uploads / temp directory
 
-Uploads stream to `_data/uploads/tmp/` before validation. A scheduled job removes stale files (> 24 h) not attached to an in-progress multipart upload.
+Uploads stream to `var/uploads/tmp/` before validation. A scheduled job removes stale files (> 24 h) not attached to an in-progress multipart upload.
 
 Resumable uploads (tus protocol) use this directory with an ID; the client can reconnect and resume an interrupted upload.
 
@@ -3370,8 +3370,8 @@ Documented step-by-step in `docs/operations/restore.md`:
 2. `composer install --no-dev`.
 3. Restore DB from the most recent known-good backup.
 4. Restore originals (from backup or sync from S3).
-5. `php bin/piwigo migrate` (no-op if backup includes current schema).
-6. `php bin/piwigo cache:clear`.
+5. `php bin/gallery migrate` (no-op if backup includes current schema).
+6. `php bin/gallery cache:clear`.
 7. Start FrankenPHP.
 8. Verify `/healthz`, `/readyz`, and a handful of known URLs.
 9. Derivative cache warms up on access — first page loads are slower; users notice nothing.
@@ -3393,14 +3393,14 @@ Warn at > 85% used; page at > 95%.
 Files on disk not referenced in the DB (crashes during upload, manual file moves, bugs):
 
 ```
-php bin/piwigo storage:orphans            # dry-run report
-php bin/piwigo storage:orphans --delete   # after human review
+php bin/gallery storage:orphans            # dry-run report
+php bin/gallery storage:orphans --delete   # after human review
 ```
 
 Symmetric: DB rows referencing non-existent files:
 
 ```
-php bin/piwigo storage:broken-links
+php bin/gallery storage:broken-links
 ```
 
 Run weekly via the scheduler; findings logged to audit.
@@ -3943,7 +3943,7 @@ locales/
 Compiled `.mo` files are built at deploy time:
 
 ```
-bun run build:locales   # or: php bin/piwigo translations:compile
+bun run build:locales   # or: php bin/gallery translations:compile
 ```
 
 PHP reads them via the native gettext extension or `symfony/translation`'s gettext loader (fallback if the extension isn't compiled into the PHP build).
@@ -3951,7 +3951,7 @@ PHP reads them via the native gettext extension or `symfony/translation`'s gette
 ### Extraction workflow
 
 ```
-php bin/piwigo translations:extract     # scans src/, templates/, plugins/, writes .pot
+php bin/gallery translations:extract     # scans src/, templates/, plugins/, writes .pot
 ```
 
 Extracts strings from:
@@ -4058,7 +4058,7 @@ No code change to add a locale beyond the config list.
 ### Untranslated string audit
 
 ```
-php bin/piwigo translations:audit --locale=ja
+php bin/gallery translations:audit --locale=ja
 ```
 
 Reports missing strings and percent-complete. Useful for PRs that touch UI strings — did we add new strings that need translation?
@@ -4090,7 +4090,7 @@ Docker Compose for dependencies (`docker-compose.dev.yml`) — the PHP app runs 
 ```yaml
 services:
   db:
-    image: mysql:8.4
+    image: mysql:9.7
     environment:
       MYSQL_ROOT_PASSWORD: dev
       MYSQL_DATABASE: piwigo_dev
@@ -4119,8 +4119,8 @@ Setup:
 ```
 docker compose -f docker-compose.dev.yml up -d
 cp .env.example .env.dev
-php bin/piwigo migrate
-php bin/piwigo db:seed --with-demo-data   # creates ~500 sample photos
+php bin/gallery migrate
+php bin/gallery db:seed --with-demo-data   # creates ~500 sample photos
 frankenphp run --config Caddyfile.dev
 bun run dev                                 # Vite dev server on :5173
 ```
@@ -4158,7 +4158,7 @@ Toggleable; zero impact in prod (middleware not wired).
 
 ### Demo data
 
-`php bin/piwigo db:seed --with-demo-data` creates:
+`php bin/gallery db:seed --with-demo-data` creates:
 
 - 20 users at various access levels.
 - 5 groups.
@@ -4187,7 +4187,7 @@ Documented in `docs/CONTRIBUTING.md`, but the gist:
 A scaffolding command generates file stubs:
 
 ```
-php bin/piwigo make:feature "album export"
+php bin/gallery make:feature "album export"
 ```
 
 Creates: route entry, controller class, test file, template, empty migration. Delete what's not needed.
@@ -4206,7 +4206,7 @@ Failing hook blocks commit. `--no-verify` is possible but CI catches it.
 ### CI parity locally
 
 ```
-php bin/piwigo ci
+php bin/gallery ci
 ```
 
 Runs the same checks CI runs, in the same order. "Green locally → green in CI" is the goal; flake-free CI is the discipline.
@@ -4235,14 +4235,14 @@ Aimed at a developer new to this codebase but comfortable with PHP.
 ### Useful local commands
 
 ```
-php bin/piwigo about                        # environment summary
-php bin/piwigo route:list                   # all routes + their middleware
-php bin/piwigo container:dump               # DI wiring inspection
-php bin/piwigo tinker                       # REPL via psy/psysh
-php bin/piwigo db:dump > dump.sql           # DB dump including data
-php bin/piwigo migrate:fresh --seed=demo    # nuke + rebuild with demo data
-php bin/piwigo translations:audit           # missing-translation report
-php bin/piwigo events:list                  # all registered event listeners
+php bin/gallery about                        # environment summary
+php bin/gallery route:list                   # all routes + their middleware
+php bin/gallery container:dump               # DI wiring inspection
+php bin/gallery tinker                       # REPL via psy/psysh
+php bin/gallery db:dump > dump.sql           # DB dump including data
+php bin/gallery migrate:fresh --seed=demo    # nuke + rebuild with demo data
+php bin/gallery translations:audit           # missing-translation report
+php bin/gallery events:list                  # all registered event listeners
 ```
 
 ### Docs as code
@@ -4616,9 +4616,9 @@ A user can save a query with a name; saved searches are rows in `saved_searches(
 - **Full reindex:** CLI command for disaster recovery or initial import:
 
 ```
-php bin/piwigo search:reindex           # all types
-php bin/piwigo search:reindex images    # just one type
-php bin/piwigo search:reindex --since=2026-01-01
+php bin/gallery search:reindex           # all types
+php bin/gallery search:reindex images    # just one type
+php bin/gallery search:reindex --since=2026-01-01
 ```
 
 Batched (500 docs/batch); progress bar; resumable via a checkpoint row.
@@ -4882,7 +4882,7 @@ Generated from PHP via attributes + DTO introspection:
 public function index(ServerRequestInterface $req): ResponseInterface { ... }
 ```
 
-`php bin/piwigo openapi:dump > docs/api/v1/openapi.yaml` produces the spec on demand; CI regenerates it and fails if it diverges from the committed copy. Drift between code and spec is a bug.
+`php bin/gallery openapi:dump > docs/api/v1/openapi.yaml` produces the spec on demand; CI regenerates it and fails if it diverges from the committed copy. Drift between code and spec is a bug.
 
 Served at `/api/v1/openapi.yaml` + interactive docs via Scalar or Swagger UI at `/api/v1/docs`.
 
@@ -5085,7 +5085,7 @@ Cancellation: mutable "before" events implement `CancellableEventInterface`; cal
 
 | Event | Fired when | Payload | Mutable |
 |---|---|---|---|
-| `DerivativeRequested` | Cache miss on `/i/...` | `DerivativeRequest $req`, `Image $source` | No |
+| `DerivativeRequested` | Cache miss on `/media/...` | `DerivativeRequest $req`, `Image $source` | No |
 | `DerivativeGenerating` | Before libvips runs | `Image $source`, `DerivativeParams $params`, cancellable | Yes |
 | `DerivativeGenerated` | File written to cache | `Image $source`, `DerivativeParams $params`, `$path`, `$bytes` | No |
 | `DerivativeFlushed` | Manual or scheduled purge | `Image $source` | No |
@@ -5201,9 +5201,9 @@ If an event is renamed or removed:
 ### Event discovery
 
 ```
-php bin/piwigo events:list
-php bin/piwigo events:list --filter=Image
-php bin/piwigo events:show Piwigo\Event\Image\ImageCreated    # full payload schema + listeners currently subscribed
+php bin/gallery events:list
+php bin/gallery events:list --filter=Image
+php bin/gallery events:show Piwigo\Event\Image\ImageCreated    # full payload schema + listeners currently subscribed
 ```
 
 Generates event reference docs as part of `docs/events.md` at CI time.
@@ -5318,7 +5318,7 @@ All files receive the same initial album + tags set by the user in the form; per
 For admins importing large directory trees (existing photo library, scanned-film archive, camera SD dump), the CLI sync walks a filesystem and reconciles with the DB.
 
 ```
-php bin/piwigo sync /photos/2024-vacation [--options]
+php bin/gallery sync /photos/2024-vacation [--options]
 ```
 
 Options:
@@ -5355,7 +5355,7 @@ Options:
 ### Dry-run output
 
 ```
-$ php bin/piwigo sync /photos/2024-vacation --mirror-tree --dry-run
+$ php bin/gallery sync /photos/2024-vacation --mirror-tree --dry-run
 
 Sync plan for /photos/2024-vacation → album "Vacation 2024"
 ────────────────────────────────────────────────────────────
@@ -6068,7 +6068,7 @@ Warning shown in upload UI: "GPS coordinates will be removed for privacy."
 For content that must be removed (DMCA, defamation, CSAM reporting):
 
 ```
-php bin/piwigo takedown --image={id} --reason="DMCA notice 2026-04-20" --notify-uploader
+php bin/gallery takedown --image={id} --reason="DMCA notice 2026-04-20" --notify-uploader
 ```
 
 - Image marked `deleted_at` (not purged immediately).
@@ -6221,7 +6221,7 @@ Each walkthrough names the files/classes involved — a breadcrumb trail through
    - `AuthMiddleware` populates `$request->user`.
    - Router dispatches to `Api\V1\UploadController::init`.
 3. Controller validates the user has `can_upload` on the target album (via `PermissionService`).
-4. Controller creates a tus upload record in `_data/uploads/tmp/` and returns a `Location` header with the upload URL.
+4. Controller creates a tus upload record in `var/uploads/tmp/` and returns a `Location` header with the upload URL.
 5. Client PATCHes chunks to that URL; server appends bytes.
 6. After final chunk: `UploadController::complete` triggers the validation pipeline (§5 + §24):
    - `VipsProcessor::probe()` → magic bytes + dimensions.
@@ -6230,7 +6230,7 @@ Each walkthrough names the files/classes involved — a breadcrumb trail through
    - `ImageDeduplicator::check()` → sha256 + pHash lookup; if duplicate, configurable behavior.
    - `ImageUploadingEvent` dispatched → plugins may veto.
    - `QuotaService::debit()` inside DB transaction; fails with 413 if exceeded.
-   - `StorageBackend::put()` → write to `_data/originals/2026/05/{uuid}.jpg`.
+   - `StorageBackend::put()` → write to `storage/originals/2026/05/{uuid}.jpg`.
    - `ImageRepository::save()` → INSERT `images` row + `image_albums` + `image_tags`.
    - Transaction commits.
    - `ImageCreatedEvent` dispatched → `QueueReindexOnImageChange` listener enqueues `ReindexSearchMessage`.
@@ -6241,7 +6241,7 @@ Each walkthrough names the files/classes involved — a breadcrumb trail through
 8. Client updates UI: green check on that file's row.
 9. Meanwhile, the `images` queue worker consumes `GenerateDerivativesMessage`:
    - `DerivativeService::ensureGenerated()` for each preset.
-   - libvips runs, derivative bytes written to `_data/derivatives/{shard}/{uuid}/{preset}.{hash}.{ext}`.
+   - libvips runs, derivative bytes written to `var/derivatives/{shard}/{uuid}/{preset}.{hash}.{ext}`.
    - `DerivativeGeneratedEvent` dispatched.
 
 **What's visible in logs:**
@@ -6304,9 +6304,9 @@ Each walkthrough names the files/classes involved — a breadcrumb trail through
 
 ### Walkthrough 3: Filesystem sync imports 10,000 photos
 
-**Actor:** admin runs `php bin/piwigo sync /photos/2024 --mirror-tree --progress` on a server shell.
+**Actor:** admin runs `php bin/gallery sync /photos/2024 --mirror-tree --progress` on a server shell.
 
-1. CLI entry point (`bin/piwigo`) boots a minimal container (no HTTP middleware needed).
+1. CLI entry point (`bin/gallery`) boots a minimal container (no HTTP middleware needed).
 2. `SyncCommand::execute`:
    - Validates the path exists and is readable.
    - Resolves the root album (creates one if `--mirror-tree` and missing).
@@ -6461,7 +6461,7 @@ Removed wholesale. Each row has a specific reason listed; nothing is dropped for
 | `config/database.inc.php` | `.env` + typed `DatabaseConfig` | PHP files for config invite code execution at config load; env vars are strictly data |
 | `install.php` / `upgrade.php` web wizards | CLI-first (`php piwigo migrate`, `php piwigo admin:create`) | Web installers historically accumulate their own security issues; CLI is simpler and automatable |
 | Smarty `{combine_script}` / `{combine_css}` tags | Vite manifest lookups via `{asset}` Latte tag | Combines compilation-at-request-time concerns with build-time concerns |
-| Per-plugin `functions_plugin.php` auto-loaded globs | Composer `type: piwigo-plugin` + `PluginInterface::register()` | Explicit entry points beat filesystem-scan magic |
+| Per-plugin `functions_plugin.php` auto-loaded globs | Composer `type: gallery-plugin` + `PluginInterface::register()` | Explicit entry points beat filesystem-scan magic |
 | MagickTransforms / GD chain classes | Small libvips operation helpers in `src/Image/` | Abstraction for its own sake; libvips's fluent API is clearer than a multi-class ceremony |
 | `check_status()`, `is_admin()`, `is_webmaster()` free functions | `AccessLevel` enum methods + `AuthorizationMiddleware` | Free functions with implicit global access replaced with explicit enum comparisons |
 | Persistent language files built per-request from `.lang` strings | Compiled ICU catalogs per locale, loaded once per worker | Request-time building adds latency; loading a compiled catalog once is instant thereafter |
@@ -6480,7 +6480,7 @@ Nothing is preserved for compatibility. What carries over is the **domain model 
 
 | Concept | Carries over as | Does **not** carry over |
 |---|---|---|
-| **Database engines supported** | MySQL 8+ and PostgreSQL 14+ (via PDO adapters) | Table names, column names, foreign-key layout, charset choices, legacy indexes, `piwigo_` prefix, SQLite support (historically flaky under Piwigo, dropped for simplicity) |
+| **Database engines supported** | MySQL 9.7 LTS, MariaDB 11.8 LTS, PostgreSQL 18 (via PDO adapters; older minors accepted on a best-effort basis down to MySQL 8.4 / MariaDB 11.4 / Postgres 16) | Table names, column names, foreign-key layout, charset choices, legacy indexes, `piwigo_` prefix, SQLite support (historically flaky under Piwigo, dropped for simplicity) |
 | **Albums** | Hierarchical album tree with permissions + inheritance | Tree representation (nested sets vs. adjacency list vs. closure table — redesigned), `category_id` as a surrogate for "album" — the new model calls them albums everywhere |
 | **Photos / images** | Image entity with dimensions, EXIF, filesize, author, description, rating | Legacy `path` format (now a UUID-based content-addressed layout), `high` field distinction (originals are always originals), legacy md5 vs. sha1 handling (SHA-256 everywhere) |
 | **Tags** | Many-to-many tags on images, tag-based browsing | Tag URL grammar, tag cloud rendering specifics, tag permission model (kept conceptually but redesigned) |
@@ -6490,7 +6490,7 @@ Nothing is preserved for compatibility. What carries over is the **domain model 
 | **Search** | Text search on title/description/tags; tag combinators (AND/OR/NOT); date ranges; author/camera filters | Legacy search URL grammar; search-result caching layer (re-engineered) |
 | **Calendar / date browsing** | Browse by date taken, date added, or both | Legacy URL shape; rendering specifics |
 | **RSS / Atom feeds** | Feeds for recent uploads, comments, etc. | Legacy feed URLs and exact payload shape |
-| **Derivative system** | On-demand generation with deterministic URLs + disk cache | Legacy `/i/…` URL grammar, existing cached-derivative path layout, the `standard derivatives` naming (`thumb`, `2small`, `xsmall`, etc. become `thumbnail`/`small`/`medium`/`large`/`xlarge`) |
+| **Derivative system** | On-demand generation with deterministic URLs + disk cache (served under `/media/`) | Legacy `/i/…` URL grammar, existing cached-derivative path layout, the `standard derivatives` naming (`thumb`, `2small`, `xsmall`, etc. become `thumbnail`/`small`/`medium`/`large`/`xlarge`) |
 | **Web-service API** | JSON HTTP API for third-party clients exists, versioned with a clear deprecation policy | `ws.php` method names, `pwg.categories.getList` / `pwg.images.setInfo` style, request/response shape, error codes — **the new API is its own surface**, under `/api/v1/` |
 | **Themes** | Child-theme override mechanism (via Latte `{extends}` and `theme.json`) | Smarty `.tpl` files, `{combine_*}`, `{footer_script}` — existing themes do not load |
 | **Plugins** | Event/hook extension points, admin UI hooks, asset injection | `trigger_change`/`trigger_notify` string keys, `functions_plugins.php`, existing plugin packages — plugins must be rewritten |
@@ -6810,20 +6810,22 @@ piwigo-rewrite/
 │   │   │   └── schemas/
 │   └── events.md                     # Event catalog reference
 │
-├── var/
-│   ├── cache/
-│   │   ├── container.php             # compiled DI container (prod)
-│   │   ├── routes.php                # compiled FastRoute table
-│   │   └── templates/                # Latte compiled templates
-│   └── log/
+├── storage/                          # Persistent user content — MUST be backed up
+│   ├── originals/                    # uploaded source files — never modified after write
+│   └── watermark.png
 │
-├── _data/                            # Runtime data — originals, derivative cache
-│   ├── originals/
-│   ├── derivatives/
-│   └── uploads/tmp/
+├── var/                              # Regenerable runtime state — safe to wipe
+│   ├── cache/                        # compiled DI container, FastRoute table, Latte templates
+│   │   ├── container.php
+│   │   ├── routes.php
+│   │   └── templates/
+│   ├── derivatives/                  # generated thumbnails / variants
+│   ├── uploads/tmp/                  # in-flight multipart uploads
+│   ├── log/
+│   └── sessions/                     # file-based session fallback
 │
 ├── franken-worker.php                # FrankenPHP worker entry point
-├── franken-worker-i.php              # Derivative worker entry point
+├── franken-worker-media.php              # Derivative worker entry point
 ├── Caddyfile
 ├── Dockerfile
 ├── .env.example
@@ -6878,11 +6880,11 @@ cp .env.example .env
 $EDITOR .env                           # DB creds, app URL, mail, storage paths
 
 # 4. Schema
-php bin/piwigo migrate                 # apply all migrations
-php bin/piwigo db:seed                 # default users, root album
+php bin/gallery migrate                 # apply all migrations
+php bin/gallery db:seed                 # default users, root album
 
 # 5. First admin
-php bin/piwigo admin:create \
+php bin/gallery admin:create \
     --username=admin \
     --email=admin@example.org
 
@@ -6905,7 +6907,7 @@ docker run -d \
     ghcr.io/example/piwigo:1.0
 ```
 
-The container runs `php bin/piwigo migrate` on first start if the DB is empty; subsequent starts are no-ops. An auth-bootstrap env var (`INITIAL_ADMIN_USERNAME` / `INITIAL_ADMIN_EMAIL`) creates the admin on first boot.
+The container runs `php bin/gallery migrate` on first start if the DB is empty; subsequent starts are no-ops. An auth-bootstrap env var (`INITIAL_ADMIN_USERNAME` / `INITIAL_ADMIN_EMAIL`) creates the admin on first boot.
 
 ### Configuration
 
@@ -6935,44 +6937,44 @@ All `APP_*`, `DATABASE_*`, `MAIL_*`, `STORAGE_*` keys are documented in `.env.ex
 
 ### CLI tooling
 
-The `bin/piwigo` CLI is the primary admin interface. Full command list:
+The `bin/gallery` CLI is the primary admin interface. Full command list:
 
 ```
 # Schema / data
-php bin/piwigo migrate
-php bin/piwigo migrate:status
-php bin/piwigo migrate:rollback
-php bin/piwigo migrate:fresh           # DEV ONLY — drop + rebuild
-php bin/piwigo migrate:make {name}
-php bin/piwigo db:seed
+php bin/gallery migrate
+php bin/gallery migrate:status
+php bin/gallery migrate:rollback
+php bin/gallery migrate:fresh           # DEV ONLY — drop + rebuild
+php bin/gallery migrate:make {name}
+php bin/gallery db:seed
 
 # Users
-php bin/piwigo admin:create
-php bin/piwigo user:create
-php bin/piwigo user:list
-php bin/piwigo user:promote {username} {level}
+php bin/gallery admin:create
+php bin/gallery user:create
+php bin/gallery user:list
+php bin/gallery user:promote {username} {level}
 
 # Sync / imports
-php bin/piwigo sync /path/to/photo/tree
-php bin/piwigo sync:dry-run /path/to/photo/tree
+php bin/gallery sync /path/to/photo/tree
+php bin/gallery sync:dry-run /path/to/photo/tree
 
 # Derivatives
-php bin/piwigo derivatives:generate {preset} [--album={id}]
-php bin/piwigo derivatives:prune           # remove orphan cached files
-php bin/piwigo derivatives:flush           # full cache rebuild
+php bin/gallery derivatives:generate {preset} [--album={id}]
+php bin/gallery derivatives:prune           # remove orphan cached files
+php bin/gallery derivatives:flush           # full cache rebuild
 
 # Maintenance
-php bin/piwigo down "Deploying v1.2"
-php bin/piwigo up
-php bin/piwigo cache:clear
-php bin/piwigo healthcheck                  # exits 0/1
+php bin/gallery down "Deploying v1.2"
+php bin/gallery up
+php bin/gallery cache:clear
+php bin/gallery healthcheck                  # exits 0/1
 
 # Plugins
-php bin/piwigo plugin:list
-php bin/piwigo plugin:enable {name}
-php bin/piwigo plugin:disable {name}
-php bin/piwigo plugin:install {composer-package}
-php bin/piwigo plugin:uninstall {name}
+php bin/gallery plugin:list
+php bin/gallery plugin:enable {name}
+php bin/gallery plugin:disable {name}
+php bin/gallery plugin:install {composer-package}
+php bin/gallery plugin:uninstall {name}
 ```
 
 ### For users coming from Piwigo
@@ -6984,7 +6986,7 @@ The project may publish an *unsupported* example script in `contrib/import-from-
 1. Reads a Piwigo 14 database read-only.
 2. Maps its albums → new album tree via the CLI.
 3. Copies original files into the new storage layout.
-4. Emits `bin/piwigo` commands to tag and categorize.
+4. Emits `bin/gallery` commands to tag and categorize.
 
 That script is a *starting point*, not a supported feature. Users will need to adapt it to their exact install. It won't gate releases, won't have SLA, and won't be tested against every Piwigo 14 subversion.
 
@@ -6994,14 +6996,14 @@ The rewrite is built feature-by-feature, each shippable, each with full test cov
 
 | # | Milestone | Includes | Definition of done |
 |---|---|---|---|
-| 1 | **Foundations** | DI container, middleware stack, PDO + QueryBuilder, Latte wiring, CLI skeleton, Pest harness, CI pipeline, arch tests for "no legacy baggage" rules, first migration and seed | `php bin/piwigo migrate` creates the DB; a hello-world HTTP route returns 200; CI is green; arch tests enforce all rules |
+| 1 | **Foundations** | DI container, middleware stack, PDO + QueryBuilder, Latte wiring, CLI skeleton, Pest harness, CI pipeline, arch tests for "no legacy baggage" rules, first migration and seed | `php bin/gallery migrate` creates the DB; a hello-world HTTP route returns 200; CI is green; arch tests enforce all rules |
 | 2 | **Auth + users** | User model, password hashing, login/logout, register, sessions, CSRF, access-level middleware, `admin:create` CLI | HTTP + browser tests for login/register/logout/password-reset; security headers set; rate limiting on login; audit log writing |
 | 3 | **Albums** | Album tree, album CRUD, permission inheritance, public album browsing, admin album editor | Browser test: admin creates a nested album, public user browses it, permissions deny private albums to guests |
 | 4 | **Images + upload + derivatives** | Image model, upload pipeline, EXIF extraction, libvips-backed derivatives, cache layer, derivative URLs | Browser test: admin uploads a photo, sees derivatives generated, views it in a browser with PhotoSwipe |
 | 5 | **Gallery rendering** | Default theme, themes infrastructure (`theme.json`, parent/child), PhotoSwipe integration, thumbnails grid, picture page | A second theme overrides a single block; both render; snapshot tests stable |
 | 6 | **Search + tags + comments + calendar** | Tag model, tag cloud, tag browsing, search with filters, comment CRUD, calendar view | Each has browser-test coverage; search handles common combinators |
 | 7 | **Admin UI** | Batch manager, user/group admin, permission editor, plugin admin, maintenance page | Browser tests for the most-used admin flows; all admin routes gated |
-| 8 | **Plugin system** | `PluginInterface`, loader, registry, Composer `type: piwigo-plugin` discovery, example plugin | Example plugin installs, registers, and responds to events; DB migration for plugin applies; plugin-asset bundling works |
+| 8 | **Plugin system** | `PluginInterface`, loader, registry, Composer `type: gallery-plugin` discovery, example plugin | Example plugin installs, registers, and responds to events; DB migration for plugin applies; plugin-asset bundling works |
 | 9 | **JSON API v1** | All routes under `/api/v1/*`, OpenAPI spec, API token auth, contract tests | OpenAPI document matches implementation; contract tests pass; token CRUD in the UI |
 | 10 | **Mail notifications** | Welcome email, password reset, comment notification, admin digest | Email preview in dev UI; Symfony Mailer + Latte email templates wired |
 | 11 | **Polish + perf** | Response caching for anonymous gallery, HTTP/3 verification, accessibility audit, performance benchmarks | All benchmark targets met; a11y audit passes WCAG 2.1 AA on default theme |

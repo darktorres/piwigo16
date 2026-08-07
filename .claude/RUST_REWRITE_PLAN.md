@@ -1,7 +1,8 @@
 # Piwigo Rust Rewrite
 
-> Full ground-up rewrite of the Piwigo PHP photo gallery in Rust.  
-> Target: feature parity with the current PHP 14.x branch, then modernization beyond what PHP could offer.
+> No legacy baggage. No PHP. No Smarty. No `ws.php`. No `i.php`. No backward compatibility — greenfield schema, greenfield API, greenfield URL grammar, modern tools and concepts throughout.
+>
+> A from-scratch photo-gallery server in Rust. It borrows the **domain** (albums, photos, tags, permissions, derivatives, plugins) from two decades of Piwigo experience, but preserves none of Piwigo's code, data model, or wire contracts. Existing Piwigo installations cannot be "upgraded" to this. Framing it any other way would smuggle the constraints the rewrite exists to escape back in through the front door.
 
 ---
 
@@ -23,10 +24,10 @@
 14. [Subsystem Specifications](#14-subsystem-specifications)
 15. [Testing Strategy](#15-testing-strategy)
 16. [Risk Register](#16-risk-register)
-17. [Breaking Changes & Migration Guide](#17-breaking-changes--migration-guide)
+17. [No migration — fresh install only](#17-no-migration--fresh-install-only)
 18. [Performance Targets](#18-performance-targets)
 19. [Milestone Summary](#19-milestone-summary)
-20. [Pain Point Deep Dives](#20-pain-point-deep-dives)
+20. [Pain Point Deep Dives — lessons from Piwigo 14](#20-pain-point-deep-dives--lessons-from-piwigo-14)
     - [20.1 Plugin & Hook System](#201-plugin--hook-system)
     - [20.2 Dynamic SQL & Query Safety](#202-dynamic-sql--query-safety)
     - [20.3 Template System & Asset Pipeline](#203-template-system--asset-pipeline)
@@ -51,10 +52,10 @@
 **Appendices — Reference Material**
 
 - [A. Complete Database Schema](#appendix-a-complete-database-schema)
-- [B. Complete API Method Catalog](#appendix-b-complete-api-method-catalog)
-- [C. Complete Configuration Reference](#appendix-c-complete-configuration-reference)
-- [D. Complete Hook Event Catalog](#appendix-d-complete-hook-event-catalog)
-- [E. Complete Template Inventory](#appendix-e-complete-template-inventory)
+- [B. Complete API Surface](#appendix-b-complete-api-surface)
+- [C. Configuration reference](#appendix-c-configuration-reference)
+- [D. Event Catalog (Piwigo ↔ Rust cross-reference)](#appendix-d-event-catalog-piwigo--rust-cross-reference)
+- [E. Template Inventory](#appendix-e-template-inventory)
 - [F. Complete URL Routing Map](#appendix-f-complete-url-routing-map)
 
 ---
@@ -63,36 +64,55 @@
 
 ### What
 
-A complete, ground-up rewrite of the Piwigo photo gallery application in Rust. No PHP code carries forward. The result is a single binary (or small set of binaries) that replaces Apache + PHP-FPM + the current Piwigo PHP stack.
+A greenfield photo-gallery server in Rust. A single binary (plus a libvips runtime dependency) that listens on HTTP, speaks a new REST API, serves a new set of templates, reads a new database schema, and owns the on-disk storage layout from `storage/originals/` down to `var/derivatives/`.
 
-### Why
+The value carried over from Piwigo is the **domain knowledge** — two decades of "what a photo gallery actually needs to do": album trees, permission inheritance, derivative caching, EXIF handling, search grammars, sync flows, the exact sharp edges the PHP version bumped into. This document restates those problems and solves them on a clean foundation.
 
-| Problem (PHP) | Solution (Rust) |
-|---|---|
-| ~500ms average page load | Target ~75ms (6–7× faster) |
-| NTFS MFT access requires Everything SDK via FFI | Native MFT reader via Windows API |
-| Sync of 400k+ dirs bottlenecked by PHP/MySQL overhead | Parallel async sync with tokio |
-| No compile-time SQL safety (raw addslashes) | sqlx query macros enforce parameterized queries |
-| Plugin system requires PHP runtime | Lua (mlua) plugin bridge |
-| Memory: ~50MB per PHP request | ~2MB per async task |
-| No concurrency within a request | Full async/concurrent request handling |
+**This is not a Piwigo-compatible replacement.** It does not preserve Piwigo's database schema, web-service API, URL layout, theme format, or plugin contracts. Existing Piwigo installations cannot be "upgraded" to it.
 
-### Scope
+### Why a rewrite rather than a fork
 
-- Full feature parity with PHP 14.x at launch
-- MySQL and PostgreSQL support maintained
-- All 5 default themes migrated
-- All 6 built-in plugins reimplemented as Lua or native
-- REST API (`ws.php`) fully compatible — existing API clients must not break
-- Admin panel fully functional (SSR, no SPA)
-- Filesystem sync with optional native MFT reader (Windows)
+| Problem with the PHP codebase | Why a fork can't fix it | What the rewrite does |
+|---|---|---|
+| ~500ms average page load | PHP-FPM process-per-request model has a floor | Long-running Axum server, ~75ms target (6–7× faster) |
+| No compile-time SQL safety (523 raw queries with `addslashes`) | Would need to rewrite every query; no in-situ way to enforce it | `sqlx::query!` compile-time checks every SQL statement; `QueryBuilder` for dynamic shapes |
+| Memory ~50MB per request | PHP-FPM allocator, global state per request | ~2MB per tokio task; shared state via `Arc` |
+| Plugin system requires PHP runtime; no sandbox | PHP is the plugin API | Lua via mlua with capability-scoped host API and per-plugin memory/CPU limits |
+| No concurrency within a request | PHP concurrency model is "spawn another process" | `tokio::join!`, `rayon` for parallel metadata extraction |
+| Sync of 400k+ dirs bottlenecked by PHP/MySQL overhead | PHP process startup + MySQL roundtrip per file | Parallel async scan; optional native NTFS MFT reader on Windows |
+| Twenty years of schema accretion: `uppercats` comma-string, `user_cache_categories`, mixed `image_category` semantics | Each table has years of feature work assuming it | Domain-driven schema designed once, documented once |
+| `ws.php` REST API invented before JSON Schema / OpenAPI were standard | Thousands of clients assume every field | New `/api/v1/*` designed with OpenAPI-first contract tests |
+
+### Scope — v1.0
+
+The system covers the full photo-gallery feature surface:
+
+- **Browsing:** album tree, photo detail, tags, search, calendar, feeds, favorites
+- **Upload:** single + chunked + resumable (tus), MIME + magic-byte validation, EXIF-aware rotation, auto-derivative generation
+- **Filesystem sync:** 3-phase (directories → files → metadata), SSE progress, idempotent re-run, optional Windows MFT scanner
+- **Admin:** SSR admin panel (no SPA v1.0), drag-drop album tree, batch manager, user/group management, settings, queue monitor, audit log
+- **Derivative pipeline:** libvips backend, 9 standard presets, signed custom derivatives, AVIF/WebP/JPEG format negotiation
+- **Permissions:** per-album ACLs (user + group), inheritance, `AccessLevel` gating, cached resolve
+- **Plugins:** Lua via mlua with sandbox + capabilities + typed event bus
+- **Themes:** Tera templates with parent-child override, asset pipeline via Vite
+- **i18n:** gettext-compatible catalogs, plural rules, RTL support
+- **Mail:** SMTP via lettre, templated transactional + digest notifications
+- **API:** versioned `/api/v1/*` REST surface, OpenAPI-generated from source, token auth
+- **Observability:** structured logs, OpenTelemetry traces, Prometheus metrics, audit log
 
 ### Out of Scope (v1.0)
 
-- Community plugin compatibility (breaking change, documented)
-- Support for the PHP serialized response format in the REST API
-- XML-RPC protocol support
-- Non-UTF-8 language file encoding
+Explicitly excluded — not hidden behind flags, not "coming soon" in the codebase:
+
+- **Piwigo data migration.** Existing Piwigo databases are not importable. No PHP-serialized session/search/preferences migration. Users re-upload.
+- **Piwigo REST API compatibility.** `ws.php`, XML-RPC, PHP-serialized response format — all gone. The new API lives at `/api/v1/*`.
+- **Piwigo URL compatibility.** No `i.php`, `index.php`, `picture.php`, `action.php`, `feed.php`, `ws.php`, `identification.php`. New URL grammar throughout.
+- **Piwigo plugin / theme compatibility.** Third-party PHP plugins and Smarty themes cannot run. Built-in plugins are reimplemented in Lua (not ported).
+- **Derivative cache compatibility.** `_data/i/{path}/photo-sq.jpg` is replaced by `var/derivatives/{uuid[:2]}/{uuid}/thumbnail.avif` — fresh regeneration on install.
+- **Video, RAW beyond embedded preview, 2FA, passkeys, PWA, multi-tenancy** — deferred to §21 (v1.1+).
+- **SQLite, MSSQL, Oracle** — supported engines are MySQL 9.7 LTS, MariaDB 11.8 LTS, PostgreSQL 18. (Same set as the PHP rewrite.)
+
+The v1.1+ roadmap (§21) covers modernization features that take advantage of the rewrite to deliver capabilities Piwigo never could. Everything there is explicitly post-v1.0.
 
 ---
 
@@ -159,9 +179,9 @@ A complete, ground-up rewrite of the Piwigo photo gallery application in Rust. N
 **Error Hierarchy:**
 
 ```rust
-// piwigo-core: typed, matchable errors
+// gallery-core: typed, matchable errors
 #[derive(Debug, thiserror::Error)]
-pub enum PiwigoError {
+pub enum GalleryError {
     // === Authentication ===
     #[error("Invalid credentials")]
     InvalidCredentials,
@@ -256,7 +276,7 @@ pub enum PiwigoError {
 - Typed errors catch missing error handling at compile time
 - HTTP mapping is deterministic — same error always produces same status code
 - WS error codes maintain compatibility with existing API clients (Lightroom, DigiKam, Piwigo mobile apps)
-- Plugins can throw `PiwigoError::PluginError` which is caught and logged without crashing the request
+- Plugins can throw `GalleryError::PluginError` which is caught and logged without crashing the request
 
 ### ADR-007: Caching Strategy
 
@@ -312,11 +332,11 @@ pub enum PiwigoError {
 **Decision:** Compile to a single binary with subcommands.
 
 ```
-piwigo serve          # HTTP server
-piwigo sync           # Run filesystem sync
-piwigo install        # First-time DB setup
-piwigo upgrade        # Run DB migrations
-piwigo maintenance    # Cache clear, integrity check, etc.
+gallery serve          # HTTP server
+gallery sync           # Run filesystem sync
+gallery install        # First-time DB setup
+gallery upgrade        # Run DB migrations
+gallery maintenance    # Cache clear, integrity check, etc.
 ```
 
 **Rationale:**
@@ -356,13 +376,13 @@ rexiv2               = "0.10"        # IPTC/XMP via gexiv2
 mlua                 = { version = "0.10", features = ["lua54", "async", "vendored"] }
 
 # Auth / crypto
-bcrypt               = "0.15"
+argon2               = "0.5"
 hmac                 = "0.12"
-sha1                 = "0.10"
 sha2                 = "0.10"
-md-5                 = "0.10"
 hex                  = "0.4"
 rand                 = "0.8"
+constant_time_eq     = "0.3"
+subtle               = "2.5"
 base64               = "0.22"
 
 # Sessions
@@ -436,12 +456,12 @@ wiremock             = "0.6"
 ## 4. Repository Structure
 
 ```
-piwigo-rs/
+gallery-rust-wip/
 ├── Cargo.toml
 ├── Cargo.lock
 │
 ├── crates/
-│   ├── piwigo-core/           # Domain types, traits, error types
+│   ├── gallery-core/           # Domain types, traits, error types
 │   │   └── src/
 │   │       ├── lib.rs
 │   │       ├── types/
@@ -454,7 +474,7 @@ piwigo-rs/
 │   │       ├── error.rs
 │   │       └── config.rs
 │   │
-│   ├── piwigo-db/             # Database layer
+│   ├── gallery-db/             # Database layer
 │   │   └── src/
 │   │       ├── lib.rs
 │   │       ├── pool.rs            # Connection pool setup
@@ -477,7 +497,7 @@ piwigo-rs/
 │   │               ├── 0001_initial.sql
 │   │               └── ...
 │   │
-│   ├── piwigo-image/          # Image processing (libvips wrapper)
+│   ├── gallery-image/          # Image processing (libvips wrapper)
 │   │   └── src/
 │   │       ├── lib.rs
 │   │       ├── backend.rs         # ImageBackend trait
@@ -489,21 +509,21 @@ piwigo-rs/
 │   │       ├── watermark.rs       # Alpha compositing
 │   │       └── formats.rs         # Format detection, animated WebP
 │   │
-│   ├── piwigo-metadata/       # EXIF/IPTC extraction
+│   ├── gallery-metadata/       # EXIF/IPTC extraction
 │   │   └── src/
 │   │       ├── lib.rs
 │   │       ├── exif.rs
 │   │       ├── iptc.rs
 │   │       └── mapping.rs         # Configurable field mapping (from $conf->use_exif_mapping)
 │   │
-│   ├── piwigo-search/         # Search query building
+│   ├── gallery-search/         # Search query building
 │   │   └── src/
 │   │       ├── lib.rs
 │   │       ├── parser.rs          # Query string tokenizer
 │   │       ├── scopes.rs          # Scope types: date, numeric, text, tag
 │   │       └── builder.rs         # SQL query builder from parsed scopes
 │   │
-│   ├── piwigo-plugins/        # Plugin & hook system
+│   ├── gallery-plugins/        # Plugin & hook system
 │   │   └── src/
 │   │       ├── lib.rs
 │   │       ├── event_bus.rs       # EventBus: trigger_notify, trigger_change
@@ -513,18 +533,18 @@ piwigo-rs/
 │   │       ├── host_api.rs        # Lua-callable Rust functions
 │   │       └── maintain.rs        # PluginMaintain trait
 │   │
-│   ├── piwigo-auth/           # Authentication & sessions
+│   ├── gallery-auth/           # Authentication & sessions
 │   │   └── src/
 │   │       ├── lib.rs
 │   │       ├── session.rs         # DB-backed session store
 │   │       ├── extractors.rs      # Axum extractors: AuthenticatedUser, AdminUser
 │   │       ├── permissions.rs     # Permission computation & caching
-│   │       ├── login.rs           # Login flow, bcrypt verify
+│   │       ├── login.rs           # Login flow, argon2id verify
 │   │       ├── remember_me.rs     # HMAC-SHA1 cookie tokens
 │   │       ├── api_keys.rs        # user_auth_keys management
 │   │       └── csrf.rs
 │   │
-│   ├── piwigo-sync/           # Filesystem synchronization
+│   ├── gallery-sync/           # Filesystem synchronization
 │   │   └── src/
 │   │       ├── lib.rs
 │   │       ├── orchestrator.rs    # 3-phase sync coordination
@@ -539,7 +559,7 @@ piwigo-rs/
 │   │       ├── progress.rs        # SSE progress event types
 │   │       └── profiler.rs        # Per-phase timing: p50/p95/p99
 │   │
-│   └── piwigo-mail/           # Email (lettre wrapper)
+│   └── gallery-mail/           # Email (lettre wrapper)
 │       └── src/
 │           ├── lib.rs
 │           ├── sender.rs
@@ -608,7 +628,7 @@ piwigo-rs/
 │   ├── config.rs              # Config loading (code defaults → file → DB)
 │   └── i18n.rs                # Language file loading, l10n(), l10n_dec()
 │
-├── templates/                 # Tera templates (migrated from .tpl)
+├── templates/                 # Tera templates (authored fresh; see Appendix E)
 │   ├── base.html
 │   ├── gallery/
 │   │   ├── index.html
@@ -670,25 +690,38 @@ piwigo-rs/
 
 ### Supported Backends
 
-- **MySQL 8.0+** (and MariaDB 10.6+)
-- **PostgreSQL 17+**
+- **MySQL 9.7 LTS** (primary target)
+- **MariaDB 11.8 LTS** (compatibility target — shares the MySQL adapter with narrow overrides for JSON type, collation, UUID)
+- **PostgreSQL 18**
 
-### Schema Changes from PHP Version
+Older minors accepted on best-effort basis down to MySQL 8.4 / MariaDB 11.4 / Postgres 16.
 
-The schema is preserved as-is for zero-friction migration from existing installations, with the following additions:
+### Schema design principles
 
-| Change | Reason |
-|---|---|
-| `sessions.data_json TEXT` column added | Migrate from PHP-serialized to JSON session data |
-| `search.rules_json JSONB/JSON` column added | Migrate from PHP-serialized search rules |
-| `user_infos.preferences_json JSON` column added | Migrate from PHP-serialized preferences |
-| All PHP-serialized columns kept during transition | Dual-write period for backward compatibility |
+The new schema is **not** a port of Piwigo 14's schema. No `piwigo_` prefix, no `uppercats` comma-string ancestry, no denormalized `user_cache_categories`, no PHP-serialized blobs in `sessions.data` / `search.rules` / `user_infos.preferences`. Key principles:
 
-### Migration Strategy
+- **snake_case table + column names.** No prefix.
+- **`bigint` surrogate PKs** on every table for internal relations. `AUTO_INCREMENT` on MySQL/MariaDB, `GENERATED ALWAYS AS IDENTITY` on Postgres.
+- **UUIDv7** for externally-exposed identifiers (API resources, derivative URLs). `BINARY(16)` on MySQL, native `UUID` on Postgres + MariaDB 10.7+. Time-ordered so B-tree-friendly.
+- **Timestamps everywhere.** `created_at`, `updated_at` on every row; `deleted_at` on soft-deletable entities (users, comments — not photos or albums, which hard-delete).
+- **Foreign keys with `ON DELETE CASCADE`** for owned relationships (image_tag → image); `ON DELETE SET NULL` for non-owning (album parent_id).
+- **No polymorphic columns.** `taggable_type` / `taggable_id` anti-patterns stay out; separate join tables instead.
+- **Adjacency-list album tree** with a cached materialized-path column (`path_ltree` on Postgres, generated column on MySQL) for `WHERE path LIKE '1/5/%'` descendant queries. Rebuilt on move via trigger, not application code.
+- **JSON for EXIF, settings, plugin metadata.** Postgres `JSONB` with GIN indexes where queried; MySQL native `JSON`; MariaDB `LONGTEXT`-with-check-constraint alias accessed via `JSON_VALUE(...)`.
+- **UTF-8 / utf8mb4 everywhere.** No Latin-1 fallbacks. Postgres `UTF8` + `C.UTF-8` collation; MySQL `utf8mb4_0900_ai_ci`; MariaDB `utf8mb4_uca1400_ai_ci`.
+- **Email uniqueness is case-insensitive.** Generated column on MySQL/MariaDB; `CITEXT` on Postgres.
+- **Explicit indexes on every foreign key and every WHERE-clause column.** No reliance on implicit engine behavior.
 
-1. `piwigo upgrade` runs sqlx migrations in order
-2. Existing PHP session/search/preferences data is migrated in-place by a one-time migration that reads the PHP serialization format and writes JSON
-3. PHP columns are dropped in a later migration (configurable, default: 30 days after upgrade)
+The full schema is catalogued in Appendix A (see also §16 of the PHP plan for the shared domain model — the two rewrites arrive at near-identical schema shapes because the domain is the same).
+
+### Migration strategy
+
+sqlx migrations in `migrations/mysql/` and `migrations/postgres/`, numbered and immutable (modifying an applied migration is caught by checksum).
+
+- `gallery install` creates the schema from scratch on an empty database.
+- `gallery upgrade` applies pending migrations (additive only within a major version).
+- No import path from Piwigo 14. The repo does not ship a PHP-serialized-data reader. Users who want their content move it via re-upload or — at their own risk — write a standalone migration tool using the public REST API.
+- Destructive migrations (drop columns, drop tables) happen only across major-version bumps and are called out in `CHANGELOG.md`.
 
 ### Query Safety Contract
 
@@ -712,6 +745,8 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
 **Duration: 6–8 weeks**  
 **Goal:** A running Axum server with database connectivity, configuration loading, authentication, and session management. No gallery pages yet — just the skeleton everything else is built on.
 
+> **On "Prior art" references in subsequent sections:** each task group cites the Piwigo PHP file(s) that implement equivalent behavior. Those citations are **reading material**, not things being translated line by line. The Rust implementation is designed fresh against the greenfield schema and API; the Piwigo files are consulted to understand edge cases, failure modes, and real-world surprise the PHP codebase already discovered. "Read this, then write the Rust version cleanly" — not "port this function."
+
 ---
 
 ### 1.1 Project Scaffold & Tooling
@@ -725,7 +760,7 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
   - `cargo sqlx prepare --check` (verifies query metadata is up to date)
 - [ ] Set up `cargo-deny` for dependency auditing
 - [ ] Configure `SQLX_OFFLINE=true` for CI (uses prepared query metadata)
-- [ ] Write `Dockerfile` and `compose.yaml` for local dev (MySQL + PostgreSQL + Piwigo binary)
+- [ ] Write `Dockerfile` and `compose.yaml` for local dev (MySQL + PostgreSQL + the `gallery` binary)
 - [ ] Set up `cargo-watch` for hot-reload during development
 - [ ] Establish `CHANGELOG.md` and semantic versioning policy
 
@@ -735,11 +770,11 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
 
 ### 1.2 Configuration System
 
-**Source:** `inc/config_default.php`, `inc/Config.php` (1,266 lines), `local/config/config.php`
+**Prior art:** `inc/config_default.php`, `inc/Config.php` (1,266 lines), `local/config/config.php`
 
-- [ ] Define `PiwigoConfig` struct with all ~900 config options, grouped by domain:
+- [ ] Define `GalleryConfig` struct with all ~900 config options, grouped by domain:
   ```rust
-  pub struct PiwigoConfig {
+  pub struct GalleryConfig {
       pub server: ServerConfig,
       pub database: DatabaseConfig,
       pub gallery: GalleryConfig,
@@ -755,7 +790,7 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
   1. Code defaults via `Default` trait and `#[serde(default)]`
   2. File override from `local/config/config.toml` (new format) or `local/config/config.php` (parsed as key=value, legacy support)
   3. DB override: `SELECT param, value FROM config` — deserialize typed values (bool, int, float, string, JSON array)
-- [ ] `piwigo install` subcommand writes `local/config/config.toml` and `local/config/database.toml`
+- [ ] `gallery install` subcommand writes `local/config/config.toml` and `local/config/database.toml`
 - [ ] Expose config to handlers via `axum::extract::State<Arc<AppState>>`
 - [ ] Hot-reload of DB-sourced config on SIGHUP (Unix) or admin panel "reload" action
 
@@ -826,17 +861,17 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
       pub tag_style: TagUrlStyle,                 // IdTag
   }
   ```
-- [ ] **PHP serialized config values:** Several DB config values are PHP-serialized arrays (`derivatives`, `picture_information`, `bootstrap_darkroom`, `elegant`, `modus_theme`, `smartpocket`, `gdThumb`, `AdminTools`, `updates_ignored`). These must be deserialized during migration. Use `php_serde` crate or custom parser for `serialize()`/`unserialize()` format.
+- [ ] **Structured DB-stored config:** complex config values (derivative-preset table, watermark params, per-theme settings, plugin settings) are stored as JSON in the `settings` table — native `JSON` on MySQL/Postgres, `LONGTEXT`-with-check on MariaDB. No PHP-serialized format anywhere; the repo does not ship a `serialize()`/`unserialize()` parser.
 - [ ] **Validation:** Validate config values on load — e.g., `session_length > 0`, `original_resize_quality` in 1..100, `uniqueness_mode` is valid enum value. Log warnings for invalid values and use defaults.
-- [ ] **Test cases:** Unit test for each config type, including PHP serialized → JSON migration.
+- [ ] **Test cases:** Unit test for each config type: default values, TOML round-trip, DB override precedence, validation rejection for out-of-range values.
 
 **Acceptance:** Config loads, all 3 tiers merge correctly, unit tests cover all value types.
 
 ---
 
-### 1.3 Database Layer (piwigo-db crate)
+### 1.3 Database Layer (gallery-db crate)
 
-**Source:** `inc/dblayer/functions_mysqli.php` (890 lines), `inc/dblayer/functions_pgsql.php` (858 lines)
+**Prior art:** `inc/dblayer/functions_mysqli.php` (890 lines), `inc/dblayer/functions_pgsql.php` (858 lines)
 
 - [ ] Define `DbPool` enum wrapping `sqlx::MySqlPool` and `sqlx::PgPool`:
   ```rust
@@ -863,8 +898,8 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
   }
   ```
 - [ ] Write SQL migrations for both MySQL and PostgreSQL (all 34 tables)
-- [ ] `piwigo install` runs `sqlx::migrate!()` to apply all migrations
-- [ ] `piwigo upgrade` runs pending migrations
+- [ ] `gallery install` runs `sqlx::migrate!()` to apply all migrations
+- [ ] `gallery upgrade` runs pending migrations
 - [ ] Connection pool configuration: max connections, acquire timeout, idle timeout
 - [ ] Query logging in debug mode (`RUST_LOG=piwigo_db=debug` logs all queries)
 
@@ -933,7 +968,7 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
 
 ---
 
-### 1.4 Core Domain Types (piwigo-core crate)
+### 1.4 Core Domain Types (gallery-core crate)
 
 - [ ] `AccessLevel` enum:
   ```rust
@@ -1077,24 +1112,24 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
   }
   ```
 - [ ] `Tag`, `Comment`, `Rate` structs matching their respective table schemas
-- [ ] `PiwigoError` type hierarchy with `thiserror` (see ADR-006 for full definition)
+- [ ] `GalleryError` type hierarchy with `thiserror` (see ADR-006 for full definition)
 - [ ] All types implement `serde::Serialize` + `serde::Deserialize` where appropriate
 
 ---
 
-### 1.5 Authentication & Session Middleware (piwigo-auth crate)
+### 1.5 Authentication & Session Middleware (gallery-auth crate)
 
-**Source:** `inc/functions_session.php`, `inc/functions_user.php`, `inc/user.php`, `identification.php`
+**Prior art:** `inc/functions_session.php`, `inc/functions_user.php`, `inc/user.php`, `identification.php`
 
 #### 1.5.1 Database-Backed Session Store
 
-- [ ] Define `PiwigoSessionStore` implementing `tower_sessions::SessionStore`
+- [ ] Define `GallerySessionStore` implementing `tower_sessions::SessionStore`
 - [ ] Session ID format: `{ipv4_hex_4bytes}{random_session_id}` — matches PHP's IP-binding
 - [ ] `create`: INSERT INTO sessions (id, data_json, expiration)
 - [ ] `load`: SELECT data_json FROM sessions WHERE id = ? AND expiration > NOW()
 - [ ] `save`: INSERT ... ON CONFLICT (id) DO UPDATE SET data_json, expiration
 - [ ] `delete`: DELETE FROM sessions WHERE id = ?
-- [ ] GC: DELETE FROM sessions WHERE expiration < NOW() — triggered probabilistically (1% of requests) or via `piwigo maintenance sessions`
+- [ ] GC: DELETE FROM sessions WHERE expiration < NOW() — triggered probabilistically (1% of requests) or via `gallery maintenance sessions`
 - [ ] Session data stored as JSON (not PHP serialized)
 - [ ] Write one-time migration that reads PHP serialized sessions and writes JSON equivalent
 
@@ -1132,11 +1167,11 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
 
 #### 1.5.4 Login/Logout Flow
 
-- [ ] `POST /identification` → validate username/password via bcrypt, create session
+- [ ] `POST /api/v1/auth/login` → validate username/password via argon2id, create session
 - [ ] `POST /identification` (logout) → destroy session, clear cookies
 - [ ] Remember-me cookie: generate `{user_id}-{timestamp}-{hmac_sha1}`, validate on `auto_login()`
 - [ ] Session regeneration on login (delete old session ID, create new)
-- [ ] CSRF token: `HMAC-MD5(session_id, secret_key)` — exposed in `GET /ws.php?method=pwg.session.getStatus`
+- [ ] CSRF token: `HMAC-SHA256(session_id, secret_key)` — exposed in `GET /api/v1/auth/me` response body (browser clients read it from there and echo via `X-CSRF-Token` header on mutations)
 - [ ] Rate limiting on login endpoint: max 10 attempts per IP per minute (tower governor)
 
 **Acceptance:** Login, logout, remember-me, API key auth all work. Permission cache returns correct forbidden categories. Integration tests cover all auth paths.
@@ -1149,7 +1184,7 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
   ```rust
   pub struct AppState {
       pub db: DbPool,
-      pub config: Arc<RwLock<PiwigoConfig>>,
+      pub config: Arc<RwLock<GalleryConfig>>,
       pub template: Arc<Tera>,
       pub plugins: Arc<EventBus>,
       pub permissions: Arc<PermissionCache>,
@@ -1169,15 +1204,15 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
   ```
 - [ ] Graceful shutdown on SIGTERM/SIGINT (drain in-flight requests, close DB pool)
 - [ ] Health check endpoint: `GET /health` → 200 OK (for load balancers)
-- [ ] Startup checks: DB connectivity, writable `_data/` directory, libvips version
+- [ ] Startup checks: DB connectivity, writable `storage/` and `var/` directories, libvips version
 
-**Acceptance:** `piwigo serve` starts, health check returns 200, middleware stack processes a request end-to-end.
+**Acceptance:** `gallery serve` starts, health check returns 200, middleware stack processes a request end-to-end.
 
 ---
 
 ### 1.7 i18n System
 
-**Source:** `inc/functions.php` (l10n, l10n_dec), language loading in `inc/common.php`
+**Prior art:** `inc/functions.php` (l10n, l10n_dec), language loading in `inc/common.php`
 
 - [ ] Language files: migrate PHP `$lang['key'] = 'value'` arrays to JSON
   - Write one-time PHP script to export all language files as JSON
@@ -1214,7 +1249,7 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
 
 ### 2.1 URL Routing
 
-**Source:** `inc/section_init.php` (648 lines), `inc/functions_url.php`
+**Prior art:** `inc/section_init.php` (648 lines), `inc/functions_url.php`
 
 - [ ] Define `GallerySection` enum:
   ```rust
@@ -1271,7 +1306,7 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
 
 ### 2.2 Gallery Index Handler
 
-**Source:** `index.php` (726 lines), `inc/section_init.php`
+**Prior art:** `index.php` (726 lines), `inc/section_init.php`
 
 - [ ] Category image listing query with permission filtering:
   ```sql
@@ -1337,7 +1372,7 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
 
 ### 2.3 Image Detail Handler
 
-**Source:** `picture.php` (976 lines)
+**Prior art:** `picture.php` (976 lines)
 
 - [ ] Fetch image metadata: all fields from `images` table
 - [ ] Category membership: `SELECT category_id FROM image_category WHERE image_id = ?`
@@ -1368,11 +1403,11 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
 
 ### 2.4 On-Demand Derivative (Thumbnail) Serving
 
-**Source:** `i.php` (350 lines), `inc/ImageStdParams.php`, `inc/DerivativeParams.php`
+**Prior art:** `i.php` (350 lines), `inc/ImageStdParams.php`, `inc/DerivativeParams.php`
 
 This is a high-traffic endpoint — every thumbnail request hits it.
 
-- [ ] Parse derivative URL: `GET /i.php?/path/to/photo-sq.jpg` → extract source path, derivative type
+- [ ] Parse derivative URL: `GET /media/{preset}/{uuid}.{ext}` → extract UUID, preset, and format
 - [ ] Custom derivative parsing: `th_cx200y150` format → width=200, height=150, crop=true
 - [ ] Cache check: compare `stat(derivative_path).mtime` vs `stat(source_path).mtime` and `params.last_modified`
 - [ ] If cache hit: return with `Last-Modified`, `Expires: +10 days`, `ETag`
@@ -1385,7 +1420,7 @@ This is a high-traffic endpoint — every thumbnail request hits it.
 
 ### 2.5 Search Handler
 
-**Source:** `inc/functions_search.php` (1,254 lines), `search.php`, `qsearch.php`
+**Prior art:** `inc/functions_search.php` (1,254 lines), `search.php`, `qsearch.php`
 
 - [ ] Port tokenizer: split query into scopes (tag:, category:, author:, date range, free text)
 - [ ] `SearchQuery` type with multiple `Scope` variants:
@@ -1408,7 +1443,7 @@ This is a high-traffic endpoint — every thumbnail request hits it.
 
 ### 2.6 Feed Handler
 
-**Source:** `feed.php`
+**Prior art:** `feed.php`
 
 - [ ] RSS 2.0 feed using `rss` crate
 - [ ] Atom feed using `atom_syndication` crate
@@ -1435,7 +1470,7 @@ This is a high-traffic endpoint — every thumbnail request hits it.
 
 ---
 
-### 3.1 libvips-rs Backend (piwigo-image crate)
+### 3.1 libvips-rs Backend (gallery-image crate)
 
 - [ ] Define `ImageBackend` trait:
   ```rust
@@ -1469,7 +1504,7 @@ This is a high-traffic endpoint — every thumbnail request hits it.
 
 ### 3.2 Derivative Parameters & Sizing
 
-**Source:** `inc/ImageStdParams.php`, `inc/DerivativeParams.php`, `inc/SizingParams.php`, `inc/ImageRect.php`
+**Prior art:** `inc/ImageStdParams.php`, `inc/DerivativeParams.php`, `inc/SizingParams.php`, `inc/ImageRect.php`
 
 - [ ] Port `SizingParams` struct: `max_width`, `max_height`, `max_crop`
 - [ ] Port `ImageRect` struct and COI (center-of-interest) crop algorithm:
@@ -1484,7 +1519,7 @@ This is a high-traffic endpoint — every thumbnail request hits it.
 
 ### 3.3 Derivative Generation Pipeline
 
-**Source:** `i.php` main generation block (lines 196–290)
+**Prior art:** `i.php` main generation block (lines 196–290)
 
 - [ ] `generate_derivative(source_path, derivative_type, params, output_path)`:
   1. `VipsImage::load(source_path)`
@@ -1498,14 +1533,14 @@ This is a high-traffic endpoint — every thumbnail request hits it.
   9. `image.write(output_path)`
 - [ ] Atomic write: write to temp file, then `std::fs::rename` (atomic on POSIX, near-atomic on Windows)
 - [ ] Concurrent generation: `tokio::sync::Semaphore` to cap concurrent derivative generations (default: CPU count)
-- [ ] Derivative URL generation: `make_derivative_url(source_path, derivative_type)` → `/_data/i/path/to/photo-sq.jpg`
+- [ ] Derivative URL generation: `make_derivative_url(source_path, derivative_type)` → `/var/derivatives/path/to/photo-sq.jpg`
 - [ ] Missing derivatives scan: `GET /admin/maintenance?action=generate_derivatives` triggers background generation for all missing sizes
 
 ---
 
 ### 3.4 Watermark System
 
-**Source:** `inc/WatermarkParams.php`, watermark block in `i.php`
+**Prior art:** `inc/WatermarkParams.php`, watermark block in `i.php`
 
 - [ ] `WatermarkParams`: file path, min output size, x/y position (0–100%), x/y repeat count, opacity (0–100%)
 - [ ] Load watermark image once at startup into shared `Arc<VipsImage>`
@@ -1516,9 +1551,9 @@ This is a high-traffic endpoint — every thumbnail request hits it.
 
 ---
 
-### 3.5 EXIF/IPTC Metadata Extraction (piwigo-metadata crate)
+### 3.5 EXIF/IPTC Metadata Extraction (gallery-metadata crate)
 
-**Source:** `inc/functions_metadata.php`, `admin/inc/functions_metadata_admin.php` (533 lines)
+**Prior art:** `inc/functions_metadata.php`, `admin/inc/functions_metadata_admin.php` (533 lines)
 
 - [ ] `extract_metadata(path: &Path, config: &MetadataConfig) -> ImageMetadata`:
   - File size, dimensions via libvips (fast, no EXIF parse needed for dimensions)
@@ -1536,14 +1571,14 @@ This is a high-traffic endpoint — every thumbnail request hits it.
 
 ### 3.6 Upload Pipeline
 
-**Source:** `admin/inc/functions_upload.php` (991 lines), `admin/photos_add_direct.php`
+**Prior art:** `admin/inc/functions_upload.php` (991 lines), `admin/photos_add_direct.php`
 
 - [ ] `POST /admin/photos/upload` (multipart form):
   - Validate file type against allowed extensions
   - Compute MD5 checksum
   - Duplicate detection: `SELECT id FROM images WHERE md5sum = ?`
   - If duplicate: link to existing image, don't store new file
-  - Generate destination path: `_data/upload/{YYYY}/{MM}/{DD}/{timestamp}-{random}.{ext}`
+  - Generate destination path: `var/uploads/{YYYY}/{MM}/{DD}/{timestamp}-{random}.{ext}`
   - Async file write via `tokio::io::copy`
   - Trigger `upload_file` plugin event (for special format handlers: PDF, HEIC, video, etc.)
   - Optional original resize: apply if dimensions exceed config limits
@@ -1551,10 +1586,10 @@ This is a high-traffic endpoint — every thumbnail request hits it.
   - Insert into `images` table
   - Insert into `image_category` table (link to target album)
   - Extract and store metadata
-- [ ] Chunked upload: `pwg.images.addChunk` + `pwg.images.uploadCompleted`
-  - Store chunks in `_data/upload/chunks/{upload_id}/`
-  - On completion: concatenate chunks, MD5 verify, process as normal upload
-- [ ] Async upload: `pwg.images.uploadAsync` — runs chunked upload accepting username/password in POST body (for batch uploaders)
+- [ ] Resumable upload: **tus.io protocol** (`POST /api/v1/uploads`, `PATCH /api/v1/uploads/{id}`, `HEAD`, `DELETE`)
+  - Staging at `var/uploads/tus/{upload_id}/`
+  - On completion: validate checksum, move to `storage/originals/`, process as normal upload
+  - Auth via session cookie OR `Authorization: Bearer {api_token}` — no bespoke POST-body-auth flavor. Batch uploaders (digiKam, Lightroom plugin) provision an API token once, use it for every upload.
 
 ---
 
@@ -1565,171 +1600,150 @@ This is a high-traffic endpoint — every thumbnail request hits it.
 
 ---
 
-### 4.1 REST API Method Registry
+### 4.1 REST infrastructure
 
-**Source:** `inc/PwgServer.php`, `inc/ws_init.php`, `inc/ws_functions.php`
+- [ ] `#[Route]` attribute scanner. At build time a `build.rs` discovers all handlers and emits the FastRoute-compatible route table. Path + method + handler name are authoritative; there is no central `routes.php`-equivalent. (§9.1 of Appendix F)
+- [ ] Request DTO convention: each handler takes an `axum::extract::Path<T>`, `Query<T>`, `Json<T>`, or `Form<T>` parameter. DTOs derive `Deserialize + Validate`.
+- [ ] Response DTO convention: handlers return `Result<Json<T>, ApiError>` where `T: Serialize`. `ApiError` renders as RFC 7807 `application/problem+json`.
+- [ ] Cursor pagination helper: `Page<T> { data: Vec<T>, next_cursor: Option<String> }`. Cursors are signed opaque strings encoding `(sort_key, last_id)`.
+- [ ] Filter + sort parser: `?tags[in]=a,b&min_rating=3&sort=-taken_at` shape. Sort columns are whitelisted via enum, never user-supplied strings.
+- [ ] Sparse fieldset support: `?fields=id,title,derivatives`. Tera's `to_json` filter respects the include set.
+- [ ] Include side-loading: `?include=author,albums` joins the related resources into the response envelope.
+- [ ] `ApiAuthMiddleware` — extracts session cookie OR `Authorization: Bearer {token}`; populates `AuthenticatedUser` extension.
+- [ ] `ApiThrottleMiddleware` — per-user + per-IP rate limits via `tower-governor`. Limits per endpoint category (auth: 10/min/IP, mutations: 60/min/user, reads: 600/min/user).
+- [ ] `#[RequiresLevel(...)]` attribute gating admin/webmaster endpoints.
+- [ ] `#[OpenApiOperation]` attribute emitting operation metadata for the spec generator.
+- [ ] `gallery openapi:dump > docs/api/openapi.yaml` CLI command. CI re-generates and fails if the committed copy drifts.
+- [ ] Scalar UI served at `/api/v1/docs`.
+- [ ] CORS middleware with `ALLOWED_ORIGINS` config. Public read routes permit `*`; credentialed routes require allowlist.
 
-- [ ] `MethodRegistry`: `HashMap<String, MethodDef>`
-- [ ] `MethodDef`:
-  ```rust
-  pub struct MethodDef {
-      pub handler: Box<dyn MethodHandler>,
-      pub params: Vec<ParamDef>,
-      pub options: MethodOptions,
-  }
-  pub struct MethodOptions {
-      pub admin_only: bool,
-      pub post_only: bool,
-      pub hidden: bool,  // not in reflection.getMethodList
-  }
-  ```
-- [ ] `ParamDef`:
-  ```rust
-  pub struct ParamDef {
-      pub name: String,
-      pub flags: ParamFlags,   // bitflags: optional, accept_array, force_array
-      pub type_: ParamType,    // bitflags: bool, int, float, positive, notnull
-      pub default: Option<Value>,
-      pub max_value: Option<f64>,
-  }
-  ```
-- [ ] Parameter validation: check presence, coerce arrays, validate type + range
-- [ ] Response encoders: `JsonEncoder` and `RestXmlEncoder`
-- [ ] Drop: XML-RPC encoder and PHP-serialize encoder (breaking change, documented)
-- [ ] Built-in reflection methods: `reflection.getMethodList`, `reflection.getMethodDetails`
+No `MethodRegistry` with `pwg.*` name lookup. No `WS_TYPE_*` flags. No XML-RPC encoder. No `RestXmlEncoder`. No `reflection.getMethodList`. Contract lives entirely in `#[Route]`-annotated handlers + OpenAPI.
 
 ---
 
-### 4.2 API Methods Implementation
+### 4.2 Endpoint implementation
 
-Implement all 84 methods. Below is the priority order with complexity notes.
+The full REST surface is catalogued in Appendix B. Below is the implementation order, grouped by resource boundary. Each bullet corresponds to a group of endpoints that ship together in a single PR-sized unit; their exact paths and methods are in Appendix B.
 
-#### 4.2.1 Session Methods (3)
-- [ ] `pwg.session.getStatus` — user info + CSRF token + available sizes
-- [ ] `pwg.session.login` — POST, bcrypt verify, create session
-- [ ] `pwg.session.logout` — destroy session
+#### 4.2.1 Auth + tokens (Appendix B.1)
 
-#### 4.2.2 Core Methods (4)
-- [ ] `pwg.getVersion`
-- [ ] `pwg.getInfos` — admin only, system stats
-- [ ] `pwg.getCacheSize` — derivative cache sizes on disk
-- [ ] `pwg.activity.getList` — admin only, paginated activity log
+- [ ] `AuthController::login` + `::logout` — argon2id verify, session regeneration on login, IP-hash binding. Rate-limited at 10 attempts / IP / minute.
+- [ ] `AuthController::me` — current user + effective `AccessLevel` + permission-cache signature.
+- [ ] `PasswordResetController::request` + `::confirm` — one-time-use tokens in `password_reset_tokens`, rate-limited per email + IP.
+- [ ] `SessionController::index` + `::revoke` — list my sessions; delete revokes and forces re-auth.
+- [ ] `TokenController::index` + `::create` + `::revoke` — `api_tokens` CRUD; plaintext token returned exactly once on create, stored as SHA-256.
 
-#### 4.2.3 Category Methods (12)
-- [ ] `pwg.categories.getList` — hierarchical tree with permission filtering, pagination, representative image
-- [ ] `pwg.categories.getImages` — image list for category with filters and sort
-- [ ] `pwg.categories.getAdminList` — all categories (admin)
-- [ ] `pwg.categories.calculateOrphans` — images not linked to any category
-- [ ] `pwg.categories.add` — create album, inherit permissions
-- [ ] `pwg.categories.delete` — delete album and optionally its images
-- [ ] `pwg.categories.move` — reparent album, recompute uppercats/global_rank
-- [ ] `pwg.categories.setInfo` — update name, description, status, representative
-- [ ] `pwg.categories.setRank` — reorder within parent
-- [ ] `pwg.categories.setRepresentative` — set cover image
-- [ ] `pwg.categories.deleteRepresentative`
-- [ ] `pwg.categories.refreshRepresentative` — auto-select from images
+#### 4.2.2 Albums (Appendix B.2)
 
-#### 4.2.4 Image Methods (26)
+- [ ] `AlbumController::index` + `::show` + `::children` + `::descendants` — tree traversal via materialized `path` column with permission filtering.
+- [ ] `AlbumController::images` + `::image_ids` — image listing; the `ids` variant is lightweight for prev/next nav.
+- [ ] `AlbumController::create` + `::update` + `::delete` — admin CRUD; delete exposes explicit `photo_action=keep|delete_orphans|cascade` query param (no silent dangerous defaults).
+- [ ] `AlbumController::move` — reparent + rebuild materialized path for subtree in a single transaction.
+- [ ] `AlbumController::set_cover` + `::reorder_images`.
+- [ ] `AlbumPermissionsController::show` + `::replace` — dual-listbox backend; supports "apply to descendants" flag.
+- [ ] `AlbumController::orphans` — images not in any album.
+- [ ] Emit events: `AlbumCreatedEvent`, `AlbumUpdatedEvent`, `AlbumDeletedEvent`, `AlbumMovedEvent`, `AlbumPermissionsChangedEvent` → permission-cache invalidation.
 
-Most complex API group. Full method list with per-method notes:
+#### 4.2.3 Photos — reads (Appendix B.3)
 
-**Read methods:**
-- [ ] `pwg.images.getInfo` — full image detail: metadata, comments (paginated), derivative URLs for all 9 sizes, tag list, category associations, rating data. Permission-filtered: checks privacy level and category access.
-- [ ] `pwg.images.search` — full-text + structured search with permission filtering. Stores search rules as JSON in `search` table, returns `search_id` for pagination. Supports `f_params` filter parameters.
-- [ ] `pwg.images.rate` — submit rating (POST despite being listed as GET in PHP). Validates rate value against `conf.rate_items` whitelist. Recomputes Bayesian `rating_score`.
-- [ ] `pwg.images.exist` — batch duplicate check: accepts `md5sum_list` (comma-separated) or `filename_list`, returns map of existing matches with image IDs
+- [ ] `PhotoController::index` — list with filters + cursor pagination + permission filter.
+- [ ] `PhotoController::show` — full detail including EXIF, tags, albums, derivative URLs for all 9 presets, comment count.
+- [ ] `PhotoController::lookup_duplicates` — batch sha256 lookup; used by upload clients to skip re-upload.
+- [ ] `PhotoCommentsController::index` + `::create` — ACL-filtered comment list; submission goes to moderation unless caller is admin.
+- [ ] `PhotoRatingController::rate` + `::unrate` — upsert into `ratings` table; recompute Bayesian `rating` column.
+- [ ] `PhotoFavoriteController::toggle`.
 
-**Write methods (upload):**
-- [ ] `pwg.images.addSimple` — single file upload (multipart POST). Creates image record, extracts metadata, generates initial derivatives. If `image_id` provided, updates existing image.
-- [ ] `pwg.images.upload` — modern upload endpoint with `pwg_token` CSRF. Supports `format_of` parameter for uploading alternative formats of an existing image.
-- [ ] `pwg.images.addChunk` — chunked upload: receives base64 `data` + `position` + `original_sum`. Stores chunk in `_data/upload/chunks/{original_sum}/`
-- [ ] `pwg.images.addFile` — finalize chunked upload: assembles chunks for given `image_id`, validates checksum
-- [ ] `pwg.images.add` — register image from pre-uploaded chunks. Creates DB record, links to categories (format: `"cat_id[,rank];cat_id[,rank]"`), assigns tags
-- [ ] `pwg.images.uploadAsync` — stateless chunked upload with username/password in POST body (no session needed). For batch uploaders like digiKam, Lightroom plugins.
-- [ ] `pwg.images.uploadCompleted` — finalization callback after multi-image upload batch. Triggers cache invalidation and notification.
-- [ ] `pwg.images.addComment` — submit comment on image. Validates via `insert_user_comment()` pipeline (§4.4.1).
+#### 4.2.4 Photos — uploads (Appendix B.3)
 
-**Write methods (edit):**
-- [ ] `pwg.images.setInfo` — update image metadata. Supports `single_value_mode` (fill_if_empty / replace) and `multiple_value_mode` (append / replace) for categories and tags.
-- [ ] `pwg.images.setPrivacyLevel` — batch set privacy level for multiple images. Triggers `invalidate_user_cache()`.
-- [ ] `pwg.images.setCategory` — batch associate/dissociate/move images between albums. Action `move` = dissociate from all current + associate to new.
-- [ ] `pwg.images.setRank` — set sort order within a category for multiple images
-- [ ] `pwg.images.setMd5sum` — batch compute and store MD5 checksums for images missing them. Processes in configurable `block_size` (default: 500).
-- [ ] `pwg.images.syncMetadata` — re-extract EXIF/IPTC from files and update DB. Batch operation on multiple image IDs.
+- [ ] `PhotoController::create_multipart` — single-shot upload; streams to `var/uploads/tmp/`, validates (MIME allowlist + `infer` magic bytes + libvips probe), debits quota in same transaction, moves to `storage/originals/{yyyy}/{mm}/{uuid}.{ext}`.
+- [ ] `UploadController::create` + `::patch` + `::head` + `::delete` — **tus.io** resumable upload protocol. Staging at `var/uploads/tus/{upload_id}/`. No ad-hoc chunk protocol; tus handles offset/resume/cleanup.
+- [ ] `UploadController::finalize` — tus completion callback enqueues `IngestUploadMessage` to the background queue; derivative generation kicks off asynchronously.
+- [ ] Emit: `ImageUploadingEvent` (vetoable by plugins), `ImageCreatedEvent`, `DerivativeGenerationQueued`.
 
-**Write methods (delete):**
-- [ ] `pwg.images.delete` — cascade delete: images + files + derivatives + comments + tags + favorites + rates + caddie. See §20.7.4 for full cascade order.
-- [ ] `pwg.images.deleteOrphans` — delete images not linked to any category. Processes in `block_size` chunks (default: 1000).
-- [ ] `pwg.images.emptyLounge` — clear the upload staging area (lounge). Triggers `empty_lounge` hook.
+No `pwg.images.addChunk` / `addFile` / `uploadAsync` / `uploadCompleted` protocol variants. The PHP API shipped four upload flavors because each generation of the API invented a new one; v1 has **one** upload protocol (single-shot for small, tus for resumable). Clients that need authenticated-without-session uploads use an API token.
 
-**Utility methods:**
-- [ ] `pwg.images.checkFiles` — compare file checksum to DB `md5sum` for an image. Returns mismatch status.
-- [ ] `pwg.images.checkUpload` — verify upload capability (disk space, permissions). Returns boolean.
-- [ ] `pwg.images.formats.searchImage` — find images matching filenames in a given category. Used by format upload to find the base image.
-- [ ] `pwg.images.formats.delete` — delete an alternative format record and its file. Requires `pwg_token`.
+#### 4.2.5 Photos — writes (Appendix B.3)
 
-#### 4.2.5 Tags Methods (8)
+- [ ] `PhotoController::update` — metadata + tags + album assignments. `Patch` semantics: unset fields are left alone; explicit `null` clears. No `single_value_mode` / `multiple_value_mode` toggle — tags and albums are `Vec<Uuid>` that replace wholesale when provided.
+- [ ] `PhotoController::delete` — hard delete with FK cascade. Files removed via `ImageDeletedEvent` listener.
+- [ ] `PhotoController::regenerate_derivatives` — accepts optional preset list; returns `202 + Operation`.
+- [ ] `PhotoController::sync_metadata` — re-extract EXIF from file on disk.
+- [ ] `PhotoController::batch` — body shape: `{photo_uuids: [...], operations: [{tag_add: ["a","b"]}, {move_album: "uuid"}, {set_min_level: 2}, ...]}`. Returns `202 + Operation` UUID. Each operation type is an enum variant with typed fields — no stringly-typed `action=...` query param.
+- [ ] `PhotoFormatsController::index` + `::upload` + `::delete` — alternative formats (CR2/DNG/HEIC) linked to the base image.
 
-- [ ] `pwg.tags.getList` — all tags with image counts. `sort_by_counter` orders by usage frequency.
-- [ ] `pwg.tags.getImages` — images for given tag(s). Supports `tag_id[]`, `tag_url_name[]`, `tag_name[]` lookups. `tag_mode_and` = require all tags (default: any). Supports `f_params` filters.
-- [ ] `pwg.tags.getAdminList` — all tags without permission filtering (admin only)
-- [ ] `pwg.tags.add` — create tag with `name`. Computes `url_name` via `render_tag_url` hook. Returns new tag ID.
-- [ ] `pwg.tags.delete` — delete tag(s) and all `image_tag` associations. Requires `pwg_token`.
-- [ ] `pwg.tags.rename` — rename tag. Updates `name` and recomputes `url_name`.
-- [ ] `pwg.tags.duplicate` — create a copy of a tag with all its image associations.
-- [ ] `pwg.tags.merge` — merge source tag(s) into destination tag. Moves all `image_tag` rows, then deletes source tags. Requires `pwg_token`.
+#### 4.2.6 Tags (Appendix B.4)
 
-#### 4.2.6 User/Group/Permission Methods (21)
+- [ ] `TagController::index` + `::show` + `::images` — listing with denormalized counts; image listing permission-filtered.
+- [ ] `TagController::create` + `::update` + `::delete`.
+- [ ] `TagController::merge` — atomic: move `image_tags`, drop sources, fire events.
+- [ ] Deleted tag slug → 301 from `slug_redirects` table for one year.
 
-**User methods (9):**
-- [ ] `pwg.users.getList` — paginated user list with filters (status, username search). Hook: `ws_users_getList` (C). Admin only.
-- [ ] `pwg.users.add` — create user. Calls `register_user()`. Returns user ID. Admin only.
-- [ ] `pwg.users.delete` — delete user and associated data (favorites, rates, comments optionally). Admin only. Requires `pwg_token`.
-- [ ] `pwg.users.setInfo` — update user fields (status, level, language, theme, nb_image_page, etc.). Admin only.
-- [ ] `pwg.users.favorites.getList` — current user's favorite images with derivative URLs
-- [ ] `pwg.users.favorites.add` — add image to favorites
-- [ ] `pwg.users.favorites.remove` — remove image from favorites
-- [ ] `pwg.users.setAuthKey` — generate/invalidate API authentication key for a user
-- [ ] `pwg.users.getAuthKey` — retrieve current auth key info (admin only)
+No `pwg.tags.duplicate` — the use case (forking a tag to preserve history) is better served by merge-with-rename; redundant API.
 
-**Group methods (8):**
-- [ ] `pwg.groups.getList` — all groups with member counts. Admin only.
-- [ ] `pwg.groups.add` — create group with `name`. Optionally set `is_default`. Admin only.
-- [ ] `pwg.groups.delete` — delete group and associated `group_access`, `user_group` records. Admin only. Requires `pwg_token`.
-- [ ] `pwg.groups.setInfo` — update group name, is_default flag. Admin only.
-- [ ] `pwg.groups.addUser` — add user to group. Inserts into `user_group`. Admin only.
-- [ ] `pwg.groups.deleteUser` — remove user from group. Admin only.
-- [ ] `pwg.groups.merge` — merge source group(s) into destination group. Moves members. Admin only.
-- [ ] `pwg.groups.duplicate` — copy group with all members. Admin only.
+#### 4.2.7 Search (Appendix B.5)
 
-**Permission methods (3):**
-- [ ] `pwg.permissions.getList` — list all category access grants (user_access + group_access). Returns per-category breakdown. Admin only.
-- [ ] `pwg.permissions.add` — grant access to category for user(s) and/or group(s). Inserts into `user_access`/`group_access`. Triggers `invalidate_user_cache()`.
-- [ ] `pwg.permissions.remove` — revoke access. Triggers `invalidate_user_cache()`. Requires `pwg_token`.
+- [ ] `SearchController::query` — tokenized scopes → parameterized SQL via `QueryBuilder`; permission post-filter.
+- [ ] `SearchController::suggest` — tag/album/user autocomplete.
+- [ ] `SavedSearchController::index` + `::create` + `::delete`.
 
-#### 4.2.7 Plugin/Extension Methods (6)
+#### 4.2.8 Users + groups (Appendix B.6)
 
-- [ ] `pwg.plugins.getList` — list installed plugins with status (active/inactive), version, description. Admin only.
-- [ ] `pwg.plugins.performAction` — activate/deactivate/delete/install/restore plugin. Calls `PluginMaintain` lifecycle methods. Admin only. Requires `pwg_token`.
-- [ ] `pwg.extensions.checkUpdates` — query marketplace for available updates to installed plugins/themes/languages. Webmaster only.
-- [ ] `pwg.extensions.update` — download and apply update for a specific extension. Webmaster only. Requires `pwg_token`.
-- [ ] `pwg.extensions.ignoreUpdate` — suppress update notification for a specific extension version. Stored in `conf.updates_ignored`.
-- [ ] `pwg.themes.performAction` — activate/deactivate/delete/set_default theme. Admin only. Triggers theme lifecycle hooks.
+- [ ] `UserController` CRUD (admin scope).
+- [ ] `UserController::force_logout` — revoke all sessions for a user.
+- [ ] `GroupController` CRUD + membership replace + merge.
 
-#### 4.2.8 Utility Methods (6)
+No `pwg.users.duplicate` or `pwg.groups.duplicate` — same reasoning as tags.
 
-- [ ] `pwg.caddie.add` — add image(s) to current user's working set (caddie). Inserts into `caddie(user_id, element_id)`.
-- [ ] `pwg.rates.delete` — delete specific rating records. Admin only. Requires `pwg_token`. Recomputes `rating_score` for affected images.
-- [ ] `pwg.getMissingDerivatives` — scan images for missing derivative sizes. Returns list of `(image_id, derivative_type)` pairs. Used by maintenance page to trigger batch generation.
-- [ ] `pwg.history.log` — manually insert a history record. Used by external clients to log access events.
-- [ ] `pwg.history.search` — query history table with date range, user, IP, image, and type filters. Returns paginated results. Hook: `get_history` (C). Admin only.
-- [ ] `pwg.images.filteredSearch.create` — create a saved search with filter parameters. Stores rules as JSON in `search` table. Returns `search_id` for later retrieval.
+#### 4.2.9 Comments (Appendix B.7)
+
+- [ ] `CommentModerationController::queue` + `::approve` + `::reject` + `::delete`.
+
+#### 4.2.10 Operations + sync (Appendix B.8, B.9)
+
+- [ ] `OperationController::show` + `::events` (SSE) + `::cancel` + `::index`.
+- [ ] `SyncController::start` + `::status` + `::cancel`. Start returns `202 + Location` pointing at the operation resource.
+
+#### 4.2.11 Admin diagnostics (Appendix B.10)
+
+- [ ] `AdminController::stats` + `::storage` + `::queues` + `::audit` + CSV export + DLQ viewer + maintenance triggers.
+
+#### 4.2.12 Settings + plugins + themes (Appendix B.11)
+
+- [ ] `SettingsController::show` + `::update` — grouped JSON; partial updates allowed.
+- [ ] `PluginController` — install / activate / deactivate / uninstall via admin UI; capability approval on install.
+- [ ] `ThemeController::activate`.
+
+#### 4.2.13 Webhooks (Appendix B.12)
+
+- [ ] `WebhookSubscriptionController` CRUD; server-generated signing secret returned once on create.
+- [ ] `DeliverWebhookMessage` queue handler — HMAC-SHA256 signed payloads, retry policy, DLQ on exhaustion.
+- [ ] `WebhookDeliveryController::retry`.
+- [ ] `SsrfGuard` used on `target_url` creation.
+
+#### 4.2.14 Feeds + health (Appendix B.13, B.14)
+
+- [ ] `FeedController::atom` + `::rss` — signed-token-gated private feeds.
+- [ ] `SitemapController::xml` — public content only.
+- [ ] `HealthController::live` (`/healthz`) + `::ready` (`/readyz`) + `::version`.
+- [ ] `MetricsController::prometheus` — IP-allowlisted.
 
 ---
 
-### 4.3 Admin Panel (57 pages)
+### 4.2.X Cross-cutting
 
-All admin pages use SSR with Tera templates. Each page is an isolated handler.
+- [ ] Every endpoint has a contract test: status, response body validates against OpenAPI schema, auth boundary enforced (403 for insufficient level).
+- [ ] Every POST/PATCH/DELETE endpoint has a CSRF token check for browser clients. API-token clients are exempt (bearer token is the authentication + CSRF is moot).
+- [ ] Every write endpoint emits at least one event from the catalog in Appendix D.
+- [ ] Every endpoint serving user content applies ACL filtering at the query level (not post-hoc in the handler).
+- [ ] Long-running operations (anything > 2 seconds wall time) return `202 + Operation` rather than blocking the HTTP request. Cancellation honored within 5 seconds.
+
+---
+
+### 4.3 Admin panel
+
+All admin pages use SSR with Tera templates. Each page is an isolated handler. Templates live under `templates/admin/` per Appendix E.2; route paths per Appendix F.5.
+
+> **On legacy references below:** where a task mentions a Piwigo hook name, field name, or SQL pattern (e.g. `user_cache`, `get_batch_manager_prefilters`, `anonymous_id`), that is an indicator of **equivalent behavior in the old PHP version** — a hint about the expected feature surface, not a thing being ported. The greenfield implementation uses the new schema (§5 + Appendix A), event catalog (Appendix D), and URL/API surface (Appendix F + B). CSRF uses `X-CSRF-Token` header, not `pwg_token` query/body param. Destructive actions are all rejected without a valid token; the middleware handles this uniformly — no per-task reminder.
 
 #### 4.3.1 Infrastructure
 - [ ] Admin base template (`admin/base.html`): sidebar navigation, breadcrumb, flash messages, CSRF token in all forms
@@ -1740,7 +1754,7 @@ All admin pages use SSR with Tera templates. Each page is an isolated handler.
 
 #### 4.3.2 High Priority Pages
 
-- [ ] **Dashboard** (`/admin` → `intro.tpl`)
+- [ ] **Dashboard** (`/admin`)
   - Pending comments count + link
   - Orphan images count + link
   - Update notifications (core + extensions)
@@ -1750,498 +1764,407 @@ All admin pages use SSR with Tera templates. Each page is an isolated handler.
   - Gallery stats: total photos, albums, tags, users, comments
   - Hook: `loc_end_intro` for plugin widgets
 
-- [ ] **Album management** (`/admin/albums` → `albums.tpl`)
+- [ ] **Album management** (`/admin/albums`)
   - Interactive tree view of all albums (drag-and-drop reordering via JS or form-based)
   - For each album: name, photo count, sub-album count, status icon (public/private), visibility icon
   - Actions: create new album (modal), edit, move, delete
   - Bulk actions: set all to public/private, lock/unlock
-  - Two views: simple `cat_list.tpl` (flat) and `albums.tpl` (tree with nesting)
+  - Two views: flat list and nested tree
 
-- [ ] **Album edit** (`/admin/album/{id}` — tabbed: properties, sort, permissions, notification)
-  - **Properties tab** (`cat_modify.tpl`): name, description (rich text), status (public/private), visibility, commentable, representative image picker, permalink
-  - **Sort tab** (`element_set_ranks.tpl`): drag-and-drop image ordering within album, or sort by date/name/id
-  - **Permissions tab** (`cat_perm.tpl`): dual-listbox for user access and group access grants; "apply to sub-albums" checkbox
-  - **Notification tab** (`album_notification.tpl`): send notification to subscribers about new content
+- [ ] **Album edit** (`/admin/albums/{uuid}` — tabbed: properties, sort, permissions, notification)
+  - **Properties tab**: name, description (rich text), public/private, visibility, commentable, cover-image picker, slug
+  - **Sort tab**: drag-and-drop image ordering within album, or sort by date/name/id
+  - **Permissions tab**: dual-listbox for user + group grants; "apply to descendants" checkbox
+  - **Notification tab**: send notification to subscribers about new content
 
-- [ ] **Photo upload** (`/admin/photos/add` → `photos_add_direct.tpl`)
+- [ ] **Photo upload** (`/admin/photos/upload`)
   - Drag-and-drop zone + file picker fallback
   - Album selector (searchable dropdown or tree)
   - Upload progress: per-file progress bar + overall progress
-  - Chunked upload: JS splits files into 500KB chunks, sends via `pwg.images.addChunk`, finalizes with `pwg.images.uploadCompleted`
-  - Privacy level selector
+  - Resumable upload: `tus-js-client` against the endpoints in Appendix B.3
+  - Privacy level (min-level) selector
   - Post-upload: link to batch manager for tagging
-  - Hook: `loc_end_photo_add_direct`
+  - Event: `PhotoUploadPageRenderedEvent` (for plugin widget injection)
 
-- [ ] **Photo edit** (`/admin/photo/{id}` — tabbed: properties, coi, formats)
-  - **Properties tab** (`picture_modify.tpl`): name, author, description, date_creation (datepicker), privacy level, tags (autocomplete), linked albums (multi-select), rotation
-  - **COI tab** (`picture_coi.tpl`): interactive crop tool — click/drag to set center-of-interest rectangle on the image. Saves 4-char `coi` value.
-  - **Formats tab** (`picture_formats.tpl`): list alternative formats (CR2, DNG, etc.), upload new format, delete format
-  - Hook: `loc_end_picture_modify`, `picture_modify_before_update`
+- [ ] **Photo edit** (`/admin/photos/{uuid}` — tabbed: properties, coi, formats)
+  - **Properties tab**: title, author, description, `taken_at` (datepicker), min-level, tags (autocomplete), linked albums (multi-select), rotation
+  - **COI tab**: interactive crop tool — click/drag to set center-of-interest rectangle. Saves 4-char `coi` value.
+  - **Formats tab**: list alternative formats (CR2, DNG, HEIC, etc.), upload new, delete
+  - Events: `PhotoEditPageRenderedEvent`, `PhotoUpdatingEvent` (vetoable)
 
-- [ ] **Batch manager** (`/admin/batch` → `batch_manager_global.tpl` / `batch_manager_unit.tpl`)
-  - **Global mode**: filter images by prefilter (caddie, no_album, no_tag, duplicates, last_import, all_photos) → display grid → select all/some → apply action
-  - **Unit mode**: edit images one at a time with full detail form
-  - **10 prefilters** (see §20.7.1 for complete list)
-  - **15 actions** (see §20.7.2): add/remove tags, associate/move/dissociate albums, set author/title/date/level, delete, sync metadata, generate/delete derivatives
-  - Filter state stored in session (`$_SESSION['bulk_manager_filter']`)
-  - Hooks: `get_batch_manager_prefilters`, `batch_manager_register_filters`, `element_set_global_action`
+- [ ] **Batch manager** (`/admin/photos`, unit mode at `/admin/photos/unit/{uuid}`)
+  - **Global mode**: filter photos by prefilter (no_album, no_tag, duplicates, last_import, all, ...) → virtualized grid → select all/some → apply action
+  - **Unit mode**: edit photos one at a time with full detail form
+  - **Prefilters** (10 shipped, see §20.7.1): selection shortcuts into common subsets
+  - **Actions** (15 shipped, see §20.7.2): add/remove tags, associate/move/dissociate albums, set author/title/taken_at/min_level, delete, sync metadata, regenerate/delete derivatives
+  - Filter state stored in the user's session payload (JSON)
+  - Events: `BatchManagerPrefiltersEvent` (C, returns `Vec<Prefilter>`), `BatchManagerFiltersEvent` (C), `BatchManagerActionAppliedEvent` (N)
 
-- [ ] **Configuration** (`/admin/configuration` — 5 sub-sections via `&section=` param)
-  - **Main** (`configuration_main.tpl`): gallery title, banner, guest access, registration, email settings
-  - **Display** (`configuration_display.tpl`): thumbnail captions, picture page options (icons, navigation), index page options
-  - **Sizes** (`configuration_sizes.tpl`): all 9 derivative sizes with width/height/crop/quality settings, original resize
-  - **Watermark** (`configuration_watermark.tpl`): watermark image, position (%), opacity, repeat, minimum output size
-  - **Comments** (`configuration_comments.tpl`): enable/disable, moderation, anti-flood, spam settings, guest comments
-  - **Defaults** (`configuration_default.tpl`): default sort order, new album defaults, recent period
+- [ ] **Configuration** (`/admin/settings/*` — see Appendix F.5 for the full list of sub-paths)
+  - **General** (`/admin/settings/general`): gallery title, banner, guest access, registration
+  - **Storage** (`/admin/settings/storage`): `storage/` + `var/` paths, S3 backend config, originals quota
+  - **Uploads** (`/admin/settings/uploads`): MIME allowlist, max file size, tus chunk size, EXIF rotation, auto-orient
+  - **Derivatives** (`/admin/settings/derivatives`): the 9 standard presets (width/height/crop/quality), original-resize, watermark config (image + position + opacity + repeat + minimum output size)
+  - **Mail** (`/admin/settings/mail`): SMTP DSN, sender identity, template theme
+  - **Security** (`/admin/settings/security`): session length, remember-me TTL, API token TTL, rate-limit budgets, CORS allowlist
+  - **Search** (`/admin/settings/search`): engine selection (native FTS / Meilisearch / Tantivy per §21.4)
 
-- [ ] **User management** (`/admin/users` → `user_list.tpl`)
+- [ ] **User management** (`/admin/users`)
   - Paginated, searchable, sortable table of all users
-  - Columns: username, email, status, groups, registration date, last visit, nb_images (from user cache)
-  - Actions: edit (inline or modal), delete, change status, assign groups
-  - Filter by status, group, registration date range
-  - Bulk actions: delete selected, change status, assign to group
+  - Columns: username, email, access level, groups, registration date, last visit, photo count (via aggregate query)
+  - Actions: edit, delete (soft), change level, assign groups
+  - Filter by level, group, registration date range
+  - Bulk actions: delete selected, change level, assign to group
   - Create new user form
 
-- [ ] **User permissions** (`/admin/user/{id}/permissions` → `user_perm.tpl`)
-  - Dual-listbox: available categories on left, granted categories on right
-  - Shows inheritance (which permissions come from group membership)
-  - "Apply" saves to `user_access` table
+- [ ] **User permissions** (`/admin/users/{uuid}/permissions`)
+  - Dual-listbox: available albums on left, granted albums on right
+  - Shows inheritance (permissions granted via group membership)
+  - "Apply" writes to `album_user_access`
 
-- [ ] **Group management** (`/admin/groups` → `group_list.tpl`)
+- [ ] **Group management** (`/admin/groups`)
   - List all groups with member count, is_default flag
-  - Create/edit/delete/merge/duplicate groups
+  - Create / edit / delete / merge
   - Add/remove members (searchable user picker)
 
-- [ ] **Group permissions** (`/admin/group/{id}/permissions` → `group_perm.tpl`)
-  - Same dual-listbox as user permissions, but saves to `group_access` table
+- [ ] **Group permissions** (`/admin/groups/{uuid}/permissions`)
+  - Same dual-listbox as user permissions, writes to `album_group_access`
 
 #### 4.3.3 Medium Priority Pages
 
-##### Sync (`/admin/sync`) → `site_update.tpl`
+##### Sync (`/admin/sync`)
 
-**Source:** `admin/site_update.php` (1,389 lines)
+- [ ] **Form fields (POST to `/api/v1/sync/start`):**
+  - `mode`: `"dirs"` (directories only) or `"files"` (files + directories)
+  - `min_level`: newly discovered photos' privacy level
+  - `metadata`: boolean — run metadata extraction phase
+  - `metadata_only_new`: boolean — skip files that already have `sha256` set
+  - `metadata_empty_overrides`: boolean — allow empty EXIF values to clear existing DB values
+  - `simulate`: boolean (default: true) — dry-run, no DB writes
+- [ ] **Quick sync:** `?quick=1` query param pre-populates form with `mode=files, metadata=true, simulate=false`
+- [ ] **SSE progress:** `GET /api/v1/operations/{uuid}/events` streams `PhaseStart`, `Progress`, `PhaseComplete`, `Error`, `Complete` events
+- [ ] **Client-side:** JS subscribes to the operation SSE stream, updates per-phase progress bars, shows elapsed time, supports cancel via `POST /api/v1/operations/{uuid}/cancel`
 
-- [ ] **Form fields (POST):**
-  - `sync`: Radio — `""` (none), `"dirs"` (directories only), `"files"` (files + directories)
-  - `add_to_caddie`: Checkbox — add synced images to working set
-  - `privacy_level`: Select — privacy level for newly discovered photos
-  - `sync_meta`: Checkbox — run metadata extraction phase
-  - `meta_all`: Checkbox — re-extract even for already-synced photos
-  - `meta_empty_overrides`: Checkbox — allow empty EXIF values to overwrite existing DB values
-  - `simulate`: Checkbox (default: checked) — dry-run mode, no DB writes
-- [ ] **Quick sync mode:** `?quick_sync` query param pre-populates form with `sync=files, sync_meta=true, simulate=false`
-- [ ] **SSE progress:** When `?sse` present, response is `Content-Type: text/event-stream` with events: `phase_start`, `substep_start`, `substep_progress`, `phase_progress`, `substep_complete`, `phase_complete`, `complete`, `error`
-- [ ] **Client-side:** JS parses SSE events, updates progress bars per phase, shows elapsed time, supports pause/resume/abort
+##### Maintenance (`/admin/maintenance`)
 
-##### Maintenance (`/admin/maintenance`) → `maintenance_actions.tpl`, `maintenance_env.tpl`
-
-**Source:** `admin/maintenance.php`, `admin/maintenance_actions.php`, `admin/maintenance_env.php`
-
-- [ ] **Tabs:** `actions`, `env` (tabsheet system)
+- [ ] **Tabs:** `actions`, `env`
 - [ ] **Actions tab operations:**
-  - Lock/unlock gallery (toggle `gallery_locked` config)
-  - Purge history detail (`DELETE FROM history`)
-  - Purge history summary (`DELETE FROM history_summary`)
-  - Purge search history (`DELETE FROM search`)
-  - Purge never-connected users
-  - Purge sessions (`DELETE FROM sessions WHERE expiration < NOW()`)
-  - Rebuild DB cache (`invalidate_user_cache(true)` — TRUNCATE `user_cache` + `user_cache_categories`)
-  - Delete derivative sizes: checkboxes per size (sq, th, 2s, xs, sm, me, la, xl, xx) → delete files from `_data/i/`
-  - Generate missing derivative sizes: launch background job
-  - Update photo information: recompute category image counts, representative images
-  - Repair and optimize database tables
-- [ ] **Env tab:** Read-only display of PHP/Rust version, DB engine, OS, cache sizes, active plugins list (via AJAX), image counts, storage usage
-- [ ] All destructive actions require `pwg_token` CSRF validation
+  - Toggle `gallery_locked` setting (503-on-read mode for planned maintenance)
+  - Purge audit log rows older than retention window
+  - Purge expired sessions
+  - Purge expired `password_reset_tokens`, expired `api_tokens`
+  - Invalidate permission cache (clears moka cache for all users)
+  - Delete derivative sizes: checkboxes per preset (`thumbnail`, `small`, ..., `xlarge`) → enqueue cleanup job against `var/derivatives/`
+  - Regenerate missing derivatives: enqueue background job
+  - Recompute denormalized counters (`albums.image_count`, `tags.image_count`)
+  - VACUUM / OPTIMIZE / ANALYZE (dialect-appropriate)
+- [ ] **Env tab:** read-only display of Rust version + libvips version + DB engine + OS + cache sizes + active plugins list + photo count + storage usage. `/admin/maintenance/env` populates via concurrent `/api/v1/admin/*` fetches.
 
-##### Tags (`/admin/tags`) → `tags.tpl`
+##### Tags (`/admin/tags`)
 
-**Source:** `admin/tags.php`
-
-- [ ] **Display:** Paginated tag list (100/200/500/1000 per page) with image count per tag
-- [ ] **Operations (AJAX-driven):**
-  - Rename: change `tags.name` and recompute `tags.url_name`
-  - Merge: select multiple tags → merge into one target tag. Reassigns all `image_tag` rows from source tags to target, then deletes source tags
-  - Delete: remove tag and all `image_tag` links
+- [ ] **Display:** Paginated tag list (100/200/500/1000 per page) with denormalized `image_count`
+- [ ] **Operations:**
+  - Rename: update `tags.name`, recompute `slug`, store old slug in redirect table
+  - Merge: select multiple tags → merge into destination. Reassigns `image_tags` rows, deletes sources in one transaction.
+  - Delete: remove tag + all `image_tags` links
   - Add: create new tag directly from admin
-  - Delete orphan tags: `?action=delete_orphans` — removes tags with zero image links
-- [ ] **Selection mode:** Toggle checkbox column for batch operations
-- [ ] **Hooks:** `render_tag_name` (C), `get_tag_alt_names` (C)
-- [ ] **SQL:** `SELECT t.*, COUNT(it.image_id) AS counter FROM tags t LEFT JOIN image_tag it ON t.id = it.tag_id GROUP BY t.id`
+  - Delete orphan tags: removes tags with `image_count = 0`
+- [ ] **Selection mode:** checkbox column for batch operations
+- [ ] **Events:** `TagRenderNameEvent` (C) for custom display rendering, `TagAltNamesEvent` (C) for search aliases
+- [ ] **Query:** `SELECT id, name, slug, image_count FROM tags` — denormalized count is authoritative; nightly reconcile via maintenance.
 
-##### Comments (`/admin/comments`) → `comments.tpl`
+##### Comments (`/admin/comments`)
 
-**Source:** `admin/comments.php`
+- [ ] **Filter tabs:** "All" / "Pending" / "Rejected" with live counts
+- [ ] **Batch operations** (via `POST /api/v1/comments/{id}/approve` and `POST /api/v1/comments/{id}/reject`, parallelized):
+  - Approve: `UPDATE comments SET status = 'approved', approved_at = NOW()`
+  - Reject: `UPDATE comments SET status = 'rejected'`
+  - Delete: `DELETE FROM comments WHERE id IN (?)`
+- [ ] **Per-comment display:** author name (via `CommentRenderAuthorEvent` C), body (via `CommentRenderBodyEvent` C), date, photo thumbnail, `ip_hash` (for admin spam-analysis)
+- [ ] **Selection UI:** select-all / none / invert, checkbox per comment
+- [ ] **Pagination:** configurable items-per-page (default 10)
 
-- [ ] **Filter tabs:** "All" / "Pending" (unvalidated) with counts
-- [ ] **Batch operations (POST):**
-  - `validate`: Approve selected comments — `UPDATE comments SET validated = true, validation_date = NOW() WHERE id IN (?)`
-  - `reject`: Delete selected comments — `DELETE FROM comments WHERE id IN (?)`
-- [ ] **Per-comment display:** Author name (rendered via `render_comment_author` hook), content (via `render_comment_content` hook), date, associated image thumbnail, IP/anonymous_id
-- [ ] **Selection UI:** Select All / None / Invert links, checkbox per comment
-- [ ] **Pagination:** `conf.comments_page_nb_comments` (default 10), navigation bar
-- [ ] **SQL:** `SELECT c.*, i.path, i.tn_ext, u.username FROM comments c JOIN images i ON c.image_id = i.id LEFT JOIN users u ON c.author_id = u.id WHERE validated = ? ORDER BY date DESC LIMIT ? OFFSET ?`
+##### Audit log (`/admin/audit`)
 
-##### History (`/admin/history`) → `history.tpl`
+- [ ] **Filter form:**
+  - Date range (datepicker `start` + `end`)
+  - Event types (multi-select): `user.login`, `user.logout`, `photo.upload`, `photo.delete`, `album.permission_changed`, `plugin.install`, ...
+  - Actor IP filter (IPv4/IPv6 pattern validation)
+  - Target type + ID filter (`album` / `photo` / `user` + uuid)
+  - Actor user filter
+- [ ] **Data retrieval:** `GET /api/v1/admin/audit` with query filters (Appendix B.10)
+- [ ] **Pagination:** configurable items-per-page; cursor pagination
+- [ ] **Export:** CSV via `GET /api/v1/admin/audit/export.csv`
 
-**Source:** `admin/history.php`
-
-- [ ] **Filter form (POST/GET):**
-  - Date range: `start` (date-after), `end` (date-before) — datepicker inputs
-  - `types[]`: Multi-select for action types (visited, downloaded, photo upload, etc.)
-  - `filter_ip`: IP address filter (validated `/^[0-9.]+$/`)
-  - `filter_image_id`: Image ID filter
-  - `filter_user_id`: User ID filter
-  - `display_thumbnail`: Radio — no thumbnails, classic thumbnails, hoverbox thumbnails
-- [ ] **Data retrieval:** Via API call `pwg.history.search` with dynamic WHERE clause filtering
-- [ ] **Pagination:** Configurable items per page (`conf.nb_logs_page`)
-- [ ] **Summary refresh:** Calls `history_summarize()` to aggregate detail table into `history_summary`
-
-##### Stats (`/admin/stats`) → `stats.tpl`
-
-**Source:** `admin/stats.php` (linked from history)
+##### Stats (`/admin/stats`)
 
 - [ ] **Chart.js visualization** with data selectors:
   - Last 72 hours (hourly)
   - Last 90 days (daily)
   - Last 60 months (monthly)
   - Year-over-year comparison (current month across years)
-- [ ] **Data queries:** `get_last(72, 'hour')`, `get_last(90, 'day')`, `get_last(60, 'month')`, `get_month_of_last_years()`
-- [ ] **Data format:** JSON embedded as data attributes on chart canvas element
-- [ ] **Locale support:** Month labels via Moment.js locale integration
+- [ ] **Data queries:** time-bucketed aggregates from `audit_log` via `DATE_TRUNC` (dialect-portable through the adapter)
+- [ ] **Data format:** inline JSON on chart canvas `data-*` attributes (no extra fetch)
+- [ ] **Locale support:** month labels via `Intl.DateTimeFormat` (no Moment.js)
 
-##### Rating (`/admin/rating`) → `rating.tpl`
+##### Ratings (`/admin/ratings`)
 
-**Source:** `admin/rating.php`
-
-- [ ] **Filter form (GET):**
-  - `order_by`: Select — 8 sort options (Rate date, Rating score, Average rate, Nb rates, Sum rates, File name, Creation date, Post date)
-  - `users`: Select — "all", "user", "guest"
-  - `display`: Items per page (default 10)
-  - `cat`: Category filter (selectize dropdown)
-- [ ] **Data display:** Per-image aggregates (COUNT, AVG, SUM of rates), plus expandable per-image detail showing individual ratings (user, rate value, date)
-- [ ] **SQL:** `SELECT i.*, MAX(r.date) AS recently_rated, ROUND(AVG(r.rate), 2) AS avg_rates, COUNT(r.rate) AS nb_rates, SUM(r.rate) AS sum_rates FROM rate r JOIN images i ON r.element_id = i.id GROUP BY i.id`
-- [ ] **Category filter:** Joins with `image_category` when `cat` filter provided
+- [ ] **Filter form:**
+  - `sort`: 7 sort options (most-recent, top-rated, most-rated, total-score, filename, taken_at, created_at)
+  - `raters`: "all", "authenticated", "anonymous"
+  - `per_page`: items per page (default 10)
+  - `album`: album filter (searchable dropdown)
+- [ ] **Data display:** per-photo aggregates (COUNT, AVG, SUM of ratings), expandable per-photo detail showing individual raters + values + dates
+- [ ] **Query:** `SELECT i.*, MAX(r.rated_at) AS last_rated, ROUND(AVG(r.rating), 2) AS avg, COUNT(r.rating) AS n, SUM(r.rating) AS total FROM ratings r JOIN images i ON r.image_id = i.id GROUP BY i.id`
+- [ ] **Album filter:** joins `image_albums` when `album` filter provided
 
 #### 4.3.4 Lower Priority Pages
 
-##### Plugins (`/admin/plugins`) → `plugins_installed.tpl`, `plugins_new.tpl`
+##### Plugins (`/admin/plugins`, marketplace at `/admin/plugins/marketplace`)
 
-**Source:** `admin/plugins.php`, `admin/plugins_installed.php`, `admin/plugins_new.php`
-
-- [ ] **Tabs:** `installed`, `new`, `update` (tabsheet system)
+- [ ] **Tabs:** `installed`, `marketplace`, `updates`
 - [ ] **Installed tab:**
-  - List active/inactive plugins with name, version, description, author
-  - Toggle details view (stored in session: `plugins_show_details`)
-  - Actions per plugin: activate, deactivate, delete (each requires `pwg_token`)
-  - Plugin sort order saved to session (`plugins_new_order`)
-  - Hooks: `get_admin_plugin_menu_links` (C — deprecated, for legacy plugin admin pages)
-- [ ] **New tab:** Install from PEM (Piwigo Extension Manager) marketplace — search, browse, install by revision ID
-- [ ] **Update tab:** Compare installed versions vs marketplace, show available updates
-- [ ] **Plugin actions:** `POST /admin/plugins/{id}/{action}` where action ∈ {activate, deactivate, delete, install, restore}
+  - List active/inactive plugins with name, version, description, author, declared capabilities
+  - Details toggle persisted in session payload
+  - Actions per plugin: activate, deactivate, uninstall (with optional `drop_data`)
+  - Events: `PluginAdminMenuLinksEvent` (C) — plugins contribute their own admin subpages
+- [ ] **Marketplace tab:** Lua plugin catalog (TBD — whether the project runs its own index or lists Packagist entries tagged `type: gallery-plugin`)
+- [ ] **Updates tab:** compare installed vs marketplace, show available updates
 
-##### Themes (`/admin/themes`) → `themes_installed.tpl`, `themes_new.tpl`
+Upgrading the core binary is out of the admin UI's scope — it's a Docker-image pull or binary replacement. No "self-update" path.
 
-**Source:** `admin/themes.php`, `admin/themes_installed.php`, `admin/themes_new.php`
+##### Themes (`/admin/themes`)
 
-- [ ] **Tabs:** `installed`, `new`, `update`
+- [ ] **Tabs:** `installed`, `marketplace`, `updates`
 - [ ] **Installed tab:**
   - List themes with name, screenshot preview, version, author
-  - Actions: activate (sets as user default), deactivate, delete
-  - Only one theme can be "default" for new users — others are available as user preference
-  - Hooks: `theme_activated` (N), `theme_deactivated` (N), `theme_deleted` (N), `loc_end_themes_installed` (N)
-- [ ] **New tab:** Install from marketplace. Hook: `theme_installed` (N)
-- [ ] **SQL:** `SELECT * FROM themes`, `UPDATE user_infos SET theme = ? WHERE theme = ?` (when deactivating a theme in use)
+  - Actions: activate (sets as site default), deactivate, delete
+  - Only one theme is "default" for new users; others are available as user preference
+  - Events: `ThemeActivatedEvent`, `ThemeDeactivatedEvent`, `ThemeDeletedEvent`, `ThemesPageRenderedEvent`
+- [ ] **Marketplace tab:** install from marketplace; fires `ThemeInstalledEvent`
+- [ ] Deactivating a theme in use migrates affected users' `users.theme` to the new default in a single UPDATE.
 
-##### Languages (`/admin/languages`) → `languages_installed.tpl`, `languages_new.tpl`
+##### Languages (`/admin/settings/languages`)
 
-**Source:** `admin/languages.php`, `admin/languages_installed.php`, `admin/languages_new.php`
-
-- [ ] **Tabs:** `installed`, `new`, `update`
+- [ ] **Tabs:** `installed`, `marketplace`, `updates`
 - [ ] **Installed tab:**
-  - List languages with name, code, active/inactive status
+  - List languages with display name, locale code, active/inactive status
   - Actions: activate, deactivate, set_default, delete
-  - Set default: `UPDATE user_infos SET language = ? WHERE language = ?` (migrates users from deleted/deactivated language)
-- [ ] **New tab:** Install from marketplace
+  - Set default: `UPDATE users SET locale = ? WHERE locale = ?` (migrates users from a deleted/deactivated locale)
+- [ ] **Marketplace tab:** install JSON catalogs from marketplace
 
-##### Permalinks (`/admin/permalinks`) → `permalinks.tpl`
+##### Slug redirects (`/admin/settings/slug-redirects`)
 
-**Source:** `admin/permalinks.php`
-
-- [ ] **Active permalinks table:** Categories with non-null `permalink` column — sortable by id, name, permalink
-- [ ] **Old permalinks table:** `old_permalinks` table — previously assigned permalinks that now redirect. Sortable by cat_id, permalink, date_deleted, last_hit
+- [ ] **Active slugs table:** albums/tags with their current slug — sortable by id, name, slug
+- [ ] **Redirect history table:** previously-assigned slugs that now 301 to current — sortable by target, old_slug, retired_at, last_hit
 - [ ] **Actions:**
-  - `set_permalink` (POST): Assign permalink string to category — validates uniqueness, stores in `categories.permalink`. Previous permalink moved to `old_permalinks` for redirect
-  - `delete_permanent` (GET): Remove old permalink redirect entry — requires `pwg_token`
-- [ ] **Functions:** `delete_cat_permalink()`, `set_cat_permalink()` from `admin/inc/functions_admin.php`
+  - Set slug (`PATCH /api/v1/albums/{uuid}` or `/api/v1/tags/{slug}`): validates uniqueness, stores old slug in redirects for the retention window
+  - Delete redirect: manually retire a redirect entry before its automatic expiry (default one year)
 
-##### Photo Formats (`/admin/photo/{id}/formats`)
+##### Photo formats (`/admin/photos/{uuid}/formats`)
 
-- [ ] **Display:** List of alternative file formats for an image (stored in `image_format` table)
-- [ ] **Format types:** Original, JPEG, PNG, TIFF, WebP, AVIF, RAW formats detected during sync
-- [ ] **Actions:** Delete individual format files, upload new format variant
-- [ ] **Schema reference:** `image_format(format_id, image_id, ext)` — see Appendix A
+- [ ] **Display:** list of alternative file formats for a photo (stored in `image_formats` table — Appendix A.4)
+- [ ] **Format types:** CR2, CR3, NEF, ARW, DNG, ORF, RW2, RAF, PEF (detected during sync) + HEIC + RAW-with-embedded-JPEG
+- [ ] **Actions:** delete individual format files, upload new format variant
 
-##### Menubar (`/admin/menubar`) → `menubar.tpl`
+##### Menubar (`/admin/settings/menubar`)
 
-**Source:** `admin/menubar.php`
+- [ ] **Block ordering form:**
+  - Per-block: `visible` checkbox, `position` number input
+  - Drag-and-drop reorder (JS falls back to number inputs)
+  - Normalize positions on save (1-indexed, consecutive)
+- [ ] **Config storage:** JSON array in `settings.menubar_blocks`
+- [ ] **BlockManager integration:** registered blocks come from the core + plugin-registered via `BlockmanagerRegisterBlocksEvent` (per Appendix D)
 
-- [ ] **Block ordering form (POST):**
-  - Per-block: `hide_{block_id}` checkbox (visibility), `pos_{block_id}` input (numeric position)
-  - Position value: positive = visible at that position, negative = hidden
-  - `make_consecutive()` normalizes position values after save
-- [ ] **Config storage:** Serialized array in `config` table under key `blk_menubar`
-- [ ] **BlockManager integration:** Loads all registered blocks (core + plugin-registered via `blockmanager_register_blocks` hook)
-- [ ] **Rust note:** Replace PHP serialized format with JSON for the `blk_menubar` config value
+##### Notification by mail (`/admin/notifications`)
 
-##### Notification by Mail (`/admin/notification`) → `notification_by_mail.tpl`, `double_select.tpl`
+- [ ] **Sections:** `settings`, `subscribers`, `send`
+- [ ] **Settings section:**
+  - `html_mail`: boolean toggle
+  - `digest_detailed`: include photo thumbnails in digest
+  - `digest_include_dates`: include per-photo dates
+  - `sender_override`: optional From address
+  - `complementary_content`: custom text appended to all notifications
+  - `unsubscribe_token_ttl`: unsubscribe-link validity (seconds)
+- [ ] **Subscribers section:** dual-listbox (subscribed / unsubscribed). Actions: subscribe, unsubscribe
+- [ ] **Send section:** list of subscribed users with checkboxes; dispatch button enqueues `SendDigestMessage` per user; optional per-send extra content
+- [ ] **Subscription table:** `user_mail_notification(user_id, unsubscribe_token, enabled, last_send_at)` — `unsubscribe_token` is a 32-byte random for token-authenticated unsubscribe links
+- [ ] **Bounded dispatch:** digest dispatcher honors a wall-clock budget; remaining users are picked up on the next run.
 
-**Source:** `admin/notification_by_mail.php`
+##### Updates (`/admin/updates`)
 
-- [ ] **Modes (GET param):** `param`, `subscribe`, `send`
-- [ ] **Param mode (POST):**
-  - `nbm_send_html_mail`: Boolean toggle
-  - `nbm_send_detailed_content`: Boolean — include image details in digest
-  - `nbm_send_recent_post_dates`: Boolean — include dates
-  - `nbm_send_mail_as`: Sender email address override
-  - `nbm_complementary_mail_content`: Custom text appended to all notifications
-  - `auth_key_duration`: Auth key lifetime in seconds
-- [ ] **Subscribe mode:** Dual-listbox (subscribed / unsubscribed users). Actions: `truthify` (subscribe), `falsify` (unsubscribe)
-- [ ] **Send mode:** List of subscribed users with checkboxes. `send_submit` dispatches digest emails. `send_customize_mail_content` textarea for per-send custom content
-- [ ] **Hook:** `nbm_render_global_customize_mail_content` (C), `nbm_event_handler_added` (N)
-- [ ] **Subscription table:** `user_mail_notification(user_id, check_key, enabled, last_send)` — `check_key` is a 16-char random token for unsubscribe links
-- [ ] **Timeout protection:** Respects `max_execution_time` via `nbm_max_treatment_timeout_percent`
-
-##### FTP Import (`/admin/photos/ftp`)
-
-**Source:** `admin/photos_add_ftp.php`
-
-- [ ] **Informational page:** Displays help content from `language/{lang}/help/photos_add_ftp.html`
-- [ ] **No form/POST actions:** This page tells users to use filesystem sync instead of FTP upload
-- [ ] **Template variable:** `FTP_HELP_CONTENT` assigned from language file
-- [ ] **Rust note:** May be deprecated entirely — sync is the primary import mechanism
-
-##### Updates (`/admin/updates`) → `updates_ext.tpl`, `updates_pwg.tpl`
-
-**Source:** `admin/updates.php`, `admin/updates_ext.php`, `admin/updates_pwg.php`
-
-- [ ] **Tabs:** `pwg` (core updates), `extensions` (plugin/theme/language updates)
+- [ ] **Tab:** `extensions` only. Core updates are out of band (Docker pull, binary replacement) — no self-update UI.
 - [ ] **Extensions tab:**
-  - Checks marketplace for newer versions of installed plugins, themes, and languages
+  - Checks marketplace for newer versions of installed plugins, themes, language packs
   - Compares `installed_version` vs `available_version`
-  - One-click update per extension (downloads ZIP, extracts, replaces files)
-  - `updates_ignored` config: array of extension IDs to skip
-  - Requires `pwg_token` for update actions
-- [ ] **Core tab:**
-  - Checks for new Piwigo versions (minor and major)
-  - Multi-step upgrade wizard: download → extract → run migrations → verify
-  - PHP version requirement checking per target version
-  - Config flags: `enable_core_update`, `enable_extensions_install`
-- [ ] **Rust note:** Core updates become binary replacement — different mechanism than PHP file replacement. Extensions tab only relevant for Lua plugins, themes, and language packs
+  - One-click update per extension (downloads release asset, verifies signature, extracts into `plugins/` / `themes/` / `locales/`, restarts the relevant VM for Lua plugins)
+  - `updates_ignored` setting: array of extension IDs to skip
+- [ ] **Config flags:** `enable_extensions_install` (allow admin to install new), `enable_extensions_update` (allow updates). Both default `false` in production profiles that manage extensions through the container image.
 
-#### 4.3.5 Category & Permission Operations (Admin)
-- [ ] `category.uppercats` recomputation after move/create/delete
-- [ ] `global_rank` recomputation (order across full tree)
-- [ ] Permission inheritance: when creating a new category, optionally inherit parent's user_access and group_access
-- [ ] Batch permission assignment: apply same permissions to all categories in a subtree
+#### 4.3.5 Cross-cutting admin operations
+
+- [ ] Materialized `albums.path` + adjacency `parent_id` both updated atomically on move/create/delete (§5 schema principles). No separate `uppercats` / `global_rank` columns exist.
+- [ ] Permission inheritance on album create: optional flag copies parent's `album_user_access` + `album_group_access` rows to the new child.
+- [ ] Batch permission assignment: apply same permissions to an album and all descendants via a single `INSERT ... SELECT` from the ACL editor's "apply to descendants" checkbox.
 
 ---
 
-### 4.4 User-Facing Write Operations
+### 4.4 User-facing write operations
 
-#### 4.4.1 Comment Submission
+#### 4.4.1 Comment submission
 
-**Source:** `inc/functions_comment.php` — `insert_user_comment()` (533 lines)
-
-- [ ] `POST /comments` (form submission from picture page):
-  - **CSRF:** Validate ephemeral key (session-stored, single-use)
+- [ ] `POST /api/v1/photos/{uuid}/comments`:
+  - **CSRF:** `X-CSRF-Token` header validated by middleware (browser clients); bearer-token API clients exempt
   - **Validation chain:**
-    1. Content not empty
-    2. Spam filter: reject if content contains more than `conf.comment_spam_max_links` URLs
-    3. Email format validation (if provided by anonymous user)
-    4. Author name collision: anonymous users cannot use an existing registered username
-    5. Website URL: only accepted if `conf.comments_enable_website = true` (honeypot field)
-    6. Anti-flood: reject if same IP posted within `conf.anti_flood_time` seconds
-    7. Plugin hook: `user_comment_check` (C) — plugins can reject with custom message
-  - **Database:** `INSERT INTO comments (author, author_id, anonymous_id, content, date, validated, validation_date, image_id, website_url, email)`
-    - `anonymous_id` = last 3 octets of IP address (for anonymous users)
-    - `validated = true` for admin/webmaster users, `false` for moderation queue (based on `conf.comment_moderate`)
-  - **Post-insert:**
-    - Trigger `user_comment_validation` hook (N) if auto-validated
-    - Email notification to admins if `conf.email_admin_on_comment` (validated) or `conf.email_admin_on_comment_validation` (pending)
-    - `invalidate_user_cache_nb_comments()` — update cached comment counts
-  - **Return:** `'validate'` (published), `'moderate'` (queued), or `'reject'` (spam/error)
+    1. Body not empty, length within configured bounds
+    2. Spam filter: reject if body contains more than `comments.spam_max_links` URLs
+    3. Anonymous: validate email format if provided
+    4. Anonymous: reject `author_name` that collides with an existing username
+    5. Honeypot field: only accepted if `comments.honeypot_enabled`
+    6. Anti-flood: reject if same `ip_hash` posted within `comments.anti_flood_seconds`
+    7. Event: `CommentSubmittingEvent` (C) — handlers can reject with a reason
+  - **Persist:** `INSERT INTO comments (image_id, user_id, author_name, author_email, body, status, ip_hash, created_at)`
+    - `status = 'approved'` for admin/webmaster users; `'pending'` for moderation (gated by `comments.require_moderation`)
+  - **Post-insert events:**
+    - `CommentCreatedEvent` always
+    - `CommentApprovedEvent` if auto-approved
+    - Email notification to subscribers (per admin preferences) via event listener
 
-#### 4.4.2 User Registration
+#### 4.4.2 User registration
 
-**Source:** `register.php`, `inc/functions_user.php` — `register_user()`
-
-- [ ] `POST /register` (form submission):
-  - **CSRF:** Ephemeral key validation
+- [ ] `POST /api/v1/auth/register`:
+  - **CSRF:** handled by middleware
   - **Validation:**
-    1. Login uniqueness (case-insensitive if `conf.insensitive_case_logon`)
-    2. No leading/trailing spaces, no HTML tags in username
-    3. Password confirmation match
-    4. Email format validation, email uniqueness check
-  - **Database:**
-    - `INSERT INTO users (username, password, mail_address)` — password is `bcrypt(plaintext, cost=10)`
-    - `INSERT INTO user_infos (user_id, status, nb_image_page, language, expand, show_nb_comments, show_nb_hits, recent_period, theme, registration_date)` — all values from `conf.default_user_*` defaults
+    1. Username uniqueness (case-insensitive via generated `username_ci` column — same mechanism as email)
+    2. Username charset allowlist; no HTML; no leading/trailing whitespace
+    3. Password + confirmation match; complexity policy
+    4. Email format + uniqueness (via `email_ci`)
+  - **Persist:**
+    - `INSERT INTO users (uuid, username, email, password_hash, access_level, locale, timezone, theme)` — password via `argon2id` (not bcrypt — new hashes use argon2; bcrypt path exists only for imported migrations which §17 rules out)
   - **Post-registration:**
-    - `log_user(user_id, false)` — auto-login the new user
-    - Optionally send welcome email with password (`conf.browser_language` detection for language)
-    - Admin notification if `conf.email_admin_on_new_user`
-    - Redirect to gallery home page
+    - Create session immediately (auto-login)
+    - Optionally send welcome email (locale from `Accept-Language` at registration time)
+    - `UserRegisteredEvent` dispatched; admin-notification subscriber handles the "new user" email
 
-#### 4.4.3 User Profile Update
+#### 4.4.3 User profile update
 
-**Source:** `profile.php`, `inc/functions.php` — `save_profile_from_post()`
-
-- [ ] `POST /profile` (form submission):
-  - **Access control:** Guest users cannot edit profile. Non-admin users must provide current password to change password or email.
+- [ ] `PATCH /api/v1/auth/me`:
+  - **Access control:** guests blocked; non-admin users must include `current_password` in the body to change password or email
   - **Editable fields:**
-    - `password` + `password_confirm` — must match, hashed with bcrypt
-    - `mail_address` — format and uniqueness validation
-    - `nb_image_page` — integer, photos per page
-    - `language` — must be in active languages whitelist
-    - `theme` — must be in active themes whitelist
-    - `expand` — boolean, expand category tree
-    - `show_nb_comments` — boolean
-    - `show_nb_hits` — boolean
-    - `recent_period` — integer, days to consider "recent"
-  - **Database:** `mass_updates()` on `users` table (email, password, username) and `user_infos` table (all preference fields)
+    - `password` + `password_confirmation` — must match, rehashed with argon2id
+    - `email` — format + uniqueness
+    - `locale` — must be an enabled locale
+    - `theme` — must be an enabled theme
+    - `timezone` — IANA zone
+    - `photos_per_page` — 1..200
+    - `recent_days` — 1..365
+    - `show_comment_counts`, `show_view_counts`, `auto_expand_tree` — booleans
+  - **Persist:** single `UPDATE users` with dialect-specific `RETURNING *` to fetch the new row.
   - **Side effects:**
-    - If password changed: deactivate all auth keys for this user
-    - If email changed: delete password reset keys
-    - Hook: `save_profile_from_post` (N, data: user_id)
-    - Activity log: `pwg_activity('user', user_id, 'edit', [changed_fields])`
+    - Password change → revoke all `api_tokens` + `remember_tokens` + non-current sessions
+    - Email change → invalidate pending `password_reset_tokens`
+    - Event: `UserProfileUpdatedEvent` with changed-fields diff
+    - Audit log: `user.profile_updated` with before/after of changed scalar fields (never secrets)
 
-#### 4.4.4 Image Rating
+#### 4.4.4 Photo rating
 
-**Source:** `inc/functions_rate.php` — `rate_picture()`
-
-- [ ] `POST /rate/{image_id}` or via API `pwg.images.rate`:
+- [ ] `POST /api/v1/photos/{uuid}/rate` (body: `{rating: 1..5}`):
   - **Validation:**
-    - `conf.rate` must be `true` (rating enabled globally)
-    - Rate value must be in `conf.rate_items` whitelist (default: `[1, 2, 3, 4, 5]`)
-    - If anonymous: `conf.rate_anonymous` must be `true`
-  - **Database:**
-    - `anonymous_id` = last 3 octets of IP (for anonymous raters)
-    - `DELETE FROM rate WHERE user_id = ? AND element_id = ? AND anonymous_id = ?` (remove existing vote)
-    - `INSERT INTO rate (user_id, anonymous_id, element_id, rate, date)` (new vote)
-    - Recompute Bayesian score: `update_rating_score(image_id)`
-  - **Bayesian scoring algorithm:**
+    - `ratings.enabled` setting must be `true`
+    - `rating` value must be in `ratings.allowed_values` whitelist (default: `[1,2,3,4,5]`)
+    - If anonymous: `ratings.allow_anonymous` must be `true`; uses `ip_hash` for dedup
+  - **Persist:** `UPSERT INTO ratings (user_id, image_id, rating, rated_at)` keyed on `(user_id, image_id)`. For anonymous raters, `user_id = 0` (the sentinel guest user) and the dedup key is `(image_id, ip_hash)` via a separate anonymous table if retained — see the design note in §20.8.
+  - **Bayesian scoring:**
     ```
-    global_avg = AVG(rate) across all images
-    per_item_avg = AVG(rate) for this image
-    per_item_count = COUNT(rate) for this image
-    confidence = configurable weight (default: 2)
-    rating_score = (confidence * global_avg + per_item_count * per_item_avg) / (confidence + per_item_count)
+    global_avg = AVG(rating) across all photos
+    per_photo_avg = AVG(rating) for this photo
+    per_photo_n = COUNT(rating) for this photo
+    confidence = settings.ratings.bayesian_confidence (default: 2)
+    score = (confidence * global_avg + per_photo_n * per_photo_avg) / (confidence + per_photo_n)
     ```
-    - Updates `images.rating_score`; NULL for unrated images
-  - **Hook:** `update_rating_score` (C) — plugins can override scoring algorithm
+    - `UPDATE images SET rating = ROUND(score * 20) WHERE id = ?` — stored as `TINYINT UNSIGNED` 0..100 (scale × 20) for numeric stability; NULL for unrated.
+  - **Event:** `RatingSubmittedEvent` (C) — listeners can modify the computed score; default listener runs the Bayesian calculation.
 
-#### 4.4.5 Favorites Management
+#### 4.4.5 Favorites management
 
-- [ ] `POST /favorites/{image_id}/add` and `POST /favorites/{image_id}/remove`:
-  - **Schema:** `favorites(user_id, image_id)` — composite primary key
-  - `INSERT INTO favorites (user_id, image_id)` / `DELETE FROM favorites WHERE user_id = ? AND image_id = ?`
-  - Bulk remove: `POST /favorites/remove_all` — `DELETE FROM favorites WHERE user_id = ?`
-  - **Permission validation:** `check_user_favorites()` — on permission changes, purge favorites referencing images the user can no longer access
-  - Guest users cannot have favorites (requires login)
+- [ ] `POST /api/v1/photos/{uuid}/favorite` (toggle):
+  - **Schema:** `favorites(user_id, image_id)` — Appendix A.7
+  - Idempotent: request that matches current state is a 200 no-op
+  - On permission change (album ACL removes user's view access): `FavoriteAccessRevokedEvent` listener purges unreachable favorites via a scheduled job (no synchronous cascade)
+  - Guest users cannot have favorites (401 if called unauthenticated)
 
-#### 4.4.6 Caddie (Working Set) Management
-
-- [ ] **Schema:** `caddie(user_id, element_id)` — composite primary key
-- [ ] **Operations:**
-  - Add to caddie: from picture page, from batch manager (bulk), from sync (`add_to_caddie` option)
-  - Remove from caddie: `DELETE FROM caddie WHERE user_id = ? AND element_id IN (?)`
-  - Empty caddie: `DELETE FROM caddie WHERE user_id = ?`
-  - View caddie: Batch manager prefilter `caddie` shows only caddie contents
-- [ ] Caddie is per-user, only visible to the user who added items
-- [ ] Admin use case: sync → add new images to caddie → review in batch manager → tag/categorize
+No "caddie" / working-set persistent state. The batch manager's selection is session-scoped, not DB-backed. Admin workflow "sync new photos → review in batch manager → tag": use the batch manager's `last_import` prefilter, which selects photos uploaded during the most recent sync operation.
 
 ---
 
-### 4.5 Email System (piwigo-mail crate)
+### 4.5 Email (`gallery-mail` crate)
 
-**Source:** `inc/functions_mail.php` (1,047 lines), `inc/functions_notification.php`, `inc/functions_notification_by_mail.php`
+#### 4.5.1 SMTP configuration
 
-#### 4.5.1 SMTP Configuration
+- [ ] Settings (stored in `settings` table, keys under `mail.*`):
+  - `mail.smtp_host`: SMTP server (format: `host:port` or `host`, default 25)
+  - `mail.smtp_user`: auth username (empty = no auth)
+  - `mail.smtp_password`: auth password (stored encrypted with the app secret key)
+  - `mail.smtp_secure`: `"ssl"` (implicit TLS, port 465) or `"tls"` (STARTTLS, port 587)
+  - `mail.sender_name`: From display name (default: gallery title)
+  - `mail.sender_email`: sender address (default: the first webmaster's email)
+  - `mail.allow_html`: boolean — send HTML multipart (with plain-text alternate)
+  - `mail.template_theme`: `"clear"` or `"dark"` (or a custom theme shipping its own CSS)
 
-- [ ] Config keys:
-  - `smtp_host`: SMTP server address (format: `host:port` or just `host`, default port 25)
-  - `smtp_user`: Authentication username (empty = no auth)
-  - `smtp_password`: Authentication password
-  - `smtp_secure`: Security type — `"ssl"` (port 465) or `"tls"` (STARTTLS, port 587)
-  - `mail_sender_name`: Display name for From header (default: `conf.gallery_title`)
-  - `mail_sender_email`: Sender email (default: webmaster email from DB)
-  - `mail_allow_html`: Boolean — send HTML emails (with plain text fallback)
-  - `mail_theme`: Email template theme — `"clear"` or `"dark"`
+#### 4.5.2 Mailer implementation
 
-#### 4.5.2 Mailer Implementation
-
-- [ ] `PiwigoMailer` wrapping `lettre::AsyncSmtpTransport`:
+- [ ] `GalleryMailer` wrapping `lettre::AsyncSmtpTransport`:
   ```rust
-  pub struct PiwigoMailer {
+  pub struct GalleryMailer {
       transport: lettre::AsyncSmtpTransport<lettre::Tokio1Executor>,
       sender: lettre::message::Mailbox,
       config: MailConfig,
       templates: Arc<Tera>,
   }
-  impl PiwigoMailer {
-      pub async fn send_mail(&self, to: &str, subject: &str, template: &str, context: &tera::Context) -> Result<()>;
-      pub async fn send_html_mail(&self, to: &str, subject: &str, html_template: &str, text_template: &str, context: &tera::Context) -> Result<()>;
+  impl GalleryMailer {
+      pub async fn send(
+          &self, to: &str, subject: &str,
+          template: &str, context: &tera::Context,
+      ) -> Result<()>;
   }
   ```
-- [ ] **Sending pipeline:**
-  1. Render Tera template for HTML body (`templates/mail/html/{template}.html`)
-  2. Render Tera template for plain text body (`templates/mail/text/{template}.txt`)
-  3. CSS inlining for HTML emails (inline `<style>` blocks into element `style` attributes) — use `css-inline` crate (Rust equivalent of PHP Emogrifier)
-  4. Trigger `before_send_mail` hook (C) — plugins can modify or cancel
-  5. If hook returns `false`, skip sending
-  6. Build `lettre::Message` with HTML + plain text multipart
-  7. Send via SMTP transport
-  8. If `conf.debug_mail`, also write email to `_data/tmp/mail_{timestamp}.eml` for debugging
+- [ ] **Pipeline:**
+  1. Render HTML body (`templates/mail/{template}.html`)
+  2. Render plain-text body (`templates/mail/{template}.txt`)
+  3. Inline CSS into HTML (via `css-inline` crate) — no separate "clear"/"dark" template directories; CSS theme applied at render time
+  4. Fire `BeforeSendMailEvent` (C) — listeners can modify subject/body/recipients or cancel by returning `None`
+  5. Build `lettre::Message` multipart
+  6. Send via SMTP transport
+  7. If `mail.debug_dump_eml`, also write to `var/tmp/mail_{ts}.eml`
+- [ ] **Queue integration:** every send goes through `SendMailMessage` on the `mail` queue — not called inline from request handlers. Retry policy: 5 attempts with exponential backoff; permanent failure → DLQ.
 
-#### 4.5.3 Email Template Inventory
+#### 4.5.3 Notification catalog
 
-- [ ] **Mail templates to migrate** (from `themes/default/template/mail/`):
-  - `header.html` / `header.txt` — common email header with gallery branding
-  - `footer.html` / `footer.txt` — common email footer with unsubscribe links
-  - `notification_by_mail.html` / `.txt` — digest notification with new images/comments
-  - `notification_admin.html` / `.txt` — admin notification (new user, new comment)
-  - `cat_group_info.html` — album group notification
-  - CSS files for mail themes (clear, dark)
+| Event | Recipient | Template |
+|---|---|---|
+| `UserRegisteredEvent` (new user) | admins (gated by `notifications.admin_on_new_user`) | `admin_new_user` |
+| `UserRegisteredEvent` (new user) | the new user, if opted in | `welcome` |
+| `CommentCreatedEvent` (auto-approved) | admins (gated by `notifications.admin_on_new_comment`) | `admin_new_comment` |
+| `CommentCreatedEvent` (pending moderation) | admins (gated by `notifications.admin_on_comment_pending`) | `admin_comment_pending` |
+| `PasswordResetRequestedEvent` | the requesting user | `password_reset` |
+| `DigestScheduledEvent` (cron-triggered) | subscribed users | `digest` |
+| `AlbumNotificationTriggeredEvent` | selected users | `album_notification` |
 
-#### 4.5.4 Notification Types
+Templates listed in Appendix E.3.
 
-| Type | Trigger | Recipients | Template |
-|---|---|---|---|
-| New comment (validated) | `insert_user_comment()` with `validated=true` | Admins (if `email_admin_on_comment`) | `notification_admin` |
-| New comment (pending) | `insert_user_comment()` with `validated=false` | Admins (if `email_admin_on_comment_validation`) | `notification_admin` |
-| New user registered | `register_user()` | Admins (if `email_admin_on_new_user`) | `notification_admin` |
-| Password reset | `POST /password` | User who requested reset | inline template |
-| Welcome email | `register_user()` with `notify_user=true` | New user | inline template |
-| Digest (new images) | Scheduled / manual from admin | Subscribed users | `notification_by_mail` |
-| Album notification | `POST /admin/album/{id}/notify` | Selected users | `cat_group_info` |
+#### 4.5.4 Digest notifications
 
-#### 4.5.5 Digest Notification System
-
-- [ ] **Subscription table:** `user_mail_notification(user_id, check_key, enabled, last_send)`
-  - `check_key`: 16-char random token — used in unsubscribe URLs for authentication without login
-  - `enabled`: `true`/`false` — user can opt out via unsubscribe link
-  - `last_send`: timestamp of last digest dispatch for this user
-- [ ] **Digest computation:** `custom_notification_query()` counts new content since `last_send`:
-  - New images: `SELECT COUNT(*) FROM images WHERE date_available > ? AND ...permission_filters...`
-  - Updated albums: `SELECT COUNT(*) FROM categories WHERE lastmodified > ?`
-  - New comments: `SELECT COUNT(*) FROM comments WHERE validation_date > ?`
-- [ ] **Digest dispatch:**
-  1. Query all subscribed users with `enabled='true'` and non-null email
-  2. For each user: compute new content since `last_send`, respecting that user's permission filters
-  3. If new content exists: render `notification_by_mail` template with image thumbnails, album names, comment snippets
-  4. Send email via `PiwigoMailer`
-  5. Update `last_send` timestamp for this user
-  6. **Timeout protection:** Track elapsed time, abort remaining sends if approaching `max_execution_time` threshold
-- [ ] **Subscribe/unsubscribe URLs:** `/notification?action=subscribe&key={check_key}` / `?action=unsubscribe&key={check_key}` — no login required, authenticated by `check_key`
+- [ ] **Subscription table:** `user_mail_notifications(user_id, unsubscribe_token, enabled, last_send_at)` — Appendix A.
+  - `unsubscribe_token`: 32-byte random, base64url-encoded; used in unsubscribe links without requiring login.
+- [ ] **Digest computation:** per subscribed user, compute counts of content since their `last_send_at`, respecting their permission set:
+  - New photos: `SELECT COUNT(*) FROM images WHERE created_at > ? AND <permission_filter>`
+  - Updated albums: `SELECT COUNT(*) FROM albums WHERE updated_at > ?`
+  - New approved comments: `SELECT COUNT(*) FROM comments WHERE approved_at > ? AND status = 'approved'`
+- [ ] **Dispatch:**
+  1. `DispatchDigestsMessage` (scheduled daily) enumerates subscribed users with `enabled = TRUE` and non-null email
+  2. For each user, enqueues a `SendDigestMessage` — distributes work across queue workers; no single-process time budget
+  3. Each `SendDigestMessage` handler: compute new content, render template, send via `GalleryMailer`, update `last_send_at`, fire `DigestDeliveredEvent`
+- [ ] **Subscribe/unsubscribe:** `GET /notifications/subscribe?token={unsubscribe_token}` / `GET /notifications/unsubscribe?token={unsubscribe_token}` — no login required, token is the only auth.
 
 ---
 
@@ -2254,7 +2177,7 @@ All admin pages use SSR with Tera templates. Each page is an isolated handler.
 
 ### 5.1 Sync Orchestrator
 
-**Source:** `admin/site_update.php` (1,389 lines)
+**Prior art:** `admin/site_update.php` (1,389 lines)
 
 - [ ] `SyncJob` struct: config for a sync run (site_id, target categories, options)
 - [ ] `SyncOptions`:
@@ -2469,19 +2392,23 @@ The PHP sync is **NOT transactional across phases** — each phase commits indep
   - DB constraint violations not caught in simulate (FK checks, unique constraints)
 - [ ] **Rust approach:** Simulate computes the full diff but wraps DB operations in a transaction that is rolled back instead of committed — catches constraint errors.
 
+---
+
+## 11. Phase 6 — Plugin System
+
 **Duration: 8–10 weeks**  
 **Goal:** Full event hook system with Lua plugin support. All 6 built-in PHP plugins reimplemented.
 
 ---
 
-### 6.1 Event Bus (piwigo-plugins crate)
+### 6.1 Event Bus (gallery-plugins crate)
 
-**Source:** `inc/functions_plugins.php` (369 lines), **144 unique event names** (91 notify + 53 change) across 222 call sites
+**Prior art:** `inc/functions_plugins.php` (369 lines), **144 unique event names** (91 notify + 53 change) across 222 call sites
 
 - [ ] Define all 144 event names as a Rust enum. Each variant is annotated with its type (`N` = trigger_notify, `C` = trigger_change):
   ```rust
   #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-  pub enum PiwigoEvent {
+  pub enum GalleryEvent {
       // ─── Lifecycle / Initialization (6 events) ───
       Init,                               // N — inc/common.php:296
       PluginsLoaded,                       // N — inc/functions_plugins.php:366
@@ -2675,20 +2602,20 @@ The PHP sync is **NOT transactional across phases** — each phase commits indep
 
   **Total: 144 unique events** (91 `trigger_notify`, 53 `trigger_change`).
 
-  Implement `PiwigoEvent::event_type(&self) -> EventType` returning `Notify` or `Change` for each variant — enforced at compile time so callers cannot accidentally call `trigger_change` on a notify-only event or vice versa.
+  Implement `GalleryEvent::event_type(&self) -> EventType` returning `Notify` or `Change` for each variant — enforced at compile time so callers cannot accidentally call `trigger_change` on a notify-only event or vice versa.
 
-  Implement `PiwigoEvent::from_str(s: &str) -> Option<Self>` for Lua plugins that register by string name.
+  Implement `GalleryEvent::from_str(s: &str) -> Option<Self>` for Lua plugins that register by string name.
 - [ ] `EventBus`:
   ```rust
   pub struct EventBus {
-      handlers: DashMap<PiwigoEvent, BTreeMap<u32, Vec<HandlerFn>>>,
+      handlers: DashMap<GalleryEvent, BTreeMap<u32, Vec<HandlerFn>>>,
   }
   impl EventBus {
-      pub fn add_handler(&self, event: PiwigoEvent, handler: HandlerFn, priority: u32);
-      pub fn remove_handler(&self, event: PiwigoEvent, handler_id: HandlerId);
-      pub async fn trigger_notify(&self, event: PiwigoEvent, ctx: &RequestContext);
+      pub fn add_handler(&self, event: GalleryEvent, handler: HandlerFn, priority: u32);
+      pub fn remove_handler(&self, event: GalleryEvent, handler_id: HandlerId);
+      pub async fn trigger_notify(&self, event: GalleryEvent, ctx: &RequestContext);
       pub async fn trigger_change<T: Serialize + DeserializeOwned>(
-          &self, event: PiwigoEvent, data: T, ctx: &RequestContext
+          &self, event: GalleryEvent, data: T, ctx: &RequestContext
       ) -> T;
   }
   ```
@@ -2802,7 +2729,7 @@ The PHP sync is **NOT transactional across phases** — each phase commits indep
 
 ### 6.3 Plugin Lifecycle (PluginMaintain)
 
-**Source:** `inc/PluginMaintain.php`
+**Prior art:** `inc/PluginMaintain.php`
 
 - [ ] `PluginMaintain` trait in Rust (for native plugins):
   ```rust
@@ -2911,7 +2838,7 @@ Each built-in plugin is reimplemented as a Lua plugin (or native Rust if perform
 
 ### 7.2 Asset Pipeline
 
-**Source:** `inc/ScriptLoader.php` (373 lines), `inc/CssLoader.php` (89 lines), `inc/FileCombiner.php` (300+ lines)
+**Prior art:** `inc/ScriptLoader.php` (373 lines), `inc/CssLoader.php` (89 lines), `inc/FileCombiner.php` (300+ lines)
 
 #### ScriptLoader (Rust equivalent)
 - [ ] `ScriptRegistry` — register JS files with load mode (header/footer/async) and dependencies
@@ -2935,14 +2862,14 @@ Each built-in plugin is reimplemented as a Lua plugin (or native Rust if perform
 - [ ] CSS URL rewriting: adjust relative paths after combining
 - [ ] CSS minification: `lightningcss` crate
 - [ ] JS minification: `swc_ecma_minifier` crate or `oxc_minifier`
-- [ ] Write combined file to `_data/combined/{hash}.css` or `.js`
+- [ ] Write combined file to `var/combined/{hash}.css` or `.js`
 - [ ] Configurable: `config.template_combine_files` — disable for development
 
 ---
 
 ### 7.3 BlockManager (Rust equivalent)
 
-**Source:** `inc/BlockManager.php` (184 lines)
+**Prior art:** `inc/BlockManager.php` (184 lines)
 
 - [ ] `BlockManager` struct:
   ```rust
@@ -2968,7 +2895,7 @@ Each built-in plugin is reimplemented as a Lua plugin (or native Rust if perform
 
 ### 7.4 Theme System
 
-**Source:** `themes/*/themeconf.php`
+**Prior art:** `themes/*/themeconf.php`
 
 - [ ] `ThemeConfig` struct:
   ```rust
@@ -2989,80 +2916,81 @@ Each built-in plugin is reimplemented as a Lua plugin (or native Rust if perform
 
 ---
 
-### 7.5 Template Migration Execution
+### 7.5 Template authoring execution
 
-- [ ] Write a Smarty→Tera transpiler script (Python recommended) to handle mechanical conversions. **Complete conversion rule table:**
+Templates are authored fresh against the handler view-models defined in Phases 2–4. There is no Smarty-to-Tera transpile step, no `.tpl` source tree, no 265-file migration checklist. The template inventory is fully specified in Appendix E.
 
-  | Smarty Syntax | Tera Equivalent | Notes |
-  |---|---|---|
-  | `{$var}` | `{{ var }}` | Simple variable |
-  | `{$var\|escape}` | `{{ var \| escape }}` | Tera auto-escapes by default |
-  | `{$obj.property}` | `{{ obj.property }}` | Dot access |
-  | `{$arr[0]}` | `{{ arr[0] }}` | Array index (Tera uses `.0` or `[0]`) |
-  | `{$derivative->get_url()}` | `{{ derivative.url }}` | **Method calls → pre-computed properties** |
-  | `{'key'\|translate}` | `{{ 'key' \| translate }}` | Custom filter |
-  | `{'key'\|translate\|escape}` | `{{ 'key' \| translate }}` | Tera auto-escapes; remove redundant |
-  | `{$count\|translate_dec:'%d photo':'%d photos'}` | `{{ count \| translate_dec(s='%d photo', p='%d photos') }}` | Named args in Tera |
-  | `{$var\|sprintf:$arg}` | `{{ var \| sprintf(arg=arg) }}` | Custom filter |
-  | `{$var\|intval}` | `{{ var \| int }}` | Built-in Tera |
-  | `{$var\|strtolower}` | `{{ var \| lower }}` | Built-in Tera |
-  | `{$var\|strtoupper}` | `{{ var \| upper }}` | Built-in Tera |
-  | `{$var\|trim}` | `{{ var \| trim }}` | Built-in Tera |
-  | `{$var\|urlencode}` | `{{ var \| urlencode }}` | Built-in Tera |
-  | `{$arr\|implode:', '}` | `{{ arr \| join(sep=', ') }}` | Built-in Tera |
-  | `{$var\|json_encode}` | `{{ var \| json_encode() }}` | Custom filter |
-  | `{$var\|md5}` | `{{ var \| md5 }}` | Custom filter |
-  | `{$var\|get_extent:'handle'}` | `{{ var \| theme_override(handle='handle') }}` | Custom filter for theme cascade |
-  | `{if $cond}...{elseif $c2}...{else}...{/if}` | `{% if cond %}...{% elif c2 %}...{% else %}...{% endif %}` | |
-  | `{if isset($var)}` | `{% if var is defined %}` | Tera `defined` test |
-  | `{if !empty($var)}` | `{% if var %}` or `{% if var \| length > 0 %}` | Depends on context |
-  | `{foreach from=$arr item=x}` | `{% for x in arr %}` | |
-  | `{foreach from=$arr key=k item=v}` | `{% for k, v in arr %}` | |
-  | `{$smarty.foreach.foo.index}` | `{{ loop.index0 }}` | Tera built-in loop var |
-  | `{$smarty.foreach.foo.iteration}` | `{{ loop.index }}` | 1-based |
-  | `{$smarty.foreach.foo.first}` | `{{ loop.first }}` | |
-  | `{$smarty.foreach.foo.last}` | `{{ loop.last }}` | |
-  | `{include file='foo.tpl'}` | `{% include "foo.html" %}` | |
-  | `{include file=$var\|get_extent:'handle'}` | `{% include theme_override("handle") %}` | Custom function |
-  | `{assign var=x value=expr}` | `{% set x = expr %}` | |
-  | `{literal}...{/literal}` | `{% raw %}...{% endraw %}` | |
-  | `{ldelim}` / `{rdelim}` | `{{ "{" }}` / `{{ "}" }}` | Or use raw blocks |
-  | `{combine_script id=x path=y require=z}` | `{{ combine_script(id='x', path='y', require='z') }}` | Custom function |
-  | `{combine_css path=x order=y}` | `{{ combine_css(path='x', order=y) }}` | Custom function |
-  | `{get_combined_scripts load='header'}` | `{{ get_combined_scripts(load='header') }}` | Custom function |
-  | `{get_combined_css}` | `{{ get_combined_css() }}` | Custom function |
-  | `{footer_script require='jquery'}...{/footer_script}` | Collect into `InlineScript` list during render | Post-processing, not a Tera tag |
-  | `{html_head}...{/html_head}` | Collect into head content list | Post-processing |
-  | `{html_style}...{/html_style}` | Collect into style content list | Post-processing |
-  | `{define_derivative name=x type=y}` | `{{ define_derivative(name='x', type='y') }}` | Custom function |
-  | `{$pwg->derivative_url($img, $type)}` | `{{ derivative_url(img=img, type=type) }}` | Custom function (no method calls in Tera) |
+#### 7.5.1 Conventions
 
-- [ ] **Patterns that CANNOT be mechanically converted** (require manual work):
-  1. **Object method calls** (`{$derivative->get_type()}`) — must be pre-computed in handler and passed as flat properties
-  2. **PHP function calls in templates** (`{$smarty.const.IMG_THUMB}`, `{count($array)}`) — compute in handler or use Tera globals
-  3. **`{footer_script}` / `{html_head}` blocks** — collected post-render, not native Tera
-  4. **`.css.tpl` / `.js.tpl` template assets** (5 files in modus theme) — render via Tera, then feed to CSS/JS minifier
-  5. **`file_exists` modifier** (3 uses) — pre-compute in handler
-  6. **`preg_match` modifier** (2 uses) — pre-compute in handler
+- [ ] **Strict handler contract.** Every template receives a typed view-model serialized to Tera context; no "pass `$pwg` and let the template figure it out." Handlers compute every displayed value before render.
+- [ ] **No method calls in templates.** If a template needs `image.derivative_url("medium")`, the handler pre-computes `image.derivatives.medium` as a flat field. Tera templates are read-only projections of data.
+- [ ] **Auto-escape on.** `{{ user.name }}` is always HTML-escaped; explicit `| safe` required (and justified) for pre-sanitized HTML.
+- [ ] **i18n via `translate` filter.** `{{ 'photo.upload.submit' | translate }}` resolves through the gettext catalog. Plural forms via `translate_dec(singular, plural, n)`.
+- [ ] **Theme-cascade lookup via `theme_override` function.** `{% include theme_override("partials/thumbnail_card") %}` walks the active theme → parent chain → default, returning the first hit.
+- [ ] **Tag/slot helpers.** `{% footer_script %}...{% endfooter_script %}` and `{% html_head %}...{% endhtml_head %}` are custom tags that append to post-render buffers — emitted into `<head>` and before `</body>` respectively.
+- [ ] **Asset helpers.** `{{ script(id='main', path='main.js', require=['tus']) }}` and `{{ stylesheet(path='main.css', order=10) }}` register into the `ScriptRegistry` / `CssRegistry` for the request.
 
-- [ ] Manually review and fix each migrated template (~265 files — see Appendix E for complete list)
-- [ ] Build visual regression test suite: screenshot comparison between PHP and Rust renders
-- [ ] **Priority migration order** (blocking dependencies first):
-  1. `header.html` + `footer.html` — affects every page
-  2. `menubar.html` + `menubar_*.html` — sidebar on every page
-  3. `index.html` + `thumbnails.html` + `mainpage_categories.html` — gallery browsing
-  4. `picture.html` + `picture_content.html` + `picture_nav_buttons.html` — image viewing
-  5. `identification.html` — login (needed for testing auth)
-  6. `navigation_bar.html` — pagination (used everywhere)
-  7. Admin `header.html` + `footer.html` + `admin.html` — admin shell
-  8. Admin `intro.html` — dashboard (first page admins see)
-  9. Remaining admin templates (56 files — see Appendix E §Admin)
-  10. Remaining gallery templates (search, tags, comments, profile, register, about, etc.)
-  11. Mail templates (13 files)
-  12. bootstrap_darkroom theme overrides (69 files)
-  13. modus theme overrides (16 files, including 5 CSS templates)
-  14. smartpocket theme overrides (34 files)
-  15. elegant theme overrides (2 files — trivial)
+#### 7.5.2 Helper catalog (Tera functions + filters)
+
+Functions registered on the Tera engine at startup:
+
+| Function | Signature | Purpose |
+|---|---|---|
+| `route(name, **kwargs)` | `route("album.show", slug=album.slug)` | Reverse-routing against the compiled route table |
+| `asset(path)` | `asset("img/logo.svg")` | Resolves to `/assets/...` with content-hash |
+| `theme_override(handle)` | `theme_override("partials/nav")` | Theme-cascade path resolver |
+| `script(...)` | Register JS into `ScriptRegistry` | See §12.2 |
+| `stylesheet(...)` | Register CSS into `CssRegistry` | See §12.2 |
+| `emit_scripts(load)` | Output registered `<script>` tags for `header`/`footer`/`async` | Post-dependency resolve |
+| `emit_stylesheets()` | Output registered `<link>` tags in order | Post-dedup |
+| `derivative_url(photo, preset)` | `derivative_url(photo, "medium")` | Builds `/media/medium/{uuid}.avif` |
+| `csrf_token()` | Returns current session's CSRF token | Emits into forms |
+| `block(handle)` | Render a BlockManager block by handle | See §12.3 |
+
+Filters:
+
+| Filter | Purpose |
+|---|---|
+| `translate` | i18n lookup |
+| `translate_dec(singular, plural, n)` | plural lookup |
+| `format_date(format)` | via `IntlDateFormatter` equivalent |
+| `format_number(style)` | decimal / percent / currency |
+| `human_filesize` | 1024³ → "1.2 GB" |
+| `relative_time` | "3 hours ago" |
+| `md5`, `sha256` | content hashing (for cache keys, not secrets) |
+| `json_encode` | for inline-script JSON |
+
+All other commonly needed filters (`escape`, `upper`, `lower`, `trim`, `urlencode`, `join`, `length`, `default`, `first`, `last`) are Tera built-ins.
+
+#### 7.5.3 Template build order (dependency-first)
+
+Each line lands in its own PR; later rows assume earlier rows exist.
+
+1. `layout.html` — root HTML shell (head, body, nav slot, content slot, footer slot).
+2. `partials/nav.html` + `partials/footer.html` + `partials/flash_messages.html` — layout slot fills.
+3. `partials/pagination.html` + `partials/breadcrumb.html` + `partials/thumbnail_card.html` — shared grid + breadcrumb primitives.
+4. `error.html` — 404/403/422/500.
+5. `home.html` + `album/show.html` — gallery home + album detail.
+6. `photo/show.html` + `partials/comment_list.html` + `partials/comment_form.html` + `partials/rating_widget.html` — picture page.
+7. `auth/login.html` + `auth/register.html` + `auth/password_reset_request.html` + `auth/password_reset_confirm.html`.
+8. `auth/account/*.html` — profile, security, tokens, sessions, notifications.
+9. `tag/index.html` + `tag/show.html`.
+10. `search/form.html` + `search/results.html`.
+11. `favorites.html` + `highlights/*.html`.
+12. `album/flat.html` + `album/calendar.html`.
+13. `photo/slideshow.html`.
+14. Admin shell: `admin/layout.html` + `admin/dashboard.html`.
+15. Admin pages: albums, photos (batch + unit + upload + coi + formats), users, groups, tags, comments, history, stats, ratings, sync, maintenance, queues, audit, settings/*, plugins/*, themes, webhooks.
+16. Mail templates: `mail/layout.html`, `welcome.html`, `password_reset.html`, `comment_notification.html`, `digest.html`, `album_notification.html` (each with `.txt` sibling).
+17. Themes 2–5: override files in `themes/{name}/templates/` as the theme design requires (no mandatory override count; each theme overrides as much or as little as its design wants).
+
+#### 7.5.4 Testing
+
+- [ ] Per-template snapshot test (Playwright) — golden screenshots regenerated with `--update-snapshots` on intentional visual changes.
+- [ ] axe-core accessibility scan on every rendered public + admin page — zero violations required.
+- [ ] Dark-mode snapshot for themes that ship a dark variant.
+- [ ] Keyboard-only walkthrough: login → browse → upload → admin CRUD — must complete without mouse.
+- [ ] Screen-reader smoke test (NVDA or VoiceOver manual pass, documented).
 
 ---
 
@@ -3138,7 +3066,7 @@ Each built-in plugin is reimplemented as a Lua plugin (or native Rust if perform
 - [ ] Verify user-supplied content in `Content-Disposition` headers is sanitized (filename injection)
 
 **CSRF (Cross-Site Request Forgery):**
-- [ ] Verify all 38 POST-only API methods validate `pwg_token` parameter
+- [ ] Verify every state-changing endpoint validates `X-CSRF-Token` header for browser clients (bearer-token API clients exempt)
 - [ ] Verify all admin form submissions include and validate CSRF token
 - [ ] Verify CSRF token is per-session (HMAC of session ID + secret key), not predictable
 - [ ] Verify logout is POST-only (prevent CSRF logout attacks)
@@ -3148,12 +3076,12 @@ Each built-in plugin is reimplemented as a Lua plugin (or native Rust if perform
 - [ ] Session binding: IP octets included in session validation
 - [ ] Remember-me: HMAC-SHA1 with timing-safe comparison (`constant_time_eq`)
 - [ ] API keys: stored as SHA-256 hash, never plaintext
-- [ ] Password: bcrypt with cost >= 10, `password_verify` auto-detects cost
+- [ ] Password: argon2id with `m_cost=19 MiB, t_cost=2, p_cost=1` (tune with `argon2` crate benchmarks for target hardware); `argon2::verify_encoded` auto-detects encoded params so hash-parameter upgrades work without migration
 - [ ] Rate limiting: max 10 login attempts per IP per minute
 
 **Authorization:**
 - [ ] Verify every admin endpoint checks `user.status >= Admin` before processing
-- [ ] Verify `pwg.extensions.update` checks for Webmaster (not just Admin)
+- [ ] Verify plugin-install and core-upgrade endpoints require `AccessLevel::Webmaster` (not just Admin)
 - [ ] Verify image privacy level checked on every image access (view, download, derivative)
 - [ ] Verify `ws_invoke_allowed` hook runs before every API method dispatch
 
@@ -3189,7 +3117,7 @@ Each built-in plugin is reimplemented as a Lua plugin (or native Rust if perform
 ### 8.6 Documentation
 
 - [ ] `docs/install.md` — installation guide (binary, Docker, building from source)
-- [ ] `docs/upgrade.md` — upgrade from Piwigo PHP 14.x
+- [ ] `docs/upgrade.md` — upgrade between versions of this project (major + minor bumps)
 - [ ] `docs/configuration.md` — all config options with defaults
 - [ ] `docs/plugins.md` — Lua plugin API reference with examples
 - [ ] `docs/api.md` — REST API reference (auto-generated from method registry)
@@ -3202,16 +3130,21 @@ Each built-in plugin is reimplemented as a Lua plugin (or native Rust if perform
 
 ## 14. Subsystem Specifications
 
-### 14.1 Session Format Migration
+### 14.1 Session Storage
 
-PHP sessions are stored as `s:7:"pwg_uid";i:3;` in the `sessions.data` column. The Rust version uses JSON.
+Sessions are stored as JSON in the `sessions.data` column (native `JSON` on MySQL/Postgres, `LONGTEXT`-with-check on MariaDB). No PHP serialization format anywhere — the repo does not ship a deserializer for `s:7:"pwg_uid";i:3;` because there is no migration from Piwigo.
 
-**Migration steps:**
-1. Add `sessions.data_json` column (nullable) in an early migration
-2. `piwigo upgrade` reads all existing sessions, deserializes PHP serialization format, writes JSON to `data_json`
-3. Rust server reads `data_json` if non-null, else `data` (for sessions created by a mixed-mode deployment)
-4. Write always goes to `data_json`
-5. After cutover period (configurable, default 30 days), a second migration drops `data` and `data_json` becomes `data`
+Session columns:
+
+- `id VARCHAR(128) PRIMARY KEY` — `{ipv4_hex_4bytes}{random}` format
+- `user_id BIGINT NULL REFERENCES users(id) ON DELETE CASCADE`
+- `data JSON NOT NULL` — application session state
+- `ip_hash BYTEA` / `BINARY(32)` — SHA-256 of requester IP for binding checks
+- `user_agent VARCHAR(255)` — optional, for audit
+- `last_active TIMESTAMP NOT NULL DEFAULT NOW()`
+- `expires_at TIMESTAMP NOT NULL`
+
+Indexes: `(user_id)`, `(expires_at)`. GC via probabilistic sweep (1% of requests) and `gallery maintenance sessions`.
 
 ### 14.2 Dynamic Query Building
 
@@ -3279,17 +3212,23 @@ impl PermissionConditions {
 
 ### 14.4 Derivative Cache Structure
 
+UUIDv7-sharded layout — one directory per image, one file per preset-plus-format:
+
 ```
-_data/i/
-├── {site_relative_path}/
-│   ├── photo-sq.jpg          (SQUARE 120px)
-│   ├── photo-th.jpg          (THUMB 144px)
-│   ├── photo-xs.jpg          (XSMALL 432px)
-│   ├── photo-me.jpg          (MEDIUM 792px)
-│   └── photo-cu_cx200y150.jpg (CUSTOM 200x150 crop)
+var/derivatives/
+├── {uuid[:2]}/                       # first 2 hex chars — 256 buckets
+│   └── {uuid}/
+│       ├── thumbnail.avif
+│       ├── thumbnail.webp
+│       ├── thumbnail.jpg
+│       ├── small.avif
+│       ├── medium.avif
+│       ├── large.avif
+│       ├── xlarge.avif
+│       └── custom-{param-hash}.avif  # signed custom params
 ```
 
-File naming convention matches current PHP format exactly — existing derivative caches are compatible.
+Clean-break from Piwigo's `photo-sq.jpg`/`photo-th.jpg` scheme: preset names are spelled out (`thumbnail`, `small`, …), one directory per image avoids filesystem-level name collisions, format is a pure file extension (one preset → N formats). Content-addressed hashing of custom parameters makes each URL's derivative deterministic and cacheable.
 
 ### 14.5 Plugin Event Context
 
@@ -3298,7 +3237,7 @@ Every hook invocation receives a `RequestContext` giving the plugin access to re
 ```rust
 pub struct RequestContext {
     pub user: AuthenticatedUser,
-    pub config: Arc<PiwigoConfig>,
+    pub config: Arc<GalleryConfig>,
     pub db: DbPool,
     pub template: Arc<TemplateContext>,
     pub i18n: Arc<I18n>,
@@ -3326,16 +3265,16 @@ Every module in every crate has unit tests. Key areas:
 
 | Module | What to Test |
 |---|---|
-| `piwigo-auth/permissions` | Permission calculation for users with various group/direct access combinations |
-| `piwigo-auth/session` | Session ID generation, IP binding, expiry |
-| `piwigo-auth/remember_me` | HMAC generation and validation, expiry |
-| `piwigo-image/sizing` | COI crop rectangle calculation against known-good values from PHP |
-| `piwigo-image/derivatives` | Mtime-based cache invalidation logic |
-| `piwigo-search/parser` | Tokenization of search queries |
-| `piwigo-search/builder` | Generated SQL matches expected parameterized form |
-| `piwigo-db/bulk` | `mass_inserts` correct with various batch sizes |
-| `piwigo-sync/diff` | Directory diff, file diff — set operations |
-| `piwigo-plugins/event_bus` | Priority ordering, chaining in `trigger_change` |
+| `gallery-auth/permissions` | Permission calculation for users with various group/direct access combinations |
+| `gallery-auth/session` | Session ID generation, IP binding, expiry |
+| `gallery-auth/remember_me` | HMAC generation and validation, expiry |
+| `gallery-image/sizing` | COI crop rectangle calculation against known-good values from PHP |
+| `gallery-image/derivatives` | Mtime-based cache invalidation logic |
+| `gallery-search/parser` | Tokenization of search queries |
+| `gallery-search/builder` | Generated SQL matches expected parameterized form |
+| `gallery-db/bulk` | `mass_inserts` correct with various batch sizes |
+| `gallery-sync/diff` | Directory diff, file diff — set operations |
+| `gallery-plugins/event_bus` | Priority ordering, chaining in `trigger_change` |
 | `config` | 3-tier merge, all value types |
 | `i18n` | l10n fallback, l10n_dec plural forms |
 
@@ -3394,22 +3333,26 @@ Critical cross-subsystem scenarios that must pass before release:
 - [ ] Sync: EXIF with GPS → latitude/longitude populated
 - [ ] Sync interrupted mid-phase → next sync recovers cleanly
 
-#### API Backward Compatibility
-- [ ] All 85 methods return responses matching PHP JSON format (field names, nesting, types)
-- [ ] `pwg.session.getStatus` returns `pwg_token` that works for subsequent admin calls
-- [ ] `pwg.categories.getList` with `tree_output=true` returns nested tree structure
-- [ ] `pwg.images.search` with `f_min_date_created` filter returns correct subset
-- [ ] Array parameters: `image_id[]=1&image_id[]=2` correctly parsed as array
+#### API Contract
+
+No backward-compatibility goal with Piwigo's `ws.php` response shapes — v1 is its own contract, documented by OpenAPI.
+
+- [ ] Every endpoint in Appendix B has at least one contract test that asserts: HTTP status, headers, and body validates against the committed OpenAPI schema.
+- [ ] Cursor pagination: cursor from page N opens page N+1 without skips or dupes; invalid cursor → 400.
+- [ ] Filter + sort grammar tested across every indexable column.
+- [ ] `?fields=` sparse-fieldset honored.
+- [ ] `?include=` side-loading produces consistent serialization across envelope + nested resources.
 
 ### API Tests
 
-Each of the 85 REST methods has at least one test covering:
-- Happy path with expected response format
-- Authentication required (returns 403 for admin-only methods)
-- Missing required parameter (returns error code 1002)
-- Invalid parameter type (returns error code 1003)
+Each endpoint in Appendix B has at least one test covering:
+- Happy path with schema validation on the response body
+- Authentication required: 401 for missing auth, 403 for insufficient `AccessLevel`
+- Validation failures: 422 + RFC 7807 problem document with `errors` array
+- CSRF: browser-session mutations without `X-CSRF-Token` → 403
+- Rate-limit: exceeding the per-endpoint budget → 429 + `Retry-After` header
 - Array parameters (FORCE_ARRAY methods accept both scalar and array)
-- CSRF token validation on POST methods that require `pwg_token`
+- CSRF token validation on state-changing endpoints (`X-CSRF-Token` header required for session-cookie clients)
 
 ### Benchmark Suite
 
@@ -3418,7 +3361,7 @@ benches/
 ├── derivative_generation.rs   # Time to generate each of 9 sizes
 ├── sync_scan.rs               # Time to scan directory tree of 10k/100k/400k files
 ├── permission_computation.rs  # Permission calculation for users with 100/1000/10000 categories
-├── api_gallery.rs             # Latency for pwg.categories.getList on large galleries
+├── api_gallery.rs             # Latency for GET /api/v1/albums on large galleries
 └── db_bulk.rs                 # mass_inserts throughput at various batch sizes
 ```
 
@@ -3433,98 +3376,93 @@ benches/
 | R-03 | Tera missing features needed by some templates | Low | Medium | Fork Tera to add missing feature; or preprocess templates to work around limitation |
 | R-04 | MFT reader requires admin privileges on Windows | High | Low | MFT is opt-in; walkdir fallback always works; document privilege requirement |
 | R-05 | sqlx query validation fails for dynamic queries | Medium | Low | Dynamic queries use `QueryBuilder` which bypasses compile-time checks — add runtime tests |
-| R-06 | Existing user data in PHP serialization format not migrated correctly | Medium | High | Write comprehensive PHP deserialization unit tests; dry-run migration before applying |
-| R-07 | REST API breaking changes break third-party clients | Low | High | Maintain strict compatibility testing against documented PHP behavior |
-| R-08 | Template visual regression too large to automate | Medium | Medium | Prioritize high-traffic pages; accept manual review for others |
-| R-09 | Memory usage higher than expected at scale | Low | Medium | Profile early with realistic dataset; use `jemalloc` for reduced fragmentation |
-| R-10 | Community plugin ecosystem resists Lua migration | High | Low | Accepted breakage; document clearly; provide PHP→Lua migration guide |
-| R-11 | PHP serialized data contains edge cases (nested objects, references, custom classes) that break deserialization | Medium | High | Test against real production DB dumps; handle `O:` (object) tokens by converting to associative arrays; reject `R:` (reference) tokens |
-| R-12 | `mass_inserts` hits parameter limit on large batch operations (e.g., sync of 100k files) | Medium | Medium | Chunk inserts to stay under MySQL's 65535 / PG's 32767 param limit; already accounted for in §1.3 |
-| R-13 | Smarty→Tera template migration introduces subtle rendering differences (whitespace, escaping, filter behavior) | High | Medium | Visual regression test suite (§8.2) catches these; manual review of all 265 templates |
-| R-14 | `get_sql_condition_FandF` reimplementation has different semantics for edge cases (empty lists, NULL handling) | Medium | High | Port all 22 call sites with dedicated integration tests; test with real permission data from production DB |
-| R-15 | Concurrent derivative generation causes file corruption (two requests generate same derivative simultaneously) | Medium | Medium | Atomic write (write to temp file, then rename); per-path lock map to serialize concurrent requests for same derivative |
-| R-16 | i18n plural forms differ between PHP and Rust (some languages have complex plural rules) | Low | Low | Use ICU plural rules; test with Russian (3 forms), Arabic (6 forms), Chinese (1 form) |
-| R-17 | EXIF date parsing fails on non-standard formats from specific camera brands | High | Low | Compile exhaustive format list from real-world data; log unparseable dates as warnings rather than failing |
-| R-18 | Windows path handling differs from Unix (backslashes, drive letters, UNC paths, case insensitivity) | Medium | Medium | Use `PathBuf` consistently; normalize paths on input; test on both platforms in CI |
-| R-19 | `upload_file` hook returns representative extension for non-image types (PDF, HEIC, video) — Lua handler must call external tools | Medium | High | Ship built-in handlers for common types (HEIC→JPEG via libvips, PDF→PNG via `poppler-rs`); Lua hooks for exotic types |
-| R-20 | bcrypt cost factor difference: PHP default is 10, Rust `bcrypt` crate default is 12 — existing passwords must verify with original cost | Low | High | Use `bcrypt::verify()` which auto-detects cost from hash; only new passwords use the configured cost |
+| R-06 | Without an import tool, early adopters with existing Piwigo libraries refuse to move | High | Low | Accepted as a positioning tradeoff — see §17. A fresh install + re-upload is the supported path. If the lost-adoption cost proves too high, an out-of-tree import tool can be written against the public REST API without altering the core project. |
+| R-07 | API shape changes after v1.0 break third-party clients | Low | High | OpenAPI contract tests run per-PR (§8.4); breaking changes require a new API version namespace (`/api/v2/*`) and a deprecation window on v1. |
+| R-08 | Template visual regression too large to automate | Medium | Medium | Prioritize high-traffic pages; accept manual review for others. No PHP baseline to compare against — snapshot tests are self-consistency checks only. |
+| R-09 | Memory usage higher than expected at scale | Low | Medium | Profile early with realistic dataset; use `jemalloc` for reduced fragmentation. |
+| R-10 | Community plugin ecosystem ignores the Lua-only stance | High | Low | Accepted breakage; clearly documented in §17. AdminTools reimplementation demonstrates the Lua API can cover the hardest plugin in the old catalog. |
+| R-11 | `mass_inserts` hits parameter limit on large sync (100k+ files) | Medium | Medium | Chunk inserts to stay under MySQL's 65535 / PG's 32767 param limit — already accounted for in §1.3. |
+| R-12 | Concurrent derivative generation causes file corruption (two requests generate the same derivative simultaneously) | Medium | Medium | Atomic write (write to temp file, then rename); per-UUID+preset lock map serializes concurrent requests. |
+| R-13 | i18n plural forms — some languages have complex rules (Russian 3, Arabic 6, Chinese 1) | Low | Low | Use ICU plural rules via `icu` crate; test against CLDR reference data. |
+| R-14 | EXIF date parsing fails on non-standard formats from specific camera brands | High | Low | Maintain an exhaustive format list from real-world data; log unparseable dates as warnings rather than failing. |
+| R-15 | Windows path handling differs from Unix (backslashes, drive letters, UNC paths, case insensitivity) | Medium | Medium | Use `PathBuf` consistently; normalize paths on input; CI matrix covers both platforms. |
+| R-16 | Non-image uploads (PDF, HEIC, RAW, video preview) — Lua plugin handlers need external tools | Medium | High | Ship built-in Rust handlers for common types (HEIC→JPEG via libvips, PDF→PNG via `poppler-rs`, RAW→JPEG via `rawloader`); Lua hooks for exotic types. |
+| R-17 | Schema design locks in early assumptions that hurt at scale | Medium | High | Milestone 1 designs the schema against the appendix before any feature code is written; an `schema/` directory with ADRs documents decisions; §26 covers the scaling strategy when surrogate keys need replication partitioning. |
+| R-18 | Permission resolution has a subtle semantic bug (group vs. user override, visibility rules) | Medium | High | Plan §6.5.3 ports the resolution algorithm verbatim into pure Rust with property-based tests covering every combination; boundary tests documented in §15. |
+| R-19 | Lua sandbox escape (plugin breaks out of capability model) | Low | High | Resource limits (CPU instruction count, memory, wall-clock timeout); `mlua`'s `ALL_SAFE` stdlib preset; per-plugin `_ENV` isolation; known-malicious patterns tested in §8.4. |
+| R-20 | Greenfield schema proves wrong in a way that requires a data-migrating v2 within two years | Low | Medium | Accept. Plan §17 commits to clean-break major versions with deprecation windows. The risk of getting the schema wrong is lower than the risk of preserving Piwigo's. |
 
 ---
 
-## 17. Breaking Changes & Migration Guide
+## 17. No migration — fresh install only
 
-### From Piwigo PHP 14.x
+**Existing Piwigo databases are not importable. Existing clients of `ws.php` will not work. Existing themes and plugins will not load.** This is intentional — dragging the schema and API forward would re-import the constraints the rewrite exists to escape. The value carried over is in the *concept of a photo gallery* and in having thought through the sharp edges over 20 years of Piwigo's life. The new codebase inherits that wisdom without inheriting the code.
 
-#### Database
+### What this means in practice
 
-The existing database schema is preserved. Run `piwigo upgrade` to apply additive migrations (new columns for JSON session data, etc.). No destructive schema changes in the upgrade path.
+| Thing | Status |
+|---|---|
+| Piwigo 14.x database | Not importable. No deserialization of `s:...;i:...;` PHP-serialized blobs. |
+| `ws.php` REST API | Gone. New surface at `/api/v1/*`. |
+| PHP plugins (community + built-in) | Incompatible. Six built-in plugins reimplemented in Lua; community plugins require rewriting. |
+| Smarty themes | Incompatible. Five default themes reimplemented in Tera; community themes require rewriting. |
+| `/i/...` derivative URLs | Gone. New `/media/{preset}/{uuid}.{ext}` grammar. |
+| `/index.php?/category/...`, `/picture.php?/...`, `/action.php`, `/feed.php`, `/identification.php` | Gone. Clean REST-shaped paths throughout. |
+| `_data/i/` derivative cache | Gone. New `var/derivatives/{uuid[:2]}/{uuid}/{preset}.{ext}` layout. |
+| `config.php` / `database.php` | Gone. TOML replaces PHP arrays. |
+| `language/*/common.lang.php` | Gone. JSON replaces PHP associative arrays. |
+| `piwigo_user` etc. DB prefix | Gone. No table prefix. |
+| Session cookies | Users log in. |
+| bcrypt password hashes | Not carried. Users set new passwords on first login. |
 
-#### Session Compatibility
+### Why no import tool
 
-Sessions from the PHP version are invalidated on upgrade (PHP serialized format → JSON). Users will need to log in again after upgrade. This is expected and documented.
+There's a legitimate argument for preserving more — specifically, a one-shot import tool that reads the old DB and writes to the new schema. That argument loses because:
 
-#### Plugin Ecosystem
+1. **Users with large libraries will move them regardless of tooling.** A fresh start with re-upload gives them a clean schema; a half-imported database gives them confusion.
+2. **The import tool would have to preserve edge cases** (legacy permission combinations, orphaned rows from old bugs, charset-ambiguous text) that don't belong in the new schema — and every site imported is subtly different from the schema the rewrite assumes.
+3. **The "value" of Piwigo's existing data is mostly the originals.** Users keep those; they re-upload them.
+4. **Writing and testing an import tool is weeks of work** that would freeze the new schema early, before v1.0 has proven its shape. A permanent import commitment is a permanent design constraint.
 
-**All PHP plugins are incompatible.** This is a hard break.
+### If someone still wants to migrate
 
-- Built-in plugins (AdminTools, GDThumb, etc.) are reimplemented as Lua plugins
-- Community plugin authors must rewrite in Lua using the documented plugin API
-- A migration guide with code examples will be provided
-- A compatibility shim is NOT planned — it would add significant complexity for temporary benefit
+Out-of-tree tooling is welcome:
 
-#### API
+- The REST API at `/api/v1/*` is public and documented. A third-party tool that reads Piwigo 14 via direct DB access and writes through the API is feasible.
+- The filesystem sync (§10) can ingest an existing `galleries/` tree without modification.
+- Permission state, tag assignments, album structure, user accounts — all writable via the API.
 
-The REST API (`ws.php` / `/api/v1/ws`) maintains full JSON response compatibility. The following are dropped:
-- PHP serialized response format (`format=php`)
-- XML-RPC format (`format=xmlrpc`)
+The core project ships no such tool and accepts no PR that adds one. This is a policy decision; see §1 "Out of Scope".
 
-Applications using these formats must migrate to JSON.
+### Fresh install runbook
 
-#### URL Structure
+For the supported path (new database):
 
-All URL formats (id, id-name, file) are preserved. Existing bookmarks and permalinks continue to work.
+```bash
+# 1. Provision the database (MySQL 9.7 LTS, MariaDB 11.8 LTS, or Postgres 18)
+createdb gallery
+# or: mysql -e "CREATE DATABASE gallery CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
 
-#### Templates & Themes
+# 2. Configure
+cp local/config/config.example.toml local/config/config.toml
+${EDITOR} local/config/config.toml   # DB DSN, secret_key, mail, storage paths
 
-PHP themes (`.tpl` files) are incompatible. The 5 built-in themes are migrated. Third-party themes must be rewritten using Tera syntax.
+# 3. Install schema + bootstrap admin
+gallery install
+gallery admin:create --username=admin --email=you@example.com
 
-#### Configuration
+# 4. Start
+gallery serve
 
-Config values from `config` table are preserved. The `local/config/config.php` format is read during migration for backward compatibility and converted to `local/config/config.toml`.
+# 5. Verify
+curl -f http://localhost:8080/healthz
+```
 
-### Migration Runbook (Step-by-Step)
+Total time on a clean host: ~10 minutes.
 
-**Pre-migration (before touching anything):**
-1. Back up the database: `pg_dump piwigo_fork > backup.sql` or `mysqldump piwigo > backup.sql`
-2. Back up `_data/`, `local/`, `plugins/`, `themes/` directories
-3. Note the current Piwigo version: `SELECT value FROM config WHERE param = 'piwigo_installed_version'`
-4. Verify PHP Piwigo is functional (browse gallery, check admin)
+### Upgrading between versions of this project
 
-**Migration steps:**
-1. **Stop PHP Piwigo** — shut down Apache/Nginx serving the PHP version
-2. **Run `piwigo upgrade`** — applies SQL migrations:
-   - Adds `sessions.data_json`, `search.rules_json`, `user_infos.preferences_json` columns
-   - Adds foreign key constraints (non-breaking — existing data should be consistent)
-   - Migrates PHP-serialized data to JSON (sessions, search rules, user preferences, config values)
-   - Adds `upgrade` table entries for each applied migration
-3. **Convert config:** `piwigo upgrade` also reads `local/config/database.php` and `local/config/config.php` → writes `local/config/database.toml` and `local/config/config.toml`
-4. **Start Rust Piwigo:** `piwigo serve --config local/config/config.toml`
-5. **Verify:**
-   - Browse gallery — images and albums visible
-   - Login — existing user credentials work (bcrypt hashes are compatible)
-   - Admin panel — accessible, config values preserved
-   - API — `curl /ws.php?method=pwg.getVersion&format=json` returns version
-6. **Rollback plan:** If issues found, stop Rust Piwigo, restore DB from backup, restart PHP Piwigo. The added columns are harmless to the PHP version.
-
-**Post-migration cleanup (after 30 days):**
-1. Run `piwigo upgrade --finalize` — drops legacy PHP-serialized columns (`sessions.data`, old `search.rules`, old `user_infos.preferences`)
-2. Remove PHP files from web root (no longer needed)
-3. Uninstall PHP and PHP-FPM if no other applications use them
-
-**Dual-run testing (optional, recommended for production):**
-1. Run both PHP and Rust Piwigo against the same database on different ports
-2. Compare responses for key pages using a diff tool
-3. Route traffic gradually: 10% → 50% → 100% to Rust via load balancer
+`gallery upgrade` applies pending sqlx migrations. Additive within a major version. Destructive migrations (drop columns, drop tables) only happen across major-version bumps and are announced in `CHANGELOG.md` with a rollback note.
 
 ---
 
@@ -3536,7 +3474,7 @@ Config values from `config` table are preserved. The `local/config/config.php` f
 | Gallery page (warm, DB cached) | ~150ms | <30ms | Benchmark |
 | Derivative generation (MEDIUM, cold) | ~800ms | <150ms | Benchmark |
 | Derivative serving (cache hit) | ~20ms | <5ms | Benchmark |
-| API `pwg.categories.getList` | ~200ms | <40ms | Benchmark |
+| API `GET /api/v1/albums` | ~200ms (PHP ws.php equivalent) | <40ms | Benchmark |
 | Sync: 10,000 files (walkdir) | ~45s | <8s | Benchmark |
 | Sync: 400,000 files (MFT) | ~5min | <10s | Benchmark |
 | Memory per request | ~50MB | <3MB | Profiler |
@@ -3566,9 +3504,11 @@ Config values from `config` table are preserved. The `local/config/config.php` f
 
 ---
 
-## 20. Pain Point Deep Dives
+## 20. Pain Point Deep Dives — lessons from Piwigo 14
 
-> Detailed technical investigation of every identified pain point.
+> Detailed technical investigation of Piwigo-specific pain points that shaped the greenfield design.
+>
+> **Framing:** every section below is "here is what the PHP codebase taught us, and here is how the Rust rewrite avoids the trap." References to PHP function names, config keys, and hook signatures describe the old system; they are inputs to design, not things being ported. The Rust implementation is free to pick a different structure as long as the lesson is respected. Where a section ends with explicit "Rust approach" guidance, that is design commitment; where it doesn't, the design remains open.
 
 ---
 
@@ -3786,7 +3726,7 @@ fn l10n_dec(singular: &str, plural: &str, count: i32) -> String;
 
 // Utilities
 fn get_root_url() -> String;
-fn get_pwg_token() -> String;
+fn get_csrf_token() -> String;
 fn is_admin() -> bool;
 fn redirect(url: &str);
 ```
@@ -3979,7 +3919,7 @@ Then scripts are sorted by: `load_mode ASC, topological_depth ASC, remote_first 
 3. Triggers `combinable_preparse` hook — plugins inject vars
 4. Parses template through Smarty — CSS/JS with variable substitution
 5. Minifies result (CSS: `tubalmartin/CssMin`, JS: `JShrink`)
-6. Caches with `t` prefix: `_data/combined/t{hash}.css`
+6. Caches with `t` prefix: `var/combined/t{hash}.css`
 
 **Cache key:** `base_convert(crc32(implode('>', [root_url, path, version, mtime])), 16, 36)`
 
@@ -4405,7 +4345,7 @@ normalized: each element / sum(all elements)
 ### 20.7.3 Upload Pipeline (11 steps)
 
 1. **Duplicate detection** — MD5 check against existing images
-2. **Directory preparation** — `_data/upload/{YYYY}/{MM}/{DD}/`
+2. **Directory preparation** — `var/uploads/{YYYY}/{MM}/{DD}/`
 3. **File placement** — `move_uploaded_file()` + `chmod 0644`
 4. **Format handling** — Plugin hook for PDF/HEIC/TIFF/video/PSD/EPS → representative generation
 5. **Original resize** — Optional, if dimensions exceed configured limits
@@ -4572,7 +4512,7 @@ libvips already supports AVIF, WebP, and JPEG XL. Serve the best format the clie
 - [ ] Parse `Accept` header for `image/avif`, `image/webp`, `image/jxl`
 - [ ] Preference order: AVIF > JXL > WebP > JPEG (configurable)
 - [ ] Generate derivatives in negotiated format on first request, cache alongside the JPEG derivative
-- [ ] Cache key includes format: `photo-me.avif`, `photo-me.webp`, `photo-me.jpg` coexist in `_data/i/`
+- [ ] Cache key includes format: `photo-me.avif`, `photo-me.webp`, `photo-me.jpg` coexist in `var/derivatives/`
 - [ ] `<picture>` element with `<source>` tags in templates for browsers that don't send proper Accept
 - [ ] Admin toggle per format (some admins may not want AVIF due to older browser share)
 - [ ] Fallback: if libvips lacks encoder for a format (e.g., JXL on older builds), skip silently
@@ -4600,7 +4540,7 @@ Basic video hosting with thumbnail extraction and adaptive streaming.
   - Original stored as-is
   - Generate HLS segments: `ffmpeg -i input.mp4 -codec: copy -start_number 0 -hls_time 6 -hls_list_size 0 -f hls output.m3u8`
   - Multiple quality tiers: 1080p, 720p, 480p (configurable)
-  - Store segments in `_data/v/{image_id}/`
+  - Store segments in `storage/videos/{image_id}/`
 - [ ] **Streaming:** Serve `.m3u8` playlist + `.ts` segments via standard Axum static file serving
 - [ ] **Player:** Embed `hls.js` for HLS playback in browsers without native support
 - [ ] **Metadata:** Duration, resolution, codec, framerate — extracted via `ffprobe` JSON output
@@ -4815,7 +4755,7 @@ Replace the current plaintext 30-char keys with proper scoped tokens.
   ```
 - [ ] **Token format:** `pwg_{random_40_chars}` — prefix makes tokens identifiable in logs/secrets scanning
 - [ ] **Scopes:** `read` (browse gallery, download), `upload` (add photos), `write` (edit metadata, manage albums), `admin` (full admin access)
-- [ ] API validates scope on each method: `pwg.images.addSimple` requires `upload`, `pwg.users.delete` requires `admin`
+- [ ] API validates scope on each endpoint: `POST /api/v1/photos` requires `upload` scope, `DELETE /api/v1/users/{uuid}` requires `admin` scope
 - [ ] Admin UI: token management page — create, list (showing prefix + last used), revoke
 - [ ] Backward compat: old-style tokens continue to work with `read+upload` scope
 
@@ -4842,7 +4782,7 @@ Replace SQL `LIKE '%word%'` with a proper inverted index.
 
 - [ ] **Crate:** `tantivy` (Rust-native full-text search engine, Lucene architecture)
 - [ ] **Indexed fields:** image name, description, file name, tags, IPTC keywords, author, album name, album description, comments
-- [ ] **Index location:** `_data/search_index/` directory
+- [ ] **Index location:** `var/search_index/` directory
 - [ ] **Indexing:** On upload/edit/sync, update the Tantivy document for affected images. Batch reindex via `piwigo search reindex` CLI.
 - [ ] **Tokenizer:** ICU-aware tokenizer for CJK support, plus stemming for European languages
 - [ ] **Query syntax:** Support quoted phrases (`"red car"`), boolean operators (`sunset AND mountains`), field-specific (`tag:landscape`), fuzzy (`sunet~1`)
@@ -4856,7 +4796,7 @@ Powers semantic search (§21.2.4) and "find similar images".
 
 - [ ] **Crate:** `usearch` (single-file ANN index) or `hnsw_rs`
 - [ ] **Index:** HNSW (Hierarchical Navigable Small World) graph for approximate nearest neighbors
-- [ ] **Index location:** `_data/vector_index/` — single memory-mapped file
+- [ ] **Index location:** `var/vector_index/` — single memory-mapped file
 - [ ] **Operations:**
   - `search_by_text(query, top_k)` → encode text with CLIP → ANN search → return image IDs
   - `search_by_image(image_id, top_k)` → use stored embedding → ANN search → return similar images
@@ -4916,7 +4856,7 @@ Store originals and/or derivatives on S3, MinIO, Backblaze B2, Cloudflare R2, or
 
 If the same photo is uploaded to multiple albums, store only one copy.
 
-- [ ] **Key:** `SHA-256` of original file content → `_data/cas/{ab}/{cd}/{abcdef...full-hash}.{ext}`
+- [ ] **Key:** `SHA-256` of original file content → `storage/cas/{ab}/{cd}/{abcdef...full-hash}.{ext}`
 - [ ] `images.cas_hash VARCHAR(64)` — the content hash
 - [ ] `images.path` becomes a virtual path (album-relative), `images.cas_hash` points to actual storage
 - [ ] **Dedup check:** Before writing file, check if hash exists → if yes, skip write, link to existing
@@ -5175,7 +5115,7 @@ Multi-architecture container images.
   # ... build with cargo
   FROM debian:bookworm-slim
   RUN apt-get install -y libvips42 ffmpeg  # runtime deps only
-  COPY --from=builder /app/piwigo /usr/local/bin/piwigo
+  COPY --from=builder /app/gallery /usr/local/bin/gallery
   ENTRYPOINT ["piwigo"]
   CMD ["serve"]
   ```
@@ -5213,9 +5153,10 @@ Long-running tasks shouldn't block HTTP requests.
 
 First-class backup tooling built into the binary.
 
-- [ ] **`piwigo backup`:**
+- [ ] **`gallery backup`:**
   - Dumps database to SQL file (via `pg_dump` / `mysqldump` shelled out, or sqlx-native for portability)
-  - Archives `_data/` directory (originals, derivatives, config)
+  - Archives `storage/` (originals, CAS, config) — the part that MUST be preserved
+  - Skips `var/` by default (derivatives, caches, indexes — regenerable); `--include-var` option if desired
   - Archives `plugins/` and `themes/` directories
   - Output: single `.tar.zst` file (Zstandard-compressed tar)
   - Options: `--db-only`, `--files-only`, `--exclude-derivatives` (regeneratable), `--output path`
@@ -5276,7 +5217,7 @@ Per-album feed of recent activity.
 - [ ] **Events tracked:** Photo added, photo commented on, album updated, person tagged
 - [ ] **Implementation:** Query existing `activity` table (already tracks most operations), filter by album, format as timeline
 - [ ] **UI:** Activity tab on album page — chronological list with thumbnails
-- [ ] **API:** `pwg.activity.getAlbumFeed(album_id, since)` — for mobile/external clients
+- [ ] **API:** `GET /api/v1/albums/{uuid}/activity?since={iso8601}` — for mobile/external clients
 - [ ] **Notifications:** Users can "watch" an album → receive email digest when new activity occurs (ties into existing notification system)
 
 ---
@@ -5338,7 +5279,7 @@ Comprehensive, tamper-evident log of security-relevant actions.
       request_id VARCHAR(36)                  -- correlation with HTTP request
   );
   ```
-- [ ] **Retention:** Configurable, default 1 year. `piwigo maintenance audit-trim` for manual cleanup.
+- [ ] **Retention:** Configurable, default 1 year. `gallery maintenance audit-trim` for manual cleanup.
 - [ ] **Admin UI:** Searchable audit log page with filters by event type, actor, date range
 - [ ] **Export:** `piwigo audit export --from 2026-01-01 --to 2026-04-01 --format csv`
 
@@ -5411,812 +5352,1005 @@ zstd                 = "0.13"          # Backup compression
 
 ## Appendix A: Complete Database Schema
 
-**Source files:** `install/piwigo_structure-pgsql.sql`, `install/piwigo_structure-mysqli.sql`
-**Total:** 34 tables, 64 indexes, 11 triggers, 5 custom ENUM types, **0 foreign keys** (all referential integrity enforced at application layer)
-
-### Custom ENUM Types (PostgreSQL)
-
-| Type Name | Values |
-|---|---|
-| `categories_status` | `public`, `private` |
-| `history_section` | `categories`, `tags`, `search`, `list`, `favorites`, `most_visited`, `best_rated`, `recent_pics`, `recent_cats` |
-| `history_image_type` | `picture`, `high`, `other` |
-| `plugins_state` | `inactive`, `active` |
-| `user_cache_image_access_type` | `NOT IN`, `IN` |
-| `user_infos_status` | `webmaster`, `admin`, `normal`, `generic`, `guest` |
-
-### Trigger Functions
-
-| Function | Behavior |
-|---|---|
-| `update_lastmodified_column()` | Sets `NEW.lastmodified = now()` BEFORE UPDATE |
-| `update_images_fts()` | Populates `image_fts` tsvector from `name` + `comment` |
-| `update_categories_fts()` | Populates `category_fts` tsvector from `name` + `comment` |
-| `update_tags_fts()` | Populates `tag_fts` tsvector from `name` |
-
-### Table Schemas
-
-#### A.1 `activity`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `activity_id` | INTEGER | NOT NULL | IDENTITY **PK** |
-| `object` | VARCHAR(255) | NOT NULL | |
-| `object_id` | INTEGER | NOT NULL | |
-| `action` | VARCHAR(255) | NOT NULL | |
-| `performed_by` | INTEGER | NOT NULL | |
-| `session_idx` | VARCHAR(255) | NOT NULL | |
-| `ip_address` | INET | nullable | |
-| `occurred_on` | TIMESTAMPTZ | nullable | CURRENT_TIMESTAMP |
-| `details` | VARCHAR(255) | nullable | |
-| `user_agent` | VARCHAR(255) | nullable | |
-
-#### A.2 `caddie`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `user_id` | INTEGER | NOT NULL | **PK (1/2)** |
-| `element_id` | INTEGER | NOT NULL | **PK (2/2)** |
-
-Implicit FKs: `user_id` → `users.id`, `element_id` → `images.id`
-
-#### A.3 `categories`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
-| `name` | VARCHAR(255) | NOT NULL | |
-| `id_uppercat` | BIGINT | nullable | |
-| `comment` | TEXT | nullable | |
-| `dir` | VARCHAR(255) | nullable | |
-| `sort_rank` | INTEGER | nullable | |
-| `status` | `categories_status` | NOT NULL | `'public'` |
-| `site_id` | INTEGER | nullable | |
-| `visible` | BOOLEAN | NOT NULL | `true` |
-| `representative_picture_id` | INTEGER | nullable | |
-| `uppercats` | VARCHAR(255) | nullable | |
-| `commentable` | BOOLEAN | NOT NULL | `true` |
-| `global_rank` | VARCHAR(255) | nullable | |
-| `image_order` | VARCHAR(128) | nullable | |
-| `permalink` | VARCHAR(64) | nullable | **UNIQUE** |
-| `lastmodified` | TIMESTAMPTZ | nullable | CURRENT_TIMESTAMP |
-| `category_fts` | TSVECTOR | nullable | |
-
-Indexes: `id_uppercat`, `lastmodified`, `uppercats (text_pattern_ops)`, GIN on `category_fts`
-Triggers: `trg_categories_update_lastmodified`, `trg_categories_fts`
-Implicit FKs: `id_uppercat` → `categories.id`, `site_id` → `sites.id`, `representative_picture_id` → `images.id`
-
-#### A.4 `comments`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
-| `image_id` | INTEGER | NOT NULL | |
-| `date` | TIMESTAMPTZ | NOT NULL | CURRENT_TIMESTAMP |
-| `author` | VARCHAR(255) | nullable | |
-| `email` | VARCHAR(255) | nullable | |
-| `author_id` | INTEGER | nullable | |
-| `anonymous_id` | VARCHAR(45) | NOT NULL | |
-| `website_url` | VARCHAR(255) | nullable | |
-| `content` | TEXT | nullable | |
-| `validated` | BOOLEAN | NOT NULL | `false` |
-| `validation_date` | TIMESTAMPTZ | nullable | |
-
-Indexes: `image_id`, `validation_date`
-
-#### A.5 `config`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `param` | VARCHAR(40) | NOT NULL | **PK** |
-| `value` | TEXT | nullable | |
-| `comment` | VARCHAR(255) | nullable | |
-
-#### A.6 `favorites`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `user_id` | INTEGER | NOT NULL | **PK (1/2)** |
-| `image_id` | INTEGER | NOT NULL | **PK (2/2)** |
-
-#### A.7 `group_access`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `group_id` | INTEGER | NOT NULL | **PK (1/2)** |
-| `cat_id` | INTEGER | NOT NULL | **PK (2/2)** |
-
-#### A.8 `user_groups` (the "groups" table)
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
-| `name` | VARCHAR(255) | NOT NULL | **UNIQUE** |
-| `is_default` | BOOLEAN | NOT NULL | `false` |
-| `lastmodified` | TIMESTAMPTZ | nullable | CURRENT_TIMESTAMP |
-
-Triggers: `trg_user_groups_update_lastmodified`
-
-#### A.9 `history`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
-| `date` | DATE | NOT NULL | |
-| `time` | TIME | NOT NULL | |
-| `user_id` | INTEGER | NOT NULL | |
-| `IP` | INET | NOT NULL | |
-| `section` | `history_section` | nullable | |
-| `category_id` | INTEGER | nullable | |
-| `search_id` | INTEGER | nullable | |
-| `tag_ids` | VARCHAR(50) | nullable | |
-| `image_id` | INTEGER | nullable | |
-| `image_type` | `history_image_type` | nullable | |
-| `format_id` | INTEGER | nullable | |
-| `auth_key_id` | INTEGER | nullable | |
-
-#### A.10 `history_summary`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `year` | INTEGER | NOT NULL | |
-| `month` | INTEGER | nullable | |
-| `day` | INTEGER | nullable | |
-| `hour` | INTEGER | nullable | |
-| `nb_pages` | INTEGER | nullable | |
-| `history_id_from` | INTEGER | nullable | |
-| `history_id_to` | INTEGER | nullable | |
-
-**No PK** — UNIQUE on `(year, month, day, hour)`
-
-#### A.11 `image_category`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `image_id` | INTEGER | NOT NULL | **PK (1/2)** |
-| `category_id` | INTEGER | NOT NULL | **PK (2/2)** |
-| `sort_rank` | INTEGER | nullable | |
-
-Indexes: `category_id`
-
-#### A.12 `image_format`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `format_id` | INTEGER | NOT NULL | IDENTITY **PK** |
-| `image_id` | INTEGER | NOT NULL | |
-| `ext` | VARCHAR(255) | NOT NULL | |
-| `filesize` | INTEGER | nullable | |
-
-#### A.13 `image_tag`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `image_id` | INTEGER | NOT NULL | **PK (1/2)** |
-| `tag_id` | INTEGER | NOT NULL | **PK (2/2)** |
-
-Indexes: `tag_id`
-
-#### A.14 `images` (most-indexed table — 14 indexes)
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
-| `file` | VARCHAR(255) | NOT NULL | |
-| `date_available` | TIMESTAMPTZ | NOT NULL | CURRENT_TIMESTAMP |
-| `date_creation` | TIMESTAMPTZ | nullable | |
-| `name` | VARCHAR(255) | nullable | |
-| `comment` | TEXT | nullable | |
-| `author` | VARCHAR(255) | nullable | |
-| `hit` | INTEGER | NOT NULL | `0` |
-| `filesize` | INTEGER | nullable | |
-| `width` | INTEGER | nullable | |
-| `height` | INTEGER | nullable | |
-| `coi` | CHAR(4) | nullable | center-of-interest |
-| `representative_ext` | VARCHAR(4) | nullable | |
-| `date_metadata_update` | DATE | nullable | |
-| `rating_score` | REAL | nullable | |
-| `path` | VARCHAR(600) | NOT NULL | |
-| `storage_category_id` | INTEGER | nullable | |
-| `level` | INTEGER | NOT NULL | `0` |
-| `md5sum` | CHAR(32) | nullable | |
-| `added_by` | INTEGER | NOT NULL | |
-| `rotation` | INTEGER | nullable | |
-| `latitude` | DOUBLE PRECISION | nullable | |
-| `longitude` | DOUBLE PRECISION | nullable | |
-| `lastmodified` | TIMESTAMPTZ | nullable | CURRENT_TIMESTAMP |
-| `image_fts` | TSVECTOR | nullable | |
-
-Indexes: `storage_category_id`, `date_available`, `rating_score`, `hit`, `date_creation`, `latitude`, `path`, `lastmodified`, GIN on `image_fts`, GIN trigram on `name`, `file`, `author`, `comment`
-Triggers: `trg_images_update_lastmodified`, `trg_images_fts`
-
-#### A.15 `languages`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `id` | VARCHAR(64) | NOT NULL | **PK** |
-| `version` | VARCHAR(64) | NOT NULL | |
-| `name` | VARCHAR(64) | nullable | |
-
-#### A.16 `lounge`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `image_id` | INTEGER | NOT NULL | **PK (1/2)** |
-| `category_id` | INTEGER | NOT NULL | **PK (2/2)** |
-
-#### A.17 `old_permalinks`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `cat_id` | INTEGER | NOT NULL | |
-| `permalink` | VARCHAR(64) | NOT NULL | **PK** |
-| `date_deleted` | TIMESTAMPTZ | NOT NULL | CURRENT_TIMESTAMP |
-| `last_hit` | TIMESTAMPTZ | nullable | |
-| `hit` | INTEGER | NOT NULL | |
-
-#### A.18 `plugins`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `id` | VARCHAR(64) | NOT NULL | **PK** |
-| `state` | `plugins_state` | NOT NULL | `'inactive'` |
-| `version` | VARCHAR(64) | NOT NULL | |
-
-#### A.19 `rate`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `user_id` | INTEGER | NOT NULL | **PK** |
-| `element_id` | INTEGER | NOT NULL | **PK** |
-| `anonymous_id` | VARCHAR(45) | NOT NULL | **PK** |
-| `rate` | INTEGER | NOT NULL | |
-| `date` | DATE | NOT NULL | |
-
-#### A.20 `search`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
-| `search_uuid` | CHAR(23) | nullable | |
-| `created_on` | TIMESTAMPTZ | nullable | |
-| `created_by` | INTEGER | nullable | |
-| `forked_from` | INTEGER | nullable | |
-| `rules` | TEXT | nullable | |
-
-#### A.21 `sessions`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `id` | VARCHAR(255) | NOT NULL | **PK** |
-| `data` | TEXT | NOT NULL | |
-| `expiration` | TIMESTAMPTZ | NOT NULL | CURRENT_TIMESTAMP |
-
-#### A.22 `sites`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
-| `galleries_url` | VARCHAR(255) | NOT NULL | **UNIQUE** |
-
-#### A.23 `tags`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
-| `name` | VARCHAR(255) | NOT NULL | |
-| `url_name` | VARCHAR(255) | NOT NULL | |
-| `lastmodified` | TIMESTAMPTZ | nullable | CURRENT_TIMESTAMP |
-| `tag_fts` | TSVECTOR | nullable | |
-
-Indexes: `url_name`, `lastmodified`, GIN on `tag_fts`
-Triggers: `trg_tags_update_lastmodified`, `trg_tags_fts`
-
-#### A.24 `themes`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `id` | VARCHAR(64) | NOT NULL | **PK** |
-| `version` | VARCHAR(64) | NOT NULL | |
-| `name` | VARCHAR(64) | nullable | |
-
-#### A.25 `upgrade`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `id` | VARCHAR(20) | NOT NULL | **PK** |
-| `applied` | TIMESTAMPTZ | NOT NULL | CURRENT_TIMESTAMP |
-| `description` | VARCHAR(255) | nullable | |
-
-#### A.26 `user_access`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `user_id` | INTEGER | NOT NULL | **PK (1/2)** |
-| `cat_id` | INTEGER | NOT NULL | **PK (2/2)** |
-
-#### A.27 `user_auth_keys`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `auth_key_id` | INTEGER | NOT NULL | IDENTITY **PK** |
-| `auth_key` | VARCHAR(255) | NOT NULL | |
-| `user_id` | INTEGER | NOT NULL | |
-| `created_on` | TIMESTAMPTZ | NOT NULL | |
-| `duration` | INTEGER | nullable | |
-| `expired_on` | TIMESTAMPTZ | NOT NULL | |
-
-#### A.28 `user_cache`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `user_id` | INTEGER | NOT NULL | **PK** |
-| `need_update` | BOOLEAN | NOT NULL | `true` |
-| `cache_update_time` | INTEGER | NOT NULL | |
-| `forbidden_categories` | TEXT | nullable | |
-| `nb_total_images` | INTEGER | nullable | |
-| `last_photo_date` | TIMESTAMPTZ | nullable | |
-| `nb_available_tags` | INTEGER | nullable | |
-| `nb_available_comments` | INTEGER | nullable | |
-| `image_access_type` | `user_cache_image_access_type` | NOT NULL | `'NOT IN'` |
-| `image_access_list` | TEXT | nullable | |
-
-#### A.29 `user_cache_categories`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `user_id` | INTEGER | NOT NULL | **PK (1/2)** |
-| `cat_id` | INTEGER | NOT NULL | **PK (2/2)** |
-| `date_last` | TIMESTAMPTZ | nullable | |
-| `max_date_last` | TIMESTAMPTZ | nullable | |
-| `nb_images` | INTEGER | NOT NULL | |
-| `count_images` | INTEGER | nullable | `0` |
-| `nb_categories` | INTEGER | nullable | `0` |
-| `count_categories` | INTEGER | nullable | `0` |
-| `user_representative_picture_id` | INTEGER | nullable | |
-
-#### A.30 `user_feed`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `id` | VARCHAR(50) | NOT NULL | **PK** |
-| `user_id` | INTEGER | NOT NULL | |
-| `last_check` | TIMESTAMPTZ | nullable | |
-
-#### A.31 `user_group`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `user_id` | INTEGER | NOT NULL | **PK** |
-| `group_id` | INTEGER | NOT NULL | **PK** |
-
-#### A.32 `user_infos`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `user_id` | INTEGER | NOT NULL | **PK** |
-| `nb_image_page` | INTEGER | NOT NULL | `15` |
-| `status` | `user_infos_status` | NOT NULL | `'guest'` |
-| `language` | VARCHAR(50) | NOT NULL | |
-| `expand` | BOOLEAN | NOT NULL | `false` |
-| `show_nb_comments` | BOOLEAN | NOT NULL | `false` |
-| `show_nb_hits` | BOOLEAN | NOT NULL | `false` |
-| `recent_period` | INTEGER | NOT NULL | `7` |
-| `theme` | VARCHAR(255) | NOT NULL | `'modus'` |
-| `registration_date` | TIMESTAMPTZ | NOT NULL | CURRENT_TIMESTAMP |
-| `enabled_high` | BOOLEAN | NOT NULL | `true` |
-| `level` | INTEGER | NOT NULL | |
-| `activation_key` | VARCHAR(255) | nullable | |
-| `activation_key_expire` | TIMESTAMPTZ | nullable | |
-| `last_visit` | TIMESTAMPTZ | nullable | |
-| `last_visit_from_history` | BOOLEAN | NOT NULL | `false` |
-| `lastmodified` | TIMESTAMPTZ | nullable | CURRENT_TIMESTAMP |
-| `preferences` | TEXT | nullable | |
-
-Triggers: `trg_user_infos_update_lastmodified`
-
-#### A.33 `user_mail_notification`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `user_id` | INTEGER | NOT NULL | **PK** |
-| `check_key` | VARCHAR(16) | NOT NULL | **UNIQUE** |
-| `enabled` | BOOLEAN | NOT NULL | `false` |
-| `last_send` | TIMESTAMPTZ | nullable | |
-
-#### A.34 `users`
-
-| Column | Type | Nullable | Default |
-|---|---|---|---|
-| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
-| `username` | VARCHAR(100) | NOT NULL | **UNIQUE** |
-| `password` | VARCHAR(255) | nullable | |
-| `mail_address` | VARCHAR(255) | nullable | |
-
-### Key Schema Notes for Rust Rewrite
-
-1. **No foreign keys exist.** All referential integrity is application-enforced. The Rust rewrite should add proper FK constraints with appropriate ON DELETE behavior.
-
-2. **Implicit FK map** (most critical relationships):
-   - `image_category` → `images.id` + `categories.id`
-   - `image_tag` → `images.id` + `tags.id`
-   - `comments.image_id` → `images.id`
-   - `categories.id_uppercat` → `categories.id` (self-referential)
-   - `user_infos.user_id` → `users.id` (1:1)
-   - `user_cache.user_id` → `users.id` (1:1)
-   - `favorites` / `caddie` / `rate` → `users.id` + `images.id`
-   - `user_access` / `group_access` → `users.id`/`user_groups.id` + `categories.id`
-
-3. **FTS strategy:** PostgreSQL uses `TSVECTOR` columns + GIN indexes on `images`, `categories`, `tags`, populated by trigger functions. Live DB also has trigram GIN indexes on `images.name/file/author/comment`.
-
-4. **MySQL-to-PG type mapping:**
-   - `ENUM('true','false')` → `BOOLEAN`
-   - `INT UNSIGNED` → `INTEGER`
-   - `VARCHAR(45)` for IP → `INET`
-   - `FULLTEXT` → `TSVECTOR` + GIN + triggers
-   - `AUTO_INCREMENT` → `GENERATED BY DEFAULT AS IDENTITY`
-   - `ON UPDATE CURRENT_TIMESTAMP` → trigger function
-
-5. **`history_summary`** is the only table without a PK (uses UNIQUE constraint).
-
-6. **Cache tables** (`user_cache`, `user_cache_categories`) can potentially be replaced with in-process caching in Rust.
+This is the greenfield schema the rewrite starts from. **Not** a port of Piwigo 14's 34-table layout — design decisions are restated in §5. Subject to refinement during Phase 1 but the shape is committed.
+
+**Total: ~22 tables**, FKs on every relationship from day one, JSON for structured columns, UUIDv7 for externally-exposed identifiers.
+
+The SQL below shows MySQL 9.7 / MariaDB 11.8 syntax. Postgres 18 equivalents use `BIGINT GENERATED ALWAYS AS IDENTITY`, native `UUID`, `JSONB`, `CITEXT`, `TIMESTAMPTZ`, `BYTEA`, and `ENUM` via `CREATE TYPE`. See §5 for the dialect-adapter notes.
+
+### A.1 Users + auth
+
+```sql
+CREATE TABLE users (
+    id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uuid              BINARY(16) NOT NULL UNIQUE,
+    username          VARCHAR(100) NOT NULL UNIQUE,
+    email             VARCHAR(255) NOT NULL,
+    email_ci          VARCHAR(255) AS (LOWER(email)) STORED UNIQUE,  -- CITEXT on PG
+    email_verified_at TIMESTAMP NULL,
+    password_hash     VARCHAR(255) NOT NULL,
+    access_level      TINYINT UNSIGNED NOT NULL DEFAULT 2,
+    locale            VARCHAR(10) NOT NULL DEFAULT 'en',
+    timezone          VARCHAR(64) NOT NULL DEFAULT 'UTC',
+    theme             VARCHAR(50) NOT NULL DEFAULT 'default',
+    last_login_at     TIMESTAMP NULL,
+    created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                           ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at        TIMESTAMP NULL,                     -- soft delete
+    INDEX (access_level),
+    INDEX (deleted_at)
+);
+
+CREATE TABLE groups (
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name       VARCHAR(100) NOT NULL UNIQUE,
+    is_default BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_groups (
+    user_id  BIGINT NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
+    group_id BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, group_id),
+    INDEX (group_id)
+);
+```
+
+Rust types: `User { id, uuid, username, email, access_level: AccessLevel, ... }`. `AccessLevel` derives `sqlx::Type` with `#[sqlx(type_name = "tinyint unsigned")]` on MySQL, `SMALLINT` on Postgres.
+
+### A.2 Sessions + tokens
+
+```sql
+CREATE TABLE sessions (
+    id          VARCHAR(128) PRIMARY KEY,                -- {ipv4_hex_4bytes}{random}
+    user_id     BIGINT NULL REFERENCES users(id) ON DELETE CASCADE,
+    data        JSON NOT NULL,                           -- application state, JSON from day one
+    ip_hash     BINARY(32),                              -- SHA-256 of requester IP
+    user_agent  VARCHAR(255),
+    last_active TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at  TIMESTAMP NOT NULL,
+    INDEX (user_id),
+    INDEX (expires_at)
+);
+
+CREATE TABLE remember_tokens (
+    selector   CHAR(32) PRIMARY KEY,                     -- unhashed cookie half
+    hash       BINARY(32) NOT NULL,                      -- SHA-256 of the secret half
+    user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (user_id),
+    INDEX (expires_at)
+);
+
+CREATE TABLE api_tokens (
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id      BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name         VARCHAR(100) NOT NULL,                  -- human-readable, like "mobile app"
+    token_hash   BINARY(32) NOT NULL UNIQUE,             -- SHA-256 of plaintext token
+    scopes       JSON NOT NULL,                          -- ["read"], ["read","write"], etc.
+    expires_at   TIMESTAMP NULL,
+    last_used_at TIMESTAMP NULL,
+    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (user_id)
+);
+
+CREATE TABLE password_reset_tokens (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash  BINARY(32) NOT NULL UNIQUE,
+    expires_at  TIMESTAMP NOT NULL,
+    used_at     TIMESTAMP NULL,
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (user_id),
+    INDEX (expires_at)
+);
+```
+
+### A.3 Albums
+
+```sql
+CREATE TABLE albums (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uuid            BINARY(16) NOT NULL UNIQUE,
+    parent_id       BIGINT NULL REFERENCES albums(id) ON DELETE SET NULL,
+    path            VARCHAR(500) NOT NULL,               -- materialized path, e.g. "1/5/12"
+    name            VARCHAR(255) NOT NULL,
+    slug            VARCHAR(255) NOT NULL,
+    description     TEXT,
+    cover_image_id  BIGINT NULL,                         -- FK added after images table
+    rank            INT NOT NULL DEFAULT 0,
+    min_level       TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    is_public       BOOLEAN NOT NULL DEFAULT TRUE,
+    image_count     INT NOT NULL DEFAULT 0,              -- denormalized, maintained by listeners
+    commentable     BOOLEAN NOT NULL DEFAULT TRUE,
+    visible         BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                         ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY albums_parent_slug (parent_id, slug),
+    INDEX (parent_id, rank),
+    INDEX (is_public, min_level),
+    INDEX (path(191))                                    -- LIKE '1/5/%' descendant queries
+);
+```
+
+`path` replaces Piwigo's `uppercats` comma-string. Postgres uses `ltree` with a GIST index; MySQL uses a `VARCHAR` with a prefix index. Rebuilt on album move via a single `UPDATE ... WHERE path LIKE 'old/%'`.
+
+### A.4 Images
+
+```sql
+CREATE TABLE images (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uuid            BINARY(16) NOT NULL UNIQUE,          -- used in derivative URLs
+    storage_path    VARCHAR(500) NOT NULL,               -- e.g. storage/originals/2026/04/{uuid}.jpg
+    original_name   VARCHAR(255) NOT NULL,               -- user-supplied filename, display only
+    mime_type       VARCHAR(100) NOT NULL,
+    width           INT NOT NULL,
+    height          INT NOT NULL,
+    filesize        BIGINT NOT NULL,                     -- bytes
+    sha256          BINARY(32) NOT NULL,                 -- content hash for exact-dup detection
+    perceptual_hash BINARY(8),                           -- pHash for near-duplicate detection
+    author_id       BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+    title           VARCHAR(255),
+    description     TEXT,
+    rating          TINYINT UNSIGNED,                    -- 0–5 Bayesian-adjusted average
+    exif            JSON,                                -- typed + queryable
+    taken_at        TIMESTAMP NULL,                      -- EXIF DateTimeOriginal
+    taken_at_offset SMALLINT NULL,                       -- tz offset minutes preserved from EXIF
+    gps_lat         DECIMAL(10, 7) NULL,
+    gps_lng         DECIMAL(10, 7) NULL,
+    coi             CHAR(4) NULL,                        -- center-of-interest for smart crop
+    min_level       TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    view_count      BIGINT NOT NULL DEFAULT 0,
+    search_fts      TEXT AS (CONCAT_WS(' ', title, description, author_id)) STORED,  -- MySQL
+    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                         ON UPDATE CURRENT_TIMESTAMP,
+    INDEX (author_id),
+    INDEX (taken_at),
+    INDEX (min_level, created_at),
+    INDEX (sha256),
+    INDEX (perceptual_hash),
+    FULLTEXT INDEX (search_fts)                           -- Postgres uses tsvector + GIN
+);
+
+-- Apply the deferred FK from albums
+ALTER TABLE albums
+    ADD CONSTRAINT fk_albums_cover FOREIGN KEY (cover_image_id)
+    REFERENCES images(id) ON DELETE SET NULL;
+
+CREATE TABLE image_albums (
+    image_id BIGINT NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+    album_id BIGINT NOT NULL REFERENCES albums(id) ON DELETE CASCADE,
+    rank     INT NOT NULL DEFAULT 0,
+    added_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (image_id, album_id),
+    INDEX (album_id, rank)
+);
+
+CREATE TABLE image_formats (                             -- alternative file formats (CR2/DNG/HEIC)
+    id        BIGINT AUTO_INCREMENT PRIMARY KEY,
+    image_id  BIGINT NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+    ext       VARCHAR(16) NOT NULL,
+    filesize  BIGINT NOT NULL,
+    storage_path VARCHAR(500) NOT NULL,
+    UNIQUE KEY (image_id, ext),
+    INDEX (image_id)
+);
+```
+
+No `representative_ext` column (Piwigo's way of flagging non-image originals). `mime_type` + `image_formats` table replace it cleanly.
+
+### A.5 Tags
+
+```sql
+CREATE TABLE tags (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL UNIQUE,
+    slug        VARCHAR(100) NOT NULL UNIQUE,
+    image_count INT NOT NULL DEFAULT 0,                  -- denormalized
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE image_tags (
+    image_id   BIGINT NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+    tag_id     BIGINT NOT NULL REFERENCES tags(id)   ON DELETE CASCADE,
+    source     ENUM('manual','auto') NOT NULL DEFAULT 'manual',
+    confidence FLOAT NULL,                               -- for auto-tagged; NULL for manual
+    added_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (image_id, tag_id),
+    INDEX (tag_id)
+);
+```
+
+### A.6 Permissions (album ACL)
+
+```sql
+CREATE TABLE album_user_access (
+    album_id   BIGINT NOT NULL REFERENCES albums(id) ON DELETE CASCADE,
+    user_id    BIGINT NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
+    can_view   BOOLEAN NOT NULL DEFAULT TRUE,
+    can_upload BOOLEAN NOT NULL DEFAULT FALSE,
+    can_manage BOOLEAN NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (album_id, user_id),
+    INDEX (user_id)
+);
+
+CREATE TABLE album_group_access (
+    album_id   BIGINT NOT NULL REFERENCES albums(id) ON DELETE CASCADE,
+    group_id   BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    can_view   BOOLEAN NOT NULL DEFAULT TRUE,
+    can_upload BOOLEAN NOT NULL DEFAULT FALSE,
+    can_manage BOOLEAN NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (album_id, group_id),
+    INDEX (group_id)
+);
+```
+
+Piwigo's `user_cache` + `user_cache_categories` tables are **not** in this schema — permission resolution is cached in-process via `moka` per §6.5.3.
+
+### A.7 Engagement (comments, favorites, ratings)
+
+```sql
+CREATE TABLE comments (
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    image_id     BIGINT NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+    user_id      BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+    author_name  VARCHAR(100),                           -- for anonymous comments
+    author_email VARCHAR(255),
+    body         TEXT NOT NULL,
+    status       ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+    ip_hash      BINARY(32),                             -- salted SHA-256
+    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    approved_at  TIMESTAMP NULL,
+    INDEX (image_id, status),
+    INDEX (status, created_at)
+);
+
+CREATE TABLE favorites (
+    user_id  BIGINT NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
+    image_id BIGINT NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+    added_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, image_id),
+    INDEX (image_id)
+);
+
+CREATE TABLE ratings (
+    user_id  BIGINT NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
+    image_id BIGINT NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+    rating   TINYINT UNSIGNED NOT NULL,                  -- 1–5 (0 would mean "not rated")
+    rated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, image_id),
+    INDEX (image_id)
+);
+```
+
+No separate `caddie` table — the admin "working set" is a saved-search or session-scoped selection, not persistent state.
+
+No separate `anonymous_id` column (Piwigo's "last 3 octets of IP" scheme) — anonymous commenting + rating is gated behind server-side rate-limits keyed on `ip_hash`, not pseudo-identity.
+
+### A.8 Audit log
+
+```sql
+CREATE TABLE audit_log (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    actor_id    BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+    actor_ip    BINARY(16),                              -- binary IPv6 or IPv4-in-v6
+    event       VARCHAR(100) NOT NULL,                   -- 'user.login', 'album.permission_changed', ...
+    target_type VARCHAR(100),                            -- 'album', 'image', 'user', …
+    target_id   BIGINT,
+    details     JSON,                                    -- event-specific payload
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (actor_id, created_at),
+    INDEX (event, created_at),
+    INDEX (target_type, target_id, created_at)
+);
+```
+
+Append-only. Retention is configurable (default 365 days) via `gallery maintenance audit-trim`.
+
+### A.9 Background jobs + operations
+
+```sql
+CREATE TABLE background_jobs (                           -- queue storage (polling workers)
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    queue        VARCHAR(64) NOT NULL,                   -- 'default', 'images', 'mail', 'webhooks'
+    payload      JSON NOT NULL,
+    available_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    reserved_at  TIMESTAMP NULL,
+    attempts     SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (queue, available_at),
+    INDEX (reserved_at)
+);
+
+CREATE TABLE failed_jobs (                                -- DLQ
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    queue        VARCHAR(64) NOT NULL,
+    payload      JSON NOT NULL,
+    error_class  VARCHAR(255) NOT NULL,
+    error_msg    TEXT NOT NULL,
+    stack_trace  TEXT NOT NULL,
+    failed_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (queue, failed_at)
+);
+
+CREATE TABLE operations (                                 -- long-running operation tracking
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uuid         BINARY(16) NOT NULL UNIQUE,              -- exposed in /api/v1/operations/{uuid}
+    kind         VARCHAR(64) NOT NULL,                    -- 'sync', 'reindex', 'batch_tag', ...
+    user_id      BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+    status       ENUM('queued','running','completed','failed','cancelled') NOT NULL,
+    progress     FLOAT NOT NULL DEFAULT 0,                -- 0.0–1.0
+    message      TEXT,
+    result       JSON,                                    -- populated on completion
+    started_at   TIMESTAMP NULL,
+    completed_at TIMESTAMP NULL,
+    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (user_id, created_at),
+    INDEX (status, created_at)
+);
+```
+
+### A.10 Plugins + webhooks
+
+```sql
+CREATE TABLE plugins (
+    name         VARCHAR(100) PRIMARY KEY,                -- "example/gallery-copyright"
+    version      VARCHAR(32) NOT NULL,
+    status       ENUM('active','inactive','error') NOT NULL DEFAULT 'inactive',
+    capabilities JSON NOT NULL,                           -- from plugin.toml [capabilities]
+    settings     JSON NOT NULL,                           -- per-plugin config
+    installed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    activated_at TIMESTAMP NULL
+);
+
+CREATE TABLE webhook_subscriptions (
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uuid       BINARY(16) NOT NULL UNIQUE,
+    user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    event      VARCHAR(100) NOT NULL,                     -- event name pattern; '*' matches all
+    target_url TEXT NOT NULL,
+    secret     VARCHAR(128) NOT NULL,                     -- HMAC signing key
+    is_active  BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (event, is_active)
+);
+
+CREATE TABLE webhook_deliveries (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    subscription_id BIGINT NOT NULL REFERENCES webhook_subscriptions(id) ON DELETE CASCADE,
+    event           VARCHAR(100) NOT NULL,
+    payload         JSON NOT NULL,
+    response_status SMALLINT NULL,
+    response_body   TEXT,
+    attempt         SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+    delivered_at    TIMESTAMP NULL,
+    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (subscription_id, created_at)
+);
+```
+
+### A.11 Settings + schema
+
+```sql
+CREATE TABLE settings (
+    key_name   VARCHAR(100) PRIMARY KEY,
+    value      JSON NOT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                       ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE schema_migrations (
+    version    VARCHAR(255) PRIMARY KEY,                  -- "20260501120000"
+    name       VARCHAR(255) NOT NULL,
+    checksum   CHAR(64) NOT NULL,                         -- SHA-256 of the .sql file
+    applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### A.12 Saved searches + user quotas
+
+```sql
+CREATE TABLE saved_searches (
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uuid       BINARY(16) NOT NULL UNIQUE,
+    user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name       VARCHAR(255) NOT NULL,
+    rules      JSON NOT NULL,                             -- parsed SearchQuery
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (user_id)
+);
+
+CREATE TABLE user_quotas (
+    user_id         BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    storage_limit   BIGINT NOT NULL,                      -- bytes; 0 = unlimited
+    storage_used    BIGINT NOT NULL DEFAULT 0,
+    image_limit     INT NOT NULL,                         -- count; 0 = unlimited
+    image_count     INT NOT NULL DEFAULT 0,
+    updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                           ON UPDATE CURRENT_TIMESTAMP
+);
+```
+
+### Key design decisions
+
+- **`BIGINT` surrogate PKs** on every table for internal relations. `AUTO_INCREMENT` on MySQL/MariaDB, `GENERATED ALWAYS AS IDENTITY` on Postgres.
+- **UUIDv7 for externally-exposed IDs.** `BINARY(16)` on MySQL, native `UUID` on Postgres + MariaDB 10.7+. Time-ordered so B-tree-friendly. Used in derivative URLs, API responses, webhook payloads.
+- **Foreign keys on every relationship.** Unlike Piwigo, which enforced referential integrity at the application layer, every relationship here has an FK with explicit `ON DELETE` behavior. Cascade on owned relationships (image_tags → image); SET NULL on non-owning (album parent_id, album cover_image_id).
+- **Soft-delete only on users.** Audit log references past user IDs; hard-deleting a user would break history reads. Images, albums, comments, tags hard-delete; audit entries record the action.
+- **JSON for EXIF, settings, ACL scopes, plugin config, webhook payloads.** Native `JSON` on MySQL + Postgres (`JSONB` for Postgres); `LONGTEXT`-with-check-constraint alias on MariaDB accessed via `JSON_VALUE(...)`.
+- **Denormalized counts** (`albums.image_count`, `tags.image_count`) maintained via event listeners; reconciled nightly as a belt-and-suspenders check.
+- **IPs as salted hashes.** `ip_hash BINARY(32)` preserves rate-limit / audit utility without making the DB a surveillance goldmine. Salt rotates weekly; old hashes stop resolving.
+- **Email uniqueness is case-insensitive.** Generated `email_ci` column on MySQL/MariaDB; `CITEXT` on Postgres.
+- **Adjacency-list + materialized path** for the album tree. `albums.parent_id` holds the adjacency; `albums.path` ("1/5/12") holds the path. `WHERE path LIKE '1/5/%'` descendant queries are O(log n) with a prefix index. Path rebuilt on move via single-statement UPDATE.
+- **FTS:** MySQL uses `FULLTEXT` on the generated `search_fts` column; Postgres uses `tsvector GENERATED ALWAYS AS (...) STORED` + GIN index; MariaDB uses `FULLTEXT` like MySQL.
+- **No `is_deleted` flag.** Where soft-delete applies, nullable `deleted_at` is both the flag and the "when".
+
+### Permission resolution algorithm
+
+"Can user U view album A?" resolves in order:
+
+1. If `U.access_level >= Webmaster` → **allow**.
+2. If `U.access_level < A.min_level` → **deny**.
+3. If `A.is_public` AND no ancestor restricts access → **allow**.
+4. Walk from A up to root:
+   - At each level, check for an explicit `album_user_access(can_view=1)` row for U.
+   - Or a matching row in `album_group_access(can_view=1)` for any group U belongs to.
+   - If any level has an explicit permit → **allow**.
+   - If any level has an explicit deny (`can_view=0`) → **deny** (short-circuit).
+5. Default → **deny**.
+
+Resolution is memoized per-user per-request; changes to permissions dispatch `PermissionChangedEvent`, invalidating the per-user entry in the `moka` cache. In-process cache replaces Piwigo's `user_cache` + `user_cache_categories` tables — those two tables **do not exist** in this schema.
+
+### ERD summary
+
+```
+users ──┬── user_groups ────── groups
+        │         │                │
+        ├── api_tokens              ├── album_group_access ──┐
+        ├── remember_tokens         │                         │
+        ├── password_reset_tokens   │                         │
+        ├── sessions                │                         │
+        ├── album_user_access ──────┤                         ├── albums ──┬── image_albums ──┐
+        ├── user_quotas             │                         │    │       │                  │
+        ├── saved_searches          │                         │    │       │                  │
+        ├── favorites               │                         │    └── path (materialized)    │
+        ├── ratings                 │                         │                                │
+        └── comments ─── images ────┴──── image_tags ─── tags ┘                                │
+                         │   │                                                                  │
+                         │   ├── exif (JSON)                                                   │
+                         │   ├── image_formats (alt formats: CR2/DNG/HEIC)                     │
+                         │   └── storage_path → storage/originals/{yyyy}/{mm}/{uuid}.{ext}     │
+                         └──────────────────────────────────────────────────────────────────────┘
+
+audit_log  settings  schema_migrations  background_jobs  failed_jobs  operations
+plugins  webhook_subscriptions  webhook_deliveries
+```
+
+### Indexes summary
+
+Hot-path indexes, per-table:
+
+- `users`: `(access_level)`, `(deleted_at)`, unique `(username)`, unique `(email_ci)`.
+- `sessions`: `(user_id)`, `(expires_at)`.
+- `albums`: `(parent_id, rank)`, `(is_public, min_level)`, prefix `(path)`.
+- `images`: `(author_id)`, `(taken_at)`, `(min_level, created_at)`, `(sha256)`, `(perceptual_hash)`, FULLTEXT `(search_fts)`.
+- `image_albums`: `(album_id, rank)`.
+- `image_tags`: `(tag_id)`.
+- `comments`: `(image_id, status)`, `(status, created_at)`.
+- `audit_log`: `(actor_id, created_at)`, `(event, created_at)`, `(target_type, target_id, created_at)`.
+- `background_jobs`: `(queue, available_at)`, `(reserved_at)`.
+- `operations`: `(user_id, created_at)`, `(status, created_at)`.
+
+Every FK column is indexed. No Piwigo-style "no FK, rely on app code" — schema integrity is DB-enforced.
+
 
 ---
 
-## Appendix B: Complete API Method Catalog
+## Appendix B: Complete API Surface
 
-**Source:** `inc/ws_functions.php` (83 methods) + `inc/PwgServer.php` (2 reflection methods)
-**Total: 85 methods** — 60 admin-only, 38 POST-only, 21 public GET
+`/api/v1/*` — REST, JSON in and out, OpenAPI-generated from source. No `pwg.*` RPC-style method names. Every endpoint has a `#[Route]` attribute that is the single source of truth for the schema.
 
-### Type System
+**Auth:** session cookie (browsers) OR `Authorization: Bearer {api_token}` (clients). Admin/webmaster endpoints are gated by `#[RequiresLevel(AccessLevel::Admin)]` attribute.
 
-| Constant | Meaning |
-|---|---|
-| `WS_TYPE_BOOL` | Boolean |
-| `WS_TYPE_INT` | Integer |
-| `WS_TYPE_FLOAT` | Float |
-| `WS_TYPE_POSITIVE` | Must be >= 0 |
-| `WS_TYPE_NOTNULL` | Must be > 0 |
-| `WS_TYPE_ID` | INT + POSITIVE + NOTNULL |
-| `WS_PARAM_OPTIONAL` | Parameter is optional |
-| `WS_PARAM_ACCEPT_ARRAY` | Can accept array value |
-| `WS_PARAM_FORCE_ARRAY` | Always coerced to array |
+**Versioning:** this is v1. Breaking changes move to `/api/v2/*`; v1 keeps working with a deprecation header for one major version cycle.
 
-### Shared Filter Parameters (`f_params`)
+**Response envelope:** no `{stat: "ok", result: ...}` wrapping — bodies are the resource directly. Errors are RFC 7807 Problem Details (`application/problem+json`).
 
-Applied to image-listing methods (`pwg.categories.getImages`, `pwg.images.search`, `pwg.tags.getImages`, `pwg.getMissingDerivatives`):
+**Pagination:** cursor-based. `?cursor={opaque}&limit={n}` in, `{data: [...], next_cursor: "..."}` out. Last page omits `next_cursor`.
 
-| Parameter | Type | Default |
-|---|---|---|
-| `f_min_rate` / `f_max_rate` | float | null |
-| `f_min_hit` / `f_max_hit` | int, positive | null |
-| `f_min_ratio` / `f_max_ratio` | float, positive | null |
-| `f_max_level` | int, positive | null |
-| `f_min_date_available` / `f_max_date_available` | string | null |
-| `f_min_date_created` / `f_max_date_created` | string | null |
+**Filtering / sorting:** query-string grammar matches the PHP plan's conventions: `?tags[in]=a,b&min_rating=3&sort=-taken_at&fields=id,title,derivatives`.
 
-### B.1 Reflection (2 methods)
+### B.1 Session + auth
 
-| Method | HTTP | Admin | Parameters |
+| Method | Path | Level | Purpose |
 |---|---|---|---|
-| `reflection.getMethodList` | GET | No | (none) |
-| `reflection.getMethodDetails` | GET | No | `methodName` (string, required) |
+| `POST` | `/api/v1/auth/login` | public | Username + password → session cookie + CSRF token |
+| `POST` | `/api/v1/auth/logout` | any | Revoke session |
+| `GET`  | `/api/v1/auth/me` | any | Current user profile + effective permissions |
+| `POST` | `/api/v1/auth/password-reset/request` | public | Email a reset link |
+| `POST` | `/api/v1/auth/password-reset/confirm` | public | Exchange token for new password |
+| `GET`  | `/api/v1/auth/sessions` | any | List my active sessions |
+| `DELETE` | `/api/v1/auth/sessions/{id}` | any | Revoke one of my sessions |
+| `GET`  | `/api/v1/auth/tokens` | any | List my API tokens |
+| `POST` | `/api/v1/auth/tokens` | any | Create API token with scopes |
+| `DELETE` | `/api/v1/auth/tokens/{id}` | any | Revoke API token |
 
-### B.2 Session (3 methods)
+### B.2 Albums
 
-| Method | HTTP | Admin | Parameters |
+| Method | Path | Level | Purpose |
 |---|---|---|---|
-| `pwg.session.getStatus` | GET | No | (none) — returns user info + CSRF token |
-| `pwg.session.login` | POST | No | `username` (string, req), `password` (string, opt) |
-| `pwg.session.logout` | GET | No | (none) |
+| `GET`    | `/api/v1/albums` | any | List root albums visible to caller |
+| `GET`    | `/api/v1/albums/{uuid}` | any | Album detail + cover + counts |
+| `GET`    | `/api/v1/albums/{uuid}/children` | any | Direct children |
+| `GET`    | `/api/v1/albums/{uuid}/descendants` | any | Full subtree (flat) |
+| `GET`    | `/api/v1/albums/{uuid}/images` | any | Images in album (filtered, paginated) |
+| `GET`    | `/api/v1/albums/{uuid}/images/ids` | any | Lightweight ID-only list for prev/next navigation |
+| `POST`   | `/api/v1/albums` | admin | Create album |
+| `PATCH`  | `/api/v1/albums/{uuid}` | admin | Update fields |
+| `DELETE` | `/api/v1/albums/{uuid}?photo_action=keep\|delete_orphans\|cascade` | admin | Delete with explicit image-handling mode |
+| `POST`   | `/api/v1/albums/{uuid}/move` | admin | Reparent (body: `{new_parent_uuid, rank}`) |
+| `POST`   | `/api/v1/albums/{uuid}/cover` | admin | Set cover image (body: `{image_uuid}`) |
+| `POST`   | `/api/v1/albums/{uuid}/rank` | admin | Reorder images within album |
+| `GET`    | `/api/v1/albums/{uuid}/permissions` | admin | ACL listing |
+| `PUT`    | `/api/v1/albums/{uuid}/permissions` | admin | Replace ACL (users + groups, with inherit-to-descendants flag) |
+| `GET`    | `/api/v1/albums/orphans` | admin | Images not in any album |
 
-### B.3 General (10 methods)
+### B.3 Photos (images)
 
-| Method | HTTP | Admin | Key Parameters |
+| Method | Path | Level | Purpose |
 |---|---|---|---|
-| `pwg.getVersion` | GET | No | (none) |
-| `pwg.getInfos` | GET | Yes | (none) |
-| `pwg.getCacheSize` | GET | Yes | (none) |
-| `pwg.activity.getList` | GET | Yes | `page` (int, opt), `uid` (int, opt) |
-| `pwg.caddie.add` | GET | Yes | `image_id` (ID[], req) |
-| `pwg.getMissingDerivatives` | GET | Yes | `types` (string[], opt), `ids` (ID[], opt), `max_urls` (int, opt, default=200), `prev_page` (int, opt), + f_params |
-| `pwg.rates.delete` | POST | Yes | `user_id` (ID, req), `anonymous_id` (string, opt), `image_id` (ID, opt) |
-| `pwg.history.log` | GET | No | `image_id` (ID, req), `cat_id` (ID, opt), `section` (string, opt), `tags_string` (string, opt), `is_download` (bool, opt) |
-| `pwg.history.search` | GET | No | `start`/`end` (date, opt), `types` (string[], opt), `user_id` (string, opt), `image_id` (ID, opt), `filename`/`ip` (string, opt), `display_thumbnail` (string, opt), `pageNumber` (int, opt) |
-| `pwg.images.filteredSearch.create` | GET | No | `search_id` (string, opt), `allwords` (string, opt), `allwords_mode` (AND/OR), `allwords_fields` (string[]), `tags` (ID[]), `tags_mode` (AND/OR), `categories` (ID[]), `categories_withsubs` (bool), `authors` (string[]), `added_by` (ID[]), `filetypes` (string[]), `date_posted` (string) |
+| `GET`    | `/api/v1/photos` | any | List with filters (`?album=`, `?tag=`, `?author=`, `?rating=`, `?taken_after=`, `?sort=-taken_at`) |
+| `GET`    | `/api/v1/photos/{uuid}` | any | Full detail: EXIF, tags, albums, derivative URLs, comment count |
+| `POST`   | `/api/v1/photos` | any (quota'd) | Single-shot multipart upload |
+| `POST`   | `/api/v1/uploads` | any (quota'd) | Start a resumable tus upload, returns `Location: /api/v1/uploads/{id}` |
+| `PATCH`  | `/api/v1/uploads/{id}` | any | tus chunk PATCH |
+| `HEAD`   | `/api/v1/uploads/{id}` | any | tus offset/status |
+| `DELETE` | `/api/v1/uploads/{id}` | any | Abort upload (quarantine cleanup) |
+| `PATCH`  | `/api/v1/photos/{uuid}` | any (author/admin) | Update metadata, tags, album assignments |
+| `DELETE` | `/api/v1/photos/{uuid}` | admin | Hard delete |
+| `POST`   | `/api/v1/photos/{uuid}/regenerate-derivatives` | admin | Queue regeneration for all or specified presets |
+| `POST`   | `/api/v1/photos/{uuid}/sync-metadata` | admin | Re-extract EXIF from file |
+| `POST`   | `/api/v1/photos/actions/batch` | admin | Body: `{photo_uuids: [...], operations: [{tag_add: [...]}, {move_album: ...}, {set_min_level: ...}, ...]}`. Returns `202` + `Operation` pointer. |
+| `POST`   | `/api/v1/photos/lookup-duplicates` | any | Body: `{sha256s: [...]}` — returns existing matches |
+| `GET`    | `/api/v1/photos/{uuid}/comments` | any (ACL-filtered) | Approved comments |
+| `POST`   | `/api/v1/photos/{uuid}/comments` | any | Submit (goes to moderation unless admin) |
+| `POST`   | `/api/v1/photos/{uuid}/rate` | any | Body: `{rating: 1..5}` |
+| `DELETE` | `/api/v1/photos/{uuid}/rate` | any | Remove own rating |
+| `POST`   | `/api/v1/photos/{uuid}/favorite` | authenticated | Toggle favorite |
 
-### B.4 Categories (12 methods)
+Media delivery: **not** under `/api/v1`. Served at `/media/{preset}/{uuid}.{ext}` — see Appendix F.
 
-| Method | HTTP | Admin | Key Parameters |
+### B.4 Tags
+
+| Method | Path | Level | Purpose |
 |---|---|---|---|
-| `pwg.categories.getList` | GET | No | `cat_id` (int, opt), `recursive` (bool), `public` (bool), `tree_output` (bool), `fullname` (bool), `thumbnail_size` (string), `search` (string) |
-| `pwg.categories.getImages` | GET | No | `cat_id` (int[], opt), `recursive` (bool), `per_page` (int, max=500), `page` (int), `order` (string), + f_params |
-| `pwg.categories.getAdminList` | GET | Yes | `search` (string, opt), `additional_output` (string, opt) |
-| `pwg.categories.calculateOrphans` | GET | Yes | `category_id` (ID[], req) |
-| `pwg.categories.add` | GET | Yes | `name` (string, req), `parent` (int, opt), `comment` (string, opt), `visible` (bool), `status` (public/private), `commentable` (bool), `position` (first/last), `pwg_token` |
-| `pwg.categories.delete` | POST | Yes | `category_id` (string/array, req), `photo_deletion_mode` (no_delete/delete_orphans/force_delete), `pwg_token` |
-| `pwg.categories.move` | POST | Yes | `category_id` (string/array, req), `parent` (int, req), `pwg_token` |
-| `pwg.categories.setInfo` | POST | Yes | `category_id` (ID, req), `name`/`comment`/`status`/`visible`/`commentable` (all opt), `apply_commentable_to_subalbums` (bool, opt), `pwg_token` |
-| `pwg.categories.setRank` | POST | Yes | `category_id` (ID[], req), `sort_rank` (int, opt) |
-| `pwg.categories.setRepresentative` | POST | Yes | `category_id` (ID, req), `image_id` (ID, req) |
-| `pwg.categories.deleteRepresentative` | POST | Yes | `category_id` (ID, req) |
-| `pwg.categories.refreshRepresentative` | POST | Yes | `category_id` (ID, req) |
+| `GET`    | `/api/v1/tags` | any | List with counts; `?sort=name\|count` |
+| `GET`    | `/api/v1/tags/{slug}` | any | Tag detail |
+| `GET`    | `/api/v1/tags/{slug}/images` | any | Images tagged (permission-filtered) |
+| `POST`   | `/api/v1/tags` | admin | Create |
+| `PATCH`  | `/api/v1/tags/{slug}` | admin | Rename (slug rewrites preserved in `old_permalinks`-equivalent) |
+| `DELETE` | `/api/v1/tags/{slug}` | admin | Delete |
+| `POST`   | `/api/v1/tags/merge` | admin | Body: `{destination: slug, sources: [slug, ...]}` |
 
-### B.5 Images (22 methods)
+### B.5 Search
 
-| Method | HTTP | Admin | Key Parameters |
+| Method | Path | Level | Purpose |
 |---|---|---|---|
-| `pwg.images.getInfo` | GET | No | `image_id` (ID, req), `comments_page` (int), `comments_per_page` (int) |
-| `pwg.images.search` | GET | No | `query` (string, req), `per_page` (int), `page` (int), `order` (string), + f_params |
-| `pwg.images.rate` | GET | No | `image_id` (ID, req), `rate` (float, req) |
-| `pwg.images.addComment` | POST | No | `image_id` (ID, req), `author` (string), `content` (string, req), `key` (string, req) |
-| `pwg.images.addSimple` | POST | Yes | `category` (ID[]), `name`/`author`/`comment` (string), `level` (int), `tags` (string/array), `image_id` (ID, opt — set to update) |
-| `pwg.images.upload` | POST | Yes | `name` (string), `category` (ID[]), `level` (int), `format_of` (ID, opt), `pwg_token` |
-| `pwg.images.addChunk` | POST | Yes | `data` (base64, req), `original_sum` (string, req), `type` (string), `position` (string, req) |
-| `pwg.images.addFile` | GET | Yes | `image_id` (ID, req), `type` (string), `sum` (string, req) |
-| `pwg.images.add` | GET | Yes | `original_sum` (string, req), `original_filename`/`name`/`author`/`date_creation`/`comment` (string, opt), `categories` (string — "id[,rank];id[,rank]"), `tag_ids` (string — comma-separated), `level` (int), `check_uniqueness` (bool), `image_id` (ID, opt) |
-| `pwg.images.uploadAsync` | POST | Yes | `username`/`password` (string, req), `chunk`/`chunks` (int, req), `chunk_sum`/`original_sum`/`filename` (string, req), `category` (ID[]), `name`/`author`/`comment`/`date_creation` (string, opt), `level` (int), `tag_ids` (string), `image_id` (ID, opt) |
-| `pwg.images.uploadCompleted` | GET | Yes | `image_id` (string/array, opt), `pwg_token` (req), `category_id` (ID, req) |
-| `pwg.images.setInfo` | POST | Yes | `image_id` (ID, req), `file`/`name`/`author`/`date_creation`/`comment` (string, opt), `categories` (string, opt), `tag_ids` (string, opt), `level` (int, opt), `single_value_mode` (fill_if_empty/replace), `multiple_value_mode` (append/replace), `pwg_token` |
-| `pwg.images.setPrivacyLevel` | POST | Yes | `image_id` (ID[], req), `level` (int, req) |
-| `pwg.images.setCategory` | POST | Yes | `image_id` (ID[], req), `category_id` (ID, req), `action` (associate/dissociate/move), `pwg_token` |
-| `pwg.images.setRank` | POST | Yes | `image_id` (ID[], req), `category_id` (ID, req), `sort_rank` (int, opt) |
-| `pwg.images.delete` | POST | Yes | `image_id` (string/array, req), `pwg_token` |
-| `pwg.images.exist` | GET | Yes | `md5sum_list` (string, opt), `filename_list` (string, opt) |
-| `pwg.images.checkFiles` | GET | Yes | `image_id` (ID, req), `file_sum` (string, opt) |
-| `pwg.images.checkUpload` | GET | Yes | (none) |
-| `pwg.images.setMd5sum` | POST | Yes | `block_size` (int, opt), `pwg_token` |
-| `pwg.images.syncMetadata` | POST | Yes | `image_id` (ID[], opt), `pwg_token` |
-| `pwg.images.deleteOrphans` | POST | Yes | `block_size` (int, opt, default=1000), `pwg_token` |
-| `pwg.images.emptyLounge` | GET | Yes | (none) |
-| `pwg.images.formats.searchImage` | POST | Yes | `category_id` (ID, opt), `filename_list` (string — JSON, req) |
-| `pwg.images.formats.delete` | POST | Yes | `format_id` (ID, opt), `pwg_token` |
+| `GET`    | `/api/v1/search` | any | Free-text + scope query (`?q=...&tags=a,b&date_after=...&sort=-relevance`) |
+| `GET`    | `/api/v1/search/suggest` | any | Autocomplete (tags, albums, users) |
+| `GET`    | `/api/v1/search/saved` | authenticated | My saved searches |
+| `POST`   | `/api/v1/search/saved` | authenticated | Save search |
+| `DELETE` | `/api/v1/search/saved/{uuid}` | authenticated | Delete saved search |
 
-### B.6 Tags (8 methods)
+### B.6 Users + groups
 
-| Method | HTTP | Admin | Key Parameters |
+| Method | Path | Level | Purpose |
 |---|---|---|---|
-| `pwg.tags.getList` | GET | No | `sort_by_counter` (bool) |
-| `pwg.tags.getImages` | GET | No | `tag_id` (ID[]), `tag_url_name` (string[]), `tag_name` (string[]), `tag_mode_and` (bool), `per_page`/`page`/`order`, + f_params |
-| `pwg.tags.getAdminList` | GET | Yes | (none) |
-| `pwg.tags.add` | GET | Yes | `name` (string, req) |
-| `pwg.tags.delete` | GET | Yes | `tag_id` (ID[], req), `pwg_token` |
-| `pwg.tags.rename` | GET | Yes | `tag_id` (ID, req), `new_name` (string, req), `pwg_token` |
-| `pwg.tags.duplicate` | POST | Yes | `tag_id` (ID, req), `copy_name` (string, req), `pwg_token` |
-| `pwg.tags.merge` | POST | Yes | `destination_tag_id` (ID, req), `merge_tag_id` (ID[], req), `pwg_token` |
+| `GET`    | `/api/v1/users` | admin | Paginated list |
+| `GET`    | `/api/v1/users/{uuid}` | admin | Detail |
+| `POST`   | `/api/v1/users` | admin | Create |
+| `PATCH`  | `/api/v1/users/{uuid}` | admin | Update (incl. level, groups) |
+| `DELETE` | `/api/v1/users/{uuid}` | admin | Soft-delete |
+| `POST`   | `/api/v1/users/{uuid}/force-logout` | admin | Revoke all sessions |
+| `GET`    | `/api/v1/groups` | admin | List |
+| `POST`   | `/api/v1/groups` | admin | Create |
+| `PATCH`  | `/api/v1/groups/{uuid}` | admin | Update |
+| `DELETE` | `/api/v1/groups/{uuid}` | admin | Delete |
+| `GET`    | `/api/v1/groups/{uuid}/members` | admin | List members |
+| `PUT`    | `/api/v1/groups/{uuid}/members` | admin | Replace membership |
+| `POST`   | `/api/v1/groups/merge` | admin | Body: `{destination, sources: [...]}` |
 
-### B.7 Users (9 methods)
+### B.7 Comments + moderation
 
-| Method | HTTP | Admin | Key Parameters |
+| Method | Path | Level | Purpose |
 |---|---|---|---|
-| `pwg.users.getList` | GET | Yes | `user_id` (ID[]), `username` (string, % wildcard), `status` (string[]), `min_level` (int), `group_id` (ID[]), `per_page`/`page`/`order`, `exclude` (ID[]), `display` (string — comma-separated fields), `filter` (string), `min_register`/`max_register` (date) |
-| `pwg.users.add` | POST | Yes | `username` (string, req), `password`/`password_confirm` (string, opt), `email` (string, opt), `send_password_by_mail` (bool), `pwg_token` |
-| `pwg.users.delete` | POST | Yes | `user_id` (ID[], req), `pwg_token` |
-| `pwg.users.setInfo` | POST | Yes | `user_id` (ID[], req), `username`/`password`/`email`/`status`/`level`/`language`/`theme` (opt), `group_id` (int[] — -1 to dissociate all), `pwg_token` |
-| `pwg.users.getAuthKey` | POST | Yes | `user_id` (ID, req), `pwg_token` |
-| `pwg.users.preferences.set` | GET | No | `param` (string, req), `value` (string, opt), `is_json` (bool) |
-| `pwg.users.favorites.add` | GET | No | `image_id` (ID, req) |
-| `pwg.users.favorites.remove` | GET | No | `image_id` (ID, req) |
-| `pwg.users.favorites.getList` | GET | No | `per_page`/`page`/`order` |
+| `GET`    | `/api/v1/comments` | admin | Moderation queue (`?status=pending\|approved\|rejected`) |
+| `POST`   | `/api/v1/comments/{id}/approve` | admin | Approve |
+| `POST`   | `/api/v1/comments/{id}/reject` | admin | Reject |
+| `DELETE` | `/api/v1/comments/{id}` | admin | Delete |
 
-### B.8 Groups (8 methods)
+### B.8 Operations (long-running tasks)
 
-| Method | HTTP | Admin | Key Parameters |
+| Method | Path | Level | Purpose |
 |---|---|---|---|
-| `pwg.groups.getList` | GET | Yes | `group_id` (ID[]), `name` (string, % wildcard), `per_page`/`page`/`order` (id/name/nb_users/is_default) |
-| `pwg.groups.add` | POST | Yes | `name` (string, req), `is_default` (bool) |
-| `pwg.groups.delete` | POST | Yes | `group_id` (ID[], req), `pwg_token` |
-| `pwg.groups.setInfo` | POST | Yes | `group_id` (ID, req), `name` (string, opt), `is_default` (bool, opt), `pwg_token` |
-| `pwg.groups.addUser` | POST | Yes | `group_id` (ID, req), `user_id` (ID[], req), `pwg_token` |
-| `pwg.groups.deleteUser` | POST | Yes | `group_id` (ID, req), `user_id` (ID[], req), `pwg_token` |
-| `pwg.groups.merge` | POST | Yes | `destination_group_id` (ID, req), `merge_group_id` (ID[], req), `pwg_token` |
-| `pwg.groups.duplicate` | POST | Yes | `group_id` (ID, req), `copy_name` (string, req), `pwg_token` |
+| `GET`    | `/api/v1/operations/{uuid}` | any (owner or admin) | Poll status |
+| `GET`    | `/api/v1/operations/{uuid}/events` | same | SSE stream of progress events |
+| `POST`   | `/api/v1/operations/{uuid}/cancel` | same | Request cancel |
+| `GET`    | `/api/v1/operations` | admin | List recent operations |
 
-### B.9 Plugins / Themes / Extensions (6 methods)
+Operations returned by: batch photo actions, sync, reindex, export, long derivative regenerations.
 
-| Method | HTTP | Admin | Key Parameters |
+### B.9 Sync (filesystem ingest)
+
+| Method | Path | Level | Purpose |
 |---|---|---|---|
-| `pwg.plugins.getList` | GET | Yes | (none) |
-| `pwg.plugins.performAction` | GET | Yes | `action` (install/activate/deactivate/uninstall/delete), `plugin` (string), `pwg_token` |
-| `pwg.themes.performAction` | GET | Yes | `action` (activate/deactivate/delete/set_default), `theme` (string), `pwg_token` |
-| `pwg.extensions.update` | GET | Webmaster | `type` (plugins/languages/themes), `id` (string), `revision` (string), `pwg_token` |
-| `pwg.extensions.ignoreUpdate` | GET | Webmaster | `type` (string, opt), `id` (string, opt), `reset` (bool), `pwg_token` |
-| `pwg.extensions.checkUpdates` | GET | Yes | (none) |
+| `POST`   | `/api/v1/sync/start` | admin | Body: `{root: "...", mode: "files"\|"dirs", simulate: bool, metadata: bool}`. Returns `202` + operation UUID. |
+| `GET`    | `/api/v1/sync/status` | admin | Current sync job (if any) |
+| `POST`   | `/api/v1/sync/cancel` | admin | Cancel in-progress sync |
 
-### B.10 Permissions (3 methods)
+### B.10 Admin (maintenance + diagnostics)
 
-| Method | HTTP | Admin | Key Parameters |
+| Method | Path | Level | Purpose |
 |---|---|---|---|
-| `pwg.permissions.getList` | GET | Yes | `cat_id` (ID[]), `group_id` (ID[]), `user_id` (ID[]) — provide only one |
-| `pwg.permissions.add` | POST | Yes | `cat_id` (ID[], req), `group_id` (ID[], opt), `user_id` (ID[], opt), `recursive` (bool), `pwg_token` |
-| `pwg.permissions.remove` | POST | Yes | `cat_id` (ID[], req), `group_id` (ID[], opt), `user_id` (ID[], opt), `pwg_token` |
+| `GET`    | `/api/v1/admin/stats` | admin | Dashboard counts |
+| `GET`    | `/api/v1/admin/storage` | admin | Originals/derivatives disk usage |
+| `GET`    | `/api/v1/admin/queues` | admin | Per-queue depth + oldest age + DLQ count |
+| `GET`    | `/api/v1/admin/queues/{name}/failed` | admin | DLQ viewer |
+| `POST`   | `/api/v1/admin/queues/{name}/failed/{id}/retry` | admin | Retry failed job |
+| `DELETE` | `/api/v1/admin/queues/{name}/failed/{id}` | admin | Drop failed job |
+| `GET`    | `/api/v1/admin/audit` | admin | Audit log (filtered) |
+| `GET`    | `/api/v1/admin/audit/export.csv` | admin | CSV export |
+| `POST`   | `/api/v1/admin/cache/clear` | admin | Body: `{scopes: ["response","permissions","templates","derivatives"]}` |
+| `POST`   | `/api/v1/admin/maintenance/prune-orphan-derivatives` | admin | Triggers cleanup job |
+| `POST`   | `/api/v1/admin/maintenance/recompute-counters` | admin | Rebuild denormalized counts |
+
+### B.11 Settings + plugins + themes
+
+| Method | Path | Level | Purpose |
+|---|---|---|---|
+| `GET`    | `/api/v1/settings` | admin | All settings (grouped) |
+| `PATCH`  | `/api/v1/settings` | admin | Update subset |
+| `GET`    | `/api/v1/plugins` | admin | Installed plugins |
+| `POST`   | `/api/v1/plugins/{name}/activate` | admin | Enable |
+| `POST`   | `/api/v1/plugins/{name}/deactivate` | admin | Disable |
+| `DELETE` | `/api/v1/plugins/{name}` | admin | Uninstall (with `?drop_data=bool`) |
+| `GET`    | `/api/v1/themes` | admin | Installed themes |
+| `POST`   | `/api/v1/themes/{name}/activate` | admin | Set default |
+
+### B.12 Webhooks
+
+| Method | Path | Level | Purpose |
+|---|---|---|---|
+| `GET`    | `/api/v1/webhooks` | any | My subscriptions |
+| `POST`   | `/api/v1/webhooks` | any | Create (body: `{event, target_url}`, server generates signing secret) |
+| `PATCH`  | `/api/v1/webhooks/{uuid}` | any | Update |
+| `DELETE` | `/api/v1/webhooks/{uuid}` | any | Delete |
+| `GET`    | `/api/v1/webhooks/{uuid}/deliveries` | any | Delivery history |
+| `POST`   | `/api/v1/webhooks/{uuid}/deliveries/{id}/retry` | any | Manual retry |
+
+### B.13 Feeds + public reads
+
+| Method | Path | Level | Purpose |
+|---|---|---|---|
+| `GET` | `/feed.atom?scope=...&token=...` | public (ACL-filtered) | Atom feed (latest, per-album, per-user with signed token) |
+| `GET` | `/feed.rss?scope=...&token=...` | same | RSS alternative |
+| `GET` | `/sitemap.xml` | public | Public URLs only |
+| `GET` | `/.well-known/security.txt` | public | Security contact |
+
+### B.14 Health + version
+
+| Method | Path | Level | Purpose |
+|---|---|---|---|
+| `GET` | `/healthz` | public | 200 for liveness |
+| `GET` | `/readyz` | public | 200 only if DB + storage + Redis reachable |
+| `GET` | `/version` | public | `{version, git_sha, build_date}` |
+| `GET` | `/metrics` | IP-allowlisted | Prometheus format |
+
+### Authentication gates
+
+Every endpoint declares its access level via `#[RequiresLevel]` attribute:
+
+- **public** — no auth required
+- **any** — any authenticated user (including guest if guest access enabled)
+- **authenticated** — non-guest user
+- **admin** — `AccessLevel::Administrator` or above
+- **webmaster** — `AccessLevel::Webmaster` only
+
+Plus ACL gates on per-resource endpoints (`/api/v1/albums/{uuid}/images` returns only what the caller can view, regardless of their level).
 
 ---
 
-## Appendix C: Complete Configuration Reference
+## Appendix C: Configuration reference
 
-**Source:** `inc/Config.php` (~170 properties), `config` DB table, `local/config/config.php`
-**Loading order:** Code defaults → `local/config/config.php` → DB `config` table (last wins)
+Greenfield configuration tree. All keys are TOML dotted paths — e.g. `mail.smtp.host` is `[mail.smtp] host = "..."` in the file. Loading order (last wins): code defaults (via `Default` + `#[serde(default)]`) → `local/config/config.toml` → `settings` DB table.
 
-### Gallery / Display
+The DB `settings` table takes precedence over file config, but only for keys the admin UI exposes; infrastructure keys (DB DSN, secret key, storage paths) are file-only and immutable at runtime.
 
-| Key | Default | Type | Description |
-|---|---|---|---|
-| `gallery_title` | DB: "Just another Piwigo gallery" | string | Gallery title |
-| `gallery_url` | `null` | string | Explicit home URL (null = auto-detect) |
-| `gallery_locked` | DB: false | bool | Lock gallery for maintenance |
-| `page_banner` | DB: HTML template | string | Banner HTML (`%gallery_title%` substituted) |
-| `show_version` | `false` | bool | Show Piwigo version at bottom |
-| `show_thumbnail_caption` | `true` | bool | Captions under thumbnails |
-| `level_separator` | `' / '` | string | Album hierarchy separator |
-| `paginate_pages_around` | `2` | int | Pages shown before/after current in pagination |
-| `random_index_redirect` | `[]` | array | Redirect rules for gallery root |
-
-### Albums
+### `[server]`
 
 | Key | Default | Type | Description |
 |---|---|---|---|
-| `newcat_default_commentable` | `true` | bool | New albums commentable by default |
-| `newcat_default_visible` | `true` | bool | New albums visible by default |
-| `newcat_default_status` | `'public'` | string | Default privacy (public/private) |
-| `newcat_default_position` | `'first'` | string | New album position (first/last) |
-| `nb_categories_page` | DB: 12 | int | Sub-albums per page |
-| `allow_random_representative` | `false` | bool | Random cover image on each reload |
-| `inheritance_by_default` | `false` | bool | Inherit parent permissions |
+| `server.bind` | `"0.0.0.0:8080"` | string | HTTP listen address |
+| `server.trusted_proxies` | `[]` | array<CIDR> | Trusted X-Forwarded-For sources |
+| `server.secret_key` | file-only, required | string (≥32 bytes) | CSRF + HMAC + cookie-signing key |
+| `server.public_url` | auto-detected | string | Canonical URL (HTTPS://example.com) |
+| `server.maintenance_mode` | `false` | bool | Serve 503 to non-admins |
 
-### Ordering
+### `[database]`
 
 | Key | Default | Type | Description |
 |---|---|---|---|
-| `order_by` | DB: "ORDER BY date_creation DESC, file ASC, id ASC" | string | Global photo sort |
-| `order_by_inside_category` | DB: same as order_by | string | Photo sort inside album |
+| `database.url` | required | string | `postgres://...` / `mysql://...` |
+| `database.max_connections` | `10` | int | Pool size |
+| `database.min_connections` | `2` | int | Idle connections kept warm |
+| `database.acquire_timeout_ms` | `5000` | int | Pool-acquire timeout |
+| `database.idle_timeout_ms` | `600000` | int | 10 minutes |
+| `database.max_lifetime_ms` | `1800000` | int | 30 minutes |
 
-### Image / Photo
-
-| Key | Default | Type | Description |
-|---|---|---|---|
-| `picture_ext` | `['jpg','jpeg','png','gif','webp']` | array | Picture extensions |
-| `file_ext` | computed | array | All allowed file extensions |
-| `enable_formats` | `false` | bool | Multiple formats (RAW, etc.) |
-| `format_ext` | `['cr2','tif','tiff','nef','dng','ai','psd']` | array | Format extensions |
-| `uniqueness_mode` | `'md5sum'` | string | Duplicate check: md5sum or filename |
-| `available_permission_levels` | `[0,1,2,4,8]` | array | Privacy levels |
-
-### Derivatives / Image Processing
+### `[storage]`
 
 | Key | Default | Type | Description |
 |---|---|---|---|
-| `derivatives` | DB: serialized | array | Full derivative config (sizes, quality, watermark) |
-| `derivative_default_size` | `'medium'` | string | Default derivative size |
-| `derivatives_strip_metadata_threshold` | `256000` | int | Strip metadata below this pixel count |
-| `animated_webp_compression_quality` | `70` | int | Animated WebP quality |
-| `graphics_library` | `'auto'` | string | Image library: auto/imagick/gd/vips |
-| `original_resize` | DB: false | bool | Resize originals on upload |
-| `original_resize_maxwidth` | DB: 2016 | int | Max original width |
-| `original_resize_maxheight` | DB: 2016 | int | Max original height |
-| `original_resize_quality` | DB: 95 | int | Original resize JPEG quality |
+| `storage.root` | `"storage/"` | path | Persistent data root — back this up |
+| `storage.var_root` | `"var/"` | path | Regenerable runtime root — wipe at will |
+| `storage.originals_layout` | `"date"` | enum | `"date"` (yyyy/mm) or `"cas"` (SHA-sharded) |
+| `storage.backend` | `"local"` | enum | `"local"` / `"s3"` |
+| `storage.s3.endpoint` | — | string | For S3-compatible stores |
+| `storage.s3.bucket` | — | string | |
+| `storage.s3.access_key` | — | string | |
+| `storage.s3.secret_key` | — | string | Encrypted at rest via `server.secret_key` |
 
-### Upload
-
-| Key | Default | Type | Description |
-|---|---|---|---|
-| `upload_dir` | `'./upload'` | string | Upload directory |
-| `upload_form_chunk_size` | `500` | int | Chunk size (KB) |
-| `upload_form_max_file_size` | `1000` | int | Max file size (MB) |
-| `upload_form_automatic_rotation` | `true` | bool | Auto-rotate via EXIF |
-
-### Sync / Filesystem
+### `[gallery]`
 
 | Key | Default | Type | Description |
 |---|---|---|---|
-| `enable_synchronization` | `true` | bool | Enable filesystem sync |
-| `sync_exclude_folders` | `[]` | array | Folders to exclude |
-| `sync_profiling` | `false` | bool | Detailed sync profiling |
-| `everything_dll_path` | `'admin/inc/Everything3_x64.dll'` | string | Everything SDK DLL |
-| `checksum_compute_blocksize` | `50` | int | MD5 computation batch size |
+| `gallery.title` | `"Gallery"` | string | Displayed site title |
+| `gallery.banner_html` | `""` | string | Banner HTML; `{title}` substituted |
+| `gallery.show_version_footer` | `false` | bool | Show server version in footer |
+| `gallery.thumbnail_captions` | `true` | bool | Captions under grid thumbnails |
+| `gallery.level_separator` | `" / "` | string | Breadcrumb separator |
+| `gallery.pagination_pages_around` | `2` | int | Pages shown around current |
+| `gallery.root_redirect` | `none` | enum | `"none"` / `"random_album"` |
+| `gallery.default_theme` | `"default"` | string | Must be an active theme slug |
 
-### Metadata
-
-| Key | Default | Type | Description |
-|---|---|---|---|
-| `show_exif` | `true` | bool | Show EXIF on picture page |
-| `show_exif_fields` | `['Make','Model','DateTimeOriginal','COMPUTED;ApertureFNumber']` | array | EXIF fields to display |
-| `use_exif` | `true` | bool | Use EXIF during sync |
-| `use_exif_mapping` | `['date_creation'=>'DateTimeOriginal']` | array | EXIF→DB mapping |
-| `show_iptc` | `false` | bool | Show IPTC metadata |
-| `use_iptc` | `false` | bool | Use IPTC during sync |
-| `use_iptc_mapping` | 5 entries | array | IPTC→DB mapping |
-
-### Comments
+### `[albums]`
 
 | Key | Default | Type | Description |
 |---|---|---|---|
-| `activate_comments` | DB: false | bool | Enable comments |
-| `anti_flood_time` | `60` | int | Seconds between comments |
-| `comment_spam_max_links` | `3` | int | Max links before spam |
-| `comments_validation` | DB: false | bool | Require admin approval |
-| `comments_forall` | DB: false | bool | Allow anonymous comments |
-| `user_can_delete_comment` | DB: false | bool | Users delete own comments |
-| `user_can_edit_comment` | DB: false | bool | Users edit own comments |
+| `albums.new.commentable` | `true` | bool | New albums commentable by default |
+| `albums.new.visible` | `true` | bool | New albums visible by default |
+| `albums.new.status` | `"public"` | enum | `"public"` / `"private"` |
+| `albums.new.position` | `"first"` | enum | `"first"` / `"last"` |
+| `albums.new.inherit_permissions` | `false` | bool | Copy parent's ACL rows |
+| `albums.per_page` | `12` | int | Sub-albums per page |
+| `albums.random_cover_on_reload` | `false` | bool | Re-pick cover each page load |
 
-### Authentication / Users
-
-| Key | Default | Type | Description |
-|---|---|---|---|
-| `guest_id` | `2` | int | Guest user ID |
-| `webmaster_id` | `1` | int | Webmaster user ID |
-| `guest_access` | `true` | bool | Allow anonymous access |
-| `allow_user_registration` | DB: false | bool | Enable self-registration |
-| `insensitive_case_logon` | `false` | bool | Case-insensitive login |
-
-### Session
+### `[photos]`
 
 | Key | Default | Type | Description |
 |---|---|---|---|
-| `session_name` | `'pwg_id'` | string | Session cookie name |
-| `session_save_handler` | `'db'` | string | Session backend |
-| `session_length` | `3600` | int | Session lifetime (seconds) |
-| `session_use_ip_address` | `true` | bool | IP binding for sessions |
-| `authorize_remembering` | `true` | bool | Enable remember-me |
-| `remember_me_length` | `5184000` | int | Remember-me lifetime (60 days) |
+| `photos.default_sort` | `"-taken_at"` | string | Whitelisted sort key |
+| `photos.allowed_mimes` | `["image/jpeg","image/png","image/gif","image/webp","image/avif"]` | array | MIME allowlist for uploads |
+| `photos.alt_format_mimes` | `["image/x-canon-cr2","image/x-nikon-nef","image/x-adobe-dng","image/heic","image/tiff"]` | array | Alternative-format allowlist |
+| `photos.duplicate_detection` | `"sha256"` | enum | `"sha256"` / `"phash"` / `"both"` |
+| `photos.privacy_levels` | `[0,1,2,4,8]` | array<int> | Allowed min_level values |
 
-### Email / SMTP
-
-| Key | Default | Type | Description |
-|---|---|---|---|
-| `smtp_host` | `''` | string | SMTP host:port (empty = PHP mail) |
-| `smtp_user` | `''` | string | SMTP username |
-| `smtp_password` | `''` | string | SMTP password |
-| `smtp_secure` | `null` | string | ssl/tls/null |
-| `mail_theme` | DB: 'clear' | string | Email template theme |
-
-### URLs
+### `[derivatives]`
 
 | Key | Default | Type | Description |
 |---|---|---|---|
-| `question_mark_in_urls` | `true` | bool | `?` in URLs |
-| `php_extension_in_urls` | `true` | bool | `.php` in URLs |
-| `category_url_style` | `'id'` | string | Album URL: id / id-name |
-| `picture_url_style` | `'id'` | string | Picture URL: id / id-file / file |
-| `tag_url_style` | `'id-tag'` | string | Tag URL: id-tag / id / tag |
+| `derivatives.presets` | see §5.2 table | map | preset → `{max_width, max_height, crop, quality}` |
+| `derivatives.default_preset` | `"medium"` | string | Default size when none specified |
+| `derivatives.strip_metadata_below_pixels` | `256000` | int | Drop EXIF below this pixel count |
+| `derivatives.animated_webp_quality` | `70` | int | Animated WebP quality cap |
+| `derivatives.original_resize.enabled` | `false` | bool | Resize originals on upload |
+| `derivatives.original_resize.max_width` | `2016` | int | |
+| `derivatives.original_resize.max_height` | `2016` | int | |
+| `derivatives.original_resize.quality` | `95` | int | |
+| `derivatives.formats.preference` | `["avif","jxl","webp","jpeg"]` | array | Format negotiation order |
 
-### Performance / Debug
-
-| Key | Default | Type | Description |
-|---|---|---|---|
-| `show_queries` | `false` | bool | Display SQL queries |
-| `template_combine_files` | `false` | bool | Merge JS/CSS files |
-| `template_force_compile` | `true` | bool | Force template recompilation |
-| `log_sql_queries` | `false` | bool | Log all SQL queries |
-
-### Admin
+### `[watermark]`
 
 | Key | Default | Type | Description |
 |---|---|---|---|
-| `ws_max_images_per_page` | `500` | int | Max images per API response |
-| `ws_max_users_per_page` | `1000` | int | Max users per API response |
-| `batch_manager_images_per_page_global` | `20` | int | Batch manager global images/page |
-| `batch_manager_images_per_page_unit` | `5` | int | Batch manager unit images/page |
+| `watermark.enabled` | `false` | bool | Apply watermark to derivatives |
+| `watermark.file` | `"storage/watermark.png"` | path | Watermark image |
+| `watermark.min_output_pixels` | `100000` | int | Skip watermark below this |
+| `watermark.x_percent` | `50` | int | Horizontal position 0..100 |
+| `watermark.y_percent` | `50` | int | Vertical position 0..100 |
+| `watermark.x_repeat` | `0` | int | Tile count (0 = single) |
+| `watermark.opacity_percent` | `50` | int | Opacity 0..100 |
 
-### Miscellaneous
+### `[uploads]`
 
 | Key | Default | Type | Description |
 |---|---|---|---|
-| `top_number` | `15` | int | Items in best-rated/most-visited |
-| `allow_html_descriptions` | `true` | bool | HTML in descriptions |
-| `secret_key` | DB: random | string | CSRF/HMAC secret |
-| `rate` | DB: true | bool | Enable rating |
-| `rate_anonymous` | DB: true | bool | Anonymous rating |
-| `rate_items` | `[0,1,2,3,4,5]` | array | Rating values |
-| `auth_key_duration` | `259200` | int | Auth key TTL (3 days) |
-| `data_location` | `'_data/'` | string | Data directory |
+| `uploads.max_file_size_mb` | `1000` | int | Per-file cap |
+| `uploads.tus.chunk_size_kb` | `500` | int | Preferred chunk size |
+| `uploads.tus.staging_dir` | `"var/uploads/tus/"` | path | tus staging |
+| `uploads.tus.abandoned_ttl_hours` | `24` | int | Cleanup stale uploads |
+| `uploads.auto_rotate_exif` | `true` | bool | Apply EXIF orientation on ingest |
+| `uploads.strip_gps_on_upload` | `false` | bool | Privacy: drop GPS EXIF |
+
+### `[sync]`
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `sync.enabled` | `true` | bool | Enable filesystem sync feature |
+| `sync.galleries_root` | `"storage/galleries/"` | path | Ingest source tree |
+| `sync.exclude_patterns` | `[".git","node_modules",".DS_Store","_data"]` | array | Skip these during walk |
+| `sync.profiling` | `false` | bool | Per-file timing + percentiles |
+| `sync.mft.enabled_windows` | `false` | bool | Use NTFS MFT reader on Windows (requires admin) |
+| `sync.checksum_batch_size` | `50` | int | Files per SHA batch |
+
+### `[metadata]`
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `metadata.exif.show` | `true` | bool | Display EXIF on picture page |
+| `metadata.exif.fields` | `["Make","Model","DateTimeOriginal","FNumber","ExposureTime","ISO","FocalLength"]` | array | EXIF fields to display |
+| `metadata.exif.use_during_sync` | `true` | bool | Extract during sync |
+| `metadata.exif.mapping` | `{date_creation = "DateTimeOriginal"}` | map | EXIF tag → DB column |
+| `metadata.iptc.show` | `false` | bool | Display IPTC |
+| `metadata.iptc.use_during_sync` | `false` | bool | Extract during sync |
+| `metadata.iptc.mapping` | `{title = "ObjectName", description = "Caption-Abstract"}` | map | IPTC tag → DB column |
+
+### `[comments]`
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `comments.enabled` | `true` | bool | Feature toggle |
+| `comments.anti_flood_seconds` | `60` | int | Min gap between same-IP posts |
+| `comments.spam_max_links` | `3` | int | URLs threshold for spam rejection |
+| `comments.require_moderation` | `false` | bool | Default-pending vs default-approved |
+| `comments.allow_anonymous` | `false` | bool | Non-authenticated commenting |
+| `comments.honeypot_enabled` | `true` | bool | Honeypot website-URL field |
+| `comments.user_can_delete_own` | `false` | bool | |
+| `comments.user_can_edit_own` | `false` | bool | |
+
+### `[auth]`
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `auth.guest_enabled` | `true` | bool | Allow anonymous browsing |
+| `auth.self_registration` | `false` | bool | Open signup |
+| `auth.username_case_insensitive` | `false` | bool | |
+| `auth.password.hasher` | `"argon2id"` | enum | `"argon2id"` / `"bcrypt"` (bcrypt for compat only) |
+| `auth.password.argon2.memory_kb` | `19456` | int | Argon2id m parameter |
+| `auth.password.argon2.iterations` | `2` | int | Argon2id t parameter |
+| `auth.password.argon2.parallelism` | `1` | int | Argon2id p parameter |
+| `auth.password.min_length` | `8` | int | |
+| `auth.password.reset_token_ttl_minutes` | `60` | int | |
+| `auth.login_rate_limit_per_minute` | `10` | int | Per-IP |
+
+### `[sessions]`
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `sessions.cookie_name` | `"gallery_id"` | string | |
+| `sessions.store` | `"database"` | enum | `"database"` / `"redis"` |
+| `sessions.lifetime_seconds` | `3600` | int | Idle timeout |
+| `sessions.bind_to_ip_class` | `true` | bool | Validate /24 match |
+| `sessions.remember_me.enabled` | `true` | bool | |
+| `sessions.remember_me.lifetime_seconds` | `5184000` | int | 60 days |
+| `sessions.api_tokens.default_ttl_days` | `90` | int | API token default expiry |
+
+### `[mail]`
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `mail.smtp.host` | — | string | `host:port` or `host` (empty = disabled) |
+| `mail.smtp.user` | `""` | string | |
+| `mail.smtp.password` | `""` | string | Encrypted at rest via `server.secret_key` |
+| `mail.smtp.secure` | `"tls"` | enum | `"ssl"` (implicit) / `"tls"` (STARTTLS) / `"none"` |
+| `mail.sender.name` | `{gallery.title}` | string | From display name |
+| `mail.sender.email` | required | string | From address |
+| `mail.template_theme` | `"clear"` | string | `"clear"` / `"dark"` / custom |
+| `mail.allow_html` | `true` | bool | Send HTML multipart |
+| `mail.debug_dump_eml` | `false` | bool | Also write to `var/tmp/mail_{ts}.eml` |
+
+### `[ratings]`
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `ratings.enabled` | `true` | bool | |
+| `ratings.allow_anonymous` | `true` | bool | |
+| `ratings.allowed_values` | `[1,2,3,4,5]` | array | |
+| `ratings.bayesian_confidence` | `2` | int | Prior strength |
+
+### `[search]`
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `search.engine` | `"native"` | enum | `"native"` (DB FTS) / `"meilisearch"` / `"tantivy"` |
+| `search.meilisearch.url` | — | string | When engine = meilisearch |
+| `search.meilisearch.api_key` | — | string | |
+| `search.semantic.enabled` | `false` | bool | CLIP-based semantic search (§21.2.4) |
+
+### `[api]`
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `api.max_photos_per_page` | `500` | int | Cap on `?limit` |
+| `api.max_users_per_page` | `1000` | int | |
+| `api.rate_limits.read_per_minute` | `600` | int | Per-user read budget |
+| `api.rate_limits.write_per_minute` | `60` | int | Per-user write budget |
+| `api.rate_limits.auth_per_minute` | `10` | int | Per-IP login budget |
+| `api.cors.allowed_origins` | `[]` | array | Explicit list for credentialed routes |
+
+### `[admin]`
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `admin.batch_manager.photos_per_page_global` | `60` | int | Virtualized grid loads N at a time |
+| `admin.batch_manager.photos_per_page_unit` | `1` | int | Unit-mode fetch |
+| `admin.audit.retention_days` | `365` | int | Audit log TTL |
+
+### `[performance]`
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `performance.permission_cache_ttl_seconds` | `300` | int | In-process moka TTL |
+| `performance.response_cache.enabled` | `true` | bool | Anon page caching |
+| `performance.response_cache.ttl_seconds` | `300` | int | |
+| `performance.asset_bundling` | `true` | bool | Combined CSS/JS in prod |
+| `performance.template_reload` | `false` | bool | Dev-only template hot-reload |
+
+### `[observability]`
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `observability.log_level` | `"info"` | enum | Standard tracing levels |
+| `observability.log_format` | `"json"` | enum | `"json"` / `"text"` |
+| `observability.log_sql_queries` | `false` | bool | Debug-only |
+| `observability.otlp.endpoint` | — | string | OpenTelemetry collector URL |
+| `observability.prometheus.enabled` | `true` | bool | `/metrics` endpoint |
+| `observability.prometheus.allowed_ips` | `["127.0.0.1/32"]` | array | IP allowlist |
+| `observability.sentry.dsn` | — | string | Optional |
+
+### `[privacy]`
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `privacy.retain_audit_days` | `365` | int | |
+| `privacy.retain_comment_ip_days` | `90` | int | After window, `ip_hash` → NULL |
+| `privacy.allow_data_export` | `true` | bool | User GDPR export via API |
+| `privacy.allow_account_deletion` | `true` | bool | User-initiated erasure |
+
+### Dropped vs Piwigo
+
+Keys from Piwigo 14's `Config.php` that are **not carried over** (rationale):
+
+- `gallery_url`: auto-detected from `Host` header + trusted-proxy chain. No explicit override.
+- `question_mark_in_urls`, `php_extension_in_urls`, `category_url_style`, `picture_url_style`, `tag_url_style`: one canonical URL shape per resource (see Appendix F); no per-install URL-style choice.
+- `session_use_ip_address`: replaced by `sessions.bind_to_ip_class` (same intent, name clarified).
+- `newcat_default_*`: namespaced under `albums.new.*`.
+- `upload_dir`: uploads always land under `storage.root/originals/`; staging under `var/uploads/tus/`. Paths are derived, not configured individually.
+- `graphics_library`: only libvips is supported. No GD/Imagick/ext_imagick fallback.
+- `everything_dll_path`: Windows MFT reader uses `windows-rs` bindings, no DLL path.
+- `guest_id`, `webmaster_id`: not needed — guest is a sentinel row with access_level = Guest, not an ID-referenced user.
+- `show_queries`, `log_sql_queries`: unified under `observability.log_sql_queries`.
+- `ws_max_images_per_page` → `api.max_photos_per_page`.
 
 ---
 
-## Appendix D: Complete Hook Event Catalog
+## Appendix D: Event Catalog (Piwigo ↔ Rust cross-reference)
 
-**Total: ~105 unique events** — 62 notify, 43 change
-**Source:** Grep of all `trigger_notify()` and `trigger_change()` calls across the codebase
+**Total: ~144 unique events** — covered by the `GalleryEvent` enum in plan §11.1.
+
+**Purpose of this appendix:** Piwigo plugin authors migrating to Lua need to know which Rust event corresponds to the PHP hook they were subscribing to. Each row maps the old PHP hook name to the equivalent `GalleryEvent` variant that fires at the analogous point in the Rust handler.
+
+**Not all Piwigo hooks carry over.** Some were artifacts of PHP-specific concerns (e.g., `functions_mail_included` — a marker that a PHP require succeeded) and have no Rust counterpart. Others are consolidated when the Rust design collapses multiple PHP fire-points into one event. Conversely, the Rust `GalleryEvent` enum adds events for operations the PHP version never exposed (e.g., `OperationStartedEvent` for long-running tasks, `DerivativeGenerationQueuedEvent` for the messenger pipeline).
+
+**Rust naming convention:** the PHP `snake_case` names become `PascalCase` enum variants under `GalleryEvent::` (e.g., `loc_begin_index` → `GalleryEvent::LocBeginIndex`; `render_tag_name` → `GalleryEvent::RenderTagName`). The full list is in `gallery-plugins/src/events.rs`.
+
+**"Change" vs "notify":** preserved from Piwigo semantics. `trigger_notify` becomes `EventBus::trigger_notify(GalleryEvent::X, ...)` (return value ignored, all handlers fire); `trigger_change` becomes `EventBus::trigger_change(GalleryEvent::X, data)` (handlers form a transforming pipeline, each receives the previous's output).
+
+**Prior art:** grep of `trigger_notify()` and `trigger_change()` call sites in Piwigo 14.x.
 
 ### D.1 Lifecycle / Initialization (7 events)
 
@@ -6420,153 +6554,276 @@ Applied to image-listing methods (`pwg.categories.getImages`, `pwg.images.search
 
 ---
 
-## Appendix E: Complete Template Inventory
+## Appendix E: Template Inventory
 
-**Total: 265 .tpl files** — 67 admin, 53 default theme, 69 bootstrap_darkroom, 16 modus, 2 elegant, 34 smartpocket, 11 plugins, 9 mail, 4 samples
+Greenfield Tera template tree. Author-driven by the handler surface in Phases 2–4; not a port of Piwigo's 265 `.tpl` files.
 
-### Admin Theme (67 files)
+### E.1 Gallery (public SSR)
 
-56 page templates + 11 partials/includes in `admin/themes/default/template/`
-
-**Pages:** `admin.tpl`, `album_notification.tpl`, `albums.tpl`, `batch_manager_global.tpl`, `batch_manager_unit.tpl`, `cat_list.tpl`, `cat_modify.tpl`, `cat_options.tpl`, `cat_perm.tpl`, `cat_search.tpl`, `check_integrity.tpl`, `comments.tpl`, `configuration_comments.tpl`, `configuration_default.tpl`, `configuration_display.tpl`, `configuration_main.tpl`, `configuration_sizes.tpl`, `configuration_watermark.tpl`, `element_set_ranks.tpl`, `extend_for_templates.tpl`, `group_list.tpl`, `group_perm.tpl`, `help.tpl`, `history.tpl`, `install.tpl`, `intro.tpl`, `languages_installed.tpl`, `languages_new.tpl`, `maintenance_actions.tpl`, `maintenance_env.tpl`, `menubar.tpl`, `notification_by_mail.tpl`, `permalinks.tpl`, `photos_add_applications.tpl`, `photos_add_direct.tpl`, `photos_add_ftp.tpl`, `picture_coi.tpl`, `picture_formats.tpl`, `picture_modify.tpl`, `plugins_installed.tpl`, `plugins_new.tpl`, `popuphelp.tpl`, `rating.tpl`, `rating_user.tpl`, `site_manager.tpl`, `site_update.tpl`, `stats.tpl`, `tags.tpl`, `themes_installed.tpl`, `themes_new.tpl`, `updates_ext.tpl`, `updates_pwg.tpl`, `upgrade.tpl`, `user_activity.tpl`, `user_list.tpl`, `user_perm.tpl`
-
-**Partials:** `header.tpl`, `footer.tpl`, `navigation_bar.tpl`, `tabsheet.tpl`, `double_select.tpl`, `inc/add_album.inc.tpl`, `inc/album_selector.inc.tpl`, `inc/autosize.inc.tpl`, `inc/colorbox.inc.tpl`, `inc/datepicker.inc.tpl`, `inc/install.inc.tpl`
-
-### Default Theme (53 files)
-
-16 page templates + 24 partials + 13 mail templates in `themes/default/template/`
-
-**Pages:** `about.tpl`, `comments.tpl`, `identification.tpl`, `index.tpl`, `nbm.tpl`, `notification.tpl`, `password.tpl`, `picture.tpl`, `popuphelp.tpl`, `profile.tpl`, `redirect.tpl`, `register.tpl`, `search.tpl`, `search_rules.tpl`, `slideshow.tpl`, `tags.tpl`
-
-**Key partials:** `header.tpl`, `footer.tpl`, `thumbnails.tpl`, `menubar.tpl`, `navigation_bar.tpl`, `picture_content.tpl`, `picture_nav_buttons.tpl`, `mainpage_categories.tpl`, `comment_list.tpl`, `profile_content.tpl`, menubar_*.tpl (8 files)
-
-### Bootstrap Darkroom (69 files)
-
-13 page templates + 54 partials + 2 admin in `themes/bootstrap_darkroom/template/`
-
-Overrides all default theme pages plus adds PhotoSwipe integration (`_photoswipe_div.tpl`, `_photoswipe_js.tpl`), Slick carousel (`_slick_js.tpl`), and extensive partial library.
-
-### Modus (16 files)
-
-4 page overrides + 5 partials + 5 CSS templates + 1 mail + 1 admin in `themes/modus/`
-
-**Notable:** CSS files are Smarty templates (`.css.tpl`) requiring Tera rendering before serving.
-
-### SmartPocket (34 files)
-
-12 page templates + 21 partials + 1 admin in `themes/smartpocket/template/`
-
-Mobile-focused theme, inherits from default.
-
-### Elegant (2 files)
-
-`local_head.tpl` + `admin/admin.tpl` — minimal overrides, inherits almost everything from default.
-
-### Plugins (11 files)
-
-AdminTools (3), GDThumb (3), LocalFilesEditor (2), TakeATour (2+tours), language_switch (1)
-
-### Theme Inheritance Chain
+Files live under `templates/` with theme overrides resolved via the parent chain in §12.4.
 
 ```
-default (base) ←── bootstrap_darkroom (full override)
-              ←── modus (selective override)
-              ←── elegant (minimal override)
-              ←── smartpocket (mobile override)
+templates/
+├── layout.html                      # Root layout for all public pages
+├── error.html                       # 404/403/422/500
+├── home.html                        # Root album listing
+├── album/
+│   ├── show.html                    # Album detail + grid
+│   ├── flat.html                    # Flat descendant view
+│   └── calendar.html                # Chronological view
+├── photo/
+│   ├── show.html                    # Detail page (metadata sidebar, prev/next)
+│   └── slideshow.html               # Keyboard-driven slideshow
+├── tag/
+│   ├── index.html                   # Cloud + alphabetical list
+│   └── show.html                    # Images for tag
+├── search/
+│   ├── form.html
+│   └── results.html
+├── favorites.html
+├── highlights/
+│   ├── most_viewed.html
+│   ├── top_rated.html
+│   ├── recent_photos.html
+│   └── recent_albums.html
+├── auth/
+│   ├── login.html
+│   ├── register.html
+│   ├── password_reset_request.html
+│   ├── password_reset_confirm.html
+│   └── account/
+│       ├── overview.html
+│       ├── security.html
+│       ├── notifications.html
+│       ├── tokens.html
+│       └── sessions.html
+└── partials/
+    ├── nav.html
+    ├── footer.html
+    ├── pagination.html
+    ├── breadcrumb.html
+    ├── thumbnail_card.html          # <picture> with AVIF/WebP/JPEG sources
+    ├── comment_list.html
+    ├── comment_form.html
+    ├── rating_widget.html
+    └── flash_messages.html
 ```
 
-Missing templates in child themes fall through to `default`.
+### E.2 Admin (SSR)
+
+```
+templates/admin/
+├── layout.html                      # Sidebar + breadcrumb shell
+├── dashboard.html
+├── albums/
+│   ├── index.html                   # Tree manager
+│   ├── new.html
+│   ├── edit.html                    # Tabbed: properties/sort/permissions/notification
+│   └── permissions_preview.html     # "View as user X"
+├── photos/
+│   ├── batch.html                   # Global batch manager
+│   ├── unit.html                    # Single-photo edit
+│   ├── upload.html
+│   ├── coi_picker.html              # Center-of-interest interactive tool
+│   └── formats.html
+├── users/
+│   ├── index.html
+│   ├── edit.html
+│   └── permissions.html
+├── groups/
+│   ├── index.html
+│   └── edit.html
+├── tags.html
+├── comments.html                    # Moderation queue
+├── history.html
+├── stats.html
+├── ratings.html
+├── sync.html                        # SSE-streamed progress
+├── maintenance/
+│   ├── actions.html
+│   └── env.html
+├── queues.html                      # Queue monitor + DLQ
+├── audit.html
+├── settings/
+│   ├── general.html
+│   ├── storage.html
+│   ├── uploads.html
+│   ├── derivatives.html
+│   ├── mail.html
+│   ├── security.html
+│   └── search.html
+├── plugins/
+│   ├── index.html
+│   ├── marketplace.html
+│   └── detail.html
+├── themes.html
+└── webhooks.html
+```
+
+### E.3 Mail templates
+
+```
+templates/mail/
+├── layout.html
+├── welcome.html                     # + welcome.txt
+├── password_reset.html              # + .txt
+├── comment_notification.html        # + .txt  (admin moderation alert)
+├── digest.html                      # + .txt  (periodic user digest)
+├── album_notification.html          # + .txt
+└── partials/
+    ├── header.html
+    └── footer.html
+```
+
+Every HTML mail template has a plain-text sibling (`.txt`) rendered via Tera from the same handler context. CSS inlining is applied post-render.
+
+### E.4 Themes
+
+```
+themes/
+├── default/                         # Parent theme — all other themes inherit
+│   └── templates/                   # (overrides of core templates)
+├── <theme_2>/                       # Four additional themes shipped at v1.0
+├── <theme_3>/                       # Final names TBD during Phase 7
+├── <theme_4>/
+└── <theme_5>/
+```
+
+Theme resolution: `themes/{active}/templates/{path}.html` → `themes/{parent}/templates/{path}.html` → `templates/{path}.html`. Missing files cascade upward automatically via the custom Tera loader (§12.4).
+
+No `.css.tpl` / `.js.tpl` template-assets — Vite handles all CSS/JS build, Tera handles only HTML.
 
 ---
 
 ## Appendix F: Complete URL Routing Map
 
-### F.1 Frontend URL Patterns
+All URLs listed here are our own — no preserved Piwigo entry points. No `index.php`, `picture.php`, `ws.php`, `i.php`, `action.php`, `feed.php`, `identification.php`, `admin.php` or any other `*.php` surface. The Axum router matches the clean paths below directly.
 
-**Router:** `inc/section_init.php` — splits PATH_INFO on `/`, dispatches via `parse_section_url()` then `parse_well_known_params_url()`.
+### F.1 Public gallery (SSR)
 
-| URL Pattern | Section | Parameters |
+| Path | Handler | Notes |
 |---|---|---|
-| `/` (no path) | `categories` | `is_homepage = true` |
-| `/category/{id}` | `categories` | `category = id` |
-| `/category/{id}-{slug}` | `categories` | `category = id`, slug for SEO |
-| `/category/{permalink}` | `categories` | Resolved via `old_permalinks` |
-| `/category/{id1}/{id2}/{id3}` | `categories` | Combined multi-album view |
-| `/tags/{id1}-{name}/{id2}-{name}` | `tags` | One or more tags |
-| `/search/{search_id}` | `search` | Integer search ID |
-| `/search/{psk-YYYYMMDD-XXXXXXXXXX}` | `search` | Persistent search key |
-| `/favorites` | `favorites` | (requires auth) |
-| `/most_visited` | `most_visited` | |
-| `/best_rated` | `best_rated` | |
-| `/recent_pics` | `recent_pics` | |
-| `/recent_cats` | `recent_cats` | |
-| `/list/{id1,id2,id3}` | `list` | Explicit image ID list |
+| `/` | `GalleryController::home` | Root album listing; paginated |
+| `/albums/{slug}` | `AlbumController::show` | Album detail + photos grid |
+| `/albums/{slug}/flat` | `AlbumController::show_flat` | Include descendants |
+| `/albums/{slug}/page/{n}` | `AlbumController::show` | Deep-link pagination |
+| `/albums/{slug}/calendar/{year}` | `CalendarController::year` | Per-album calendar |
+| `/albums/{slug}/calendar/{year}/{month}` | `CalendarController::month` | |
+| `/albums/{slug}/calendar/{year}/{month}/{day}` | `CalendarController::day` | |
+| `/photos/{uuid}` | `PictureController::show` | Detail view; context-aware prev/next inferred from `?from=album/{slug}` or `?from=tag/{slug}` or `?from=search/{uuid}` |
+| `/tags` | `TagController::index` | Tag cloud + list |
+| `/tags/{slug}` | `TagController::show` | Images for tag |
+| `/tags/{slug}+{slug}+{slug}` | `TagController::show_multi` | Multi-tag AND filter |
+| `/search` | `SearchController::form` | Form + result rendering |
+| `/search/{uuid}` | `SearchController::show` | Saved-search deep link |
+| `/favorites` | `FavoritesController::index` | Authenticated |
+| `/highlights/most-viewed` | `HighlightsController::most_viewed` | |
+| `/highlights/top-rated` | `HighlightsController::top_rated` | |
+| `/highlights/recent-photos` | `HighlightsController::recent_photos` | |
+| `/highlights/recent-albums` | `HighlightsController::recent_albums` | |
 
-**Trailing modifiers** (can follow any section):
+Clean slugs, no `category/`/`picture/`/`tags/`/`search/` legacy prefixes. Section context for the picture page is passed as `?from=` query param rather than embedded in the path — resolves prev/next without `parse_well_known_params_url()`-style two-phase dispatch.
 
-| Token | Parameter |
+### F.2 Auth (SSR)
+
+| Path | Handler |
 |---|---|
-| `flat` | `page.flat = true` |
-| `start-{N}` | `page.start = N` (image pagination) |
-| `startcat-{N}` | `page.startcat = N` (album pagination) |
-| `created-monthly` | Calendar by creation date |
-| `posted-weekly` | Calendar by post date |
-| `{field}-{style}-{Y}-{M}-{D}` | Calendar drill-down to specific date |
+| `/login` | `AuthController::form` |
+| `/logout` | `AuthController::submit_logout` |
+| `/register` | `RegisterController::form` |
+| `/password-reset` | `PasswordResetController::form` |
+| `/password-reset/confirm/{token}` | `PasswordResetController::confirm_form` |
+| `/account` | `ProfileController::show` |
+| `/account/security` | `ProfileController::security` |
+| `/account/notifications` | `ProfileController::notifications` |
+| `/account/tokens` | `TokenController::index` |
+| `/account/sessions` | `SessionController::index` |
 
-### F.2 Picture Page URL Patterns
+### F.3 Media (derivative serving)
 
-**Router:** `picture.php` — extracts image ID from first token, then delegates to section parser for context.
+| Path | Handler | Auth |
+|---|---|---|
+| `/media/{preset}/{uuid}.{ext}` | `DerivativeController::serve` | ACL-filtered |
+| `/media/{preset}/{uuid}` | `DerivativeController::serve_negotiated` | ACL-filtered; picks format from `Accept` header |
+| `/media/custom/{uuid}?w=&h=&crop=&s=&exp=` | `DerivativeController::serve_custom` | Requires valid HMAC signature |
+| `/media/originals/{uuid}/{filename}` | `OriginalsController::download` | ACL + `Content-Disposition: attachment` |
 
-| URL Pattern | Parameters |
+Caddy routes `/media/*` to the derivative worker pool (§2); no Caddyfile match for `/i/*`.
+
+### F.4 API (versioned REST)
+
+| Path prefix | Scope |
 |---|---|
-| `/picture/{image_id}` | `image_id` only |
-| `/picture/{image_id}-{filename}` | `image_id` + `image_file` |
-| `/picture/{filename}` | Resolved by filename lookup |
-| `/picture/{image_id}/category/{cat_id}` | Image within album context |
-| `/picture/{image_id}/tags/{tag_id}` | Image within tag context |
-| `/picture/{image_id}/favorites` | Image within favorites context |
-| `/picture/{image_id}/search/{search_id}` | Image within search context |
+| `/api/v1/*` | Full REST surface — see Appendix B |
+| `/api/v1/docs` | Scalar/Swagger UI |
+| `/api/v1/openapi.json` | Spec served from generated source |
 
-### F.3 Standalone Endpoints
+### F.5 Admin (SSR, under `/admin/*`)
 
-| File | URL | Purpose | Has Template |
-|---|---|---|---|
-| `search.php` | `/search.php` | Search form / quick search | Yes |
-| `tags.php` | `/tags.php` | Tag cloud / letter listing | Yes |
-| `about.php` | `/about.php` | About page | Yes |
-| `identification.php` | `/identification.php` | Login | Yes |
-| `register.php` | `/register.php` | Registration | Yes |
-| `password.php` | `/password.php` | Password reset | Yes |
-| `profile.php` | `/profile.php` | User profile | Yes |
-| `comments.php` | `/comments.php` | Public comments | Yes |
-| `notification.php` | `/notification.php` | Notification page | Yes |
-| `nbm.php` | `/nbm.php` | Mail notification subscribe | Yes |
-| `feed.php` | `/feed.php` | RSS/Atom feed | No (XML) |
-| `action.php` | `/action.php` | File download | No (stream) |
-| `random.php` | `/random.php` | Random image redirect | No (redirect) |
-| `qsearch.php` | `/qsearch.php` | Quick search redirect | No (redirect) |
-| `i.php` | `/_data/i/...` | On-demand derivative gen | No (image) |
-| `ws.php` | `/ws.php` | REST API | No (JSON/XML) |
+Single admin namespace. No `?page=X` query-param routing. Each admin page has its own path, its own handler, and its own `#[RequiresLevel(AccessLevel::Administrator)]` attribute.
 
-### F.4 Admin URL Patterns
+| Path | Purpose |
+|---|---|
+| `/admin` | Dashboard |
+| `/admin/albums` | Album tree manager |
+| `/admin/albums/new` | Create album |
+| `/admin/albums/{uuid}` | Edit album (properties tab) |
+| `/admin/albums/{uuid}/photos` | Sort photos within |
+| `/admin/albums/{uuid}/permissions` | ACL editor |
+| `/admin/albums/{uuid}/notify` | Send notification to subscribers |
+| `/admin/photos` | Batch manager (global mode) |
+| `/admin/photos/unit/{uuid}` | Batch manager (unit mode) |
+| `/admin/photos/upload` | Upload UI |
+| `/admin/photos/{uuid}` | Edit photo |
+| `/admin/photos/{uuid}/coi` | Center-of-interest picker |
+| `/admin/photos/{uuid}/formats` | Alternative formats |
+| `/admin/users` | User list |
+| `/admin/users/{uuid}` | Edit user |
+| `/admin/users/{uuid}/permissions` | ACL (reverse view) |
+| `/admin/groups` | Group list |
+| `/admin/groups/{uuid}` | Edit group |
+| `/admin/tags` | Tag manager |
+| `/admin/comments` | Moderation queue |
+| `/admin/history` | Activity log |
+| `/admin/stats` | Usage graphs |
+| `/admin/ratings` | Rating overview |
+| `/admin/sync` | Filesystem sync (form + SSE progress) |
+| `/admin/maintenance` | Cache clear, integrity checks, etc. |
+| `/admin/maintenance/env` | Read-only environment info |
+| `/admin/queues` | Queue monitor + DLQ |
+| `/admin/audit` | Audit log viewer |
+| `/admin/settings/general` | General settings |
+| `/admin/settings/storage` | Storage config |
+| `/admin/settings/uploads` | Upload config |
+| `/admin/settings/derivatives` | Derivative presets |
+| `/admin/settings/mail` | SMTP + templates |
+| `/admin/settings/security` | Security config |
+| `/admin/settings/search` | Search engine selection |
+| `/admin/plugins` | Installed plugins |
+| `/admin/plugins/marketplace` | Browse Lua plugins |
+| `/admin/plugins/{name}` | Plugin detail + settings |
+| `/admin/themes` | Theme switcher |
+| `/admin/webhooks` | Webhook subscriptions |
 
-**Router:** `admin.php` — single GET parameter `page=` maps to PHP file in `admin/`.
+### F.6 Public utility endpoints
 
-**Clean URL aliases:**
-- `admin.php?page=plugin-{name}-{tab}` → plugin admin page
-- `admin.php?page=album-{id}-{tab}` → album admin (tabs: properties/sort/permissions/notification)
-- `admin.php?page=photo-{id}-{tab}` → photo admin (tabs: properties/coi/formats)
+| Path | Purpose |
+|---|---|
+| `/healthz` | Liveness probe (200 + `ok`) |
+| `/readyz` | Readiness probe (200 only if DB + storage reachable) |
+| `/version` | JSON `{version, git_sha, build_date}` |
+| `/metrics` | Prometheus format (IP-allowlisted) |
+| `/feed.atom` | Atom feed |
+| `/feed.rss` | RSS feed |
+| `/sitemap.xml` | Sitemap (public content only) |
+| `/.well-known/security.txt` | Security contact |
+| `/robots.txt` | Generated from settings |
 
-**All admin pages (50+):**
+### F.7 Routing implementation notes
 
-`intro` (dashboard), `album`, `album_notification`, `albums`, `batch_manager`, `batch_manager_global`, `batch_manager_unit`, `cat_list`, `cat_modify`, `cat_options`, `cat_perm`, `cat_search`, `comments`, `configuration` (sub-sections: main/sizes/watermark/default/comments), `element_set_ranks`, `extend_for_templates`, `group_list`, `group_perm`, `help`, `history`, `languages_installed`, `languages_new`, `maintenance_actions`, `maintenance_env`, `menubar`, `notification_by_mail`, `permalinks`, `photo`, `photos_add_direct`, `photos_add_ftp`, `photos_add_applications`, `picture_coi`, `picture_formats`, `picture_modify`, `plugin`, `plugins_installed`, `plugins_new`, `rating`, `rating_user`, `site_manager`, `site_update`, `stats`, `tags`, `theme`, `themes_installed`, `themes_new`, `updates_ext`, `updates_pwg`, `user_activity`, `user_list`, `user_perm`
-
-**Common query parameters:** `&section=` (config sub-pages), `&tab=` (tabbed pages), `&cat_id=` (album pages), `&image_id=` (photo pages), `&filter=prefilter-{name}` (batch manager)
-
-### F.5 Notes for Rust Router
-
-1. **No `.htaccess` exists** — all routing is PHP-internal via PATH_INFO splitting
-2. **URL dispatch is two-phase:** `parse_section_url()` → section, then `parse_well_known_params_url()` → modifiers
-3. **`picture.php` has its own parser** for the image identifier, then delegates context to the section parser
-4. **Admin routing is simpler:** `page=` GET param maps 1:1 to a PHP file
-5. **`ws.php`** has its own method dispatch system via `MethodRegistry` (separate from URL router)
+1. **Attribute-driven routes.** Each handler declares its path with `#[Route("GET", "/albums/{slug}")]`; a build-time scanner compiles the route table for FastRoute-style prefix trie matching. Config file `config/routes.php`-equivalent does not exist — routes live with handlers.
+2. **No path-info parsing.** Axum's `Path<T>` extractor deserializes parameters from the matched route. No string splitting, no two-phase dispatch.
+3. **No URL-style options.** Piwigo's `config.url.category_style = 'id' | 'id-name' | 'permalink'` configurability is removed — one canonical URL shape per resource.
+4. **Permalink history.** When an album or tag is renamed, the old slug is stored in a `slug_redirects` table (not documented as a separate schema entry above — lightweight; fits in `settings` or a dedicated small table if it grows). Old slug → 301 to new.
+5. **Localization in URLs.** Paths stay English. Locale selection is via `Accept-Language`, session preference, or `?lang=` override — never in the path.
+6. **No `.php` anywhere.** If a user bookmarks `/picture.php?...` on an old Piwigo and lands here, they see a 404. The server does not pretend.

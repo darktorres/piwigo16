@@ -91,14 +91,22 @@ final readonly class PermalinkRepository implements OldPermalinkLookupInterface
      */
     public function findPermalinkByCategoryId(int $catId): ?string
     {
-        $entity = $this->em->find(CategoryEntity::class, $catId);
+        $catIdVo = CategoryId::tryFrom($catId);
+        if ($catIdVo === null) {
+            return null;
+        }
 
-        return $entity !== null && $entity->permalink !== '' ? $entity->permalink : null;
+        return $this->em->find(CategoryEntity::class, $catIdVo)?->permalink?->value;
     }
 
     public function clearCategoryPermalink(int $catId): void
     {
-        $entity = $this->em->find(CategoryEntity::class, $catId);
+        $catIdVo = CategoryId::tryFrom($catId);
+        if ($catIdVo === null) {
+            return;
+        }
+
+        $entity = $this->em->find(CategoryEntity::class, $catIdVo);
         if ($entity === null) {
             return;
         }
@@ -107,14 +115,27 @@ final readonly class PermalinkRepository implements OldPermalinkLookupInterface
         $this->em->flush();
     }
 
+    /**
+     * `$permalink` wraps via `Permalink::from()` -- this method's only
+     * real caller ({@see \Piwigo\Permalink\PermalinkService::
+     * setCatPermalink()}) reaches it only after its own manual charset/
+     * numeric validation (mirrored by Permalink's own constraints) has
+     * already passed for this exact value, same reasoning as this
+     * class's other `from()`-using methods below.
+     */
     public function setCategoryPermalink(int $catId, string $permalink): void
     {
-        $entity = $this->em->find(CategoryEntity::class, $catId);
+        $catIdVo = CategoryId::tryFrom($catId);
+        if ($catIdVo === null) {
+            return;
+        }
+
+        $entity = $this->em->find(CategoryEntity::class, $catIdVo);
         if ($entity === null) {
             return;
         }
 
-        $entity->permalink = $permalink;
+        $entity->permalink = Permalink::from($permalink);
         $this->em->flush();
     }
 
@@ -260,13 +281,13 @@ final readonly class PermalinkRepository implements OldPermalinkLookupInterface
      * {@see OldPermalinkLookupInterface} implementation. Category is
      * L2aCoreDomain, this file's own OldPermalinkEntity is
      * L2bExtendedDomain, so a direct dependency the other way would
-     * violate the layering ruleset. `op.catId` maps through the
-     * `category_id` custom Doctrine Type, so getArrayResult() hydrates it
-     * as a CategoryId value object (Gotcha #1 shape) -- read via
-     * instanceof, unlike the plain-int `c.id` from the categories side.
-     * `c.permalink` (CategoryEntity's own still-untyped column) stays a
-     * plain string in the same merged result set, so both shapes are
-     * unwrapped before the merge.
+     * violate the layering ruleset. `op.catId`/`c.id`/`c.permalink` all
+     * map through their own custom Doctrine Types, so `getArrayResult()`
+     * hydrates each as a real VO (Gotcha #1 shape) -- read via
+     * `instanceof` below, already written defensively enough (both
+     * branches of the merged `$oldRows`/`$categoryRows` result set) that
+     * `CategoryEntity::$id`/`$permalink` becoming Type-mapped needed no
+     * further change here.
      */
     #[Override]
     public function findPermalinkMatches(array $permalinks): array

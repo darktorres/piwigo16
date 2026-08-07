@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\CategoryStatus;
+use Piwigo\Common\ValueObject\Permalink;
 
 /**
- * @return array{name: string, idUppercat: ?int, comment: ?string, dir: ?string, rank: ?int, status: CategoryStatus, siteId: ?int, visible: bool, representativePictureId: ?int, uppercats: string, commentable: bool, globalRank: ?string, imageOrder: ?string, permalink: ?string, lastmodified: string}
+ * @return array{name: string, idUppercat: ?int, comment: ?string, dir: ?string, rank: ?int, status: CategoryStatus, siteId: ?int, visible: bool, representativePictureId: ?int, uppercats: string, commentable: bool, globalRank: ?string, imageOrder: ?string, permalink: ?Permalink, lastmodified: string}
  */
 function baseCategoryArgs(): array
 {
@@ -24,7 +25,7 @@ function baseCategoryArgs(): array
         'commentable' => false,
         'globalRank' => '000012000027',
         'imageOrder' => 'date_creation DESC',
-        'permalink' => 'summer-2026',
+        'permalink' => Permalink::from('summer-2026'),
         'lastmodified' => '2026-07-26 14:30:00',
     ];
 }
@@ -46,7 +47,7 @@ test('constructs with distinct values for every property', function (): void {
         ->and($category->commentable)->toBeFalse()
         ->and($category->globalRank)->toBe('000012000027')
         ->and($category->imageOrder)->toBe('date_creation DESC')
-        ->and($category->permalink)->toBe('summer-2026')
+        ->and($category->permalink)->toEqual(Permalink::from('summer-2026'))
         ->and($category->lastmodified)->toBe('2026-07-26 14:30:00');
 });
 

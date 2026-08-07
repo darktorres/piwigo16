@@ -14,6 +14,7 @@ use Piwigo\Category\Projection\Category;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\BatchWriter;
@@ -83,7 +84,7 @@ final class CategoryRepository
         private readonly CurrentConfig $currentConfig,
     ) {}
 
-    private function find(int $id): ?CategoryEntity
+    private function find(CategoryId $id): ?CategoryEntity
     {
         return $this->em->find(CategoryEntity::class, $id);
     }
@@ -111,7 +112,12 @@ final class CategoryRepository
 
     public function findById(int $id): ?Category
     {
-        $entity = $this->find($id);
+        $catId = CategoryId::tryFrom($id);
+        if ($catId === null) {
+            return null;
+        }
+
+        $entity = $this->find($catId);
 
         return $entity === null ? null : Category::fromEntity($entity);
     }
@@ -121,9 +127,9 @@ final class CategoryRepository
      * @return array<int, array{id: int, name: string, permalink: ?string}> keyed by id
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static WHERE,
-     * no join DQL can't express; id/name/permalink are plain types (no
-     * custom Doctrine Type on CategoryEntity), so array hydration returns
-     * ordinary scalars.
+     * no join DQL can't express. `c.id`/`c.permalink` are now custom-Typed
+     * (`category_id`/`permalink`), so `getArrayResult()` (Gotcha #1)
+     * returns real VO instances for them -- unwrapped below.
      */
     public function findNamesByIds(array $ids): array
     {
@@ -140,14 +146,14 @@ final class CategoryRepository
 
         $byId = [];
         foreach ($rows as $row) {
-            if (! is_array($row) || ! is_numeric($row['id'] ?? null)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
-            $byId[(int) $row['id']] = [
-                'id' => (int) $row['id'],
+            $byId[$row['id']->value] = [
+                'id' => $row['id']->value,
                 'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
-                'permalink' => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
+                'permalink' => ($row['permalink'] ?? null) instanceof Permalink ? $row['permalink']->value : null,
             ];
         }
 
@@ -161,7 +167,8 @@ final class CategoryRepository
      * @return array<int, array{id: int, name: string, permalink: ?string}> keyed by id
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, unconditional
-     * select of plain-typed columns.
+     * select. `c.id`/`c.permalink` are custom-Typed -- see this class's own
+     * Gotcha #1 note above.
      */
     public function findAllIdNamePermalink(): array
     {
@@ -172,14 +179,14 @@ final class CategoryRepository
 
         $byId = [];
         foreach ($rows as $row) {
-            if (! is_array($row) || ! is_numeric($row['id'] ?? null)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
-            $byId[(int) $row['id']] = [
-                'id' => (int) $row['id'],
+            $byId[$row['id']->value] = [
+                'id' => $row['id']->value,
                 'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
-                'permalink' => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
+                'permalink' => ($row['permalink'] ?? null) instanceof Permalink ? $row['permalink']->value : null,
             ];
         }
 
@@ -196,7 +203,8 @@ final class CategoryRepository
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, id is the PK
      * so at most one row can match (no NonUniqueResultException risk, no
-     * setMaxResults() needed); id/name/permalink are plain types.
+     * setMaxResults() needed). `c.id`/`c.permalink` are custom-Typed -- see
+     * this class's own Gotcha #1 note above.
      */
     public function findIdNamePermalinkById(int $id): ?array
     {
@@ -215,9 +223,9 @@ final class CategoryRepository
         $row = $rows[0];
 
         return [
-            'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+            'id' => $row['id'] instanceof CategoryId ? $row['id']->value : 0,
             'name' => is_string($row['name']) ? $row['name'] : '',
-            'permalink' => is_string($row['permalink']) ? $row['permalink'] : null,
+            'permalink' => $row['permalink'] instanceof Permalink ? $row['permalink']->value : null,
         ];
     }
 
@@ -630,11 +638,11 @@ final class CategoryRepository
 
         $byId = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
-            $id = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
+            $id = $row['id']->value;
             $byId[$id] = [
                 'id' => $id,
                 'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
@@ -653,8 +661,9 @@ final class CategoryRepository
      * @param  list<int>  $ids
      * @return list<array{id: int, name: string, permalink: ?string, id_uppercat: ?int, uppercats: string, global_rank: ?string}>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static WHERE,
-     * all 6 columns plain-typed.
+     * Item 14 DQL audit: converted to real DQL -- single-table, static WHERE.
+     * `c.id`/`c.permalink` are custom-Typed -- see this class's own Gotcha
+     * #1 note above.
      */
     public function findCategoriesByIds(array $ids): array
     {
@@ -671,14 +680,14 @@ final class CategoryRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
             $result[] = [
-                'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+                'id' => $row['id']->value,
                 'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
-                'permalink' => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
+                'permalink' => ($row['permalink'] ?? null) instanceof Permalink ? $row['permalink']->value : null,
                 'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
                 'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
                 'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
@@ -1246,12 +1255,12 @@ final class CategoryRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
             $result[] = [
-                'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+                'id' => $row['id']->value,
                 'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
                 'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
                 'rank' => is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
@@ -1332,7 +1341,7 @@ final class CategoryRepository
      */
     public function updateImageOrder(CategoryId $catId, ?string $imageOrder): void
     {
-        $entity = $this->find($catId->value);
+        $entity = $this->find($catId);
         if ($entity === null) {
             return;
         }
@@ -1366,7 +1375,11 @@ final class CategoryRepository
      * @return array<int, array{id: int, status: string}> keyed by id
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, both columns plain-typed.
+     * WHERE. `c.id` is now custom-Typed (`category_id`) -- `$row['id']`
+     * used directly as an array key here (a fatal TypeError once it
+     * became a real CategoryId object, not just a silently-wrong scalar
+     * like this class's other Gotcha #1 sites) is the reason this method
+     * was fixed first.
      */
     public function findStatusByIds(array $ids): array
     {
@@ -1383,9 +1396,12 @@ final class CategoryRepository
 
         $byId = [];
         foreach ($rows as $row) {
-            /** @var array{id: int, status: CategoryStatus} $row */
-            $byId[$row['id']] = [
-                'id' => $row['id'],
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId || ! ($row['status'] ?? null) instanceof CategoryStatus) {
+                continue;
+            }
+
+            $byId[$row['id']->value] = [
+                'id' => $row['id']->value,
                 'status' => $row['status']->value,
             ];
         }
@@ -1494,8 +1510,9 @@ final class CategoryRepository
      * @return array<int, string> keyed by id
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE; id/uppercats are both plain-typed. `fetchAllKeyValue()` has no
-     * direct DQL equivalent, so the id=>uppercats map is built from
+     * WHERE; `c.id` is custom-Typed (`category_id`) -- see this class's
+     * own Gotcha #1 note above. `fetchAllKeyValue()` has no direct DQL
+     * equivalent, so the id=>uppercats map is built from
      * `getArrayResult()`'s own rows instead.
      */
     public function findUppercatsById(array $ids): array
@@ -1513,15 +1530,12 @@ final class CategoryRepository
 
         $byId = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
-            $id = $row['id'] ?? null;
             $uppercats = $row['uppercats'] ?? null;
-            if (is_numeric($id)) {
-                $byId[(int) $id] = is_scalar($uppercats) ? (string) $uppercats : '';
-            }
+            $byId[$row['id']->value] = is_scalar($uppercats) ? (string) $uppercats : '';
         }
 
         return $byId;
@@ -1653,7 +1667,8 @@ final class CategoryRepository
      *   fetchAllKeyValue()'s own generic type doesn't track that statically)
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE; id/dir are both plain-typed. Builds the id=>dir map from
+     * WHERE; `c.id` is custom-Typed (`category_id`) -- see this class's
+     * own Gotcha #1 note above. Builds the id=>dir map from
      * `getArrayResult()`'s own rows (no direct `fetchAllKeyValue()`
      * equivalent).
      */
@@ -1667,14 +1682,13 @@ final class CategoryRepository
 
         $byId = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
-            $id = $row['id'] ?? null;
             $dir = $row['dir'] ?? null;
-            if (is_numeric($id) && is_string($dir)) {
-                $byId[(int) $id] = $dir;
+            if (is_string($dir)) {
+                $byId[$row['id']->value] = $dir;
             }
         }
 
@@ -1686,7 +1700,8 @@ final class CategoryRepository
      * @return list<array{id: int, uppercats: string, site_id: ?int}>
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, all 3 columns plain-typed.
+     * WHERE. `c.id` is custom-Typed (`category_id`) -- see this class's
+     * own Gotcha #1 note above.
      */
     public function findCategoriesForFulldirs(array $ids): array
     {
@@ -1704,12 +1719,12 @@ final class CategoryRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
             $result[] = [
-                'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+                'id' => $row['id']->value,
                 'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
                 'site_id' => is_numeric($row['site_id'] ?? null) ? (int) $row['site_id'] : null,
             ];
@@ -1813,12 +1828,12 @@ final class CategoryRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
             $result[] = [
-                'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+                'id' => $row['id']->value,
                 'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
                 'status' => ($row['status'] ?? null) instanceof CategoryStatus ? $row['status']->value : '',
                 'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
@@ -1836,7 +1851,9 @@ final class CategoryRepository
      */
     public function findCategoryUppercatsById(int $id): ?string
     {
-        return $this->find($id)?->uppercats;
+        $catId = CategoryId::tryFrom($id);
+
+        return $catId === null ? null : $this->find($catId)?->uppercats;
     }
 
     /**
@@ -1872,7 +1889,9 @@ final class CategoryRepository
      */
     public function findCategoryStatus(int $id): ?string
     {
-        return $this->find($id)?->status
+        $catId = CategoryId::tryFrom($id);
+
+        return $catId === null ? null : $this->find($catId)?->status
             ->value;
     }
 
@@ -1927,12 +1946,12 @@ final class CategoryRepository
         }
 
         $row = $rows[0];
-        if (! is_array($row)) {
+        if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
             return null;
         }
 
         return [
-            'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+            'id' => $row['id']->value,
             'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
             'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : '',
             'visible' => (bool) ($row['visible'] ?? false) ? 1 : 0,
@@ -1999,6 +2018,11 @@ final class CategoryRepository
     /**
      * @param  array<mixed>  $rows
      * @return list<array<string, mixed>>
+     *
+     * `c.id` is custom-Typed (`category_id`) -- see this class's own
+     * Gotcha #1 note above. Unwrapped to a plain int here so every one
+     * of this helper's 8 real callers keeps returning the same
+     * `id: int`-shaped row it always did.
      */
     private static function narrowIdNameUppercatsRankRows(array $rows): array
     {
@@ -2008,8 +2032,9 @@ final class CategoryRepository
                 continue;
             }
 
+            $id = $row['id'] ?? null;
             $result[] = [
-                'id' => $row['id'] ?? null,
+                'id' => $id instanceof CategoryId ? $id->value : $id,
                 'name' => $row['name'] ?? null,
                 'uppercats' => $row['uppercats'] ?? null,
                 'global_rank' => $row['global_rank'] ?? null,
@@ -2242,9 +2267,11 @@ final class CategoryRepository
                 continue;
             }
 
+            $id = $row['id'] ?? null;
+            $permalink = $row['permalink'] ?? null;
             $result[] = [
-                'id' => $row['id'] ?? null,
-                'permalink' => $row['permalink'] ?? null,
+                'id' => $id instanceof CategoryId ? $id->value : $id,
+                'permalink' => $permalink instanceof Permalink ? $permalink->value : $permalink,
                 'name' => $row['name'] ?? null,
                 'uppercats' => $row['uppercats'] ?? null,
                 'global_rank' => $row['global_rank'] ?? null,
@@ -2774,11 +2801,10 @@ final class CategoryRepository
      * Item 14 DQL audit: converted to real DQL -- `user_group`/
      * `group_access` are both mapped ({@see UserGroupEntity}/
      * {@see GroupAccessEntity}), chained via two explicit `Join::WITH`
-     * conditions. Selects `c.id AS cat_id` (plain int off CategoryEntity)
-     * rather than `ga.catId` (a custom-typed CategoryId VO) -- the real
-     * caller (Admin\UserPermPageRenderer) narrows `cat_id` with
-     * `is_int()/is_string()`, which a VO instance would silently fail,
-     * gotcha #1 from the Item 14 audit's own pilot.
+     * conditions. `c.id AS cat_id` is now custom-Typed (`category_id`) --
+     * see this class's own Gotcha #1 note above; unwrapped below to keep
+     * this method's own real caller's `is_int()/is_string()` narrowing
+     * working unchanged.
      */
     public function findCategoriesAuthorizedViaGroupsForUser(int $userId): array
     {
@@ -2800,8 +2826,9 @@ final class CategoryRepository
                 continue;
             }
 
+            $catId = $row['cat_id'] ?? null;
             $result[] = [
-                'cat_id' => $row['cat_id'] ?? null,
+                'cat_id' => $catId instanceof CategoryId ? $catId->value : $catId,
                 'uppercats' => $row['uppercats'] ?? null,
                 'global_rank' => $row['global_rank'] ?? null,
             ];
@@ -2905,11 +2932,13 @@ final class CategoryRepository
                 continue;
             }
 
+            $id = $row['id'] ?? null;
+            $permalink = $row['permalink'] ?? null;
             $status = $row['status'] ?? null;
             $result[] = [
-                'id' => $row['id'] ?? null,
+                'id' => $id instanceof CategoryId ? $id->value : $id,
                 'name' => $row['name'] ?? null,
-                'permalink' => $row['permalink'] ?? null,
+                'permalink' => $permalink instanceof Permalink ? $permalink->value : $permalink,
                 'dir' => $row['dir'] ?? null,
                 'rank' => $row['rank'] ?? null,
                 'status' => $status instanceof CategoryStatus ? $status->value : $status,
@@ -2978,14 +3007,11 @@ final class CategoryRepository
 
         $byId = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
-            $id = $row['id'] ?? null;
-            if (is_int($id) || is_string($id)) {
-                $byId[$id] = $row['uppercats'] ?? null;
-            }
+            $byId[$row['id']->value] = $row['uppercats'] ?? null;
         }
 
         return $byId;
@@ -3046,8 +3072,9 @@ final class CategoryRepository
                 continue;
             }
 
+            $id = $row['id'] ?? null;
             $result[] = [
-                'id' => $row['id'] ?? null,
+                'id' => $id instanceof CategoryId ? $id->value : $id,
                 'name' => $row['name'] ?? null,
                 'id_uppercat' => $row['id_uppercat'] ?? null,
             ];
@@ -3078,9 +3105,10 @@ final class CategoryRepository
                 continue;
             }
 
+            $id = $row['id'] ?? null;
             $status = $row['status'] ?? null;
             $result[] = [
-                'id' => $row['id'] ?? null,
+                'id' => $id instanceof CategoryId ? $id->value : $id,
                 'name' => $row['name'] ?? null,
                 'rank' => $row['rank'] ?? null,
                 'status' => $status instanceof CategoryStatus ? $status->value : $status,
@@ -3237,14 +3265,11 @@ final class CategoryRepository
 
         $byId = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
-            $id = $row['id'] ?? null;
-            if (is_int($id) || is_string($id)) {
-                $byId[$id] = $row['dir'] ?? null;
-            }
+            $byId[$row['id']->value] = $row['dir'] ?? null;
         }
 
         return $byId;
@@ -3287,9 +3312,11 @@ final class CategoryRepository
                 continue;
             }
 
+            $id = $row['id'] ?? null;
+            $permalink = $row['permalink'] ?? null;
             $result[] = [
-                'id' => $row['id'] ?? null,
-                'permalink' => $row['permalink'] ?? null,
+                'id' => $id instanceof CategoryId ? $id->value : $id,
+                'permalink' => $permalink instanceof Permalink ? $permalink->value : $permalink,
                 'uppercats' => $row['uppercats'] ?? null,
                 'global_rank' => $row['global_rank'] ?? null,
             ];
@@ -3418,12 +3445,12 @@ final class CategoryRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
             $result[] = [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                'id' => $row['id']->value,
                 'image_order' => is_string($row['imageOrder'] ?? null) ? $row['imageOrder'] : null,
             ];
         }
@@ -3703,12 +3730,12 @@ final class CategoryRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
             $result[] = [
-                'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+                'id' => $row['id']->value,
                 'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
                 'rank' => is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
             ];
@@ -3810,12 +3837,12 @@ final class CategoryRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
             $result[] = [
-                'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+                'id' => $row['id']->value,
                 'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
                 'dir' => is_string($row['dir'] ?? null) ? $row['dir'] : null,
                 'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
@@ -3893,9 +3920,10 @@ final class CategoryRepository
                 continue;
             }
 
+            $id = $row['id'] ?? null;
             $status = $row['status'] ?? null;
             $result[] = [
-                'id' => $row['id'] ?? null,
+                'id' => $id instanceof CategoryId ? $id->value : $id,
                 'uppercats' => $row['uppercats'] ?? null,
                 'global_rank' => $row['global_rank'] ?? null,
                 'status' => $status instanceof CategoryStatus ? $status->value : $status,

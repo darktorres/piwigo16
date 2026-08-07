@@ -27,6 +27,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Category\CategoryEntity;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryStatus;
@@ -154,10 +155,10 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
         $this->em->persist($category);
         $this->em->flush();
 
-        self::assertIsInt($category->id);
-        $this->insertedCategoryIds[] = $category->id;
+        self::assertInstanceOf(CategoryId::class, $category->id);
+        $this->insertedCategoryIds[] = $category->id->value;
 
-        return $category->id;
+        return $category->id->value;
     }
 
     /**

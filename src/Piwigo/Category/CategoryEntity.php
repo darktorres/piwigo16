@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\Permalink;
 
 /**
  * Maps the `categories` table (`piwigo_categories` once
@@ -19,7 +21,12 @@ use Doctrine\ORM\Mapping as ORM;
  * `c.status` via `getArrayResult()`/`getSingleColumnResult()` must unwrap
  * `->value` right after fetch to keep a plain-string return contract.
  * WHERE/SET parameter binding (`setParameter('status', 'private')`) is
- * unaffected either way.
+ * unaffected either way. `id`/`permalink` are custom-Typed the same way
+ * (`category_id`/`permalink`) -- `getArrayResult()` (Gotcha #1) applies
+ * both during hydration, so every `CategoryRepository` method selecting
+ * `c.id`/`c.permalink` that way must unwrap via `instanceof`;
+ * `getSingleColumnResult()` (Gotcha #4, `HYDRATE_SCALAR_COLUMN`) never
+ * does, regardless of column.
  *
  * Only a handful of CategoryRepository's 65 methods go through this
  * entity -- the large majority are bulk id-list operations against a
@@ -50,8 +57,8 @@ final class CategoryEntity
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
-    public ?int $id = null;
+    #[ORM\Column(type: 'category_id')]
+    public ?CategoryId $id = null;
 
     public function __construct(
         #[ORM\Column(type: 'string', length: 255)]
@@ -80,8 +87,8 @@ final class CategoryEntity
         public ?string $globalRank,
         #[ORM\Column(name: 'image_order', type: 'string', length: 128, nullable: true)]
         public ?string $imageOrder,
-        #[ORM\Column(type: 'string', length: 64, nullable: true)]
-        public ?string $permalink,
+        #[ORM\Column(type: 'permalink', length: 64, nullable: true)]
+        public ?Permalink $permalink,
         #[ORM\Column(type: 'string', length: 19)]
         public string $lastmodified,
     ) {}

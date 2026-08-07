@@ -6,6 +6,8 @@ namespace Piwigo\Category\Projection;
 
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\CategoryStatus;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\Permalink;
 
 /**
  * Typed row shape for `piwigo_categories` (P17-23 Stage 1b, Category domain
@@ -53,7 +55,7 @@ final readonly class Category
     public static function fromEntity(CategoryEntity $entity): self
     {
         return new self(
-            id: $entity->id ?? 0,
+            id: $entity->id->value ?? 0,
             name: $entity->name,
             idUppercat: $entity->idUppercat,
             comment: $entity->comment,
@@ -67,7 +69,7 @@ final readonly class Category
             commentable: $entity->commentable,
             globalRank: $entity->globalRank,
             imageOrder: $entity->imageOrder,
-            permalink: $entity->permalink,
+            permalink: $entity->permalink?->value,
             lastmodified: $entity->lastmodified,
         );
     }
@@ -77,8 +79,11 @@ final readonly class Category
      */
     public static function fromRow(array $row): self
     {
+        $id = $row['id'] ?? null;
+        $permalink = $row['permalink'] ?? null;
+
         return new self(
-            id: is_numeric($row['id']) ? (int) $row['id'] : 0,
+            id: $id instanceof CategoryId ? $id->value : (is_numeric($id) ? (int) $id : 0),
             name: is_string($row['name'] ?? null) ? $row['name'] : '',
             idUppercat: is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
             comment: is_string($row['comment'] ?? null) ? $row['comment'] : null,
@@ -92,7 +97,7 @@ final readonly class Category
             commentable: is_numeric($row['commentable'] ?? null) ? (bool) (int) $row['commentable'] : true,
             globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
             imageOrder: is_string($row['image_order'] ?? null) ? $row['image_order'] : null,
-            permalink: is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
+            permalink: $permalink instanceof Permalink ? $permalink->value : (is_string($permalink) ? $permalink : null),
             lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : '',
         );
     }

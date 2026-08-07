@@ -22,21 +22,6 @@ use Piwigo\Core\TimingHelper;
 use Piwigo\Event\Lifecycle\LoadImageLibrary;
 use Piwigo\PluginConfig\EventDispatcher;
 
-/**
- * Unknown methods are forwarded to $this->image (an ImageInterface
- * implementor) via __call(). These @method tags mirror that interface.
- *
- * @method int|float get_width()
- * @method int|float get_height()
- * @method bool set_compression_quality(int $quality)
- * @method bool crop(int|float $width, int|float $height, int|float $x, int|float $y)
- * @method bool strip()
- * @method bool rotate(int|float $rotation)
- * @method bool resize(int|float $width, int|float $height)
- * @method bool sharpen(int|float $amount)
- * @method bool compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity)
- * @method bool write(string $destination_filepath)
- */
 final class PwgImage
 {
     /**
@@ -90,20 +75,70 @@ final class PwgImage
         };
     }
 
-    // Unknow methods will be redirected to image object
-    /**
-     * PHP's own __call() magic-method contract requires this signature
-     * (arbitrary $arguments forwarded to an arbitrary backend method,
-     * arbitrary return) -- genuinely arbitrary by design, same as
-     * EventDispatcher's own addEventHandler()/triggerChange().
-     *
-     * @param array<int, mixed> $arguments
-     */
-    public function __call(string $method, array $arguments): mixed
+    // Delegate methods for ImageInterface -- previously forwarded
+    // dynamically via __call(), which PHPStan can't type-check (an
+    // arbitrary $method string against an arbitrary backend). Explicit
+    // one-liners here give real signature checking for the exact same
+    // public surface real callers already use (e.g. tests/Unit/Admin/
+    // Image/PwgImageTest.php's `$img->get_width()`).
+    public function get_width(): int|float
     {
-        $image = $this->getImage();
-        // @phpstan-ignore method.dynamicName
-        return $image->{$method}(...$arguments);
+        return $this->getImage()
+            ->get_width();
+    }
+
+    public function get_height(): int|float
+    {
+        return $this->getImage()
+            ->get_height();
+    }
+
+    public function set_compression_quality(int $quality): bool
+    {
+        return $this->getImage()
+            ->set_compression_quality($quality);
+    }
+
+    public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
+    {
+        return $this->getImage()
+            ->crop($width, $height, $x, $y);
+    }
+
+    public function strip(): bool
+    {
+        return $this->getImage()
+            ->strip();
+    }
+
+    public function rotate(int|float $rotation): bool
+    {
+        return $this->getImage()
+            ->rotate($rotation);
+    }
+
+    public function resize(int|float $width, int|float $height): bool
+    {
+        return $this->getImage()
+            ->resize($width, $height);
+    }
+
+    public function sharpen(int|float $amount): bool
+    {
+        return $this->getImage()
+            ->sharpen($amount);
+    }
+
+    public function compose(self $overlay, int|float $x, int|float $y, int|float $opacity): bool
+    {
+        return $this->getImage()
+            ->compose($overlay, $x, $y, $opacity);
+    }
+
+    public function write(string $destination_filepath): bool
+    {
+        return $this->getImage()
+            ->write($destination_filepath);
     }
 
     /**

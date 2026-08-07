@@ -316,8 +316,8 @@ final class BatchManagerGlobalPageRenderer
                     and $move_category !== (is_numeric($bulk_manager_filter['category']) ? (int) $bulk_manager_filter['category'] : null)) {
                     $redirect = true;
                 }
-            } elseif ($action === 'dissociate') {
-                $dissociate_category = isset($post['dissociate']) && is_numeric($post['dissociate']) ? (int) $post['dissociate'] : 0;
+            } elseif ($action === 'dissociate' && isset($post['dissociate']) && is_numeric($post['dissociate'])) {
+                $dissociate_category = (int) $post['dissociate'];
                 $nb_dissociated = $imageService->dissociateImagesFromCategory($collection, $dissociate_category);
 
                 if ($nb_dissociated > 0) {

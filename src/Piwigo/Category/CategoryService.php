@@ -424,7 +424,10 @@ final readonly class CategoryService
         }
 
         $catId = $category['id'];
-        $catId = is_numeric($catId) ? (int) $catId : 0;
+        $catId = is_numeric($catId) ? (int) $catId : null;
+        if ($catId === null) {
+            return null;
+        }
         $uppercats = $category['uppercats'];
         $uppercats = is_string($uppercats) ? $uppercats : '';
 

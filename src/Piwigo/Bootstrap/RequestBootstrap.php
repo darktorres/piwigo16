@@ -529,9 +529,14 @@ final class RequestBootstrap
 
         // check if we need to notified user about api_key expiration
         $notify_api_key_expiration = $pageState->notifyApiKeyExpiration;
-        if ($notify_api_key_expiration !== null) {
-            $notify_username = Username::from(self::currentUser()->get()->username);
-            $notify_email = Email::from(self::currentUser()->get()->email);
+        // This account data, though read from CurrentUser, is exactly as
+        // much a "could be malformed/incomplete" boundary as raw input --
+        // a real fixture/legacy account can have an empty email or
+        // username -- so tryFrom() + a graceful skip, not a hard
+        // requirement.
+        $notify_username = $notify_api_key_expiration !== null ? Username::tryFrom(self::currentUser()->get()->username) : null;
+        $notify_email = $notify_api_key_expiration !== null ? Email::tryFrom(self::currentUser()->get()->email) : null;
+        if ($notify_api_key_expiration !== null && $notify_username !== null && $notify_email !== null) {
             $apiKeyRepo = new ApiKeyRepository(EntityManagerFactory::build($conn));
             $is_mail_send = new ApiKeyService(self::lang(), self::mailService(), $apiKeyRepo, self::passwordService($conn), self::urlService(), self::sessionService(), self::currentConfig())
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);

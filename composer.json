@@ -153,6 +153,9 @@
         "Fix expectScreenshot() unconditionally failing when the tolerant threshold comparison actually passes (missing return after Page.php's foreach loop)": "patches/pest-plugin-browser-5.0.0-expect-screenshot-success-path.patch",
         "Add Chromium launch flags for deterministic screenshot rendering on Linux (font hinting/LCD text/color profile) -- the plugin's own maintainers don't trust screenshot assertions on Linux/CI without this class of mitigation, see PR pestphp/pest-plugin-browser#175": "patches/pest-plugin-browser-5.0.0-deterministic-screenshot-flags.patch",
         "Fix Execution::resetAssertions() passing Assert::class instead of null as ReflectionProperty::setValue()'s first argument for a static property (PHP 8.1 deprecation)": "patches/pest-plugin-browser-5.0.0-reset-assertions-static-property.patch"
+      },
+      "pestphp/pest-plugin-mutate": {
+        "Bound the composed --filter argument length in MutationTest::start() -- a mutation covered by hundreds/thousands of tests can build a --filter regex past Linux's 128 KiB MAX_ARG_STRLEN, crashing proc_open() with ProcessStartFailedException (\"Argument list too long\") and killing the entire test:mutate run; falls back to running the full testsuite for that one mutant instead, which is always correctness-preserving": "patches/pest-plugin-mutate-5.0.1-bound-filter-argument-length.patch"
       }
     },
     "phpstan/extension-installer": {

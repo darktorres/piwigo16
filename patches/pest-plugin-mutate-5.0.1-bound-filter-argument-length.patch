@@ -1,0 +1,70 @@
+# Fixes a real bug in pestphp/pest-plugin-mutate 5.0.1's
+# MutationTest::start(): for each mutation, it collects every test that
+# covers any line in the mutated range and joins ALL of them into a
+# single `--filter="..."` argument for the re-spawned pest subprocess,
+# with no length guard anywhere in that logic.
+#
+# Confirmed live via `composer test:mutate` on this codebase
+# (`--testsuite Unit --parallel --everything --covered-only`): a
+# mutation on Kernel::reset() (Core/Kernel.php, the test-only teardown
+# that clears the Kernel's static $booted/$container state, called from
+# ~200 different test files' own afterEach()) was covered by 1246
+# distinct tests after Pest's own array_unique() dedup. The resulting
+# --filter argument measured 139,683 bytes -- past Linux's
+# MAX_ARG_STRLEN kernel constant (131,072 bytes / 128 KiB, the cap on
+# any single execve()/posix_spawn() argument) -- so proc_open() failed
+# with E2BIG, surfaced by Symfony\Component\Process as
+# ProcessStartFailedException. That exception is never caught anywhere
+# in MutationTest::start() or its caller, so it kills the entire
+# `test:mutate` run (not just the one pathological mutant) with exit
+# code 1, right after "18428 Mutations for 337 Files created" and
+# partway through actually running them.
+#
+# Confirmed via GitHub (no existing upstream issue found, and the same
+# unguarded implode('|', $filters) is unchanged as of the latest
+# release, v5.0.1) that this is a genuinely unreported, unfixed bug --
+# not something a version bump on our end would resolve.
+#
+# The fix: when the composed --filter argument would exceed a safe
+# length (100,000 bytes, comfortably under the 128 KiB kernel limit,
+# leaving margin for the rest of the argv/env), omit it entirely and
+# run the mutant against the whole configured testsuite instead of a
+# filtered subset. This is always correctness-preserving -- the mutant
+# still gets a real kill/survive verdict -- and only slower for the
+# rare pathological case of a mutation covered by hundreds/thousands of
+# tests, which any codebase with broadly-shared bootstrap/teardown code
+# (like this one's Kernel::boot()/reset() pattern) will keep hitting on
+# every future test:mutate run otherwise.
+
+--- a/src/MutationTest.php
++++ b/src/MutationTest.php
+@@ -87,13 +87,24 @@
+         // remove coverage arguments from the original arguments
+         $filteredArguments = array_filter($originalArguments, fn (string $argument): bool => ! str_starts_with($argument, '--coverage'));
+
++        $command = [...$filteredArguments, '--bail'];
++
++        // Linux caps a single argv element at 128 KiB (MAX_ARG_STRLEN) --
++        // a mutation covered by hundreds of tests can compose a --filter
++        // regex past that, crashing proc_open() with
++        // ProcessStartFailedException ("Argument list too long") and
++        // killing the entire mutation run instead of just this one
++        // mutant. Falling back to the full testsuite is always
++        // correctness-preserving, only slower for the rare pathological
++        // case of a mutation covered by hundreds/thousands of tests.
++        $filterArgument = '--filter="'.implode('|', $filters).'"';
++        if (strlen($filterArgument) < 100_000) {
++            $command[] = $filterArgument;
++        }
++
+         // TODO: filter arguments to remove unnecessary stuff (Teamcity, Coverage, etc.)
+         $process = new Process(
+-            command: [
+-                ...$filteredArguments,
+-                '--bail',
+-                '--filter="'.implode('|', $filters).'"',
+-            ],
++            command: $command,
+             env: $envs,
+             timeout: $this->calculateTimeout(),
+         );

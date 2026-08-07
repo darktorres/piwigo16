@@ -7,6 +7,7 @@ namespace Piwigo\History;
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
@@ -23,6 +24,13 @@ use Piwigo\Common\ValueObject\UserId;
  * -- `section` deliberately stays a plain `?string` instead, see
  * {@see HistoryRepository::getSectionEnumOptions()}'s own docblock for why
  * (plugin-widened at runtime, not a closed set).
+ *
+ * `ip` is `NOT NULL DEFAULT ''` at the DB level, not nullable -- `?IpAddress`
+ * here uses `ip_address_graceful` (not the strict `ip_address` Type
+ * {@see \Piwigo\Activity\ActivityEntity}/{@see \Piwigo\Audit\AuditLogEntity}
+ * use for their own genuinely-nullable columns): `''` round-trips to/from
+ * PHP `null` instead of throwing, since `REMOTE_ADDR` is legitimately
+ * unavailable on some real request paths (see `IpAddress`'s own docblock).
  */
 #[ORM\Entity(repositoryClass: HistoryRepository::class)]
 #[ORM\Table(name: 'history')]
@@ -40,8 +48,8 @@ final class HistoryEntity
         public string $time,
         #[ORM\Column(name: 'user_id', type: 'user_id')]
         public UserId $userId,
-        #[ORM\Column(name: 'IP', type: 'string', length: 39)]
-        public string $ip,
+        #[ORM\Column(name: 'IP', type: 'ip_address_graceful', length: 39)]
+        public ?IpAddress $ip,
         #[ORM\Column(type: 'string', length: 20, nullable: true)]
         public ?string $section,
         #[ORM\Column(name: 'category_id', type: 'category_id', nullable: true)]

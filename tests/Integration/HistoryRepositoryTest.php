@@ -273,6 +273,26 @@ final class HistoryRepositoryTest extends IntegrationTestCase
     }
 
     /**
+     * h.ip is now ip_address_graceful-Typed -- a raw LIKE pattern (not a
+     * full valid IpAddress) bound against it must bypass that Type's own
+     * convertToDatabaseValue() (which only accepts null|IpAddress), or
+     * this throws instead of matching.
+     */
+    public function test_search_filters_by_ip_like_pattern(): void
+    {
+        $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
+
+        try {
+            $rows = $this->repo->search(null, null, null, [], null, null, null, '127.%');
+
+            self::assertCount(1, $rows);
+            self::assertSame('127.0.0.1', $rows[0]['IP']);
+        } finally {
+            $this->clearHistory();
+        }
+    }
+
+    /**
      * SQL-modernization audit: findLastByType()/findMonthlyRows()/
      * findDailyRowsForMonths()/findAverageDailyPageViewsSince() had zero
      * direct coverage before this pass -- Admin\StatsPageRenderer is

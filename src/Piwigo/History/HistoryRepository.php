@@ -12,6 +12,7 @@ use Override;
 use Piwigo\Auth\LastVisitLookupInterface;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
 use Piwigo\Db\Tables;
@@ -619,9 +620,11 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
      * (not a loop-built Orx composite) to sidestep the phpstan-doctrine
      * static-analysis false positive on loop-built composites (Item 14
      * DQL audit gotcha #2) -- same "raw string + real bound params"
-     * convention already used everywhere else in this codebase. None of
-     * `history`'s own columns route through a custom Doctrine Type, so no
-     * value-object hydration concern here either.
+     * convention already used everywhere else in this codebase.
+     * `userId`/`categoryId`/`imageId`/`ip` all route through custom
+     * Doctrine Types, so the row mapper below unwraps each via
+     * `instanceof` (Gotcha #1 -- `getArrayResult()` DOES apply a
+     * column's Type during hydration).
      *
      * History lines matching every given filter, each filter applied only
      * when its criterion is present (matches get_history()'s own
@@ -713,7 +716,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
                 'date' => is_string($row['date'] ?? null) ? $row['date'] : null,
                 'time' => is_string($row['time'] ?? null) ? $row['time'] : '',
                 'user_id' => ($row['userId'] ?? null) instanceof UserId ? $row['userId']->value : (is_numeric($row['userId'] ?? null) ? (int) $row['userId'] : 0),
-                'IP' => is_string($row['ip'] ?? null) ? $row['ip'] : '',
+                'IP' => ($row['ip'] ?? null) instanceof IpAddress ? $row['ip']->value : '',
                 'section' => is_string($row['section'] ?? null) ? $row['section'] : null,
                 'category_id' => ($row['categoryId'] ?? null) instanceof CategoryId ? $row['categoryId']->value : (is_numeric($row['categoryId'] ?? null) ? (int) $row['categoryId'] : null),
                 'search_id' => is_numeric($row['searchId'] ?? null) ? (int) $row['searchId'] : null,
@@ -876,7 +879,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             date: $now->format('Y-m-d'),
             time: $now->format('H:i:s'),
             userId: UserId::from($data['userId']),
-            ip: $data['ip'],
+            ip: IpAddress::tryFrom($data['ip']),
             section: $data['section'],
             categoryId: $data['categoryId'] === null ? null : CategoryId::from($data['categoryId']),
             searchId: $data['searchId'],

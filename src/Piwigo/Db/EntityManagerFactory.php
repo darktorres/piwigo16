@@ -28,6 +28,7 @@ use Piwigo\Db\DqlFunction\YearFunction;
 use Piwigo\Db\Type\CategoryIdType;
 use Piwigo\Db\Type\CommentIdType;
 use Piwigo\Db\Type\EmailType;
+use Piwigo\Db\Type\GracefulIpAddressType;
 use Piwigo\Db\Type\GroupIdType;
 use Piwigo\Db\Type\ImageIdType;
 use Piwigo\Db\Type\IpAddressType;
@@ -85,6 +86,7 @@ final class EntityManagerFactory
             'user_id' => UserIdType::class,
             'category_id' => CategoryIdType::class,
             'ip_address' => IpAddressType::class,
+            'ip_address_graceful' => GracefulIpAddressType::class,
             'comment_id' => CommentIdType::class,
             'tag_id' => TagIdType::class,
             'image_id' => ImageIdType::class,

@@ -417,8 +417,8 @@ final class RateRepository extends EntityRepository
 
         return array_map(
             static fn (RateEntity $r): Rate => new Rate(
-                userId: $r->userId->value,
-                elementId: $r->elementId->value,
+                userId: $r->userId,
+                elementId: $r->elementId,
                 anonymousId: $r->anonymousId,
                 rate: $r->rate,
                 date: $r->date,
@@ -536,8 +536,8 @@ final class RateRepository extends EntityRepository
 
         return array_map(
             static fn (RateEntity $r): Rate => new Rate(
-                userId: $r->userId->value,
-                elementId: $r->elementId->value,
+                userId: $r->userId,
+                elementId: $r->elementId,
                 anonymousId: $r->anonymousId,
                 rate: $r->rate,
                 date: $r->date,

@@ -62,7 +62,7 @@ final class RatingUserPageRenderer
         $image_ids = [];
         $by_user_ratings = [];
         foreach ($rate_repository->findAllRatesOrderedByDateDesc() as $rate_row) {
-            $user_id = $rate_row->userId;
+            $user_id = $rate_row->userId->value;
             if (! isset($users_by_id[$user_id])) {
                 $users_by_id[$user_id] = [
                     'name' => '???' . $user_id,
@@ -85,7 +85,7 @@ final class RatingUserPageRenderer
                 $rating['first_date'] = $rate_row->date;
             }
 
-            $element_id = $rate_row->elementId;
+            $element_id = $rate_row->elementId->value;
             $rating['rates'][$rate_row->rate][] = [
                 'id' => $element_id,
                 'date' => $rate_row->date,

@@ -159,10 +159,10 @@ final class RatingPageRenderer
               ];
 
             foreach ($rates as $rate_row) {
-                if (isset($users[$rate_row->userId])) {
-                    $user_rate = $users[$rate_row->userId];
+                if (isset($users[$rate_row->userId->value])) {
+                    $user_rate = $users[$rate_row->userId->value];
                 } else {
-                    $user_rate = '? ' . $rate_row->userId;
+                    $user_rate = '? ' . $rate_row->userId->value;
                 }
                 if ($rate_row->anonymousId !== '') {
                     $user_rate .= '(' . $rate_row->anonymousId . ')';

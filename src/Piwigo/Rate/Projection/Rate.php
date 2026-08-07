@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Rate\Projection;
 
+use InvalidArgumentException;
+use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\UserId;
+
 /**
  * Typed row shape for `piwigo_rate` (P17-23 Stage 1b, Rate domain --
  * `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
@@ -17,12 +21,20 @@ namespace Piwigo\Rate\Projection;
  * it explicitly via `RateRepository::insertRate()`), and every real
  * consumer already expects the raw DB DATE string form, same reasoning as
  * {@see \Piwigo\Image\Projection\Image}.
+ *
+ * `userId`/`elementId` are `UserId`/`ImageId`, not `?UserId`/`?ImageId` --
+ * `piwigo_rate.user_id`/`element_id` are both `NOT NULL`, part of the
+ * table's own composite PRIMARY KEY, and each carries a real FOREIGN KEY
+ * (`fk_rate_user_id` onto `piwigo_users.id`, `fk_rate_element_id` onto
+ * `piwigo_images.id`, both `ON DELETE CASCADE`) -- a real fetched row can't
+ * carry a missing/invalid value for either, same reasoning as
+ * {@see \Piwigo\Comment\Projection\Comment}'s `id`/`imageId`.
  */
 final readonly class Rate
 {
     public function __construct(
-        public int $userId,
-        public int $elementId,
+        public UserId $userId,
+        public ImageId $elementId,
         public string $anonymousId,
         public int $rate,
         public ?string $date,
@@ -33,9 +45,21 @@ final readonly class Rate
      */
     public static function fromRow(array $row): self
     {
+        $userIdValue = $row['user_id'] ?? null;
+        $userId = $userIdValue instanceof UserId ? $userIdValue : UserId::tryFrom($userIdValue);
+        if ($userId === null) {
+            throw new InvalidArgumentException(sprintf('Expected a positive user id, got %s', get_debug_type($userIdValue)));
+        }
+
+        $elementIdValue = $row['element_id'] ?? null;
+        $elementId = $elementIdValue instanceof ImageId ? $elementIdValue : ImageId::tryFrom($elementIdValue);
+        if ($elementId === null) {
+            throw new InvalidArgumentException(sprintf('Expected a positive element id, got %s', get_debug_type($elementIdValue)));
+        }
+
         return new self(
-            userId: is_numeric($row['user_id'] ?? null) ? (int) $row['user_id'] : 0,
-            elementId: is_numeric($row['element_id'] ?? null) ? (int) $row['element_id'] : 0,
+            userId: $userId,
+            elementId: $elementId,
             anonymousId: is_string($row['anonymous_id'] ?? null) ? $row['anonymous_id'] : '',
             rate: is_numeric($row['rate'] ?? null) ? (int) $row['rate'] : 0,
             date: is_string($row['date'] ?? null) ? $row['date'] : null,
@@ -48,8 +72,8 @@ final readonly class Rate
     public function toArray(): array
     {
         return [
-            'user_id' => $this->userId,
-            'element_id' => $this->elementId,
+            'user_id' => $this->userId->value,
+            'element_id' => $this->elementId->value,
             'anonymous_id' => $this->anonymousId,
             'rate' => $this->rate,
             'date' => $this->date,

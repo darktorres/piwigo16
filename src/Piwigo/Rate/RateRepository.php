@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\SqlDate;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\Env;
@@ -126,7 +127,7 @@ final class RateRepository extends EntityRepository
             userId: $userId,
             anonymousId: $anonymousId,
             rate: $rate,
-            date: Env::now()->format('Y-m-d'),
+            date: SqlDate::from(Env::now()->format('Y-m-d')),
         ));
         $em->flush();
     }
@@ -421,7 +422,7 @@ final class RateRepository extends EntityRepository
                 elementId: $r->elementId,
                 anonymousId: $r->anonymousId,
                 rate: $r->rate,
-                date: $r->date,
+                date: $r->date?->value,
             ),
             $entities
         );
@@ -540,7 +541,7 @@ final class RateRepository extends EntityRepository
                 elementId: $r->elementId,
                 anonymousId: $r->anonymousId,
                 rate: $r->rate,
-                date: $r->date,
+                date: $r->date?->value,
             ),
             $entities
         );

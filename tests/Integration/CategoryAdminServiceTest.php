@@ -402,7 +402,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertTrue($result->success);
         self::assertNotNull($result->categoryId);
 
-        $created = $this->fetchCategory($result->categoryId);
+        $created = $this->fetchCategory($result->categoryId->value);
         self::assertNotNull($created);
         self::assertSame('Integration Test Album', $created['name']);
 

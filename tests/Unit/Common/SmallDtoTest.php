@@ -45,11 +45,11 @@ test('CreateCategoryResult::failure carries the error message with no category i
 });
 
 test('CreateCategoryResult::success carries the info message and the new category id', function (): void {
-    $result = CreateCategoryResult::success('Album created', 42);
+    $result = CreateCategoryResult::success('Album created', CategoryId::from(42));
 
     expect($result->success)->toBeTrue();
     expect($result->message)->toBe('Album created');
-    expect($result->categoryId)->toBe(42);
+    expect($result->categoryId)->toEqual(CategoryId::from(42));
 });
 
 test('OldPermalink::fromEntity copies every field straight through', function (): void {

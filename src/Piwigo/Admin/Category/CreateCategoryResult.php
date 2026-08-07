@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Category;
 
+use Piwigo\Common\ValueObject\CategoryId;
+
 /**
  * Typed replacement for create_virtual_category()'s own loosely-typed
  * return shape (array{error: string}|array{info: string, id: int}) --
@@ -15,7 +17,7 @@ final readonly class CreateCategoryResult
     private function __construct(
         public bool $success,
         public ?string $message,
-        public ?int $categoryId,
+        public ?CategoryId $categoryId,
     ) {}
 
     public static function failure(string $error): self
@@ -23,7 +25,7 @@ final readonly class CreateCategoryResult
         return new self(success: false, message: $error, categoryId: null);
     }
 
-    public static function success(string $info, int $categoryId): self
+    public static function success(string $info, CategoryId $categoryId): self
     {
         return new self(success: true, message: $info, categoryId: $categoryId);
     }

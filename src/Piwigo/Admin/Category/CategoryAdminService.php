@@ -7,6 +7,7 @@ namespace Piwigo\Admin\Category;
 use Piwigo\Category\CategoryRefDateAggregate;
 use Piwigo\Category\CategoryRefDateField;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
@@ -45,7 +46,6 @@ final class CategoryAdminService
      */
     public function createVirtualCategory(string $name, ActivityLoggerInterface $activityLogger, CurrentUser $currentUser, ?int $parentId = null, array $options = []): CreateCategoryResult
     {
-        /** @var array{error?: string, info?: string, id?: int|string} $result */
         $result = $this->categoryService->createVirtualCategory($name, $activityLogger, $currentUser, $parentId, $options);
 
         if (isset($result['error'])) {
@@ -53,8 +53,8 @@ final class CategoryAdminService
         }
 
         return CreateCategoryResult::success(
-            $result['info'] ?? '',
-            isset($result['id']) ? (int) $result['id'] : 0
+            $result['info'],
+            CategoryId::from((int) $result['id'])
         );
     }
 

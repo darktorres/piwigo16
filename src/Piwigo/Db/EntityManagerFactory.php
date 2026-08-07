@@ -34,6 +34,7 @@ use Piwigo\Db\Type\Md5SumType;
 use Piwigo\Db\Type\PermalinkType;
 use Piwigo\Db\Type\RelPathType;
 use Piwigo\Db\Type\TagIdType;
+use Piwigo\Db\Type\ThemeIdType;
 use Piwigo\Db\Type\UserIdType;
 
 /**
@@ -87,6 +88,7 @@ final class EntityManagerFactory
             'md5sum' => Md5SumType::class,
             'rel_path' => RelPathType::class,
             'permalink' => PermalinkType::class,
+            'theme_id' => ThemeIdType::class,
         ] as $name => $class) {
             if (! Type::hasType($name)) {
                 Type::addType($name, $class);

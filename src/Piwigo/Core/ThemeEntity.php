@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\ThemeId;
 
 /**
  * Maps the `themes` table (installed/active themes, row deleted outright
@@ -21,6 +22,9 @@ use Doctrine\ORM\Mapping as ORM;
  * L1Infrastructure collector is a fixed namespace enumeration.
  * `Users\UserRepository` (L2aCoreDomain) depending on this is an allowed
  * direction (L2aCoreDomain -> L1Infrastructure).
+ *
+ * `$id` uses the `theme_id` custom Doctrine Type
+ * (`Piwigo\Common\ValueObject\ThemeId`).
  */
 #[ORM\Entity(repositoryClass: ThemeRepository::class)]
 #[ORM\Table(name: 'themes')]
@@ -28,8 +32,8 @@ final class ThemeEntity
 {
     public function __construct(
         #[ORM\Id]
-        #[ORM\Column(type: 'string', length: 64)]
-        public string $id,
+        #[ORM\Column(type: 'theme_id', length: 64)]
+        public ThemeId $id,
         #[ORM\Column(type: 'string', length: 64)]
         public string $version,
         #[ORM\Column(type: 'string', length: 64, nullable: true)]

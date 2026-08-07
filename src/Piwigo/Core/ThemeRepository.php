@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 use Doctrine\ORM\EntityRepository;
+use Piwigo\Common\ValueObject\ThemeId;
 
 /**
  * Persistence layer for the `themes` table's own id/name listing below.
@@ -28,6 +29,13 @@ final class ThemeRepository extends EntityRepository
      * the original raw query's own `is_string()` filter.
      *
      * @return list<array{id: string, name: string}>
+     *
+     * `t.id` maps through the `theme_id` custom Doctrine Type, so
+     * getArrayResult() hydrates it as a ThemeId value object -- unwrapped
+     * here since this listing's own return shape stays plain string (its
+     * one real caller, ThemeCatalog::getPwgThemes(), compares it against
+     * a raw config string and uses it as an array key, no VO involved on
+     * that side).
      */
     public function findAllIdsAndNames(): array
     {
@@ -39,13 +47,20 @@ final class ThemeRepository extends EntityRepository
 
         $themes = [];
         foreach ($rows as $row) {
-            if (! is_array($row) || ! is_string($row['id'] ?? null) || ! is_string($row['name'] ?? null)) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = $row['id'] ?? null;
+            $id = $id instanceof ThemeId ? $id->value : null;
+            $name = $row['name'] ?? null;
+            if ($id === null || ! is_string($name)) {
                 continue;
             }
 
             $themes[] = [
-                'id' => $row['id'],
-                'name' => $row['name'],
+                'id' => $id,
+                'name' => $name,
             ];
         }
 

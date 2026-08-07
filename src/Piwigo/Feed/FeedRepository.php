@@ -6,6 +6,7 @@ namespace Piwigo\Feed;
 
 use DateTimeImmutable;
 use Doctrine\ORM\EntityRepository;
+use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Persistence layer for the per-user RSS feed identifier domain.
@@ -22,7 +23,7 @@ final class FeedRepository extends EntityRepository
     public function insert(string $id, int $userId): void
     {
         $em = $this->getEntityManager();
-        $em->persist(new FeedEntity($id, $userId));
+        $em->persist(new FeedEntity($id, UserId::from($userId)));
         $em->flush();
     }
 
@@ -37,7 +38,7 @@ final class FeedRepository extends EntityRepository
         $entity = $this->find($id);
 
         return $entity === null ? null : [
-            'userId' => $entity->userId,
+            'userId' => $entity->userId->value,
             'lastCheck' => $entity->lastCheck,
         ];
     }

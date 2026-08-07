@@ -307,7 +307,7 @@ final class PwgCore
         foreach (array_keys($infos['msizes']) as $size_type) {
             $current_size = $infos['msizes'][$size_type];
 
-            // get_cache_size_derivatives()'s array<string, int> return type
+            // getCacheSizeDerivatives()'s array<string, int> return type
             // doesn't capture that it's a sparse map -- it only contains keys
             // for derivative sizes that actually have files on disk (see its
             // real implementation, admin/include/functions.php), so a given
@@ -315,7 +315,13 @@ final class PwgCore
             // such file exists. treatPhpDocTypesAsCertain makes PHPStan
             // (wrongly) prove this offset always exists and is always int;
             // @ suppresses the resulting real undefined-key warning, and the
-            // two guards below are the actual runtime safety net, not dead code.
+            // two guards below are the actual runtime safety net, not dead
+            // code. Tried telling PHPStan the real int|null result via an
+            // explicit @var instead of ignoring -- rejected by PHPStan's own
+            // varTag.type check (a @var can only narrow the type it already
+            // infers, never widen it beyond what treatPhpDocTypesAsCertain
+            // already committed to), confirming this can't be told, only
+            // suppressed.
             $added_size = @$msizes[DerivativeUrlCodec::derivativeToUrl($size_type)];
             // @phpstan-ignore function.alreadyNarrowedType
             $added_size = is_int($added_size) ? $added_size : 0;
@@ -635,6 +641,11 @@ final class PwgCore
                         // by dynamic index in the same loop, widening every
                         // field to optional. Verified safe: $last_idx only
                         // reaches here after at least one element exists.
+                        // An explicit @var on the assignment doesn't help
+                        // here either -- unlike the msizes case above, this
+                        // diagnostic flags the offset access itself, not the
+                        // assigned variable's type, so a @var on
+                        // has nothing to override.
                         // @phpstan-ignore offsetAccess.notFound
                         $prev_object_ids = $output_lines[$last_idx]['object_id'];
                         $prev_object_ids[] = $row_object_id;

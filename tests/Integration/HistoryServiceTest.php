@@ -301,10 +301,16 @@ final class HistoryServiceTest extends IntegrationTestCase
     /**
      * A full 8-group IPv6 address with an embedded IPv4 tail (a real,
      * filter_var()-valid form -- see IpAddress::from()) can be 45 chars,
-     * over the IP column's own 39-char limit -- truncated the same way
-     * the docblock above logVisit()'s own truncation describes.
+     * over the IP column's own 39-char limit. Naively substr()-truncating
+     * such a value cuts into the embedded IPv4 octets, producing a string
+     * that isn't a real IP address at all -- HistoryRepository::insert()'s
+     * own IpAddress::tryFrom() correctly rejects that malformed value
+     * rather than storing it, so logVisit() stores nothing rather than a
+     * corrupted partial address; the graceful `ip_address_graceful` Type
+     * then round-trips that as an empty, space-padded CHAR(39) read (same
+     * padding behavior HistoryRepositoryTest's own IP tests cover).
      */
-    public function test_log_visit_truncates_an_over_long_ip_address(): void
+    public function test_log_visit_gracefully_drops_an_over_long_unrepresentable_ip_address(): void
     {
         $longIp = '0000:0000:0000:0000:0000:ffff:192.168.100.100';
         self::assertGreaterThan(39, strlen($longIp));
@@ -313,7 +319,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         try {
             $this->service->logVisit();
 
-            self::assertSame(substr($longIp, 0, 39), $this->fetchLastHistoryColumn('IP'));
+            self::assertSame(str_repeat(' ', 39), $this->fetchLastHistoryColumn('IP'));
         } finally {
             unset($_SERVER['REMOTE_ADDR']);
         }

@@ -8,13 +8,16 @@ use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SqlDate;
+use Piwigo\Common\ValueObject\SqlTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Maps the `history` table (`piwigo_history` once
  * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * `date`/`time` stay plain string, not \DateTimeImmutable -- every real
- * consumer wants the raw DB DATE/TIME string form. `history_summary`
+ * `date`/`time` are `SqlDate`/`SqlTime`-typed (Phase 5) -- the one real
+ * write path (`insert()`) traces to an `Env::now()`-derived value.
+ * `history_summary`
  * (this repository's other owned table) is mapped as
  * {@see HistorySummaryEntity}; only `findSummaryRowsForHierarchy()`'s own
  * dynamic composite-nullable-key WHERE doesn't fit a clean single-row
@@ -42,10 +45,10 @@ final class HistoryEntity
     public ?int $id = null;
 
     public function __construct(
-        #[ORM\Column(type: 'string', length: 10, nullable: true)]
-        public ?string $date,
-        #[ORM\Column(type: 'string', length: 8)]
-        public string $time,
+        #[ORM\Column(type: 'sql_date', length: 10, nullable: true)]
+        public ?SqlDate $date,
+        #[ORM\Column(type: 'sql_time', length: 8)]
+        public SqlTime $time,
         #[ORM\Column(name: 'user_id', type: 'user_id')]
         public UserId $userId,
         #[ORM\Column(name: 'IP', type: 'ip_address_graceful', length: 39)]

@@ -129,10 +129,24 @@ final readonly class HistoryService
         }
 
         $ip = IpAddress::fromRemoteAddr()->value ?? '';
-        // IPv6 should not be longer than 39 chars, and that is the maximum length of
-        // the column in the database, but in case it would be longer, let's truncate it.
+        // A full native IPv6 address (8 groups) is exactly 39 chars, fitting
+        // `history.IP CHAR(39)` exactly -- but a valid IPv6-mapped-IPv4
+        // address in its expanded dotted-quad form (e.g.
+        // '0000:...:ffff:192.168.100.100') can reach 45 chars.
+        // filter_var(FILTER_VALIDATE_IP) doesn't normalize/compress its
+        // input, so there's no cheap way to shorten a real address like
+        // that without losing information. Truncating to fit would cut
+        // into the embedded IPv4 octets, producing a string that isn't a
+        // real IP address at all -- HistoryRepository::insert()'s own
+        // IpAddress::tryFrom() correctly rejects that truncated garbage
+        // rather than storing it, and the graceful `ip_address_graceful`
+        // column Type then stores it as empty (see that Type's own
+        // docblock) instead of a corrupted partial address. Left
+        // un-truncated here so a genuinely-representable address (the
+        // overwhelming majority of real traffic, all IPv4 and all
+        // standard-form IPv6) is never needlessly mangled.
         if (strlen($ip) > 39) {
-            $ip = substr($ip, 0, 39);
+            $ip = '';
         }
 
         $section = null;

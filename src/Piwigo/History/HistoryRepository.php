@@ -13,6 +13,8 @@ use Piwigo\Auth\LastVisitLookupInterface;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SqlDate;
+use Piwigo\Common\ValueObject\SqlTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
 use Piwigo\Db\Tables;
@@ -94,8 +96,8 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             return null;
         }
 
-        $date = is_scalar($row['date'] ?? null) ? (string) $row['date'] : '';
-        $time = is_scalar($row['time'] ?? null) ? (string) $row['time'] : '';
+        $date = ($row['date'] ?? null) instanceof SqlDate ? $row['date']->value : '';
+        $time = ($row['time'] ?? null) instanceof SqlTime ? $row['time']->value : '';
 
         return $date . ' ' . $time;
     }
@@ -191,8 +193,8 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             }
 
             $id = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
-            $date = is_string($row['date'] ?? null) ? $row['date'] : '';
-            $time = is_string($row['time'] ?? null) ? $row['time'] : '';
+            $date = ($row['date'] ?? null) instanceof SqlDate ? $row['date']->value : '';
+            $time = ($row['time'] ?? null) instanceof SqlTime ? $row['time']->value : '';
             $hour = (int) substr($time, 0, 2);
 
             $key = $date . "\0" . $hour;
@@ -621,8 +623,8 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
      * static-analysis false positive on loop-built composites (Item 14
      * DQL audit gotcha #2) -- same "raw string + real bound params"
      * convention already used everywhere else in this codebase.
-     * `userId`/`categoryId`/`imageId`/`ip` all route through custom
-     * Doctrine Types, so the row mapper below unwraps each via
+     * `userId`/`categoryId`/`imageId`/`ip`/`date`/`time` all route through
+     * custom Doctrine Types, so the row mapper below unwraps each via
      * `instanceof` (Gotcha #1 -- `getArrayResult()` DOES apply a
      * column's Type during hydration).
      *
@@ -713,8 +715,8 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             }
 
             $results[] = [
-                'date' => is_string($row['date'] ?? null) ? $row['date'] : null,
-                'time' => is_string($row['time'] ?? null) ? $row['time'] : '',
+                'date' => ($row['date'] ?? null) instanceof SqlDate ? $row['date']->value : null,
+                'time' => ($row['time'] ?? null) instanceof SqlTime ? $row['time']->value : '',
                 'user_id' => ($row['userId'] ?? null) instanceof UserId ? $row['userId']->value : (is_numeric($row['userId'] ?? null) ? (int) $row['userId'] : 0),
                 'IP' => ($row['ip'] ?? null) instanceof IpAddress ? $row['ip']->value : '',
                 'section' => is_string($row['section'] ?? null) ? $row['section'] : null,
@@ -876,8 +878,8 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
         $now = Env::now();
 
         $entity = new HistoryEntity(
-            date: $now->format('Y-m-d'),
-            time: $now->format('H:i:s'),
+            date: SqlDate::from($now->format('Y-m-d')),
+            time: SqlTime::from($now->format('H:i:s')),
             userId: UserId::from($data['userId']),
             ip: IpAddress::tryFrom($data['ip']),
             section: $data['section'],

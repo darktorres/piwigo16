@@ -1627,13 +1627,13 @@ final class UserRepository implements WebmasterMailProviderInterface
 
         if ($criteria->minRegister !== null) {
             $conditions[] = new SqlCondition('ui.registration_date >= :minRegister', [
-                'minRegister' => $criteria->minRegister,
+                'minRegister' => $criteria->minRegister->value,
             ]);
         }
 
         if ($criteria->maxRegister !== null) {
             $conditions[] = new SqlCondition('ui.registration_date <= :maxRegister', [
-                'maxRegister' => $criteria->maxRegister,
+                'maxRegister' => $criteria->maxRegister->value,
             ]);
         }
 

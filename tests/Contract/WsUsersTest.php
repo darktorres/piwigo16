@@ -135,6 +135,20 @@ final class WsUsersTest extends ContractTestCase
         self::assertSame('Invalid input parameter min_register', $response['message']);
     }
 
+    /**
+     * '2026-13-99' passes the shape-only regex (4 digits, then 1-2 more
+     * numeric groups) but is not a real calendar date -- the real
+     * validator is SqlDateTime::from()'s own round-trip check.
+     */
+    public function test_getList_min_register_shape_valid_but_calendar_invalid_returns_error(): void
+    {
+        $response = $this->wsAdmin('pwg.users.getList', ['min_register' => '2026-13-99']);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('Invalid input parameter min_register', $response['message']);
+    }
+
     public function test_getList_max_register_year_month_only_computes_last_day_of_month(): void
     {
         // Fixture users all registered on 2026-08-01 -- max_register capped
@@ -150,6 +164,22 @@ final class WsUsersTest extends ContractTestCase
     public function test_getList_max_register_invalid_format_returns_error(): void
     {
         $response = $this->wsAdmin('pwg.users.getList', ['max_register' => 'not-a-date']);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('Invalid input parameter max_register', $response['message']);
+    }
+
+    /**
+     * Sibling of the min_register shape-valid-but-calendar-invalid test
+     * above -- max_register's own day-of-month computation branch
+     * (isset($max_date_tokens[2])) uses the caller-supplied day directly,
+     * so an out-of-range day ('2026-01-99') reaches SqlDateTime::from()
+     * unmodified.
+     */
+    public function test_getList_max_register_shape_valid_but_calendar_invalid_returns_error(): void
+    {
+        $response = $this->wsAdmin('pwg.users.getList', ['max_register' => '2026-01-99']);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);

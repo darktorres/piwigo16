@@ -11,12 +11,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use InvalidArgumentException;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -148,7 +150,18 @@ final class PwgUsers
             $min_register_month = $date_tokens[1] ?? 1;
             $min_register_day = $date_tokens[2] ?? 1;
             $min_date = sprintf('%u-%02u-%02u', (int) $min_register_year, (int) $min_register_month, (int) $min_register_day);
-            $minRegister = $min_date . ' 00:00:00';
+
+            // The regex above only checks the token *shape* (1-4 numeric
+            // groups), not real calendar validity -- e.g. 'min_register=
+            // 9999-13-99' passes it. SqlDateTime::from()'s own calendar
+            // round-trip check is the real validator; a genuinely invalid
+            // date now returns a proper WS error instead of silently
+            // reaching the SQL comparison as an uncomparable string.
+            try {
+                $minRegister = SqlDateTime::from($min_date . ' 00:00:00');
+            } catch (InvalidArgumentException) {
+                return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter min_register');
+            }
         }
 
         $maxRegister = null;
@@ -171,7 +184,13 @@ final class PwgUsers
                 $max_register_day = date('t', $max_register_month_ts);
             }
             $max_date = sprintf('%u-%02u-%02u', (int) $max_register_year, (int) $max_register_month, (int) $max_register_day);
-            $maxRegister = $max_date . ' 23:59:59';
+
+            // Same real-calendar-validity gap as min_register above.
+            try {
+                $maxRegister = SqlDateTime::from($max_date . ' 23:59:59');
+            } catch (InvalidArgumentException) {
+                return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter max_register');
+            }
         }
 
         $status = null;

@@ -9,6 +9,7 @@ use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Common\ValueObject\Email;
@@ -665,12 +666,12 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_find_list_for_ws_filters_by_min_register(): void
     {
-        self::assertSame([], $this->findListForWsIds(new UserListCriteria(minRegister: '2026-08-02 00:00:00')));
+        self::assertSame([], $this->findListForWsIds(new UserListCriteria(minRegister: SqlDateTime::from('2026-08-02 00:00:00'))));
     }
 
     public function test_find_list_for_ws_filters_by_max_register(): void
     {
-        self::assertSame([], $this->findListForWsIds(new UserListCriteria(maxRegister: '2026-07-31 23:59:59')));
+        self::assertSame([], $this->findListForWsIds(new UserListCriteria(maxRegister: SqlDateTime::from('2026-07-31 23:59:59'))));
     }
 
     public function test_find_list_for_ws_filters_by_status(): void

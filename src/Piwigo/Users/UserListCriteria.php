@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
@@ -26,9 +27,12 @@ use Piwigo\Common\ValueObject\UserId;
  * repository's own persistence layer should do, so the caller resolves it
  * first and hands over just the ids.
  *
- * $minRegister/$maxRegister are already `Y-m-d H:i:s`-formatted by the
- * caller (after its own date-format validation), same convention as
- * Comment\CommentApiCriteria's own $minDate/$maxDate.
+ * $minRegister/$maxRegister are `SqlDateTime`-typed (Phase 5 typed-VO
+ * campaign) -- `Ws\PwgUsers::getList()` validates the raw `min_register`/
+ * `max_register` WS params through `SqlDateTime::from()` itself (a real
+ * PwgError on an invalid calendar date, e.g. `min_register=9999-13-99`,
+ * which the WS layer's own shape-only regex doesn't catch) before ever
+ * constructing this criteria object.
  */
 final readonly class UserListCriteria
 {
@@ -44,8 +48,8 @@ final readonly class UserListCriteria
         public ?string $username = null,
         public ?string $filter = null,
         public ?array $filteredGroupIds = null,
-        public ?string $minRegister = null,
-        public ?string $maxRegister = null,
+        public ?SqlDateTime $minRegister = null,
+        public ?SqlDateTime $maxRegister = null,
         public ?array $status = null,
         public ?int $minLevel = null,
         public ?int $maxLevel = null,

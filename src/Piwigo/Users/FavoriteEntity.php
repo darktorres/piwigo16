@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
@@ -14,10 +15,14 @@ use Piwigo\Common\ValueObject\UserId;
  * DQL/QueryBuilder rather than through a dedicated repository class, same
  * shape as {@see \Piwigo\Tag\ImageTagEntity}.
  *
- * `userId` uses the existing `user_id` custom Doctrine Type. `imageId`
- * stays plain int -- no `ImageIdType` exists yet, same "FK into an
- * un-VO'd domain stays raw" call {@see \Piwigo\Tag\ImageTagEntity}
- * already made.
+ * `userId` uses the existing `user_id` custom Doctrine Type; `imageId`
+ * uses `image_id`, same as {@see \Piwigo\Tag\ImageTagEntity::$imageId}.
+ * `UserRepository`'s own favorites methods never hydrate a full entity
+ * (`getArrayResult()`/`getResult()`) and every WHERE-clause bind against
+ * `imageId` already passes an explicit raw `ParameterType::INTEGER`/
+ * `ArrayParameterType::INTEGER`, bypassing this Type's own conversion --
+ * so those method signatures stay plain `int`/`list<int>`, unaffected by
+ * this Type.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'favorites')]
@@ -28,7 +33,7 @@ final class FavoriteEntity
         #[ORM\Column(name: 'user_id', type: 'user_id')]
         public UserId $userId,
         #[ORM\Id]
-        #[ORM\Column(name: 'image_id', type: 'integer')]
-        public int $imageId,
+        #[ORM\Column(name: 'image_id', type: 'image_id')]
+        public ImageId $imageId,
     ) {}
 }

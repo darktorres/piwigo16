@@ -946,10 +946,9 @@ final class UserRepository implements WebmasterMailProviderInterface
      *
      * Item 14 DQL audit, re-corrected: `favorites` is now mapped ({@see
      * FavoriteEntity}). Converted to real DQL -- single-table select of
-     * `f.imageId`, a plain int property (no custom Doctrine Type on
-     * FavoriteEntity's imageId, so `getSingleColumnResult()`'s lack of Type
-     * conversion -- see this class's own Item 14 gotcha note elsewhere in
-     * this file -- doesn't apply here).
+     * `f.imageId` via `getSingleColumnResult()` (Gotcha #4, `HYDRATE_
+     * SCALAR_COLUMN`) never applies FavoriteEntity::$imageId's own
+     * `image_id` custom Type, so this stays a plain int read regardless.
      *
      * @return list<int>
      */

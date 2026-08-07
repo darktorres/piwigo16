@@ -34,9 +34,9 @@ use Piwigo\Db\Type\ImageIdType;
 use Piwigo\Db\Type\IpAddressType;
 use Piwigo\Db\Type\LangCodeType;
 use Piwigo\Db\Type\Md5SumType;
-use Piwigo\Db\Type\MysqlDateTimeType;
-use Piwigo\Db\Type\MysqlDateType;
 use Piwigo\Db\Type\PermalinkType;
+use Piwigo\Db\Type\SqlDateTimeType;
+use Piwigo\Db\Type\SqlDateType;
 use Piwigo\Db\Type\PluginIdType;
 use Piwigo\Db\Type\TagIdType;
 use Piwigo\Db\Type\ThemeIdType;
@@ -99,8 +99,8 @@ final class EntityManagerFactory
             'lang_code' => LangCodeType::class,
             'email' => EmailType::class,
             'username' => UsernameType::class,
-            'mysql_date' => MysqlDateType::class,
-            'mysql_datetime' => MysqlDateTimeType::class,
+            'sql_date' => SqlDateType::class,
+            'sql_datetime' => SqlDateTimeType::class,
         ] as $name => $class) {
             if (! Type::hasType($name)) {
                 Type::addType($name, $class);

@@ -19,11 +19,11 @@ use Piwigo\Common\ValueObject\UserId;
  * DATETIME string form).
  *
  * Re-examined fresh during the typed-primitives adoption campaign
- * (Common\ValueObject\MysqlDate/MysqlDateTime now exist): traced every
+ * (Common\ValueObject\SqlDate/SqlDateTime now exist): traced every
  * real consumer of these 4 properties and found none do arithmetic or
  * typed comparison -- Image\Projection\Image::fromArray()/toArray() just
  * round-trip the raw string unchanged for template/JSON output.
- * MysqlDateTime::from() would add real construction-time calendar
+ * SqlDateTime::from() would add real construction-time calendar
  * validation, which is a behavior change with legacy-data risk (a
  * pre-existing MySQL zero-date row would throw on hydration, not just on
  * a new write) for zero real benefit given how these fields are actually

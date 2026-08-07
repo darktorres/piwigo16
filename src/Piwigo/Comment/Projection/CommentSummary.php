@@ -17,7 +17,7 @@ use Piwigo\Common\ValueObject\CommentId;
  * notes for why `AdminListingRow`/`AuthorCount`/`RecentCommentRow` aren't
  * built here).
  *
- * `date` stays `?string`, not `MysqlDateTime` -- that VO's own domain-wide
+ * `date` stays `?string`, not `SqlDateTime` -- that VO's own domain-wide
  * propagation is Stage C, out of scope for this CommentId-focused pass,
  * same reasoning `Comment\Projection\Comment::$date` already documents.
  */

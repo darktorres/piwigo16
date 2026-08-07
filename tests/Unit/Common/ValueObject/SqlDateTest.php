@@ -8,13 +8,13 @@ use InvalidArgumentException;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Piwigo\Common\ValueObject\MysqlDate;
+use Piwigo\Common\ValueObject\SqlDate;
 
-final class MysqlDateTest extends TestCase
+final class SqlDateTest extends TestCase
 {
     public function testFromAcceptsCanonicalForm(): void
     {
-        $d = MysqlDate::from('2026-05-18');
+        $d = SqlDate::from('2026-05-18');
         self::assertSame('2026-05-18', $d->value);
     }
 
@@ -37,12 +37,12 @@ final class MysqlDateTest extends TestCase
     public function testFromRejects(string $input): void
     {
         $this->expectException(InvalidArgumentException::class);
-        MysqlDate::from($input);
+        SqlDate::from($input);
     }
 
     public function testTryFromAcceptsCanonicalForm(): void
     {
-        $d = MysqlDate::tryFrom('2026-05-18');
+        $d = SqlDate::tryFrom('2026-05-18');
         self::assertNotNull($d);
         self::assertSame('2026-05-18', $d->value);
     }
@@ -60,39 +60,39 @@ final class MysqlDateTest extends TestCase
     #[DataProvider('tryFromNullCases')]
     public function testTryFromReturnsNull(mixed $input): void
     {
-        self::assertNull(MysqlDate::tryFrom($input));
+        self::assertNull(SqlDate::tryFrom($input));
     }
 
     public function testFromDateTimeRoundTrips(): void
     {
         $dt  = new DateTimeImmutable('2026-05-18 12:34:56');
-        $vo  = MysqlDate::fromDateTime($dt);
+        $vo  = SqlDate::fromDateTime($dt);
         self::assertSame('2026-05-18', $vo->value);
     }
 
     public function testToDateTimeImmutable(): void
     {
-        $d = MysqlDate::from('2026-05-18');
+        $d = SqlDate::from('2026-05-18');
         self::assertSame('2026-05-18 00:00:00', $d->toDateTimeImmutable()->format('Y-m-d H:i:s'));
     }
 
     public function testStringableProducesCanonicalString(): void
     {
-        self::assertSame('2026-05-18', (string) MysqlDate::from('2026-05-18'));
+        self::assertSame('2026-05-18', (string) SqlDate::from('2026-05-18'));
     }
 
     public function testEqualsIsTrueForTheSameCalendarDate(): void
     {
-        $a = MysqlDate::from('2026-05-18');
-        $b = MysqlDate::from('2026-05-18');
+        $a = SqlDate::from('2026-05-18');
+        $b = SqlDate::from('2026-05-18');
 
         self::assertTrue($a->equals($b));
     }
 
     public function testEqualsIsFalseForADifferentCalendarDate(): void
     {
-        $a = MysqlDate::from('2026-05-18');
-        $b = MysqlDate::from('2026-05-19');
+        $a = SqlDate::from('2026-05-18');
+        $b = SqlDate::from('2026-05-19');
 
         self::assertFalse($a->equals($b));
     }

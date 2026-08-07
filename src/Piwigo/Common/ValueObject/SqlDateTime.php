@@ -10,18 +10,23 @@ use InvalidArgumentException;
 use Override;
 
 /**
- * MySQL DATETIME value in canonical `Y-m-d H:i:s` form.
+ * SQL DATETIME/TIMESTAMP value in canonical `Y-m-d H:i:s` form.
  *
  * Validates calendar arithmetic at construction (Feb 30, hour 25, etc. are
  * rejected) so downstream SQL composition, comparisons, and formatting can
- * treat the underlying string as well-formed.
+ * treat the underlying string as well-formed. `Y-m-d H:i:s` is the shared
+ * canonical string form both MySQL's DATETIME and PostgreSQL's TIMESTAMP
+ * (without time zone) columns round-trip through this project's DBAL
+ * driver setup (confirmed live against both), so this VO isn't
+ * engine-specific despite the shape originating from MySQL's own output
+ * convention.
  *
  * The wrapped string is the canonical form — concatenating into SQL or
- * comparing two MysqlDateTime instances by `$a->value === $b->value` is
+ * comparing two SqlDateTime instances by `$a->value === $b->value` is
  * always meaningful. Conversion to a `\DateTimeImmutable` is available via
  * `toDateTimeImmutable()` for arithmetic; round-trips are lossless.
  */
-final readonly class MysqlDateTime implements StringVo
+final readonly class SqlDateTime implements StringVo
 {
     private function __construct(
         public string $value
@@ -37,7 +42,7 @@ final readonly class MysqlDateTime implements StringVo
         $dt = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $value);
         // Round-trip catches lenient parsing — e.g. '2026-02-30' silently rolls to '2026-03-02'.
         if ($dt === false || $dt->format('Y-m-d H:i:s') !== $value) {
-            throw new InvalidArgumentException("Invalid MySQL datetime: '{$value}'");
+            throw new InvalidArgumentException("Invalid SQL datetime: '{$value}'");
         }
         return new self($value);
     }

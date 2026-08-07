@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Db\Type;
 
 use Override;
-use Piwigo\Common\ValueObject\MysqlDate;
+use Piwigo\Common\ValueObject\SqlDate;
 
-final class MysqlDateType extends AbstractStringVoType
+final class SqlDateType extends AbstractStringVoType
 {
     #[Override]
     protected function voClass(): string
     {
-        return MysqlDate::class;
+        return SqlDate::class;
     }
 }

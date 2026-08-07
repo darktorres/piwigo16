@@ -10,16 +10,20 @@ use InvalidArgumentException;
 use Override;
 
 /**
- * MySQL DATE value in canonical `Y-m-d` form (no time component).
+ * SQL DATE value in canonical `Y-m-d` form (no time component).
  *
  * Validates calendar arithmetic at construction (Feb 30, month 13, etc.
  * rejected) so downstream SQL composition, comparisons, and formatting
- * can treat the underlying string as well-formed.
+ * can treat the underlying string as well-formed. `Y-m-d` is the shared
+ * canonical string form both MySQL's DATE and PostgreSQL's DATE columns
+ * round-trip through this project's DBAL driver setup (confirmed live
+ * against both), so this VO isn't engine-specific despite the shape
+ * originating from MySQL's own output convention.
  *
- * Pairs with `MysqlDateTime` for columns typed `DATE` rather than
- * `DATETIME` (e.g. `images.date_metadata_update`).
+ * Pairs with `SqlDateTime` for columns typed `DATE` rather than
+ * `DATETIME`/`TIMESTAMP` (e.g. `images.date_metadata_update`).
  */
-final readonly class MysqlDate implements StringVo
+final readonly class SqlDate implements StringVo
 {
     private function __construct(
         public string $value
@@ -33,7 +37,7 @@ final readonly class MysqlDate implements StringVo
     {
         $dt = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
         if ($dt === false || $dt->format('Y-m-d') !== $value) {
-            throw new InvalidArgumentException("Invalid MySQL date: '{$value}'");
+            throw new InvalidArgumentException("Invalid SQL date: '{$value}'");
         }
         return new self($value);
     }

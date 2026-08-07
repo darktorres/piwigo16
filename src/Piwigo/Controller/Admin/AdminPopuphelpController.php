@@ -22,31 +22,21 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin/popuphelp.php -- the admin-context help popup, distinct
- * from Piwigo\Controller\PopuphelpController (the front-end one, its own
- * docblock already flags this file as "a standalone root-style entry point
- * untouched since P21"). Not a `?page=` slug -- reached as its own real
- * file path (`/admin/popuphelp.php`), invoked from the admin UI's
- * `popuphelp(url)` JS popup-window helper (themes/default/js/scripts.js),
- * so it gets its own config/routes.php entry rather than a
- * config/admin_pages.php one.
+ * The admin-context help popup, distinct from the front-end
+ * Piwigo\Controller\PopuphelpController. Not a `?page=` slug -- reached
+ * as its own file path (`/admin/popuphelp.php`), invoked from the admin
+ * UI's `popuphelp(url)` JS popup-window helper
+ * (themes/default/js/scripts.js), so it has its own config/routes.php
+ * entry rather than a config/admin_pages.php one.
  *
- * `PWG_HELP` dropped the same way the front-end port already dropped it
- * (confirmed via a project-wide grep: nothing reads that constant anywhere,
- * not even this file's own original body). `IN_ADMIN` is genuinely read
- * elsewhere (Piwigo\Page\PageHeaderRenderer) so it stays, set by the new
- * bootstrap file the same way admin.php itself sets it.
+ * `IN_ADMIN` is read elsewhere (Piwigo\Page\PageHeaderRenderer), set by
+ * the bootstrap file the same way admin.php itself sets it.
  *
- * Workstream C3c: converted off LegacyRenderCapture's ob_start()/
- * ob_get_contents() capture -- same mechanism/reasoning as
- * PopuphelpController's own docblock (parse($handle, false) accumulates
- * into Template's own buffer instead of echoing, PageTail::
- * renderToString() drains it as one string). The `?page=` validation
- * throws ResponseReadyException instead of die()ing mid-render (same
- * "no partial HTML left to preserve any more" reasoning as
- * PopuphelpController); the `output=content_only` branch just returns
- * $help_content directly -- by that point in the method it's already
- * fully computed, nothing left to accumulate.
+ * $template->parse('popuphelp', false) accumulates into Template's own
+ * buffer; PageTail::renderToString() drains it as one string. The
+ * `?page=` validation throws ResponseReadyException rather than dying
+ * mid-render. The `output=content_only` branch returns $help_content
+ * directly since by that point it is already fully computed.
  */
 final class AdminPopuphelpController implements ControllerInterface
 {

@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 /**
- * P23 batch 8c: ported from `include/derivative_params.inc.php`'s 5 free
- * functions -- pure, stateless encoding helpers used by `SizingParams`
- * (derivative filename tokens), `ImageRect` (center-of-interest crop
- * math), and `PictureCoiPageRenderer` (the admin COI editor form).
+ * Pure, stateless encoding helpers used by `SizingParams` (derivative
+ * filename tokens), `ImageRect` (center-of-interest crop math), and
+ * `PictureCoiPageRenderer` (the admin COI editor form).
  */
 final class DerivativeUrlCodec
 {
@@ -39,9 +38,6 @@ final class DerivativeUrlCodec
     /**
      * Parses a size identifier out of a derivative filename token --
      * the exact inverse of sizeToUrl() ('NNN' or 'WWWxHHH').
-     *
-     * P23 batch 8f (i.php): relocated from i.php's url_to_size() free
-     * function, unchanged logic.
      *
      * @return array{0: int, 1: int}
      */

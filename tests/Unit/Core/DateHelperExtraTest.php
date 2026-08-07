@@ -9,31 +9,20 @@ use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 
 /**
- * Piwigo\Core\DateHelper::formatDateLegacy()/formatFromto()/transformDate()
- * -- had zero dedicated coverage (see /home/torres/.claude/plans/piped-
- * enchanting-spark.md, Wave 1) despite the class being used constantly
- * throughout the codebase; formatDate()/timeSince()/str2DateTime() are
- * already well covered indirectly (real page renders), these 3 were not.
- *
- * formatFromto()/formatDate() go through IntlDateFormatter (php-intl is
- * loaded in this environment, confirmed via class_exists()), using
+ * formatFromto()/formatDate() go through IntlDateFormatter, using
  * Lang::currentUserLanguage() ?? AppInfo::DEFAULT_LANGUAGE as the ICU
  * locale -- not this file's own Lang::loadArray() month/day injection,
  * which only formatDateLegacy() (called directly, bypassing formatDate()'s
- * Intl branch) actually reads. Every value below was independently
- * confirmed by invoking the real class before writing the assertion.
+ * Intl branch) reads.
  *
  * DateHelper's own private lang() resolver's t()/day()/month()/
- * currentUserLanguage() calls (singleton/service-locator elimination
- * campaign, Phase 8) are a
- * live container resolve with no pre-boot fallback -- see Lang's own
- * docblock -- so this file now also boots/resets a real Kernel around each
- * test, matching TemplateTest.php's own established pattern for the same
- * reason. A real Paths must be supplied to boot() too -- Lang's own
- * constructor needs one, and PHP-DI can't autowire Paths on its own (every
- * property is a required string with no default). No filesystem access is
- * ever exercised through it here, so a bare sys_get_temp_dir() root, never
- * actually written to, is enough.
+ * currentUserLanguage() calls are a live container resolve with no
+ * pre-boot fallback -- see Lang's own docblock -- so this file boots/
+ * resets a real Kernel around each test. A real Paths must be supplied to
+ * boot() too -- Lang's own constructor needs one, and PHP-DI can't
+ * autowire Paths on its own (every property is a required string with no
+ * default). No filesystem access is ever exercised through it here, so a
+ * bare sys_get_temp_dir() root, never actually written to, is enough.
  */
 beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));

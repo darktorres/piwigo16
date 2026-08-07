@@ -19,11 +19,7 @@ use Piwigo\Permalink\Projection\OldPermalink;
  * stale); `old_permalinks` is mapped as {@see OldPermalinkEntity} below.
  * Holds EntityManagerInterface directly, same shape as Auth\AuthRepository.
  *
- * Further SQL-modernization audit, Item 16A/16B: every method now runs
- * as real DQL -- never audited by Item 14/15. `old_permalinks` was
- * deliberately never entity-mapped anywhere in the campaign until 16B
- * (see the former {@see \Piwigo\Category\CategoryRepository::
- * touchOldPermalinkHit()} cross-reference, since corrected).
+ * Every method runs as real DQL.
  */
 final readonly class PermalinkRepository
 {
@@ -51,12 +47,11 @@ final readonly class PermalinkRepository
     }
 
     /**
-     * Return the category id a permalink was historically used by, or
+     * Return the category id a retired permalink used to point to, or
      * null -- an INNER JOIN against `categories` (not just reading
      * `OldPermalinkEntity::$catId` directly) matters: a stale
      * `old_permalinks` row referencing an already-deleted category must
-     * still resolve to null here, same real-existence-check behavior the
-     * original's own join preserved.
+     * still resolve to null here.
      */
     public function findOldCategoryId(string $permalink): ?int
     {
@@ -109,7 +104,7 @@ final readonly class PermalinkRepository
      * Marks an existing old-permalink row (cat_id, permalink) as deleted
      * now. The timestamp is PHP-computed via {@see Env::now()} (stays
      * PIWIGO_TEST_NOW-aware for deterministic tests) rather than a raw
-     * SQL NOW() -- same pattern used throughout this campaign.
+     * SQL NOW().
      */
     public function markOldPermalinkDeleted(int $catId, string $permalink): void
     {
@@ -163,8 +158,7 @@ final readonly class PermalinkRepository
      * only has the permalink string from the link it renders). No LIMIT
      * needed: `permalink` is old_permalinks' own primary key (see
      * install/piwigo_structure-mysql.sql), so at most one row can ever
-     * match. Returns whether a row was actually deleted, mirroring the
-     * legacy \Piwigo\Db\MysqliDb::changes() == 0 check this replaces.
+     * match. Returns whether a row was actually deleted.
      */
     public function deleteOldPermalinkByValue(string $permalink): bool
     {

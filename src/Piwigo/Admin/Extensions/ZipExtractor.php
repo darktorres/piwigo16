@@ -10,19 +10,15 @@ use ZipArchive;
 
 /**
  * Safe archive extraction for the extension (plugin/theme/language)
- * install/update flow. Replaces admin/include/functions_zip.inc.php's
- * zip_list_filenames()/zip_extract() free functions, which had two real
- * gaps confirmed by direct read of that file:
+ * install/update flow.
  *
- * 1. Zip-slip / path traversal: entry names were spliced into the
- *    destination path with no containment check at all (`$destPath . '/' .
- *    $strippedName`) -- a malicious archive with an entry named e.g.
- *    "../../../../var/www/html/admin.php" would write outside the intended
- *    extension directory. This is a more serious bug than the "zip bomb"
- *    framing SEC-32 was originally scoped around: an arbitrary file write,
- *    not just a resource-exhaustion DoS.
- * 2. No entry-count or uncompressed-size ceiling at all (the actual SEC-32
- *    zip-bomb gap).
+ * Guards against zip-slip / path traversal: an entry's resolved
+ * destination is checked for containment within $destPath before any
+ * file is written, since a malicious archive entry named e.g.
+ * "../../../../var/www/html/admin.php" would otherwise write outside the
+ * intended extension directory. [SEC-32] Also enforces an entry-count
+ * ceiling (MAX_ENTRIES) and a total uncompressed-size ceiling
+ * (MAX_UNCOMPRESSED_BYTES) to guard against zip bombs.
  *
  * Path containment is checked lexically (normalizePath()), not via
  * realpath(): the destination directory doesn't exist yet when extraction

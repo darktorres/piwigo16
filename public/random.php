@@ -89,14 +89,9 @@ $types = [
 // |                                redirect                               |
 // +-----------------------------------------------------------------------+
 
-// This file never calls RequestPipeline::handle() (unlike every P22
-// controller's own root file) -- it's a raw top-level script, so none of
-// Workstream C3's 3 pipeline/bootstrap catch points wrap this call. Found
-// live (real 500, uncaught ResponseReadyException) while re-verifying
-// Part I's own "every RedirectService/HtmlService caller is covered by one
-// of the 3 catch points" claim against actual call sites rather than
-// trusting it -- this file was never audited because it isn't reached from
-// config/routes.php. A 4th, file-local catch point, same shape as
+// This file never calls RequestPipeline::handle() -- it's a raw
+// top-level script, so nothing else catches ResponseReadyException here.
+// This try/catch is this file's own catch point, same shape as
 // AdminShell::run()'s own dispatch-context catch point.
 try {
     new RedirectService(RequestBootstrap::lang(), RequestBootstrap::userService(), RequestBootstrap::eventDispatcher(), RequestBootstrap::pageState())

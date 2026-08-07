@@ -63,65 +63,36 @@ use Symfony\Component\Mime\Email;
  * Infrastructure only -- no domain-specific logic of its own -- must build
  * before User/Comment, which both send mail through here.
  *
- * Reads mail-related settings from `Piwigo\Config\Config`'s typed
- * accessors. Piwigo\Config\ConfigDb::loadConfFromDb() (called from
- * common.inc.php on every real request) now syncs every DB-persisted
- * config row into both the legacy `$conf` global AND `CurrentConfig::$data`
- * (Legacy Coupling Retirement Track A batch A4 -- previously only the
- * former was updated, so a MailService built on CurrentConfig:: accessors would
- * have silently ignored every real admin-configured mail setting
- * (debug_mail, smtp_host, mail_sender_name, ...), always falling back to
- * install-time defaults).
+ * Reads mail-related settings through `Piwigo\Config\CurrentConfig`'s typed
+ * accessors. `Piwigo\Config\ConfigDb::loadConfFromDb()` (called from
+ * common.inc.php on every real request) syncs every DB-persisted config row
+ * into both the legacy `$conf` global and `CurrentConfig::$data`, so mail
+ * settings read here (debug_mail, smtp_host, mail_sender_name, ...) reflect
+ * real admin-configured values rather than install-time defaults.
  *
- * Injects the optional WebmasterMailProviderInterface test seam (P23
- * batch 8f-4, see the constructor's own docblock) -- remaining cross-domain
- * calls (l10n(), trigger_notify()/trigger_change()) stay as plain
- * global-function calls to the settled composer-autoloaded procedural
- * helpers, matching every other P17/P18-era service. l10n_args()/load_language()
- * calls above were retargeted to $this->lang->args()/->load() in
- * P23 batch 8d -- l10n() itself stays a bare call (track-2 relocated,
- * too widely used to retarget, see src/Piwigo/Lang/functions.php).
+ * Accepts an optional WebmasterMailProviderInterface test seam (see the
+ * constructor's own docblock). Remaining cross-domain calls (l10n(),
+ * trigger_notify()/trigger_change()) stay as plain global-function calls
+ * to the composer-autoloaded procedural helpers; l10n() itself stays a
+ * bare call (see src/Piwigo/Lang/functions.php).
  *
- * The template-render cache and language-switch stack (`$conf_mail`/
- * `$switch_lang` in the procedural version) are request-scoped state with no
- * other reader in the codebase (confirmed via grep) -- kept as private
- * instance state (singleton/service-locator elimination campaign, Phase 6:
- * was private static state until this class itself became the one
- * container-shared instance every real caller receives via constructor
- * injection of `MailerInterface`), with an instance reset() for test
- * isolation, matching every other converted class in this campaign. Phase
- * 11 sub-phase 11E: the constructor now also takes every remaining
- * transitional-shim collaborator this class used to read internally
- * (Lang/CurrentConfig/DeploymentPolicy/PageState/Paths/SessionService/
- * Translator/EventDispatcher/CurrentUser/UrlServiceInterface) as required
- * params -- the old "stays cheap to call with no args" reasoning no
- * longer holds (churn is not a deciding factor for this campaign); every
- * real `new MailService(...)` call site was updated accordingly.
- * AccessControl itself stayed a lazily-resolved private helper -- a
- * genuine circular dependency, not the same too-many-call-sites reasoning
- * -- but the one thing this class actually reads from it (`isAdmin()`)
- * moved to AccessLevelChecker (singleton/service-locator elimination
- * campaign, Phase 12 sub-phase 12A), which has no MailerInterface
- * dependency of its own, so it's built from this class's own already-
- * required currentUser/currentConfig instead of a container resolve.
- * AdminContext/ErrorCollector/ProcessCache/
- * CurrentConfigService are 4 further lazily-resolved private helpers
- * (same "container resolve, not a constructor property" shape as
- * accessControl(), see that method's own docblock for why) added right
- * after, for `buildMailTemplate()`'s own `new Template(...)` call, whose
- * own constructor now requires them -- kept lazy because this class
- * already sits on AccessControl's own transitively-autowired dependency
- * chain (a required param here for a collaborator with any eager-
- * side-effect container factory would force that cost merely by
- * resolving AccessControl elsewhere -- confirmed for real with
- * ImageStdParams during this same sub-phase, see its own private helper
- * on Template for the full story, not a theoretical concern).
+ * The template-render cache and language-switch stack are request-scoped
+ * state with no other reader in the codebase -- kept as private instance
+ * state, with an instance reset() for test isolation.
  *
- * Implements `Piwigo\Core\MailerInterface` (P23 batch 8c) so
- * L2aCoreDomain/L2bExtendedDomain classes that may not depend on this
- * class directly (this file is L3Presentation) can constructor-inject the
- * interface instead — `Users\UserService`/`Comment\CommentService`, bound
- * via `config/container.php`.
+ * `AccessLevelChecker` has no `MailerInterface` dependency of its own, so
+ * it's built directly from this class's own already-required
+ * currentUser/currentConfig rather than resolved from the container.
+ * `AdminContext`/`ErrorCollector`/`ProcessCache`/`CurrentConfigService` are
+ * resolved lazily from the container instead, purely to pass through to
+ * getMailTemplate()'s own `new Template(...)` call -- see adminContext()'s
+ * own docblock for why they stay lazy.
+ *
+ * Implements `Piwigo\Core\MailerInterface` so L2aCoreDomain/L2bExtendedDomain
+ * classes that may not depend on this class directly (this file is
+ * L3Presentation) can constructor-inject the interface instead —
+ * `Users\UserService`/`Comment\CommentService`, bound via
+ * `config/container.php`.
  */
 final class MailService implements MailerInterface
 {
@@ -134,16 +105,12 @@ final class MailService implements MailerInterface
     private const MAIL_TRANSPORT_TIMEOUT_SECONDS = 10.0;
 
     /**
-     * P23 batch 8f-4: replaces the 2 deliberately-bare
-     * get_webmaster_mail_address() calls (free function deleted with
-     * include/functions.inc.php). Optional-with-lazy-default rather than
-     * required: the dependency is only reached on the sender-fallback/
-     * Bcc-webmaster paths -- callers that never reach them get the real
-     * Piwigo\Users\UserRepository (a legal L3->L2a downward dep,
-     * constructed lazily so no DB connection is built for the many code
-     * paths that never need it); unit tests (MailServiceTest/
-     * SendNotificationEmailHandlerTest) pass a fake implementation instead
-     * of the old global-function-stub shadowing.
+     * Optional-with-lazy-default rather than required: the dependency is
+     * only reached on the sender-fallback/Bcc-webmaster paths -- callers
+     * that never reach them get the real Piwigo\Users\UserRepository (a
+     * legal L3->L2a downward dep, constructed lazily so no DB connection
+     * is built for the many code paths that never need it); unit tests
+     * pass a fake implementation instead.
      */
     public function __construct(
         private readonly Lang $lang,
@@ -164,9 +131,7 @@ final class MailService implements MailerInterface
     /**
      * Built from this class's own already-required currentUser/
      * currentConfig -- AccessLevelChecker has no MailerInterface dependency
-     * of its own, so unlike accessControl() (deleted, singleton/
-     * service-locator elimination campaign, Phase 12 sub-phase 12A) this
-     * needs no container resolve at all.
+     * of its own, so this needs no container resolve at all.
      */
     private function accessLevelChecker(): AccessLevelChecker
     {
@@ -175,26 +140,16 @@ final class MailService implements MailerInterface
 
     /**
      * Container resolve, not a constructor property -- these 4 exist
-     * purely to pass through to buildMailTemplate()'s own
-     * `new Template(...)` call (Template's own required collaborators,
-     * singleton/service-locator elimination campaign, Phase 11 sub-phase
-     * 11E), not read by MailService itself. Not a true PHP-DI circular
-     * dependency the way accessControl() above is, but a real, confirmed
-     * regression risk found live via a full-suite run: AccessControl's own
-     * constructor already requires RedirectServiceInterface ->
+     * purely to pass through to getMailTemplate()'s own
+     * `new Template(...)` call (Template's own required collaborators),
+     * not read by MailService itself. Resolving `Piwigo\Auth\AccessControl`
+     * anywhere already transitively autowires this class -- its
+     * constructor requires RedirectServiceInterface ->
      * Bootstrap\RedirectService -> Users\UserService -> Core\MailerInterface
-     * (this class, autowired), so resolving AccessControl anywhere already
-     * transitively autowires MailService -- a required param here for any
-     * collaborator with an eager-side-effect container factory would mean
-     * every such resolution also pays that cost. ImageStdParams was
-     * originally on this list too (its own container factory
-     * unconditionally calls load_from_db() against a real DB connection --
-     * a subprocess test with no `derivative_settings` table hit exactly
-     * this), but Template itself now resolves it lazily internally (see
-     * Template::imageStdParams()'s own docblock), so this class doesn't
-     * need to pass it through at all any more. Kept lazy here, matching
-     * accessControl()'s own established shape, so nothing forces this
-     * cost outside an actual buildMailTemplate() call.
+     * (this class, autowired) -- so a required constructor param here for
+     * any collaborator with an eager-side-effect container factory would
+     * mean every such resolution also pays that cost. Kept lazy so nothing
+     * forces it outside an actual getMailTemplate() call.
      */
     private function adminContext(): AdminContext
     {
@@ -217,14 +172,11 @@ final class MailService implements MailerInterface
     }
 
     /**
-     * Container resolve, not a constructor property -- same "pass-through
-     * only, this class sits on AccessControl's own transitively-autowired
-     * chain" reasoning as adminContext()/errorCollector()/processCache()/
-     * currentConfigService() above. Used only inside authService()/
-     * userService()'s own throwaway-fallback constructions below, for
-     * HtmlService.php's own newly-required constructor collaborators
-     * (singleton/service-locator elimination campaign, Phase 11 sub-phase
-     * 11E).
+     * Container resolve, not a constructor property -- same reasoning as
+     * adminContext()/errorCollector()/processCache()/currentConfigService()
+     * above. Used only inside authService()/userService()'s own
+     * throwaway-fallback constructions below, for HtmlService's own
+     * required constructor collaborators.
      */
     private function htmlRenderer(): HtmlRenderingInterface
     {
@@ -249,9 +201,8 @@ final class MailService implements MailerInterface
     /**
      * Same reasoning as processCache() above -- used only inside
      * userService()'s own throwaway-fallback construction below, for
-     * UserService's own new required InstallationFlag/ProcessCache
-     * collaborators (singleton/service-locator elimination campaign,
-     * Phase 11 sub-phase 11G).
+     * UserService's own required InstallationFlag/ProcessCache
+     * collaborators.
      */
     private function installationFlag(): InstallationFlag
     {

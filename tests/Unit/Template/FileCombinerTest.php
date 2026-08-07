@@ -22,12 +22,11 @@ use Piwigo\Users\UserStatus;
 
 // combine()'s multi-item merge path (mkgetdir()+file_put_contents() under
 // PHPWG_ROOT_PATH) -- the full cascade through legacy free functions/
-// is_admin() etc. -- is Smarty-rendering/file-I/O integration, already
-// covered indirectly by the Browser suite (see docs/PLAN.md's P16 audit
-// note) -- not re-tested here. What's under test at this level: combine()'s
-// behavior for 0-1 non-template items and remote items, which never touch
-// the filesystem (confirmed by reading flush_pending()/process_combinable()'s
-// own branches).
+// is_admin() etc. -- is Smarty-rendering/file-I/O integration, covered
+// indirectly by the Browser suite, not re-tested here. What's under test
+// at this level: combine()'s behavior for 0-1 non-template items and
+// remote items, which never touch the filesystem (confirmed by reading
+// flush_pending()/process_combinable()'s own branches).
 //
 // process_combinable()'s own is_template branch (cache-hit short-circuit,
 // cache-miss build+write, the real-path-not-found guard, and CSS/JS
@@ -36,13 +35,12 @@ use Piwigo\Users\UserStatus;
 // real, minimally-configured Template (CurrentTemplate::current()->set()), not a full
 // themed request.
 //
-// combine() now calls Piwigo\Auth\AccessControl::isAdmin() directly (P23
-// batch 8d), which reads Piwigo\Users\CurrentUser (Legacy Coupling
-// Retirement Track A batch A3) -- so no stub is needed beyond seeding a
-// guest CurrentUser below, matching this test's old $GLOBALS['user'] stub.
+// combine() calls Piwigo\Auth\AccessControl::isAdmin() directly, which
+// reads Piwigo\Users\CurrentUser -- so no stub is needed beyond seeding a
+// guest CurrentUser below.
 
-// url_is_remote() -- always available now via composer autoload.files
-// (src/Piwigo/Url/functions.php, P23 batch 8c), no explicit require needed.
+// url_is_remote() is always available via composer autoload.files
+// (src/Piwigo/Url/functions.php), no explicit require needed.
 
 beforeEach(function (): void {
     CurrentConfigTestFactory::get()->setTemplateCompileCheck(false);
@@ -86,10 +84,9 @@ function setAdminUser(): void
 
 /**
  * FileCombiner only ever reads `isAdmin()` (via `computeForce()`), which
- * itself only reads CurrentUserTestFactory::get() -- singleton/service-locator
- * elimination campaign, Phase 12 sub-phase 12A: FileCombiner now takes
- * AccessLevelChecker directly (no HtmlRenderingInterface/
- * RedirectServiceInterface collaborators to fake at all).
+ * itself only reads CurrentUserTestFactory::get(). FileCombiner takes
+ * AccessLevelChecker directly, with no HtmlRenderingInterface/
+ * RedirectServiceInterface collaborators to fake.
  */
 function fileCombinerTestAccessLevelChecker(): AccessLevelChecker
 {

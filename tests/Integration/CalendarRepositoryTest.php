@@ -78,8 +78,8 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         // is 'ORDER BY date_available DESC, file ASC, id ASC') -- proves
         // the query is valid under ONLY_FULL_GROUP_BY (GROUP BY id, not
         // SELECT DISTINCT id, which has no functional-dependency exception
-        // for ORDER BY columns not in the SELECT list). A real regression
-        // here previously 500'd every live calendar page.
+        // for ORDER BY columns not in the SELECT list). A regression here
+        // breaks every live calendar page.
         $ids = $this->repo->findImageIds(
             new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)'),
             new SqlCondition(''),
@@ -107,10 +107,10 @@ final class CalendarRepositoryTest extends IntegrationTestCase
     public function test_find_image_ids_applies_the_date_where_continuation(): void
     {
         // get_date_where() (despite its name) returns a WHERE-clause
-        // *continuation* fragment ("AND (...)"), meant to land right after
-        // $fromWhereSql's own WHERE and before GROUP BY -- a real
-        // regression once concatenated it after GROUP BY/next to ORDER BY
-        // instead, producing invalid SQL for every live calendar page.
+        // *continuation* fragment ("AND (...)"), which must land right
+        // after $fromWhereSql's own WHERE and before GROUP BY --
+        // concatenating it after GROUP BY or next to ORDER BY instead
+        // produces invalid SQL for every live calendar page.
         // The fixture seeds every image at the same uniform date_available
         // (2026-08-01 00:00:00, matching PIWIGO_TEST_NOW) -- image 3's is
         // pushed a day later here, scoped to this test only, so images 1
@@ -129,8 +129,8 @@ final class CalendarRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * Item 16J: passing the DQL-shaped $dqlScope/$dqlDateWhere counterparts
-     * attempts real DQL when $orderBySql parses.
+     * Passing the DQL-shaped $dqlScope/$dqlDateWhere counterparts attempts
+     * real DQL when $orderBySql parses.
      */
     public function test_find_image_ids_runs_dql_when_dql_scope_and_order_by_are_given(): void
     {

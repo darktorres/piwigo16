@@ -288,9 +288,8 @@ function idcSaveWatermarkConfig(string $cookieJar, string $pwgToken, array $fiel
 
 /**
  * Reads derivative_settings.watermark_json's own `file` field directly --
- * replaces the former raw-serialize()-blob regex extraction (watermark
- * config is real JSON now, no unserialize() class-instantiation side
- * effect to avoid).
+ * watermark config is real JSON, with no unserialize() class-
+ * instantiation side effect to avoid.
  */
 function idcWatermarkFileFromSettings(string $errorMessage): string
 {
@@ -1149,7 +1148,7 @@ it('sends a long-lived Expires header when both the source file and the derivati
     }
 });
 
-it('generates a previously-unregistered custom size once its own key is registered, averaging sharpen across every defined type', function (): void {
+it('generates a custom size once its own key is registered, averaging sharpen across every defined type', function (): void {
     $snapshot = H::snapshotDerivativeConfig();
     try {
         // Prime derivative_settings/derivative_size on a throwaway photo

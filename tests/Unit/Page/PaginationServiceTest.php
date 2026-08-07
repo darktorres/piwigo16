@@ -6,14 +6,11 @@ use PHPUnit\Framework\Assert;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\PaginationService;
 
-// CurrentConfig is now a real, constructor-injected instance (no more
-// static property bag) -- each test builds its own fresh instance rather
-// than mutating/resetting shared static state, matching the
-// singleton/DI-elimination campaign's own established test pattern (see
-// e.g. tests/Unit/Controller/ImageDerivativeControllerTest.php). A fresh
-// instance's paginatePagesAround() already defaults to 2, matching this
-// suite's former beforeEach override, so most tests below don't need to
-// touch it at all.
+// CurrentConfig is a constructor-injected instance -- each test builds
+// its own fresh instance rather than mutating/resetting shared static
+// state (same pattern as tests/Unit/Controller/ImageDerivativeControllerTest.php).
+// A fresh instance's paginatePagesAround() already defaults to 2, so most
+// tests below don't need to touch it at all.
 test('createNavigationBar returns an empty bar when everything fits on one page', function (): void {
     $currentConfig = new CurrentConfig();
     $service = new PaginationService($currentConfig);

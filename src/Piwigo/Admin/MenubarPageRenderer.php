@@ -21,18 +21,9 @@ use Piwigo\Template\CurrentTemplate;
 /**
  * Ported from admin/menubar.php (page slug "menubar").
  *
- * Real bug fixed during this port: the original file wrote
- * `$page['warnings'][] = ...` (the "webmaster status required" notice)
- * without `$page` in its own declared-globals list -- it only worked
- * before P21 because `admin.php` did a raw top-level `include`, sharing
- * scope directly. Once wrapped inside AdminDispatcher::dispatch()'s (or
- * MenubarSubController::handle()'s) own method scope, that write silently
- * landed in a method-local variable discarded on return -- a non-webmaster
- * admin editing this page never saw the warning. Retargeting onto
- * PageState (Legacy Coupling Retirement Track A batch A5, real
- * constructor injection since sub-phase 12F-7's shim closure)
- * structurally closes off this whole bug class here: no `global`
- * declaration is needed to reach it from any scope.
+ * The "webmaster status required" notice is written through the
+ * constructor-injected PageState, not a `global $page['warnings']` write --
+ * no `global` declaration is needed to reach it from any scope.
  */
 final class MenubarPageRenderer
 {
@@ -44,11 +35,8 @@ final class MenubarPageRenderer
             $pageState->addWarning(str_replace('%s', $lang->t('user_status_webmaster'), $lang->t('%s status is required to edit parameters.')));
         }
 
-        // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
-        // bug -- nothing had ever called CoreTabs::setContext() with
-        // myBaseUrl for this page (same class of gap as
-        // ConfigurationSubController's own $conf_link fix), so this page's
-        // own tab strip has always rendered a broken relative href.
+        // CoreTabs::setContext() must be called with myBaseUrl, or this
+        // page's tab strip renders a broken relative href.
         $coreTabs->setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('menus');

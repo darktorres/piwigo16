@@ -12,16 +12,14 @@ use Piwigo\Tests\Support\KernelContainerOverride;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Piwigo\Bootstrap\AdminDispatcher::dispatch() -- had zero dedicated
- * coverage (see /home/torres/.claude/plans/piped-enchanting-spark.md, Wave
- * 1). The happy path (a mapped page slug reaching a real controller) is
- * already exhaustively exercised by every one of the Browser suite's
- * admin.php page-load tests; this file covers only the class's own docblock-
- * documented "programming error, not user input" guard -- unreachable
- * through the real admin.php entry point (which always resolves to a
- * mapped slug or the 'intro' fallback before calling dispatch()), but a
- * real, reachable branch for any direct caller of this public static
- * method.
+ * Piwigo\Bootstrap\AdminDispatcher::dispatch() -- the happy path (a mapped
+ * page slug reaching a real controller) is already exhaustively exercised
+ * by every one of the Browser suite's admin.php page-load tests; this file
+ * covers only the class's own docblock-documented "programming error, not
+ * user input" guard -- unreachable through the real admin.php entry point
+ * (which always resolves to a mapped slug or the 'intro' fallback before
+ * calling dispatch()), but a real, reachable branch for any direct caller
+ * of this public static method.
  */
 afterEach(function (): void {
     Kernel::reset();
@@ -49,8 +47,7 @@ test('dispatch throws when a mapped page resolves to a class that does not imple
     // Paths::class must be bound alongside the deliberately-wrong
     // PhotosAddSubController::class override -- KernelContainerOverride::
     // with() rebuilds the container from scratch with no Paths given by
-    // default, and CurrentPaths (Phase 3) is a pure shim with no state of
-    // its own to survive that rebuild.
+    // default.
     KernelContainerOverride::with(
         [
             PhotosAddSubController::class => new stdClass(),

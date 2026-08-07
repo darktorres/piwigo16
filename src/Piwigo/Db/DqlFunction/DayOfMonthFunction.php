@@ -17,21 +17,17 @@ use Override;
 
 /**
  * Custom DQL function: "DAYOFMONTH" "(" StringPrimary ")" -- day-of-month
- * (1-31), matching MySQL's own `DAYOFMONTH(date)` shape (formerly
- * {@see \Piwigo\Db\SqlDialect}'s `getDayOfMonth()`, removed once Calendar
- * -- its only real caller -- became real DQL). No native DQL built-in
- * exists for this -- confirmed against Doctrine's own DQL grammar
- * (`Parser::$datetimeFunctions` only has `CURRENT_DATE`/`CURRENT_TIME`/
+ * (1-31), matching MySQL's own `DAYOFMONTH(date)` shape. No native DQL
+ * built-in exists for this: Doctrine's own DQL grammar
+ * (`Parser::$datetimeFunctions`) only has `CURRENT_DATE`/`CURRENT_TIME`/
  * `CURRENT_TIMESTAMP`/`DATE_ADD`/`DATE_SUB`; `YEAR`/`MONTH`/`DAY` aren't
- * built in either, see {@see YearFunction}/{@see MonthFunction}'s own
- * docblocks for that correction).
+ * built in either, see {@see YearFunction}/{@see MonthFunction}.
  *
- * Further SQL-modernization audit, Item 15G: MySQL/MariaDB branch
- * verified against real data via this project's own Integration tests.
- * PostgreSQL/SQLite branches are unverified against a real installation
- * (see this plan's own Context section) -- built from each platform's
- * own documented syntax, not empirically confirmed. Any other platform
- * throws `NotSupported` rather than guessing.
+ * The MySQL/MariaDB branch is verified against real data via this
+ * project's Integration tests. The PostgreSQL/SQLite branches are built
+ * from each platform's documented syntax but are not verified against a
+ * real installation. Any other platform throws `NotSupported` rather
+ * than guessing.
  */
 final class DayOfMonthFunction extends FunctionNode
 {

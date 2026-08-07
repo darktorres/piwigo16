@@ -19,16 +19,15 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Logger;
 use Piwigo\Image\ImageStdParams;
 
-// Workstream C3 Part III: ImageDerivativeController's own trySwitchSource()
-// (redirects to an already-cached *different* derivative type when it's an
-// exact match for what's being requested) had no direct test coverage
-// before this phase -- most of the class needs a real DB connection/
+// ImageDerivativeController's own trySwitchSource() redirects to an
+// already-cached *different* derivative type when it's an exact match for
+// what's being requested. Most of the class needs a real DB connection/
 // filesystem/permission-checked request to exercise meaningfully, but its
 // own URL-construction logic (derivativeUrlPath(), extracted specifically
-// so this is possible) is pure and testable in isolation. Found live during
-// Part III's own work: a raw filesystem-relative redirect built the same
-// way was a real SEC-33-class bug (redirecting into the now-unreachable
-// _data/i/ tree) -- this locks in the fix.
+// so this is possible) is pure and testable in isolation. A raw
+// filesystem-relative redirect built the same way was a real bug
+// (redirecting into the unreachable _data/i/ tree) -- this locks in the
+// fix.
 
 // Never actually invoked -- none of this file's tests exercise
 // checkDerivativePermission()/a full __invoke() dispatch (only

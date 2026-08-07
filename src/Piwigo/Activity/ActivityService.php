@@ -22,12 +22,11 @@ use Piwigo\Users\CurrentUser;
  * admin/user_activity.php's own dashboard queries. Constructor-injects
  * only ActivityRepository (plain constructor injection).
  *
- * P23 batch 8d: implements Piwigo\Core\ActivityLoggerInterface so the 3
- * L2aCoreDomain classes that call record() (UserService/GroupService/
- * AuthService) can constructor-inject it without a forbidden L2a->L2b
- * dependency (see that interface's own docblock) -- every other real
- * caller (dozens of L4Integration/legacy sites) still retargets straight
- * to this class.
+ * Implements {@see \Piwigo\Core\ActivityLoggerInterface} so the
+ * `L2aCoreDomain` classes that call record() (UserService/GroupService/
+ * AuthService) can constructor-inject it without a forbidden
+ * `L2a` -> `L2b` dependency (see that interface's own docblock); every
+ * other caller retargets straight to this class.
  */
 final readonly class ActivityService implements ActivityLoggerInterface
 {
@@ -39,13 +38,9 @@ final readonly class ActivityService implements ActivityLoggerInterface
      * Container resolve, not a constructor property -- used only inside
      * record()'s own internal wasRealUserResolved() read below. A
      * required constructor param here would ripple across this class's
-     * own huge real construction-site count (dozens of literal `new
-     * ActivityService(...)` calls across the codebase, especially in test
-     * files), same low-blast-radius reasoning as every other lazy helper
-     * this session (singleton/service-locator elimination campaign, Phase
-     * 11 sub-phase 11G). Falls back to a fresh, unmemoized instance when
-     * Kernel::boot() hasn't run, matching CurrentUser::current()'s own
-     * former identical pre-boot fallback.
+     * own many `new ActivityService(...)` call sites across the
+     * codebase, especially in test files. Falls back to a fresh,
+     * unmemoized instance when Kernel::isBooted() is false.
      */
     private function currentUser(): CurrentUser
     {
@@ -64,8 +59,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
     /**
      * Same "container resolve, not a constructor property" reasoning as
      * currentUser() above -- used only inside record()'s own internal
-     * PageFilterHelper::scriptBasename() call below (singleton/
-     * service-locator elimination campaign, Phase 12 sub-phase 12D).
+     * PageFilterHelper::scriptBasename() call below.
      */
     private function currentConfig(): CurrentConfig
     {
@@ -174,25 +168,19 @@ final readonly class ActivityService implements ActivityLoggerInterface
 
         $rows = [];
         foreach ($objectIds as $loopObjectId) {
-            // Real, adversarially-verified bug fixed here: activity.performed_by
-            // has an ON DELETE SET NULL foreign key to users.id (confirmed
-            // via a real ForeignKeyConstraintViolationException writing this
-            // batch's own Integration tests) -- 0 is not a valid user id
-            // (AUTO_INCREMENT starts at 1), so the "on a plugin autoupdate,
-            // no real user resolved yet" case below would throw an
-            // uncaught exception on every such write, not silently log
-            // "performed by user 0" as originally intended. null is the
-            // column's own real "unknown actor" value, matching the FK's
-            // own semantics for a since-deleted user.
+            // activity.performed_by has an ON DELETE SET NULL foreign key
+            // to users.id, and 0 is not a valid user id (AUTO_INCREMENT
+            // starts at 1), so a plugin autoupdate with no real user
+            // resolved yet records null (the column's "unknown actor"
+            // value, matching the FK's own semantics for a since-deleted
+            // user) rather than 0.
             //
-            // Legacy Coupling Retirement Phase 8, 8h: retargeted from
-            // `global $user;` onto CurrentUser::wasRealUserResolved() --
-            // CurrentUser::isInitialized() can't substitute, since
-            // attachGlobals() unconditionally guest-seeds it on every
-            // bootstrap path (including CLI), which would silently
+            // CurrentUser::wasRealUserResolved() is used rather than
+            // CurrentUser::isInitialized(): attachGlobals()
+            // unconditionally guest-seeds CurrentUser on every bootstrap
+            // path (including CLI), so isInitialized() alone would
             // misattribute these rows to the guest user instead of
-            // 'unknown actor' (null) in exactly the case this fallback
-            // exists for.
+            // recording 'unknown actor' (null).
             $performedBy = $this->currentUser()
                 ->wasRealUserResolved() ? $this->currentUser()
                 ->get()

@@ -54,21 +54,18 @@ final readonly class CategoryDefaultRenderer
     ) {}
 
     /**
-     * Legacy Coupling Retirement Track A batch A5.2e: $items/$start/
-     * $nbImagePage/$section are explicit params instead of `global $page;`
-     * -- the one real caller (GalleryController) already has them from
-     * SectionContextRegistry::current(). Plain values rather than the
+     * $items/$start/$nbImagePage/$section are plain values rather than the
      * SectionContext object itself: Category is L2aCoreDomain and Section
-     * is L2bExtendedDomain, so a SectionContext parameter here is a real
+     * is L2bExtendedDomain, so a SectionContext parameter here would be a
      * `deptrac analyse` DependsOnDisallowedLayer violation (L2a may not
-     * depend on L2b), caught during A5.2e-8's verification gate.
+     * depend on L2b). The one real caller (GalleryController) already has
+     * these values from SectionContextRegistry::current().
      *
-     * Batch A5.2i: the slideshow URL (formerly `$page['cat_slideshow_url']`)
-     * is now this method's return value instead -- it's produced here for
-     * GalleryController's own later read, after SectionContext was already
-     * built, so it's out of SectionContext's own scope (see that class's
-     * docblock), but the two are always in the same call and don't need a
-     * shared PageState field.
+     * The slideshow URL is this method's return value: it's produced here
+     * for GalleryController's own later read, after SectionContext was
+     * already built, so it's out of SectionContext's own scope (see that
+     * class's docblock) -- but the two are always in the same call and
+     * don't need a shared PageState field.
      *
      * @param list<int|string> $items
      */

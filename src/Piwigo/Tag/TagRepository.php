@@ -21,11 +21,8 @@ use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\Projection\TagBrief;
 
 /**
- * Persistence layer for the tag domain, including the Tag+Image+Category
- * cross-domain queries (image_tag/image_category joins) that P23 batch 8c
- * ported out of `include/functions_tag.inc.php` -- the Category/Image
- * domain blocker this class's docblock used to cite (task #343) no longer
- * applies now that both exist as typed modules (P19).
+ * Persistence layer for the tag domain, including Tag+Image+Category
+ * cross-domain queries (image_tag/image_category joins).
  *
  * @extends EntityRepository<TagEntity>
  */
@@ -121,35 +118,18 @@ final class TagRepository extends EntityRepository
 
     /**
      * Count of distinct images per tag, restricted to visible/permitted
-     * images. Cross-domain (image_category isn't Tag's own table) --
-     * plain DBAL `QueryBuilder` via the entity manager's own connection,
-     * not DQL.
+     * images. Cross-domain (image_category isn't Tag's own table): both
+     * `image_category` ({@see \Piwigo\Image\ImageCategoryEntity}) and
+     * `image_tag` ({@see ImageTagEntity}) are mapped entities, so this
+     * runs as real DQL, with `Join::WITH` covering the join since there's
+     * no formal association between them.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
-     * other, still-real blocker: a dynamic caller-supplied SqlCondition
-     * (`PermissionService::getSqlConditionFandFAsCondition()`, see this
-     * docblock's own next paragraph) -- same genuinely dynamic,
-     * cross-cutting permission-condition blocker documented in
-     * {@see \Piwigo\Image\ImageRepository::applyCondition()}'s own
-     * docblock, outside Sub-phase B3/B4's scope.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller
-     * ({@see TagService::getAvailableTags()}) applies
-     * forbiddenCategoryIds/visibleCategoryIds against `ic.category_id` and
-     * imageAccessIds against `ic.image_id` (fieldName was already
-     * qualified `'ic.image_id'`, not `'id'`/`'i.id'`, so the old
-     * `visible_images`-fallthrough hit the `image_access_list` branch, not
-     * the level check). $tagIds' own CSV splice also bound.
-     *
-     * Item 15 audit: converted to real DQL -- both `image_category`
-     * ({@see \Piwigo\Image\ImageCategoryEntity}) and `image_tag`
-     * ({@see ImageTagEntity}) are mapped, `Join::WITH` covers the join
-     * (no formal association), and `PermissionCriteria`'s own methods
-     * needed no changes (see {@see applyCondition()}'s own docblock).
-     * `it.tagId` hydrates as a `TagId` VO under `getArrayResult()`, same
-     * gotcha already documented on {@see findTagsForImage()}.
+     * {@see PermissionCriteria} applies forbiddenCategoryIds/
+     * visibleCategoryIds against `ic.category_id` and imageAccessIds
+     * against `ic.image_id`. `it.tagId` hydrates as a `TagId` VO under
+     * `getArrayResult()`, the same gotcha documented on
+     * {@see findTagsForImage()}. $tagIds is bound as a parameter, not
+     * spliced.
      *
      * @param array<int, int|string> $tagIds empty means "no tag_id filter" (every tag counted)
      * @return array<int, int> [tag_id => counter]
@@ -273,53 +253,23 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * Further SQL-modernization audit, Item 4: $joinSql/$whereSql/
-     * $groupHavingSql used to be fully assembled by TagService::
-     * getImageIdsForTags() itself and handed here pre-built -- now typed,
-     * the repository builds its own join/base-where/group-having
-     * internally from $tagIds/$mode/$usePermissions/$criteria.
-     * $orderBySql stays a raw, caller-supplied opaque fragment.
+     * Stays on DBAL rather than DQL: conditionally joins the
+     * never-entity-mapped `image_category`, and $orderBySql is a raw,
+     * caller-supplied SQL ORDER BY fragment, not a typed sort object --
+     * the one real caller ({@see \Piwigo\Tag\TagService::
+     * getImageIdsForTags()}) falls back to `CurrentConfig::orderBy()`
+     * (free-form admin-configurable text) whenever the caller-supplied
+     * `$orderBy` is null/empty, the same "caller composes trusted ORDER
+     * BY text" architecture as {@see \Piwigo\Image\PhotoSortField},
+     * {@see \Piwigo\Group\GroupRepository::findWithMemberCounts()}, and
+     * {@see \Piwigo\Image\ImageRepository::findBatchManagerThumbnails()}.
+     * `ImageFilterCriteria::toSqlCondition()` also hardcodes raw
+     * snake_case column names internally (not parameterized per DQL
+     * property path the way {@see PermissionCriteria} is).
      *
-     * SQL-modernization audit, Item 14 Sub-phase C3: $extraImagesWhereSql/
-     * $extraParams/$extraTypes (the one legitimate escape hatch, only ever
-     * populated by Ws\PwgTags::getImages()'s own generic image-filter
-     * feature, f_min_rate etc.) replaced by `?ImageFilterCriteria
-     * $filterCriteria` -- see that class's own docblock.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C1: $permissionCondition
-     * (a raw SqlCondition) replaced by a typed {@see PermissionCriteria} --
-     * the one real caller (with $usePermissions true) applies
-     * forbiddenCategoryIds/visibleCategoryIds against `ic.category_id` and
-     * visibleImageIds against `i.id`. It also passed `visible_images =>
-     * 'id'` to the old `getSqlConditionFandFAsCondition()`, whose own
-     * `visible_images` case falls through into `forbidden_images` with no
-     * `break` -- with fieldName `'id'`, that's the images-table's own
-     * `level <= x` check, so maxLevel applies here too, against `i.level`.
-     * $usePermissions now also gates $criteria's own application directly
-     * (previously the caller passed an empty SqlCondition instead when
-     * false) -- same net effect, one fewer caller-side branch.
-     *
-     * Item 14 DQL audit: stays on DBAL -- conditionally joins the
-     * never-entity-mapped `image_category`, plus the caller-supplied raw
-     * $orderBySql fragment.
-     *
-     * Item 15 audit, re-verified and corrected: `image_category` IS now
-     * mapped ({@see \Piwigo\Image\ImageCategoryEntity}) -- the above claim
-     * is stale. The real, still-valid blocker is `$orderBySql`: traced to
-     * its one real caller ({@see \Piwigo\Tag\TagService::
-     * getImageIdsForTags()}), which falls back to `CurrentConfig::
-     * orderBy()` (free-form admin-configurable text) whenever the
-     * caller-supplied `$orderBy` is null/empty -- the same "caller
-     * composes trusted ORDER BY text" architecture already confirmed
-     * non-enumerable 3 times this item ({@see \Piwigo\Image\PhotoSortField}'s
-     * own documented exception, {@see \Piwigo\Group\GroupRepository::
-     * findWithMemberCounts()}, {@see \Piwigo\Image\ImageRepository::
-     * findBatchManagerThumbnails()}). `ImageFilterCriteria::
-     * toSqlCondition()` also hardcodes raw snake_case column names
-     * internally (not parameterized per DQL property path the way
-     * {@see PermissionCriteria} is), a second real blocker -- moot here
-     * since $orderBySql alone already rules out DQL, not worth fixing for
-     * this one caller.
+     * When $usePermissions is true, $criteria is applied against
+     * `ic.category_id` (forbidden/visible categories), `i.id` (visible
+     * images), and `i.level` (max level).
      *
      * @param list<int> $tagIds already-unwrapped TagId values
      * @return list<int>
@@ -935,10 +885,9 @@ final class TagRepository extends EntityRepository
      * Comma-joined tag ids per image, for images linked to any of $tagIds
      * -- Ws\PwgTags::getImages()'s own "OR mode" per-image tag list.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 3: converted to
-     * real DQL -- MySQL's `GROUP_CONCAT()` now has a portable custom DQL
-     * function ({@see \Piwigo\Db\DqlFunction\GroupConcatFunction}, per-
-     * platform dispatch, MySQL/MariaDB verified, PostgreSQL/SQLite
+     * Runs as real DQL: MySQL's `GROUP_CONCAT()` is exposed via a portable
+     * custom DQL function ({@see \Piwigo\Db\DqlFunction\GroupConcatFunction},
+     * per-platform dispatch, MySQL/MariaDB verified, PostgreSQL/SQLite
      * unverified against a real install -- see that class's own docblock).
      *
      * @param  list<int>  $tagIds

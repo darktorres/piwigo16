@@ -27,27 +27,26 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
- * Piwigo\Image\SrcImage had zero dedicated test file. Covers: the 3
- * static-setter-guarded accessors' not-set RuntimeException (fatalError()/
- * themeConf()/urlService()); the constructor's representative_ext branch,
- * its full mimetype-icon lookup (icon found, icon missing -> falls back to
- * 'unknown.png', and the ext==='svg' special-case that falls back to the
- * original path instead -- including that path's own "still not a real
- * image" Exception), and its rotation-swap branch for width/height; get_path();
- * get_url()'s mimetype-icon branch; and get_size()'s DIM_NOT_GIVEN
- * fatalError() (both with and without an installed HtmlRenderingInterface)
- * plus its live getimagesize() re-read.
+ * Covers: the 3 static-setter-guarded accessors' not-set RuntimeException
+ * (fatalError()/themeConf()/urlService()); the constructor's
+ * representative_ext branch, its full mimetype-icon lookup (icon found,
+ * icon missing -> falls back to 'unknown.png', and the ext==='svg'
+ * special-case that falls back to the original path instead -- including
+ * that path's own "still not a real image" Exception), and its
+ * rotation-swap branch for width/height; get_path(); get_url()'s
+ * mimetype-icon branch; and get_size()'s DIM_NOT_GIVEN fatalError() (both
+ * with and without an installed HtmlRenderingInterface) plus its live
+ * getimagesize() re-read.
  *
- * Singleton/service-locator elimination campaign, Phase 6: SrcImage's own
- * 4 static collaborator bridges are gone -- htmlRenderer/urlService/
- * imageRepository now resolve fresh from the container on every call (no
- * independently-settable wrapper), so a fake/real collaborator for those 3
- * is installed via KernelContainerOverride::with(), not direct Reflection
- * into a (now nonexistent) static property. themeConfProvider is the one
- * exception -- CurrentThemeConfProvider is a real, dedicated, independently
- * settable wrapper (works whether or not Kernel is booted), so
- * srcImageTestSetThemeConfProvider() below still exists and still behaves
- * like a direct setter.
+ * SrcImage resolves htmlRenderer, urlService, and imageRepository fresh
+ * from the container on every call, with no independently-settable static
+ * wrapper for any of the three -- a fake/real collaborator for them is
+ * installed via KernelContainerOverride::with(), not direct Reflection
+ * into a static property. themeConfProvider is the one exception:
+ * CurrentThemeConfProvider is a real, dedicated, independently settable
+ * wrapper (works whether or not Kernel is booted), so
+ * srcImageTestSetThemeConfProvider() below still behaves like a direct
+ * setter.
  */
 function srcImageTestSetThemeConfProvider(?ThemeConfProviderInterface $provider): void
 {
@@ -106,8 +105,8 @@ afterEach(function (): void {
 });
 
 test('themeConf() throws a RuntimeException when no ThemeConfProviderInterface has been installed yet', function (): void {
-    // SrcImage's own constructor now needs a booted Kernel too (Phase 9:
-    // pictureExtensions() read) -- boot it, but never install a theme-conf
+    // SrcImage's constructor needs a booted Kernel (it reads
+    // pictureExtensions()) -- boot it, but never install a theme-conf
     // provider, so themeConf()'s own check is still what throws.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-themeconf-not-set'));
     srcImageTestSetThemeConfProvider(null);
@@ -120,8 +119,8 @@ test('themeConf() throws a RuntimeException when no ThemeConfProviderInterface h
 });
 
 test('urlService() throws a RuntimeException when no UrlServiceInterface has been installed yet', function (): void {
-    // SrcImage's own constructor now needs a booted Kernel too (Phase 9:
-    // pictureExtensions() read) -- construct it under a real boot, then
+    // SrcImage's constructor needs a booted Kernel (it reads
+    // pictureExtensions()) -- construct it under a real boot, then
     // reset before calling get_url() so urlService()'s own
     // Kernel::isBooted() guard is what throws, not SrcImage's. $src itself
     // holds no live container reference once built, so resetting
@@ -139,8 +138,8 @@ test('urlService() throws a RuntimeException when no UrlServiceInterface has bee
 });
 
 test('get_size() throws a RuntimeException carrying the untranslated message when dimensions are required but not provided and no HtmlRenderingInterface is installed', function (): void {
-    // SrcImage's own constructor now needs a booted Kernel too (Phase 9:
-    // pictureExtensions() read) -- construct it under a real boot, then
+    // SrcImage's constructor needs a booted Kernel (it reads
+    // pictureExtensions()) -- construct it under a real boot, then
     // reset before calling get_size() so fatalError()'s own
     // Kernel::isBooted() guard falls through to the plain, untranslated
     // RuntimeException, not the container's real HtmlRenderingInterface.
@@ -172,8 +171,8 @@ test('get_size() delegates the fatal message to the installed HtmlRenderingInter
 });
 
 test('constructor narrows a numeric-string id to a real int', function (): void {
-    // Kills line 171's RemoveIntegerCast. SrcImage's own constructor now
-    // needs a booted Kernel (Phase 9: pictureExtensions() read).
+    // Kills line 171's RemoveIntegerCast. SrcImage's constructor needs a
+    // booted Kernel (it reads pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-id-numeric-string'));
     $src = new SrcImage([
         'id' => '7',
@@ -185,9 +184,8 @@ test('constructor narrows a numeric-string id to a real int', function (): void 
 });
 
 test('constructor defaults id to exactly 0 for a non-numeric id', function (): void {
-    // Kills line 171's DecrementInteger/IncrementInteger. SrcImage's own
-    // constructor now needs a booted Kernel (Phase 9: pictureExtensions()
-    // read).
+    // Kills line 171's DecrementInteger/IncrementInteger. SrcImage's
+    // constructor needs a booted Kernel (it reads pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-id-non-numeric'));
     $src = new SrcImage([
         'id' => 'not-numeric',
@@ -199,8 +197,8 @@ test('constructor defaults id to exactly 0 for a non-numeric id', function (): v
 });
 
 test('constructor builds a pwg_representative path when the extension is not a picture extension but a representative_ext is given', function (): void {
-    // SrcImage's own constructor now needs a booted Kernel (Phase 9:
-    // pictureExtensions() read).
+    // SrcImage's constructor needs a booted Kernel (it reads
+    // pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-representative-path'));
     $src = new SrcImage([
         'id' => 1,
@@ -217,8 +215,8 @@ test('constructor builds a pwg_representative path when the extension is not a p
 test('constructor matches a picture extension case-insensitively', function (): void {
     // Kills line 174's UnwrapStrtolower -- CurrentConfig::pictureExtensions()'s
     // own default set is all-lowercase; an uppercase real-world extension
-    // only matches it through strtolower(). SrcImage's own constructor now
-    // needs a booted Kernel (Phase 9: pictureExtensions() read).
+    // only matches it through strtolower(). SrcImage's constructor needs a
+    // booted Kernel (it reads pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-case-insensitive'));
     $src = new SrcImage([
         'id' => 1,
@@ -231,8 +229,8 @@ test('constructor matches a picture extension case-insensitively', function (): 
 });
 
 test('constructor swaps width/height for an odd rotation code but not for an even one', function (): void {
-    // SrcImage's own constructor now needs a booted Kernel (Phase 9:
-    // pictureExtensions() read).
+    // SrcImage's constructor needs a booted Kernel (it reads
+    // pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-rotation-swap'));
     $rotated = new SrcImage([
         'id' => 1,
@@ -391,8 +389,8 @@ test('constructor treats a missing path as an empty string, not null, when build
     // originalToRepresentative('', 'jpg') vs the mutant's non-empty
     // placeholder value producing genuinely different results.
     //
-    // SrcImage's own constructor now needs a booted Kernel (Phase 9:
-    // pictureExtensions() read).
+    // SrcImage's constructor needs a booted Kernel (it reads
+    // pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-missing-path'));
     $src = new SrcImage([
         'id' => 1,
@@ -477,8 +475,8 @@ test('constructor narrows a numeric-string width to a real int, and defaults a n
     // Kills line 215's RemoveIntegerCast (numeric-string width survives
     // as a string without the cast) and line 216's DecrementInteger/
     // IncrementInteger (a non-numeric-but-present height's own 0
-    // default). SrcImage's own constructor now needs a booted Kernel
-    // (Phase 9: pictureExtensions() read).
+    // default). SrcImage's constructor needs a booted Kernel (it reads
+    // pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-width-numeric-string'));
     $src = new SrcImage([
         'id' => 1,
@@ -498,8 +496,8 @@ test('constructor defaults a non-numeric width to exactly 0, and narrows a numer
     // RemoveIntegerCast (numeric-string height survives as a string
     // without the cast) -- the sibling test above only ever exercises
     // width's cast and height's default, never the other pairing.
-    // SrcImage's own constructor now needs a booted Kernel (Phase 9:
-    // pictureExtensions() read).
+    // SrcImage's constructor needs a booted Kernel (it reads
+    // pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-height-numeric-string'));
     $src = new SrcImage([
         'id' => 1,
@@ -516,8 +514,8 @@ test('constructor defaults a non-numeric width to exactly 0, and narrows a numer
 test('constructor defaults rotation to exactly 0 when the column is absent, not just non-numeric', function (): void {
     // Kills line 219's DecrementInteger/IncrementInteger -- every
     // sibling test above always supplies a real numeric 'rotation'.
-    // SrcImage's own constructor now needs a booted Kernel (Phase 9:
-    // pictureExtensions() read).
+    // SrcImage's constructor needs a booted Kernel (it reads
+    // pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-rotation-default'));
     $src = new SrcImage([
         'id' => 1,

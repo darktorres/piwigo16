@@ -17,9 +17,9 @@ function fullUserMailNotificationRow(): array
         'mail_address' => 'fixture_admin@example.test',
         'enabled' => '1',
         'last_send' => '2026-07-01 00:00:00',
-        // A real row's `status` is a UserStatus instance (Phase 5 Item 21:
-        // DQL array hydration of an enumType-mapped field), not a raw
-        // string -- matches what fromRow()'s real caller actually passes.
+        // A real row's `status` is a UserStatus instance (DQL array
+        // hydration of an enumType-mapped field), not a raw string --
+        // matches what fromRow()'s real caller actually passes.
         'status' => UserStatus::Webmaster,
     ];
 }

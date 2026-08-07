@@ -265,8 +265,6 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
     }
 
     /**
-     * @since 2.6
-     *
      * @return array<string, mixed>
      */
     public function getMethodOptions(string $methodName): array
@@ -564,14 +562,11 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
     }
 
     /**
-     * P26/SEC-40: $methodName used to be re-derived from $_REQUEST['method']
-     * instead of taking invoke()'s own already-known $methodName parameter
-     * -- a real bug for recursive invoke() calls (e.g.
-     * PwgPermissions::add()/remove() calling
-     * $service->invoke('pwg.permissions.getList', ...) after their own
-     * mutation): the forbidden-methods check would apply to whatever
-     * method the *original* HTTP request named, not the method actually
-     * being invoked in that recursive call.
+     * Checks the forbidden-methods list against $methodName itself, not
+     * against the original HTTP request's method -- this keeps the check
+     * correct for recursive invoke() calls (e.g. PwgPermissions::add()/
+     * remove() calling $service->invoke('pwg.permissions.getList', ...)
+     * after their own mutation).
      */
     public function isAuthorizedMethodForAPIKEY(string $methodName): bool
     {

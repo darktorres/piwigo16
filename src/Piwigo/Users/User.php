@@ -8,24 +8,13 @@ use InvalidArgumentException;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
- * Typed user entity. `rawAttributes` carries the full legacy `$user` array
- * for P17-23 reads during migration -- retirement gates per the plan doc:
- * P18 records a baseline read-count, P26's arch test enforces zero reads
- * outside `Users/`, P29 deletes the property entirely.
+ * Typed user entity. `rawAttributes` carries the full legacy `$user`
+ * array for keys with no dedicated named property.
  *
- * `forbiddenCategories`/`level`/`preferences` were promoted from
- * `rawAttributes` to named properties in Legacy Coupling Retirement Track A
- * batch A3 -- a real key-frequency audit of every `global $user; ...
- * $user['key']` read across `src/Piwigo/` found these used 13/9/13 times
- * respectively (vs. id/username/etc.'s existing 124/21/10/43-range
- * frequencies), clearing the same "common enough to warrant a named
- * property" bar those were promoted under. Lower-frequency keys
- * (`recent_period`, `nb_available_tags`, etc., all under 7 reads combined)
- * stay in `rawAttributes`. `cacheUpdateTime` was promoted alongside these 3
- * in the same batch, then demoted back out and deleted entirely in
- * gap-closure Stage 4g (docs/plan/gap-closure-p0-p23.md) once its own
- * `user_cache.cache_update_time`-keyed invalidation pattern was replaced
- * with `CachePools`-backed TTLs (Stage 4a) and no reader remained.
+ * `id`/`username`/`email`/`language`/`theme`/`status`/`enabledHigh`/
+ * `forbiddenCategories`/`level`/`preferences` are named properties;
+ * lower-frequency keys (`recent_period`, `nb_available_tags`, etc.) stay
+ * in `rawAttributes`.
  */
 final readonly class User
 {

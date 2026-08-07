@@ -51,72 +51,32 @@ use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin/site_update.php (page slug "site_update"), folded
- * directly into this controller -- same shape as every prior P23 batch 6
- * sub-batch's shell folding. By far the largest file in this batch
- * (1,100+ lines): a full filesystem/DB synchronization pass (new/deleted
- * category detection, new/deleted/updated element detection, metadata
- * sync), all self-contained business logic directly in the page file
- * rather than delegating to a separate admin/include/*.inc.php helper the
- * way Upload/Albums/Users' pages did. The P21 plan's own scope for this
- * batch names only ConfigService/ConfigRepository/SiteRepository/
- * PermalinkService as reused pieces (a `MenubarLayoutRepository` also
- * named there was later deleted entirely, P24 Part B, once
- * `ConfigRepository::upsert()` alone covered its one call site) -- no new
- * "SiteSyncService" is called for, and extracting one now would be a
- * large, high-risk undertaking disproportionate to this batch (matching
- * task #343's own deferral precedent in the Users batch). Left as legacy
- * glue, same "keep page/template logic inline, only extract data access"
- * split used throughout P21 for oversized pages. No free functions are
- * declared in this file, so there's no "redeclare on a second same-process
- * call" risk to fold away here.
+ * Backs the "site_update" admin page: a full filesystem/DB synchronization
+ * pass (new/deleted category detection, new/deleted/updated element
+ * detection, metadata sync). This business logic lives directly in this
+ * controller rather than a separate service. No free functions are
+ * declared in this file.
  *
- * admin.php itself already gates every page behind
- * check_status(AccessLevel::Administrator) before dispatch (admin.php:65),
- * so the original file's own (redundant, same level, and the only
- * check_status() call in this file) call is dropped here -- same
- * precedent as MaintenanceSubController/ConfigurationSubController.
+ * admin.php gates every page behind check_status(AccessLevel::Administrator)
+ * before dispatch, so this controller does not duplicate that check.
  *
- * P23 batch 6j-5 fixed the most severe CSRF gap of the whole P23 batch 6
- * effort: the main "Synchronize" POST handler (creates/deletes categories
- * and photos, bulk-overwrites metadata) had zero check_pwg_token() -- only
- * the `quick_sync` GET shortcut was token-gated. Fixed with a single
- * check_pwg_token() as the first statement inside the
- * `isset($_POST['submit'])` gate (every downstream block re-checks that
- * same condition but never re-derives the POST independently, so one
- * early check covers the whole flow); the template's own `<form>` now
- * carries a hidden pwg_token field too (see
- * themes/admin/default/template/site_update.tpl).
+ * The "Synchronize" POST handler is CSRF-protected by a single CsrfService
+ * check as the first statement inside the `isset($post['submit'])` gate
+ * below; every downstream block re-checks that same condition but never
+ * re-derives $_POST independently, so the one early check covers the whole
+ * flow. The template's own `<form>` also carries a hidden pwg_token field
+ * (see themes/admin/default/template/site_update.tpl).
  *
- * Also fixed 2 real issues found during a fresh full re-read, not carried
- * over from the earlier batch-6j scoping pass:
- *
- * - `$my_base_url` needed `global $my_base_url;` before its assignment --
- *   the 4th live instance of the P23 batch 6i-4/6j-1 `$my_base_url` bug
- *   class, and unlike those, this one was already broken in production
- *   *before* this batch touched it (confirmed live via curl:
- *   `?page=site_update`'s own "Synchronization"/"Site manager" tab hrefs
- *   were rendering without their `admin.php?page=` prefix), since this
- *   file was already being `include`'d from inside
- *   `SiteUpdateSubController::handle()`'s own call frame even before its
- *   real absorption.
- * - `define('CURRENT_DATE', $dbnow)` is dropped entirely, not just
- *   guarded -- `tests/Arch/StructuralTest.php`'s "src/Piwigo/ contains no
- *   define() calls" rule (part of SEC-60 worker-isolation prep: a future
- *   FrankenPHP worker loop reuses one process across many requests, and
- *   PHP constants can never be redefined, so any `define()` inside
- *   src/Piwigo/ would go stale -- silently, with a non-fatal E_WARNING --
- *   after its first call in a given worker's lifetime) already forbids
- *   this once the code lives here rather than in a legacy admin/*.php
- *   file. Both of this file's own reads of the constant are replaced with
- *   the already-in-scope local `$dbnow` variable directly -- no `define()`/
- *   `constant()` indirection was ever needed for this class's own logic.
- *   `Piwigo\Metadata\MetadataService::syncMetadata()`'s own defensive
- *   `defined('CURRENT_DATE') ? constant(...) : null` read (falling back to
- *   `date('Y-m-d')`) stays untouched -- `install.php`/`upgrade.php` (real
- *   top-level scripts, not src/Piwigo/) remain its only genuine definers;
- *   this class never actually called `syncMetadata()` itself, so nothing
- *   real starts falling back to today's date that didn't already.
+ * `define('CURRENT_DATE', ...)` is not used here: src/Piwigo/ is
+ * arch-tested to contain no `define()` calls (tests/Arch/StructuralTest.php),
+ * because a FrankenPHP worker process reuses one process across many
+ * requests and PHP constants can never be redefined -- a `define()` inside
+ * src/Piwigo/ would silently go stale after its first call in a worker's
+ * lifetime. This class reads the local `$dbnow` variable directly instead.
+ * `Piwigo\Metadata\MetadataService::syncMetadata()` still falls back to a
+ * defensive `defined('CURRENT_DATE') ? constant(...) : null` read (with
+ * `install.php`/`upgrade.php` as its only definers), since this class
+ * never calls `syncMetadata()`.
  */
 final class SiteUpdateSubController implements AdminSubControllerInterface
 {
@@ -173,10 +133,8 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         }
         $site_id = (int) $siteUpdateRequest->siteRaw;
 
-        // A single connection for the whole request -- mirrors the legacy
-        // single-global-mysqli-connection model this migration restores,
-        // and avoids the needless-reconnection pattern found in earlier
-        // construction-chain debt (Phase 1d finding).
+        // A single connection is used for the whole request, avoiding
+        // repeated reconnection.
         $conn = DbConnection::build();
 
         $site_url = EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)
@@ -259,10 +217,10 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         // | Quick sync                                                            |
         // +-----------------------------------------------------------------------+
 
-        // A local working copy of post -- the quick_sync shortcut below
-        // used to write 8 $_POST keys in place to simulate a full form
-        // submission, so every later isset()/comparison read in this same
-        // handle() call saw the synthesized values.
+        // $post is a local working copy of the submitted form data. The
+        // quick_sync shortcut below sets 8 keys directly on this array to
+        // simulate a full form submission, so every later isset()/comparison
+        // read in this same handle() call sees the synthesized values.
         $post = $siteUpdateRequest->post;
 
         if ($siteUpdateRequest->quickSyncRequested) {
@@ -404,8 +362,8 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                         $parent = $db_fulldirs[dirname($fulldir)];
 
                         // $db_categories[$parent] can be either a raw DB row
-                        // (uppercats/global_rank as string|null) or a previously
-                        // inserted category from an earlier iteration of this same
+                        // (uppercats/global_rank as string|null) or an already-inserted
+                        // category from an earlier iteration of this same
                         // loop (uppercats as string, global_rank as int|string) —
                         // narrow to the concatenable subset either way.
                         $parent_uppercats = $db_categories[$parent]['uppercats'] ?? null;

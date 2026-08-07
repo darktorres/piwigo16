@@ -13,14 +13,6 @@ use Piwigo\Config\DeploymentPolicy;
  * into HTTP response headers instead (X-PHP-Error-N), visible in DevTools ->
  * Network -> Response Headers.
  *
- * P23 sub-batch 8f-5: real class replacing the 7 pwg_error_collector_*()
- * free functions of the deleted include/error_collector.inc.php -- that
- * file's own docblock justified staying procedural with "17.x-rewrite has
- * no src/ PSR-4 autoloading yet", long stale. Bodies ported verbatim
- * (set_error_handler()/register_shutdown_function()/headers_sent()
- * semantics unchanged); the two $pwg_error_collector_* globals became the
- * static properties below.
- *
  * Prevents PHP notices/warnings/deprecations from corrupting JSON, XML, or
  * binary responses (e.g. ws.php) while keeping them inspectable in the
  * browser. Errors still reach error_log() so the Apache error log remains
@@ -29,15 +21,13 @@ use Piwigo\Config\DeploymentPolicy;
  * Install once, early in the bootstrap — see Piwigo\Bootstrap\
  * RequestBootstrap's show_php_errors_on_frontend handling.
  *
- * Container-shared instance (singleton/service-locator elimination
- * campaign, Phase 2): $active/$collected are real per-request state, a
- * genuine SEC-60 worker-mode risk if left static (a leftover $collected
- * entry from one request would otherwise resurface as an X-PHP-Error-N
- * header on the next request sharing the same worker process).
- * handleError()/flush() are the only two methods that read/write that
- * state, so only those became instance methods -- label()/
- * writeTestErrorsLog() are pure functions of their own parameters (no
- * $this access) and stay `private static`, unchanged.
+ * Container-shared instance: $active/$collected are per-request instance
+ * state, not static -- left static, a leftover $collected entry from one
+ * request would resurface as an X-PHP-Error-N header on the next request
+ * sharing the same worker process. handleError()/flush() are the only two
+ * methods that read/write that state and so are instance methods;
+ * label()/writeTestErrorsLog() are pure functions of their own parameters
+ * (no $this access) and stay `private static`.
  */
 final class ErrorCollector
 {
@@ -72,15 +62,12 @@ final class ErrorCollector
     /**
      * Installs (per the same show_php_errors/show_php_errors_on_frontend
      * deployment-policy gate) from every bootstrap that has its own
-     * fatalError()-reachable call graph -- originally only
-     * Bootstrap\RequestBootstrap::connect() (the main HTTP pipeline);
-     * Bootstrap\InstallBootstrap::boot() (install.php/upgrade.php/
-     * upgrade_feed.php) needs the identical sequence for the exact same
-     * reason (see HtmlService::fatalError()'s own comment: without this
-     * installed, its trigger_error(E_USER_ERROR) hard-halts the script
-     * before ever reaching the ResponseReadyException throw that follows
-     * it) -- confirmed live, a real install.php 500 rather than the
-     * intended clean error page.
+     * fatalError()-reachable call graph: `Bootstrap\RequestBootstrap::
+     * connect()` (the main HTTP pipeline) and `Bootstrap\InstallBootstrap::
+     * boot()` (install.php/upgrade.php/upgrade_feed.php) both need it --
+     * without it, HtmlService::fatalError()'s trigger_error(E_USER_ERROR)
+     * hard-halts the script before ever reaching the ResponseReadyException
+     * throw that follows it.
      */
     public function installIfConfigured(): void
     {
@@ -211,17 +198,15 @@ final class ErrorCollector
     }
 
     /**
-     * Same "container resolve, not a constructor property" reasoning as
-     * every other static utility in this campaign -- writeTestErrorsLog()
-     * is deliberately kept a pure, `private static` function of its own
-     * params (see this class's own docblock), and this rare fallback
-     * mkgetdir() call (only reached on a fresh checkout's very first
-     * test-mode error, before _data/logs/ exists) is its sole reason to
-     * need CurrentConfig at all -- not worth rippling into this class's
-     * own constructor and its ~13 real construction sites for one
-     * defensive path. CurrentConfig's own former pre-boot fallback was
-     * just `new self()`, no DB read at all, so a fresh, unmemoized
-     * instance here is safe.
+     * Resolves via the container rather than being carried as a
+     * constructor property: writeTestErrorsLog() is deliberately kept a
+     * pure, `private static` function of its own params (see this class's
+     * own docblock), and this rare fallback mkgetdir() call (only reached
+     * on a fresh checkout's very first test-mode error, before
+     * _data/logs/ exists) is its sole reason to need CurrentConfig at all
+     * -- not worth rippling into this class's own constructor for one
+     * defensive path. A fresh, unmemoized CurrentConfig instance is safe
+     * here because its constructor performs no DB read.
      */
     private static function currentConfig(): CurrentConfig
     {

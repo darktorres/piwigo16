@@ -87,9 +87,9 @@ function ctDerivativesPayload(array $overrides = []): array
 }
 
 /**
- * Reconstructs the same 'd'/'q'/'w'/'c' structure the former `derivatives`
- * config blob held, now sourced from the real derivative_settings/
- * derivative_size tables ImageStdParams persists to (see its own
+ * Reconstructs the 'd'/'q'/'w'/'c' structure, sourced from the real
+ * derivative_settings/derivative_size tables ImageStdParams persists to
+ * (see its own
  * sizesFromEntities()/watermarkFromJson()/customFromJson() -- this mirrors
  * that same mapping, just against raw mysqli rows instead of Doctrine
  * entities, since this file has no app-container access).
@@ -161,9 +161,8 @@ function ctDecodedDerivatives(): array
  * to ctDecodedDerivatives(), for seeding a specific fixture state (a
  * custom-derivative entry, an artificially-old last_mod_time) this page's
  * own POST handlers have no form field to set directly. Only ever touches
- * derivative_settings and the *enabled* partition of derivative_size, same
- * scope as the original blob-based version (which only ever wrote the
- * `derivatives` config key, never `disabled_derivatives`).
+ * derivative_settings and the *enabled* partition of derivative_size --
+ * disabled rows are left untouched.
  *
  * @param array{d: array<string, DerivativeParams>, q: int, w: WatermarkParams, c: array<string, int>} $decoded
  */
@@ -201,10 +200,9 @@ function ctSetDecodedDerivatives(array $decoded): void
 }
 
 /**
- * Reads derivative_settings.watermark_json's own `file` field directly
- * (replaces the former raw-serialize()-blob regex extraction -- watermark
- * config is real JSON now, no unserialize() class-instantiation side
- * effect to avoid).
+ * Reads derivative_settings.watermark_json's own `file` field directly --
+ * watermark config is real JSON, with no unserialize() class-
+ * instantiation side effect to avoid.
  */
 function ctWatermarkFileFromSettings(string $errorMessage): string
 {
@@ -1593,7 +1591,7 @@ it('sizes tab: resubmitting identical derivative values leaves an unchanged type
 
         // A real elapsed-time gap (not just "same request"): if
         // processSizes()'s own same-value detection (comparing ideal_size/
-        // max_crop/min_size/sharpen/quality against the previously saved
+        // max_crop/min_size/sharpen/quality against the already-saved
         // DerivativeParams) were broken and unconditionally stamped
         // last_mod_time = time() on every save, this second, byte-identical
         // resubmission would show a strictly newer timestamp.
@@ -1677,8 +1675,7 @@ it('watermark tab: reports a write-access error for a genuinely unwritable uploa
         // $watermarksDir in some unknown intermediate state (e.g. non-empty,
         // still www-data-owned) while the rest of this test keeps assuming
         // its own "fresh torres-owned 0555 directory" setup succeeded --
-        // exactly the kind of gap that let leaked debris accumulate
-        // silently before (see the finally block's own docblock below).
+        // the same class of gap the finally block below guards against.
         $entries = scandir($watermarksDir);
         foreach ($entries !== false ? $entries : [] as $entry) {
             if ($entry === '.' || $entry === '..') {
@@ -1794,16 +1791,14 @@ it('watermark tab: reports a write-access error for a genuinely unwritable uploa
             @mkdir($watermarksDir, 0777);
         }
         @chmod($watermarksDir, 0777);
-        // Real bug, found live: this used to only restore $preserved,
-        // never removing anything else -- if the upload attempt above
-        // ever actually succeeded (a race against the 0555 setup, or a
-        // prior interrupted run leaving watermarksDir mid-swap), the
-        // resulting file was never in $preserved and stayed as permanent,
-        // accumulating debris (confirmed live: numbered
-        // ct_unwritable_watermark-1.png/-2.png etc. from repeated leaks).
-        // Clear anything currently there before restoring the genuinely
-        // pre-existing entries, so a single bad run can never leave this
-        // shared fixture directory in a dirty state for every later one.
+        // If the upload attempt above ever actually succeeds (a race
+        // against the 0555 setup, or an earlier run having left
+        // watermarksDir mid-swap), the resulting file is not in
+        // $preserved and would otherwise stay behind permanently,
+        // accumulating debris. Clear anything currently there before
+        // restoring the genuinely pre-existing entries, so a single bad
+        // run can never leave this shared fixture directory in a dirty
+        // state for every later one.
         $currentEntries = scandir($watermarksDir);
         foreach ($currentEntries !== false ? $currentEntries : [] as $entry) {
             if ($entry === '.' || $entry === '..') {

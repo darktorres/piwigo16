@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-// PermissionService::getForbiddenCategories() now calls
-// Piwigo\Auth\AccessControl::isAdmin($userStatus) directly (P23 batch 8d),
-// always with this file's own explicit $userStatus argument -- no stub
-// needed.
+// PermissionService::getForbiddenCategories() calls
+// Piwigo\Auth\AccessControl::isAdmin($userStatus) directly, always with
+// this file's own explicit $userStatus argument -- no stub needed.
 
 namespace Piwigo\Tests\Integration {
 

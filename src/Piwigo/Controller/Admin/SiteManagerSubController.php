@@ -29,37 +29,24 @@ use Piwigo\Template\CurrentTemplate;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin/site_manager.php (page slug "site_manager"), folded
- * directly into this controller -- same shape as every prior P23 batch 6
- * sub-batch's shell folding. admin.php itself already gates every page
- * behind check_status(AccessLevel::Administrator) before dispatch, so the
- * original file's own (redundant, same level) check_status() call is
- * dropped here, same precedent as MaintenanceSubController/
- * BatchManagerSubController. Its real mutation paths (POST site creation,
- * GET action=delete) were already correctly `check_pwg_token()`-gated --
- * no CSRF gap found in this sub-batch, kept unchanged.
+ * Backs the "site_manager" admin page. admin.php gates every page behind
+ * check_status(AccessLevel::Administrator) before dispatch, so this
+ * controller does not duplicate that check.
  *
- * `$tabsheet->select('site_maager')` (missing "n") is not a typo to fix
- * here: `Piwigo\Admin\CoreTabs::addCoreTabs()`'s own `case 'site_update':`
- * branch (formerly `admin/include/add_core_tabs.inc.php`'s
- * `add_core_tabs()`, folded in P23 batch 8b-6) defines the exact same
- * misspelled key
- * (`$sheets['site_maager']`), so both sides match and the correct tab
- * highlights. Renaming only one side would silently break tab
- * highlighting (the same regression class found in P23 batch 6i-4);
- * renaming both would touch a second file shared by 4 other already-shipped
- * pages for a purely cosmetic gain. Left as-is (P23 batch 6j scoping pass,
- * see `p23/04-batch6j-overview.md`).
+ * `$tabsheet->select('site_maager')` (missing "n") is intentional:
+ * `Piwigo\Admin\CoreTabs::addCoreTabs()`'s own `case 'site_update':` branch
+ * defines the same misspelled key (`$sheets['site_maager']`), so both sides
+ * must match for the correct tab to highlight. Renaming only one side would
+ * silently break tab highlighting; renaming both would touch a second file
+ * shared by other already-shipped pages for a purely cosmetic gain.
  *
  * `CoreTabs::setContext(new CoreTabsContext(myBaseUrl: ...))` must run
  * before `$tabsheet->select()` below -- `CoreTabs::addCoreTabs()`'s own
  * `case 'site_update':` branch reads that value via
  * `self::contextField(self::context()->myBaseUrl, 'myBaseUrl')` a few
  * lines below, inside `$tabsheet->select()`'s `tabsheet_before_select`
- * event. This replaced the old `global $my_base_url;` mechanism this
- * paragraph used to describe (P24 phase 8g, CoreTabsContext + Bucket A
- * global retirement); there is no bare `$my_base_url` variable or
- * `global` statement left in this method.
+ * event. There is no bare `$my_base_url` variable or `global` statement in
+ * this method.
  */
 final class SiteManagerSubController implements AdminSubControllerInterface
 {

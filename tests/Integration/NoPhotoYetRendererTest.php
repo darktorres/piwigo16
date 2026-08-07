@@ -2,12 +2,9 @@
 
 declare(strict_types=1);
 
-// P23 batch 8f-4: the conf_update_param() function stub is gone --
-// NoPhotoYetRenderer now calls its own constructor-injected ConfigService
-// (Legacy Coupling Retirement Phase 8, 8d), a real DBAL-based write no
-// bare-function stub can intercept, so the genuine write path runs
-// against the same config table via $this->conn below -- no separate
-// MysqliDb connection needed any more.
+// NoPhotoYetRenderer calls its own constructor-injected ConfigService, a
+// real DBAL-based write -- the genuine write path runs against the same
+// config table via $this->conn below.
 
 namespace Piwigo\Tests\Integration {
 
@@ -139,8 +136,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
 
         // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
         // isAdmin() directly (real class methods), which read
-        // Piwigo\Users\CurrentUser (Legacy Coupling Retirement Track A
-        // batch A3).
+        // Piwigo\Users\CurrentUser.
         CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 2, 'status' => 'guest', 'username' => 'fixture_guest']));
         unset($_SESSION['no_photo_yet']);
     }

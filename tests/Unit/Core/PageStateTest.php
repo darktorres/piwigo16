@@ -7,8 +7,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\Paths;
 
-// Container-shared instance (singleton/service-locator elimination
-// campaign, Phase 4) -- each test constructs its own fresh instance
+// Container-shared instance -- each test constructs its own fresh instance
 // directly; no reset() needed.
 
 afterEach(function (): void {
@@ -105,10 +104,8 @@ test('setUpdatedVersion/markAuthKeyInvalid set their respective fields', functio
 });
 
 test('PageStateTestFactory::get falls back to a memoized instance when Kernel is not booted', function (): void {
-    // Memoized (not fresh-per-call), same reasoning as CurrentUserTestFactory::get()
-    // (and formerly EventDispatcher::get()/ImageStdParams::current()/
-    // Translator::get(), closed in sub-phases 12F-4/12F-6/12F-9/12F-11): a caller that
-    // writes via current() in one call and reads via current() in a
+    // Memoized (not fresh-per-call), same reasoning as CurrentUserTestFactory::get():
+    // a caller that writes via current() in one call and reads via current() in a
     // later call must see the same instance, or the write would be lost.
     // reset() first: the memoized fallback is one real object shared by
     // every not-booted caller across the whole test process (other test

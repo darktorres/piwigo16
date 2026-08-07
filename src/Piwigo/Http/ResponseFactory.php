@@ -31,13 +31,8 @@ final class ResponseFactory
     }
 
     /**
-     * Workstream C3: fills the gap this class's own docblock used to name
-     * ("No redirect() yet ... add redirect() here once a real non-exiting
-     * RedirectResponse replaces [redirect_http()/redirect_html()]"). Just
-     * a Location header + empty body -- the Request-URI/Content-Location
-     * headers the legacy redirect_http() also sent were already identified
-     * as pointless and dropped elsewhere (SEC-35's ImageDerivativeController
-     * fix), not carried forward here either.
+     * Just a Location header + empty body -- Request-URI/Content-Location
+     * headers are pointless for a redirect response and are not included.
      */
     public static function redirect(string $url, int $status = 302): ResponseInterface
     {

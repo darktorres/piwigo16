@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Core\ServerTiming;
 
-// Container-shared instance (singleton/service-locator elimination
-// campaign, Phase 3) -- each test constructs its own fresh instance
+// Container-shared instance -- each test constructs its own fresh instance
 // directly; no reset() needed.
 
 test('all is empty before anything starts', function (): void {

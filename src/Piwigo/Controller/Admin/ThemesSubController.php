@@ -27,40 +27,24 @@ use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin/themes.php's own tab-dispatch shell (page slug "themes"),
- * folded directly into this controller (P23 sub-batch 6i-2) -- same shape
- * as `LanguagesSubController`. Its own tab dispatch is already validated
- * (`/^(installed|update|new|standard_pages)$/`).
+ * Replaces admin/themes.php's own tab-dispatch shell (page slug "themes").
+ * Its own tab dispatch is validated against
+ * `/^(installed|update|new|standard_pages)$/`.
  *
- * Correction (found during 6i-4): `$my_base_url` is NOT dead code, despite
- * this docblock originally claiming so. It's consumed indirectly by
- * `Piwigo\Admin\CoreTabs::addCoreTabs()`'s own `case 'themes':` branch
- * (formerly `admin/include/add_core_tabs.inc.php`'s `add_core_tabs()`,
- * folded in P23 batch 8b-6) -- dropping it silently degraded every tab
- * href (missing the `admin.php?page=themes` prefix entirely). Restored
- * here via `CoreTabs::setContext(new CoreTabsContext(myBaseUrl: ...))`
- * below; `CoreTabs::addCoreTabs()`'s `'themes'` case now reads it via
- * `self::contextField(self::context()->myBaseUrl, 'myBaseUrl')`, not the
- * `global $my_base_url;` read this paragraph originally described (that
- * mechanism was retired by P24 phase 8g's CoreTabsContext migration).
+ * `CoreTabsContext`'s `myBaseUrl` must be set (via `CoreTabs::setContext()`
+ * below) before `Tabsheet::select()` triggers `CoreTabs::addCoreTabs()`'s
+ * `'themes'` case, which reads it via
+ * `self::contextField(self::context()->myBaseUrl, 'myBaseUrl')`; without it
+ * every tab href loses its `admin.php?page=themes` prefix.
  *
- * The "installed"/"new" tab bodies were migrated off the themes.class.php
- * god-class (already replaced by PemCatalog/ExtensionScanner/
- * ExtensionLifecycle/ExtensionRepository in a prior P21-era pass) onto
- * Piwigo\Admin\ThemesInstalledPageRenderer/ThemesNewPageRenderer -- see
- * ThemesInstalledPageRenderer's own docblock for a real CSRF gap found and
- * fixed there. The "standard_pages" tab now calls the shared
- * Piwigo\Admin\ThemesStandardPagesPageRenderer, the same class the
- * standalone "themes_standard_pages" page slug's own
- * ThemesStandardPagesSubController calls -- both routes reached the same
- * file before this port too, now they share one real class instead of one
- * `include`-ing the other. The "update" tab now calls the shared
- * Piwigo\Admin\UpdatesExtPageRenderer (P23 sub-batch 6i-4) instead of its
- * own raw `include admin/updates_ext.php` -- the same class
- * `LanguagesSubController`/`PluginsSubController`/`UpdatesSubController`'s
- * own "ext" tab call. This controller's own `ADMIN_PAGE_TITLE` override
- * still applies after the renderer call, exactly as it did after the raw
- * include before this port.
+ * The "installed" and "new" tabs render via `ThemesInstalledPageRenderer`/
+ * `ThemesNewPageRenderer`. The "standard_pages" tab renders via the shared
+ * `ThemesStandardPagesPageRenderer` (also used by the standalone
+ * `ThemesStandardPagesSubController`). The "update" tab renders via the
+ * shared `UpdatesExtPageRenderer` (also used by `LanguagesSubController`,
+ * `PluginsSubController`, and `UpdatesSubController` for their own "ext"
+ * tab); this controller's `ADMIN_PAGE_TITLE` assignment still overrides
+ * after that call.
  */
 final class ThemesSubController implements AdminSubControllerInterface
 {

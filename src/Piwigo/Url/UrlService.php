@@ -45,39 +45,24 @@ use Piwigo\Users\UserRepository;
  *
  * `cookie_path()`, `find_tags()` (`Piwigo\Tag\TagService::findTags()`),
  * `get_cat_info()`/`get_cat_id_from_permalinks()`
- * (`Piwigo\Category\CategoryService`, P23 batch 8c) are called directly
- * (not free-function delegates) -- Auth\CookieService/Tag/Category are all
- * same-layer-or-below (L2b may depend on L2a). P23 batch 8f-3: the P17-era
- * "injects nothing" shape is retired for the HTML-rendering surface
- * specifically -- `bad_request()`/`page_not_found()`/`fatal_error()` now
- * route through the constructor-injected HtmlRenderingInterface
- * (Piwigo\Core), same pattern as CategoryService/AuthService/CommentService/
- * UserService's own equivalent treatment. parseSectionUrl() alone reaches
- * badRequest()/pageNotFound() (both now take a required
- * RedirectServiceInterface parameter -- see HtmlRenderingInterface's own
- * docblock) -- Legacy Coupling Retirement Phase 4c passes
- * RedirectServiceInterface into that one method as a parameter instead of
- * a constructor dependency: this class can't hold RedirectServiceInterface
- * as a constructor property without HtmlService's own throwaway
- * UrlService construction (Legacy Coupling Retirement Phase 4c, see its
- * own docblock) needing a concrete L4 Piwigo\Bootstrap\RedirectService,
- * which HtmlService (L3Presentation) may not depend on directly per
- * deptrac.yaml's ruleset.
+ * (`Piwigo\Category\CategoryService`) are called directly (not
+ * free-function delegates) -- Auth\CookieService/Tag/Category are all
+ * same-layer-or-below (L2b may depend on L2a). `bad_request()`/
+ * `page_not_found()`/`fatal_error()` route through the
+ * constructor-injected HtmlRenderingInterface (Piwigo\Core), the same
+ * pattern used by CategoryService/AuthService/CommentService/UserService.
+ * parseSectionUrl() alone reaches badRequest()/pageNotFound() (both take
+ * a required RedirectServiceInterface parameter -- see
+ * HtmlRenderingInterface's own docblock); RedirectServiceInterface is
+ * passed into that one method as a parameter rather than held as a
+ * constructor property, since HtmlService's own construction of
+ * UrlService would otherwise need a concrete L4 Piwigo\Bootstrap\
+ * RedirectService, which HtmlService (L3Presentation) may not depend on
+ * directly per deptrac.yaml's ruleset.
  *
- * Phase 11 sub-phase 11E: the constructor now also takes every remaining
- * transitional-shim collaborator this class used to read internally
- * (SectionContextRegistry/RequestMountDepth/CurrentConfig/DeploymentPolicy/
- * WsContext/CurrentUser/Lang/EventDispatcher) as required params -- the
- * old "too many manual construction sites" reasoning no longer holds
- * (churn is not a deciding factor for this campaign); every real
- * `new UrlService(...)` call site was updated accordingly. AccessControl
- * itself stayed a lazily-resolved private helper -- a genuine circular
- * dependency, not the same too-many-call-sites reasoning -- but the one
- * thing this class actually reads from it (`isAGuest()`) moved to
- * AccessLevelChecker (singleton/service-locator elimination campaign,
- * Phase 12 sub-phase 12A), which has no UrlServiceInterface dependency of
- * its own, so it's built from this class's own already-required
- * currentUser/currentConfig instead of a container resolve.
+ * AccessLevelChecker has no UrlServiceInterface dependency of its own, so
+ * it's built directly from this class's own currentUser/currentConfig
+ * rather than resolved from the container.
  */
 final class UrlService implements UrlServiceInterface
 {
@@ -98,9 +83,7 @@ final class UrlService implements UrlServiceInterface
     /**
      * Built from this class's own already-required currentUser/
      * currentConfig -- AccessLevelChecker has no UrlServiceInterface
-     * dependency of its own, so unlike accessControl() (deleted, singleton/
-     * service-locator elimination campaign, Phase 12 sub-phase 12A) this
-     * needs no container resolve at all.
+     * dependency of its own, so this needs no container resolve at all.
      */
     private function accessLevelChecker(): AccessLevelChecker
     {
@@ -111,10 +94,8 @@ final class UrlService implements UrlServiceInterface
      * Container resolve, not a constructor property -- the only real use
      * in this class is the one `new TagService(...)` construction below. A
      * required constructor param here would ripple to every real
-     * `new UrlService(...)` construction site across the app (Phase 6:
-     * still manually `new`'d at dozens of sites) for a single caller, the
-     * same low-blast-radius reasoning as accessControl() above (singleton/
-     * service-locator elimination campaign, Phase 11 sub-phase 11G).
+     * `new UrlService(...)` construction site across the app (still
+     * manually `new`'d at dozens of sites) for a single caller.
      */
     private function currentLogger(): CurrentLogger
     {
@@ -157,9 +138,7 @@ final class UrlService implements UrlServiceInterface
      * Same reasoning as currentLogger()/sessionService()/translator()
      * above -- used only inside this class's own 2 `new
      * PermissionService(...)` construction sites. Falls back to a fresh,
-     * uninitialised instance when `Kernel::boot()` hasn't run, matching
-     * `FilterState`'s own former `isInitializedStatic()` shim's identical
-     * pre-boot fallback.
+     * uninitialised instance when `Kernel::boot()` hasn't run.
      */
     private function filterState(): FilterState
     {
@@ -182,20 +161,13 @@ final class UrlService implements UrlServiceInterface
     #[Override]
     public function getRootUrl(): string
     {
-        // Legacy Coupling Retirement Track A batch A5.2e: root_path comes
-        // from RootPathOverride when setMakeFullUrl() is active, else
-        // SectionContextRegistry::current() (was `global $page['root_path']`)
-        // -- nullable here (unlike GalleryController/PictureController's
-        // own guaranteed-non-null read) since this runs for non-gallery
-        // pages too, matching the original's own `?? null` fallback.
+        // root_path comes from RootPathOverride when setMakeFullUrl() is
+        // active, else SectionContextRegistry::current() -- nullable here
+        // (unlike GalleryController/PictureController's own
+        // guaranteed-non-null read) since this runs for non-gallery pages
+        // too.
         $root_path = $this->rootPathOverride->current() ?? $this->sectionContextRegistry->current()?->rootPath;
         if ($root_path === null || $root_path === '') {
-            // Legacy Coupling Retirement gap-closure (entry-shell
-            // define()/include round): used to read the raw PHPWG_ROOT_PATH
-            // constant here -- see RequestMountDepth's own docblock for why
-            // that was fragile (coincidentally correct only for
-            // admin/popuphelp.php, not a guaranteed general mechanism) and
-            // why this real, request-scoped mount-depth value replaces it.
             return str_repeat('../', $this->requestMountDepth->current());
         }
 
@@ -276,14 +248,8 @@ final class UrlService implements UrlServiceInterface
 
     /**
      * Returns the configured gallery_url's host[:port], or null when
-     * unconfigured (auto-detect mode). Reads Piwigo\Config\CurrentConfig::
-     * galleryUrl() directly -- safe since Legacy Coupling Retirement Track A
-     * batch A4's ConfigDb fix (see EphemeralKeyService's own docblock for
-     * the mechanism); previously this and every other admin-configurable
-     * setting in this class had to read the legacy `global $conf` instead,
-     * since CurrentConfig::galleryUrl() was silently inert for every real
-     * admin-configured value on a live request -- caught empirically while
-     * building P18's MailService.
+     * unconfigured (auto-detect mode). Reads
+     * Piwigo\Config\CurrentConfig::galleryUrl() directly.
      */
     private function configuredHost(): ?string
     {
@@ -307,8 +273,8 @@ final class UrlService implements UrlServiceInterface
      * $this->deploymentPolicy->allowedHosts is
      * non-empty, an unrecognized candidate host is never embedded into an
      * outbound URL -- falls back to the first configured host instead.
-     * Empty allow-list means "not configured", preserving the historical
-     * auto-detect (trust the header) behavior.
+     * Empty allow-list means "not configured" -- falls back to trusting
+     * the header (auto-detect).
      */
     private function trustedHost(string $candidate): string
     {
@@ -407,12 +373,11 @@ final class UrlService implements UrlServiceInterface
      * Returns the current gallery-navigation-context params (with key
      * redefined and key removed) used to duplicate the current URL.
      *
-     * Legacy Coupling Retirement Track A batch A5.2e: sourced from
-     * SectionContextRegistry::current()->toUrlParams() instead of a raw
-     * `global $page;` snapshot -- nullable-safe (falls back to an empty
-     * params array) since this runs for non-gallery pages too. root_path
-     * is overridden the same way getRootUrl() is, so a duplicated URL
-     * still gets the absolute path while setMakeFullUrl() is active.
+     * Sourced from SectionContextRegistry::current()->toUrlParams() --
+     * nullable-safe (falls back to an empty params array) since this runs
+     * for non-gallery pages too. root_path is overridden the same way
+     * getRootUrl() is, so a duplicated URL still gets the absolute path
+     * while setMakeFullUrl() is active.
      *
      * @param array<string, mixed> $redefined keys
      * @param array<int, string> $removed keys
@@ -1102,7 +1067,6 @@ final class UrlService implements UrlServiceInterface
      * List favorite image_ids of the current user. Every real caller only
      * checks key existence (isset($favorites[$id])) -- the value is always
      * the query's own literal `1`, never read for its own sake.
-     * @since 13
      *
      * @return array<int, int>
      */

@@ -14,8 +14,7 @@ function fullMailRecipientRow(): array
         'user_id' => '3',
         'name' => 'regular_user',
         'email' => 'regular@example.test',
-        // A real row's `status` is a UserStatus instance (Phase 5 Item 21:
-        // DQL array hydration of an enumType-mapped field), not a raw
+        // A real row's `status` is a UserStatus instance, not a raw
         // string -- matches what fromRow()'s real caller actually passes.
         'status' => UserStatus::Normal,
     ];

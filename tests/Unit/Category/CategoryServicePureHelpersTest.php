@@ -18,14 +18,12 @@ use Piwigo\Tests\Support\HtmlServiceTestFactory;
 // docblock).
 
 /**
- * getDisplayImagesCount() takes Lang as a genuinely new explicit param
- * (NOCTOR shape, singleton/service-locator elimination campaign, Phase 12
- * sub-phase 12D) -- no Kernel::boot() anywhere in this file, so a bare,
- * never-.load()'d instance is used, same "no Kernel::boot(), type-
- * satisfying instance is enough" reasoning already established throughout
- * this campaign. Translator::plural()'s own ngettext() call falls back to
- * the raw singular/plural English text passed in when nothing has been
- * loaded, which is exactly what these tests assert against.
+ * getDisplayImagesCount() takes Lang as an explicit parameter -- no
+ * Kernel::boot() anywhere in this file, so a bare, never-.load()'d
+ * instance is enough to satisfy the type. Translator::plural()'s own
+ * ngettext() call falls back to the raw singular/plural English text
+ * passed in when nothing has been loaded, which is exactly what these
+ * tests assert against.
  */
 function category_service_pure_helpers_test_lang(): Lang
 {

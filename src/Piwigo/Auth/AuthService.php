@@ -35,21 +35,9 @@ use Piwigo\Users\CurrentUser;
  * creation/regeneration/teardown. Constructor-injects AuthRepository,
  * plain constructor injection (same shape as PermalinkService/GroupService).
  *
- * The remember-me cookie is set via raw setcookie() calls, matching the
- * original -- a genuinely different cookie namespace/lifecycle than
- * Piwigo\Auth\CookieService's 'pwg_*' preference-cookie storage, not a
- * missed opportunity to reuse it.
- *
- * [SEC-27] calculateAutoLoginKey()/autoLogin() built with sha256 +
- * hash_equals() from the start, unlike the original
- * calculate_auto_login_key()/auto_login() (hash_hmac('sha1', ...), key
- * compared with a plain === ) -- there's no insecure intermediate state to
- * carry forward since this class doesn't exist yet on this branch.
- *
- * calculate_auto_login_key()'s own secret_key read was already correct in
- * the original (global \Piwigo\Config\CurrentConfig::secretKey(), never Piwigo\Config\Config)
- * -- preserved as-is, not the CurrentConfig::secretKey() bug found and fixed
- * elsewhere this phase (CsrfService/EphemeralKeyService).
+ * The remember-me cookie is set via raw setcookie() calls -- a genuinely
+ * different cookie namespace/lifecycle than Piwigo\Auth\CookieService's
+ * 'pwg_*' preference-cookie storage, not a missed opportunity to reuse it.
  *
  * pwgLogin() also enforces a dual-scope (IP and username) lockout backed
  * by UserFailedLoginRepository (user_failed_logins table) -- see that
@@ -206,16 +194,12 @@ final readonly class AuthService
             ]);
         }
 
-        // Real bug, found via a new Integration test that calls this
-        // directly (no SessionMiddleware ahead of it to have already
-        // started a session): session_id() !== '' (the original
-        // include/functions_user.inc.php's own check, unchanged here) only
-        // tells you an id string has been *set* -- e.g. via a fixed
-        // session_id('...') call, same as this project's own test helpers
-        // do -- not that a session is actually *active*.
-        // session_regenerate_id() requires an active session and emits a
-        // PHP warning otherwise; session_status() is the real predicate
-        // this branch needs.
+        // session_id() !== '' only tells you an id string has been *set*
+        // -- e.g. via a fixed session_id('...') call, same as this
+        // project's own test helpers do -- not that a session is actually
+        // *active*. session_regenerate_id() requires an active session and
+        // emits a PHP warning otherwise; session_status() is the real
+        // predicate this branch needs.
         if (session_status() === \PHP_SESSION_ACTIVE) { // we regenerate the session for security reasons
             // see http://www.acros.si/papers/session_fixation.pdf
             session_regenerate_id(true);
@@ -252,10 +236,10 @@ final readonly class AuthService
                 ) {
                     $calculated = $this->calculateAutoLoginKey($cookie[0], $cookie[1]);
                     if ($calculated['key'] !== false && hash_equals($calculated['key'], $cookie[2])) {
-                        // Since Piwigo 16, 'connected_with' in the session
-                        // defines the authentication context (UI, API,
-                        // etc). Auto-login via remember-me may miss this,
-                        // so we set it to 'pwg_ui' for UI logins (not API).
+                        // 'connected_with' in the session defines the
+                        // authentication context (UI, API, etc). Auto-login
+                        // via remember-me may miss this, so we set it to
+                        // 'pwg_ui' for UI logins (not API).
                         if (PageFilterHelper::scriptBasename($this->currentConfig) !== 'ws') {
                             $_SESSION['connected_with'] = 'pwg_ui';
                         }
@@ -480,8 +464,6 @@ final readonly class AuthService
 
     /**
      * Find user by username or email search by username first then email.
-     *
-     * @since 16
      */
     public function findUserByUsernameOrEmail(string $usernameOrEmail): ?AuthUser
     {
@@ -496,7 +478,6 @@ final readonly class AuthService
      * repeated hashing overhead while maintaining constant-time
      * authentication behavior.
      *
-     * @since 16
      * @return array{id: null, password: string} id and password
      */
     public function generateFakeUser(): array
@@ -524,8 +505,6 @@ final readonly class AuthService
 
     /**
      * Clear current session fake user cache.
-     *
-     * @since 16
      */
     public function clearFakeUserCache(): void
     {
@@ -535,7 +514,6 @@ final readonly class AuthService
     /**
      * Performs auto-connection if authentication key is valid.
      *
-     * @since 2.8
      * @param mixed $authKey raw, unvalidated request input ($_GET['auth'], an
      *   Authorization header value, or a ws param) -- normalized to '' when
      *   not already a string (a malicious/malformed request can hand this an
@@ -647,7 +625,6 @@ final readonly class AuthService
     /**
      * Creates an authentication key.
      *
-     * @since 2.8
      * @return array{auth_key: string, user_id: int, created_on: string, duration: int, expired_on: string, key_type: string, auth_key_id: string}|false false if auth keys are disabled or the user status is ineligible
      */
     public function createUserAuthKey(int $userId, ?string $userStatus = null): array|false
@@ -699,17 +676,12 @@ final readonly class AuthService
 
     /**
      * Deactivates authentication keys.
-     *
-     * @since 2.8
      */
     public function deactivateUserAuthKeys(int $userId): void
     {
         $this->repo->deactivateAuthKeys($userId, Env::now());
     }
 
-    /**
-     * @since 11
-     */
     public function deactivatePasswordResetKey(int $userId): void
     {
         $this->repo->clearActivationKey(UserId::from($userId));
@@ -718,7 +690,6 @@ final readonly class AuthService
     /**
      * Generate reset password link.
      *
-     * @since 15
      * @return array{time_validation: string, password_link: string}
      */
     public function generatePasswordLink(int $userId, UrlServiceInterface $urlService, bool $firstLogin = false): array
@@ -754,7 +725,6 @@ final readonly class AuthService
     /**
      * Gets the last visit (datetime) of a user, based on history table.
      *
-     * @since 2.9
      * @param bool $saveInUserInfos to store result in user_infos.last_visit
      * @return string|null date & time of last visit
      */
@@ -771,8 +741,6 @@ final readonly class AuthService
 
     /**
      * See if this is the first time the user has logged on.
-     *
-     * @since 15
      */
     public function hasAlreadyLoggedIn(int $userId, LoginActivityLookupInterface $loginActivityLookup): bool
     {
@@ -782,7 +750,6 @@ final readonly class AuthService
     /**
      * Generate a user code for verification.
      *
-     * @since 16
      * @return array{secret: string, code: string}
      */
     public function generateUserCode(): array
@@ -801,9 +768,6 @@ final readonly class AuthService
         ];
     }
 
-    /**
-     * @since 16
-     */
     public function verifyUserCode(string $secret, string $code): bool
     {
 

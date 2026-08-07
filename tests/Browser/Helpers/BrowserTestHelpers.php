@@ -170,10 +170,9 @@ final class BrowserTestHelpers
      * short bounded retry scoped to exactly this one Playwright error
      * message is safe and idempotent, not a blind catch-all.
      *
-     * Extracted as its own method (previously inlined only in
-     * assertNoServerErrors()) because $page->assertSee()'s own internal
-     * polling is subject to the exact same race but doesn't get the
-     * benefit of this retry -- confirmed live: assertSee() reported a
+     * This method exists separately because $page->assertSee()'s own
+     * internal polling is subject to the exact same race but doesn't get
+     * the benefit of this retry -- confirmed live: assertSee() reported a
      * failure "on the page initially with the url [.../identification.php]"
      * (the *pre*-navigation page) even though a subsequent content() call
      * on the same $page already returned the real, correct post-navigation
@@ -430,13 +429,11 @@ final class BrowserTestHelpers
      * proving the session is actually authenticated (not just redirected).
      */
     /**
-     * pgsql support pass: every direct-DB-fixture helper below previously
-     * built its own `new \mysqli(...)` -- hardcoded to MySQL, confirmed
-     * live to throw "Access denied" against a real PIWIGO_DB_DRIVER=pgsql
-     * .env.test the moment any of these ran (VisualRegressionTest's own
-     * H::clearLoginLockout()/H::freezeImageHits() calls). This shared
+     * Every direct-DB-fixture helper below goes through this shared
      * connect()/dbQuery()/dbEscape()/dbClose()/dbFetchAssoc()/dbFetchAll()
-     * set mirrors the identical dispatch shape RegenerateFixtureTest
+     * set instead of building its own `new \mysqli(...)`, so both
+     * PIWIGO_DB_DRIVER=mysql and =pgsql work. Mirrors the identical
+     * dispatch shape RegenerateFixtureTest
      * already established for its own raw INSERTs (that class's own
      * private dbQuery()/dbEscape()/dbClose() -- not reusable here directly
      * since this is a plain static class, not an IntegrationTestCase
@@ -501,10 +498,10 @@ final class BrowserTestHelpers
      * real Postgres counterpart: it returns the most recently
      * `nextval()`-consumed value for ANY sequence in the CURRENT session,
      * which every SERIAL/IDENTITY-backed id column consumes automatically
-     * on insert (Phase B's schema-authoring pass), matching mysqli's own
-     * per-connection (not global) semantics closely enough for this
-     * suite's single-INSERT-then-read call shape. Verified live before
-     * porting every real `$db->insert_id` call site to this.
+     * on insert, matching mysqli's own per-connection (not global)
+     * semantics closely enough for this suite's single-INSERT-then-read
+     * call shape. Verified live before porting every real
+     * `$db->insert_id` call site to this.
      */
     public static function dbInsertId(mysqli|Connection $db): int
     {
@@ -1301,11 +1298,10 @@ final class BrowserTestHelpers
      * (derivative_settings/derivative_size, per the two callers above) is
      * already lowercase snake_case with no reserved-word collisions on
      * either platform (confirmed by reading both tables' real DDL) --
-     * matches the same "unquoted works identically" convention Phase B's
-     * schema authoring already established, rather than branching a
+     * unquoted works identically on both, rather than branching a
      * quote-char per platform for a case that never actually needs it.
-     * Backtick quoting (the prior MySQL-only form) is simply invalid
-     * syntax on Postgres, so this can't stay driver-blind.
+     * Backtick quoting is simply invalid syntax on Postgres, so this
+     * can't stay driver-blind.
      *
      * @param array<string, mixed> $row
      */
@@ -1335,25 +1331,19 @@ final class BrowserTestHelpers
      * Flips a category's status and clears the effective-permission cache
      * pools accordingly -- the same 2-step real permission recomputation a
      * real "make this album private" admin action performs (via
-     * Cache\PermissionCacheInvalidator::invalidate(), gap-closure Stage 4g),
+     * Cache\PermissionCacheInvalidator::invalidate()),
      * not just the categories.status flag alone.
      *
-     * Gap-closure Stage 4g gap-closure (2026-07-25): previously wrote
-     * directly to `user_cache.forbidden_categories` -- confirmed live while
-     * originally adding this helper that flipping status alone left every
-     * existing derivative still served to anonymous requests, because
-     * Permission\ImageVisibilityChecker::isVisibleToUser() read that
-     * precomputed column, never live category status. Stage 4g retargeted
-     * that class onto `CurrentUser::forbiddenCategories`
+     * Permission\ImageVisibilityChecker::isVisibleToUser() reads
+     * `CurrentUser::forbiddenCategories`
      * (Permission\EffectiveForbiddenCategoriesCache, cached in
-     * Cache\CachePools::permissions()/effectivePermissions()), so this
-     * helper now clears those pools directly instead -- a real Browser-test
-     * failure (this exact test, `2 failed`) caught the old write becoming a
-     * silent no-op once `getUserData()` stopped writing `user_cache` at
-     * all. Uses the app's own FilesystemAdapter-backed cache directory (no
-     * ext-apcu in this environment, confirmed via CacheFactory's own
-     * docblock), so a clear() from this separate CLI process is visible to
-     * the real dev-server process on the next request.
+     * Cache\CachePools::permissions()/effectivePermissions()), never live
+     * category status directly -- so this helper clears those pools
+     * directly after flipping status. Uses the app's own
+     * FilesystemAdapter-backed cache directory (no ext-apcu in this
+     * environment, confirmed via CacheFactory's own docblock), so a
+     * clear() from this separate CLI process is visible to the real
+     * dev-server process on the next request.
      */
     public static function setCategoryPrivate(int $categoryId, bool $private): void
     {
@@ -1441,13 +1431,9 @@ final class BrowserTestHelpers
 
         // use_standard_pages already defaults to 'true' in the fixture --
         // set explicitly anyway so this helper is correct standalone.
-        // Routed through setConfigValue() (rather than its own inline
-        // upsert, which previously duplicated that method's MySQL-only
-        // ON DUPLICATE KEY UPDATE) so the ON CONFLICT/cache-clear logic
-        // exists in exactly one place -- that method already clears
-        // CachePools::config() per call, closing the same "this write
-        // bypasses ConfigService entirely" gap this method's own prior
-        // single end-of-method clear() described.
+        // Routed through setConfigValue() so the ON CONFLICT/cache-clear
+        // logic exists in exactly one place -- that method already clears
+        // CachePools::config() per call.
         foreach ([
             'use_standard_pages' => true,
             'standard_pages_selected_logo' => 'custom_logo',

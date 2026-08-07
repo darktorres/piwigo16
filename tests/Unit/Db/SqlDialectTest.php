@@ -6,29 +6,12 @@ use Piwigo\Db\SqlDialect;
 
 /**
  * Piwigo\Db\SqlDialect -- pure SQL-fragment string builders, no connection
- * dependency. getHour()/dateToTs() had zero coverage and booleanToInt()
- * only its bool branch (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1); every
- * other method here is already indirectly exercised (Calendar/C13yInternal
- * tests), but a full, direct pass is cheap and removes any doubt.
+ * dependency.
  *
- * Phase 4 Item 16: protectColumnName()/concat()/DB_REGEX_OPERATOR removed
- * -- confirmed-duplicate hand-rolling of
- * `Doctrine\DBAL\Platforms\AbstractMySQLPlatform::quoteSingleIdentifier()`/
- * `getConcatExpression()`/`getRegexpExpression()`. protectColumnName()'s
- * only real callers (Db\BatchWriter) now call the real platform method
- * directly; concat()/DB_REGEX_OPERATOR had zero real callers left --
- * CategoryRepository's own DQL conversion (Item 14/15) and
- * Db\DqlFunction\RegexpFunction had already independently arrived at
- * calling the framework's own equivalents.
- *
- * pgsql support pass: getHour()/dateToTs()/getRecentPeriodExpression()
- * branch on PIWIGO_DB_DRIVER (via DbCredentials::fromEnv() -- this class
- * has no Connection of its own, see its class docblock) -- same
- * save/restore-around-a-scenario shape DbConnectionTest.php's own
- * $envVars/beforeEach/afterEach already establishes for this exact env
- * var, scoped to just PIWIGO_DB_DRIVER since that's the only one this
- * class reads.
+ * getHour()/dateToTs()/getRecentPeriodExpression() branch on
+ * PIWIGO_DB_DRIVER (via DbCredentials::fromEnv() -- this class has no
+ * Connection of its own), so beforeEach/afterEach save and restore just
+ * that one env var, since it's the only one this class reads.
  */
 $originalDbDriver = null;
 
@@ -84,23 +67,22 @@ test('dateToTs wraps a date expression in EXTRACT(EPOCH FROM ...) on pgsql', fun
 });
 
 /**
- * Further SQL-modernization audit, Item 11: a non-default $date is now
- * always a bound-parameter placeholder the caller already declared (see
- * getRecentPeriodExpression()'s own docblock) -- spliced in unquoted,
- * unlike the old quote-wrap-any-literal-value defect this replaced.
+ * A non-default $date is a bound-parameter placeholder the caller
+ * already declares (see getRecentPeriodExpression()'s own docblock),
+ * spliced into the returned expression unquoted.
  */
 test('getRecentPeriodExpression builds a SUBDATE(...) fragment for a caller-supplied bound-parameter placeholder', function (): void {
     expect(SqlDialect::getRecentPeriodExpression(7, ':lastDate'))->toBe('SUBDATE(:lastDate,INTERVAL 7 DAY)');
 });
 
 /**
- * pgsql support pass: SUBDATE() has no Postgres equivalent -- verified
- * live that `$date - make_interval(...)` needs an explicit `::timestamp`
- * cast on $date first (a bare untyped literal/bound parameter minus an
- * interval fails outright: "invalid input syntax for type interval"),
- * and that `::timestamp` (not `::date`) is required specifically to avoid
- * silently truncating a caller-supplied datetime's time-of-day component
- * -- see that method's own docblock for the full verification.
+ * SUBDATE() has no Postgres equivalent: `$date - make_interval(...)`
+ * requires an explicit `::timestamp` cast on $date, since Postgres
+ * cannot subtract an interval from an untyped literal or bound
+ * parameter ("invalid input syntax for type interval"). `::timestamp`,
+ * not `::date`, is required to avoid truncating a caller-supplied
+ * datetime's time-of-day component -- see that method's own docblock
+ * for further detail.
  */
 test('getRecentPeriodExpression builds a make_interval(...) fragment on pgsql', function (): void {
     putenv('PIWIGO_DB_DRIVER=pgsql');

@@ -12,13 +12,10 @@ use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 
 /**
- * Piwigo\Bootstrap\RequestBootstrap::configure() -- Phase 1 of the HTTP
- * boot sequence. Never called directly by any existing Unit/Integration
- * test (only reachable, until now, through the Browser suite's real HTTP
- * requests via bootEntryPoint()); safe to call standalone here since,
- * unlike connect()/finalize(), it does no session/plugin-loading/global-
- * handler-installation work -- confirmed by reading its own body -- so it
- * carries none of the "shared PHPUnit process" risk those two would.
+ * Piwigo\Bootstrap\RequestBootstrap::configure() is the first step of the
+ * HTTP boot sequence; unlike connect()/finalize(), it does no
+ * session/plugin-loading/global-handler-installation work, so it carries
+ * none of the "shared PHPUnit process" risk those two would.
  *
  * Covers the 2 red branches:
  *  - the $_SERVER['PATH_INFO'] addslashes() sanitization (every existing
@@ -29,9 +26,7 @@ use Piwigo\Http\ResponseReadyException;
  *
  * configure()'s own several static-setter calls (AccessControl::
  * setHtmlRenderer() etc.) are all idempotent, side-effect-free
- * re-wirings -- already proven harmless by this project's own inline
- * documentation ("harmless no-op if it ever runs in the same process") --
- * so no special teardown is needed for those.
+ * re-wirings, so no special teardown is needed for those.
  */
 final class RequestBootstrapConfigureTest extends IntegrationTestCase
 {

@@ -103,21 +103,9 @@ final class CategoryAdminServiceFakeCapturingRedirectService implements Redirect
 }
 
 /**
- * Moved from Unit to Integration (Legacy Coupling Retirement Phase 4a):
- * CategoryAdminService's target free-function calls now go through a
- * real, constructor-injected CategoryService -- CategoryService and
- * CategoryRepository are both `final`, so the same-namespace
- * function-shadowing stub technique the old Unit test used can no
- * longer intercept these calls (that technique only works against a
- * bare, unqualified function call, not a method call on a concrete
- * object). Docs/PLAN.md gap-closure, 2026-07-23: the
- * remaining bare pwg_query()/query2array()/mass_inserts() calls this
- * file used to shadow (getCategoriesRefDate()/setCategoryPermissions()/
- * saveImageOrder(), none of which ever had a real production
- * definition -- every one of those methods fatal-errored outside this
- * test process) are now real repository/service calls too, so the
- * shadowing block that used to sit above this namespace is gone
- * entirely; nothing in this file needs it to pass anymore.
+ * CategoryAdminService's target methods go through a real,
+ * constructor-injected CategoryService, which needs a real DB
+ * connection -- hence this is an Integration test.
  *
  * Same fixture shape as CategoryServiceTest/CategoryRepositoryTest:
  * category 1 "Sample Album" (root, images 1/2/3), category 2 "Nested
@@ -191,8 +179,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
     {
         // Kernel::boot() already ran above -- resolve the same
         // container-shared instance a real request would get, matching
-        // RedirectService's own real production callers (singleton/
-        // service-locator elimination campaign, Phase 6).
+        // RedirectService's own real production callers.
         $userService = Kernel::container()->get(UserService::class);
         if (! $userService instanceof UserService) {
             throw new LogicException('Container returned an unexpected type for ' . UserService::class);

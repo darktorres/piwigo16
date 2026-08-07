@@ -229,8 +229,7 @@ namespace Piwigo\Tests\Integration {
         private function accessControl(): AccessControl
         {
             // Kernel is already booted by parent::setUp() above -- resolve
-            // the same container-shared instance a real request would get
-            // (singleton/service-locator elimination campaign, Phase 7).
+            // the same container-shared instance a real request would get.
             $accessControl = Kernel::container()->get(AccessControl::class);
             if (! $accessControl instanceof AccessControl) {
                 throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
@@ -727,12 +726,11 @@ namespace Piwigo\Tests\Integration {
         /**
          * author_id is nullable in schema (anonymous/guest comment with no
          * owner) -- this is a distinct state from "comment doesn't exist",
-         * see CommentRepository::findAuthorId(). A prior version of
-         * getCommentAuthorId() collapsed both states down to `false`,
-         * which then flowed into AccessControl::canManageComment()'s
-         * strictly-typed `int|string` parameter and crashed with a
-         * TypeError as soon as assert() (a no-op under this project's
-         * zend.assertions=-1) failed to catch it.
+         * see CommentRepository::findAuthorId(). Collapsing both states
+         * down to `false` would flow into
+         * AccessControl::canManageComment()'s strictly-typed `int|string`
+         * parameter and crash with a TypeError, since assert() is a no-op
+         * under this project's zend.assertions=-1 and can't catch it.
          */
         public function test_get_comment_author_id_returns_null_for_an_anonymous_comment(): void
         {
@@ -820,21 +818,18 @@ namespace Piwigo\Tests\Integration {
         // --- invalidateNbCommentsCache() -------------------------------------
 
         /**
-         * Gap-closure Stage 4f (docs/plan/gap-closure-p0-p23.md): this no
-         * longer touches `user_cache.nb_available_comments` at all -- that
-         * write was confirmed dead (the read side only ever consults
-         * CurrentUser::rawAttributes, never the DB column) and deleted
-         * outright, along with CommentRepository::clearNbCommentsCache().
+         * This method never touches `user_cache.nb_available_comments` --
+         * the read side only ever consults CurrentUser::rawAttributes,
+         * never the DB column.
          */
         public function test_get_nb_available_comments_counts_only_validated_comments_for_a_non_admin_user(): void
         {
-            // Item 16I: countAvailableWithConditions() converted to real
-            // DQL, and this real caller's own condition fragments
+            // countAvailableWithConditions() is exercised here through
+            // this real caller's own condition fragments
             // (com.validated/ic.categoryId/ic.imageId, wired up in
-            // CommentService itself) had zero direct test coverage --
-            // CommentRepositoryTest's own countAvailableWithConditions()
-            // tests exercise the same repository mechanism, but never
-            // through this exact caller.
+            // CommentService itself) -- CommentRepositoryTest's own
+            // countAvailableWithConditions() tests exercise the same
+            // repository mechanism, but never through this exact caller.
             $repo = EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class);
             $counter = new AvailableCommentsCounter(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $this->accessLevelChecker());
             $baseline = $counter->count();
@@ -1013,10 +1008,9 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * validated is a real tinyint(1) column now (Comment domain Stage
-         * 1a) -- fetchColumn()'s is_string() narrowing would always
-         * return null for it, same reasoning as CommentRepositoryTest's
-         * own fetchValidated().
+         * validated is a real tinyint(1) column -- fetchColumn()'s
+         * is_string() narrowing would always return null for it, same
+         * reasoning as CommentRepositoryTest's own fetchValidated().
          */
         private function fetchValidated(int $commentId): ?int
         {

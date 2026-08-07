@@ -52,19 +52,14 @@ use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
 
 /**
- * The admin.php page-shell orchestration (P23 batch 10): access check,
- * direct GET actions, page-slug aliasing/validation, the admin frame's
- * template assigns (pending comments/caddie/orphans counters, whats-new),
- * sub-controller dispatch, and final page render. Folded here verbatim
- * from admin.php's former top-level body so the root file is a thin
- * bootstrap shell matching index.php's own final form.
+ * The admin.php page-shell orchestration: access check, direct GET
+ * actions, page-slug aliasing/validation, the admin frame's template
+ * assigns (pending comments/caddie/orphans counters, whats-new),
+ * sub-controller dispatch, and final page render -- a thin bootstrap
+ * shell matching index.php's own final form.
  *
- * Legacy Coupling Retirement Track A batch A5.2i: the last real `global
- * $conf;`/`global $page;` reads/writes in run() are gone -- $conf was
- * dead (never referenced), $page's keys (page_banner/body_id/
- * nb_pending_comments/no_md5sum_number/nb_orphans/nb_photos_total) are
- * all real PageState reads/writes now (constructor-injected
- * $this->pageState since sub-phase 12F-7's shim closure), consumed by
+ * $this->pageState carries page_banner/body_id/nb_pending_comments/
+ * no_md5sum_number/nb_orphans/nb_photos_total, consumed by
  * IntroSubController/PageHeaderRenderer/FilterPanelRenderer/SiteUpdateSubController.
  */
 final class AdminShell
@@ -94,15 +89,12 @@ final class AdminShell
     ) {}
 
     /**
-     * Workstream C3, catch point 3: runDispatch() below is the entire
-     * original run() body, unchanged -- extracted into its own method
-     * (rather than wrapping its ~430 lines in a try block directly) so
-     * this thin wrapper is the one, easily-reviewed place that catches
+     * runDispatch() holds the full page-shell body, extracted into its own
+     * method (rather than wrapping its ~430 lines in a try block directly)
+     * so this thin wrapper is the one, easily-reviewed place that catches
      * Piwigo\Http\ResponseReadyException. AdminShell has no PSR-7
-     * request/response of its own yet, so this reuses the existing
-     * Piwigo\Http\ResponseEmitter class (already used by every P22 root
-     * file) for just this exceptional-exit path, not a full AdminShell-
-     * onto-PSR7 migration.
+     * request/response of its own, so this reuses Piwigo\Http\
+     * ResponseEmitter for just this exceptional-exit path.
      */
     public function run(): void
     {
@@ -256,12 +248,9 @@ final class AdminShell
             }
         }
 
-        // A valid page slug is exactly "registered in config/admin_pages.php" --
-        // every admin page has been an AdminDispatcher sub-controller since P23
-        // batch 6, and batch 9 removed the transitional is_file() half of this
-        // check (admin/ holds no page files anymore, so it only matched the
-        // anti-listing stub and popuphelp.php, neither a real admin page).
-        // Anything else falls back to 'intro'.
+        // A valid page slug is one registered in config/admin_pages.php --
+        // every admin page is dispatched to an AdminDispatcher
+        // sub-controller. Anything else falls back to 'intro'.
         /** @var array<string, class-string<AdminSubControllerInterface>> $admin_pages */
         $admin_pages = require $this->paths->root . 'config/admin_pages.php';
 

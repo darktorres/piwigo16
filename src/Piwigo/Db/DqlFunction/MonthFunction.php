@@ -17,17 +17,14 @@ use Override;
 
 /**
  * Custom DQL function: "MONTH" "(" StringPrimary ")" -- matching MySQL's
- * own `MONTH(date)` shape (formerly {@see \Piwigo\Db\SqlDialect}'s
- * `getMonth()`, removed once Calendar -- its only real caller -- became
- * real DQL). See {@see YearFunction}'s own docblock for why this needed a
- * custom function at all (no built-in DQL `MONTH()` exists in this
- * Doctrine ORM version).
+ * own `MONTH(date)` shape. No built-in DQL `MONTH()` exists in this
+ * Doctrine ORM version; see {@see YearFunction} for the same gap.
  *
- * MySQL/MariaDB branch verified against real data via this project's own
- * Integration tests. PostgreSQL/SQLite branches are unverified against a
- * real installation (see this plan's own Context section) -- built from
- * each platform's own documented syntax, not empirically confirmed. Any
- * other platform throws `NotSupported` rather than guessing.
+ * The MySQL/MariaDB branch is verified against real data via this
+ * project's Integration tests. The PostgreSQL/SQLite branches are built
+ * from each platform's documented syntax but are not verified against a
+ * real installation. Any other platform throws `NotSupported` rather
+ * than guessing.
  */
 final class MonthFunction extends FunctionNode
 {

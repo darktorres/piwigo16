@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 
-// Container-shared instance (singleton/service-locator elimination
-// campaign, Phase 2) -- each test constructs its own fresh instance
-// directly; no reset() needed.
+// SectionContextRegistry is normally shared via the DI container; each
+// test constructs its own fresh instance directly, so no reset() between
+// tests is needed.
 
 test('current returns null before anything is set', function (): void {
     $registry = new SectionContextRegistry();

@@ -82,86 +82,71 @@ abstract class IntegrationTestCase extends TestCase
 
     /**
      * Piwigo\Users\UserService::getDefaultUserInfo() memoizes its DB read
-     * into Piwigo\Core\ProcessCache (Legacy Coupling Retirement Track A
-     * gap-fill batch G5, formerly `global $cache['default_user'];`) for
-     * the lifetime of the process (a real production optimization -- one
-     * row read per request, not per call). Since PHPUnit/Pest run every
-     * test file in one shared process, a test with a minimal
-     * `$GLOBALS['conf']` (missing `default_user_id`) can cache `false`
-     * and poison the value every later test file reads (P23 batch 8d
-     * found this the moment a 2nd Integration test file started
-     * exercising the real getDefaultUserInfo()/getDefaultTheme()/
-     * getDefaultLanguage() call chain instead of a fixed-value stub).
-     * Every subclass's own setUp() already calls parent::setUp() first,
-     * so resetting here guarantees each test starts with a fresh
-     * memoization slot.
+     * into Piwigo\Core\ProcessCache for the lifetime of the process (a
+     * real production optimization -- one row read per request, not per
+     * call). Since PHPUnit/Pest run every test file in one shared
+     * process, a test with a minimal `$GLOBALS['conf']` (missing
+     * `default_user_id`) can cache `false` and poison the value every
+     * later test file reads. Every subclass's own setUp() already calls
+     * parent::setUp() first, so resetting here guarantees each test
+     * starts with a fresh memoization slot.
      */
     #[Override]
     protected function setUp(): void
     {
         parent::setUp();
         // Paths::class must be resolvable straight out of the live
-        // container -- tests that
-        // construct a domain service directly (not through a real HTTP
-        // request, so no root index.php ever calls Kernel::boot($paths))
-        // need a real Paths bound too, or the first real container resolve
-        // throws (singleton/service-locator elimination campaign, Phase 3;
-        // CurrentPaths itself, the former pure transitional shim reading
-        // this same binding, closed outright in sub-phase 12F-10). Only
-        // boot here when nothing has booted the Kernel yet: a
-        // subclass whose own setUp() calls Kernel::boot() *after*
-        // parent::setUp() (several do, for its mountDepth/isWs/isAdmin
-        // params or to layer its own container wiring on top) would have
-        // that later call silently no-op against Kernel::boot()'s own
-        // idempotency guard if this ran unconditionally -- a subclass
-        // needing a genuinely different root calls Kernel::reset() itself
-        // right after parent::setUp() (see InstallBootstrapTest/
-        // InstallWizardTest/LegacyFileConfTest) rather than fighting this
-        // default. dirname(__DIR__, 2) from tests/Integration/ is this
-        // project's own repo root, matching every fixture path (e.g.
-        // MetadataServiceTest's 'path' => '_data/...') already written
-        // relative to it. Deliberately runs BEFORE the ProcessCache/
-        // CurrentLogger/FilterState seeding below (not after, as an
-        // earlier revision of this method had it) -- seeding those against
-        // "Kernel::isBooted() happens to already be true" left every
-        // subclass whose own setUp() boots Kernel via a bare, no-op-against-
-        // the-idempotency-guard Kernel::boot() call (most of them, needing
-        // no custom Paths) with an *unseeded* CurrentLogger/FilterState for
-        // the whole test: parent::setUp() ran first (Kernel not yet
-        // booted, so the old ordering's own isBooted() checks were all
-        // false), then the subclass's own later boot() call silently
-        // no-op'd against a container that was never seeded. Real bug,
-        // found via a full composer test:integration run surfacing
-        // "CurrentLogger not initialised" across ~8 unrelated test files
-        // that construct their SUT directly but reach a container-resolved
+        // container -- tests that construct a domain service directly (not
+        // through a real HTTP request, so no root index.php ever calls
+        // Kernel::boot($paths)) need a real Paths bound too, or the first
+        // real container resolve throws. Only boot here when nothing has
+        // booted the Kernel yet: a subclass whose own setUp() calls
+        // Kernel::boot() *after* parent::setUp() (several do, for its
+        // mountDepth/isWs/isAdmin params or to layer its own container
+        // wiring on top) would have that later call silently no-op against
+        // Kernel::boot()'s own idempotency guard if this ran
+        // unconditionally -- a subclass needing a genuinely different root
+        // calls Kernel::reset() itself right after parent::setUp() (see
+        // InstallBootstrapTest/InstallWizardTest/LegacyFileConfTest) rather
+        // than fighting this default. dirname(__DIR__, 2) from
+        // tests/Integration/ is this project's own repo root, matching
+        // every fixture path (e.g. MetadataServiceTest's 'path' =>
+        // '_data/...') already written relative to it. This deliberately
+        // runs BEFORE the ProcessCache/CurrentLogger/FilterState seeding
+        // below: seeding those first would leave any subclass whose own
+        // setUp() boots Kernel via a bare, no-op-against-the-idempotency-
+        // guard Kernel::boot() call (most of them, needing no custom Paths)
+        // with an *unseeded* CurrentLogger/FilterState for the whole test,
+        // since that subclass's own later boot() call would silently
+        // no-op against a container that was never seeded -- surfacing as
+        // a "CurrentLogger not initialised" error in any test that
+        // constructs its SUT directly but reaches a container-resolved
         // CurrentLogger/FilterState somewhere in that SUT's own dependency
         // chain (e.g. via a Bootstrap\*Accessor).
         if (! Kernel::isBooted()) {
             Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
         }
-        // ProcessCache is a container-shared instance now (singleton/
-        // service-locator elimination campaign, Phase 1), not a static
+        // ProcessCache is a container-shared instance, not a static
         // facade -- always resolve+reset now that the boot decision above
         // guarantees a container exists.
         $processCache = Kernel::container()->get(ProcessCache::class);
         if ($processCache instanceof ProcessCache) {
             $processCache->reset();
         }
-        // Piwigo\Users\CurrentUser (Legacy Coupling Retirement Track A batch
-        // A3) is a request-lifetime singleton; PHPUnit/Pest run every test
-        // file in one shared process (see this class's own docblock above
-        // for the identical ProcessCache reasoning), so each test gets
-        // a fresh guest baseline here -- idempotent, so a subclass's own
-        // setUp() calling CurrentUser::set() with a specific fixture user
-        // right after parent::setUp() simply overwrites it.
+        // Piwigo\Users\CurrentUser is a request-lifetime singleton;
+        // PHPUnit/Pest run every test file in one shared process (see this
+        // class's own docblock above for the identical ProcessCache
+        // reasoning), so each test gets a fresh guest baseline here --
+        // idempotent, so a subclass's own setUp() calling CurrentUser::set()
+        // with a specific fixture user right after parent::setUp() simply
+        // overwrites it.
         $currentUser = Kernel::container()->get(CurrentUser::class);
         if ($currentUser instanceof CurrentUser) {
             $currentUser->attachGlobals();
         }
-        // Piwigo\Core\CurrentLogger (singleton/service-locator elimination
-        // campaign, Phase 2: container-shared instance) -- a real,
-        // no-op-severity instance here means a subclass resolving its
-        // SUT's CurrentLogger from the container still gets a valid,
+        // Piwigo\Core\CurrentLogger is a container-shared instance -- a
+        // real, no-op-severity instance here means a subclass resolving
+        // its SUT's CurrentLogger from the container still gets a valid,
         // non-throwing get() rather than the "not initialised"
         // LogicException. severity => OFF makes every log call an
         // immediate no-op (Logger::log() checks severity() >= $level, and
@@ -171,12 +156,11 @@ abstract class IntegrationTestCase extends TestCase
         if ($currentLogger instanceof CurrentLogger) {
             $currentLogger->set(new Logger(['severity' => Logger::OFF]));
         }
-        // Piwigo\Core\FilterState (singleton/service-locator elimination
-        // campaign, Phase 2: container-shared instance) -- a disabled-
-        // filter baseline here means a subclass resolving its SUT's
-        // FilterState from the container still gets a valid, non-throwing
-        // isEnabled()/visibleCategories()/etc. A subclass's own setUp()
-        // calling ->set() with real filter values right after
+        // Piwigo\Core\FilterState is a container-shared instance -- a
+        // disabled-filter baseline here means a subclass resolving its
+        // SUT's FilterState from the container still gets a valid,
+        // non-throwing isEnabled()/visibleCategories()/etc. A subclass's
+        // own setUp() calling ->set() with real filter values right after
         // parent::setUp() simply overwrites it.
         $filterState = Kernel::container()->get(FilterState::class);
         if ($filterState instanceof FilterState) {
@@ -236,8 +220,7 @@ abstract class IntegrationTestCase extends TestCase
                 $filterState->reset();
             }
         }
-        // InstallationFlag is a container-shared instance now (singleton/
-        // service-locator elimination campaign, Phase 1), not a static
+        // InstallationFlag is a container-shared instance, not a static
         // facade -- most subclasses never call Kernel::boot() at all, so
         // only resolve+reset when a container genuinely exists.
         if (Kernel::isBooted()) {
@@ -246,8 +229,8 @@ abstract class IntegrationTestCase extends TestCase
                 $installationFlag->reset();
             }
         }
-        // Paths::class has no independent state of its own to reset (Phase
-        // 3) -- it's read directly from whatever container is live. Reset the
+        // Paths::class has no independent state of its own to reset -- it's
+        // read directly from whatever container is live. Reset the
         // Kernel itself instead: setUp() above only boots when nothing else
         // has, so this is what returns the next test to a clean, unbooted
         // baseline -- safe even when a subclass's own tearDown() already
@@ -277,8 +260,8 @@ abstract class IntegrationTestCase extends TestCase
      * class's own setUp() (most Integration tests never touch it), so
      * this mirrors setUpConnectionFromEnv()'s own not-auto-called shape:
      * call it explicitly from a subclass's setUp() when the test actually
-     * exercises a Tier 2 class's write path (Legacy Coupling Retirement
-     * Phase 5) or otherwise needs a real ConfigService/ConfigRepository.
+     * exercises a Tier 2 class's write path or otherwise needs a real
+     * ConfigService/ConfigRepository.
      */
     protected function buildConfigRepository(): ConfigRepository
     {

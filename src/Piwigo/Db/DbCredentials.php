@@ -6,47 +6,32 @@ namespace Piwigo\Db;
 
 /**
  * The 7 PIWIGO_DB_* connection parameters, read from the process
- * environment only. Originally P12-only (CLI commands shelling out to
- * mysql/mysqldump via env-var credentials, bypassing the legacy
- * include/common.inc.php bootstrap chain untested under CLI SAPI) --
- * generalized (Config generic-accessor removal) into the one source of DB
- * credentials for the whole app, replacing CurrentConfig::dbHost()/dbPort()/
- * dbDriver()/dbUser()/dbPassword()/dbName()/dbPrefix(). No relationship to
- * Piwigo\Config\CurrentConfig's properties/attributes/getters at all --
- * these are infrastructure-bootstrapping values needed before a DB
- * connection (and therefore CurrentConfig's own DB-backed load) can exist,
- * not ordinary site settings.
+ * environment only -- the one source of DB credentials for the whole app.
+ * These are infrastructure-bootstrapping values needed before a DB
+ * connection (and therefore Piwigo\Config\CurrentConfig's own DB-backed
+ * load) can exist, not ordinary site settings, and are unrelated to
+ * CurrentConfig's own properties/getters.
  *
- * Singleton/service-locator elimination campaign, Phase 3: this class used
- * to be a genuine self-managed static memo (its own `private static ?self
- * $current`, written by `reset()`/`seed()`, read by `current()`). It is now
- * a plain, mutable, container-shared instance (`config/container.php`'s own
- * `factory(fn () => DbCredentials::fromEnv())` binding) -- properties are
- * NOT `readonly`, unlike most value objects in this codebase, specifically
- * so `reload()`/`seed()` can mutate the *same* shared instance every
- * already-injected consumer holds, rather than replacing it: a genuine,
- * previously-live production bug (see InstallBootstrap's own docblock)
- * showed that anything resolving DB credentials before InstallWizard's own
- * mid-request `seed()` call must still see the freshly-submitted values
- * afterward, not a stale copy captured at construction time.
+ * This class is a plain, mutable, container-shared instance
+ * (`config/container.php`'s own `factory(fn () => DbCredentials::fromEnv())`
+ * binding). Properties are NOT `readonly`, unlike most value objects in
+ * this codebase, specifically so `reload()`/`seed()` can mutate the *same*
+ * shared instance every already-injected consumer holds, rather than
+ * replacing it: anything resolving DB credentials before InstallWizard's
+ * own mid-request `seed()` call must still see the freshly-submitted
+ * values afterward, not a stale copy captured at construction time.
  *
- * `fromEnv()` (bypassing the container entirely) is the direct answer for
- * the campaign's own documented "raw entry-shell root file, runs before
- * Kernel::boot()" exception category -- `public/install.php` resolves its
- * one real credentials read via `InstallBootstrap::dbCredentials()`'s own
- * direct container access instead (no object graph exists yet for install.php
- * itself to receive this via constructor injection through, but
- * InstallBootstrap::boot() has already run by that point); `public/ready.php`
- * called `fromEnv()` directly as of sub-phase 12F-3, closing the former
- * `@deprecated current()` transitional bridge outright (env vars are
- * always meaningfully available regardless of DI wiring, and the vast
- * majority of this codebase's own Unit tests construct a `Connection`/
- * read a `Tables::*()` name without ever calling `Kernel::boot()` at all,
- * exactly the "one-shot process, a fresh read doesn't matter" reasoning
- * `fromEnv()` itself already existed for). `Tables`/`DbConnection` closed
- * their own former `current()` shim usage earlier, in Phase 11
- * sub-phase 11I (their own private `dbCredentials()` container-resolve
- * helpers).
+ * `fromEnv()` bypasses the container entirely, for raw entry-shell root
+ * files that run before `Kernel::boot()` and have no object graph yet to
+ * receive this via constructor injection -- `public/ready.php` calls it
+ * directly, for example. `public/install.php` instead resolves its one
+ * real credentials read via `InstallBootstrap::dbCredentials()`'s own
+ * direct container access (`InstallBootstrap::boot()` has already run by
+ * that point). Env vars are always meaningfully available regardless of DI
+ * wiring, so most of this codebase's own Unit tests construct a
+ * `Connection`/read a `Tables::*()` name without ever calling
+ * `Kernel::boot()` at all. `Tables`/`DbConnection` each hold their own
+ * private `dbCredentials()` container-resolve helper.
  *
  * toMysqlArgs() mirrors tools/restore-drill.sh's own mysql_args
  * construction exactly, so backup/restore commands shell out to the
@@ -104,9 +89,8 @@ final class DbCredentials
      * write) then reload()s this instance so every consumer holding it
      * reflects them for the rest of this request -- install.php's freshly
      * submitted form values need this before
-     * InstallBootstrap::activateConfigService() runs, the same "real
-     * credentials before anything connects" ordering CurrentConfig::override()
-     * used to provide.
+     * InstallBootstrap::activateConfigService() runs, so real credentials
+     * are available before anything connects.
      *
      * @param array<string, string|null> $values keyed by PIWIGO_DB_* env var name
      */
@@ -137,9 +121,9 @@ final class DbCredentials
     }
 
     /**
-     * pgsql support pass: mirrors toMysqlArgs() for the psql/pg_dump/
-     * pg_restore client family -- real, deliberate flag differences, not
-     * an oversight: psql's own `-p` is the PORT flag (mysql's `-P`), and
+     * Mirrors toMysqlArgs() for the psql/pg_dump/pg_restore client family
+     * -- real, deliberate flag differences, not an oversight: psql's own
+     * `-p` is the PORT flag (mysql's `-P`), and
      * psql has no password CLI flag at all (`PGPASSWORD` env var or
      * `~/.pgpass` only) -- the caller is responsible for setting
      * `PGPASSWORD` in the child process's own env when {@see $password}

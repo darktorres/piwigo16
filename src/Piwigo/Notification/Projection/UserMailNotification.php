@@ -8,30 +8,21 @@ use Piwigo\Users\UserStatus;
 
 /**
  * Typed row shape for
- * {@see \Piwigo\Notification\NotificationByMailRepository::findUserNotifications()}
- * (P17-23 Stage 1b, Notification domain) -- a `user_mail_notification`/
- * `users`/`user_infos` join. `fromRow()` centralises the narrowing
- * {@see \Piwigo\Mail\NotificationByMailSender} used to duplicate across
- * ~20 `$nbmUser['x']` accesses spread over several of its own methods.
+ * {@see \Piwigo\Notification\NotificationByMailRepository::findUserNotifications()},
+ * a `user_mail_notification`/`users`/`user_infos` join. `fromRow()`
+ * centralises the narrowing that {@see \Piwigo\Mail\NotificationByMailSender}
+ * would otherwise duplicate across ~20 `$nbmUser['x']` accesses spread
+ * over several of its own methods.
  *
  * `enabled` stays `?string`, matching {@see \Piwigo\Db\SqlDialect::getBoolean()}
  * (its one real consumer, in `NotificationByMailSubController`), which
  * already accepts `mixed`, so no narrower type is needed here.
  *
- * Real bug found live: `fromRow()` used to require `is_string($row['enabled'])`
- * before keeping the value, silently nulling it out otherwise -- but this
- * project's own `DbConnection::params()` sets
+ * `enabled` is read with `is_scalar()` + cast to string rather than
+ * `is_string()`: `DbConnection::params()` sets
  * `MYSQLI_OPT_INT_AND_FLOAT_NATIVE => true`, so a real tinyint(1) column
- * comes back as a native `int`, not a string. `enabled` was therefore
- * *always* null for every real row, which meant `SqlDialect::getBoolean()`
- * always saw `false` regardless of the DB's real value -- every enabled
- * user rendered into the "Unsubscribed" (opt_false) option list instead
- * of "Subscribed" (opt_true), and the pre-selection check
- * (`in_array($nbm_user->checkKey, $post['cat_true'], true)`) could never
- * match since it's only ever reached from the opt_true branch. `is_scalar()`
- * + cast to string fixes both int and (still-possible, e.g. a different
- * driver) string representations, matching this project's own established
- * `feedback_dbal_type_filter_silently_drops_rows` precedent.
+ * comes back as a native `int`, not a string, and a plain `is_string()`
+ * check would always fail.
  */
 final readonly class UserMailNotification
 {
@@ -57,9 +48,7 @@ final readonly class UserMailNotification
             mailAddress: is_string($row['mail_address'] ?? null) ? $row['mail_address'] : '',
             enabled: is_scalar($row['enabled'] ?? null) ? (string) $row['enabled'] : null,
             lastSend: is_string($row['last_send'] ?? null) ? $row['last_send'] : null,
-            // Phase 5 Item 21: see \Piwigo\Auth\Projection\AuthUser::fromRow()'s
-            // own comment -- `ui.status` array-hydrates as a UserStatus
-            // instance now, not a raw string.
+            // `status` array-hydrates as a UserStatus instance, not a raw string.
             status: ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : null,
         );
     }

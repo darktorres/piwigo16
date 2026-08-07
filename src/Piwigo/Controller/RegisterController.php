@@ -48,10 +48,9 @@ use Psr\Http\Message\ServerRequestInterface;
  * Replaces register.php -- the user self-registration form + POST handler.
  * page_forbidden()/redirect() both happen before any rendering starts.
  *
- * Legacy Coupling Retirement Workstream D: converted off
- * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
- * pattern as AboutController -- see that class's own docblock for the
- * accumulator mechanics this relies on.
+ * Builds its response body via PageTail::renderToString(), the same
+ * accumulator pattern AboutController uses -- see that class's own
+ * docblock for the mechanics.
  */
 final class RegisterController implements ControllerInterface
 {
@@ -86,18 +85,15 @@ final class RegisterController implements ControllerInterface
         // different shape than PageState::$errors' plain list<string>.
         $errors = [];
 
-        // Real bug, found while adding coverage for the invalid-key branch
-        // below: same root cause as PictureController's own documented
-        // recent_pics fix (see that class's docblock) -- Http\ResponseEmitter::
-        // emit() always sends `header(..., true, $response->getStatusCode())`,
-        // which unconditionally overwrites whatever a prior raw
-        // HtmlService::setStatusHeader() call already sent. This method's own
-        // final `return ResponseFactory::html($body)` defaults to 200, so a
-        // bare setStatusHeader(403) call here was silently dead -- confirmed
-        // live, an invalid/expired form key came back 200, never the intended
-        // 403. Threading the real status through the Response object built at
-        // the end (instead of a separate, now-dead setStatusHeader() call) is
-        // the fix, matching PictureController's own chosen pattern.
+        // Http\ResponseEmitter::emit() always sends
+        // `header(..., true, $response->getStatusCode())`, which
+        // unconditionally overwrites any status a prior raw
+        // HtmlService::setStatusHeader() call already sent. The real status
+        // for an invalid/expired form key must therefore be threaded through
+        // the Response object built at the end (`return
+        // ResponseFactory::html($body, $status)`), not sent via a separate
+        // setStatusHeader() call -- matching PictureController's own chosen
+        // pattern (see that class's docblock).
         $status = 200;
 
         $this->accessControl->checkStatus(AccessLevel::Free);
@@ -197,14 +193,19 @@ final class RegisterController implements ControllerInterface
                     // would be a full account-takeover, not just an
                     // information leak. Both cases redirect identically.
                     if ($new_user_id !== null) {
-                        // Same real bug as InstallWizard's identical fix: this
-                        // controller never goes through
-                        // Bootstrap\UserBootstrap::initialize() either, so
-                        // without this sync, ActivityService::record()
-                        // misattributes this new user's own activity -- including
-                        // the 'login' row logUser() itself records internally,
-                        // which is why this must run BEFORE calling it, not
-                        // after -- to performed_by=NULL instead of their own new id.
+                        // This controller does not go through
+                        // Bootstrap\UserBootstrap::initialize(), so the
+                        // current-user sync below is required:
+                        // ActivityService::record() attributes activity to
+                        // whichever user CurrentUser currently resolves to,
+                        // and AuthService::logUser() itself records a
+                        // 'login' activity row internally. Setting the
+                        // current user before calling logUser() (not after)
+                        // is what makes that internal login row -- and every
+                        // subsequent record() call in this request --
+                        // attribute to this new user's own id instead of
+                        // performed_by=NULL. Matches InstallWizard's own
+                        // equivalent sync.
                         $this->currentUser->set(User::fromUserArray(
                             $userService->buildUser(UserId::from($new_user_id))
                         ));

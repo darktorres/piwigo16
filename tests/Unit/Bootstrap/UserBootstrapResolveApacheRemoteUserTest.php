@@ -8,10 +8,8 @@ use PHPUnit\Framework\TestCase;
 use Piwigo\Bootstrap\UserBootstrap;
 
 /**
- * UserBootstrap::resolveApacheRemoteUser() -- the REMOTE_USER/
- * REDIRECT_REMOTE_USER resolution loop extracted from
- * include/user.inc.php during its P23 batch 5 port. Pure function, no
- * DB/globals needed.
+ * UserBootstrap::resolveApacheRemoteUser() resolves REMOTE_USER/
+ * REDIRECT_REMOTE_USER. Pure function, no DB/globals needed.
  */
 final class UserBootstrapResolveApacheRemoteUserTest extends TestCase
 {

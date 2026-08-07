@@ -43,11 +43,6 @@ final class TagsPageRenderer
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
-        // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
-        // bug -- nothing had ever called CoreTabs::setContext() with
-        // myBaseUrl for this page (same class of gap as
-        // ConfigurationSubController's own $conf_link fix), so this page's
-        // own tab strip has always rendered a broken relative href.
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('tags');

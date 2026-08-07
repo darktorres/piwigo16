@@ -20,25 +20,19 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Validation\InputValidator;
 
 /**
- * Ported from admin/updates_pwg.php (the "pwg" tab of the "updates" page
- * slug, dispatched by UpdatesSubController) -- Piwigo core self-update:
- * check for a new version, then a 2-step POST-based upgrade flow.
+ * The "pwg" tab of the "updates" page slug, dispatched by
+ * UpdatesSubController -- Piwigo core self-update: check for a new
+ * version, then a 2-step POST-based upgrade flow.
  *
- * P23 sub-batch 6i-4 fix: the most severe CSRF gap found across the whole
- * P23 batch 6 admin-absorption effort. The step 2/3 POST handlers below
- * called CoreUpdateService::upgradeTo() (a real core version upgrade --
- * downloads and extracts a new Piwigo release over the live application)
- * gated only on is_webmaster(), with zero check_pwg_token() call anywhere
- * in the file, and both corresponding <form method="post"> blocks in
- * updates_pwg.tpl carried zero pwg_token field (confirmed via direct grep)
- * -- only a hidden 'upgrade_to' whose value (the next version number) is
- * publicly knowable, not a secret. CoreUpdateService::upgradeTo() itself
- * has no built-in CSRF check either. A malicious cross-origin
- * auto-submitting POST form targeting a logged-in webmaster could trigger
- * a real, unconfirmed core upgrade. Fixed by adding check_pwg_token() to
- * both POST handlers and a hidden pwg_token field to both forms (assigned
- * here as PWG_TOKEN, matching the convention already used by
- * themes_standard_pages.tpl/plugins_installed.tpl).
+ * The step 2/3 POST handlers below call CoreUpdateService::upgradeTo() (a
+ * real core version upgrade -- downloads and extracts a new Piwigo
+ * release over the live application), which has no built-in CSRF check of
+ * its own, so each handler validates the token itself before calling it;
+ * gating on isWebmaster() alone would not stop a cross-origin
+ * auto-submitting POST form from a logged-in webmaster's browser.
+ * PWG_TOKEN below feeds the hidden pwg_token field in both forms,
+ * matching the convention used by
+ * themes_standard_pages.tpl/plugins_installed.tpl.
  */
 final class UpdatesPwgPageRenderer
 {

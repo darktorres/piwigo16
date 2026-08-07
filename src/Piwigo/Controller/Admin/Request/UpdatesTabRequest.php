@@ -8,11 +8,8 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET['tab']` for UpdatesSubController::handle() (page slug
- * "updates") -- P26/SEC-40 Request DTO. Preserves the existing
- * `/^(pwg|ext)$/` pattern validation -- see this controller's own docblock
- * for the real LFI a prior remediation pass already fixed here (this
- * value used to be spliced unvalidated into `include
- * admin/updates_<tab>.php`).
+ * "updates"). The pattern validation (`/^(pwg|ext)$/`) constrains the tab
+ * value before it can be used to select behavior downstream.
  */
 final readonly class UpdatesTabRequest
 {

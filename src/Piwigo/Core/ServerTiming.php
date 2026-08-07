@@ -5,21 +5,15 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * Simple stopwatch registry -- container-shared instance (singleton/
- * service-locator elimination campaign, Phase 3; moved from Phase 1's
- * pre-boot marker trio for the identical entanglement reason, but
- * genuinely converted only now).
+ * Stopwatch registry, shared as a single instance via the container.
  *
- * Real production callers: `Piwigo\Bootstrap\RequestBootstrap` (writer,
- * via its own private `serverTiming()` resolver) and
- * `Piwigo\Http\Middleware\ServerTimingMiddleware` (reader, real
+ * `Piwigo\Bootstrap\RequestBootstrap` writes to it (via its own private
+ * `serverTiming()` resolver) and
+ * `Piwigo\Http\Middleware\ServerTimingMiddleware` reads it, via real
  * constructor injection -- always container-resolved, never manually
- * `new`'d). No transitional shim needed at all -- unlike every other
- * class in this campaign's Phase 1/3 pre-boot-marker group, this class's
- * real caller graph is only these 2 files, both already able to reach the
- * container-shared instance directly.
+ * `new`'d.
  *
- * `start('boot')`/`stop('boot')` genuinely bracket work that begins
+ * `start('boot')`/`stop('boot')` bracket work that begins
  * *before* `Kernel::boot()` runs (`RequestBootstrap::bootEntryPoint()`/
  * `bootConfigOnly()` time the whole boot sequence, including the
  * `Kernel::boot()` call itself) -- there is no container-shared instance

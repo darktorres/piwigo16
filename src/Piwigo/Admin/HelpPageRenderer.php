@@ -28,11 +28,8 @@ final class HelpPageRenderer
 
         $selected = HelpSectionRequest::fromGlobals()->section;
 
-        // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
-        // bug -- nothing had ever called CoreTabs::setContext() with
-        // helpLink for this page (same class of gap as
-        // ConfigurationSubController's own $conf_link fix), so this page's
-        // own tab strip has always rendered broken relative hrefs.
+        // CoreTabs::setContext() must be called with helpLink, or this
+        // page's tab strip renders broken relative hrefs.
         $coreTabs->setContext(new CoreTabsContext(helpLink: $urlService->getRootUrl() . 'admin.php?page=help&amp;section='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('help');

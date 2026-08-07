@@ -50,32 +50,15 @@ use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 
 /**
- * Replaces index.php -- the main gallery browsing page (categories,
- * thumbnails, search results, calendar, tags, etc.), picking up
- * P20's SectionInitializer's own deferred note ("the $page/$template
- * population half stays procedural, P22 scope") -- that half was absorbed
- * into Piwigo\Section\SectionPopulator in P23 batch 4d.
+ * The main gallery browsing page (categories, thumbnails, search
+ * results, calendar, tags, etc.).
  *
- * Unlike every other P22 controller, SectionPopulator::populate() must run
- * BEFORE check_status() -- check_restrictions() (called right after) depends
- * on the built SectionContext's `category` already being populated. `$page`
- * itself is long gone from populate() (Legacy Coupling Retirement Track A
- * batch A5.2e converted it to a local scratch array feeding
- * SectionContextRegistry::set()) and from this controller's own closure
- * below (batch A5.2i retargeted its last 2 keys, body_id/cat_slideshow_url,
- * onto PageState/an explicit return value respectively).
+ * SectionPopulator::populate() must run before check_status():
+ * check_restrictions() (called right after) depends on the built
+ * SectionContext's `category` already being populated.
  *
  * check_status()/check_restrictions()/page_not_found() all happen before
  * any rendering starts.
- *
- * Legacy Coupling Retirement Workstream D: converted off
- * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
- * pattern as AboutController -- see that class's own docblock for the
- * accumulator mechanics this relies on. $categoryCountCategories is the
- * one real caller of MenubarRenderer::render()'s return value (narrowed
- * to ?int in this mixed-elimination pass) among all the converted
- * controllers -- preserved as a plain local variable, no different from
- * before.
  */
 final class GalleryController implements ControllerInterface
 {
@@ -117,11 +100,11 @@ final class GalleryController implements ControllerInterface
 
         $this->accessControl->checkStatus(AccessLevel::Guest);
 
-        // Legacy Coupling Retirement Track A batch A5.2e: populate() always
-        // calls SectionContextRegistry::set() as the very last thing it
-        // does, so this is guaranteed non-null by the time this controller
-        // (its one real caller besides PictureController) runs -- a real
-        // guard, not dead code, since the type itself is nullable.
+        // populate() always calls SectionContextRegistry::set() as the very
+        // last thing it does, so this is guaranteed non-null by the time
+        // this controller (its one real caller besides PictureController)
+        // runs -- a real guard, not dead code, since the type itself is
+        // nullable.
         $section_context = $this->sectionContextRegistry->current();
         if (! $section_context instanceof SectionContext) {
             throw new RuntimeException('SectionContextRegistry::current() is null after SectionPopulator::populate()');
@@ -232,11 +215,6 @@ final class GalleryController implements ControllerInterface
         // +-----------------------------------------------------------------+
         // |  index page (categories, thumbnails, search, calendar, etc.)    |
         // +-----------------------------------------------------------------+
-        // This whole section used to be guarded by an "is_external"
-        // check (isset($page['is_external'])) that is confirmed dead in
-        // the 16.x-rewrite reference too (SectionContext::$isExternal
-        // defaults false and nothing ever passes true) -- not a 17.x
-        // porting gap, so the guard is dropped rather than ported.
         // ------------------------------------------------- template init
         $this->pageState->setBodyId('theCategoryPage');
 

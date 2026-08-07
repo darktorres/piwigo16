@@ -47,7 +47,7 @@ const NBM_REGULAR_USER_KEY = 'ghijkl9876543210';
 it('subscribes then unsubscribes a real check_key, flipping `enabled` both ways', function (): void {
     // Self-contained round trip (matches TagCrudTest's own full-lifecycle
     // style) rather than 2 order-dependent tests -- restores the fixture's
-    // originally-seeded enabled=0 state by the end either way.
+    // seeded enabled=0 state by the end either way.
     expect(nbmEnabledForKey(NBM_REGULAR_USER_KEY))->toBe(0);
 
     $page = H::gotoOk($this, '/nbm.php?subscribe=' . NBM_REGULAR_USER_KEY);

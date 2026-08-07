@@ -481,15 +481,11 @@ final class WsUploadTest extends ContractTestCase
     }
 
     /**
-     * Legacy Coupling Retirement gap-closure (Workstream C2): pwg.images.upload
-     * used to die() a hardcoded raw JSON-RPC error string on this exact
-     * condition (a multipart request with no $_FILES['file'] entry),
-     * ignoring the request's real format=. Retargeted onto
-     * `return new PwgError(103, ...)`, the same mechanism every other
-     * error in this method already uses -- confirm it now honors format=
-     * for both json and rest (PwgRestEncoder's XML output; 'xml' itself
-     * isn't a recognized format= value, see WsInitializer's switch)
-     * instead of always emitting raw JSON.
+     * A multipart request with no $_FILES['file'] entry returns a
+     * `PwgError(103, ...)`, the same mechanism every other error in this
+     * method uses, honoring the request's real format= for both json and
+     * rest (PwgRestEncoder's XML output; 'xml' itself isn't a recognized
+     * format= value, see WsInitializer's switch).
      */
     public function test_upload_missing_file_field_returns_a_properly_encoded_error(): void
     {
@@ -585,14 +581,6 @@ final class WsUploadTest extends ContractTestCase
      * target category and, if found, replaces that photo's file in place
      * (add_status='update', same image_id) instead of inserting a new row.
      *
-     * This exact "replace an existing photo's file" pipeline
-     * (UploadService::addUploadedFile()'s $id_image-not-null path) used to
-     * 500 in this environment -- see WsImagesUploadGapsTest's own docblock,
-     * written before commit 6abce47d17 fixed both underlying bugs (the
-     * relative-vs-absolute $file_path prefix, and the missing `file` column
-     * in the "cache a derivative" SELECT). Now that both are fixed, this
-     * branch is real and testable.
-     *
      * One line just past this branch (upload()'s own "image fetch failed
      * right after inserting it" throw, ~1676) stays genuinely unreachable
      * from a black-box HTTP test either way: getUploadResultInfoById() re-
@@ -645,8 +633,8 @@ final class WsUploadTest extends ContractTestCase
         // store the client-supplied $original_filename there, not a
         // server-generated name) -- both calls must use the exact same
         // 'name' value for the match to succeed, by design: this is how a
-        // real client signals "replace the photo I previously uploaded
-        // under this exact name".
+        // real client signals "replace the photo I uploaded under this
+        // exact name".
         $name = 'Contract Test update_mode ' . uniqid();
 
         try {

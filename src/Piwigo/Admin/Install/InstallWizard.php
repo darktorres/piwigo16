@@ -82,40 +82,29 @@ use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
 /**
- * install.php's orchestration, ported verbatim from that script's former
- * top-level code (P23 sub-batch 8f-6). The install.php entry shell keeps
- * only bootstrap (env/config includes, the SEC-60-constrained define()s)
- * and drives this wizard: boot() -> [POST: analyzeForm(); no errors ->
- * shell define()s PHPWG_INSTALLED/PWG_CHARSET/DB_CHARSET/DB_COLLATE ->
+ * install.php's orchestration. The install.php entry shell keeps only
+ * bootstrap (env/config includes, the SEC-60-constrained define()s) and
+ * drives this wizard: boot() -> [POST: analyzeForm(); no errors -> shell
+ * define()s PHPWG_INSTALLED/PWG_CHARSET/DB_CHARSET/DB_COLLATE ->
  * performInstall()] -> render().
  *
  * The constructor reads data_location via LegacyFileConf::read() -- a
  * site owner's `local/config/config.inc.php` override is only visible
  * through the raw file, not through `CurrentConfig::`'s accessors (no
  * real `config` table exists yet at this point in the install flow).
- * render()'s own former `global $user;` was fully retired
- * (Legacy Coupling Retirement Phase 8 gap-closure) once every consumer,
- * including `AuthService::logUser()`/`PreferencesService`'s own methods,
- * had already moved onto `CurrentUser` in earlier phases -- $user is now
- * a plain local variable there.
  *
- * Legacy Coupling Retirement Phase 8, 8b: install.php now calls
- * InstallBootstrap::boot($paths) before this wizard is even constructed,
- * so the DI container is available throughout. Phase 8, 8d retargeted
- * every ConfigDb:: call here onto CurrentConfigService::get() -- safe
- * by the time performInstall() reaches them, since boot() already calls
- * InstallBootstrap::activateConfigService() and the config table exists
- * (the Doctrine Migrations baseline/config.sql ran immediately above).
+ * install.php calls InstallBootstrap::boot($paths) before this wizard is
+ * constructed, so the DI container is available throughout. Every
+ * CurrentConfigService::get() call here is safe because boot() already
+ * calls InstallBootstrap::activateConfigService() and the config table
+ * exists by then (the Doctrine Migrations baseline/config.sql runs
+ * immediately before).
  */
 final class InstallWizard
 {
     /**
-     * Legacy Coupling Retirement gap-closure (install/upgrade-flow
-     * constants round): used to be install.php's own
-     * `define('DEFAULT_PREFIX_TABLE', 'piwigo_')` -- a fixed literal, not
-     * a real global concern. install.php (which already directly
-     * orchestrates this class) reads this constant too, at the one point
-     * it computes the site's actual chosen prefix.
+     * Default table prefix. install.php also reads this constant, at the
+     * point it computes the site's actual chosen prefix.
      */
     public const string DEFAULT_PREFIX_TABLE = 'piwigo_';
 
@@ -179,26 +168,18 @@ final class InstallWizard
     private int $step = 1;
 
     /**
-     * Deliberately does NOT take SessionService via constructor injection
-     * (singleton/service-locator elimination campaign, Phase 4) -- unlike
-     * every other real caller in the codebase, this class discovers its
-     * own real DB credentials mid-request (boot()'s own dbCredentials::
-     * seed() call, from the submitted form) rather than having them
-     * already settled by RequestBootstrap::connect() before any service
-     * gets a chance to resolve. Resolving SessionService eagerly (whether
-     * via the container or the SessionService::get() shim) as a
-     * constructor argument here would build its own SessionRepository's
-     * EntityManagerInterface/Connection chain -- and once PHP-DI's
-     * container.php-bound Connection::class factory runs once, its
-     * result is shared for the rest of this container's lifetime,
-     * permanently bound to whatever (stale, pre-seed) credentials were
-     * current at that moment. Real bug found this exact way: 6
-     * Integration tests failed with "table ... doesn't exist" against the
-     * wrong (default env) database once SessionService became a
-     * constructor param here. Every real use below instead builds a
-     * throwaway SessionService from the already-correct, already-resolved
-     * $conn local variable -- same "no constructor dep, ~50 sites"
-     * reasoning MailService/TagService already use for this exact shim.
+     * Deliberately does not take SessionService via constructor injection.
+     * Unlike other callers, this class discovers its real DB credentials
+     * mid-request (boot()'s own DbCredentials::seed() call, from the
+     * submitted form) rather than having them already settled before any
+     * service resolves. Resolving SessionService eagerly here would build
+     * its own SessionRepository's EntityManagerInterface/Connection
+     * chain, and PHP-DI's container-bound Connection::class factory
+     * permanently binds its result to whatever (stale, pre-seed)
+     * credentials were current at that point in the container's
+     * lifetime. Every use below instead builds a throwaway
+     * SessionService from the already-correct, already-resolved $conn
+     * local variable.
      */
     public function __construct(
         private readonly Lang $lang,
@@ -303,12 +284,11 @@ final class InstallWizard
         // Must run right here, not from install.php after boot() returns:
         // this method's own Template construction at the end of its body
         // (self::$template below) needs CurrentConfigService already
-        // active (Legacy Coupling Retirement Phase 8, 8d -- Template's
-        // data_dir_checked write), and that construction happens before
-        // install.php regains control. Placed after the credential seeding
-        // above, not before, for the same stale-credentials reason
-        // InstallBootstrap::activateConfigService()'s own docblock
-        // documents.
+        // active (Template's data_dir_checked write), and that
+        // construction happens before install.php regains control. Placed
+        // after the credential seeding above, not before, to avoid the
+        // same stale-credentials issue InstallBootstrap::
+        // activateConfigService()'s own docblock documents.
         InstallBootstrap::activateConfigService();
 
         // Same reasoning again, different dependency: this request never
@@ -325,16 +305,12 @@ final class InstallWizard
         // render() is never clobbered by this).
         $this->currentUser->attachGlobals();
 
-        // Same no-boot gap, third dependency: CurrentLogger. Originally found
-        // live one step later than CurrentUser (render()'s
-        // UserService::buildUser() -> getUserData() -> CurrentLogger::get())
-        // -- that specific call chain is gone (gap-closure Stage 4g deleted
-        // getUserData()'s own CurrentLogger use along with the lock/wait/503
-        // mechanism it logged), but whether some other consumer on this
-        // no-boot install path still needs CurrentLogger set this early is
-        // unverified and out of that stage's scope -- left in place rather
-        // than removed on an unaudited assumption. Same construction recipe
-        // as RequestBootstrap::connect()'s (the normal request pipeline's
+        // Same no-boot gap, third dependency: CurrentLogger -- not
+        // initialized through the normal boot path either. Whether any
+        // consumer on this no-boot install path still needs CurrentLogger
+        // set this early is unverified; left in place rather than removed
+        // on an unaudited assumption. Same construction recipe as
+        // RequestBootstrap::connect()'s (the normal request pipeline's
         // own site) -- no DB access needed, just Config/DbCredentials reads
         // already valid this early (the DB password was just seeded above).
         InstallBootstrap::currentLogger()->set(new Logger([
@@ -430,20 +406,14 @@ final class InstallWizard
     }
 
     /**
-     * DRY-extracted (Legacy Coupling Retirement Phase 8, 8b) -- was 3
-     * identical `new UserService(new UserRepository($c), new
-     * GroupRepository($c), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(new
-     * ActivityRepository($c)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $c)` chains inline
-     * below, matching the same "private helper takes the already-available
-     * Connection as a parameter" shape as
+     * Builds a UserService, matching the same "private helper takes the
+     * already-available Connection as a parameter" shape as
      * Bootstrap\RequestBootstrap::activityService(). $conn defaults to a
-     * fresh DbConnection::build() rather than reusing $this->conn: unlike
-     * the two performInstall() call sites below (which always have a real
-     * connection by the time they run), analyzeForm()'s own call site can
-     * legitimately run after installDbConnect() returned null (a failed
-     * connection attempt) -- the original code always attempted its own
-     * independent connection there regardless, a behavior this preserves
-     * exactly.
+     * fresh DbConnection::build() rather than reusing $this->conn:
+     * analyzeForm()'s own call site can legitimately run after
+     * installDbConnect() returned null (a failed connection attempt),
+     * unlike the two performInstall() call sites below, which always
+     * have a real connection by the time they run.
      */
     private function userService(?Connection $conn = null): UserService
     {
@@ -452,14 +422,10 @@ final class InstallWizard
     }
 
     /**
-     * DRY-extracted (singleton/service-locator elimination campaign,
-     * Phase 4) -- adding DeploymentPolicy as PasswordService's 2nd
-     * constructor arg turned the 2 previously-distinct (1-arg)
-     * `new PasswordService(new PasswordRepository($conn))` call sites
-     * below into an identical 2-arg chain, tripping the "no repeated
-     * multi-dependency construction chain" arch test. Same "private
-     * helper takes the already-available Connection as a parameter"
-     * shape as userService() above.
+     * Builds a PasswordService. Same "private helper takes the
+     * already-available Connection as a parameter" shape as
+     * userService() above -- avoids a repeated multi-dependency
+     * construction chain, which an arch test forbids.
      */
     private function passwordService(Connection $conn): PasswordService
     {
@@ -902,13 +868,9 @@ define(\'DB_COLLATE\', \'\');
                 $user['preferences'] = $preferences;
             }
 
-            // Legacy Coupling Retirement Phase 8 gap-closure: sync CurrentUser
-            // before PreferencesService::save() reads it -- this install-time
-            // $user is a fresh buildUser(1) result, never routed
-            // through RequestBootstrap/UserBootstrap's own sync calls. (The
-            // raw global $user bridge this comment used to reference was
-            // fully retired once every consumer -- including this one --
-            // moved onto CurrentUser.)
+            // Sync CurrentUser before PreferencesService::save() reads it --
+            // this install-time $user is a fresh buildUser(1) result, never
+            // routed through RequestBootstrap/UserBootstrap's own sync calls.
             $this->currentUser->set(User::fromUserArray($user));
 
             new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig), $this->currentUser)

@@ -38,17 +38,10 @@ final class PluginLoader
     /**
      * Base directory of plugins, trailing slash included.
      *
-     * P23 batch 8f-4: replaces the PHPWG_PLUGINS_PATH define (formerly
-     * include/functions.inc.php's top-level `define('PHPWG_PLUGINS_PATH',
-     * PHPWG_ROOT_PATH . 'plugins/')`, file deleted; verified: no frozen
-     * install/db or install/upgrade_*.php script reads that constant, so
-     * no legacy-bootstrap define needs to survive). A static method rather
-     * than a class constant because the underlying value (formerly
-     * PHPWG_ROOT_PATH, now a real `Paths` param) isn't guaranteed
-     * resolved at class-linking time -- same reasoning as
-     * PhotosAddDirectPageRenderer::baseUrl() (P23 batch 8f-1). Lives here
-     * (every real reader is L4Integration -- Admin/Admin\Extensions/
-     * Controller -- or a root entry script) on the class that owns
+     * A static method rather than a class constant because the underlying
+     * `Paths` param isn't guaranteed resolved at class-linking time. Every
+     * real reader lives in L4Integration (Admin, Admin\Extensions,
+     * Controller) or a root entry script, on the class that owns
      * per-request plugin loading.
      */
     public static function pluginsPath(Paths $paths): string

@@ -52,48 +52,30 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
 /**
- * Ported from admin/include/functions_upload.inc.php (22 free functions).
- * Behavior-preserving port -- $user reads retargeted onto
- * Piwigo\Users\CurrentUser in Legacy Coupling Retirement Track A batch A3;
- * $conf reads retargeted onto Piwigo\Config\Config in Legacy Coupling
- * Retirement Track A gap-fill batch G2; $logger reads retargeted onto
- * Piwigo\Core\CurrentLogger in Legacy Coupling Retirement Track A gap-fill
- * batch G5), except two real fixes made during the port:
+ * [SEC-21] The SVG upload branch validates that the sniffed MIME type
+ * matches the ".svg" extension, and sanitizeSvgIfNeeded() strips
+ * <script> elements and on*= event-handler attributes from the SVG (via
+ * DOMDocument, LIBXML_NONET, DOCTYPE stripped first) before the file is
+ * written to permanent storage. Content-Disposition: attachment for
+ * uploaded SVG/HTML is enforced at the web-server level, see
+ * upload/.htaccess.
  *
- * [SEC-21] addUploadedFile()'s SVG branch validated that the sniffed MIME
- * type matched the ".svg" extension, but never sanitized the SVG's own
- * XML content -- a genuinely-named "photo.svg" containing an embedded
- * <script> passed straight through to storage and is later served
- * inline by the web server. sanitizeSvgIfNeeded() (new) strips <script>
- * elements and on*= event-handler attributes via DOMDocument (LIBXML_NONET,
- * DOCTYPE stripped first -- same safe-parsing shape as
- * MetadataService::parseSvgDimensions(), P19's own SEC-20 fix), run right
- * after the MIME/extension check, before the file is written to permanent
- * storage. Content-Disposition: attachment for uploaded SVG/HTML (the
- * other SEC-21 half) is a web-server-level fix, see upload/.htaccess.
- *
- * [SEC-16] all 8 real exec() calls (PDF/HEIC/TIFF/video/PSD/EPS
- * representative generation) built their command string via unescaped
- * `'"' . $path . '"'` concatenation -- P19 only fixed PwgImage.php's and
- * ImageExtImagick.php's 4 call sites (the doc's own SEC-16 text already
- * scoped "UploadService (10 calls)" separately, i.e. this file was always
- * the remaining half). Every exec() call now uses escapeshellarg(), same
+ * [SEC-16] Every exec() call in this file (PDF/HEIC/TIFF/video/PSD/EPS
+ * representative generation) builds its command string with
+ * escapeshellarg() on every path/dir component, using the same
  * `escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command()`
- * dir-prefix pattern P19 established in PwgImage.php/ImageExtImagick.php.
+ * dir-prefix pattern as PwgImage.php/ImageExtImagick.php.
  *
  * The 6 upload_file_* representative-generation handlers are `public
  * static` (not instance methods, unlike the rest of this class) because
  * they're registered as PluginConfig event handlers (in
- * include/common.inc.php's "default event handlers" block since P23
- * sub-batch 8b-3, formerly admin/include/functions_upload.inc.php's thin
- * delegate file) -- EventDispatcher::addEventHandler() dedupes by
- * `$a === $b` on the callable, which for an array callable compares the
- * bound object by identity; an instance-method callable
- * ([$this, 'method']) would silently re-register (and double-fire) a new
- * "distinct" handler on every `new UploadService()`. A `[self::class,
- * 'method']` static callable compares equal across any number of
- * registrations, matching the original free function's true
- * once-per-process registration semantics.
+ * include/common.inc.php's "default event handlers" block).
+ * EventDispatcher::addEventHandler() dedupes by `$a === $b` on the
+ * callable, which for an array callable compares the bound object by
+ * identity; an instance-method callable ([$this, 'method']) would
+ * silently re-register (and double-fire) a new "distinct" handler on
+ * every `new UploadService()`. A `[self::class, 'method']` static
+ * callable compares equal across any number of registrations.
  */
 final class UploadService
 {
@@ -174,8 +156,7 @@ final class UploadService
 
     /**
      * $data is raw, unvalidated $_POST data (see the only real caller,
-     * ConfigurationSubController) -- flagged for Phase 4 (SEC-40/P26
-     * Request DTOs), not narrowed now.
+     * ConfigurationSubController), not narrowed here.
      *
      * @param array<string, mixed> $data
      * @param array<int, string> $errors
@@ -282,16 +263,13 @@ final class UploadService
      * 3) register in database
      *
      * @param int[]|null $categories
-     * @param PwgServer|null $service Legacy Coupling Retirement Phase 8,
-     *   8m: was a `global $service;` read guarded by `defined('IN_WS')`.
-     *   Cannot be a required parameter -- the one non-WS real caller,
-     *   Job\Handler\BatchUploadHandler::__invoke(BatchUploadJob $job), is a
-     *   genuine queued-job handler with no PwgServer in scope at all
-     *   (IN_WS is never defined there either, matching the pre-existing
-     *   behavior). PwgImages.php's 5 real WS callers (addFile()/add()/
-     *   addSimple()/upload()/uploadAsync(), each already carrying its own
-     *   PwgServer $service param) pass it through; BatchUploadHandler
-     *   passes nothing.
+     * @param PwgServer|null $service Not a required parameter: the one
+     *   non-WS real caller, Job\Handler\BatchUploadHandler::
+     *   __invoke(BatchUploadJob $job), is a genuine queued-job handler
+     *   with no PwgServer in scope at all. PwgImages.php's 5 real WS
+     *   callers (addFile()/add()/addSimple()/upload()/uploadAsync(), each
+     *   already carrying its own PwgServer $service param) pass it
+     *   through; BatchUploadHandler passes nothing.
      */
     public function addUploadedFile(string $source_filepath, UrlServiceInterface $urlService, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null, ?PwgServer $service = null): int
     {
@@ -511,10 +489,10 @@ final class UploadService
             // through StorageRegistry's 'uploads' disk instead so a future non-local
             // adapter (S3/SFTP) needs no call-site change here. PHP's own SAPI-level
             // upload cleanup deletes a real is_uploaded_file() tmp file at request
-            // end even without an explicit unlink() (verified via PHP's documented
-            // upload garbage-collection guarantee), matching what move_uploaded_file()
-            // used to do immediately; the "already local" (rename()) branch still
-            // needs an explicit unlink() since nothing else will remove that source.
+            // end even without an explicit unlink() (per PHP's documented upload
+            // garbage-collection guarantee); the "already local" (rename()) branch
+            // still needs an explicit unlink() since nothing else will remove that
+            // source.
             $upload_root = rtrim($this->paths->root . $this->currentConfig->uploadDir(), '/');
             $upload_rel_path = StorageRegistry::stripRoot($upload_root, $file_path);
             $upload_stream = fopen($source_filepath, 'rb');
@@ -818,16 +796,14 @@ final class UploadService
         $format_path .= StringHelper::getFilenameWoExtension(basename($image_0_path));
         $format_path .= '.' . $format_ext;
 
-        // Same StorageRegistry-routed migration as addUploadedFile()'s own
-        // move_uploaded_file()/rename() pair above -- $format_path here (built
-        // from the DB-stored images.path column) is relative, not yet an
-        // absolute path, so it needs normalizing before stripRoot() can
-        // compute the disk-relative path. prepareDirectory() below must use
-        // that same normalized absolute path too: mkdir() on the bare
-        // relative $format_path resolves against the PHP process's cwd
-        // (the document root, public/, on a real request), silently
-        // creating a stray "public/upload/..." directory tree instead of
-        // the real one -- a real, previously-shipped bug fixed here.
+        // $format_path here (built from the DB-stored images.path column) is
+        // relative, not yet an absolute path, so it needs normalizing before
+        // stripRoot() can compute the disk-relative path. prepareDirectory()
+        // below must use that same normalized absolute path too: mkdir() on
+        // the bare relative $format_path would resolve against the PHP
+        // process's cwd (the document root, public/, on a real request),
+        // silently creating a stray "public/upload/..." directory tree
+        // instead of the real one.
         $paths = $this->paths;
         $format_root = $paths->root . $this->currentConfig->uploadDir();
         $format_abs_path = $paths->root . ltrim(str_replace(['\\', '/./'], ['/', '/'], $format_path), '/');
@@ -1362,18 +1338,16 @@ final class UploadService
     }
 
     /**
-     * Singleton/service-locator elimination campaign, Phase 12 sub-phase
-     * 12F-1: the `uploadFileXxx()` event handlers below must stay static
-     * (EventDispatcher::callablesEqual()'s closure-identity dedup only
-     * correctly no-ops repeat registrations for a static method's closure;
-     * an instance method's closure would double-register across this
-     * class's own real non-singleton `new UploadService(...)` sites), so
-     * they can't read the constructor-injected `$this->currentLogger`
-     * `needResize()` uses below -- this resolves the container-shared
-     * instance directly instead, same "container resolve, not a
-     * constructor property" shape as Core\Logger::pageState(). Falls back
-     * to a fresh, no-op `severity => OFF` Logger pre-boot, matching
-     * CurrentLogger::getStatic()'s own former fallback exactly.
+     * The `uploadFileXxx()` event handlers below must stay static:
+     * EventDispatcher::callablesEqual()'s closure-identity dedup only
+     * correctly no-ops repeat registrations for a static method's
+     * closure, while an instance method's closure would double-register
+     * across this class's own non-singleton `new UploadService(...)`
+     * sites. Because of that, they can't read the constructor-injected
+     * `$this->currentLogger` that `needResize()` uses below -- this
+     * resolves the container-shared instance directly instead, falling
+     * back to a fresh, no-op `severity => OFF` Logger when the container
+     * isn't booted.
      */
     private static function currentLogger(): Logger
     {
@@ -1392,18 +1366,15 @@ final class UploadService
     }
 
     /**
-     * Singleton/service-locator elimination campaign, Phase 12 sub-phase
-     * 12F-4: same "must stay static, resolves the container-shared
-     * instance directly" reasoning as currentLogger() above --
+     * Same "must stay static, resolves the container-shared instance
+     * directly" reasoning as currentLogger() above --
      * getOptimalDimensionsForRepresentative() (the sole caller) is itself
      * a `private static` helper reached only from the static
-     * uploadFileXxx() handlers. Unlike currentLogger()'s fresh-per-call
-     * fallback, this replicates ImageStdParams::current()'s own former
-     * MEMOIZED pre-boot fallback exactly (a `private static` property here,
-     * populated via a real load_from_db() read on first not-booted
-     * access) -- ImageStdParams is "load once, read/write many times" per
-     * request, so a fresh instance per call would silently lose writes
-     * between calls.
+     * uploadFileXxx() handlers. The not-booted fallback is memoized (a
+     * `private static` property here, populated via a real
+     * load_from_db() read on first not-booted access): ImageStdParams is
+     * "load once, read/write many times" per request, so a fresh
+     * instance per call would silently lose writes between calls.
      */
     private static function imageStdParams(): ImageStdParams
     {
@@ -1425,16 +1396,16 @@ final class UploadService
     }
 
     /**
-     * Singleton/service-locator elimination campaign, Phase 12 sub-phase
-     * 12F-12: same "must stay static" reasoning as currentLogger()/
+     * Same "must stay static" reasoning as currentLogger()/
      * imageStdParams() above -- the `uploadFileXxx()` event handlers'
-     * remaining CurrentConfig::current() reads (pdfRepresentativeExt()/
-     * pdfJpgQuality()/extImagickDir()/tiffRepresentativeExt()/ffmpegDir())
-     * can't read the constructor-injected `$this->currentConfig`
-     * needResize() uses below. Cheap, fresh-per-call fallback pre-boot
-     * (unlike imageStdParams()'s eager DB-hit fallback) -- CurrentConfig's
-     * own former pre-boot fallback was just `new self()`, no DB read at
-     * all, so there's no shared state to lose between calls.
+     * remaining CurrentConfig reads (pdfRepresentativeExt()/
+     * pdfJpgQuality()/extImagickDir()/tiffRepresentativeExt()/
+     * ffmpegDir()) can't read the constructor-injected
+     * `$this->currentConfig` that needResize() uses below. The
+     * not-booted fallback is a fresh `new CurrentConfig()` per call
+     * (unlike imageStdParams()'s eager DB-hit fallback): CurrentConfig
+     * has no DB read at construction, so there's no shared state to lose
+     * between calls.
      */
     private static function currentConfig(): CurrentConfig
     {
@@ -1513,10 +1484,7 @@ final class UploadService
         // are genuinely unknown, not an error: piwigo_images.width/height
         // are nullable columns precisely for this case (see the schema),
         // and addFormat()'s own call to this method (the only other real
-        // caller) never reads width/height at all. This used to throw
-        // unconditionally, crashing every non-image upload; same fix
-        // family as PwgImage::get_rotation_angle() in this same
-        // coverage-gap-closure pass.
+        // caller) never reads width/height at all.
         if ($image_size === false) {
             $width = null;
             $height = null;

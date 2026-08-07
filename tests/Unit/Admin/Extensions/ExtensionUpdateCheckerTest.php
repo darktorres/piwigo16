@@ -125,8 +125,7 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
     // here at all -- see this file's own docblock on why (real PEM
     // network access, unavailable in this environment).
     //
-    // CurrentUser/CurrentConfig ARE exercised though (singleton/service-
-    // locator elimination campaign, Phase 12 sub-phase 12D):
+    // CurrentUser/CurrentConfig ARE exercised though:
     // getMissingExtensions() threads both into
     // ExtensionScanner::scan()'s own NOCTOR-shaped params, which need the
     // real, shared CurrentConfigTestFactory::get() (reflecting this file's own

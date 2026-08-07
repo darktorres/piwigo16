@@ -26,34 +26,21 @@ use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin/languages.php's own tab-dispatch shell (page slug
- * "languages"), folded directly into this controller -- same shape as
- * every prior P23 batch 6 sub-batch's shell folding. Its own tab dispatch
- * is already validated (`/^(installed|update|new)$/`).
+ * Page slug "languages" -- a flat tab-dispatch shell. Tab dispatch is
+ * validated (`/^(installed|update|new)$/`).
  *
- * Correction (found during 6i-4): `$my_base_url` is NOT dead code, despite
- * this docblock originally claiming so. It's consumed indirectly by
- * `Piwigo\Admin\CoreTabs::addCoreTabs()`'s own `case 'languages':` branch
- * (formerly `admin/include/add_core_tabs.inc.php`'s `add_core_tabs()`,
- * folded in P23 batch 8b-6), read via `global $my_base_url;` when
- * `Tabsheet::select()` fires its `tabsheet_before_select` event a few
- * lines below -- dropping it silently degraded every tab href (missing
- * the `admin.php?page=languages` prefix entirely). Restored here.
+ * `$my_base_url` (set via CoreTabs::setContext() below) is consumed by
+ * `Piwigo\Admin\CoreTabs::addCoreTabs()`'s own `case 'languages':`
+ * branch, read via `global $my_base_url;` when `Tabsheet::select()`
+ * fires its `tabsheet_before_select` event. Omitting it degrades every
+ * tab href by dropping the `admin.php?page=languages` prefix.
  *
- * The "installed"/"new" tab bodies were migrated off the languages.class.php
- * god-class (already replaced by PemCatalog/ExtensionScanner/
- * ExtensionLifecycle/ExtensionRepository in a prior P21-era pass) onto
- * Piwigo\Admin\LanguagesInstalledPageRenderer/LanguagesNewPageRenderer (P23
- * sub-batch 6i-1, this batch's real scope) -- see
- * LanguagesInstalledPageRenderer's own docblock for a real CSRF gap found
- * and fixed there. The "update" tab now calls the shared
- * Piwigo\Admin\UpdatesExtPageRenderer (P23 sub-batch 6i-4) instead of its
- * own raw `include admin/updates_ext.php` -- the same class
- * `ThemesSubController`/`PluginsSubController`/`UpdatesSubController`'s own
- * "ext" tab call, matching the `ThemesStandardPagesPageRenderer` "one
- * class, multiple call sites" precedent from 6i-2. This controller's own
- * `ADMIN_PAGE_TITLE` override still applies after the renderer call,
- * exactly as it did after the raw include before this port.
+ * The "installed"/"new" tabs render via
+ * Piwigo\Admin\LanguagesInstalledPageRenderer/LanguagesNewPageRenderer.
+ * The "update" tab calls the shared Piwigo\Admin\UpdatesExtPageRenderer,
+ * the same renderer ThemesSubController/PluginsSubController/
+ * UpdatesSubController's own "ext" tab call uses. This controller's own
+ * `ADMIN_PAGE_TITLE` override still applies after that renderer call.
  */
 final class LanguagesSubController implements AdminSubControllerInterface
 {

@@ -13,35 +13,26 @@ use Piwigo\Users\UserService;
 
 /**
  * Resolves the batch manager's session-held filter criteria
- * ($_SESSION['bulk_manager_filter']) into concrete photo id lists --
- * extracted from admin/batch_manager.php's own ~320-line inline block
- * (the file's only real "data access" concern; everything else in that
- * file and its 2 tab siblings is $_POST/$_GET/$_SESSION parsing and
- * template glue, kept inline per this phase's established "extract data
- * access, keep page/template glue inline" pattern).
+ * ($_SESSION['bulk_manager_filter']) into concrete photo id lists -- the
+ * only data-access concern in admin/batch_manager.php and its 2 tab
+ * siblings; the rest of those files is $_POST/$_GET/$_SESSION parsing and
+ * template glue, kept inline.
  *
- * Originally built directly on a raw Connection (P21); its own SQL
- * moved into ImageRepository/CategoryRepository/CaddieRepository/
- * UserRepository during the Controller/Ws/Admin -> Service -> Repository
- * migration -- this class now only orchestrates (validates/builds the
- * caller-composed WHERE fragments its filters need, then delegates
- * execution), matching the 3-hop chain every other L4 admin class in
- * this migration already follows.
+ * This class only orchestrates: it validates/builds the caller-composed
+ * WHERE fragments each filter needs, then delegates execution to
+ * ImageService/CategoryService/CaddieRepository/UserService.
  *
  * Deliberately does NOT re-implement filters that already have a correct,
  * tested implementation elsewhere (Piwigo\Image\ImageService::getOrphans()/
  * getPhotosNoMd5sum(), get_subcat_ids(), Piwigo\Tag\TagService::
  * getImageIdsForTags(), get_quick_search_results_no_cache()) -- those stay
- * called directly from the admin page glue, same as this phase's
- * ExtensionLifecycle/ExtensionUpdateChecker still calling
- * pwg_activity()/conf_update_param().
+ * called directly from the admin page glue.
  *
  * `array<string, mixed> $bulkFilter`/`$dimension`/`$filesize` throughout
  * this class are `$_SESSION['bulk_manager_filter']` (or a sub-array of
  * it), itself built from raw `$_GET`/`$_POST` upstream in
- * BatchManagerSubController -- flagged for Phase 4 (SEC-40/P26 Request
- * DTOs), not narrowed now. Every real read below already narrows
- * defensively (`isset()` + `is_numeric()`).
+ * BatchManagerSubController. Every real read below narrows defensively
+ * (`isset()` + `is_numeric()`).
  */
 final readonly class FilterResolver
 {

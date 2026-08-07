@@ -443,7 +443,7 @@ final class HistoryServiceTest extends IntegrationTestCase
 
         // summarize(50000) ran as a direct side effect of that logVisit()
         // call (never called separately in this test) -- the earlier,
-        // previously-unsummarized 2026-07-12 line is now rolled up into a
+        // not-yet-summarized 2026-07-12 line is now rolled up into a
         // real history_summary row.
         self::assertSame(1, $this->fetchSummaryNbPages(2026, 7, 12, null));
     }

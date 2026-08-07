@@ -38,47 +38,36 @@ use Piwigo\Permission\SqlCondition;
  *
  * Owns `categories` ({@see CategoryEntity}) and `old_permalinks` ({@see
  * OldPermalinkEntity}), and shares `user_access` ({@see UserAccessEntity})/
- * `group_access` ({@see \Piwigo\Group\GroupAccessEntity}, created during
- * the Group batch)/`image_category` ({@see \Piwigo\Image\ImageCategoryEntity},
- * placed in the Image domain, its heaviest real consumer -- Item 14
- * Sub-phase B1) with Group/Image/Permission -- only the single-row/
- * simple-id-list methods against those tables go through DQL; the large
- * majority of this repository's 65 methods are dynamic-fragment
+ * `group_access` ({@see \Piwigo\Group\GroupAccessEntity})/`image_category`
+ * ({@see \Piwigo\Image\ImageCategoryEntity}, placed in the Image domain,
+ * its heaviest real consumer) with Group/Image/Permission. Only the
+ * single-row/simple-id-list methods against those tables go through DQL;
+ * the large majority of this repository's 65 methods are dynamic-fragment
  * (caller-built permission/ORDER BY SQL), dynamically table/column-named
  * (findOrphanedColumnValues/deleteRowsWhereColumnIn/deleteInconsistentAccess),
  * or cross-domain joins/reads (typically against `images`, owned by the
  * Image domain with no association declared here), and stay plain DBAL
- * via $this->em->getConnection() -- same "mixed
- * repository" shape Image/Tag's own conversions established.
+ * via $this->em->getConnection() -- the same mixed-repository shape used
+ * for Image/Tag.
  *
- * Singleton/service-locator elimination campaign, Phase 11 sub-phase 11B:
- * no longer `extends EntityRepository` -- Doctrine's own `RepositoryFactory`
- * always constructs an `EntityRepository` subclass via a fixed
- * `(EntityManagerInterface $em, ClassMetadata $class)` signature, which
- * permanently blocked this class from ever taking `CurrentConfig` (its own
- * 3 remaining shim reads, all `CurrentConfig::orderBy()`/`orderByCustom()`)
- * via real constructor injection -- a real, newly-found gap this branch's
- * own later pgsql-portability commits introduced (findImageIdsForCategories()'s
- * own raw-DBAL RAND() fallback, ported from
- * {@see \Piwigo\Users\UserRepository}'s own identical fix), landing after
- * this phase's own inventory/audit pass already ran. Now a plain,
- * container-shared service instead, matching every other converted class
- * in this campaign, `Users\UserRepository`'s own identical redesign
- * included. `CategoryEntity`'s own `#[ORM\Entity]` mapping no longer names
- * this class as its `repositoryClass` (dropped in the same commit), so
- * `$em->getRepository(CategoryEntity::class)` now returns a generic
- * `Doctrine\ORM\EntityRepository<CategoryEntity>` instead -- every one of
- * this class's own 57 `$this->createQueryBuilder('c')` sites now reaches
- * that generic repository inline instead
- * (`$this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')`,
- * not through a private wrapper: confirmed live, same as
- * {@see \Piwigo\Users\UserRepository}'s own identical finding, that
- * phpstan-doctrine's own DQL result-type inference only traces a literal
- * `getRepository(X::class)->createQueryBuilder()` chain, not one hidden
- * behind a same-file helper method), and its 4 `$this->find($id)` sites
- * now go through a small private `find()` wrapper (safe to wrap, unlike
- * `createQueryBuilder()` -- `EntityManagerInterface::find()`'s own return
- * type isn't DQL-string-shape-dependent).
+ * This class is a plain, container-shared service -- it does not extend
+ * Doctrine's `EntityRepository` (whose `RepositoryFactory` always
+ * constructs it via a fixed `(EntityManagerInterface $em, ClassMetadata
+ * $class)` signature, which would block real constructor injection of
+ * `CurrentConfig`, needed for its `CurrentConfig::orderBy()`/
+ * `orderByCustom()` reads). `CategoryEntity`'s own `#[ORM\Entity]` mapping
+ * doesn't name this class as its `repositoryClass`, so
+ * `$em->getRepository(CategoryEntity::class)` returns a generic
+ * `Doctrine\ORM\EntityRepository<CategoryEntity>`. Every
+ * `$this->createQueryBuilder('c')` site reaches that generic repository
+ * inline (`$this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')`),
+ * not through a private wrapper: phpstan-doctrine's own DQL result-type
+ * inference only traces a literal `getRepository(X::class)->createQueryBuilder()`
+ * chain, not one hidden behind a same-file helper method. Its
+ * `$this->find($id)` sites, by contrast, go through a small private
+ * `find()` wrapper -- safe to wrap, unlike `createQueryBuilder()`, since
+ * `EntityManagerInterface::find()`'s return type isn't
+ * DQL-string-shape-dependent.
  */
 final class CategoryRepository
 {
@@ -439,20 +428,19 @@ final class CategoryRepository
      * date -- {@see \Piwigo\Category\CategoryService::getComputedCategories()}
      * rolls these up into subtree totals.
      *
-     * cat_id/id_uppercat/global_rank/rank/date_last/nb_images -- narrowed
+     * cat_id/id_uppercat/global_rank/rank/date_last/nb_images are narrowed
      * below the same way {@see \Piwigo\Category\Projection\Category::fromRow()}
      * narrows a full category row, so CategoryService::getComputedCategories()
      * can consume the result directly instead of re-deriving each field's
      * type itself. `rank` (sibling order within a parent, distinct from
-     * `global_rank`) is carried through purely for P23 batch 4b's
-     * CategoryCatsRenderer (CategoryService::compareByRank()) --
-     * CategoryService/CategoryTreeCache themselves never read it.
+     * `global_rank`) is carried through purely for CategoryCatsRenderer
+     * (CategoryService::compareByRank()) -- CategoryService/CategoryTreeCache
+     * themselves never read it.
      *
      * @return list<array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int}>
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
-     * two other, still-real blockers: a dynamic
+     * `image_category` is mapped ({@see \Piwigo\Image\ImageCategoryEntity}),
+     * but this method stays on DBAL for two real blockers: a dynamic
      * `SqlDialect::getRecentPeriodExpression()` raw-SQL fragment spliced
      * into the second JOIN's own ON condition, and a raw
      * `$forbiddenCategoriesCsv` NOT IN splice.
@@ -801,18 +789,17 @@ final class CategoryRepository
      * Every column on `categories` for the given ids -- deliberately a
      * separate method from {@see findCategoriesByIds()} (a narrower,
      * differently-shaped, already-tested 6-column contract with its own
-     * real caller) rather than widening that one. P23 batch 4b's
-     * CategoryCatsRenderer calls this only for the small, already-paginated
-     * subset of cat_ids being displayed on one page -- never the whole
-     * tree, unlike CategoryTreeCache's own cached rollup.
+     * real caller) rather than widening that one. CategoryCatsRenderer
+     * calls this only for the small, already-paginated subset of cat_ids
+     * being displayed on one page -- never the whole tree, unlike
+     * CategoryTreeCache's own cached rollup.
      *
      * @param  list<int>  $ids
      * @return list<Category>
      *
-     * Item 14 DQL audit: converted to real DQL -- fetches the full entity
-     * (object hydration, same as {@see findById()}) instead of a `SELECT *`
-     * DBAL row, and maps through {@see Category::fromEntity()} instead of
-     * {@see Category::fromRow()}.
+     * Fetches the full entity (object hydration, same as {@see findById()})
+     * instead of a `SELECT *` DBAL row, and maps through {@see
+     * Category::fromEntity()} instead of {@see Category::fromRow()}.
      */
     public function findFullCategoriesByIds(array $ids): array
     {
@@ -2162,12 +2149,8 @@ final class CategoryRepository
      *
      * @return list<array<string, mixed>>
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}) -- the "splitting one
-     * query-building method's two branches across DQL and DBAL isn't worth
-     * the inconsistency" reasoning that previously kept the whole method on
-     * DBAL no longer applies now that both branches convert cleanly.
-     * Converted to real DQL -- the false branch's join has no declared
+     * `image_category` is mapped ({@see \Piwigo\Image\ImageCategoryEntity});
+     * both branches use real DQL. The false branch's join has no declared
      * association from CategoryEntity, so it goes through an explicit
      * `Join::WITH` condition, same precedent as
      * {@see findPrivateCategoriesGrantedToUser()} elsewhere in this class.
@@ -2231,9 +2214,8 @@ final class CategoryRepository
      *
      * @return list<array<string, mixed>>
      *
-     * Item 14 DQL audit: converted to real DQL -- `group_access` is mapped
-     * ({@see GroupAccessEntity}), joined via an explicit `Join::WITH`
-     * condition (same precedent as
+     * `group_access` is mapped ({@see GroupAccessEntity}), joined via an
+     * explicit `Join::WITH` condition (same precedent as
      * {@see findPrivateCategoriesGrantedToUser()} above). The join condition
      * itself (`ga.catId = c.id`) compiles to a plain SQL `cat_id = id`
      * regardless of GroupAccessEntity's own custom Doctrine Types; only the
@@ -2241,17 +2223,12 @@ final class CategoryRepository
      * (the well-supported single-value bind case, not the IN-clause array
      * one).
      *
-     * pgsql support pass: explicit `ORDER BY c.id` added -- this query
-     * (and its 3 real siblings in this class with the identical gap:
-     * {@see findPrivateCategoriesExcluding()}, {@see findIdNameUppercatsRank()},
-     * {@see findPrivateCategoryIdsGrantedToGroup()}) had none, so its real
-     * row order was whatever the query planner happened to choose --
-     * MySQL incidentally returned id-ascending for this simple join, but
-     * Postgres's own planner picked a different (also SQL-standard-valid)
-     * order for the identical query, confirmed live via this exact
-     * method's own test going from `[1, 2]` to `[2, 1]`. A real
-     * nondeterminism gap the test happened to never previously catch, not
-     * a Postgres-only fix.
+     * Explicit `ORDER BY c.id`: without it, row order is not guaranteed by
+     * SQL and can differ across database engines' query planners even for
+     * the same query (this query and its 3 siblings with the identical gap
+     * -- {@see findPrivateCategoriesExcluding()}, {@see
+     * findIdNameUppercatsRank()}, {@see findPrivateCategoryIdsGrantedToGroup()}
+     * -- all need it for this reason, not just for Postgres compatibility).
      */
     public function findPrivateCategoriesGrantedToGroup(int $groupId): array
     {
@@ -2674,38 +2651,18 @@ final class CategoryRepository
      * First/last photo creation date per category (`CategoryCatsRenderer`'s
      * "from/to" date-range display, gated by `CurrentConfig::displayFromto()`).
      *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller applies
-     * visibleCategoryIds against the unqualified `category_id`
-     * (`image_category`'s own column, no alias here) and visibleImageIds
-     * against `images`' own unqualified `id`. It also passed
-     * `visible_images => 'id'` to the old
-     * `getSqlConditionFandFAsCondition()`, whose own `visible_images` case
-     * falls through into `forbidden_images` with no `break` -- with
-     * fieldName `'id'`, that's the images-table's own `level <= x` check,
-     * so maxLevel applies here too, against the unqualified `level`
-     * (only `images` has that column in this join).
-     *
      * @param  list<int>  $categoryIds
      * @return array<int, array{from: ?string, to: ?string}> keyed by category id
-     *   -- PHP auto-coerces a numeric string array key to int regardless
-     *   of how it's written, so this was always the real runtime shape
-     *   (Item 15 audit: DQL's stricter type inference is what finally
-     *   surfaced the previously-inaccurate `array<string, ...>` annotation).
+     *   -- PHP auto-coerces a numeric string array key to int regardless of
+     *   how it's written, so `int` (not `string`) is the real runtime key
+     *   type.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL --
-     * $criteria's own fragment is a raw SQL string spliced via heredoc,
-     * same blocker as {@see findRandomRepresentativeIdAmongSubcategories()}.
-     *
-     * Item 15 audit, re-verified: converted to a DQL `QueryBuilder` --
-     * {@see PermissionCriteria}'s fragments needed no changes (see
-     * {@see applyCondition()}'s own docblock). Aliased `MIN(...)`/`MAX(...)`
-     * as `from_date`/`to_date` rather than the original's own backtick-
-     * quoted `` `from` ``/`` `to` `` -- `FROM` is a DQL keyword, and DQL
-     * has no backtick-escaping syntax; this row shape is internal to this
-     * method (rebuilt into the `from`/`to`-keyed return array below), not
-     * a public contract.
+     * Uses a DQL `QueryBuilder`; {@see PermissionCriteria}'s fragments need
+     * no changes for DQL (see {@see applyCondition()}'s own docblock).
+     * `MIN(...)`/`MAX(...)` are aliased as `from_date`/`to_date`, not
+     * `from`/`to`: `FROM` is a DQL keyword and DQL has no backtick-escaping
+     * syntax. This row shape is internal to this method (rebuilt into the
+     * `from`/`to`-keyed return array below), not a public contract.
      */
     public function findDateRangeByCategory(array $categoryIds, PermissionCriteria $criteria): array
     {
@@ -3619,28 +3576,23 @@ final class CategoryRepository
     }
 
     /**
-     * Further SQL-modernization audit, Item 13: Ws\PwgCategories::
-     * getList()'s own paginated category rollup -- $whereClauses (a
-     * caller-built `list<string>` of trusted SQL fragments) replaced with
-     * a typed CategoryListCriteria; this method now builds its own scope/
-     * forbidden-categories/public-only conditions internally via
-     * {@see categoryScopeCondition()} and SqlCondition::combine().
-     * $searchTerm/$searchLimit/$limit/$limitPlusOne replicate the
-     * original's own conditional LIMIT logic verbatim: a search term gets
-     * its own LIMIT only when no explicit $limit is requested; $limit
-     * itself gets +1 when $limitPlusOne (single-category scope), to detect
-     * "more remain" without a second query. The total is only computed
-     * when $limit !== null, matching the original's own guard.
+     * Ws\PwgCategories::getList()'s own paginated category rollup. Builds
+     * its own scope/forbidden-categories/public-only conditions internally
+     * via {@see categoryScopeCondition()} and SqlCondition::combine(), from
+     * a typed CategoryListCriteria. $searchTerm/$searchLimit/$limit/
+     * $limitPlusOne: a search term gets its own LIMIT only when no explicit
+     * $limit is requested; $limit itself gets +1 when $limitPlusOne
+     * (single-category scope), to detect "more remain" without a second
+     * query. The total is only computed when $limit !== null.
      *
      * @return PaginatedResult<array<string, mixed>>
      *
-     * Phase 5 Item 19: `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` replaced with
-     * `COUNT(*) OVER() AS total_count` -- no `DISTINCT`/`GROUP BY` on this
-     * query, so a window function reports the exact same total the old
-     * mechanism did, computed in the same query as the row data instead
-     * of a second round-trip coupled to connection state. `total_count`
-     * is stripped back out of each row before returning -- it was never
-     * part of this method's own row shape, only `PaginatedResult::$total`.
+     * Computes the total via `COUNT(*) OVER() AS total_count` in the same
+     * query as the row data (no `DISTINCT`/`GROUP BY` here, so the window
+     * function's count is exact) rather than a second round-trip.
+     * `total_count` is stripped back out of each row before returning --
+     * it's not part of this method's own row shape, only
+     * `PaginatedResult::$total`.
      */
     public function findListForWs(
         CategoryListCriteria $criteria,
@@ -3734,17 +3686,16 @@ final class CategoryRepository
     }
 
     /**
-     * Further SQL-modernization audit, Item 13: Ws\PwgCategories::
-     * getAdminList()'s own paginated category rollup -- same conversion as
-     * {@see findListForWs()} above, but via CategoryAdminListCriteria (no
-     * forbidden-categories/public-only fields at all -- this WS method is
-     * admin-only). Always computes the total (unconditional in the
-     * original, unlike findListForWs()'s own $limit-gated fetch).
+     * Ws\PwgCategories::getAdminList()'s own paginated category rollup, via
+     * CategoryAdminListCriteria (no forbidden-categories/public-only fields
+     * at all -- this WS method is admin-only). Always computes the total,
+     * unlike {@see findListForWs()}'s own $limit-gated fetch.
      *
      * @return PaginatedResult<array<string, mixed>>
      *
-     * Phase 5 Item 19: same `COUNT(*) OVER() AS total_count` conversion as
-     * {@see findListForWs()} above -- no `DISTINCT`/`GROUP BY` here either.
+     * Computes the total the same way as {@see findListForWs()} above
+     * (`COUNT(*) OVER() AS total_count`) -- no `DISTINCT`/`GROUP BY` here
+     * either.
      */
     public function findAdminListForWs(CategoryAdminListCriteria $criteria, ?string $searchTerm, int $searchLimit): PaginatedResult
     {

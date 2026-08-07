@@ -22,19 +22,10 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 
 /**
- * Singleton/service-locator elimination campaign, Phase 11 sub-phase 11E:
- * UrlService's own real constructor now requires 8 collaborators
- * (SectionContextRegistry/RequestMountDepth/CurrentConfig/
- * DeploymentPolicy/WsContext/CurrentUser/Lang/EventDispatcher) this test
- * suite's ~280 real call sites previously never had to supply (the shim
- * reads happened internally). Resolves each from the real
- * container-shared instance when one exists (matching what every real
- * production caller already gets, including honoring any test-seeded
- * state on those instances), falling back to a fresh, DB-free, bare
- * instance for the many plain Unit tests that never boot a Kernel at all
- * -- mirrors the "no Kernel::boot(), type-satisfying instance is enough"
- * reasoning already established throughout this campaign (e.g.
- * CoreUpdateServiceTest's own core_update_service_test_lang()).
+ * Resolves each collaborator from the real container-shared instance when
+ * one exists, matching what every production caller gets (including any
+ * test-seeded state on those instances). Falls back to a fresh, DB-free,
+ * bare instance for tests that never boot a Kernel.
  */
 final class UrlServiceTestFactory
 {

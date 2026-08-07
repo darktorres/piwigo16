@@ -8,10 +8,8 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ErrorCollector;
 
 /**
- * Container-shared instance (singleton/service-locator elimination
- * campaign, Phase 2) -- each test constructs its own fresh instance
- * directly; no reset()/global beforeEach-afterEach needed for the
- * instance API, same shape as CurrentLoggerTest.php.
+ * Each test constructs its own fresh instance directly -- no reset()/
+ * global beforeEach-afterEach is needed for the instance API.
  *
  * Deliberately never calls a real instance's install() -- it registers a
  * real set_error_handler()/register_shutdown_function() pair, and PHP has
@@ -21,9 +19,8 @@ use Piwigo\Core\ErrorCollector;
  * matching how this class's other state has no install()-dependent test
  * either. handleError()/flush() are the only two methods with instance
  * state to reflect into -- label()/writeTestErrorsLog() are pure functions
- * of their own parameters and stayed `private static` through the
- * conversion, so their own Reflection calls below are unchanged
- * (`invoke(null, ...)`).
+ * of their own parameters and are `private static`, so their own
+ * Reflection calls below use `invoke(null, ...)`.
  *
  * @param list<string> $entries
  */
@@ -458,55 +455,13 @@ test('label falls back to the PHP code for a type matching none of the known cat
 });
 
 /**
- * A later coverage-gap sweep re-flagged flush()'s own fatal-error branch
- * (the `error_get_last()`-is-fatal body) and its X-PHP-Error-N header-
- * emission loop as closable. Re-investigated independently of this
- * file's own docblock above; the header-emission loop reached the
- * identical unreachable conclusion, with two additional, concrete
- * confirmations:
- *  - eval() of malformed PHP raises a catchable \ParseError (PHP turned
- *    eval()'s own E_PARSE into a real Throwable years ago) and never
- *    touches error_get_last() at all -- confirmed live: `var_dump
- *    (error_get_last())` right after catching that ParseError prints
- *    NULL. So eval() is not an injection seam for the fatal-type branch
- *    either (see the dedicated subprocess test further down for what IS).
- *  - PHPUnit's own console output (vendor/phpunit/phpunit/src/TextUI/
- *    Output/Printer/DefaultPrinter.php) writes every dot/summary line via
- *    a raw fwrite() to an explicitly fopen()'d php://stdout stream, never
- *    echo/print -- so the test runner's own progress output cannot be
- *    what latches headers_sent() true (fwrite() to an explicit stream
- *    handle bypasses the SAPI output layer headers_sent() tracks
- *    entirely). Whatever does latch it is real script-level output
- *    somewhere else in this large, shared, single Unit-suite process --
- *    and this CLI SAPI's implicit_flush is On by default (unchanged by
- *    tests/bootstrap.php or phpunit.xml.dist), which forces even output
- *    produced *inside* PHPUnit's own per-test ob_start() straight through
- *    to the real SAPI layer instead of staying safely discarded by its
- *    matching ob_get_clean(). Once latched, headers_sent() has no
- *    userland reset, and no runkit/uopz extension is installed here to
- *    stub the builtin itself. The two lines below add real, still-closable
- *    coverage adjacent to that guard instead: the `headers_sent()` half
- *    of flush()'s `$this->collected === [] || headers_sent()` check
- *    (previously only its `$this->collected === []` half was exercised),
- *    proving flush() never mutates the buffer either way.
- *
- * This same test below (both its empty- and non-empty-buffer variants,
- * plus "flush returns immediately when nothing was collected" further
- * down) also empirically confirms all 3 of this sweep's own remaining
- * mutants on that same condition (BooleanOrToBooleanAnd, IdenticalTo­
- * NotIdentical, IfNegated) are confirmed-equivalent, not just untested:
- * verified live via temporary sed-applied mutations to the operator, the
- * left operand's own comparison, and the whole condition's negation --
- * the full suite passed unchanged against each. header() is a
- * documented-here-live no-op under the CLI SAPI (no warning, no
- * exception), and this loop only ever *reads* $this->collected (never
- * mutates it) -- so with headers_sent() permanently true in this
- * environment, every mutated variant of this condition still leaves
- * $this->collected in the exact same final state as the real early
- * return, regardless of what's actually buffered. The header-emission
- * loop's own remaining mutants (lines 187/189/190/192, all inside that
- * same unreachable-per-this-file's-own-earlier-investigation loop) are
- * dead for the identical reason -- not chased further.
+ * flush()'s X-PHP-Error-N header-emission loop only runs when
+ * `$this->collected !== [] && ! headers_sent()`. Under the CLI SAPI,
+ * headers_sent() is always true (there is no real HTTP response to send
+ * headers to), so this loop never actually runs in this test suite --
+ * header() is a documented no-op there anyway. The loop only ever reads
+ * $this->collected, never mutates it, so flush() leaves the buffer
+ * unchanged whether or not the loop runs.
  */
 test('flush leaves a non-empty buffer untouched when headers are already sent', function (): void {
     $errorCollector = new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir()));

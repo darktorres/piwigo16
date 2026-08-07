@@ -32,13 +32,11 @@ use Piwigo\Users\CurrentUser;
 final class StatsPageRenderer
 {
     /**
-     * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
-     * explicit param instead of `global $page['page'];` -- the one real
-     * caller (StatsSubController) already knows its own fixed page slug
-     * statically (it's the only class registered for the 'stats' slug
-     * in config/admin_pages.php); selects this page's own tab within the
-     * shared 'history' tabsheet group (see HistoryPageRenderer, its
-     * sibling in that same group).
+     * $pageSlug is an explicit param: the one real caller (StatsSubController)
+     * already knows its own fixed page slug statically (it's the only class
+     * registered for the 'stats' slug in config/admin_pages.php). Selects
+     * this page's own tab within the shared 'history' tabsheet group (see
+     * HistoryPageRenderer, its sibling in that same group).
      */
     public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, HistoryService $historyService, EventDispatcher $eventDispatcher): void
     {
@@ -56,11 +54,9 @@ final class StatsPageRenderer
 
         $template->set_filename('stats', 'stats.tpl');
 
-        // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
-        // bug -- nothing had ever called CoreTabs::setContext() with
-        // linkStart for this page (same class of gap as
-        // ConfigurationSubController's own $conf_link fix), so this page's
-        // own tab strip has always rendered broken relative hrefs.
+        // CoreTabs::setContext() must be called with linkStart here so this
+        // page's tab strip renders correct admin.php?page=... hrefs instead
+        // of broken relative ones.
         $coreTabs->setContext(new CoreTabsContext(linkStart: $urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('history');
@@ -307,12 +303,9 @@ final class StatsPageRenderer
      * year/month/day/hour are smallint/tinyint columns (schema), so a raw
      * fetched value is int|string (native int under DBAL's mysqli driver,
      * numeric string under its pgsql driver -- see DbConnection::params()),
-     * never a genuine string -- this used to check is_string() instead,
-     * which is always false for the native-int case and silently built an
-     * empty date-string segment (a real, previously-unnoticed bug: verified
-     * against the same table's own history_summary read in
-     * HistoryRepository, which already uses is_numeric() for this exact
-     * column).
+     * never a genuine string -- each value below is checked with
+     * is_numeric(), matching HistoryRepository's own read of this same
+     * column.
      *
      * @param array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages?: int|string|null} $row
      */

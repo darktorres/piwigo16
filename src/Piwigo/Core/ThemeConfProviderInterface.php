@@ -5,19 +5,16 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * P23 batch 8f-4: the legacy get_themeconf() free function
- * (include/functions.inc.php, now deleted) read the request's
- * `$GLOBALS['template']` (Piwigo\Template\Template, L3Presentation) -- but
- * one of its real callers, `Piwigo\Image\SrcImage` (L2aCoreDomain), may not
- * depend upward on L3 per deptrac's ruleset. Lives in `Piwigo\Core`
- * (L1Infrastructure, same direction as `HtmlRenderingInterface`/
- * `MailerInterface`) so SrcImage can depend downward on this instead.
- * `Template implements` it; `SrcImage::themeConf()` (singleton/service-
- * locator elimination campaign, Phase 6) reads the request's own Template
- * instance via `Piwigo\Template\CurrentTemplate::current()->get()`, not a
- * container binding for this interface itself: Template's constructor
- * takes runtime path/theme strings and is never container-managed, unlike
- * the autowirable implementations behind the other Core interfaces in
+ * `Piwigo\Image\SrcImage` (L2aCoreDomain) is a real caller, and may not
+ * depend upward on `Piwigo\Template\Template` (L3Presentation) per
+ * deptrac's ruleset. Lives in `Piwigo\Core` (L1Infrastructure, same
+ * direction as `HtmlRenderingInterface`/`MailerInterface`) so SrcImage can
+ * depend downward on this instead. `Template implements` it;
+ * `SrcImage::themeConf()` reads the request's own Template instance via
+ * `Piwigo\Template\CurrentTemplate::current()->get()`, not a container
+ * binding for this interface itself: Template's constructor takes runtime
+ * path/theme strings and is never container-managed, unlike the
+ * autowirable implementations behind the other Core interfaces in
  * config/container.php.
  */
 interface ThemeConfProviderInterface

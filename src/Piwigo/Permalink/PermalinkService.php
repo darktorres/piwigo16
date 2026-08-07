@@ -10,17 +10,8 @@ use Piwigo\Core\ProcessCache;
 
 /**
  * Category-permalink business logic: validation, uniqueness against both
- * the live and historical (old_permalinks) permalink sets, cache
+ * the live and retired (old_permalinks) permalink sets, cache
  * invalidation.
- *
- * Constructor-injects PermalinkRepository directly -- no ServiceLocator
- * (doesn't exist in this repo; DI is plain constructor injection via the
- * PHP-DI container throughout, established since P8), unlike the reference
- * implementation's much-later, controller-era PermalinkService built
- * during its own "sweep admin/include/ free function call sites" pass
- * (ServiceLocator::get(PermalinkRepository::class), PageState/RequestCache
- * dependencies) -- that shape belongs to P21/P22 (controller migration),
- * not this phase's scope.
  */
 final readonly class PermalinkService
 {
@@ -106,7 +97,7 @@ final readonly class PermalinkService
             return false;
         }
 
-        // check if the new permalink was historically used
+        // check if the new permalink is recorded in the old-permalinks history
         $oldCatId = $this->repo->findOldCategoryId($permalink);
         if ($oldCatId !== null && $oldCatId !== $catId) {
             $this->pageState->addError(sprintf(

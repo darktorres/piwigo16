@@ -25,11 +25,10 @@ final class ImageImagick implements ImageInterface
     public $image;
 
     /**
-     * compose()'s own "already dimmed this overlay once" memoization flag
-     * (Legacy Coupling Retirement Phase 8, 8f) -- a former `global
-     * $dirty_trick_xrepeat;`. Instance-scoped, not static: each
-     * ImageImagick instance wraps exactly one source image for its own
-     * lifetime (see the constructor), and compose() reads/writes this flag
+     * compose()'s own "already dimmed this overlay once" memoization flag.
+     * Instance-scoped, not static: each ImageImagick instance wraps
+     * exactly one source image for its own lifetime (see the
+     * constructor), and compose() reads/writes this flag
      * on the OVERLAY's own instance (`$overlay_backend`, not `$this`) --
      * the thing being memoized is "has this specific overlay's alpha
      * channel already been dimmed," which must survive across multiple

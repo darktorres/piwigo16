@@ -89,8 +89,7 @@ namespace Piwigo\Tests\Integration {
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            // DI-phase follow-on to gap-closure Stage 4: ExtensionLifecycle
-            // now resolves MailService/HtmlService via
+            // ExtensionLifecycle resolves MailService/HtmlService via
             // Bootstrap\PresentationAccessor -> Kernel::container(), which
             // this isolated Integration test (no full RequestBootstrap)
             // wouldn't otherwise boot.
@@ -119,10 +118,10 @@ namespace Piwigo\Tests\Integration {
 
             $currentConfig->setEnableExtensionsInstall(true);
             $currentConfig->setPhpExtensionInUrls(false);
-            // P23 batch 8f-4: ThemeCatalog::checkThemeInstalled() (called
-            // for real here) reads CurrentConfig::themesDir() -- provide the
-            // production value so the real filesystem check runs against
-            // the real themes/ dir.
+            // ThemeCatalog::checkThemeInstalled() (called for real here)
+            // reads CurrentConfig::themesDir() -- provide the production
+            // value so the real filesystem check runs against the real
+            // themes/ dir.
             $currentConfig->setThemesDir(CurrentPathsTestFactory::get()->root . 'themes');
             CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1]));
             CurrentUserTestFactory::get()->markRealUserResolved();
@@ -376,20 +375,15 @@ namespace Piwigo\Tests\Integration {
         public function test_theme_activate_rejects_a_second_mobile_theme(): void
         {
             // ConfigService::confUpdateParam('mobile_theme', $id) (called by
-            // a successful mobile-theme activate, Legacy Coupling
-            // Retirement Phase 5 -- formerly ConfigDb::confUpdateParam(),
-            // same call shape preserved exactly) is deliberately called
-            // WITHOUT updateGlobal=true, matching themes.class.php's own
-            // original call shape -- it persists to the DB but never
-            // updates CurrentConfig::$data (and structurally can't touch the
-            // legacy $conf global at all, unlike ConfigDb). This is a real,
-            // faithfully-preserved legacy quirk: the mobile-theme-uniqueness
-            // guard only actually takes effect on the NEXT request, once
-            // both get freshly reloaded from the DB at bootstrap -- never
-            // within the same request/process that just activated the
-            // first mobile theme. Simulate that "next request" state
-            // directly rather than asserting a same-process guard that
-            // legacy code itself never provides.
+            // a successful mobile-theme activate) is deliberately called
+            // WITHOUT updateGlobal=true -- it persists to the DB but never
+            // updates CurrentConfig::$data. As a result the
+            // mobile-theme-uniqueness guard only actually takes effect on
+            // the NEXT request, once both get freshly reloaded from the DB
+            // at bootstrap -- never within the same request/process that
+            // just activated the first mobile theme. Simulate that "next
+            // request" state directly rather than asserting a same-process
+            // guard the code never provides.
             $first = $this->themeId();
             $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $first, [
                 'version' => '1.0',
@@ -469,13 +463,12 @@ namespace Piwigo\Tests\Integration {
 
         public function test_language_deactivate_of_the_default_language_is_rejected(): void
         {
-            // Piwigo\Users\UserService::getDefaultLanguage() now reads the
+            // Piwigo\Users\UserService::getDefaultLanguage() reads the
             // real fixture default user's language column ('en_UK', the
             // only row this class's setUp() keeps active -- see the
-            // DELETE ... WHERE id != 'en_UK' above) instead of a fixed
-            // 'en' stub, so this exercises the real guard condition
-            // ($id === getDefaultLanguage()) directly against 'en_UK'
-            // rather than a synthetic language id.
+            // DELETE ... WHERE id != 'en_UK' above), so this exercises the
+            // real guard condition ($id === getDefaultLanguage()) directly
+            // against 'en_UK' rather than a synthetic language id.
             $errors = $this->lifecycle->performAction(ExtensionType::Language, 'deactivate', 'en_UK', null);
 
             self::assertSame(['CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE'], $errors);

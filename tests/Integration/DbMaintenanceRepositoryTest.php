@@ -296,45 +296,37 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
 
     public function test_repair_optimize_all_tables_completes_without_throwing(): void
     {
-        // Phase 4 Item 17: had zero prior coverage. Per this method's own
-        // docblock, REPAIR/ALTER .../OPTIMIZE issue no meaningful return
-        // value to assert on -- completing without an exception already
-        // means every introspected table (real Schema-API calls now,
-        // not hand-parsed SHOW TABLES/DESC output) round-tripped
-        // correctly through REPAIR TABLE/(if it has a primary key)
-        // ALTER TABLE ... ORDER BY/OPTIMIZE TABLE.
+        // Per this method's own docblock, REPAIR/ALTER .../OPTIMIZE issue
+        // no meaningful return value to assert on -- completing without an
+        // exception already means every introspected table (found via real
+        // Schema-API calls, not hand-parsed SHOW TABLES/DESC output)
+        // round-tripped correctly through REPAIR TABLE/(if it has a
+        // primary key) ALTER TABLE ... ORDER BY/OPTIMIZE TABLE.
         self::expectNotToPerformAssertions();
 
         $this->repo->repairOptimizeAllTables();
     }
 
     /**
-     * Item 17's own plan text specifically asks to confirm the new
-     * AbstractSchemaManager-based introspection finds "the exact same
-     * table set and primary-key columns via the new introspection calls
-     * as the old SHOW TABLES/DESC parsing did" -- a check
-     * test_repair_optimize_all_tables_completes_without_throwing() above
-     * doesn't actually perform (a table silently dropped from the
-     * introspected set, or a wrong PK column for one specific table,
-     * wouldn't necessarily raise an exception). The old SHOW TABLES/DESC
-     * code no longer exists to diff against directly, so this instead
-     * cross-checks introspectTableNames()/introspectTablePrimaryKeyConstraint()
+     * Cross-checks introspectTableNames()/introspectTablePrimaryKeyConstraint()
      * -- the exact calls repairOptimizeAllTables() itself uses -- against
      * raw MySQL-reported ground truth computed independently in this
-     * test, proving the switch didn't silently lose or corrupt anything.
+     * test: test_repair_optimize_all_tables_completes_without_throwing()
+     * above only proves the method doesn't throw, and wouldn't catch a
+     * table silently dropped from the introspected set or a wrong PK
+     * column for one specific table.
      *
-     * Real finding while writing this: DESC's own row order for a
-     * composite PK is column-*definition* order, not the PRIMARY KEY
-     * clause's own *declared* column order -- confirmed live on
-     * `piwigo_rate` (columns defined user_id/element_id/anonymous_id, but
-     * `PRIMARY KEY (element_id, user_id, anonymous_id)` declared in a
-     * different order). `introspectTablePrimaryKeyConstraint()` reports
-     * the real declared order (matching `SHOW CREATE TABLE`'s own
-     * `PRIMARY KEY (...)` clause exactly, confirmed live) -- ground truth
-     * here is `SHOW CREATE TABLE`, not DESC, precisely because
-     * `ALTER TABLE ... ORDER BY` (what this method's own PK columns feed
-     * into) cares about the constraint's real column order, not table
-     * column-definition order.
+     * DESC's own row order for a composite PK is column-*definition*
+     * order, not the PRIMARY KEY clause's own *declared* column order --
+     * confirmed live on `piwigo_rate` (columns defined
+     * user_id/element_id/anonymous_id, but `PRIMARY KEY (element_id,
+     * user_id, anonymous_id)` declared in a different order).
+     * `introspectTablePrimaryKeyConstraint()` reports the real declared
+     * order (matching `SHOW CREATE TABLE`'s own `PRIMARY KEY (...)`
+     * clause exactly) -- ground truth here is `SHOW CREATE TABLE`, not
+     * DESC, precisely because `ALTER TABLE ... ORDER BY` (what this
+     * method's own PK columns feed into) cares about the constraint's
+     * real column order, not table column-definition order.
      */
     public function test_repair_optimize_all_tables_introspection_matches_raw_show_tables_and_create_table(): void
     {
@@ -350,9 +342,9 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         ));
         sort($introspectedTableNames);
 
-        // pgsql support pass: real bug found live -- SHOW TABLES is
-        // MySQL-only syntax ("syntax error at or near 'LIKE'"). Postgres's
-        // real ground-truth equivalent is pg_tables.
+        // SHOW TABLES is MySQL-only syntax ("syntax error at or near
+        // 'LIKE'" on Postgres). Postgres's real ground-truth equivalent is
+        // pg_tables.
         /** @var list<string> $rawTableNames */
         $rawTableNames = $this->dbDriver === 'pgsql'
             ? $this->conn->fetchFirstColumn(
@@ -376,11 +368,10 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
                 $primaryKey->getColumnNames(),
             );
 
-            // pgsql support pass: real bug found live -- SHOW CREATE TABLE
-            // is MySQL-only syntax. Postgres's own pg_get_constraintdef()
-            // reports the exact same "PRIMARY KEY (col1, col2)" shape for
-            // a table's primary key constraint (confirmed live), so the
-            // same regex-based extraction below applies unchanged once
+            // SHOW CREATE TABLE is MySQL-only syntax. Postgres's own
+            // pg_get_constraintdef() reports the exact same "PRIMARY KEY
+            // (col1, col2)" shape for a table's primary key constraint, so
+            // the same regex-based extraction below applies unchanged once
             // fed this instead.
             if ($this->dbDriver === 'pgsql') {
                 $createTableSql = $this->conn->fetchOne(

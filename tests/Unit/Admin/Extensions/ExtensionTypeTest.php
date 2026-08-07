@@ -46,8 +46,8 @@ test('fromPluralWsParam returns null for an unrecognized string', function (): v
 });
 
 test('scanDirectory returns each type\'s own filesystem root', function (): void {
-    // P23 batch 8f-4: the PHPWG_PLUGINS_PATH define is gone --
-    // Piwigo\Admin\PluginLoader::pluginsPath() is the canonical value now.
+    // Piwigo\Admin\PluginLoader::pluginsPath() is the canonical value for
+    // the Plugin type's scan directory.
     expect(ExtensionType::Plugin->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()))->toBe(PluginLoader::pluginsPath(CurrentPathsTestFactory::get()))
         ->and(ExtensionType::Theme->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()))->toBe(CurrentConfigTestFactory::get()->themesPath())
         ->and(ExtensionType::Language->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()))->toBe(CurrentPathsTestFactory::get()->root . 'language/');

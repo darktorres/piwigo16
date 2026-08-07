@@ -27,16 +27,11 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
 /**
- * Piwigo\Bootstrap\RequestBootstrap::finalize() -- Phase 3 of the HTTP
- * boot sequence. Never called directly by any existing Unit/Integration
- * test (only reachable, until now, through the Browser suite's real HTTP
- * requests via bootEntryPoint() -> connect() -> finalize()); safe to call
- * standalone here since, unlike connect(), it does no session-bootstrap/
- * plugin-loading/global-error-handler-installation work -- confirmed by
- * reading its own body -- so every precondition it needs (a real
- * CurrentUser, CurrentConfigService, DB connection) can be set up by hand,
- * the same "call the phase directly with hand-built preconditions" shape
- * as this project's own phase-splitting docblocks describe.
+ * Piwigo\Bootstrap\RequestBootstrap::finalize() runs after connect() in
+ * the HTTP boot sequence. Unlike connect(), it does no session-bootstrap/
+ * plugin-loading/global-error-handler-installation work, so every
+ * precondition it needs (a real CurrentUser, CurrentConfigService, DB
+ * connection) is set up by hand in this test.
  *
  * Covers 6 branches the real Browser suite's fixture state never
  * naturally exercises together:

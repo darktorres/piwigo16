@@ -29,20 +29,15 @@ use Piwigo\Validation\InputValidator;
  * Ported from admin/cat_list.php (page slug "cat_list").
  *
  * admin.php itself already gates every page behind
- * check_status(AccessLevel::Administrator) before dispatch (admin.php:65),
- * so the original cat_list.php's own (redundant) check_status() call is
- * dropped here -- same precedent as PhotosAddSubController.
+ * check_status(AccessLevel::Administrator) before dispatch, so this
+ * renderer does not call check_status() itself.
  *
- * `CoreTabs::setContext(new CoreTabsContext(myBaseUrl: ...))` below is a
- * real bug fix (P23 batch 6j-1), not a mechanical carry-over: the inline
- * tabsheet block below (formerly admin/include/albums_tab.inc.php, folded
- * in P23 batch 8b-5) needs this page's own base URL, and
- * CoreTabs::addCoreTabs() reads it off the injected CoreTabsContext
- * (`self::context()->myBaseUrl`) for the 'albums' tabsheet case -- nothing
- * had previously called setContext() with myBaseUrl for this page. Verified
- * live that this page's own "List"/"Permalinks" tab hrefs were rendering
- * as bare `href="albums"` / `href="permalinks"` instead of
- * `admin.php?page=albums` / `admin.php?page=permalinks` before this fix.
+ * `CoreTabs::setContext(new CoreTabsContext(myBaseUrl: ...))` below supplies
+ * this page's own base URL: `CoreTabs::addCoreTabs()` reads it off the
+ * injected CoreTabsContext (`self::context()->myBaseUrl`) for the 'albums'
+ * tabsheet case. Without it, this page's "List"/"Permalinks" tab hrefs
+ * render as bare `href="albums"` / `href="permalinks"` instead of
+ * `admin.php?page=albums` / `admin.php?page=permalinks`.
  */
 final class CatListPageRenderer
 {

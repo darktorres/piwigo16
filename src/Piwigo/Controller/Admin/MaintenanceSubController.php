@@ -27,42 +27,20 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Replaces admin/maintenance.php's own tab-dispatch shell (page slug
- * "maintenance"), folded directly into this controller -- same shape as
- * every prior P23 batch 6 sub-batch's shell folding. Its own tab dispatch
- * is already validated (`/^(actions|env|sys)$/`). admin.php itself already
- * gates every page behind check_status(AccessLevel::Administrator) before
- * dispatch, so the shell's own (redundant) check_status() call is dropped
- * here. The shell's own check_pwg_token() gate for every $_GET['action']
- * IS real and load-bearing (no CSRF gap found in this sub-batch, unlike
- * 6d-6g) -- kept unchanged.
+ * "maintenance"). Its own tab dispatch is validated against
+ * `/^(actions|env|sys)$/`. admin.php already gates every page behind
+ * check_status(AccessLevel::Administrator) before dispatch, so this
+ * controller does not repeat that check. Every $_GET['action'] mutation is
+ * still gated by its own CSRF token check.
  *
- * Correction (found during 6i-4): `$my_base_url` is NOT dead code, despite
- * this docblock originally claiming so. It's consumed indirectly by
- * `Piwigo\Admin\CoreTabs::addCoreTabs()`'s own `case 'maintenance':` branch
- * (formerly `admin/include/add_core_tabs.inc.php`'s `add_core_tabs()`,
- * folded in P23 batch 8b-6), read via `global $my_base_url;` when
- * `Tabsheet::select()` fires its `tabsheet_before_select` event a few
- * lines below -- dropping it silently degraded every tab href (missing
- * the `admin.php?page=` prefix entirely). Restored here.
+ * `CoreTabsContext`'s `myBaseUrl` must be set before `Tabsheet::select()`
+ * is called: `CoreTabs::addCoreTabs()`'s `'maintenance'` case reads it
+ * during the `tabsheet_before_select` event that call fires, and without it
+ * every tab href loses its `admin.php?page=` prefix.
  *
- * A prior P21-era pass had already closed SEC-22 (both phpinfo() call
- * sites, in the "actions" and "env" tabs, replaced with Piwigo\Admin\
- * Maintenance\ServerInfoService's curated output) and extracted the raw
- * SQL shared between the "actions" and "env" tabs into Piwigo\Admin\
- * Maintenance\DbMaintenanceRepository, plus the "sys" tab's own
- * activity-log query onto Piwigo\Activity\ActivityRepository::
- * findSystemObjectLogWithUsernames(). This batch (P23 batch 6h) finishes
- * the job that same class's own docblock had already flagged as
- * outstanding: the "actions"/"env" tabs' own ~18-case action-dispatch
- * switch was still duplicated between them (and had drifted while unused
- * -- see Piwigo\Admin\Maintenance\MaintenanceActionDispatcher's own
- * docblock for the 2 real bugs found and fixed by consolidating it there),
- * ports the 3 tab bodies into Piwigo\Admin\MaintenanceActionsPageRenderer/
- * MaintenanceEnvPageRenderer/MaintenanceSysPageRenderer. (That same P21
- * pass had already fixed a real bug in the "actions" tab's own 'search'
- * case -- a dead sprintf(...) statement whose message text was a
- * copy-paste of the 'c13y' case's own -- carried forward unchanged into
- * MaintenanceActionDispatcher, not re-fixed here.)
+ * The "actions"/"env"/"sys" tab bodies render via
+ * Piwigo\Admin\MaintenanceActionsPageRenderer/MaintenanceEnvPageRenderer/
+ * MaintenanceSysPageRenderer.
  */
 final class MaintenanceSubController implements AdminSubControllerInterface
 {

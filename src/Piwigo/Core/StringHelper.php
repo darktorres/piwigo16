@@ -4,17 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-/**
- * P23 batch 8d: pure string/filename helpers relocated from
- * include/functions.inc.php -- no natural existing class home, stateless.
- *
- * pwgTransliterate() collapses the original file's two conditional top-
- * level `function pwg_transliterate()` declarations (chosen once, at
- * include time, based on mb_strtolower()/PWG_CHARSET availability) into a
- * single method with the same branch evaluated per call -- both
- * conditions are runtime-invariant within a request, so this is behavior-
- * identical, just re-checked on every call instead of once.
- */
 final class StringHelper
 {
     /**

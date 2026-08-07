@@ -24,34 +24,23 @@ use Piwigo\Users\UserRepository;
 /**
  * Renders the page footer into $template.
  *
- * The original page_tail.php's "check for Piwigo updates" block
- * (constructing Piwigo\Admin\Extensions\CoreUpdateService) is deliberately
- * NOT ported here --
- * L3Presentation may not depend on L4Integration (Admin), confirmed via a
- * real deptrac violation when tried. It lives in
- * Piwigo\Bootstrap\PageTail::render() (L4, the orchestrator that replaced
- * the thin include/page_tail.php seam in P23 sub-batch 8f-5), which runs
- * it right before constructing this renderer.
+ * The "check for Piwigo updates" block is not rendered here: layering
+ * rules disallow this class's layer (L3 Presentation) from depending on
+ * Admin (L4 Integration). That block lives in
+ * Piwigo\Bootstrap\PageTail::render(), which runs it right before
+ * constructing this renderer.
  *
- * P23 batch 8f-4: the telemetry send (formerly the bare
- * send_piwigo_infos() free function, deleted with
- * include/functions.inc.php) has the exact same L3-may-not-reach-L4 shape
- * -- injected here as Piwigo\Core\TelemetrySenderInterface (constructor
- * injection: exactly two construction sites, Bootstrap\PageTail::render()
- * and Bootstrap\PageTail::renderToString(), both of which pass the
- * concrete Piwigo\Admin\PiwigoInfosSender).
+ * The telemetry send has the same layering constraint, so it's injected
+ * as Piwigo\Core\TelemetrySenderInterface rather than called directly;
+ * both of this class's construction sites (Bootstrap\PageTail::render()
+ * and Bootstrap\PageTail::renderToString()) pass the concrete
+ * Piwigo\Admin\PiwigoInfosSender.
  *
- * Legacy Coupling Retirement Phase 4c: UrlServiceInterface is also
- * real constructor injection here, unlike Html\HtmlService/
- * Mail\MailService/Users\UserService/Template\Template/
- * PageHeaderRenderer's throwaway-per-call pattern -- this class's own real
- * construction sites are Bootstrap\PageTail::render() and
- * Bootstrap\PageTail::renderToString(), both already an established
- * composition root manually wiring TelemetrySenderInterface's concrete
- * implementation; wiring a second interface there the same way is
- * consistent, not circular (unlike those other classes, this one isn't
- * reachable from Piwigo\Bootstrap\RedirectService's own construction
- * chain).
+ * UrlServiceInterface is also real constructor injection here, unlike
+ * Html\HtmlService/Mail\MailService/Users\UserService/Template\Template/
+ * PageHeaderRenderer's throwaway-per-call pattern: this class is not
+ * reachable from Piwigo\Bootstrap\RedirectService's construction chain,
+ * so wiring it through the constructor here doesn't risk circularity.
  */
 final readonly class PageTailRenderer
 {
@@ -74,12 +63,12 @@ final readonly class PageTailRenderer
     }
 
     /**
-     * Legacy Coupling Retirement Workstream D: the non-echoing sibling of
-     * render() -- same orchestration, but returns the fully rendered page
-     * (everything accumulated in $template->output so far, header/content/
-     * tail together, see Template::fetchOutput()'s own docblock) instead
-     * of sending it to the browser. For controllers returning a real
-     * PSR-7 Response instead of echoing directly.
+     * The non-echoing sibling of render(): same orchestration, but
+     * returns the fully rendered page (everything accumulated in
+     * $template->output so far, header/content/tail together, see
+     * Template::fetchOutput()'s own docblock) instead of sending it to
+     * the browser. For controllers returning a real PSR-7 Response
+     * instead of echoing directly.
      */
     public function renderToString(float $startTime): string
     {

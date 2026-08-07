@@ -98,9 +98,7 @@ final readonly class ApiKeyRepository
 
     /**
      * Records that the auth key's near-expiration notification email was
-     * just sent -- Legacy Coupling Retirement: DI+DBAL migration Phase 1d,
-     * retargeted from RequestBootstrap::finalize()'s own former
-     * `MysqliDb::singleUpdate()` call.
+     * just sent.
      */
     public function updateLastNotifiedOn(string $authKey, int $userId, string $lastNotifiedOn): void
     {

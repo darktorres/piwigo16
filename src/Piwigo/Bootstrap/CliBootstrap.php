@@ -18,40 +18,33 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArgvInput;
 
 /**
- * P12 CLI entry orchestrator -- the bin/piwigo counterpart to
- * RequestBootstrap::bootEntryPoint() for the HTTP path. Kept in
- * Bootstrap/ (not
- * bin/piwigo itself) so Kernel::container() access stays inside the
- * existing arch-test-allowed boundary rather than widening it; bin/piwigo
- * stays a thin delegator, mirroring index.php's own minimalism.
+ * The bin/piwigo counterpart to RequestBootstrap::bootEntryPoint() for the
+ * HTTP path. Kept in Bootstrap/ (not bin/piwigo itself) so
+ * Kernel::container() access stays inside the existing arch-test-allowed
+ * boundary rather than widening it; bin/piwigo stays a thin delegator,
+ * mirroring index.php's own minimalism.
  *
  * Commands are resolved via the DI container (autowired -- every command
- * class this phase adds has only class-typed constructor params, so
- * config/container.php needs zero new entries) rather than constructed
- * directly, so they can receive real service dependencies the same way
- * every other P7-P11 service does.
+ * class needs only class-typed constructor params, so config/container.php
+ * needs no new entries for it) rather than constructed directly, so they
+ * receive real service dependencies the same way every other service does.
  *
- * P14 adds ConfigLoader::applyDefaults()/applyEnvOverrides() before
- * Kernel::boot() -- a real gap found while testing a CLI command against a
- * freshly-installed DB, back when config/container.php's Connection/
- * EntityManagerInterface factories read CurrentConfig::dbHost()/etc (static, P13)
- * and nothing seeded CurrentConfig::$data on the CLI path. Mirrors
- * RequestBootstrap::configure()'s equivalent P13 addition on the HTTP path
- * exactly. DB credentials moved off Config entirely (Config generic-
- * accessor removal) onto Piwigo\Db\DbCredentials -- a pure env read, no
- * Config dependency -- so this ordering no longer matters for the DB
- * connection specifically; kept for whatever other Config-backed values a
- * CLI command's own constructor-injected dependencies still read.
+ * ConfigLoader::applyDefaults()/applyEnvOverrides() run before
+ * Kernel::boot(), seeding CurrentConfig::$data on the CLI path, mirroring
+ * RequestBootstrap::configure()'s equivalent step on the HTTP path. DB
+ * credentials come from Piwigo\Db\DbCredentials (a pure env read, with no
+ * Config dependency), so this ordering only matters for whatever other
+ * Config-backed values a CLI command's own constructor-injected
+ * dependencies still read.
  *
- * Phase 5 adds CurrentConfigService::set($configService) -- resolve-and-
- * set only, deliberately not followed by ConfigService::loadConfFromDb()
- * the way RequestBootstrap::connect() also calls it: that call is HTTP-only,
- * since CLI commands can run before the `config` table exists (e.g. a
- * command run before install.php has ever been executed), where an
- * unconditional loadConfFromDb() would throw. Merely resolving/injecting
- * ConfigService
+ * CurrentConfigService::set($configService) is resolve-and-set only,
+ * deliberately not followed by ConfigService::loadConfFromDb() the way
+ * RequestBootstrap::connect() also calls it: that call is HTTP-only, since
+ * CLI commands can run before the `config` table exists (e.g. a command run
+ * before install.php has ever been executed), where an unconditional
+ * loadConfFromDb() would throw. Merely resolving/injecting ConfigService
  * doesn't touch the DB (Doctrine repositories are lazy), so that part is
- * safe here even pre-migration.
+ * safe even pre-migration.
  */
 final class CliBootstrap
 {

@@ -32,10 +32,9 @@ use Piwigo\Template\Template;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 /**
- * Template::urlService() now resolves the container-shared UrlServiceInterface
- * (and, via its own constructor, RootPathOverride) live on every call
- * (singleton/service-locator elimination campaign, Phase 6) -- a bare
- * RootPathOverride::push()/reset() static call no longer exists at all.
+ * Template::urlService() resolves the container-shared UrlServiceInterface
+ * (and, via its own constructor, RootPathOverride) live on every call --
+ * there is no bare RootPathOverride::push()/reset() static call.
  */
 function template_instance_test_root_path_override(): RootPathOverride
 {
@@ -225,18 +224,16 @@ beforeEach(function (): void {
     // afterEach() runs, so CurrentPathsTestFactory::get() would throw there.
     $this->root = $root;
     mkdir($root, 0o777, true);
-    // Template's own ProcessCache usage now goes through a transitional
-    // static shim (singleton/service-locator elimination campaign, Phase 1
-    // -- Template isn't converted to constructor injection, see that
+    // Template's own ProcessCache usage goes through a static shim
+    // (Template isn't converted to constructor injection, see that
     // shim's own docblock), which needs a real container. CurrentPaths
-    // (Phase 3) is itself a pure shim reading Paths::class straight out of
+    // is itself a pure shim reading Paths::class straight out of
     // that same container, so this one Kernel::boot() call establishes both.
     Kernel::boot(Paths::fromRoot($root));
     // Booted first (above) -- CurrentConfigTestFactory::get()/CurrentUserTestFactory::get()
     // must resolve the container-shared instance, not the memoized pre-boot
     // fallback, or these seeds are invisible to every later current()->get()
-    // call (Phase 5 execution finding, same pitfall Translator/EventDispatcher
-    // already hit).
+    // call (same pitfall Translator/EventDispatcher hit too).
     CurrentConfigTestFactory::get()->setDataLocation('data/');
     CurrentConfigTestFactory::get()->setDataDirChecked('1');
     CurrentUserTestFactory::get()->attachGlobals();
@@ -488,8 +485,7 @@ test('constructor registers template-extension extents when not in admin context
 
 test('constructor registers the local-css header prefilter for a themed template when not in admin context', function (): void {
     // AdminContext defaults to inactive -- beforeEach()'s own Kernel::boot()
-    // already bound the default (false), no explicit setup needed
-    // (singleton/service-locator elimination campaign, Phase 3).
+    // already bound the default (false), no explicit setup needed.
     $t = TemplateTestFactory::build('.', 'template-instance-test-theme-a');
 
     expect($t->external_filters)->toHaveKey('header');
@@ -500,10 +496,9 @@ test('constructor does not register the local-css header prefilter for a themed 
     // so Paths::class needs re-supplying alongside the deliberate
     // AdminContext override -- captured from the live container
     // beforeEach() already booted, before with()'s own Kernel::reset()
-    // discards it. CurrentConfig::class needs the same treatment (singleton/
-    // service-locator elimination campaign, Phase 9): a fresh container
-    // builds its own fresh CurrentConfig instance, at its own class
-    // defaults, discarding beforeEach()'s own setDataLocation()/
+    // discards it. CurrentConfig::class needs the same treatment: a fresh
+    // container builds its own fresh CurrentConfig instance, at its own
+    // class defaults, discarding beforeEach()'s own setDataLocation()/
     // setDataDirChecked() writes -- re-supplying the SAME already-configured
     // instance keeps Template's constructor from re-reaching the (in this
     // fresh container, uninitialised) CurrentConfigService.
@@ -1033,13 +1028,11 @@ test('clear_assign removes a previously assigned template variable', function ()
 // --- p() ---------------------------------------------------------------
 
 test('p flushes the output buffer, then appends a working Smarty debug console when template debugging is on', function (): void {
-    // Real bug, found live while adding this test: Smarty\Debug::display_debug()
-    // (vendor/smarty/smarty/src/Debug.php) unconditionally calls
-    // $obj->getSource() -- passing the bare $this->smarty engine (as this
-    // method used to) always threw `Error: Call to undefined method
-    // Smarty\Smarty::getSource()`, since only Smarty\Template implements
-    // that method. See p()'s own updated call site for the minimal fix
-    // (a throwaway 'string:' resource template instead of the bare engine).
+    // Smarty\Debug::display_debug() (vendor/smarty/smarty/src/Debug.php)
+    // unconditionally calls $obj->getSource() -- only Smarty\Template
+    // implements that method, so p() passes it a throwaway 'string:'
+    // resource template rather than the bare $this->smarty engine (which
+    // has no getSource() method and would throw an Error).
     CurrentConfigTestFactory::get()->setDebugTemplate(true);
     $t = TemplateTestFactory::build();
     $t->output = 'body-output';
@@ -1345,8 +1338,7 @@ test('parse fatal-errors for a handle with no registered filename', function ():
 /**
  * func_combine_script()/func_get_combined_scripts() log via
  * $this->errorCollector->recordFatal() (a real required constructor
- * collaborator as of singleton/service-locator elimination campaign,
- * Phase 11 sub-phase 11E; TemplateTestFactory::build() resolves the same
+ * collaborator; TemplateTestFactory::build() resolves the same
  * container-shared instance when Kernel is booted) -- resolved here the
  * same way, so drain() reads what Template's own call just wrote instead
  * of a disconnected fresh instance.

@@ -48,16 +48,15 @@ namespace Piwigo\Tests\Integration {
     /**
      * Covers validation/lookup (fully self-contained) and
      * registerUser()'s two early-return paths -- a real validation error,
-     * and [SEC-31]'s duplicate-username path (tested against a fixture
-     * user with no email on file, so notifyExistingAccountOfDuplicateRegistration()
+     * and the duplicate-username path (tested against a fixture user
+     * with no email on file, so notifyExistingAccountOfDuplicateRegistration()
      * short-circuits before ever calling MailerInterface::mail() -- this
      * harness shouldn't attempt a real mail send). registerUser()'s full SUCCESS
      * path calls ActivityLoggerInterface::record() and
-     * EventDispatcher::triggerNotify() -- both fully DBAL/in-memory now, no
-     * legacy $mysqli dependency; test_register_user_adds_the_new_user_to_default_groups()
-     * below exercises it now, added as a regression test for a real bug
-     * found during the Group domain VO integration (see
-     * UserService::registerUser()'s own inline comment) -- the success
+     * EventDispatcher::triggerNotify() -- both fully DBAL/in-memory, with
+     * no $mysqli dependency; test_register_user_adds_the_new_user_to_default_groups()
+     * below exercises it (see that test's own docblock for the
+     * addMembers() argument-order invariant it guards) -- the success
      * path's OTHER effects (admin/user notification emails,
      * EventDispatcher::triggerNotify(), ActivityLoggerInterface::record())
      * still aren't independently asserted here; live-verified separately,
@@ -122,11 +121,9 @@ namespace Piwigo\Tests\Integration {
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
             // PermissionCacheInvalidator::invalidate() ->
-            // CurrentConfigServiceTestFactory::get()->get() -- confirmed via a standalone
-            // sanity script that a bare "CurrentConfigService not
-            // initialised" LogicException is the real failure mode
-            // without this, since no other test in this file previously
-            // reached that call chain.
+            // CurrentConfigServiceTestFactory::get()->get() -- without this,
+            // that throws a bare "CurrentConfigService not initialised"
+            // LogicException.
             CurrentConfigServiceTestFactory::get()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new EventDispatcher(), $currentConfig));
         }
 
@@ -223,8 +220,8 @@ namespace Piwigo\Tests\Integration {
 
         public function test_register_user_sets_duplicate_username_without_revealing_it_in_errors(): void
         {
-            // 'guest' (fixture) has no email on file, so the SEC-31 notice
-            // email is never attempted here.
+            // 'guest' (fixture) has no email on file, so the duplicate-
+            // account notice email is never attempted here.
             $result = $this->service->registerUser('guest', 'password123', null, UrlServiceTestFactory::build());
 
             self::assertNull($result['userId']);
@@ -252,17 +249,12 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * Regression test for a real bug found during the Group domain VO
-         * integration: registerUser() used to call
-         * $this->groupRepo->addMembers($userId, $defaultGroupIds) directly
-         * -- addMembers(GroupId $groupId, list<UserId> $userIds) adds many
-         * users to ONE group, so that call wrote
-         * (group_id, user_id) = ($userId, each default group's id) to
-         * user_group, backwards. No test exercised registration + a real
-         * default group together before this, which is exactly why it
-         * went uncaught -- the fixture itself has zero is_default groups
-         * (confirmed: all 3 fixture groups are is_default=0), so this test
-         * creates its own.
+         * addMembers(GroupId $groupId, list<UserId> $userIds) adds many
+         * users to ONE group -- registerUser() must call it with each
+         * default group's id as $groupId and the new user's id as the
+         * sole member, never the reverse. The fixture itself has zero
+         * is_default groups (confirmed: all 3 fixture groups are
+         * is_default=0), so this test creates its own.
          */
         public function test_register_user_adds_the_new_user_to_default_groups(): void
         {
@@ -294,17 +286,10 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * Real gap this closes: neither this class nor UserRepositoryTest
-         * called getUserData()/buildUser() at all before gap-closure Stage
-         * 4b -- a real TypeError (user_infos.level arrives as a native int
-         * via DBAL, not the mysqli-style string
-         * EffectiveForbiddenCategoriesCache::getForUser() first assumed)
-         * shipped through PHPStan/Unit/Arch/Integration and was only
-         * caught by the Browser suite hitting a real dev-server process.
-         * Gap-closure Stage 4g deleted the `$useCache` parameter entirely
-         * (it only ever gated the legacy lock/wait/503 regeneration block,
-         * itself deleted the same stage) -- one test now covers the single
-         * remaining code path.
+         * buildUser() populates the effective-permission fields on the
+         * returned array; user_infos.level arrives as a native int via
+         * DBAL, which EffectiveForbiddenCategoriesCache::getForUser() must
+         * accept directly rather than as a string.
          */
         public function test_build_user_populates_effective_permission_fields(): void
         {
@@ -708,13 +693,9 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * SQL-modernization audit regression: a non-numeric
-         * rawAttributes['recent_period'] used to be kept as-is (`is_string(
-         * $recent_period) ? $recent_period : 0`) and spliced raw into
-         * SqlDialect::getRecentPeriodExpression()'s SQL fragment --
-         * SqlDialect::getRecentPeriodExpression() now requires a real
-         * `int`, so a corrupted value must fall back to 0 like any other
-         * malformed input, not reach the query verbatim.
+         * SqlDialect::getRecentPeriodExpression() requires a real `int` --
+         * a non-numeric rawAttributes['recent_period'] falls back to 0 like
+         * any other malformed input, never reaching the query verbatim.
          */
         public function test_get_recent_photos_condition_falls_back_to_zero_days_for_a_non_numeric_recent_period(): void
         {
@@ -1096,9 +1077,8 @@ namespace Piwigo\Tests\Integration {
             $tempId = (int) $this->conn->lastInsertId();
             // A one-off instance with a non-default DeploymentPolicy --
             // $this->service is shared across every test in this file and
-            // DeploymentPolicy is now a real constructor dependency, not a
-            // mutable static, so this test can no longer flip it on the
-            // shared instance.
+            // DeploymentPolicy is a constructor dependency, not a mutable
+            // static, so it can't be flipped on the shared instance.
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
             $installationFlag = Kernel::container()->get(InstallationFlag::class);
@@ -1120,12 +1100,9 @@ namespace Piwigo\Tests\Integration {
                     'SELECT COUNT(*) FROM ' . Tables::userInfos() . ' WHERE user_id = ?',
                     [$tempId]
                 ));
-                // Item 16H: fetchUserInfosWithThemeName()'s own DQL
-                // conversion hydrates these 5 columns as real PHP bools
-                // straight from UserInfoEntity's mapped `boolean` type --
-                // the explicit re-cast loop this used to need is gone,
-                // so this is the only real assertion left proving that
-                // still holds.
+                // fetchUserInfosWithThemeName() hydrates these 5 columns
+                // as real PHP bools straight from UserInfoEntity's mapped
+                // `boolean` type.
                 foreach (['enabled_high', 'expand', 'last_visit_from_history', 'show_nb_comments', 'show_nb_hits'] as $key) {
                     self::assertIsBool($data[$key], "{$key} should be a real bool");
                 }
@@ -1161,10 +1138,8 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_user_data_coerces_a_literal_true_or_false_scalar_value_to_a_real_bool(): void
         {
-            // getUserData()'s generic true/false-string scan (a leftover
-            // from the old enum('true','false') representation -- see its
-            // own inline comment) still applies to every merged field, not
-            // just the tinyint columns it used to cover. `users.username`
+            // getUserData()'s generic true/false-string scan (see its own
+            // inline comment) applies to every merged field. `users.username`
             // has no reserved-word restriction at this layer, so a literal
             // 'true'/'false' username is a real, if odd, way to reach it.
             $this->conn->executeStatement(
@@ -1190,16 +1165,11 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_user_data_preserves_real_non_empty_preferences_from_the_db(): void
         {
-            // Real bug found live (2026-08-04, via a failing AdminShellTest
-            // purge-logic assertion): fetchUserInfosWithThemeName()'s
-            // Item-16H conversion to real DQL UserInfoEntity hydration made
-            // its own `preferences` column arrive already decoded as a PHP
-            // array (Doctrine's native `json` Type), not the raw JSON
-            // *string* getUserData()'s own is_string() gate still expected
-            // -- silently discarding every real user's preferences on
-            // every single login, test and production alike, with no
-            // existing test ever exercising a genuinely non-empty
-            // preferences value through this path to catch it.
+            // fetchUserInfosWithThemeName()'s DQL UserInfoEntity hydration
+            // makes its own `preferences` column arrive already decoded as
+            // a PHP array (Doctrine's native `json` Type), not a raw JSON
+            // string -- getUserData()'s own is_string() gate must not
+            // discard a genuinely non-empty value arriving in that shape.
             $this->conn->executeStatement(
                 "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('prefs-user', NULL, NULL)"
             );

@@ -11,9 +11,8 @@ use Piwigo\Bootstrap\RequestBootstrap;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-// P23 batch 10: page-shell orchestration moved to Piwigo\Admin\AdminShell;
-// this file is now pure bootstrap + dispatch, matching index.php's own
-// final form.
+// Page-shell orchestration lives in Piwigo\Admin\AdminShell; this file is
+// pure bootstrap + dispatch, matching index.php's own shape.
 
 // vendor/autoload.php must be required directly here -- Paths::fromRoot()
 // below and RequestBootstrap::bootEntryPoint() are both Piwigo\ classes,

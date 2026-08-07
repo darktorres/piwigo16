@@ -102,10 +102,6 @@ final class UserActivityPageRenderer
         if (count($nb_lines_for_user) > 0) {
             $username_of = $userService->getUsernamesByIds(array_map(strval(...), array_keys($nb_lines_for_user)));
         } else {
-            // no activity lines at all: skip the lookup query rather than
-            // re-running the stale $query from above (previously left in place
-            // from the "COUNT(*) as counter" query, whose rows have neither an
-            // 'id' nor a 'username' column).
             $username_of = [];
         }
 

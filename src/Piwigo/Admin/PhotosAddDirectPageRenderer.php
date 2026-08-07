@@ -45,19 +45,14 @@ use Piwigo\Users\UserRepository;
 use Piwigo\Validation\InputValidator;
 
 /**
- * Ported from admin/photos_add_direct.php (the "direct" tab of the
- * "photos_add" page slug, dispatched by PhotosAddSubController) plus
- * admin/include/photos_add_direct_prepare.inc.php's form-prep body,
- * folded in as prepareUploadForm() (zero external callers, genuinely
- * page-specific, unlike the shared admin/include/*.inc.php files this
- * project has kept as real includes elsewhere).
+ * Renders the "direct" tab of the "photos_add" page slug, dispatched by
+ * PhotosAddSubController. prepareUploadForm() has no external callers and
+ * is genuinely page-specific, unlike the shared admin/include/*.inc.php
+ * files this project has kept as real includes elsewhere.
  *
- * P23 batch 6e fix: the batch action was reachable via a plain GET with
- * no check_pwg_token() -- unlike this project's other mutating admin
- * actions -- and the JS link that drives it (themes/admin/default/js/
- * photos_add_direct.js) carried no token either, a real CSRF gap closed
- * here the same way P23 batch 6d closed the equivalent gap in
- * PictureModifyPageRenderer's sync_metadata action.
+ * The batch action requires a valid CSRF token (see checkOrFail() below):
+ * its JS trigger (themes/admin/default/js/photos_add_direct.js) carries
+ * no token of its own, so the check must happen here.
  */
 final class PhotosAddDirectPageRenderer
 {
@@ -86,14 +81,11 @@ final class PhotosAddDirectPageRenderer
     ) {}
 
     /**
-     * P23 batch 8f-1: relocated from admin/include/functions.php's
-     * PHOTOS_ADD_BASE_URL define() (formerly relocated there from the
-     * deleted admin/photos_add.php, P23 batch 8a) -- get_root_url() is a
-     * request-time value, not a compile-time constant expression, so this
-     * can't become a real class `const`; a static method is the SEC-60-
-     * compliant equivalent (src/Piwigo/ forbids define()). CoreTabs
-     * (the other real reader) calls this directly, supplying its own
-     * UrlServiceInterface (Legacy Coupling Retirement Phase 4c).
+     * get_root_url() is a request-time value, not a compile-time constant
+     * expression, so this can't become a real class `const`; a static
+     * method is the SEC-60-compliant equivalent (src/Piwigo/ forbids
+     * define()). CoreTabs (the other real reader) calls this directly,
+     * supplying its own UrlServiceInterface.
      */
     public static function baseUrl(UrlServiceInterface $urlService): string
     {

@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-/**
- * P23 batch 8d: character-set helpers relocated from
- * include/functions.inc.php -- no natural existing class home, stateless.
- */
 final class CharsetHelper
 {
     /**

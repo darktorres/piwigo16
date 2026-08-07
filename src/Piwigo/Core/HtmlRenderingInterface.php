@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * P23 batch 8f-3: `Piwigo\Html\HtmlService` is L3Presentation, but its own
- * free-function delegates (formerly include/functions_html.inc.php) have
+ * `Piwigo\Html\HtmlService` is L3Presentation, but its own methods have
  * real callers spanning L1Infrastructure (Core/Db/Validation),
  * L2aCoreDomain (Auth/Image/Tag/Category), and L2bExtendedDomain
  * (Search/Section/Url/Calendar/Comment/Notification) -- deptrac's ruleset
@@ -26,10 +25,8 @@ namespace Piwigo\Core;
  * included -- the other 9 `HtmlService` methods (L3/L4-only real callers,
  * or event-only) are retargeted/registered directly, no interface needed.
  *
- * `accessDenied()`/`badRequest()`/`pageNotFound()` (Legacy Coupling
- * Retirement Phase 4b) each take a required `RedirectServiceInterface`
- * parameter -- their real bodies call the former `redirect_http()`/
- * `redirect_html()` free functions, and `HtmlService` itself can't hold
+ * `accessDenied()`/`badRequest()`/`pageNotFound()` each take a required
+ * `RedirectServiceInterface` parameter -- `HtmlService` itself can't hold
  * one as a constructor dependency (same "hundreds of construction sites"
  * constraint as its own docblock explains for `CategoryRepository`, plus
  * a real deptrac violation: the concrete `RedirectService` is

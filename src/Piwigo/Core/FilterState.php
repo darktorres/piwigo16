@@ -7,9 +7,8 @@ namespace Piwigo\Core;
 use LogicException;
 
 /**
- * Typed reader/writer for the current request's recent-content filter --
- * Phase 2 global-residual sweep, replacing the legacy `global $filter;`
- * bridge. `Filter\FilterService::initializeFromRequest()` (plus
+ * Typed reader/writer for the current request's recent-content filter.
+ * `Filter\FilterService::initializeFromRequest()` (plus
  * `Bootstrap\RequestBootstrap::finalize()`'s own disabled-filter
  * fallback) is the sole writer.
  *
@@ -21,15 +20,11 @@ use LogicException;
  * *downward* on L1 without issue, so this placement doesn't block
  * constructor injection into either.
  *
- * Singleton/service-locator elimination campaign, Phase 2: converted from
- * a self-managed static facade to a container-shared instance.
- * `FilterService`/`RequestBootstrap` (the real writers), `SectionPopulator`,
- * `Category\CategoryService::getCategoriesMenu()`, `Menu\MenubarRenderer::
- * render()`, and `Controller\PictureController` all take it via
- * constructor/explicit-parameter injection. `Permission\PermissionService::
- * getSqlConditionFandFAsCondition()` is the one exception: it has ~30 real
- * callers, several inside the still-static `Ws\Pwg*` dispatch layer (Phase
- * 10) -- see the 3 `*Static()` shims below.
+ * A container-shared instance. `FilterService`/`RequestBootstrap` (the
+ * real writers), `SectionPopulator`, `Category\CategoryService::
+ * getCategoriesMenu()`, `Menu\MenubarRenderer::render()`, and
+ * `Controller\PictureController` all take it via constructor/explicit-
+ * parameter injection.
  */
 final class FilterState
 {

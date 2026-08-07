@@ -15,17 +15,16 @@ function installationStatsDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-// InstallationStats is a container-shared, constructor-injected instance
-// (RateService/HistoryService/ImageService/CategoryService/TagService/
-// UserService/GroupService -- singleton/service-locator elimination
-// campaign, Phase 6's own ExtendedDomainAccessor sub-batch), so every test
-// in this file needs a booted container -- same convention as the other
-// Integration tests that touch container-backed services.
+// InstallationStats is a container-shared, constructor-injected instance,
+// like RateService/HistoryService/ImageService/CategoryService/TagService/
+// UserService/GroupService, so every test in this file needs a booted
+// container -- same convention as the other Integration tests that touch
+// container-backed services.
 beforeEach(function (): void {
     // A real Paths is required too, not just any booted Kernel:
     // UserService (one of InstallationStats' own constructor deps) itself
-    // constructor-injects DeploymentPolicy (Phase 4), whose own container
-    // factory needs Paths bound to autowire.
+    // constructor-injects DeploymentPolicy, whose own container factory
+    // needs Paths bound to autowire.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
 });
 

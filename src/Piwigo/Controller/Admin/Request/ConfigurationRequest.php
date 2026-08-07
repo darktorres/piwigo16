@@ -9,30 +9,25 @@ use Piwigo\Validation\InputValidator;
 /**
  * Validated `$_GET`/`$_POST`/`$_FILES` shape for
  * ConfigurationSubController::handle()/processSizes()/processWatermark()
- * (page slug "configuration") -- P26/SEC-40 Request DTO.
+ * (page slug "configuration").
  *
- * `post`/`files` retain the raw `$_POST`/`$_FILES` arrays -- this page's
+ * `post`/`files` retain the raw `$_POST`/`$_FILES` arrays: this page's
  * per-tab submit handling (`main`/`comments`/`display`/`search`) mutates
  * several fields in place before a single generic config-row UPDATE loop
- * reads them back (the same "many fields feed one later loop, all within
- * the same call" shape as `ProfileFormSubmitRequest`/
- * `BatchManagerGlobalRequest`), and the "sizes"/"watermark" tabs' own
+ * reads them back, and the "sizes"/"watermark" tabs' own
  * `processSizes()`/`processWatermark()` handlers each parse their own
  * differently-shaped nested POST fields (`d[type][...]`/`w[...]`) -- no
- * fixed property set covers either shape, so `handle()` keeps building
- * its own local `post` working copy from this bag exactly as it did from
- * `$_POST` before, and passes `post`/`files` through as plain parameters
- * to the 2 process methods (neither one needs to write back into
- * `handle()`'s own copy: both already exclude themselves from the
- * generic config-row UPDATE loop and persist through their own typed
- * `ImageStdParams`/`WatermarkParams` save calls instead).
+ * fixed property set covers either shape, so `handle()` builds its own
+ * local `post` working copy from this bag and passes `post`/`files`
+ * through as plain parameters to the 2 process methods (neither one
+ * needs to write back into `handle()`'s own copy: both already exclude
+ * themselves from the generic config-row UPDATE loop and persist through
+ * their own typed `ImageStdParams`/`WatermarkParams` save calls instead).
  *
- * `restoreSettingsRequested` replaces the original's own
- * `isset($_GET['action']) and $_GET['action'] === 'restore_settings'`
- * check; the corresponding activity-log `config_action` value is always
- * the literal `'restore_settings'` string by the time that code runs
- * (gated by this same flag), so the call site no longer needs to re-read
- * `$_GET['action']` for it.
+ * `restoreSettingsRequested` is true when `$_GET['action'] ===
+ * 'restore_settings'`; the corresponding activity-log `config_action`
+ * value is always the literal `'restore_settings'` string whenever this
+ * flag is set, so callers don't need to re-read `$_GET['action']` for it.
  */
 final readonly class ConfigurationRequest
 {

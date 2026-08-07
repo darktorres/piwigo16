@@ -19,25 +19,11 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Permission\SqlCondition;
 
 /**
- * Base class for monthly and weekly calendar styles
+ * Base class for monthly and weekly calendar styles.
  *
- * P23 batch 8f-4: the calendar view/chronology-date constants moved here
- * as class constants (formerly top-level define()s in the deleted
- * include/functions.inc.php, relocated there from
- * include/functions_calendar.inc.php in batch 8c). This shared base hosts
- * them; readers outside the hierarchy (CalendarRenderer) reference them
- * as CalendarBase::CAL_VIEW_* / CalendarBase::C*.
- *
- * Legacy Coupling Retirement: DI+DBAL migration -- build_nav_bar()/
- * build_next_prev() (and CalendarMonthly's own build_*_calendar()
- * methods) retargeted their remaining MysqliDb::query()/query2Array()
- * calls onto CalendarRepository (constructor-injected here, inherited by
- * CalendarMonthly/CalendarWeekly). This class was left on the legacy
- * MysqliDb layer for longer than most, not for any performance/DI-
- * avoidance reason -- just unmigrated complex dynamic SQL -- but the same
- * FrankenPHP/workers reasoning that retired ImageVisibilityChecker's own
- * exception applies equally well here: there's no remaining reason to
- * keep any file off DBAL.
+ * Hosts the calendar view/chronology-date constants as class constants;
+ * readers outside the hierarchy (CalendarRenderer) reference them as
+ * CalendarBase::CAL_VIEW_* / CalendarBase::C*.
  */
 abstract class CalendarBase
 {
@@ -88,7 +74,7 @@ abstract class CalendarBase
     /**
      * DQL property-path equivalent of $date_field (e.g. `i.dateAvailable`)
      * -- used by every other query in this hierarchy, all of which are
-     * real DQL as of the Item 15G Calendar redesign.
+     * real DQL.
      */
     public string $date_field_dql = '';
 
@@ -109,8 +95,7 @@ abstract class CalendarBase
 
     /**
      * chronology field ('posted' or 'created'); set by CalendarRenderer
-     * before initialize() is called (Legacy Coupling Retirement Track A
-     * batch A5.2e: replaces a `global $page['chronology_field']` read).
+     * before initialize() is called.
      *
      * @var string
      */
@@ -119,9 +104,7 @@ abstract class CalendarBase
     /**
      * mutable chronology-date state, narrowed in place by
      * generate_category_content() and its build_*_calendar() helpers as
-     * the requested period gets resolved down to a single year/month/day
-     * (Legacy Coupling Retirement Track A batch A5.2e: replaces
-     * `global $page['chronology_date']` reads/writes).
+     * the requested period gets resolved down to a single year/month/day.
      *
      * @var array<int, int|string>
      */
@@ -129,9 +112,7 @@ abstract class CalendarBase
 
     /**
      * chronology view (CAL_VIEW_LIST or CAL_VIEW_CALENDAR); set by
-     * CalendarRenderer before generate_category_content() is called
-     * (Legacy Coupling Retirement Track A batch A5.2e: replaces a
-     * `global $page['chronology_view']` read).
+     * CalendarRenderer before generate_category_content() is called.
      *
      * @var string
      */

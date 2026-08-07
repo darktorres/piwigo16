@@ -27,24 +27,13 @@ use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin/photo.php's own tab-dispatch shell (page slug "photo").
- * Its 3 tab bodies are all typed renderers: PictureModifyPageRenderer
- * ("properties", P23 batch 6d), PictureCoiPageRenderer/
- * PictureFormatsPageRenderer ("coi"/"formats", already built in the earlier
- * Config batch and additionally directly reachable as their own top-level
- * `?page=` slugs). Same "fold the shell into the sub-controller, keep tab
- * bodies as their own classes" shape as AlbumSubController.
+ * Backs the "photo" admin page's tab dispatch. The three tabs are rendered
+ * by PictureModifyPageRenderer ("properties"), PictureCoiPageRenderer
+ * ("coi"), and PictureFormatsPageRenderer ("formats") -- the latter two are
+ * also directly reachable as their own top-level `?page=` slugs.
  *
- * The legacy admin/photo.php had a dynamic `include admin/photo_' .
- * $page['tab'] . '.php'` fallback for any tab outside the known 3 -- no
- * such file has ever existed on disk, and admin.php's own shared
- * check_input_parameter('tab', ..., '/^[a-zA-Z\d_-]+$/') already blocks
- * real path traversal on the 'tab' param before dispatch even reaches this
- * class, the same non-issue AlbumSubController's own docblock documents for
- * the identical pattern in admin/album.php. This class's own KNOWN_TABS
- * allowlist (with a safe 'properties' fallback) is real defense-in-depth,
- * not a fix for an actively-exploitable hole -- it also drops the dynamic
- * `include` entirely, so tab dispatch no longer depends on filesystem state.
+ * Tab dispatch is restricted to the KNOWN_TABS allowlist with a safe
+ * "properties" fallback; there is no dynamic `include` based on user input.
  */
 final class PhotoSubController implements AdminSubControllerInterface
 {
@@ -69,10 +58,6 @@ final class PhotoSubController implements AdminSubControllerInterface
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
-        // Phase 2 global-residual sweep: $page is a local scratch array
-        // for this method's own body only (no longer `global $page;`),
-        // same shape as Section\SectionPopulator::populate()'s own
-        // equivalent fix (Track A5.2e).
         /** @var array<string, mixed> $page */
         $page = [];
         $template = $this->currentTemplate->get();

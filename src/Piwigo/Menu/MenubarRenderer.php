@@ -39,16 +39,11 @@ use Piwigo\Users\CurrentUser;
  * Html\HtmlService/Url\UrlService: cross-domain calls
  * (AccessLevelChecker::isAGuest()/isAuthorizeStatus()/isAdmin(),
  * PageFilterHelper::getFilterPageValue()/scriptBasename(), Lang::t(),
- * AvailableCommentsCounter::count()) already call the real migrated OOP
- * classes directly, not plain global-function wrappers.
- * get_available_tags()/get_nb_available_tags()/tags_counter_compare()
- * (functions_tag.inc.php) and get_categories_menu()/
- * get_related_categories_menu() (functions_category.inc.php) were ported
- * to real TagService/CategoryService methods in P23 batch 8c -- both
+ * AvailableCommentsCounter::count()) call the real OOP classes directly,
+ * not plain global-function wrappers. TagService/CategoryService are
  * constructed locally in render() since this renderer itself takes no
- * constructor deps. Legacy Coupling Retirement Phase 4c: render() takes
- * UrlServiceInterface as a method parameter instead (its own former
- * add_url_params()/make_index_url()/get_root_url() calls, 24 real sites).
+ * constructor deps; render() takes UrlServiceInterface as a method
+ * parameter for the same reason.
  *
  * The `eval($url_data['eval_visible'])` call for the external-links block
  * is preserved unmodified -- the reference doc's own fix for this
@@ -59,22 +54,16 @@ use Piwigo\Users\CurrentUser;
 final class MenubarRenderer
 {
     /**
-     * Legacy Coupling Retirement Track A batch A5.2e: the gallery-
-     * navigation-context reads below (section/items/category/
+     * The gallery-navigation-context reads below (section/items/category/
      * combined_categories/qsearch_details) come from
-     * SectionContextRegistry::current() instead of `global $page;` --
-     * nullable here (unlike GalleryController/PictureController's own
-     * guaranteed-non-null read) since this renderer is also called from
-     * 9 other, non-gallery controllers that never run
-     * SectionPopulator::populate() at all, matching every one of those
-     * keys' own former `?? null`/`isset()` fallback behavior.
+     * SectionContextRegistry::current() -- nullable here (unlike
+     * GalleryController/PictureController's own guaranteed-non-null read)
+     * since this renderer is also called from 9 other, non-gallery
+     * controllers that never populate it.
      *
-     * The categories-menu block also used to have
-     * CategoryService::getCategoriesMenu() write `count_categories` back
-     * onto the real global `$page['category']` for callers reading it
-     * later (see that method's own docblock) -- with no global left to
-     * write to, this method returns that value instead; every caller but
-     * GalleryController ignores it.
+     * Returns `count_categories` from CategoryService::getCategoriesMenu()
+     * (see that method's own docblock); every caller but GalleryController
+     * ignores the return value.
      */
     public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, UrlServiceInterface $urlService, FilterState $filterState, SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, DeploymentPolicy $deploymentPolicy, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, Translator $translator, CurrentLogger $currentLogger): ?int
     {
@@ -82,8 +71,7 @@ final class MenubarRenderer
         $section_context = $sectionContextRegistry->current();
 
         $conn = DbConnection::build();
-        // Built once, reused below -- was the same PermissionService recipe
-        // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
+        // Built once, reused below.
         $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, $filterState, $accessLevelChecker);
         $tagService = new TagService($lang, EntityManagerFactory::build($conn)->getRepository(TagEntity::class), $permissionService, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger, $sessionService);
         $categoryService = new CategoryService($lang, new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator, $accessLevelChecker);

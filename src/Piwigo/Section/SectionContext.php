@@ -7,20 +7,10 @@ namespace Piwigo\Section;
 /**
  * Immutable value object holding the full gallery-navigation context for
  * the current request -- built once by SectionPopulator::populate() and
- * distributed via SectionContextRegistry. Legacy Coupling Retirement
- * Track A batch A5.2e: replaces the former global $page array's
- * "gallery navigation context" cluster (~24 keys written once per
- * gallery/picture request and read by ~20 downstream files), adapted
- * from 16.x-rewrite's own already-finished SectionContext (this
- * project's reference implementation solved the identical problem) to
- * 17.x's real, adversarially-validated key set -- e.g. no `feed`/
- * `searchId`/`useRegexpICU`/`isExternal` fields, since those are either
- * absent from or confirmed dead in 17.x's actual $page usage.
+ * distributed via SectionContextRegistry.
  *
  * root_path/section_url/image_id/image_file are carried over unchanged
- * from the SectionUrlParse step (SectionInitializer::parse()) -- see
- * that class's own docblock for why URL tokenization stays a separate,
- * narrower value object rather than folding into this one.
+ * from the SectionUrlParse step (SectionInitializer::parse()).
  */
 final readonly class SectionContext
 {
@@ -113,14 +103,10 @@ final readonly class SectionContext
     /**
      * Serializes this object back to the snake_case $page-shaped array
      * UrlService::paramsForDuplication() needs to build "duplicate the
-     * current URL with these params redefined/removed" links -- adapted
-     * from 16.x-rewrite's own SectionContext::toUrlParams() (this
-     * project's reference implementation already solved the identical
-     * problem). `section` is always included; every other field is
-     * included only when it differs from this class's own default,
-     * matching the original global $page array's real invariant: a key
-     * was only ever present when something actually set it, never
-     * present-but-default-valued.
+     * current URL with these params redefined/removed" links. `section`
+     * is always included; every other field is included only when it
+     * differs from this class's own default -- a key is only present when
+     * something actually set it, never present-but-default-valued.
      *
      * @return array<string, mixed>
      */

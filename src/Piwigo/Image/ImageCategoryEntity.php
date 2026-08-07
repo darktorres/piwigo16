@@ -11,16 +11,10 @@ use Piwigo\Common\ValueObject\CategoryId;
  * Maps the `image_category` table (image-to-album membership) --
  * composite PK (imageId, categoryId), plus a mutable `?int $rank`.
  *
- * Further SQL-modernization audit, Item 14 Sub-phase B1: previously
- * deliberately left unmapped ({@see CategoryEntity}'s own docblock)
- * reasoning a shared entity's cross-repository coordination cost wasn't
- * worth it -- re-audited and reversed, since GroupAccessEntity/
- * UserAccessEntity already establish that a join-table entity works
- * fine shared across multiple repositories' own DQL. Placed in
- * `Piwigo\Image` (L2aCoreDomain) rather than `Piwigo\Category`: `Image`
- * is by far the heaviest real consumer, and every other real consumer
- * (`Category`, same layer; `Comment`/`Rate`, L2bExtendedDomain) can
- * legally depend on it from here per `deptrac.yaml`'s ruleset.
+ * Placed in `Piwigo\Image` (L2aCoreDomain) rather than `Piwigo\Category`:
+ * `Image` is by far the heaviest real consumer, and every other real
+ * consumer (`Category`, same layer; `Comment`/`Rate`, L2bExtendedDomain)
+ * can legally depend on it from here per `deptrac.yaml`'s ruleset.
  *
  * `imageId` stays plain int, same "FK into an un-VO'd domain stays raw"
  * call {@see \Piwigo\Tag\ImageTagEntity} already made -- no `ImageIdType`
@@ -32,13 +26,13 @@ use Piwigo\Common\ValueObject\CategoryId;
  * documented mechanism for a reserved SQL keyword column) -- `RANK` is a
  * reserved word as of MySQL 8.0.2 (window functions), and the schema's
  * own `CREATE TABLE` already quotes it for the same reason. Without the
- * explicit quoting, `SELECT`/`WHERE` on `ic.rank` compiled fine (DQL's
+ * explicit quoting, `SELECT`/`WHERE` on `ic.rank` compiles fine (DQL's
  * own identifier-quoting there already handles it), but a DQL `UPDATE
- * ... SET ic.rank = ...` did not -- caught empirically via a real
- * `SyntaxErrorException` against the test DB when
+ * ... SET ic.rank = ...` does not -- this only surfaces as a
+ * `SyntaxErrorException` at runtime when
  * {@see \Piwigo\Image\ImageRepository::updateRankForImageInCategory()}/
  * {@see \Piwigo\Image\ImageRepository::incrementRanksFromForCategory()}
- * ran, not by static analysis.
+ * run, not via static analysis.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'image_category')]

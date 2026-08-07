@@ -70,11 +70,8 @@ use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 
 /**
- * MaintenanceActionDispatcher::dispatch() -- the consolidated action
- * switch built during P23 batch 6h to replace the two independently-drifted
- * copies previously in admin/maintenance_actions.php and
- * admin/maintenance_env.php (see that class's own docblock for the 2 real
- * drift bugs found and fixed).
+ * MaintenanceActionDispatcher::dispatch() is the single action-routing
+ * switch shared by the maintenance actions and environment admin pages.
  *
  * Scoped to the actions reachable via pure Doctrine DBAL (already tested
  * at the repository layer by DbMaintenanceRepositoryTest -- this suite
@@ -83,8 +80,7 @@ use Piwigo\Template\CurrentTemplate;
  * `empty_lounge`/`sessions`/`categories`/`images`/`database`/`c13y` all
  * need a legacy `$mysqli` (or `$logger`) global bootstrap this suite
  * doesn't set up -- no existing Integration test in this codebase does
- * either, so those are verified live instead (see the batch's own
- * completion notes for the curl round trip).
+ * either, so those are verified live instead.
  */
 final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 {
@@ -151,9 +147,8 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
     /**
      * Never actually invoked -- same reasoning as
-     * maintenanceActionDispatcherTestImageService(). Singleton/
-     * service-locator elimination campaign, Phase 6: RedirectService now
-     * takes UserService via constructor injection.
+     * maintenanceActionDispatcherTestImageService(). RedirectService takes
+     * UserService via constructor injection.
      */
     private function maintenanceActionDispatcherTestUserService(): UserService
     {
@@ -269,11 +264,10 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        // DbMaintenanceRepository is now constructor-injected directly (no
-        // more Bootstrap\AdminAccessor indirection), but this isolated
-        // Integration test (no full RequestBootstrap) still needs a booted
-        // Kernel for CurrentConfigService/CurrentTemplate/DbCredentials::
-        // current() below.
+        // DbMaintenanceRepository is constructor-injected directly. This
+        // isolated Integration test (no full RequestBootstrap) still needs
+        // a booted Kernel for CurrentConfigService/CurrentTemplate/
+        // DbCredentials::current() below.
         Kernel::boot();
         // Every Lang::t() assertion in this file expects the real en_UK
         // admin.po wording (which sometimes differs from the raw English
@@ -313,10 +307,9 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         $this->dispatcher->dispatch('search');
 
         self::assertSame(0, $this->countRows(Tables::search()));
-        // Regression guard for the pre-existing, already-fixed bug this
-        // batch carried forward unchanged (see MaintenanceSubController's
-        // own docblock): this message must be "Purge search history", not
-        // a copy-paste of the 'c13y' case's "Reinitialize check integrity".
+        // Regression guard: this message must be "Purge search history",
+        // not a copy-paste of the 'c13y' case's "Reinitialize check
+        // integrity".
         self::assertContains(
             'Purge search history : action successfully performed.',
             PageStateTestFactory::get()->infos
@@ -345,9 +338,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
     public function test_a_real_action_is_logged_to_pwg_activity(): void
     {
-        // Drift bug #1 fixed by this batch's consolidation: the original
-        // admin/maintenance_env.php's own copy of this switch never called
-        // pwg_activity() for any action -- the dispatcher always does now,
+        // The dispatcher always calls pwg_activity() for every action,
         // regardless of which tab reaches it.
         $before = $this->countRows(Tables::activity());
 

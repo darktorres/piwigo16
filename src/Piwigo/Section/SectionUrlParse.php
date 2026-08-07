@@ -7,12 +7,11 @@ namespace Piwigo\Section;
 /**
  * Parsed section URL state -- the structured result of tokenizing
  * "category/12-name/start-24"-style URLs, before the $page/$template
- * population pipeline in SectionPopulator::populate() runs on top of
- * it. Renamed from SectionContext (Legacy Coupling Retirement Track A
- * batch A5.2e): SectionContext is now the full gallery-navigation-
- * context value object SectionPopulator builds and registers via
- * SectionContextRegistry -- this narrower, parse-step-only shape needed
- * its own name once that split became real instead of aspirational.
+ * population pipeline in SectionPopulator::populate() runs on top of it.
+ *
+ * SectionContext is the full gallery-navigation-context value object
+ * SectionPopulator builds and registers via SectionContextRegistry; this
+ * is a narrower, parse-step-only shape.
  */
 final readonly class SectionUrlParse
 {

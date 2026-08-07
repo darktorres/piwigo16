@@ -8,23 +8,19 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 
-// Guards the property <-> accessor contract on Piwigo\Config\CurrentConfig
-// (Config generic-accessor removal) -- replaces the former 3 SCHEMA<->
-// generated-accessor invariants (there's no more SCHEMA/generator) with 2
-// property<->accessor ones: every config-value property has a same-named
-// getter and setter, and every getter/setter genuinely reads/writes its
-// own property rather than a computed value -- minus a small allow-list
-// for framework methods and the 2 properties with a real, documented
-// reason to compute instead of trivially return/assign (see their own
-// docblocks: chmodValue's SAPI-dependent fallback, recentPostDates's
-// can't-`new`-in-a-property-default lazy build).
+// Guards the property <-> accessor contract on Piwigo\Config\CurrentConfig:
+// every config-value property has a same-named getter and setter, and
+// every getter/setter genuinely reads/writes its own property rather than
+// a computed value -- minus a small allow-list for framework methods and
+// the 2 properties with a real, documented reason to compute instead of
+// trivially return/assign (see their own docblocks: chmodValue's
+// SAPI-dependent fallback, recentPostDates's can't-`new`-in-a-property-
+// default lazy build).
 //
-// Singleton/service-locator elimination campaign, Phase 9: CurrentConfig's
-// 289 config-key properties/accessors converted from static to instance --
-// this file's own reflection now filters out the class's one remaining
-// static property (the `current()` shim's memoized $fallback, not a config
-// key) and invokes getters/setters against a real instance instead of
-// `null`.
+// CurrentConfig's config-key properties/accessors are instance members
+// (not static). This file's own reflection filters out the class's one
+// remaining static property (the `current()` shim's memoized $fallback,
+// not a config key) and invokes getters/setters against a real instance.
 
 const SCHEMA_INTEGRITY_METHOD_ALLOW_LIST = [
     // Bulk readers / test helpers
@@ -134,27 +130,21 @@ test('every setter trivially assigns its own property, minus the documented allo
     }
 });
 
-// gap-closure Stage 1a-bis item 5: config.value is JSON now
-// (ConfigService::encode()/hydrate()) -- this sweep confirms every
-// scalar/array-typed property's own compiled-in default survives a real
-// encode()-then-hydrate() round trip, catching the same class of bug two
-// real call sites had (a value of the wrong PHP type for its target
-// property, e.g. a real int passed to a ?string-typed property, silently
-// absorbed by the old per-type string-cast convention but not by real
-// JSON typing). encode() stays a pure static (no CurrentConfig state
-// involved); hydrate() is a real instance method since Phase 9, so this
-// sweep builds one throwaway CurrentConfig + ConfigService pair up front
-// and invokes every getter/setter/hydrate() call against that same pair --
-// hydrate() never touches the DB (it only calls a CurrentConfig setter via
-// reflection), so no Kernel::boot() is needed. Skips: keys not in
-// KEY_TO_PROPERTY (property has no DB-backed key, e.g. computed/lazy
-// properties), union/object-typed setters (no single generic round-trip
-// contract), and a null default (encode()/hydrate() both take a separate,
-// already-covered branch for null). ConfigService::OBJECT_SERIALIZED_PARAMS
-// (the former derivatives/disabled_derivatives serialize() exception) no
-// longer exists -- both keys retired in favor of the real
-// derivative_settings/derivative_size tables, so every config value is now
-// plain JSON, no skip-list needed for this reason anymore.
+// config.value is JSON-typed (see ConfigService::encode()/hydrate()).
+// This sweep confirms every scalar/array-typed property's own
+// compiled-in default survives a real encode()-then-hydrate() round
+// trip, catching the same class of bug two real call sites had: a value
+// of the wrong PHP type for its target property (e.g. a real int for a
+// ?string-typed property) is caught instead of silently coerced.
+// encode() is a pure static (no CurrentConfig state involved); hydrate()
+// is an instance method, so this sweep builds one throwaway CurrentConfig
+// + ConfigService pair up front and invokes every getter/setter/hydrate()
+// call against that same pair -- hydrate() never touches the DB (it only
+// calls a CurrentConfig setter via reflection), so no Kernel::boot() is
+// needed. Skips: keys not in KEY_TO_PROPERTY (property has no DB-backed
+// key, e.g. computed/lazy properties), union/object-typed setters (no
+// single generic round-trip contract), and a null default (encode()/
+// hydrate() both take a separate, already-covered branch for null).
 test('every scalar/array-typed property survives a real encode()/hydrate() round trip', function (): void {
     $keyToProperty = new ReflectionClass(ConfigService::class)->getConstant('KEY_TO_PROPERTY');
     if (! is_array($keyToProperty)) {

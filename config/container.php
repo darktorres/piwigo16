@@ -98,23 +98,23 @@ use function DI\get;
 //   - non-obvious construction (config values, factory methods, conditional logic)
 //   - unresolvable string/config parameters
 //
-// This grows incrementally, one entry at a time, as later phases find a
-// concrete class that genuinely needs one -- never pre-populated ahead of
-// need. See src/Piwigo/Core/Container.php.
+// This grows incrementally, one entry at a time, only when a concrete
+// class genuinely needs one -- never pre-populated ahead of need. See
+// src/Piwigo/Core/Container.php.
 
 /**
  * @return array<string, mixed>
  */
 return [
-    // Interface binding (P23 batch 8c) -- Piwigo\Mail\MailService is
-    // L3Presentation (real Template dependency); L2aCoreDomain/
-    // L2bExtendedDomain classes (UserService/CommentService) constructor-
-    // inject MailerInterface instead of depending on the concrete class
-    // directly, per deptrac.yaml's ruleset. See src/Piwigo/Core/
-    // MailerInterface.php's own docblock.
+    // Interface binding -- Piwigo\Mail\MailService is L3Presentation (real
+    // Template dependency); L2aCoreDomain/L2bExtendedDomain classes
+    // (UserService/CommentService) constructor-inject MailerInterface
+    // instead of depending on the concrete class directly, per
+    // deptrac.yaml's ruleset. See src/Piwigo/Core/MailerInterface.php's
+    // own docblock.
     MailerInterface::class => get(MailService::class),
 
-    // Interface binding (P23 batch 8d) -- Piwigo\Activity\ActivityService is
+    // Interface binding -- Piwigo\Activity\ActivityService is
     // L2bExtendedDomain; Users\UserService/Group\GroupService/Auth\AuthService
     // (all L2aCoreDomain) constructor-inject ActivityLoggerInterface instead
     // of depending on the concrete class directly, per deptrac.yaml's
@@ -122,76 +122,71 @@ return [
     // docblock.
     ActivityLoggerInterface::class => get(ActivityService::class),
 
-    // Interface binding (Legacy Coupling Retirement: DI+DBAL migration
-    // Phase 1a) -- Piwigo\Comment\CommentRepository is L2bExtendedDomain;
-    // Category\CategoryDefaultRenderer (L2aCoreDomain) constructor-injects
-    // CommentCounterInterface instead of depending on the concrete class
-    // directly, per deptrac.yaml's ruleset. See src/Piwigo/Core/
-    // CommentCounterInterface.php's own docblock.
+    // Interface binding -- Piwigo\Comment\CommentRepository is
+    // L2bExtendedDomain; Category\CategoryDefaultRenderer (L2aCoreDomain)
+    // constructor-injects CommentCounterInterface instead of depending on
+    // the concrete class directly, per deptrac.yaml's ruleset. See
+    // src/Piwigo/Core/CommentCounterInterface.php's own docblock.
     CommentCounterInterface::class => get(CommentRepository::class),
 
-    // Interface binding (P23 batch 8d) -- Piwigo\Core\Lang::load() is a
-    // static L1Infrastructure method that needs the DB-configured default
+    // Interface binding -- Piwigo\Core\Lang::load() is a static
+    // L1Infrastructure method that needs the DB-configured default
     // language (Users\UserService::getDefaultLanguage(), L2aCoreDomain).
-    // Bound here for consistency with the other 2 interfaces above, though
-    // Lang::load() itself is populated via Lang::setDefaultLanguageProvider()
-    // from include/common.inc.php (legacy code, not container-managed) --
-    // see src/Piwigo/Core/DefaultLanguageProviderInterface.php's own
-    // docblock for why a static method can't just constructor-inject this.
+    // Bound here for consistency with the other 2 interfaces above;
+    // Lang::load() itself is populated via
+    // Lang::setDefaultLanguageProvider() from include/common.inc.php (not
+    // container-managed) -- see
+    // src/Piwigo/Core/DefaultLanguageProviderInterface.php's own docblock
+    // for why a static method can't just constructor-inject this.
     DefaultLanguageProviderInterface::class => get(UserService::class),
 
-    // Interface binding (P23 batch 8f-1) -- Piwigo\Filter\FilterService is
-    // L2bExtendedDomain; Category\CategoryService (L2aCoreDomain)
-    // constructor-injects FilterUpdaterInterface instead of depending on
-    // the concrete class directly, per deptrac.yaml's ruleset. See
+    // Interface binding -- Piwigo\Filter\FilterService is L2bExtendedDomain;
+    // Category\CategoryService (L2aCoreDomain) constructor-injects
+    // FilterUpdaterInterface instead of depending on the concrete class
+    // directly, per deptrac.yaml's ruleset. See
     // src/Piwigo/Core/FilterUpdaterInterface.php's own docblock.
     FilterUpdaterInterface::class => get(FilterService::class),
 
-    // Interface binding (P23 batch 8f-3) -- Piwigo\Html\HtmlService is
-    // L3Presentation; real L1Infrastructure/L2aCoreDomain/L2bExtendedDomain
-    // callers constructor- or method-inject HtmlRenderingInterface instead
-    // of depending on the concrete class directly, per deptrac.yaml's
-    // ruleset. See src/Piwigo/Core/HtmlRenderingInterface.php's own
-    // docblock.
+    // Interface binding -- Piwigo\Html\HtmlService is L3Presentation; real
+    // L1Infrastructure/L2aCoreDomain/L2bExtendedDomain callers constructor-
+    // or method-inject HtmlRenderingInterface instead of depending on the
+    // concrete class directly, per deptrac.yaml's ruleset. See
+    // src/Piwigo/Core/HtmlRenderingInterface.php's own docblock.
     HtmlRenderingInterface::class => get(HtmlService::class),
 
-    // Interface binding (Legacy Coupling Retirement Phase 4b) --
-    // Piwigo\Bootstrap\RedirectService is L4Integration (its real body
-    // calls Piwigo\Bootstrap\PageTail::render()); real callers span every
-    // layer from L1Infrastructure to L4Integration, so they constructor-
-    // or method-inject RedirectServiceInterface instead of depending on
-    // the concrete class directly, per deptrac.yaml's ruleset. See
-    // src/Piwigo/Core/RedirectServiceInterface.php's own docblock.
+    // Interface binding -- Piwigo\Bootstrap\RedirectService is L4Integration
+    // (its real body calls Piwigo\Bootstrap\PageTail::render()); real
+    // callers span every layer from L1Infrastructure to L4Integration, so
+    // they constructor- or method-inject RedirectServiceInterface instead
+    // of depending on the concrete class directly, per deptrac.yaml's
+    // ruleset. See src/Piwigo/Core/RedirectServiceInterface.php's own
+    // docblock.
     RedirectServiceInterface::class => get(RedirectService::class),
 
-    // Interface binding (Legacy Coupling Retirement Phase 4c) --
-    // Piwigo\Url\UrlService is L2bExtendedDomain; real callers span every
-    // layer, so they constructor- or method-inject UrlServiceInterface
-    // instead of depending on the concrete class directly, per
-    // deptrac.yaml's ruleset. See src/Piwigo/Core/UrlServiceInterface.php's
-    // own docblock.
+    // Interface binding -- Piwigo\Url\UrlService is L2bExtendedDomain; real
+    // callers span every layer, so they constructor- or method-inject
+    // UrlServiceInterface instead of depending on the concrete class
+    // directly, per deptrac.yaml's ruleset. See
+    // src/Piwigo/Core/UrlServiceInterface.php's own docblock.
     UrlServiceInterface::class => get(UrlService::class),
 
-    // Abstract-class binding (singleton/service-locator elimination
-    // campaign, Phase 0 pilot) -- Piwigo\Cache\PersistentCache is abstract,
+    // Abstract-class binding -- Piwigo\Cache\PersistentCache is abstract,
     // so PHP-DI can't autowire it without being told which concrete
-    // implementation to construct. Replaces the former
-    // Piwigo\Cache\CurrentPersistentCache static facade (deleted): the
-    // value never actually varied per request (always PersistentFileCache),
-    // so there was nothing genuinely request-scoped to hold in a shared
-    // mutable instance -- an ordinary binding is enough.
+    // implementation to construct. The value never actually varies per
+    // request (always PersistentFileCache), so there's nothing genuinely
+    // request-scoped to hold in a shared mutable instance -- an ordinary
+    // binding is enough.
     PersistentCache::class => get(PersistentFileCache::class),
 
-    // Interface binding (P23 batch 8f-4) -- Piwigo\Admin\PiwigoInfosSender
-    // is L4Integration; Piwigo\Page\PageTailRenderer (L3Presentation)
-    // constructor-injects TelemetrySenderInterface instead of depending on
-    // the concrete class directly, per deptrac.yaml's ruleset. See
+    // Interface binding -- Piwigo\Admin\PiwigoInfosSender is L4Integration;
+    // Piwigo\Page\PageTailRenderer (L3Presentation) constructor-injects
+    // TelemetrySenderInterface instead of depending on the concrete class
+    // directly, per deptrac.yaml's ruleset. See
     // src/Piwigo/Core/TelemetrySenderInterface.php's own docblock.
     TelemetrySenderInterface::class => get(PiwigoInfosSender::class),
 
-    // Interface binding (Legacy Coupling Retirement Track A) --
-    // Piwigo\Template\Template is L3Presentation; a handful of
-    // L2aCoreDomain/L2bExtendedDomain callers method-inject
+    // Interface binding -- Piwigo\Template\Template is L3Presentation; a
+    // handful of L2aCoreDomain/L2bExtendedDomain callers method-inject
     // TemplateInterface instead of depending on the concrete class
     // directly, per deptrac.yaml's ruleset. A factory, not \DI\get(),
     // because the current request's Template is constructed dynamically
@@ -200,73 +195,54 @@ return [
     // Piwigo\Template\CurrentTemplate.
     TemplateInterface::class => factory(static fn (): Template => CurrentTemplate::current()->get()),
 
-    // Interface binding (P23 batch 8f-4) -- Piwigo\Users\UserRepository
-    // provides the webmaster mail address; Piwigo\Mail\MailService takes
+    // Interface binding -- Piwigo\Users\UserRepository provides the
+    // webmaster mail address; Piwigo\Mail\MailService takes
     // WebmasterMailProviderInterface as an optional constructor test seam
     // (lazily defaulting to the real UserRepository). Bound here for
     // consistency with the other Core interfaces. See
     // src/Piwigo/Core/WebmasterMailProviderInterface.php's own docblock.
     //
-    // No equivalent entry for Piwigo\Core\ThemeConfProviderInterface (also
-    // P23 batch 8f-4): its implementation is the request's own
-    // Piwigo\Template\Template instance (constructed with runtime
-    // path/theme strings, never container-managed) -- SrcImage::themeConf()
-    // reaches it via Piwigo\Template\CurrentTemplate::current()->get()
-    // instead (singleton/service-locator elimination campaign, Phase 6).
+    // No equivalent entry for Piwigo\Core\ThemeConfProviderInterface: its
+    // implementation is the request's own Piwigo\Template\Template
+    // instance (constructed with runtime path/theme strings, never
+    // container-managed) -- SrcImage::themeConf() reaches it via
+    // Piwigo\Template\CurrentTemplate::current()->get() instead.
     WebmasterMailProviderInterface::class => get(UserRepository::class),
 
     // Unresolvable string param (the routes file path) -- Router::fromFile()
     // needs a path autowire can't provide.
     Router::class => factory(static fn (): Router => Router::fromFile(dirname(__DIR__) . '/config/routes.php')),
 
-    // Factory binding (singleton/service-locator elimination campaign,
-    // Phase 2) -- replaces Piwigo\Storage\StorageRegistry's former
-    // self-managed static singleton (current()/set()/reset()): the value
-    // never actually varies per request (always built from the same
-    // config/storage.php), so there's nothing genuinely request-scoped to
-    // hold in a shared mutable instance, same "delete the facade, use a
-    // plain factory" outcome as the Phase 0 pilot (CurrentPersistentCache).
-    // Sub-phase 12F-10: $paths/$currentConfig are real, autowired factory
-    // params now (config/storage.php itself needed them threaded through
-    // once its own CurrentPaths::get()/CurrentConfig::current() shim
-    // calls closed) -- same autowired-factory-closure-param pattern
-    // DeploymentPolicy::class's own binding below already established.
+    // Factory binding -- the value never actually varies per request
+    // (always built from the same config/storage.php), so there's nothing
+    // genuinely request-scoped to hold in a shared mutable instance;
+    // $paths and $currentConfig are real, autowired factory params, the
+    // same pattern DeploymentPolicy::class's own binding below uses.
     StorageRegistry::class => factory(static fn (Paths $paths, CurrentConfig $currentConfig): StorageRegistry => StorageRegistry::fromConfig(dirname(__DIR__) . '/config/storage.php', $paths, $currentConfig)),
 
-    // Factory binding (singleton/service-locator elimination campaign,
-    // Phase 3) -- replaces Piwigo\Db\DbCredentials's former self-managed
-    // static memo (current()/reset()/seed()). Unlike StorageRegistry
-    // above, this value genuinely can change mid-request (InstallWizard's
-    // own seed() call, see that class's own docblock), so the shared
-    // instance is mutable (reload()/seed() mutate it in place) rather than
-    // deleted outright.
+    // Factory binding -- unlike StorageRegistry above, this value
+    // genuinely can change mid-request (InstallWizard's own seed() call,
+    // see that class's own docblock), so the shared instance is mutable
+    // (reload()/seed() mutate it in place).
     DbCredentials::class => factory(static fn (): DbCredentials => DbCredentials::fromEnv()),
 
-    // Factory binding (singleton/service-locator elimination campaign,
-    // Phase 4) -- replaces DeploymentPolicy's former self-managed static
-    // memo (current()/set()/reset()). $paths is autowired from the
-    // container's own Paths::class binding (set by Kernel::boot() when a
-    // real Paths is passed); shared/memoized for the container's lifetime
-    // like every other autowired service, matching the former per-request
-    // memo exactly.
+    // Factory binding -- $paths is autowired from the container's own
+    // Paths::class binding (set by Kernel::boot() when a real Paths is
+    // passed); shared/memoized for the container's lifetime like every
+    // other autowired service.
     DeploymentPolicy::class => factory(static fn (Paths $paths): DeploymentPolicy => DeploymentPolicy::load($paths)),
 
-    // Factory binding (singleton/service-locator elimination campaign,
-    // Phase 4) -- replaces ImageStdParams's former self-managed static
-    // memo (get_defined_type_map()/get_by_type()/etc., all `private
-    // static` properties written by load_from_db()). load_from_db() calls
-    // its own repositories via a fresh EntityManagerFactory::build(
-    // DbConnection::build()) internally -- no Paths/Connection param
-    // needed here, same reasoning as its own docblock already gives for
-    // not routing through the container-shared EM.
+    // Factory binding -- load_from_db() calls its own repositories via a
+    // fresh EntityManagerFactory::build(DbConnection::build()) internally,
+    // so no Paths/Connection param is needed here; see that method's own
+    // docblock for why it doesn't route through the container-shared EM.
     ImageStdParams::class => factory(static function (): ImageStdParams {
         $imageStdParams = new ImageStdParams();
         $imageStdParams->load_from_db();
         return $imageStdParams;
     }),
 
-    // Non-obvious construction -- confirmed bug fix, found during this
-    // phase's full-suite verification (WsHistoryTest.php's
+    // Non-obvious construction -- confirmed bug fix (WsHistoryTest.php's
     // assertHistorySearchIsAHackingAttempt() cases): PHP-DI's default
     // autowiring only injects REQUIRED constructor parameters via
     // reflection; a parameter with a default value (InputValidator's own
@@ -287,7 +263,7 @@ return [
 
     // Non-obvious construction (handler + formatter wiring). Monolog "app"
     // channel only -- the "security" channel (a named $securityLogger
-    // parameter) is deferred until a real consumer exists (P11/P16/P27).
+    // parameter) is deferred until a real consumer exists.
     LoggerInterface::class => factory(static function (): LoggerInterface {
         $handler = new RotatingFileHandler(dirname(__DIR__) . '/_data/logs/piwigo.log', 30);
         $handler->setFormatter(new JsonFormatter());
@@ -296,10 +272,10 @@ return [
     }),
 
     // Non-obvious construction (adapter selection reads env vars --
-    // Config::cacheAdapter() doesn't exist yet, P13). No named pools yet
+    // Config::cacheAdapter() doesn't exist). No named pools yet
     // (config/permissions/category_tree/tag_cloud/general/rate_limiter) --
     // none have a real consumer today; each gets its own entry only when
-    // its owning phase lands.
+    // one is genuinely needed.
     CacheItemPoolInterface::class => factory(static fn (): CacheItemPoolInterface => CacheFactory::create()),
 
     // PSR-16 wraps the same PSR-6 pool instance (container-shared by
@@ -400,7 +376,7 @@ return [
     // DependencyFactory -- verified (same as every other optional
     // class-typed constructor param in this codebase) that PHP-DI's
     // default reflection autowiring does NOT inject it, so it needs this
-    // explicit factory entry ([[feedback_phpdi_skips_optional_constructor_params]]).
+    // explicit factory entry.
     MigrateCommand::class => factory(
         static fn (DependencyFactory $df): MigrateCommand => new MigrateCommand($df),
     ),

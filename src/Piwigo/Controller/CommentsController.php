@@ -60,16 +60,10 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces comments.php -- the front-end "all comments" listing + per-
- * comment moderation actions (delete/validate/edit). The "comments
- * management" block (delete/validate/edit, including its own
- * check_pwg_token()/redirect() calls) all happens before any rendering
- * starts.
- *
- * Legacy Coupling Retirement Workstream D: converted off
- * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
- * pattern as AboutController -- see that class's own docblock for the
- * accumulator mechanics this relies on.
+ * The front-end "all comments" listing + per-comment moderation actions
+ * (delete/validate/edit). The "comments management" block
+ * (delete/validate/edit, including its own check_pwg_token()/redirect()
+ * calls) all happens before any rendering starts.
  */
 final class CommentsController implements ControllerInterface
 {
@@ -102,10 +96,6 @@ final class CommentsController implements ControllerInterface
     {
         $template = $this->currentTemplate->get();
 
-        // A single connection for the whole request -- mirrors the
-        // legacy single-global-mysqli-connection model this migration
-        // restores, and avoids the needless-reconnection pattern found
-        // in earlier construction-chain debt (Phase 1d finding).
         $conn = DbConnection::build();
 
         if (! $this->currentConfig->activateComments()) {

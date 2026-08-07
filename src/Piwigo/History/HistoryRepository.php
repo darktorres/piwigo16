@@ -26,29 +26,27 @@ use Piwigo\Users\UserInfoEntity;
  * looked up explicitly (findSummaryRowsForHierarchy()) rather than upserted
  * blindly).
  *
- * Owns `history` ({@see HistoryEntity}) and, since Item 14 Sub-phase B1/B2,
- * `history_summary` too ({@see HistorySummaryEntity} -- previously claimed
- * to have "no clean single-row shape an entity would help with"; re-audited
- * and every method against it goes through the ORM/DQL now, including
- * findSummaryRowsForHierarchy()'s own nested-conditional WHERE, a direct
- * 1:1 port of the same fixed-shape branching the original DBAL version
- * already did). A handful of other classes (Admin\Maintenance\
- * DbMaintenanceRepository, Admin\HistoryPageRenderer) still touch these
- * two tables directly via raw DBAL -- no cross-repository identity-map
- * risk from that, since neither goes through the ORM/entity manager for
- * these tables (both are `L3Presentation`-layer, an allowed downward
- * dependency regardless). `Auth\AuthRepository` used to as well, until
- * Item 16F moved it onto {@see \Piwigo\Auth\LastVisitLookupInterface}
- * (implemented by this class), a real deptrac boundary fix -- `Auth` is
- * `L2aCoreDomain`, which cannot depend on `History`'s own
+ * Owns `history` ({@see HistoryEntity}) and `history_summary` too
+ * ({@see HistorySummaryEntity}) -- every method against it goes through
+ * the ORM/DQL, including findSummaryRowsForHierarchy()'s own
+ * nested-conditional WHERE, a direct 1:1 port of the same fixed-shape
+ * branching the original DBAL version did. A handful of other classes
+ * (Admin\Maintenance\DbMaintenanceRepository, Admin\HistoryPageRenderer)
+ * still touch these two tables directly via raw DBAL -- no
+ * cross-repository identity-map risk from that, since neither goes
+ * through the ORM/entity manager for these tables (both are
+ * `L3Presentation`-layer, an allowed downward dependency regardless).
+ * `Auth\AuthRepository` depends on {@see \Piwigo\Auth\LastVisitLookupInterface}
+ * (implemented by this class) rather than touching these tables directly,
+ * since `Auth` is `L2aCoreDomain`, which cannot depend on `History`'s own
  * `L2bExtendedDomain` layer.
- * Admin\InstallationStats/Admin\StatsPageRenderer/Ws\PwgCore were all
- * retargeted (during the raw-DBAL-out-of-non-Repository-classes pass)
- * onto this repository's own findLastByType()/findMonthlyRows()/
- * findDailyRowsForMonths()/findAverageDailyPageViewsSince()/
- * sumPageViews() for their history_summary reads; Ws\PwgCore's own
- * activity-table listing went to {@see \Piwigo\Activity\ActivityRepository::findPaginated()}
- * instead, a different table this class doesn't own.
+ * Admin\InstallationStats/Admin\StatsPageRenderer/Ws\PwgCore read
+ * `history_summary` via this repository's own findLastByType()/
+ * findMonthlyRows()/findDailyRowsForMonths()/
+ * findAverageDailyPageViewsSince()/sumPageViews(); Ws\PwgCore's own
+ * activity-table listing goes to
+ * {@see \Piwigo\Activity\ActivityRepository::findPaginated()} instead, a
+ * different table this class doesn't own.
  *
  * @extends EntityRepository<HistoryEntity>
  */
@@ -146,22 +144,21 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
-     * real DQL -- MySQL's `HOUR(time)` has no portable DQL equivalent
-     * (only ABS/CONCAT/CURRENT_DATE/CURRENT_TIME/CURRENT_TIMESTAMP/
-     * DATE_ADD/DATE_DIFF/DATE_SUB/LENGTH/LOCATE/LOWER/MOD/SIZE/SQRT/
-     * SUBSTRING/TRIM/UPPER/BIT_AND/BIT_OR are standard DQL functions, and
-     * this project's EntityManagerFactory registers no custom DQL
-     * functions on top of those), and it was also part of the `GROUP BY`
-     * key (DQL can't group by a SELECT alias). Fetches `date`/`time`/`id`
-     * per row instead and groups in PHP -- the real caller
+     * MySQL's `HOUR(time)` has no portable DQL equivalent (only
+     * ABS/CONCAT/CURRENT_DATE/CURRENT_TIME/CURRENT_TIMESTAMP/DATE_ADD/
+     * DATE_DIFF/DATE_SUB/LENGTH/LOCATE/LOWER/MOD/SIZE/SQRT/SUBSTRING/TRIM/
+     * UPPER/BIT_AND/BIT_OR are standard DQL functions, and this project's
+     * EntityManagerFactory registers no custom DQL functions on top of
+     * those), and it is also part of the `GROUP BY` key (DQL can't group
+     * by a SELECT alias). Fetches `date`/`time`/`id` per row instead and
+     * groups in PHP -- the real caller
      * ({@see \Piwigo\History\HistoryService::summarize()}) is a
      * chunked/cron-style batch job, not a hot request path, and already
      * supports a `$maxLines` cap for controlling batch size; scanning
      * every history row in ]$minId, $maxId] is the same trade
-     * `updateSummaryRows()`/`insertSummaryRows()` already made for their
-     * own per-row loops. `time` is an `HH:MM:SS` string (`HistoryEntity`'s
-     * own `length: 8`), so `(int) substr($time, 0, 2)` reproduces
+     * `updateSummaryRows()`/`insertSummaryRows()` make for their own
+     * per-row loops. `time` is an `HH:MM:SS` string (`HistoryEntity`'s own
+     * `length: 8`), so `(int) substr($time, 0, 2)` reproduces
      * `HOUR(time)`'s output exactly.
      *
      * One row per (date, hour) bucket with at least one history line in
@@ -752,40 +749,36 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- a `DESC <table>` schema-
-     * introspection statement, not a data query at all; DQL has no
-     * equivalent for reading a live column definition.
+     * Stays on DBAL -- a `DESC <table>` schema-introspection statement, not
+     * a data query at all; DQL has no equivalent for reading a live column
+     * definition.
      *
      * Parses the `history`.`section` column's current ENUM options
-     * (`enum('blue','green','black')` -> `['blue', 'green', 'black']`),
-     * matching the original MysqliDb::getEnums()'s own `DESC` + string-parse
-     * approach -- no cross-driver-portable DBAL equivalent exists for
-     * reading a live ENUM definition.
+     * (`enum('blue','green','black')` -> `['blue', 'green', 'black']`) --
+     * no cross-driver-portable DBAL equivalent exists for reading a live
+     * ENUM definition.
      *
-     * pgsql-support campaign: `section` deliberately carries no CHECK
-     * constraint on PostgreSQL at all (see the baseline migration's own
-     * docblock on this column) -- there is no schema-level "currently
-     * allowed values" construct to introspect the way MySQL's live ENUM
-     * definition provides. The Postgres branch derives the "known" set
-     * from real data (`SELECT DISTINCT section`) -- a self-healing
-     * analog: once a row using a given section value exists, a later
-     * cold-cache read recognizes it as known, same practical effect
-     * `alterSectionEnum()`'s MySQL-side schema widening exists to
-     * provide, without a DDL step.
+     * `section` carries no CHECK constraint on PostgreSQL at all (see the
+     * baseline migration's own docblock on this column) -- there is no
+     * schema-level "currently allowed values" construct to introspect the
+     * way MySQL's live ENUM definition provides. The Postgres branch
+     * derives the "known" set from real data (`SELECT DISTINCT section`)
+     * -- a self-healing analog: once a row using a given section value
+     * exists, a later cold-cache read recognizes it as known, the same
+     * practical effect `alterSectionEnum()`'s MySQL-side schema widening
+     * provides, without a DDL step.
      *
-     * Real bug found live in that analog, fixed here: a genuinely
-     * cold table (no row has ever used a given core section yet -- a
-     * fresh install, or an isolated test fixture) has nothing for
+     * A genuinely cold table (no row has ever used a given core section
+     * yet -- a fresh install, or an isolated test fixture) has nothing for
      * `SELECT DISTINCT` to find, so even Piwigo's own built-in sections
-     * read back as "unknown" on a first use, unlike MySQL's live ENUM
-     * definition (which always carries the original schema-defined
+     * would read back as "unknown" on a first use, unlike MySQL's live
+     * ENUM definition (which always carries the original schema-defined
      * member list regardless of what data exists). {@see BASE_SECTIONS}
      * -- the exact same initial member list the MySQL schema's own
      * `section` ENUM column was created with -- is unioned in so the
      * built-in sections are always recognized, matching MySQL's real
-     * behavior; plugin-defined sections (never in this static list)
-     * still rely on the same self-healing DISTINCT-from-data lookup as
-     * before, unchanged.
+     * behavior; plugin-defined sections (never in this static list) rely
+     * on the self-healing DISTINCT-from-data lookup.
      *
      * @return list<string>
      */
@@ -825,21 +818,20 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- a DDL `ALTER TABLE` statement,
-     * not a DQL-expressible operation at all (DQL only targets
+     * Stays on DBAL -- a DDL `ALTER TABLE` statement, not a
+     * DQL-expressible operation at all (DQL only targets
      * SELECT/UPDATE/DELETE data queries, never schema DDL).
      *
      * Widens the `section` column's ENUM definition to include every
      * option in $options -- $options is always getSectionEnumOptions()'s
      * own DB-introspected values with one new value appended, that new
      * value already regex-validated by the caller (HistoryService::
-     * logVisit(), `/^[a-zA-Z0-9_-]+$/`), never raw user input, matching
-     * the original's own trust boundary for this DDL statement.
+     * logVisit(), `/^[a-zA-Z0-9_-]+$/`), never raw user input.
      *
-     * pgsql-support campaign: a genuine no-op on PostgreSQL -- `section`
-     * has no CHECK constraint there (see `getSectionEnumOptions()`'s own
-     * docblock), so every value the caller's own regex already accepts is
-     * already storable without any schema change.
+     * A genuine no-op on PostgreSQL -- `section` has no CHECK constraint
+     * there (see `getSectionEnumOptions()`'s own docblock), so every value
+     * the caller's own regex already accepts is already storable without
+     * any schema change.
      *
      * @param  list<string>  $options
      */

@@ -8,10 +8,10 @@ use PHPUnit\Framework\TestCase;
 use Piwigo\Category\CategoryService;
 
 /**
- * CategoryService::filterMenuRows() -- the PHP-side replacement (P23 batch
- * 3b) for get_categories_menu()'s two SQL WHERE branches. Pure function, no
+ * CategoryService::filterMenuRows() is the PHP-side equivalent of
+ * get_categories_menu()'s two SQL WHERE branches. Pure function, no
  * DB/globals needed -- see tests/Integration/CategoryTreeCacheTest.php for
- * the permission-filtered row-set half of this same batch's change.
+ * the permission-filtered row-set coverage.
  */
 final class CategoryServiceFilterMenuRowsTest extends TestCase
 {

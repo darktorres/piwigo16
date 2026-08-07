@@ -32,10 +32,6 @@ test('loadClassMetadata prefixes a bare table name', function (): void {
 });
 
 test('loadClassMetadata leaves the table name untouched when the configured prefix is empty', function (): void {
-    // singleton/service-locator elimination campaign, Phase 3:
-    // TablePrefixListener takes DbCredentials via real constructor
-    // injection now -- constructing one directly with an empty prefix is
-    // the real way to reach this branch, no reflection needed anymore.
     $credentials = new DbCredentials(
         host: 'localhost',
         user: '',

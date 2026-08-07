@@ -16,30 +16,23 @@ use Piwigo\Core\Kernel;
 
 /**
  * Container-shared instance holding the current request's page-rendering
- * `Template` instance -- Legacy Coupling Retirement Track A, replacing the
- * legacy `global $template;` bridge (singleton/service-locator elimination
- * campaign, Phase 5).
+ * `Template` instance.
  *
- * `current()` was originally a transitional bridge for production callers
- * not yet converted to constructor injection -- Phase 11 sub-phase 11L
- * confirmed zero remaining production (`src/Piwigo`) callers, so that role
- * is closed. It stays as a permanent accessor for two real, ongoing uses:
- * (1) the pre-boot fallback path itself (memoized via
+ * `current()` is a permanent accessor for two real, ongoing uses: (1) the
+ * pre-boot fallback path itself (memoized via
  * `self::$fallback ??= new self()`, same "load once, read/write many
  * times per request" shape `Translator`/`EventDispatcher`/`ImageStdParams`/
  * `PageState`/`CurrentUser` share), and (2) Unit/Integration test setup --
  * ~230 call sites across ~30 test files reach the shared/fallback instance
  * directly through `current()` to seed or assert template state, matching
  * `reset()`'s own "test-only" role below. Neither use carries the
- * SEC-60 worker-mode risk this campaign exists to close (tests never run
- * inside a FrankenPHP worker serving concurrent real requests), so no
- * further migration is planned.
+ * worker-mode risk of stale cross-request state, since tests never run
+ * inside a FrankenPHP worker serving concurrent real requests.
  *
  * Not every `Template` instance in the app goes through this registry --
  * e.g. `MailService`'s email-rendering `Template` instances are genuinely
  * separate, throwaway objects, never "the" current page template. Only
- * `Piwigo\Bootstrap\RequestBootstrap::finalize()` (the original
- * `global $template;` construction site) and the handful of real
+ * `Piwigo\Bootstrap\RequestBootstrap::finalize()` and the handful of real
  * mid-request reassignment sites (e.g. `Piwigo\Page\NoPhotoYetRenderer`,
  * which swaps in a different theme) call `set()`.
  */

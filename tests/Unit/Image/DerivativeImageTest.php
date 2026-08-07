@@ -44,17 +44,15 @@ use RuntimeException;
  * one test that does need has_size()=true (the smaller-defined-type
  * search) sets width/height explicitly and says so.
  *
- * Singleton/service-locator elimination campaign, Phase 6: urlService() no
- * longer has an independently-settable static -- it resolves fresh from the
- * container on every call. A plain Kernel::boot(Paths::fromRoot(...)) is
- * enough for it to succeed at all (config/container.php's own default
+ * urlService() has no independently-settable static -- it resolves fresh
+ * from the container on every call. A plain Kernel::boot(Paths::fromRoot(...))
+ * is enough for it to succeed at all (config/container.php's own default
  * UrlServiceInterface binding), and that default, unconfigured UrlService
- * happens to compute the exact same '' root url + identity-like
- * embellishUrl() the old shared DerivativeImageTestFakeUrlService default
- * did -- so most tests below need no override at all. The 2 tests that
- * assert a non-default, non-empty root url install a real
- * DerivativeImageTestFakeUrlService via KernelContainerOverride::with()
- * instead.
+ * computes the same '' root url + identity-like embellishUrl() that
+ * DerivativeImageTestFakeUrlService's own default does -- so most tests
+ * below need no override at all. The 2 tests that assert a non-default,
+ * non-empty root url install a real DerivativeImageTestFakeUrlService via
+ * KernelContainerOverride::with() instead.
  */
 
 /**
@@ -124,16 +122,15 @@ afterEach(function (): void {
 });
 
 test('url() throws a RuntimeException when RequestBootstrap has not set a CurrentConfig yet', function (): void {
-    // SrcImage's own constructor now needs a booted Kernel too (Phase 9:
-    // its pictureExtensions() read) -- construct it under a real boot,
-    // then reset before calling url(). Singleton/service-locator
-    // elimination campaign, Phase 11 sub-phase 11F: url() -> build()
-    // resolves CurrentConfig via DerivativeImage's own private static
-    // currentConfig() helper now, which (like SrcImage's own equivalent
-    // helper) throws eagerly on a not-booted Kernel rather than falling
-    // back to CurrentConfigTestFactory::get()'s own memoized pre-boot instance --
+    // SrcImage's own constructor needs a booted Kernel (its
+    // pictureExtensions() read) -- construct it under a real boot, then
+    // reset before calling url(). url() -> build() resolves CurrentConfig
+    // via DerivativeImage's own private static currentConfig() helper,
+    // which (like SrcImage's own equivalent helper) throws eagerly on a
+    // not-booted Kernel rather than falling back to
+    // CurrentConfigTestFactory::get()'s own memoized pre-boot instance --
     // this guard fires before build() ever reaches urlService(), so this
-    // is the RuntimeException url() actually throws first now, not
+    // is the RuntimeException url() actually throws first, not
     // urlService()'s own (see the dedicated get_url() test below for that
     // one, which is reachable without a CurrentConfig read). $src itself
     // holds no live container reference once built, so resetting
@@ -157,8 +154,8 @@ test('get_url() throws a RuntimeException when RequestBootstrap has not set a UR
     // injected) is enough; resetting afterward only invalidates the
     // static container-resolve helpers (urlService()/eventDispatcher()),
     // not the already-injected instance property, so this isolates
-    // urlService()'s own not-booted guard exactly like it did before
-    // Phase 11 sub-phase 11F introduced currentConfig()'s own guard above.
+    // urlService()'s own not-booted guard from currentConfig()'s own
+    // guard in the test above.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-geturl-not-booted'));
     $src = new SrcImage([
         'id' => 42,
@@ -230,9 +227,9 @@ test('url() throws when a get_derivative_url handler returns something other tha
 });
 
 test('get_all() coerces a plain info array into a SrcImage and keys the result by defined type', function (): void {
-    // get_all() coerces the plain array via `new SrcImage(...)`, which now
-    // needs a booted Kernel too (Phase 9: SrcImage's own pictureExtensions()
-    // read) -- boot before snapshotting/seeding ImageStdParams so every
+    // get_all() coerces the plain array via `new SrcImage(...)`, which
+    // needs a booted Kernel (SrcImage's own pictureExtensions() read) --
+    // boot before snapshotting/seeding ImageStdParams so every
     // ImageStdParamsTestFactory::get() call in this test resolves the same
     // (container-shared) instance, not a pre-boot fallback later abandoned.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-get-all-1'));
@@ -324,7 +321,7 @@ test('get_one() falls back to the mapped enabled type for a disabled type, and r
 });
 
 test('build() throws when the source path has no extension', function (): void {
-    // SrcImage's own constructor now needs a booted Kernel (Phase 9:
+    // SrcImage's own constructor needs a booted Kernel (its
     // pictureExtensions() read).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-no-extension'));
     $src = new SrcImage([
@@ -395,10 +392,10 @@ test('build() searches the whole defined-type list without an out-of-bounds read
     // `$defined_types[$i]` read as a real E_WARNING real code never
     // raises.
     //
-    // Boot first -- this test constructs a real SrcImage below (Phase 9:
-    // needs a booted Kernel), and ImageStdParamsTestFactory::get() must resolve
-    // the same instance throughout, not a pre-boot fallback abandoned once
-    // Kernel::boot() runs later.
+    // Boot first -- this test constructs a real SrcImage below, which
+    // needs a booted Kernel, and ImageStdParamsTestFactory::get() must
+    // resolve the same instance throughout, not a pre-boot fallback
+    // abandoned once Kernel::boot() runs later.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-defined-type-search'));
     $snapshot = derivativeImageTestSnapshotStdParams();
     $originalWatermark = ImageStdParamsTestFactory::get()->get_watermark();
@@ -573,9 +570,7 @@ test('build() substitutes a smaller already-defined identity-matching type when 
     // container-built) instance once Kernel is booted than the pre-boot
     // memoized fallback it returns beforehand, and build() (inside the
     // real DerivativeImage construction further down) always reads
-    // whichever instance is current *after* boot. Same ordering pitfall
-    // already found for Translator/EventDispatcher elsewhere in this
-    // campaign.
+    // whichever instance is current *after* boot.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-substitute-only'));
     $snapshot = derivativeImageTestSnapshotStdParams();
     $originalWatermark = ImageStdParamsTestFactory::get()->get_watermark();
@@ -829,10 +824,10 @@ function derivativeCacheServiceRrmdirDerivativeImageTest(string $dir): void
  */
 test('get_size_css()/get_size_htm()/get_size_hr() render the computed size, or an empty string when the size cannot be computed', function (): void {
     // Boot first, with the SAME root used for the real broken.jpg file
-    // below -- SrcImage's own constructor now needs a booted Kernel
-    // (Phase 9: pictureExtensions() read), and Kernel::boot() is
-    // idempotent, so a second boot() call with a different root later in
-    // this test would silently no-op rather than actually switching roots.
+    // below -- SrcImage's own constructor needs a booted Kernel (its
+    // pictureExtensions() read), and Kernel::boot() is idempotent, so a
+    // second boot() call with a different root later in this test would
+    // silently no-op rather than actually switching roots.
     $root = sys_get_temp_dir() . '/piwigo-derivative-image-test-' . bin2hex(random_bytes(8));
     mkdir($root . '/upload/2026/07', 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
@@ -884,7 +879,7 @@ test('get_size_css()/get_size_htm()/get_size_hr() render the computed size, or a
 });
 
 test('get_scaled_size()/get_scaled_size_htm() scale down proportionally, binding on whichever dimension overflows more', function (): void {
-    // SrcImage's own constructor now needs a booted Kernel (Phase 9:
+    // SrcImage's own constructor needs a booted Kernel (its
     // pictureExtensions() read).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-scaled-size'));
 
@@ -936,7 +931,7 @@ test('get_scaled_size() still scales when only ONE dimension overflows, not just
     // the other (comfortably <= 1, so it can never independently
     // trigger scaling either).
     //
-    // SrcImage's own constructor now needs a booted Kernel (Phase 9:
+    // SrcImage's own constructor needs a booted Kernel (its
     // pictureExtensions() read).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-scaled-size-one-dim'));
     $wideSrc = new SrcImage([

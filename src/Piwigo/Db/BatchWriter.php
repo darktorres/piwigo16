@@ -8,32 +8,18 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 
 /**
- * Parameterized replacement for `MysqliDb::singleInsert()`/`massInserts()`/
- * `singleUpdate()`/`massUpdates()` (Legacy Coupling Retirement: DI+DBAL
- * migration, Phase 1a). Shared rather than duplicated per-repository --
- * these 4 methods back ~20 call sites across Category/Image/Ws/Admin/
- * Controller/Mail, not a single domain's concern.
+ * Batched parameterized INSERT/UPDATE helpers, shared rather than
+ * duplicated per-repository -- these 4 methods back ~20 call sites across
+ * Category/Image/Ws/Admin/Controller/Mail, not a single domain's concern.
  *
- * Deliberate simplification vs. the original `massUpdates()`: the legacy
- * version had two strategies -- N individual `UPDATE`s for under 10 rows,
- * or (>=10 rows) a `SHOW FULL COLUMNS` column-type introspection, a
- * `CREATE TABLE` scratch table, a bulk insert into it, one `UPDATE ...
- * JOIN` against it, then `DROP TABLE` -- a real but MySQL-specific,
- * DDL-heavy optimization for large batches. Reimplementing that exact
- * strategy with parameterized DBAL queries (no raw string interpolation)
- * is disproportionate complexity for this pass and doesn't obviously
- * port to the pgsql driver `DbCredentials::current()->driver` already allows. This
- * class always issues one parameterized `UPDATE` per row instead, for
- * every batch size, wrapped in a single transaction (which the original
- * never had at all -- every row was its own unguarded query, so a
- * mid-batch failure could already leave a batch half-applied; the
- * transaction here is a real correctness improvement, not just a
- * simplification). This trades away the temp-table strategy's
- * large-batch performance advantage for large N (many hundreds/
- * thousands of rows in one batch-manager operation) in exchange for
- * much simpler, safer, parameterized code. Revisit with real profiling
- * data if a large-batch `massUpdate()` call site turns out to be a
- * measured bottleneck -- no such measurement exists today.
+ * massUpdate()/singleUpdate() issue one parameterized `UPDATE` per row, for
+ * every batch size, wrapped in a single transaction (all-or-nothing): a
+ * mid-batch failure never leaves a batch half-applied. This trades away a
+ * temp-table bulk-update strategy's large-batch performance advantage for
+ * much simpler, safer, parameterized code (no raw string interpolation, and
+ * no MySQL-specific DDL). Revisit with real profiling data if a
+ * large-batch `massUpdate()` call site turns out to be a measured
+ * bottleneck -- no such measurement exists today.
  */
 final readonly class BatchWriter
 {
@@ -52,15 +38,11 @@ final readonly class BatchWriter
     ) {}
 
     /**
-     * Phase 4 Item 16: routes through the real DBAL platform's own
-     * identifier-quoting -- `AbstractMySQLPlatform::quoteSingleIdentifier()`
-     * escapes an embedded backtick character
-     * (`` '`' . str_replace('`', '``', $str) . '`' ``), which the
-     * hand-rolled `SqlDialect::protectColumnName()` this replaced never
-     * did. Not a live vulnerability either way (every real caller here
-     * passes a fixed, code-controlled column/table name), but a real
-     * correctness gap closed for free by using the framework's own,
-     * already-correct, per-platform implementation instead.
+     * Routes through the DBAL platform's own identifier-quoting --
+     * `AbstractMySQLPlatform::quoteSingleIdentifier()` escapes an embedded
+     * backtick character as `` '`' . str_replace('`', '``', $str) . '`' ``.
+     * Not a live vulnerability either way: every real caller here passes a
+     * fixed, code-controlled column/table name.
      */
     private function protectColumnName(string $name): string
     {
@@ -101,12 +83,11 @@ final readonly class BatchWriter
             return;
         }
 
-        // SQL-modernization audit (recursive-cuddling-squid.md): verified,
-        // not a raw-string-splice defect -- buildInsertSql()'s own
-        // $protectedTable/$columnsSql/$placeholdersSql inputs below are
-        // all structural (protected identifiers + bound-parameter
-        // placeholder syntax), every real value flows through
-        // $params/executeStatement()'s own binding. Stays on raw
+        // buildInsertSql()'s own $protectedTable/$columnsSql/$placeholdersSql
+        // inputs below are all structural (protected identifiers +
+        // bound-parameter placeholder syntax); every real value flows
+        // through $params/executeStatement()'s own binding, never raw
+        // string interpolation. Stays on raw
         // Connection rather than QueryBuilder::insert() deliberately:
         // DBAL's QueryBuilder has no INSERT IGNORE/ON CONFLICT support
         // (confirmed against its own source), and that behavior is real,
@@ -147,18 +128,16 @@ final readonly class BatchWriter
             return;
         }
 
-        // SQL-modernization audit: same verified-safe, stays-raw shape as
-        // singleInsert() above -- see its own comment.
+        // Same stays-raw shape as singleInsert() above -- see its own
+        // comment.
         $ignore = $options['ignore'] ?? false;
         $columns = array_map($this->protectColumnName(...), $dbfields);
         $protectedTable = $this->protectColumnName($table);
         $columnsSql = implode(',', $columns);
 
-        // Phase 5 Item 23: Connection::transactional() replaces the manual
-        // beginTransaction()/commit()/catch/rollBack()-and-rethrow
-        // boilerplate -- same all-or-nothing behavior, less code, and
-        // removes any chance of a future edit forgetting the
-        // rollBack()-and-rethrow half of the pattern.
+        // Connection::transactional() wraps this in a single all-or-nothing
+        // transaction, removing any chance of forgetting a
+        // rollBack()-and-rethrow.
         $this->conn->transactional(function (Connection $conn) use ($datas, $dbfields, $ignore, $protectedTable, $columnsSql): void {
             foreach ($datas as $insert) {
                 $placeholders = [];
@@ -197,8 +176,8 @@ final readonly class BatchWriter
             return;
         }
 
-        // Phase 5 Item 23: see massInsert()'s own comment -- same
-        // Connection::transactional() replacement.
+        // See massInsert()'s own comment -- same Connection::transactional()
+        // single-transaction wrapping.
         $this->conn->transactional(function () use ($table, $dbfields, $datas, $flags): void {
             foreach ($datas as $data) {
                 $updateData = [];

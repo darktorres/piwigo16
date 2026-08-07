@@ -171,10 +171,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         self::assertSame('first-value', $this->repo->findRawValue($param));
 
         // INSERT IGNORE: (param) is the primary key, so a second call for
-        // the same $param is a silent no-op, not an overwrite -- the
-        // race-resolution mechanism Core\UniqueExecLock's own begins()
-        // relied on before Phase 4 Item 18 retargeted it onto MySQL's
-        // native GET_LOCK() instead.
+        // the same $param is a silent no-op, not an overwrite.
         $this->repo->insertIgnoreRawValue($param, 'second-value-should-be-ignored');
         self::assertSame('first-value', $this->repo->findRawValue($param));
 
@@ -182,13 +179,9 @@ final class ConfigRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * SQL-modernization audit regression: $param/$value used to be
-     * spliced directly into `INSERT IGNORE ... SET param="{$param}",
-     * value="{$value}"` (manual double-quote wrapping, no escaping) --
-     * now bound. A value containing a literal double quote would have
-     * broken out of the old manual quoting (`"..."`.$value.`"..."`
-     * shape) into raw SQL text; confirms it now round-trips as inert
-     * data instead.
+     * $param/$value are bound parameters, not spliced into SQL text -- a
+     * value containing a literal double quote round-trips as inert data
+     * rather than breaking out into raw SQL.
      */
     public function test_insert_ignore_raw_value_and_find_raw_value_round_trip_a_value_containing_a_double_quote(): void
     {

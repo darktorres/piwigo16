@@ -24,23 +24,18 @@ use Piwigo\Users\UserInfoEntity;
  *
  * Owns no entity itself ({@see UserAuthKeyEntity} has no `repositoryClass`,
  * shared with ApiKeyRepository) -- holds EntityManagerInterface directly.
- * `users` is now ORM-mapped too ({@see \Piwigo\Users\UserEntity}, Item 14
- * Sub-phase C4 -- the multi-auth column indirection every method touching
- * it used to take as caller-supplied column names is gone, confirmed
- * dead code). `user_infos` IS ORM-mapped
- * ({@see UserInfoEntity}, owned by Users\UserRepository) -- writes here
- * go through it (find+set+flush) rather than raw DBAL, since a raw write
- * would leave any UserInfoEntity already in this EntityManager's identity
- * map stale for the rest of the request (same reasoning as every other
- * repository's own identity-map-staleness fix this migration).
+ * `users` ({@see \Piwigo\Users\UserEntity}) and `user_infos`
+ * ({@see UserInfoEntity}, owned by Users\UserRepository) are both
+ * ORM-mapped. Writes to `user_infos` go through it (find+set+flush)
+ * rather than raw DBAL, since a raw write would leave any UserInfoEntity
+ * already in this EntityManager's identity map stale for the rest of the
+ * request.
  *
- * Every `NOW()`/`ADDDATE(NOW(), ...)` computation the original raw SQL did
- * in MySQL is done in PHP against \Piwigo\Core\Env::now() instead --
- * matches Piwigo\Session\SessionRepository::write()/
- * Piwigo\Comment\CommentRepository::countRecentComments()'s own established
- * reasoning: SQL's NOW() is invisible to Env::now()'s PIWIGO_TEST_NOW
- * freeze, so a fixture-driven test comparing "now" against a fixture-dated
- * column would silently use two different clocks.
+ * Every `NOW()`/`ADDDATE(NOW(), ...)` computation is done in PHP against
+ * \Piwigo\Core\Env::now() instead of in SQL: SQL's NOW() is invisible to
+ * Env::now()'s PIWIGO_TEST_NOW freeze, so a fixture-driven test comparing
+ * "now" against a fixture-dated column would otherwise use two different
+ * clocks.
  */
 final readonly class AuthRepository
 {
@@ -51,12 +46,6 @@ final readonly class AuthRepository
     ) {}
 
     /**
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}); the
-     * multi-auth column indirection this used to take as `$idColumn`/
-     * `$usernameColumn`/`$passwordColumn` parameters is gone (see this
-     * class's own docblock).
-     *
      * @return array{username: string, password: string}|null
      */
     public function findUsernameAndPassword(UserId $userId): ?array
@@ -91,14 +80,8 @@ final readonly class AuthRepository
     }
 
     /**
-     * Finds a user by username first, falling back to email -- matches the
-     * original's own two-query try-username-then-email order.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}); the
-     * multi-auth column indirection this used to take as `$idColumn`/
-     * `$usernameColumn`/`$emailColumn`/`$passwordColumn` parameters is
-     * gone (see this class's own docblock).
+     * Finds a user by username first, falling back to email, via two
+     * separate queries in that order rather than a single OR'd query.
      */
     public function findByUsernameOrEmail(string $usernameOrEmail): ?AuthUser
     {
@@ -129,16 +112,9 @@ final readonly class AuthRepository
 
     /**
      * A single auth_key row (JOINed with its owning user's username/email),
-     * or null when no such key exists. Every value that was a SQL-computed
-     * pseudo-column in the original (NOW(), DATEDIFF, SUBDATE) is left to
-     * the caller to compute from \Piwigo\Core\Env::now() instead.
-     */
-    /**
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}); the
-     * multi-auth column indirection this used to take as `$idColumn`/
-     * `$usernameColumn`/`$emailColumn` parameters is gone (see this
-     * class's own docblock).
+     * or null when no such key exists. Values that would be SQL-computed
+     * pseudo-columns (NOW(), DATEDIFF, SUBDATE) are left to the caller to
+     * compute from \Piwigo\Core\Env::now() instead.
      */
     public function findAuthKeyDetails(string $authKey): ?AuthKeyDetails
     {
@@ -184,11 +160,10 @@ final readonly class AuthRepository
     }
 
     /**
-     * Phase 5 Item 21: `UserInfoEntity::$status` is now `UserStatus`
-     * (enumType-mapped) -- unwrapped to `.value` here so this method's own
-     * `?string` contract (and every real caller downstream, e.g.
-     * `AuthService::createUserAuthKey()`'s `in_array($status, [...], true)`
-     * string comparisons) stays unchanged.
+     * `UserInfoEntity::$status` is `UserStatus` (enum-typed) -- unwrapped
+     * to `.value` here so this method's own `?string` contract stays
+     * intact for callers doing string comparisons, e.g.
+     * `AuthService::createUserAuthKey()`'s `in_array($status, [...], true)`.
      */
     public function findUserStatus(UserId $userId): ?string
     {
@@ -279,11 +254,11 @@ final readonly class AuthRepository
     }
 
     /**
-     * Item 16F: delegates to $lookup (an explicit per-call parameter, not
+     * Delegates to $lookup (an explicit per-call parameter, not
      * constructor-injected -- AuthRepository is freshly constructed from
      * several call sites, some in domain-service code that itself can't
      * touch History\HistoryRepository directly, e.g. Users\UserService)
-     * instead of reading `history` directly -- `Auth` (`L2aCoreDomain`)
+     * instead of reading `history` directly: `Auth` (`L2aCoreDomain`)
      * can't depend on `History` (`L2bExtendedDomain`).
      */
     public function findLastVisitFromHistory(int $userId, LastVisitLookupInterface $lookup): ?string
@@ -292,20 +267,14 @@ final readonly class AuthRepository
     }
 
     /**
-     * `lastmodified = lastmodified` is a deliberate self-assignment in the
-     * original -- not a no-op leftover, it's how the original avoids
-     * bumping an ON UPDATE CURRENT_TIMESTAMP-style column while still
-     * writing the other two columns.
-     *
-     * Item 15 audit, re-verified: this docblock previously claimed "a
-     * mapped entity property write can't express [the self-assignment]"
-     * -- wrong once actually tried. DQL's `SET` clause accepts an
-     * arbitrary right-hand expression, including the same property path
-     * again (`ui.lastmodified = ui.lastmodified`), same as
-     * {@see \Piwigo\History\HistoryRepository::updateLastVisitNow()}'s own
-     * converted form. `last_visit_from_history` is a real `boolean`
-     * column now ({@see UserInfoEntity}) -- binds the real PHP `true`,
-     * not a numeric-literal proxy for it.
+     * `ui.lastmodified = ui.lastmodified` is a deliberate self-assignment,
+     * not a no-op leftover -- it avoids bumping an ON UPDATE
+     * CURRENT_TIMESTAMP-style column while still writing the other two
+     * columns. DQL's `SET` clause accepts an arbitrary right-hand
+     * expression, including the same property path again.
+     * `last_visit_from_history` is a `boolean` column
+     * ({@see UserInfoEntity}) -- this binds the real PHP `true`, not a
+     * numeric-literal proxy for it.
      */
     public function saveLastVisitFromHistory(int $userId, ?string $lastVisit): void
     {
@@ -331,10 +300,10 @@ final readonly class AuthRepository
     }
 
     /**
-     * Item 16F: delegates to $lookup (an explicit per-call parameter,
-     * same reasoning as {@see findLastVisitFromHistory()} above) instead
-     * of reading `activity` directly -- `Auth` (`L2aCoreDomain`) can't
-     * depend on `Activity` (`L2bExtendedDomain`).
+     * Delegates to $lookup (an explicit per-call parameter, same
+     * reasoning as {@see findLastVisitFromHistory()} above) instead of
+     * reading `activity` directly: `Auth` (`L2aCoreDomain`) can't depend
+     * on `Activity` (`L2bExtendedDomain`).
      */
     public function countLoginActivity(int $userId, LoginActivityLookupInterface $lookup): int
     {

@@ -214,14 +214,11 @@ test('deleteLoungeUpTo removes only rows at or below the given image id', functi
 });
 
 test('deleteImages cascades away rows from every real referencing table, and clears the identity map', function (): void {
-    // Item 16E: deleteElementReferences() (which used to run before
-    // deleteImages() in ImageService::deleteElements(), explicitly
-    // clearing these same 7 tables) was removed entirely -- every one
-    // of them carries a real ON DELETE CASCADE FK straight to
-    // images.id (tests/Fixtures/piwigo-17.0.sql), so deleteImages()
-    // alone already does the same cleanup, via the database itself.
-    // One real row is seeded in every table to prove that live, not
-    // just cite the schema.
+    // Every referencing table carries a real ON DELETE CASCADE FK
+    // straight to images.id (tests/Fixtures/piwigo-17.0.sql), so
+    // deleteImages() alone already performs this cleanup, via the
+    // database itself. One real row is seeded in every table to prove
+    // that live, not just cite the schema.
     $repo = imageRepositoryTestRepo();
     $cached = $repo->find(1);
     expect($cached)->not->toBeNull();
@@ -649,14 +646,13 @@ test('deleteNonStorageCategoryLinks clears the identity map after a raw write ou
 });
 
 test('deleteNonStorageCategoryLinks spares the image\'s own storage_category_id link', function (): void {
-    // Item 16D's own real reason to exist: the original raw SQL's
-    // `storage_category_id IS NULL OR storage_category_id != category_id`
-    // half never gets exercised by the identity-map test above (a
-    // freshly-inserted image with no image_category rows at all --
-    // the foreach body in the DQL rewrite never even runs there). This
-    // seeds real image_category rows across both fixture categories
-    // (1 and 2) and a real storage_category_id, so a wrong conversion
-    // that deletes every link (or spares the wrong one) is observable.
+    // Exercises the `storage_category_id != category_id` half of the
+    // exclusion filter -- the identity-map test above uses a freshly-
+    // inserted image with no image_category rows at all, so the per-row
+    // filtering loop never actually runs there. This seeds real
+    // image_category rows across both fixture categories (1 and 2) and a
+    // real storage_category_id, so a bug that deletes every link (or
+    // spares the wrong one) is observable.
     $conn = DbConnection::build();
     $conn->createQueryBuilder()
         ->insert(Tables::images())

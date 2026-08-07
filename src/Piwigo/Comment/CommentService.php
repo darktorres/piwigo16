@@ -31,19 +31,14 @@ use Piwigo\Validation\InputValidator;
  * posts) -- Auth lives in L2aCoreDomain, Comment in L2bExtendedDomain, so a
  * real class-to-class dependency there is allowed (unlike Mail, see below).
  *
- * P23 batch 8c: constructor-injects MailerInterface (Piwigo\Core) for
+ * Constructor-injects MailerInterface (Piwigo\Core) for
  * `mailNotificationAdmins()` rather than depending on
  * Piwigo\Mail\MailService directly -- same L2b-may-not-depend-on-L3
  * constraint as UserService, see deptrac.yaml's own comment on the Mail
- * namespace entry and MailerInterface's own docblock. P23 batch 8f-3:
- * `getCommentAuthorId()`'s unknown-comment-id `fatal_error()` call is now
+ * namespace entry and MailerInterface's own docblock.
+ * `getCommentAuthorId()`'s unknown-comment-id `fatal_error()` call is
  * routed through the same-shaped HtmlRenderingInterface (Piwigo\Core)
- * instead of staying a bare free-function call.
- *
- * $this->accessLevelChecker->isAdmin()/isAGuest()/isClassicUser() and the
- * $this->currentUser->get()/CurrentConfig:: accessors they and this class
- * use replace the original functions_comment.inc.php's bare is_admin()/
- * is_a_guest()/is_classic_user() calls and `$user`/`$conf` globals.
+ * instead of a bare free-function call.
  */
 final readonly class CommentService
 {
@@ -136,8 +131,7 @@ final readonly class CommentService
     /**
      * Basic spam check (plugins can do more via the same `user_comment_check`
      * event). Registered in Piwigo\Bootstrap\RequestBootstrap's own
-     * default-event-handlers block (P23 batch 8c, relocated from the now-deleted
-     * functions_comment.inc.php) as that event's own handler -- called by
+     * default-event-handlers block as that event's own handler -- called by
      * dispatchChange() from insertComment()/updateComment() themselves, not
      * directly by callers. $event->comm is untyped per-key (matching
      * updateComment()'s own already-established looseness), so 'content'/

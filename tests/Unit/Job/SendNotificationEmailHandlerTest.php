@@ -20,19 +20,16 @@ use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 
-// P23 batch 8f-4: the get_webmaster_mail_address() function stub is gone
-// (free function deleted with include/functions.inc.php; MailService now
-// reaches the webmaster address through its optional
-// WebmasterMailProviderInterface constructor param). No fake is needed
+// MailService reaches the webmaster address through its optional
+// WebmasterMailProviderInterface constructor param. No fake is needed
 // here: the empty-$to job below short-circuits MailService::mail() to
 // `return true` before getMailConfiguration()/the webmaster lookup ever
 // runs (verified against mail()'s own first guard).
 
 /**
- * Every MailService::__construct() shim collaborator (singleton/
- * service-locator elimination campaign, Phase 11 sub-phase 11E), resolved
- * from a real booted container -- Kernel::boot() is idempotent, so calling
- * it here is a safe no-op when the caller already booted its own Kernel.
+ * Every MailService::__construct() collaborator is resolved from a real
+ * booted container -- Kernel::boot() is idempotent, so calling it here is
+ * a safe no-op when the caller already booted its own Kernel.
  */
 function send_notification_email_handler_test_mail_service(): MailService
 {
@@ -93,7 +90,7 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
     // instance MailService::mail() itself resolves via CurrentConfig::
     // current() -- the pre-boot fallback is a different, memoized object
     // (same "seed after boot, not before" fix shape as every other
-    // Current* wrapper in this campaign, e.g.
+    // Current* wrapper, e.g.
     // RequestBootstrapBootConfigOnlyTest.php's own "reuses an
     // already-set CurrentConfigService" test).
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));

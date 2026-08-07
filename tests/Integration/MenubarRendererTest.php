@@ -103,13 +103,10 @@ final class MenubarRendererTest extends IntegrationTestCase
         $this->template = TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default');
         CurrentTemplate::current()->set($this->template);
 
-        // getRootUrl()/paramsForDuplication() read SectionContextRegistry
-        // through the transitional currentStatic() shim (singleton/
-        // service-locator elimination campaign, Phase 2 -- UrlService is
-        // one of Phase 6's ~440 manually-`new`'d classes), which resolves
-        // the real container-shared instance once Kernel::boot() has run
-        // -- booted here so that instance is the same one $this->renderer
-        // is given directly below, not a disconnected one.
+        // UrlServiceTestFactory::build() resolves SectionContextRegistry
+        // from the real container-shared instance once Kernel::boot() has
+        // run -- booted here so that instance is the same one
+        // $this->renderer is given directly below, not a disconnected one.
         Kernel::boot();
         $sectionContextRegistry = Kernel::container()->get(SectionContextRegistry::class);
         if (! $sectionContextRegistry instanceof SectionContextRegistry) {

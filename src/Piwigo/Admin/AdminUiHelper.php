@@ -13,15 +13,11 @@ use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 
 /**
- * Small, disparate admin-UI utility functions ported from
- * admin/include/functions.php (P23 batch 8d) -- no other natural domain
- * home; every real caller is under the Piwigo\Admin or
- * Piwigo\Controller\Admin namespace (L4Integration) or a legacy top-level
- * entry point (admin.php, install.php), so unlike this batch's
- * FilesystemHelper/PermissionService/PermissionCacheInvalidator, no deptrac
- * layer constraint forced a specific placement -- matches the
- * "administrative machinery" precedent already set by
- * PiwigoInfosSender/InstallationStats.
+ * Small, disparate admin-UI utility functions with no single natural
+ * namespace home. Every real caller is under the Piwigo\Admin or
+ * Piwigo\Controller\Admin namespace (L4Integration) or a legacy
+ * top-level entry point (admin.php, install.php), so no deptrac layer
+ * constraint forces a specific placement.
  */
 final class AdminUiHelper
 {

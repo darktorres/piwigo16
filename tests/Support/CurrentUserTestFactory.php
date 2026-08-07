@@ -10,13 +10,10 @@ use Piwigo\Core\Kernel;
 use Piwigo\Users\CurrentUser;
 
 /**
- * Singleton/service-locator elimination campaign, Phase 12 sub-phase
- * 12F-11: replaces the deleted `CurrentUser::current()` transitional shim
- * for test call sites -- reproduces its exact behavior (the real
- * container-shared instance once Kernel has booted, a MEMOIZED, not
- * fresh-per-call, instance otherwise). A caller that writes via a call in
- * one test line and reads via a later call must see the same instance, or
- * the write would be lost.
+ * Returns the container-shared instance once Kernel has booted. Before
+ * boot, returns a memoized fallback instance rather than a fresh one per
+ * call, so a caller that writes in one test line and reads in a later
+ * line sees the same instance.
  */
 final class CurrentUserTestFactory
 {

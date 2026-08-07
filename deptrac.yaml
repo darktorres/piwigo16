@@ -2,224 +2,158 @@ deptrac:
   paths:
     - ./src/Piwigo
   layers:
-    # L0 Data — no first-party classes yet (P6 doesn't create any); enumerated
-    # ahead of time per docs/PLAN.md's P6 6-layer model, populated by
-    # later phases.
     - name: L0Data
       collectors:
         - type: classLike
           value: ^Piwigo\\(Common|Event|Exception)\\.*
-    # L1 Infrastructure — Cache/Session land here in P6; Config/Core/Db etc.
-    # are later-phase additions, enumerated ahead of time. Db lands in P12
-    # (Piwigo\Db\DbCredentials); Backup lands in P12 too (Piwigo\Backup\
-    # BackupService) — infrastructure-adjacent, no domain-layer dependency.
-    # Lang lands in P16 (Piwigo\Lang\
-    # Translator/LangService) — same Core-data + Service-layer split as
-    # Config, no domain-layer dependency: LangService::loadLanguageForPlugin()
-    # takes the active locale as an explicit parameter rather than reading
-    # Users\CurrentUser itself (a real DependsOnDisallowedLayer violation
-    # caught via deptrac analyse — L1Infrastructure may only depend on
-    # L0Data, not upward on L2aCoreDomain; callers resolve the locale).
-    # Storage lands in P17 (Piwigo\Storage\StorageRegistry) -- a technical
-    # file-I/O capability alongside Cache/Db, no domain-layer dependency;
-    # self-managed singleton (current()/set()/reset()), same shape as
-    # PageState/Translator/SessionService, not container-wired.
-    # Audit lands in P18 (Piwigo\Audit\AuditRepository/Service, SEC-57) --
-    # a technical, cross-cutting logging capability alongside Cache/
-    # Storage/Mail(-shaped), no domain-layer dependency of its own;
-    # injected INTO L2a/L2b domain services (Users/Group), never the
-    # reverse, matching every other L1 infrastructure class here.
-    # Validation lands in P19 (Piwigo\Validation\InputValidator) -- per the
-    # reference doc's own explicit layer table; only depends on
-    # Piwigo\Core\ValidationPattern (same-layer), calls the free function
-    # fatal_error() (not a class dependency deptrac tracks) rather than
-    # HtmlService directly.
-    # Piwigo\PluginConfig\EventDispatcher moves here in Phase 3 of
-    # docs/plan/legacy-coupling-retirement.md (Track B) -- split off from
-    # its namespace-mate PluginRepository (stays L2bExtendedDomain, see
-    # its own comment there). Retargeting the free-function event-dispatch
-    # bridge (add_event_handler()/trigger_change()/trigger_notify()) onto
-    # EventDispatcher::get() directly surfaced real L1->L2b and L2a->L2b
-    # callers (Config\ConfigDb, Core\ThemeCatalog, Cache\
-    # PermissionCacheInvalidator; Auth\AuthService, Users\*, Category\*, Image\*,
-    # Group\GroupService, Tag\TagService) that the untracked free-function
-    # form had been hiding. EventDispatcher.php itself injects nothing (no
-    # `use` statements) and is a generic pub/sub bus reachable from every
-    # layer -- same "technical, cross-cutting capability, injected INTO
-    # L2a/L2b, never the reverse" shape as Cache/Session/Storage/Audit
-    # above, so L1Infrastructure is both the lowest layer that covers
-    # every real caller and the architecturally correct fit. EventHandler
-    # (EventDispatcher's own handler-registration DTO, constructed only by
-    # EventDispatcher itself) rides along in the same collector -- without
-    # it, this one class in the namespace has no layer at all and every
-    # dependency touching it goes unchecked (confirmed via `deptrac analyse
-    # --report-uncovered`: this was the entire first-party coverage gap in
-    # this file before being closed here). Any future class added to this
-    # namespace needs the same deliberate placement, not a silent gap.
+    # L1 Infrastructure — Cache, Session, Config, Core, Db
+    # (Piwigo\Db\DbCredentials), and Backup (Piwigo\Backup\BackupService)
+    # are infrastructure-adjacent, with no domain-layer dependency.
+    # Piwigo\Lang\Translator/LangService share the same Core-data +
+    # Service-layer split as Config, no domain-layer dependency:
+    # LangService::loadLanguageForPlugin() takes the active locale as an
+    # explicit parameter rather than reading Users\CurrentUser itself,
+    # because L1Infrastructure may only depend on L0Data, not upward on
+    # L2aCoreDomain -- callers resolve the locale instead.
+    # Piwigo\Storage\StorageRegistry is a technical file-I/O capability
+    # alongside Cache/Db, no domain-layer dependency; it is a plain
+    # container-resolved service, not a self-managed singleton -- every
+    # real reader takes it via constructor injection.
+    # Piwigo\Audit\AuditRepository/Service is a technical, cross-cutting
+    # logging capability alongside Cache/Storage/Mail(-shaped), no
+    # domain-layer dependency of its own; it is injected INTO L2a/L2b
+    # domain services (Users/Group), never the reverse, matching every
+    # other L1 infrastructure class here.
+    # Piwigo\Validation\InputValidator only depends on
+    # Piwigo\Core\ValidationPattern (same-layer); its optional
+    # `HtmlRenderingInterface` constructor param (also L1) is how it
+    # reports a hacking-attempt failure without depending on the
+    # concrete Piwigo\Html\HtmlService (L3) directly.
+    # Piwigo\PluginConfig\EventDispatcher is a generic pub/sub bus with
+    # no first-party (Piwigo\) dependencies, reachable from every layer,
+    # including real L1->L2b and L2a->L2b callers (e.g. Config\ConfigDb,
+    # Core\ThemeCatalog, Cache\PermissionCacheInvalidator;
+    # Auth\AuthService, Users\*, Category\*, Image\*, Group\GroupService,
+    # Tag\TagService) -- the same "technical, cross-cutting capability,
+    # injected INTO L2a/L2b, never the reverse" shape as Cache/Session/
+    # Storage/Audit above, so L1Infrastructure is both the lowest layer
+    # that covers every real caller and the architecturally correct fit.
+    # Its namespace-mate PluginRepository stays in L2bExtendedDomain (see
+    # its own comment there). EventHandler (EventDispatcher's own
+    # handler-registration DTO, constructed only by EventDispatcher
+    # itself) rides along in the same collector -- without it, this
+    # class would have no layer at all and every dependency touching it
+    # would go unchecked. Any future class added to this namespace needs
+    # the same deliberate placement, not a silent gap.
     - name: L1Infrastructure
       collectors:
         - type: classLike
           value: ^Piwigo\\(Config|Core|Db|Cache|Session|Backup|Lang|Storage|Audit|Validation)\\.*
         - type: classLike
           value: ^Piwigo\\PluginConfig\\(EventDispatcher|EventHandler)$
-    # L2a Core Domain — Auth/Image land here in P6; Users/Permission/Category/
-    # Tag are later-phase additions. Group lands in P18 (Piwigo\Group\
-    # GroupRepository/GroupService) -- must sit at this layer, not the more
-    # natural-looking L2bExtendedDomain: functions_user.inc.php's
-    # calculate_permissions() (Permission domain, already L2a) queries
-    # user_group/group_access directly, a real dependency from Permission
-    # onto Group, and L2a may not depend sideways on L2b.
+    # L2a Core Domain — Piwigo\Group\GroupRepository/GroupService sits at
+    # this layer rather than the more natural-looking L2bExtendedDomain:
+    # Permission\PermissionRepository/PermissionService (Permission
+    # domain, L2a) query user_group/group_access directly, a real
+    # dependency from Permission onto Group, and L2a may not depend
+    # sideways on L2b.
     - name: L2aCoreDomain
       collectors:
         - type: classLike
           value: ^Piwigo\\(Auth|Users|Permission|Category|Image|Tag|Group)\\.*
-    # L2b Extended Domain — every other first-party domain namespace. Search/
-    # Calendar/Site land here in P6. Explicit enumeration (not a catch-all
-    # regex) so a future phase adding a namespace has to deliberately place
-    # it in the right layer instead of silently falling into this one.
-    # Url lands in P17 (Piwigo\Url\UrlService) -- injects nothing (matches
-    # the reference implementation's own settled design), so it has no
-    # cross-layer dependency of its own to place carefully. Csrf lands in
-    # P17 too (Piwigo\Csrf\CsrfService) -- deliberately built with no
-    # HtmlService dependency (check() returns bool instead of calling
-    # accessDenied()/badRequest() itself) specifically so it can live here
-    # without an upward L2b→L3 dependency on Html. Permalink lands in P17
-    # too (Piwigo\Permalink\PermalinkRepository/Service) -- no other domain
-    # namespace dependency, plain constructor injection. Feed lands in P17
-    # too (Piwigo\Feed\FeedHelper/FeedRepository) -- FeedHelper injects
-    # nothing (same shape as Url/Html); FeedRepository is plain constructor
-    # injection like Permalink's.
-    # Filter lands in P18 (Piwigo\Filter\FilterService) -- reads/mutates a
-    # plain category-row array via the $filter global, no domain-namespace
-    # dependency of its own; same "injects nothing" shape as Csrf/Url.
-    # Comment lands in P18 too (Piwigo\Comment\CommentRepository/Service) --
-    # constructor-injects Piwigo\Auth\EphemeralKeyService (anti-spam key on
-    # anonymous posts), a real L2b -> L2a dependency, always allowed.
-    # Rate lands in P18 too (Piwigo\Rate\RateRepository/Service) --
-    # constructor-injects Piwigo\Auth\CookieService (the anonymous-rater
-    # cookie), same L2b -> L2a shape as Comment's EphemeralKeyService.
-    # Caddie lands in P18 too (Piwigo\Caddie\CaddieRepository) -- injects
-    # nothing (plain DBAL repository, no other domain namespace dependency),
-    # same "injects nothing" shape as Csrf/Url/Filter.
-    # History lands in P18 too (Piwigo\History\HistoryRepository/Service)
-    # -- injects nothing (plain constructor injection of its own
-    # Repository only); reads `global $conf`/`$logger` directly for
-    # autopurge(), same shape as every other P18 service's config reads.
-    # Activity lands in P18 too (Piwigo\Activity\ActivityRepository/
-    # Service) -- injects nothing; record() (pwg_activity()'s business
-    # logic) reads `global $user`/superglobals directly, same shape as
-    # every other P18 service.
-    # Notification lands in P19 (Piwigo\Notification\NotificationRepository/
-    # Service, and NotificationByMailRepository/Service) -- constructor-
-    # injects Piwigo\Permission\PermissionService (getSqlConditionFandF()),
-    # a real L2b -> L2a dependency, always allowed; does NOT inject
-    # MailService (pwg_mail() stays a free-function call, same "L2b may not
-    # depend on L3Presentation" shape as Comment/Users in P18).
-    # Metadata lands in P19 too (Piwigo\Metadata\MetadataRepository/
-    # Service) -- injects nothing beyond Db/Core (L1), no domain-namespace
-    # dependency of its own.
-    # Telemetry lands in P19 too (Piwigo\Telemetry\TelemetryService + 5
-    # DTOs) -- constructor-injects Doctrine\DBAL\Connection and
-    # Piwigo\Config\ConfigRepository directly (both L1), no Repository of
-    # its own and no other domain-namespace dependency; genuinely
-    # greenfield, no procedural predecessor.
-    # Section lands in P20 (Piwigo\Section\SectionInitializer/Context/
-    # ContextRegistry, [SEC-15]) -- SectionInitializer injects nothing
-    # (parses $_SERVER/$_GET directly, same "injects nothing" shape as
-    # Url/Csrf/Filter); ContextRegistry is a self-managed singleton, same
-    # shape as Storage\StorageRegistry.
-    # PluginConfig lands in P20 too (Piwigo\PluginConfig\EventDispatcher/
-    # PluginRepository) -- PluginRepository is a plain Db\AbstractRepository
-    # subclass, doesn't depend on Piwigo\Admin\PluginMaintain (the dynamic
-    # `instanceof PluginMaintain` check in autoupdate_plugin() stays a
-    # free-function/include/ concern, outside deptrac's
-    # `paths: [./src/Piwigo]` scan), so L2b's inability to depend on
-    # L4Integration (Admin) never actually comes into play here.
-    # EventDispatcher moved to L1Infrastructure in Phase 3 of
-    # docs/plan/legacy-coupling-retirement.md (Track B) -- see its own
-    # comment there; PluginRepository stays here since its only real
-    # caller (Admin\PluginLoader; the legacy Admin\plugins.php god-class
-    # was retired in Legacy Coupling Retirement Phase 8, 8j) is
-    # L4Integration, already legally above L2b. PluginEntity (the ORM
-    # entity Admin\PluginLoader actually fetches via the EntityManager) and
-    # Projection\Plugin (PluginRepository's own read-shape DTO) ride along
-    # in the same collector, same reasoning as EventHandler riding with
-    # EventDispatcher above -- left unassigned, these two had zero layer
-    # at all and every dependency touching them went unchecked (confirmed
-    # via `deptrac analyse --report-uncovered`).
+    # L2b Extended Domain — every other first-party domain namespace.
+    # Explicit enumeration (not a catch-all regex) so a namespace added
+    # later has to be deliberately placed in the right layer instead of
+    # silently falling into this one.
+    # Piwigo\Csrf\CsrfService is deliberately built with no HtmlService
+    # dependency -- check() returns ?bool instead of calling
+    # accessDenied()/badRequest() itself, so it can live here without an
+    # upward L2b->L3 dependency on Html; checkOrFail() takes the renderer
+    # and redirect service as explicit parameters instead.
+    # Piwigo\Permalink\PermalinkRepository/Service has no other
+    # domain-namespace dependency, plain constructor injection.
+    # Piwigo\Feed\FeedHelper injects nothing beyond PHP's own
+    # DateTimeImmutable.
+    # Piwigo\Comment\CommentRepository/Service constructor-injects
+    # Piwigo\Auth\EphemeralKeyService (anti-spam key on anonymous
+    # posts), a real L2b -> L2a dependency, always allowed.
+    # Piwigo\Rate\RateService constructor-injects Piwigo\Auth\CookieService
+    # (the anonymous-rater cookie), same L2b -> L2a shape as Comment's
+    # EphemeralKeyService.
+    # Piwigo\Caddie\CaddieRepository, Piwigo\Rate\RateRepository,
+    # Piwigo\Feed\FeedRepository, Piwigo\History\HistoryRepository, and
+    # Piwigo\Activity\ActivityRepository are plain Doctrine ORM entity
+    # repositories with no custom constructor of their own.
+    # Piwigo\Notification\NotificationRepository/Service
+    # constructor-injects Piwigo\Permission\PermissionService
+    # (getSqlConditionFandF()), a real L2b -> L2a dependency, always
+    # allowed. Neither it nor NotificationByMailRepository/Service inject
+    # MailerInterface -- mail sending in this domain stays a
+    # pwg_mail()-style free-function call.
+    # Piwigo\Metadata\MetadataService constructor-injects
+    # Piwigo\Users\CurrentUser (L2a), a real L2b -> L2a dependency,
+    # always allowed.
+    # Piwigo\Telemetry\TelemetryService constructor-injects Doctrine's
+    # EntityManagerInterface and Piwigo\Config\ConfigRepository directly
+    # (ConfigRepository is L1), no Repository of its own and no other
+    # domain-namespace dependency.
+    # Piwigo\Section\SectionContextRegistry holds request-scoped mutable
+    # state (set()/current()/reset()), resolved as a shared instance via
+    # the container rather than a self-managed static facade.
+    # Piwigo\PluginConfig\PluginRepository is a plain Doctrine ORM entity
+    # repository (extends EntityRepository), doesn't depend on
+    # Piwigo\Admin\PluginMaintain (that `instanceof` check lives in
+    # Admin\PluginLoader/Admin\Extensions\ExtensionLifecycle instead), so
+    # L2b's inability to depend on L4Integration never actually comes
+    # into play here. PluginEntity (the ORM entity Admin\PluginLoader
+    # fetches via the EntityManager) and Projection\Plugin
+    # (PluginRepository's own read-shape DTO) ride along in the same
+    # collector, same reasoning as EventHandler riding with
+    # EventDispatcher above -- without it, these classes would have no
+    # layer at all and every dependency touching them would go
+    # unchecked.
     - name: L2bExtendedDomain
       collectors:
         - type: classLike
           value: ^Piwigo\\(Search|Calendar|Site|Url|Csrf|Permalink|Feed|Filter|Comment|Rate|Caddie|History|Activity|Notification|Metadata|Telemetry|Section)\\.*
         - type: classLike
           value: ^Piwigo\\PluginConfig\\(PluginRepository|PluginEntity|Projection\\Plugin)$
-    # L3 Presentation — Menu/Template land here in P6; Http (incl.
-    # Http\Middleware) and Routing land here in P9 -- Routing wasn't
-    # pre-anticipated in P6's list, but Http\RoutingMiddleware depends on
-    # Routing\Router, and L3 may only depend on layers at or below itself,
-    # so Routing has to live at L3 too (same-layer, always allowed).
-    # Html lands in P17 (Piwigo\Html\HtmlService) -- injects nothing (same
-    # "no constructor deps" shape as Url\UrlService, its P17 sibling), same
-    # layer as Menu (used directly by registerDefaultMenubarBlocks()) and
-    # Template (used via the free-function $template global, unchanged).
-    # Piwigo\Http\HttpClientService also lands in P17 -- a new class inside
-    # the already-existing Http namespace (no regex change needed), a
-    # PSR-18 wrapper around pwg_http_client() with an SSRF guard (SEC-23).
-    # Mail lands in P18 (Piwigo\Mail\MailService) -- the doc's own P18 header
-    # calls it "infrastructure deps only", which would suggest
-    # L1Infrastructure, but `deptrac analyse` caught a real
-    # DependsOnDisallowedLayer violation when placed there:
-    # get_mail_template() constructs a real Piwigo\Template\Template
-    # (Smarty-rendered mail/*.tpl themes), and L1Infrastructure may only
-    # depend on L0Data. Since Mail's Template dependency is real and
-    # necessary (themed HTML email rendering, not something to simplify
-    # away), Mail has to sit at L3Presentation or L4Integration instead,
-    # same layer as Template itself (same-layer deps are always allowed).
-    # This is why UserService (L2aCoreDomain)/CommentService
-    # (L2bExtendedDomain) may not constructor-inject MailService directly --
-    # L2a/L2b may not depend on L3Presentation. P23 batch 8c (finding 8)
-    # resolved this with real dependency inversion rather than keeping
-    # pwg_mail()/pwg_mail_admins() as free-function delegates forever:
-    # Piwigo\Core\MailerInterface (L1Infrastructure) is implemented by
-    # MailService and bound in config/container.php; UserService/
-    # CommentService constructor-inject the interface instead. Both
-    # directions are allowed (L3->L1 for MailService implementing it,
-    # L2a/L2b->L1 for the domain classes depending on it) -- see
-    # MailerInterface's own docblock for the full reasoning, including why
-    # this treatment doesn't extend to every free function (fatal_error()
-    # stays a permanent free-function facade instead, a structurally
-    # different case -- called from every layer including L1, not just a
-    # couple of narrowly-constructed domain classes). P23 batch 8d found 3
-    # more real L2b callers needing the same treatment while retargeting
-    # include/functions_user.inc.php's get_default_language()/
-    # checkUserFavorites()/getRecentPhotosSql() (each constructs UserService,
-    # which itself needs MailerInterface): Search\SearchService,
-    # Search\SearchFilterRenderer, Section\SectionPopulator all now
-    # constructor-inject MailerInterface too, threaded down to every
-    # UserService/SearchService they construct internally.
-    # Page/Asset/Listener are later-phase additions.
-    # Picture lands in P23 batch 4 (Piwigo\Picture\PictureCommentRenderer/
-    # PictureMetadataRenderer, ported from include/picture_comment.inc.php/
-    # picture_metadata.inc.php) -- same "renderer constructs an L2b service
-    # directly, called from a Controller" shape as Page\PageHeaderRenderer,
-    # same layer.
+    # L3 Presentation — Http\Middleware\RoutingMiddleware depends on
+    # Routing\Router, and L3 may only depend on layers at or below
+    # itself, so Routing lives at L3 too (same-layer, always allowed).
+    # Piwigo\Http\HttpClientService is a PSR-18 wrapper (implements
+    # Psr\Http\Client\ClientInterface) around the app's shared Symfony
+    # HTTP transport, with an SSRF guard.
+    # Piwigo\Mail\MailService constructs a real Piwigo\Template\Template
+    # (Smarty-rendered mail/*.tpl themes) to build outgoing mail, so it
+    # sits at L3Presentation/L4Integration rather than L1Infrastructure,
+    # same layer as Template itself (same-layer deps are always
+    # allowed). This is why L2aCoreDomain/L2bExtendedDomain classes may
+    # not constructor-inject MailService directly -- L2a/L2b may not
+    # depend on L3Presentation. Piwigo\Core\MailerInterface
+    # (L1Infrastructure) is implemented by MailService and bound in
+    # config/container.php; Users\UserService (L2a) and
+    # Comment\CommentService/Search\SearchService (L2b)
+    # constructor-inject the interface instead of the concrete class.
+    # Both directions are allowed (L3->L1 for MailService implementing
+    # it, L2a/L2b->L1 for the domain classes depending on it) -- see
+    # MailerInterface's own docblock for the full reasoning.
+    # Picture\PictureCommentRenderer/PictureMetadataRenderer construct an
+    # L2b service directly and are themselves called from a Controller,
+    # same shape as Page\PageHeaderRenderer, same layer.
     - name: L3Presentation
       collectors:
         - type: classLike
           value: ^Piwigo\\(Html|Http|Menu|Page|Template|Asset|Listener|Routing|Mail|Picture)\\.*
-    # L4 Integration — Admin (incl. Admin\Image, Admin\Integrity) and Ws
-    # (incl. Ws\Encoder, Ws\Protocol) land here in P6; Bootstrap/Controller/
-    # Job are later-phase additions. Command lands in P12 (bin/piwigo's
-    # Symfony Console commands) — same edge-of-the-app shape as Controller.
+    # L4 Integration — Piwigo\Command (bin/piwigo's Symfony Console
+    # commands) has the same edge-of-the-app shape as Controller.
     - name: L4Integration
       collectors:
         - type: classLike
           value: ^Piwigo\\(Admin|Bootstrap|Command|Controller|Job|Ws)\\.*
   ruleset:
     # Each layer may depend only on layers below it — standard layered
-    # architecture. Violations are recorded as a baseline (P6 wrap-up) and
-    # ratchet down over subsequent phases, per docs/PLAN.md's P6
-    # section.
+    # architecture.
     L4Integration:
       - L3Presentation
       - L2bExtendedDomain
@@ -241,15 +175,12 @@ deptrac:
     L1Infrastructure:
       - L0Data
     L0Data: []
-  # No skip_violations. P6's original "10 violations" baseline here (removed
-  # P8) was a false positive: deptrac 4.6.2's Symfony Config layer parsing
-  # silently breaks ruleset resolution when layer names contain a hyphen
-  # (confirmed via an isolated minimal reproduction -- a bare `LayerA: [LayerB]`
-  # ruleset entry resolves correctly, but renaming to `Layer-A: [Layer-B]`
-  # makes the identical dependency register as a violation). The P6 layer
-  # names (`L0-Data`, `L1-Infrastructure`, etc.) all had hyphens, so every
-  # cross-layer dependency the ruleset explicitly allowed was being
-  # misreported as a violation -- there was never a real Calendar/Template ->
-  # Image architecture problem to baseline. Fixed by dropping the hyphens
-  # from every layer name (`L0Data`, `L1Infrastructure`, ...); re-running
-  # confirms 0 violations project-wide.
+  # No skip_violations: 0 violations project-wide. Layer names here are
+  # deliberately hyphen-free (`L0Data`, `L1Infrastructure`, ...) --
+  # deptrac's Symfony Config layer parsing silently breaks ruleset
+  # resolution when a layer name contains a hyphen (confirmed via an
+  # isolated minimal reproduction: a bare `LayerA: [LayerB]` ruleset
+  # entry resolves correctly, but renaming to `Layer-A: [Layer-B]` makes
+  # the identical dependency register as a violation), so a hyphenated
+  # layer name here would silently misreport real, explicitly-allowed
+  # cross-layer dependencies as violations.

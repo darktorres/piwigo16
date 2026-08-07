@@ -39,22 +39,18 @@ use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
- * The "No Photo Yet" feature: if the gallery has no photo yet, replace
+ * The "No Photo Yet" feature: if the gallery has no photos yet, replaces
  * the whole page with a big box guiding the visitor/admin to add their
- * first photos. Contains real redirect()/exit() calls, same as
- * Html\HtmlService's own established precedent (see its
- * pageNotFound()-adjacent methods) -- not routed around, since this is
- * the original's real terminal behavior. Tests only exercise the
- * guard-condition-false and nb_photos>0 branches (never reach exit()),
- * same "don't stub what would kill the test process" reasoning as
- * fatal_error().
+ * first photos. Contains real redirect()/exit() calls -- this is
+ * terminal behavior, not routed around. Tests only exercise the
+ * guard-condition-false and nb_photos>0 branches, since exit() would
+ * kill the test process.
  *
- * Legacy Coupling Retirement Phase 8, 8d: its no_photo_yet write takes a
- * real constructor-injected ConfigService -- only 2 real construction
- * sites (Bootstrap\RequestBootstrap.php's own `new NoPhotoYetRenderer(...)
- * ->render()` inline call, gated on CurrentConfig::noPhotoYet() === null, plus
- * this class's own test), low enough to thread properly rather than reach
- * for CurrentConfigService::get().
+ * ConfigService is constructor-injected directly rather than resolved
+ * via CurrentConfigService::get(), since this class is only ever
+ * constructed at two real call sites (Bootstrap\RequestBootstrap.php's
+ * own `new NoPhotoYetRenderer(...)->render()` inline call, gated on
+ * CurrentConfig::noPhotoYet() === null, plus this class's own test).
  */
 final readonly class NoPhotoYetRenderer
 {

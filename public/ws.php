@@ -11,11 +11,10 @@ use Piwigo\Bootstrap\RequestBootstrap;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-// P22: page logic moved to Piwigo\Controller\WsController
-// (config/routes.php's `/ws.php` route); this file is now pure
-// bootstrap + dispatch, matching every other P22 controller's root file.
-// The ~100-method registration catalog is Piwigo\Ws\WsDefaultMethods
-// (P23 batch 8e-8).
+// Page logic lives in Piwigo\Controller\WsController
+// (config/routes.php's `/ws.php` route); this file is pure bootstrap +
+// dispatch, matching every other controller's root file. The
+// ~100-method registration catalog is Piwigo\Ws\WsDefaultMethods.
 require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Bootstrap\RequestPipeline;

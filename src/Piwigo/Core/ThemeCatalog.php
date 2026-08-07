@@ -11,17 +11,14 @@ use Piwigo\Event\Lifecycle\GetPwgThemes;
 use Piwigo\PluginConfig\EventDispatcher;
 
 /**
- * P23 batch 8d: installed-theme listing relocated from
- * include/functions.inc.php -- no natural existing class home (theme
- * management itself lives in Piwigo\Admin, L4Integration, but
- * Piwigo\Users\UserService, L2aCoreDomain, is a real caller of
- * getPwgThemes()/checkThemeInstalled(), so this needs an L1Infrastructure
- * home, same reasoning as PaginationService's own move).
+ * Lives in `Piwigo\Core` (L1Infrastructure) rather than `Piwigo\Admin`
+ * (L4Integration, where theme management otherwise lives), because
+ * `Piwigo\Users\UserService` (L2aCoreDomain) is a real caller of
+ * `getPwgThemes()`/`checkThemeInstalled()` and cannot depend upward on L4.
  *
- * Legacy Coupling Retirement: DI+DBAL migration Phase 1e -- `Piwigo\Db`
- * is the same L1Infrastructure layer as this class, so `DbConnection`
- * (constructed inline; static method, no instance state) is a legal,
- * same-layer dependency.
+ * `Piwigo\Db` is the same L1Infrastructure layer as this class, so
+ * `DbConnection` (constructed inline; static method, no instance state) is
+ * a legal, same-layer dependency.
  */
 final class ThemeCatalog
 {

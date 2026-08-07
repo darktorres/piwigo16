@@ -7,35 +7,27 @@ namespace Piwigo\Cache;
 use Psr\Cache\CacheItemPoolInterface;
 
 /**
- * Named cache pools (P11 gap, closed P23 batch 2). `CacheFactory::create()`
- * had exactly one real caller before this (config/container.php's single
- * generic `CacheItemPoolInterface` entry, itself only consumed by
- * `CacheClearCommand`) -- every concern that needs caching shared one flat
- * namespace with no way to size/expire/clear them independently. Each
- * method here is a distinct namespace on the same configured backend
- * (still one physical adapter -- APCu/Redis/filesystem -- chosen the usual
- * way via `CacheFactory`), with a TTL matching what P23's cache-table
- * rationalization (batch 3) needs for each of the three MyISAM-era tables
- * it replaces.
+ * Named cache pools. Each method here is a distinct namespace on the same
+ * configured backend (still one physical adapter -- APCu/Redis/filesystem
+ * -- chosen the usual way via `CacheFactory`), each with a TTL suited to
+ * what it caches.
  *
  * A plain static factory, matching `DbConnection`/`ConfigLoader`'s own
  * shape -- not a constructor-injected service, since building a pool has no
- * dependencies of its own to inject. Domain consumers (wired in batch 3, not
- * here -- this batch only builds the infrastructure) receive a concrete
+ * dependencies of its own to inject. Domain consumers receive a concrete
  * `CacheItemPoolInterface` via a `config/container.php` factory entry that
  * calls the relevant method here, the same way `Connection::class`'s entry
  * calls `DbConnection::build()`.
  *
- * `rate_limiter` is deliberately not built -- genuinely P27 scope, no
- * consumer exists anywhere in this codebase yet.
+ * `rate_limiter` is deliberately not built -- no consumer exists anywhere
+ * in this codebase yet.
  */
 final class CachePools
 {
     /**
-     * CurrentConfig's own properties are already an in-process static
-     * (ConfigLoader/ConfigService, P13/P23 batch 1) -- this pool is for
-     * cross-*process* reuse (APCu/Redis/filesystem persist between
-     * requests; a plain PHP static doesn't). Real consumer: ConfigService::
+     * CurrentConfig's own properties are already an in-process static --
+     * this pool is for cross-*process* reuse (APCu/Redis/filesystem persist
+     * between requests; a plain PHP static doesn't). Real consumer: ConfigService::
      * allRowsFromCacheOrDb(), caching the ~280-row param => value map that
      * loadConfFromDb() would otherwise re-hydrate via Doctrine ORM on every
      * request. No TTL -- ConfigService's own confUpdateParam()/
@@ -48,11 +40,10 @@ final class CachePools
     }
 
     /**
-     * 30s TTL -- matches docs/PLAN.md P23's stated design for the
-     * `user_cache.forbidden_categories` replacement (batch 3): short enough
-     * that a permission change (revoking a category, editing a group)
-     * becomes visible well within one user session, long enough to avoid
-     * recomputing PermissionService::getForbiddenCategories()'s multi-query
+     * 30s TTL -- short enough that a permission change (revoking a
+     * category, editing a group) becomes visible well within one user
+     * session, long enough to avoid recomputing
+     * PermissionService::getForbiddenCategories()'s multi-query
      * calculation on every single request for the same user.
      */
     public static function permissions(): CacheItemPoolInterface
@@ -61,13 +52,11 @@ final class CachePools
     }
 
     /**
-     * 30s TTL -- same reasoning as permissions() above. Gap-closure Stage
-     * 4b/4c/4d/4e (docs/plan/gap-closure-p0-p23.md): replaces
-     * `user_cache.forbidden_categories`/`image_access_type`/
-     * `image_access_list`/`nb_total_images`/`last_photo_date` -- the
-     * *effective* (feature-1053-widened) permission snapshot, distinct
-     * from permissions() above, which only ever holds the narrower
-     * structural value.
+     * 30s TTL -- same reasoning as permissions() above. Holds the
+     * *effective* permission snapshot (forbidden categories, image access
+     * type/list, total image count, and last photo date), distinct from
+     * permissions() above, which only ever holds the narrower structural
+     * value.
      */
     public static function effectivePermissions(): CacheItemPoolInterface
     {
@@ -75,10 +64,9 @@ final class CachePools
     }
 
     /**
-     * 300s TTL -- matches docs/PLAN.md P23's stated design for the
-     * `user_cache_categories` replacement (batch 3): per-user per-album
-     * counts, cheaper to hold slightly stale than to recompute the
-     * `COUNT(*) ... GROUP BY category_id` rollup on every category listing.
+     * 300s TTL -- per-user per-album counts, cheaper to hold slightly
+     * stale than to recompute the `COUNT(*) ... GROUP BY category_id`
+     * rollup on every category listing.
      */
     public static function categoryTree(): CacheItemPoolInterface
     {
@@ -87,9 +75,8 @@ final class CachePools
 
     /**
      * 300s TTL -- same reasoning as categoryTree() above. Real consumer:
-     * Piwigo\Tag\TagService::getAvailableTags() (P23 Stage 1d), which wires
-     * this pool in place of the older PersistentFileCache/
-     * CurrentPersistentCache mechanism it previously relied on.
+     * Piwigo\Tag\TagService::getAvailableTags(), which uses this pool
+     * instead of PersistentFileCache/CurrentPersistentCache.
      */
     public static function tagCloud(): CacheItemPoolInterface
     {
@@ -139,11 +126,9 @@ final class CachePools
     }
 
     /**
-     * 30s TTL -- same reasoning as permissions() above. Gap-closure Stage
-     * 4a (docs/plan/gap-closure-p0-p23.md): replaces the
-     * `user_cache.cache_update_time`-keyed immediate-invalidation pattern
-     * previously used by Section\SectionPopulator's per-user visible
-     * image-id list for a section.
+     * 30s TTL -- same reasoning as permissions() above. Holds
+     * Section\SectionPopulator's per-user visible image-id list for a
+     * section.
      */
     public static function sectionImageIds(): CacheItemPoolInterface
     {
@@ -151,14 +136,12 @@ final class CachePools
     }
 
     /**
-     * 30s TTL -- same reasoning as permissions() above. Gap-closure Stage
-     * 4a: replaces the `cache_update_time`-keyed pattern previously used by
+     * 30s TTL -- same reasoning as permissions() above. Used by
      * Search\SearchFilterRenderer's several filter-row/count caches and
-     * Search\SearchService::getQuickSearchResults() (whose own explicit
-     * 300s TTL is deliberately dropped to this pool's uniform 30s -- the
-     * 300s was never a considered "search content changes slowly" choice
-     * on its own, it was bundled with the permission-invalidation concern
-     * cacheUpdateTime provided).
+     * Search\SearchService::getQuickSearchResults(): a uniform 30s TTL,
+     * not a longer "search content changes slowly" value, since
+     * invalidation here is really about permission changes, not content
+     * staleness.
      */
     public static function searchResults(): CacheItemPoolInterface
     {
@@ -166,8 +149,7 @@ final class CachePools
     }
 
     /**
-     * 30s TTL -- same reasoning as permissions() above. Gap-closure Stage
-     * 4a: replaces the `cache_update_time`-keyed pattern previously used by
+     * 30s TTL -- same reasoning as permissions() above. Used by
      * Calendar\CalendarRenderer's calendar navigation-bar cache.
      */
     public static function calendarNav(): CacheItemPoolInterface
@@ -176,8 +158,7 @@ final class CachePools
     }
 
     /**
-     * 30s TTL -- same reasoning as permissions() above. Gap-closure Stage
-     * 4a: replaces the `cache_update_time`-keyed pattern previously used by
+     * 30s TTL -- same reasoning as permissions() above. Used by
      * Notification\NotificationService::getRecentPostDates().
      */
     public static function notifications(): CacheItemPoolInterface

@@ -9,15 +9,8 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 
 /**
- * Piwigo\Bootstrap\RequestBootstrap::pemUrl() -- pure, side-effect-free,
- * had zero dedicated coverage. Only the alternativePemUrl() override
- * branch was red; the fallback (AppInfo::URL . '/ext') is already
- * exercised indirectly wherever this is called with no override
- * configured.
- *
  * pemUrl() reads through self::currentConfig(), which resolves
- * CurrentConfig straight from Kernel::container() (singleton/
- * service-locator elimination campaign, Phase 9) with no not-booted
+ * CurrentConfig directly from Kernel::container() with no not-booted
  * fallback of its own -- unlike the CurrentConfigTestFactory::get() shim, so
  * each test below boots the Kernel first and writes onto that same
  * container-shared instance.

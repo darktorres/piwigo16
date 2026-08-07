@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-// parse_section_url() (the former free-function bridge) was retired
-// (Legacy Coupling Retirement Phase 4c) -- SectionInitializer now calls
-// Piwigo\Url\UrlService::parseSectionUrl() directly via a constructor-
-// injected UrlServiceInterface, same as every other real caller.
+// SectionInitializer calls Piwigo\Url\UrlService::parseSectionUrl()
+// directly via a constructor-injected UrlServiceInterface, same as every
+// other real caller.
 
 namespace Piwigo\Tests\Integration {
 
@@ -39,20 +38,18 @@ use Piwigo\Template\CurrentTemplate;
 
 /**
  * Forces the $_SERVER['PATH_INFO'] branch (question_mark_in_urls=false)
- * throughout -- the alternative $_GET-key branch's escaping now goes
- * through SectionRepository (a real DBAL Connection, built here same as
- * every other repository-backed Integration test), so it no longer needs
- * the legacy `global $mysqli` avoidance this test used to require.
+ * throughout -- the alternative $_GET-key branch's escaping goes through
+ * SectionRepository (a real DBAL Connection, built here same as every
+ * other repository-backed Integration test).
  *
  * The "invalid/missing picture identifier" branches call
  * HtmlRenderingInterface::badRequest(), which itself just delegates to
- * RedirectServiceInterface::redirectHtml() -- Workstream C3 converted that
- * from a real header()+echo+exit() sequence to throwing
- * Piwigo\Http\ResponseReadyException (see RedirectService's own
- * docblock), so despite this file's own former docblock claim, they are
- * NOT exit-triggering any more and ARE safely testable, given the same
- * real Template/Lang/Kernel preconditions RedirectServiceTest.php's
- * "already-initialised" scenario needs.
+ * RedirectServiceInterface::redirectHtml() -- this throws
+ * Piwigo\Http\ResponseReadyException rather than doing a real
+ * header()+echo+exit() sequence (see RedirectService's own docblock), so
+ * they are safely testable, given the same real Template/Lang/Kernel
+ * preconditions RedirectServiceTest.php's "already-initialised" scenario
+ * needs.
  */
 final class SectionInitializerTest extends IntegrationTestCase
 {
@@ -111,8 +108,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         // IntegrationTestCase::setUp() already booted Kernel -- resolve the
         // same container-shared instance a real request would get, matching
-        // RedirectService's own real production callers (singleton/
-        // service-locator elimination campaign, Phase 6).
+        // RedirectService's own real production callers.
         $userService = Kernel::container()->get(UserService::class);
         if (! $userService instanceof UserService) {
             throw new LogicException('Container returned an unexpected type for ' . UserService::class);

@@ -17,26 +17,17 @@ use Override;
 
 /**
  * Custom DQL function: "YEAR" "(" StringPrimary ")" -- matching MySQL's
- * own `YEAR(date)` shape (formerly {@see \Piwigo\Db\SqlDialect}'s
- * `getYear()`, removed once Calendar -- its only real caller -- became
- * real DQL).
+ * own `YEAR(date)` shape. `Doctrine\ORM\Query\Parser`'s own
+ * `$datetimeFunctions` table (built-in datetime functions) only has
+ * `CURRENT_DATE`/`CURRENT_TIME`/`CURRENT_TIMESTAMP`/`DATE_ADD`/`DATE_SUB`
+ * -- no `YEAR`/`MONTH`/`DAY` at all in this Doctrine ORM version -- so
+ * this is registered as a custom function, the same way as every other
+ * date-part function in this directory.
  *
- * Further SQL-modernization audit, Item 15G: `YEAR()`/`MONTH()` were
- * assumed to be native built-in DQL functions while designing this plan
- * -- a real, live-verified correction found once conversion actually
- * ran: `Doctrine\ORM\Query\Parser`'s own `$datetimeFunctions` table
- * (built-in datetime functions) only has `CURRENT_DATE`/`CURRENT_TIME`/
- * `CURRENT_TIMESTAMP`/`DATE_ADD`/`DATE_SUB` -- no `YEAR`/`MONTH`/`DAY` at
- * all in this Doctrine ORM version, confirmed by reading the vendor
- * source directly, not assumed from general DQL folklore. Registered
- * here the same way as every other custom date-part function in this
- * directory.
- *
- * MySQL/MariaDB branch verified against real data via this project's own
- * Integration tests. PostgreSQL/SQLite branches are unverified against a
- * real installation (see this plan's own Context section) -- built from
- * each platform's own documented syntax, not empirically confirmed. Any
- * other platform throws `NotSupported` rather than guessing.
+ * MySQL/MariaDB is verified against real data via this project's own
+ * Integration tests; PostgreSQL/SQLite are built from each platform's
+ * documented syntax, not empirically confirmed. Any other platform throws
+ * `NotSupported` rather than guessing.
  */
 final class YearFunction extends FunctionNode
 {

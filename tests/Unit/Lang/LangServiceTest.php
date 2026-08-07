@@ -10,8 +10,7 @@ use Piwigo\Lang\LangService;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 
 /**
- * Lang is a real, container-shared instance now (singleton/service-
- * locator elimination campaign, Phase 8) -- this file never boots
+ * Lang is a real, container-shared instance -- this file never boots
  * Kernel, so a throwaway instance is constructed directly instead of
  * resolving the real one. A helper (rather than a `$this->lang`
  * built once in beforeEach) is used so the couple of tests below that

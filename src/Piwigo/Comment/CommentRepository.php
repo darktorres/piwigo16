@@ -242,10 +242,6 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * with an explicit `utf8mb4_bin` collation, overriding the table's own
      * `utf8mb4_unicode_ci` default, so this comparison is case-sensitive), not
      * on anything this query controls.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real DQL
-     * -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}), so the
-     * `$usernameColumn` multi-auth column-name param is gone.
      */
     public function usernameExists(string $username): bool
     {
@@ -268,13 +264,9 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * fragments (SqlCondition::isEmpty()) are skipped rather than adding a
      * vacuous `AND ()`.
      *
-     * Item 16I: widened to accept a DQL `Doctrine\ORM\QueryBuilder` too,
-     * for {@see countAvailableWithConditions()}'s own conversion --
-     * `SqlCondition`'s `sql`/`parameters`/`types` shape applies
-     * identically via `andWhere()`/`setParameter()` on both DBAL's and
-     * DQL's query builders (already established elsewhere this
-     * campaign, e.g. {@see \Piwigo\Category\CategoryRepository}'s own
-     * class docblock).
+     * Accepts a DQL `Doctrine\ORM\QueryBuilder` as well as DBAL's
+     * `QueryBuilder` -- `SqlCondition`'s `sql`/`parameters`/`types` shape
+     * applies identically via `andWhere()`/`setParameter()` on both.
      *
      * @param array<array-key, SqlCondition> $conditions
      */
@@ -394,9 +386,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * DQL counterpart of {@see buildApiConditions()} -- SQL-modernization
-     * audit, Item 14 Sub-phase B3: shared by the 3 DQL-based
-     * CommentApiCriteria-consuming methods below
+     * DQL counterpart of {@see buildApiConditions()} -- shared by the 3
+     * DQL-based CommentApiCriteria-consuming methods below
      * ({@see findAuthorCounts()}/{@see findSummaryCounts()}/
      * {@see findDateRange()}). {@see findListForAdminWs()} deliberately
      * keeps using the original SqlCondition/DBAL version above -- it has
@@ -404,23 +395,20 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * column-name join, same as {@see findForImage()}'s own), so tying it
      * to a DQL-only builder would just force it back onto a second,
      * redundant raw-SQL condition layer for no benefit. Splitting this
-     * class's condition-building machinery in two (once judged not worth
-     * doing, per the older docblock this replaces) is the honest design
+     * class's condition-building machinery in two is the honest design
      * here: 3 methods genuinely have no other blocker left, one never
      * will regardless of what this helper does.
      *
-     * Phase 5 Item 15: built via Doctrine's `Criteria`/`Criteria::expr()`
-     * (the ORM-level counterpart to Item 2's DBAL-level
-     * `ExpressionBuilder`) and applied through
-     * `QueryBuilder::addCriteria()` -- genuinely eligible here (unlike
-     * every other Criteria-value-object-consuming method in this
+     * Built via Doctrine's `Criteria`/`Criteria::expr()` and applied
+     * through `QueryBuilder::addCriteria()` -- genuinely eligible here
+     * (unlike every other Criteria-value-object-consuming method in this
      * codebase, all blocked by a JOIN/dynamic-column/`SELECT DISTINCT`
      * concern `Criteria` can't express): single mapped entity
      * (`CommentEntity`, alias `c`), no JOIN, and `addCriteria()` only
      * touches WHERE/ORDER/LIMIT, so the callers' own aggregate
      * `->select()`/`->groupBy()` calls are untouched. `contains()`
-     * translates to the exact same `LIKE '%value%'` this replaced
-     * (confirmed via `QueryExpressionVisitor::walkComparison()`'s own
+     * translates to `LIKE '%value%'` (confirmed via
+     * `QueryExpressionVisitor::walkComparison()`'s own
      * `Comparison::CONTAINS` case).
      */
     private static function applyApiConditions(\Doctrine\ORM\QueryBuilder $qb, CommentApiCriteria $criteria, bool $includeAuthorId): void
@@ -478,23 +466,13 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * fragments -- CommentService::getNbAvailableComments()'s own
      * PermissionCriteria::forbiddenCategoriesCondition()/imageAccessCondition()
      * output plus a plain literal condition, combined here via
-     * applyConditions() and bound. SQL-modernization audit: $whereClauses
-     * elements used to be raw trusted-SQL strings spliced verbatim; now
-     * real SqlCondition fragments, each with its own bound parameters.
+     * applyConditions() and bound. $whereClauses elements are real
+     * SqlCondition fragments, each with its own bound parameters.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), and the "other, still
-     * real blocker" this docblock used to cite -- a
-     * `PermissionService::getSqlConditionFandFAsCondition()` result fed
-     * in by the real caller -- is now moot: that method was deleted once
-     * every real call site migrated onto {@see \Piwigo\Permission\PermissionCriteria}
-     * (confirmed via a fresh grep, not assumed), whose own `*Condition()`
-     * methods are already DQL-compatible and already used this exact way
-     * throughout the codebase (e.g. {@see \Piwigo\Tag\TagRepository}).
-     * Item 16I: converted to real DQL accordingly -- the caller
-     * ({@see \Piwigo\Comment\CommentService::getNbAvailableComments()})
-     * now passes DQL property paths (`ic.categoryId`/`ic.imageId`)
-     * instead of raw column names.
+     * `image_category` is mapped ({@see \Piwigo\Image\ImageCategoryEntity}).
+     * The caller ({@see \Piwigo\Comment\CommentService::getNbAvailableComments()})
+     * passes DQL property paths (`ic.categoryId`/`ic.imageId`) instead of
+     * raw column names.
      *
      * @param  list<SqlCondition>  $whereClauses
      */
@@ -515,11 +493,10 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Further SQL-modernization audit, Item 14: converted to real DQL --
-     * single-table, static WHERE, no join/aggregate DQL can't express.
-     *
      * Number of comments on a single image (the picture page's comment
-     * count), optionally restricted to validated ones (non-admin viewers).
+     * count), optionally restricted to validated ones (non-admin
+     * viewers). Single-table, static WHERE -- no join or aggregate here
+     * that DQL can't express.
      */
     public function countForImage(int $imageId, bool $onlyValidated): int
     {
@@ -542,14 +519,11 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Further SQL-modernization audit, Item 14: converted to real DQL --
-     * single-table, static WHERE/ORDER BY/LIMIT, no join/aggregate DQL
-     * can't express.
-     *
      * Paginated `id, date, author, content` summaries for a single image,
      * ordered by date ascending -- Ws\PwgImages::getInfo()'s own "related
      * comments" block, a different (narrower, no user join) shape from
-     * findForImage() above.
+     * findForImage() above. Single-table, static WHERE/ORDER BY/LIMIT --
+     * no join or aggregate here that DQL can't express.
      *
      * @return list<CommentSummary>
      */
@@ -600,14 +574,12 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Further SQL-modernization audit, Item 14: converted to real DQL --
-     * single-table, static WHERE/GROUP BY, no join DQL can't express;
-     * imageId/COUNT(c.id) are plain integers, no custom Doctrine Type
-     * involved (unlike c.id elsewhere in this class).
-     *
      * Validated comment count per image, for a batch of images at once
      * (`CategoryDefaultRenderer`'s main-page thumbnail grid, one query
-     * instead of one `countForImage()` call per thumbnail).
+     * instead of one `countForImage()` call per thumbnail). Single-table,
+     * static WHERE/GROUP BY -- no join here that DQL can't express;
+     * imageId/COUNT(c.id) are plain integers, no custom Doctrine Type
+     * involved (unlike c.id elsewhere in this class).
      *
      * @param  list<int|string>  $imageIds
      * @return array<string, int> keyed by image id
@@ -651,10 +623,9 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * Paginated comment listing for a single image, joined with the
      * commenting user's email column (looked up by DB primary key).
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}); the
-     * multi-auth column indirection this used to take as `$userIdColumn`/
-     * `$userEmailColumn` parameters is gone.
+     * `users` is mapped ({@see \Piwigo\Users\UserEntity}), so no
+     * multi-auth column indirection (`$userIdColumn`/`$userEmailColumn`
+     * parameters) is needed here.
      *
      * @param string $order 'ASC'|'asc'|'DESC'|'desc' only -- the caller must
      *   validate this before calling (matches the original's own
@@ -733,40 +704,34 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * category per comment, matching the original's own grouping/row
      * count exactly.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: dropped the
-     * `$userIdColumn`/`$userEmailColumn` multi-auth column-name params --
-     * `users` is now mapped ({@see \Piwigo\Users\UserEntity}), always
-     * `id`/`mail_address`. Item 14 DQL audit: still stays on DBAL -- joins
-     * the never-entity-mapped `image_category`, `ANY_VALUE()` (has no DQL
-     * equivalent), and dynamic caller-supplied SqlCondition fragments --
-     * several independent, genuine DQL blockers remain on this query.
+     * `users` is mapped ({@see \Piwigo\Users\UserEntity}), always
+     * `id`/`mail_address`. This query stays on DBAL rather than DQL -- it
+     * joins the never-entity-mapped `image_category`, uses `ANY_VALUE()`
+     * (has no DQL equivalent), and accepts dynamic caller-supplied
+     * SqlCondition fragments -- several independent, genuine DQL blockers
+     * remain.
      *
-     * pgsql support pass: `u.mail_address` needs `ANY_VALUE()` too, not
-     * just `ic.category_id` -- real bug found live. MySQL's
-     * ONLY_FULL_GROUP_BY functional-dependency check reasons transitively
-     * through the `u.id = com.author_id` join (grouping by `com.id`
-     * determines `com.author_id`, which -- joined against `users`' own
-     * primary key -- determines `u.mail_address`), so MySQL tolerated the
-     * bare column unwrapped. PostgreSQL's functional-dependency check
-     * (confirmed via its own docs) only recognizes a table's OWN primary
+     * `u.mail_address` needs `ANY_VALUE()` too, not just
+     * `ic.category_id`. MySQL's ONLY_FULL_GROUP_BY functional-dependency
+     * check reasons transitively through the `u.id = com.author_id` join
+     * (grouping by `com.id` determines `com.author_id`, which -- joined
+     * against `users`' own primary key -- determines `u.mail_address`),
+     * so MySQL tolerates the bare column unwrapped. PostgreSQL's
+     * functional-dependency check only recognizes a table's own primary
      * key appearing in GROUP BY, never transitively through a join --
      * rejects it outright ("column u.mail_address must appear in the
      * GROUP BY clause or be used in an aggregate function"). `ANY_VALUE()`
-     * is genuinely portable here (confirmed: PostgreSQL 16+ ships it as a
-     * real aggregate, and this environment runs 18.4), so this isn't a
-     * MySQL-only function despite the docblock line above -- just needs
-     * applying consistently to every non-grouped, non-`com.*` column.
+     * is a real aggregate on both platforms (PostgreSQL 16+ and MySQL),
+     * applied consistently to every non-grouped, non-`com.*` column.
      *
-     * Phase 5 Item 19: `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` replaced with
-     * `COUNT(*) OVER() AS total_count`, computed in the same query as the
-     * row data instead of a second round-trip coupled to connection
-     * state -- `GROUP BY comment_id` here (not `DISTINCT`), so the window
-     * function (evaluated after GROUP BY, before LIMIT/OFFSET) reports
-     * the exact same total the old mechanism did (live-verified: MySQL
-     * `COUNT(*) OVER()` on a GROUP BY query reports the post-grouping row
-     * count, unlike its confirmed-wrong behavior on `SELECT DISTINCT`
-     * queries -- see {@see \Piwigo\Users\UserRepository::findListForWs()}'s
-     * own docblock).
+     * `COUNT(*) OVER() AS total_count` is computed in the same query as
+     * the row data instead of a second round-trip. `GROUP BY comment_id`
+     * here (not `DISTINCT`), so the window function (evaluated after
+     * GROUP BY, before LIMIT/OFFSET) reports the correct post-grouping
+     * row count -- unlike its confirmed-wrong behavior on `SELECT
+     * DISTINCT` queries, see
+     * {@see \Piwigo\Users\UserRepository::findListForWs()}'s own
+     * docblock.
      *
      * @param list<SqlCondition> $whereClauses
      * @return PaginatedResult<array<string, mixed>>
@@ -829,12 +794,9 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * needs the status-unfiltered condition set, unlike the 3 sibling
      * methods below.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B3: converted to real
-     * DQL -- MySQL's `sum(validated = 1)`/`sum(validated = 0)` boolean-
-     * expression-as-integer idiom is rewritten as the standard DQL
-     * `SUM(CASE WHEN ... THEN 1 ELSE 0 END)`, and
-     * {@see applyApiConditions()} resolves the condition-building blocker
-     * this method's own docblock used to cite.
+     * Uses the standard DQL `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` idiom
+     * in place of MySQL's `sum(validated = 1)`/`sum(validated = 0)`
+     * boolean-expression-as-integer shorthand.
      *
      * @return array{all_comments: mixed, validated: mixed, pending: mixed}|null
      */
@@ -868,13 +830,10 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * and user) matching $criteria -- Ws\PwgComments::getList()'s own row
      * listing.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: dropped the
-     * `$userIdColumn`/`$userUsernameColumn` multi-auth column-name params
-     * -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}), always
-     * `id`/`username`. Item 14 DQL audit: still stays on DBAL -- keeps
-     * using the SqlCondition/DBAL-based buildApiConditionsWithStatus()
-     * rather than {@see applyApiConditionsWithStatus()}'s DQL version --
-     * see that method's own docblock for why.
+     * Stays on DBAL -- keeps using the SqlCondition/DBAL-based
+     * buildApiConditionsWithStatus() rather than
+     * {@see applyApiConditionsWithStatus()}'s DQL version; see that
+     * method's own docblock for why.
      *
      * @return list<array<string, mixed>>
      */
@@ -919,12 +878,9 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
     /**
      * Earliest/latest `date` matching $criteria -- Ws\PwgComments::
-     * getList()'s own "filters" date range.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase B3: converted to real
-     * DQL -- MIN()/MAX() were themselves already standard DQL functions;
-     * {@see applyApiConditionsWithStatus()} resolves the condition-building
-     * blocker this method's own docblock used to cite.
+     * getList()'s own "filters" date range. MIN()/MAX() are standard DQL
+     * functions, so this is straightforward once
+     * {@see applyApiConditionsWithStatus()} builds the condition set.
      *
      * @return array{started_at: mixed, ended_at: mixed}|null
      */
@@ -957,20 +913,13 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * unset($where_clauses['author_id']) intent as real code instead of
      * an array-key convention.
      *
-     * author isn't functionally dependent on the GROUP BY column
-     * (author_id) -- this connection doesn't strip ONLY_FULL_GROUP_BY the
-     * way the legacy mysqli connection did, so picking exactly one row's
-     * worth of `author` per author_id needs an explicit aggregate.
-     * `MIN(author)` (standard SQL-92, portable across every DBAL platform)
-     * replaces the originally-ported `ANY_VALUE()` (MySQL-only) --
-     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2. Changes
-     * "arbitrary pick" to "deterministic pick" (a behavior improvement, not
-     * just a portability shim); confirmed no test asserts on which
-     * specific `author` value comes back, only `author_id`/`nb_authors`.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase B3: converted to real
-     * DQL -- {@see applyApiConditionsWithStatus()} resolves the condition-
-     * building blocker this method's own docblock used to cite.
+     * `author` isn't functionally dependent on the GROUP BY column
+     * (`author_id`) -- this connection doesn't strip ONLY_FULL_GROUP_BY,
+     * so picking exactly one row's worth of `author` per `author_id`
+     * needs an explicit aggregate. `MIN(author)` (standard SQL-92,
+     * portable across every DBAL platform) gives a deterministic pick;
+     * confirmed no test asserts on which specific `author` value comes
+     * back, only `author_id`/`nb_authors`.
      *
      * @return list<array<string, mixed>>
      */
@@ -1002,11 +951,9 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Further SQL-modernization audit, Item 14: converted to real DQL --
-     * single-table, no WHERE/join DQL can't express.
-     *
      * Total row count of `comments` -- Ws\PwgCore::getInfos()'s own
-     * "nb_comments" summary figure.
+     * "nb_comments" summary figure. Single-table, no WHERE or join here
+     * that DQL can't express.
      */
     public function countAll(): int
     {
@@ -1021,11 +968,9 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Further SQL-modernization audit, Item 14: converted to real DQL --
-     * single-table, static WHERE, no join DQL can't express.
-     *
      * Total count of unvalidated (pending) comments -- Ws\PwgCore::
      * getInfos()'s own "nb_unvalidated_comments" summary figure.
+     * Single-table, static WHERE -- no join here that DQL can't express.
      */
     public function countUnvalidated(): int
     {

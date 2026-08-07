@@ -17,14 +17,11 @@ use Stringable;
 /**
  * Represents a single word or quoted phrase to be searched.
  *
- * P23 batch 8f-4: the QST_ quick-search token modifier bitmask flags moved
- * here as class constants (formerly top-level define()s in the deleted
- * include/functions.inc.php, relocated there from
- * include/functions_search.inc.php in batch 8c). This class hosts them
- * because they describe exactly its own $modifier property; every other
- * reader (QMultiToken/QExpression/SearchService/QDateRangeScope/
- * QNumericRangeScope, all in this same namespace) references them as
- * QSingleToken::QST_*.
+ * Hosts the QST_ quick-search token modifier bitmask flags as class
+ * constants because they describe exactly its own $modifier property;
+ * every other reader (QMultiToken/QExpression/SearchService/
+ * QDateRangeScope/QNumericRangeScope, all in this same namespace)
+ * references them as QSingleToken::QST_*.
  */
 final class QSingleToken implements Stringable
 {

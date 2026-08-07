@@ -33,27 +33,18 @@ use UnexpectedValueException;
  * rather than being resolved via getRepository(), same shape as
  * Auth\AuthRepository.
  *
- * `deleteUserAccess()`/`massInsertUserAccess()` were originally classified
- * "reads only" when Part B's DBAL->ORM migration first surveyed this
- * class -- wrong; both are real writes into user_access, found via a
- * later audit of raw/BatchWriter call sites outside the repository layer
- * that turned up this same gap inside the repository layer too. (Category\
- * UserAccessEntity's own docblock still describes this class as read-only
- * and needs the same correction.)
- *
- * Further SQL-modernization audit, Item 16A: every method except
- * `expressionBuilder()` (still real -- the quicksearch token evaluator's
- * own permanent DBAL boundary, see `SearchService::
- * getQuickSearchResultsNoCache()`) and `massInsertUserAccess()` (`INSERT
- * IGNORE` via `BatchWriter`, Item 16C's own bucket) converted to real
- * DQL -- every real query here was already bounded, never audited by
- * Item 14/15. `findGrantedGroupIdsByCategory()`/`findGroupAccessRows()`/
- * `findIndirectUserAccessRows()` unwrap `GroupAccessEntity`/
- * `UserGroupEntity`'s own `CategoryId`/`GroupId`/`UserId` VO-typed columns
- * -- `getArrayResult()` (unlike `getSingleColumnResult()`'s own
- * `HYDRATE_SCALAR_COLUMN`, which skips custom-Type conversion entirely)
- * applies each column's real custom Doctrine Type, so these hydrate as
- * real VO instances, not raw ints.
+ * Every method here uses real DQL except `expressionBuilder()` (a
+ * permanent raw-DBAL boundary for the quicksearch token evaluator, see
+ * `SearchService::getQuickSearchResultsNoCache()`) and
+ * `massInsertUserAccess()` (`INSERT IGNORE` via `BatchWriter`, which
+ * `persist()`+`flush()` has no equivalent for).
+ * `findGrantedGroupIdsByCategory()`/`findGroupAccessRows()`/
+ * `findIndirectUserAccessRows()` use `getArrayResult()` rather than
+ * `getSingleColumnResult()` specifically because `getArrayResult()`
+ * applies each column's real custom Doctrine Type (unlike
+ * `getSingleColumnResult()`'s own `HYDRATE_SCALAR_COLUMN`, which skips
+ * custom-Type conversion entirely), so those rows hydrate as real
+ * `CategoryId`/`GroupId`/`UserId` VO instances, not raw ints.
  */
 final readonly class PermissionRepository
 {
@@ -62,14 +53,9 @@ final readonly class PermissionRepository
     ) {}
 
     /**
-     * Further SQL-modernization audit, Item 2: exposes a real
-     * `Doctrine\DBAL\Query\Expression\ExpressionBuilder` for
-     * `PermissionService::getSqlConditionFandFAsCondition()` (a pure
-     * string/params builder with no DB access of its own, per its own
-     * docblock) to compose SQL-condition fragments via typed method
-     * calls instead of hand-typed string concatenation -- kept here
-     * rather than injecting Connection directly into the service, since
-     * this repository already owns the EntityManager/DB-access concern.
+     * Exposes this repository's own `Doctrine\DBAL\Query\Expression\
+     * ExpressionBuilder` so callers can compose SQL-condition fragments
+     * via typed method calls instead of hand-typed string concatenation.
      */
     public function expressionBuilder(): ExpressionBuilder
     {
@@ -126,10 +112,7 @@ final readonly class PermissionRepository
     }
 
     /**
-     * Deletes direct user-category access rows. Ported from
-     * admin/user_perm.php's own inline `DELETE FROM user_access WHERE
-     * user_id = ... AND cat_id IN (...)` (P21 Users batch) -- bound
-     * parameters replacing the original's raw implode()'d id list.
+     * Deletes direct user-category access rows.
      *
      * @param list<int> $catIds
      */
@@ -179,13 +162,12 @@ final readonly class PermissionRepository
     /**
      * $ignore matters for the same reason as Category\CategoryRepository::
      * massInsertGroupAccess()'s own docblock -- stays raw DBAL
-     * (BatchWriter), persist()+flush() has no INSERT IGNORE equivalent.
-     * Defaults to true, matching this method's only caller before
-     * Controller\Admin\SiteUpdateSubController's own "brand-new
-     * categories can't already have an access row" insert reused it with
-     * false (its own $insert_granted_users is already deduplicated via
-     * array_unique() beforehand, so INSERT IGNORE's collision-swallowing
-     * would only ever mask a genuine bug, not a real duplicate).
+     * (BatchWriter), since persist()+flush() has no INSERT IGNORE
+     * equivalent. Defaults to true. Controller\Admin\SiteUpdateSubController
+     * passes false because its own `$insert_granted_users` is already
+     * deduplicated via array_unique() beforehand, so INSERT IGNORE's
+     * collision-swallowing there would only ever mask a genuine bug, not a
+     * real duplicate.
      *
      * @param  list<array{user_id: int, cat_id: int}>  $inserts
      */
@@ -273,13 +255,9 @@ final readonly class PermissionRepository
      * $level -- EffectiveForbiddenCategoriesCache's own "which specific
      * images does the level restriction additionally forbid" step.
      *
-     * SQL-modernization audit: $structuralForbidden (a comma-separated id
-     * list, PermissionService::getForbiddenCategories()'s own return
-     * shape) and $level were previously spliced raw; both now bound.
-     * PermissionService::getForbiddenCategories() itself is unchanged --
-     * its CSV-string return shape is a separate, wider cross-cutting
-     * concern (tracked in the plan) than this one extraction converting
-     * its own consumption of that string to bound parameters.
+     * $structuralForbidden (a comma-separated id list,
+     * PermissionService::getForbiddenCategories()'s own return shape) and
+     * $level are both bound query parameters, not string-interpolated.
      *
      * @return list<int>
      */
@@ -304,13 +282,11 @@ final readonly class PermissionRepository
      * the already-computed $imageAccessType/$imageAccessList restriction --
      * EffectiveForbiddenCategoriesCache's own `nbTotalImages`.
      *
-     * SQL-modernization audit: $structuralForbidden/$imageAccessList were
-     * previously spliced raw; both now bound. $imageAccessType (the SQL
-     * inclusion operator itself, 'IN'/'NOT IN') can't be a bound
-     * parameter -- SQL has no placeholder syntax for an operator position
-     * -- so it's validated against the fixed 2-value domain instead
-     * (matches getSqlConditionFandFAsCondition()'s own treatment of the
-     * same field).
+     * $structuralForbidden/$imageAccessList are bound query parameters.
+     * $imageAccessType (the SQL inclusion operator itself, 'IN'/'NOT IN')
+     * can't be a bound parameter -- SQL has no placeholder syntax for an
+     * operator position -- so it's validated against the fixed 2-value
+     * domain instead.
      */
     public function countAccessibleImages(string $structuralForbidden, string $imageAccessType, string $imageAccessList): string
     {

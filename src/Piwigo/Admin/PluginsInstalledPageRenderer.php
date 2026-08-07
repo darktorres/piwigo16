@@ -38,29 +38,14 @@ use Piwigo\Users\PreferencesService;
  * the already token-protected ws.php?method=pwg.plugins.performAction --
  * Piwigo\Ws\PwgExtensions::pluginsPerformAction() checks get_pwg_token()
  * against $params['pwg_token'] itself).
- *
- * P23 sub-batch 6i-3 cleanup: dropped the dead per-plugin U_ACTION field
- * (and the $action_url construction that fed it) -- grepping the whole
- * admin/ tree found zero real readers of $_GET['plugin'], and the only 2
- * template consumers (both gated on STATE == 'merged') were confirmed
- * redundant with the state-unconditional, already-working JS
- * `.delete-plugin-button` dropdown handler (same ws.php path), and with
- * the reference 16.x-rewrite branch's own already-modernized template,
- * which has no 'merged' branch left at all. The 2 dead `elseif` links
- * were removed from plugins_installed.tpl in the same commit. Also dropped
- * `cmp_plugins()` entirely -- its only call site was already commented out
- * ("Stoped plugin sorting for new plugin manager"), confirmed via grep to
- * have zero other callers anywhere, unlike the maintenance/env
- * dead-from-this-tab-only cases in 6h.
  */
 final class PluginsInstalledPageRenderer
 {
     /**
-     * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
-     * explicit param instead of `global $page['page'];` -- the one real
-     * caller (PluginsSubController) already knows its own fixed page
-     * slug statically (it's the only class registered for the 'plugins'
-     * slug in config/admin_pages.php).
+     * $pageSlug is an explicit param instead of `global $page['page'];` --
+     * the one real caller (PluginsSubController) already knows its own
+     * fixed page slug statically (it's the only class registered for the
+     * 'plugins' slug in config/admin_pages.php).
      */
     public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CurrentLogger $currentLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, PreferencesService $preferencesService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CurrentUser $currentUser, Paths $paths): void
     {

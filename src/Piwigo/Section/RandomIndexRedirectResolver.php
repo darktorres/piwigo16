@@ -7,13 +7,14 @@ namespace Piwigo\Section;
 use Piwigo\Auth\AccessLevelChecker;
 
 /**
- * [SEC-15] Replaces eval($random_url_condition) for the
- * `random_index_redirect` config feature (include/config_default.inc.php)
- * with a declarative, named-condition evaluator -- a config value with DB
- * write access previously got arbitrary PHP execution via eval(). The
- * config's own documented example only ever uses 2 real condition shapes
- * ('' / 'return true;' always-match, 'return is_a_guest();' guest-only);
- * anything else now safely matches nothing rather than executing.
+ * [SEC-15] Evaluates the `random_index_redirect` config feature
+ * (include/config_default.inc.php) via a declarative, named-condition
+ * evaluator instead of eval()'ing the condition string -- a config
+ * value with DB write access never gets arbitrary PHP execution. The
+ * config's own documented example only ever uses 2 real condition
+ * shapes ('' / 'return true;' always-match, 'return is_a_guest();'
+ * guest-only); anything else safely matches nothing rather than
+ * executing.
  */
 final class RandomIndexRedirectResolver
 {

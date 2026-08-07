@@ -25,32 +25,16 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 
 /**
- * Ported from admin/themes_standard_pages.php -- configures the "standard
- * pages" (logo/skin) shown when a theme lacks its own login/register/etc
- * pages. Reachable via 2 routes, both of which now call this one shared
- * render() method instead of each keeping (or including) its own copy,
- * matching the MaintenanceActionDispatcher/FilterPanelRenderer "one class,
- * multiple call sites" precedent: ThemesSubController's own "standard_pages"
- * tab, and the standalone "themes_standard_pages" page slug's
- * ThemesStandardPagesSubController.
+ * Configures the "standard pages" (logo/skin) shown when a theme lacks its
+ * own login/register/etc pages. Reachable via two routes that both call
+ * this one shared render() method: ThemesSubController's own
+ * "standard_pages" tab, and the standalone "themes_standard_pages" page
+ * slug's ThemesStandardPagesSubController.
  *
  * admin.php itself already gates every page slug behind
  * check_status(AccessLevel::Administrator) before dispatch -- both routes
- * that reach this renderer go through that same admin.php routing, so the
- * file's own (redundant) check_status() call is dropped here, same
- * precedent as MaintenanceSubController's own shell fold.
- *
- * Migrated off the legacy Piwigo\Admin\themes god-class onto
- * ExtensionScanner::scan(ExtensionType::Theme), which returns the same
- * 'name'/'use_standard_pages' fields this file needs. The themes god-class
- * itself was fully retired in Legacy Coupling Retirement Phase 8, 8j, once
- * every other real caller had migrated onto Admin\Extensions\* too.
- *
- * Legacy Coupling Retirement Phase 5: the 4 writes below now go through
- * the DI/Doctrine-backed Piwigo\Config\ConfigService instead of the
- * static Piwigo\Config\ConfigDb -- this class already receives
- * RedirectServiceInterface/UrlServiceInterface via constructor
- * injection, so adding ConfigService the same way is mechanical.
+ * that reach this renderer go through that same admin.php routing, so this
+ * class performs no check_status() call of its own.
  */
 final class ThemesStandardPagesPageRenderer
 {
@@ -156,23 +140,19 @@ final class ThemesStandardPagesPageRenderer
                     // Piwigo\Controller\CustomLogoController can resolve and
                     // stream it later. Deliberately NOT the absolute
                     // filesystem $upload_dir path: 'local/' is intentionally
-                    // unreachable from public/ (Legacy Coupling Retirement's
-                    // web-root isolation work), and an absolute path was
-                    // never a valid URL anyway -- CustomLogoController is the
-                    // one, permission-free, server-resolved way this single
+                    // unreachable from public/, and an absolute path is not
+                    // a valid URL anyway -- CustomLogoController is the one,
+                    // permission-free, server-resolved way this single
                     // intentionally-public file is served.
                     $relative_path = 'logo/' . $logo_filename;
 
-                    // Persisted only once the write below actually succeeds
-                    // (real bug found and fixed while adding test coverage
-                    // for the fopen()-failure branch: this used to run
-                    // unconditionally *before* fopen()/writeStream() ever
-                    // ran, so a failed write still left config pointing at
-                    // a logo file that was never written -- breaking both
-                    // Piwigo\Controller\CustomLogoController's serving of
-                    // it and this method's own "existing logo preview" vs.
-                    // "upload a logo" UI toggle a few lines below, which
-                    // gates on this exact config value).
+                    // Persisted only once the write below actually
+                    // succeeds -- a failed write must not leave config
+                    // pointing at a logo file that was never written, since
+                    // both Piwigo\Controller\CustomLogoController's serving
+                    // of it and this method's own "existing logo preview"
+                    // vs. "upload a logo" UI toggle a few lines below gate
+                    // on this exact config value.
                     $logo_stream = fopen($std_pgs_logo_tmp_name, 'rb');
                     if ($logo_stream !== false) {
                         $this->storageRegistry->get('local')

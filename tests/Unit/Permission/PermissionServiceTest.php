@@ -51,10 +51,9 @@ function makePermissionService(): PermissionService
 }
 
 /**
- * getPermissionCriteria() reads FilterState via real constructor injection
- * (singleton/service-locator elimination campaign, Phase 11 sub-phase
- * 11G) -- this helper seeds the real container-shared instance directly
- * so the same object PermissionService was constructed with observes the
+ * getPermissionCriteria() reads FilterState via constructor injection --
+ * this helper seeds the real container-shared instance directly so the
+ * same object PermissionService was constructed with observes the
  * seeded state.
  */
 function seedFilterState(bool $enabled, string $visibleCategories = '', string $visibleImages = ''): void
@@ -88,7 +87,7 @@ function seedPermissionUser(string $forbiddenCategories = '', int $level = 0, st
 
 /**
  * Bypasses seedPermissionUser()'s string-only params to reach
- * getSqlConditionFandFAsCondition()'s own is_scalar()-then-(string)-cast
+ * getPermissionCriteria()'s own is_scalar()-then-(string)-cast
  * defensive guard with a rawAttributes shape that guard actually
  * exists for: `rawAttributes` is `array<string, mixed>` (see
  * `User::fromUserArray()`, which assigns the raw DB row wholesale) --
@@ -114,12 +113,11 @@ function seedPermissionUserRaw(array $rawAttributes): void
 }
 
 beforeEach(function (): void {
-    // A real Paths is required now: this file's own
-    // getPrivacyLevelOptions() tests pass LangTestFactory::get() in (singleton/
-    // service-locator elimination campaign, Phase 8), and Lang's own
-    // Paths constructor collaborator has no autowireable default -- a
-    // bare Kernel::boot() with no Paths argument leaves it unresolvable
-    // in the container.
+    // A real Paths is required: this file's own getPrivacyLevelOptions()
+    // tests pass LangTestFactory::get() in, and Lang's own Paths
+    // constructor collaborator has no autowireable default -- a bare
+    // Kernel::boot() with no Paths argument leaves it unresolvable in the
+    // container.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     seedPermissionUser();
 });
@@ -191,13 +189,9 @@ test('getPermissionCriteria computes visibleCategoryIds/visibleImageIds from Fil
 });
 
 test('getPermissionCriteria always computes maxLevel alongside visibleImageIds, not one gating the other', function (): void {
-    // The old getSqlConditionFandFAsCondition()'s own `visible_images` case
-    // fell through into `forbidden_images` with no `break` -- callers that
-    // requested visibleImageIds always implicitly got the level check too.
-    // The typed replacement computes both fields unconditionally instead
-    // (see PermissionCriteria's own docblock); this pins that both are
-    // populated together whenever the "applies" gate is satisfied, matching
-    // the old fallthrough's real net effect.
+    // getPermissionCriteria() always populates maxLevel alongside
+    // visibleImageIds whenever the "applies" gate is satisfied (see
+    // PermissionCriteria's own docblock) -- neither field gates the other.
     seedPermissionUser(level: 3);
     seedFilterState(true, visibleImages: '10,11');
     $service = makePermissionService();

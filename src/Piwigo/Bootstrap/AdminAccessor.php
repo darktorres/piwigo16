@@ -32,26 +32,21 @@ use Piwigo\Admin\UserPermPageRenderer;
 use Piwigo\Core\Kernel;
 
 /**
- * DI-migration follow-on to gap-closure Stage 4: typed accessors to
- * container-resolved `Admin\*` (L4Integration, same layer as `Bootstrap`
- * itself) classes -- see `Bootstrap\CoreDomainAccessor`'s own docblock for
- * the full rationale. A same-layer dependency (Bootstrap -> Admin) is
- * already an established, real pattern in this codebase (e.g.
- * `Admin\AdminShell` already depends on `Bootstrap\*`, and
+ * Typed accessors to container-resolved `Admin\*` (L4Integration, same
+ * layer as `Bootstrap` itself) classes -- see `Bootstrap\CoreDomainAccessor`'s
+ * own docblock for the full rationale. A same-layer dependency
+ * (Bootstrap -> Admin) is already an established, real pattern in this
+ * codebase (e.g. `Admin\AdminShell` already depends on `Bootstrap\*`, and
  * `Controller\Admin\*` sub-controllers already depend on `Admin\*`
  * renderers directly) -- deptrac's ruleset only restricts *upward*
  * cross-layer dependencies, not same-layer ones.
  *
- * Every one of these was previously constructed manually from a sibling
- * `Controller\Admin\*SubController` (itself already container-resolved via
- * `config/admin_pages.php`, re-passing its own constructor-injected
- * `RedirectServiceInterface`/`UrlServiceInterface`/`ConfigService`)
- * rather than resolved directly -- routing through this accessor instead
- * is uniform with every other bucket-A class this DI phase retargeted,
- * even though the more surgical fix (constructor-inject the renderer
- * directly into its one real SubController caller) would also work; at
- * this scale, uniformity was chosen over chasing the marginally purer
- * topology for each of ~20 near-identical single-call-site renderers.
+ * Each of these renderers has exactly one real caller, a
+ * `Controller\Admin\*SubController` (itself container-resolved via
+ * `config/admin_pages.php`) -- constructor-injecting the renderer directly
+ * into that one caller would be more surgical, but routing all of them
+ * through this accessor keeps the pattern uniform across the roughly 20
+ * near-identical single-call-site renderers here.
  */
 final class AdminAccessor
 {

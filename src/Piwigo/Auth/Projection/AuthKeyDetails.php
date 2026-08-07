@@ -8,12 +8,11 @@ use Piwigo\Users\UserStatus;
 
 /**
  * Typed row shape for
- * {@see \Piwigo\Auth\AuthRepository::findAuthKeyDetails()} (P17-23 Stage 1b,
- * Auth domain) -- a `user_auth_keys`/`user_infos`/`users` join.
- * `fromRow()` centralises the narrowing
- * {@see \Piwigo\Auth\AuthService::authKeyLogin()} used to duplicate for
- * itself across many `$key['x']` accesses in this security-sensitive
- * auth_key/api_key login path.
+ * {@see \Piwigo\Auth\AuthRepository::findAuthKeyDetails()} -- a
+ * `user_auth_keys`/`user_infos`/`users` join. `fromRow()` centralises the
+ * narrowing that {@see \Piwigo\Auth\AuthService::authKeyLogin()} would
+ * otherwise have to repeat across many `$key['x']` accesses in this
+ * security-sensitive auth_key/api_key login path.
  *
  * `userId`/`authKeyId` stay `string`, matching every real consumer's own
  * `is_numeric($x)`/`(int) $x` on-use narrowing (e.g. `logUser()`'s own
@@ -56,9 +55,8 @@ final readonly class AuthKeyDetails
             lastUsedOn: is_scalar($row['last_used_on'] ?? null) ? (string) $row['last_used_on'] : null,
             lastNotifiedOn: is_scalar($row['last_notified_on'] ?? null) ? (string) $row['last_notified_on'] : null,
             apikeySecret: is_scalar($row['apikey_secret'] ?? null) ? (string) $row['apikey_secret'] : null,
-            // Phase 5 Item 21: see \Piwigo\Auth\Projection\AuthUser::fromRow()'s
-            // own comment -- `ui.status` array-hydrates as a UserStatus
-            // instance now, not a raw string.
+            // `ui.status` array-hydrates as a UserStatus instance, not a
+            // raw string -- see \Piwigo\Auth\Projection\AuthUser::fromRow().
             status: ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : '',
             username: is_string($row['username'] ?? null) ? $row['username'] : '',
             email: is_string($row['email'] ?? null) ? $row['email'] : '',

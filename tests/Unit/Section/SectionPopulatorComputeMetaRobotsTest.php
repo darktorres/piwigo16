@@ -9,8 +9,7 @@ use Piwigo\Section\SectionPopulator;
 
 /**
  * SectionPopulator::computeMetaRobots() -- the noindex/nofollow decision
- * tree extracted from include/section_init.inc.php during its P23 batch 4d
- * port. Pure function, no DB/globals needed.
+ * tree. Pure function, no DB/globals needed.
  *
  * A mutation-testing sweep found the method's own
  * `is_string($page['section'] ?? null) ? $page['section'] : ''` fallback

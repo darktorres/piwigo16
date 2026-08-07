@@ -48,42 +48,32 @@ use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin/batch_manager.php's own tab-dispatch shell (page slug
- * "batch_manager"), folded directly into this controller -- same shape as
- * AlbumSubController/PhotoSubController (the shell logic goes into the
- * sub-controller itself, tab bodies become their own renderer classes).
- * The shell's own real "data access" concern (resolving
- * $_SESSION['bulk_manager_filter'] into photo id lists) was already
- * migrated off ~320 lines of inline SQL onto Piwigo\Admin\BatchManager\
- * FilterResolver back in P21 -- this class absorbs what was left:
- * session-filter parsing, FilterResolver orchestration, pagination, the
- * dimension/filesize filter-form option aggregation, and tab dispatch to
- * BatchManagerGlobalPageRenderer/BatchManagerUnitPageRenderer (P23 batch
- * 6g). admin.php itself already gates every page behind
- * check_status(AccessLevel::Administrator) before dispatch, so the
- * original file's own (redundant) check_status() call is dropped here --
- * same precedent as every prior P23 batch 6 sub-batch.
+ * The tab-dispatch shell for admin/batch_manager.php (page slug
+ * "batch_manager") -- same shape as AlbumSubController/PhotoSubController:
+ * the shell logic lives in this sub-controller, and tab bodies are their
+ * own renderer classes. This class handles session-filter parsing,
+ * FilterResolver orchestration, pagination, the dimension/filesize
+ * filter-form option aggregation, and tab dispatch to
+ * BatchManagerGlobalPageRenderer/BatchManagerUnitPageRenderer. admin.php
+ * itself already gates every page behind
+ * check_status(AccessLevel::Administrator) before dispatch, so this class
+ * has no check_status() call of its own.
  *
- * Real CSRF fix (P23 batch 6g): the `action=empty_caddie` GET link ran an
- * unconditional `DELETE FROM piwigo_caddie WHERE user_id = ...` with zero
- * token verification -- confirmed via a direct grep that
- * batch_manager_filter.inc.tpl's link never carried a pwg_token either.
- * check_pwg_token() added to that branch, `pwg_token` appended to the
- * link (CsrfService::check() reads $_REQUEST, so a GET-carried token works
- * the same as a POST one, confirmed by reading the class directly before
- * relying on it). The other 2 GET actions (`delete_orphans`,
- * `sync_md5sum`) only render a $_SESSION message from an
+ * `action=empty_caddie` performs an unconditional `DELETE FROM
+ * piwigo_caddie WHERE user_id = ...`, so it requires CSRF verification
+ * (`check_pwg_token()`) and carries a `pwg_token` on its link
+ * (`CsrfService::check()` reads `$_REQUEST`, so a GET-carried token works
+ * the same as a POST one). The other 2 GET actions (`delete_orphans`,
+ * `sync_md5sum`) only render a `$_SESSION` message from an
  * already-validated count -- the real deletion/checksum work happens via
- * already-token-protected ws.php calls (pwg.images.deleteOrphans/
- * pwg.images.setMd5sum, confirmed in batchManagerGlobal.js) -- so no fix
- * needed there.
+ * already-token-protected `ws.php` calls (`pwg.images.deleteOrphans`/
+ * `pwg.images.setMd5sum`), so they need no token of their own.
  *
  * `array<string, mixed> $bulkFilter`/`$bulk_filter`/`$url_filter`
  * throughout this class are all `$_SESSION['bulk_manager_filter']` (or a
  * sub-array of it), itself built from raw `$_GET`/`$_POST` a few lines
- * above -- same "flagged for Phase 4 (SEC-40/P26 Request DTOs)" call as
- * FilterResolver's own identical param. Every real read below already
- * narrows defensively (`isset()`/`is_array()` + an is_*() check).
+ * above. Every real read below already narrows defensively
+ * (`isset()`/`is_array()` + an is_*() check).
  */
 final class BatchManagerSubController implements AdminSubControllerInterface
 {
@@ -167,11 +157,9 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 
         $tab = $batchManagerRequest->tab;
 
-        // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
-        // bug -- nothing had ever called CoreTabs::setContext() with
-        // managerLink for this page (same class of gap as
-        // ConfigurationSubController's own $conf_link fix), so this page's
-        // own tab strip has always rendered broken relative hrefs.
+        // CoreTabs::setContext() needs an explicit managerLink for this
+        // page (same as ConfigurationSubController's own $conf_link), or
+        // this page's tab strip renders broken relative hrefs.
         $this->coreTabs->setContext(new CoreTabsContext(managerLink: $this->urlService->getRootUrl() . 'admin.php?page=batch_manager&amp;mode='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('batch_manager');
@@ -530,15 +518,9 @@ final class BatchManagerSubController implements AdminSubControllerInterface
     /**
      * @param array<string, mixed> $bulkFilter
      * @param ?list<ImageDuplicateField> $duplicatesOnFields by-ref out-param, only ever
-     *   computed for the 'duplicates' prefilter (matching the legacy
-     *   switch's own scoping) -- fed back to the caller so it can pass it on
-     *   to BatchManagerGlobalPageRenderer for its own duplicates-mode
-     *   thumbnail ordering (Legacy Coupling Retirement Track A batch A5.2i;
-     *   the original admin/batch_manager.php shared this via PHP's
-     *   include() scope instead, which doesn't survive splitting the shell
-     *   and the tab body into separate classes -- and the `$page` global it
-     *   was ported onto in P23 batch 6g doesn't survive FrankenPHP worker
-     *   mode either).
+     *   computed for the 'duplicates' prefilter -- fed back to the caller
+     *   so it can pass it on to BatchManagerGlobalPageRenderer for its own
+     *   duplicates-mode thumbnail ordering.
      *
      * @return array<array-key, int|string|float|bool> a scalar-filtered
      *   image id set -- see the array_filter(..., is_scalar(...)) calls

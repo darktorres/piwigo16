@@ -266,8 +266,8 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_image_ids_for_categories_orders_by_current_config_order_by(): void
     {
-        // Item 16J: the real DQL path -- a single bounded-vocabulary field,
-        // not sorted before comparing, to prove the parsed order is what
+        // The real DQL path -- a single bounded-vocabulary field, not
+        // sorted before comparing, to prove the parsed order is what
         // actually reaches the query rather than incidental id order.
         CurrentConfigTestFactory::get()->setOrderBy('ORDER BY id DESC');
 
@@ -347,9 +347,8 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_computed_categories_rollup_includes_rank(): void
     {
-        // P23 batch 4b: CategoryCatsRenderer needs `rank` (sibling order)
-        // for CategoryService::compareByRank(), distinct from `global_rank`
-        // -- added to this rollup purely additively.
+        // CategoryCatsRenderer needs `rank` (sibling order) for
+        // CategoryService::compareByRank(), distinct from `global_rank`.
         $rows = $this->repo->findComputedCategoriesRollup(0, null, '');
 
         $byId = [];
@@ -855,12 +854,12 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_private_category_ids_granted_to_group_matches_fixture_grants(): void
     {
-        // Item 14 DQL audit regression test: this method's JOIN...WITH
-        // condition (ga.catId = c.id) compares GroupAccessEntity's own
-        // custom-CategoryId-typed field against CategoryEntity's plain int
-        // id -- confirming here that it still resolves correctly against a
-        // real DB (DQL JOIN...WITH conditions compile to a plain SQL column
-        // comparison regardless of PHP-side Type differences).
+        // This method's JOIN...WITH condition (ga.catId = c.id) compares
+        // GroupAccessEntity's own custom-CategoryId-typed field against
+        // CategoryEntity's plain int id -- confirming here that it still
+        // resolves correctly against a real DB (DQL JOIN...WITH conditions
+        // compile to a plain SQL column comparison regardless of PHP-side
+        // Type differences).
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private'");
 
         self::assertSame([1, 2], $this->repo->findPrivateCategoryIdsGrantedToGroup(1));
@@ -1052,9 +1051,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_next_id_returns_one_more_than_the_current_max(): void
     {
-        // Item 14 DQL audit: findNextId() converted its original
-        // IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) to COALESCE(MAX(id)+1, 1) --
-        // mathematically identical for this 2-argument case, verified here
+        // findNextId() computes COALESCE(MAX(id)+1, 1) -- verified here
         // against the real, non-empty fixture table (the empty-table branch
         // isn't practically testable against this shared fixture DB).
         $maxId = $this->conn->fetchOne('SELECT MAX(id) FROM ' . Tables::categories());
@@ -1064,10 +1061,10 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_photo_counts_by_category_counts_direct_images(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage --
-        // combines a custom-Typed categoryId GROUP BY with a blind
-        // instanceof-then-continue fallback (silently drops the row
-        // instead of throwing if the VO-hydration assumption is wrong).
+        // findPhotoCountsByCategory() combines a custom-Typed categoryId
+        // GROUP BY with a blind instanceof-then-continue fallback -- it
+        // silently drops the row instead of throwing if the VO-hydration
+        // assumption is wrong.
         self::assertSame(
             [1 => 3, 2 => 2],
             $this->repo->findPhotoCountsByCategory()

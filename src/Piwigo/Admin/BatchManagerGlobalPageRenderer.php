@@ -51,29 +51,18 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
 
 /**
- * Ported from admin/batch_manager_global.php (the "global" mode tab of the
- * "batch_manager" page slug, dispatched by BatchManagerSubController) --
- * bulk actions (tags, associate/move/dissociate album, author/title/date/
- * level, caddie, delete, derivatives) applied to the whole current photo
- * selection at once.
+ * Renders the "global" mode tab of the "batch_manager" admin page
+ * (dispatched by BatchManagerSubController) -- applies bulk actions (tags,
+ * associate/move/dissociate album, author/title/date/level, caddie,
+ * delete, derivatives) to the whole current photo selection at once.
  *
- * admin.php itself already gates every page behind
- * check_status(AccessLevel::Administrator) before dispatch, so the
- * original file's own (redundant) check_status() call is dropped here --
- * same precedent as every prior P23 batch 6 sub-batch. Every mutation
- * branch below is already covered by a single blanket `if (! empty($_POST))
- * { check_pwg_token(); }` guard (confirmed by reading every branch) -- no
- * CSRF gap here, unlike this same sub-batch's admin/batch_manager.php shell
- * (see BatchManagerSubController's own docblock for that real fix).
+ * Access control is enforced by admin.php's dispatch gate before this
+ * renderer runs. A single CSRF check at the top of render() covers every
+ * mutation branch below.
  *
  * $duplicatesOnFields is only computed by BatchManagerSubController for the
  * 'duplicates' prefilter, and is passed in here as an explicit parameter
- * (for this file's own duplicates-mode thumbnail ordering) -- Legacy
- * Coupling Retirement Track A batch A5.2i retargeted this off the
- * `$page['duplicates_on_fields']` global it was ported onto in P23 batch
- * 6g, which itself replaced the original file's PHP-include-scope variable
- * sharing (the legacy admin/batch_manager.php included this file directly,
- * so a bare local variable it set was still in scope here).
+ * for this file's own duplicates-mode thumbnail ordering.
  */
 final class BatchManagerGlobalPageRenderer
 {

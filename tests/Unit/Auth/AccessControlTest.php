@@ -18,24 +18,17 @@ use Piwigo\Users\UserStatus;
 use RuntimeException;
 
 /**
- * Zero coverage existed for this class before this test, despite it
- * gating every U_EDIT/U_DELETE/U_VALIDATE template flag in
- * PictureCommentRenderer -- the "permission-check logic" Stage 1c's own
- * plan text calls out for the Picture domain. Every method here is a pure
- * read of CurrentUser/CurrentConfig, no DB access (see the class's own
- * docblock), so it's tested directly rather than only indirectly through
- * a renderer.
+ * Every method here is a pure read of CurrentUser/CurrentConfig, with no
+ * DB access (see the class's own docblock), so it's tested directly rather
+ * than only indirectly through a renderer -- it gates every
+ * U_EDIT/U_DELETE/U_VALIDATE template flag in PictureCommentRenderer.
  *
- * Singleton/service-locator elimination campaign, Phase 7: AccessControl
- * is now a real, constructor-injected instance (HtmlRenderingInterface/
+ * AccessControl is a constructor-injected instance (HtmlRenderingInterface/
  * RedirectServiceInterface/CurrentUser), so every test below constructs
  * its own fresh instance via accessControlTestMake() instead of
- * reflecting into static properties -- strictly simpler than before, same
- * "no shared mutable global" simplification every large facade in this
- * campaign has already gone through (see e.g. CurrentUserTest.php). No
- * beforeEach()/afterEach() CurrentUser seed/reset is needed anymore for
- * the same reason; CurrentConfig itself is untouched by this phase (Phase
- * 9), so its own reset() still runs after every test.
+ * reflecting into static properties, and no beforeEach()/afterEach()
+ * CurrentUser seed/reset is needed. CurrentConfig's own reset() still runs
+ * after every test.
  */
 function seedAccessControlUser(UserStatus $status, int $id = 1): CurrentUser
 {
@@ -56,10 +49,9 @@ function seedAccessControlUser(UserStatus $status, int $id = 1): CurrentUser
 /**
  * Both collaborators default to a fake that throws on every method except
  * accessDenied() (which the checkStatus() tests below individually
- * override to observe) -- every real caller now always has both wired
- * (container-resolved instance guarantees it), so no test here needs to
- * exercise a "not wired" scenario, unlike before this phase's own
- * conversion.
+ * override to observe) -- every real caller always has both wired (a
+ * container-resolved instance guarantees it), so no test here needs to
+ * exercise a "not wired" scenario.
  */
 function accessControlTestMake(
     UserStatus $status,
@@ -133,13 +125,8 @@ test('checkStatus does nothing when the current user meets the required access l
 });
 
 /**
- * checkStatus()'s own former nullable-collaborator guard (allowing
- * accessDenied() to be silently skipped when either collaborator was
- * unset) is gone since Phase 7's conversion -- a constructed AccessControl
- * instance always has both, so accessDenied() is unconditionally reached
- * on denial. This single test replaces the pre-Phase-7 file's 3 separate
- * "wired/not wired" scenarios, which tested a state that can no longer
- * exist.
+ * A constructed AccessControl instance always has both collaborators
+ * wired, so accessDenied() is unconditionally reached on denial.
  */
 test('checkStatus calls the installed HtmlRenderingInterface accessDenied() before throwing', function (): void {
     $renderer = new AccessControlTestFakeHtmlRendererDeniesAccess();

@@ -75,9 +75,8 @@ test('encodeResponse flattens a PwgNamedArray to its plain list content, with no
     // flatten()'s other branch: PwgNamedArray unwraps to ->_content same
     // as PwgNamedStruct does, but a sequential-int-keyed list is NOT a
     // "struct" per is_struct(), so the attributes_xml_ merge block is
-    // skipped entirely -- this is a genuinely different code path from
-    // the PwgNamedStruct case above, previously untested anywhere in
-    // this class's flatten()-dependent behaviour.
+    // skipped entirely -- a genuinely different code path from the
+    // PwgNamedStruct case above.
     $encoder = new PwgSerialPhpEncoder();
     $response = new PwgNamedArray([10, 20, 30], 'item');
 

@@ -18,24 +18,20 @@ use Override;
 /**
  * Custom DQL function: "DATE_FORMAT_YEAR_MONTH" "(" StringPrimary ")" --
  * a 6-digit `YYYYMM` grouping key, matching MySQL's own
- * `DATE_FORMAT(date, '%Y%m')` shape (formerly {@see \Piwigo\Db\SqlDialect}'s
- * `getDateYYYYMM()`, removed once Calendar -- its only real caller --
- * became real DQL).
+ * `DATE_FORMAT(date, '%Y%m')` shape. Calendar is its only real caller,
+ * for its own year+month navigation grouping key.
  *
- * Further SQL-modernization audit, Item 15G: Calendar's own year+month
- * navigation grouping key. A dedicated single-purpose function rather
- * than a generic 2-arg `DATE_FORMAT(date, pattern)` -- MySQL's/SQLite's
- * `%Y%m` token syntax and PostgreSQL's `TO_CHAR` `YYYYMM` token syntax
- * genuinely differ, so a caller-supplied pattern string isn't safely
- * portable across platforms; hardcoding this one real pattern per
- * platform here is the honest choice, matching {@see GroupConcatFunction}'s
- * own per-platform-branch precedent. MySQL/MariaDB branch verified
- * against real data via this project's own Integration tests.
- * PostgreSQL/SQLite branches are unverified against a real installation
- * -- no `install/schema/pgsql.sql` (or SQLite equivalent) exists yet in
- * this repo (see this plan's own Context section) -- built from each
- * platform's own documented syntax, not empirically confirmed. Any other
- * platform throws `NotSupported` rather than guessing.
+ * A dedicated single-purpose function rather than a generic 2-arg
+ * `DATE_FORMAT(date, pattern)`: MySQL's/SQLite's `%Y%m` token syntax and
+ * PostgreSQL's `TO_CHAR` `YYYYMM` token syntax genuinely differ, so a
+ * caller-supplied pattern string isn't safely portable across platforms;
+ * hardcoding this one real pattern per platform here matches
+ * {@see GroupConcatFunction}'s own per-platform-branch precedent. The
+ * MySQL/MariaDB branch is verified against real data via this project's
+ * own Integration tests. The PostgreSQL/SQLite branches are unverified
+ * against a real installation -- built from each platform's own
+ * documented syntax, not empirically confirmed. Any other platform
+ * throws `NotSupported` rather than guessing.
  */
 final class DateFormatYearMonthFunction extends FunctionNode
 {

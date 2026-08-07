@@ -7,8 +7,7 @@ namespace Piwigo\Core;
 use Piwigo\Config\CurrentConfig;
 
 /**
- * P23 batch 8d: current-script/page-filter helpers relocated from
- * include/functions.inc.php -- no natural existing class home, stateless.
+ * Current-script and page-filter helper functions.
  */
 final class PageFilterHelper
 {
@@ -22,12 +21,10 @@ final class PageFilterHelper
             $raw = $_SERVER[$key] ?? null;
             if (is_string($raw) && $raw !== '') {
                 $filename = strtolower($raw);
-                // production's bootstrap chain (config_default.inc.php)
+                // Production's bootstrap chain (config_default.inc.php)
                 // guarantees this key is always set; lightweight test
                 // harnesses that build a minimal $conf by hand don't share
-                // that guarantee (confirmed by the Integration test stub
-                // this method's real callers used to route through, before
-                // P23 batch 8d retargeted them here directly).
+                // that guarantee.
                 if ($currentConfig->phpExtensionInUrls() && StringHelper::getExtension($filename) !== 'php') {
                     continue;
                 }

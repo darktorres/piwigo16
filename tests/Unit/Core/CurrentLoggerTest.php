@@ -12,10 +12,10 @@ use Piwigo\Tests\Support\CurrentLoggerTestFactory;
  * filesystem at all (see Logger::__construct()'s own early-return), so
  * this file never needs a real log directory.
  *
- * Container-shared instance (singleton/service-locator elimination
- * campaign, Phase 2) -- each test constructs its own fresh instance
- * directly; no reset() needed for the instance API. getStatic()'s own
- * Kernel::isBooted() branches are covered separately below.
+ * Container-shared instance -- each test constructs its own fresh
+ * instance directly; no reset() needed for the instance API.
+ * getStatic()'s own Kernel::isBooted() branches are covered separately
+ * below.
  */
 test('get throws when no Logger has been set yet', function (): void {
     $currentLogger = new CurrentLogger();

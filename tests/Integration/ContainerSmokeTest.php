@@ -28,10 +28,7 @@ use Psr\Container\ContainerInterface;
  * wrong type hint, missing binding, or a circular dependency -- and would
  * cause a runtime 500 the first time that service is requested.
  *
- * config/container.php is now fully populated, so the resolution loop
- * below exercises every real service definition wired so far. Extends
- * plain TestCase, not IntegrationTestCase -- no DB is touched at this
- * phase.
+ * Extends plain TestCase, not IntegrationTestCase -- no DB is touched.
  */
 final class ContainerSmokeTest extends TestCase
 {
@@ -48,14 +45,14 @@ final class ContainerSmokeTest extends TestCase
     }
 
     /**
-     * Piwigo\Core\TemplateInterface's binding is a factory resolving
-     * Piwigo\Template\CurrentTemplate::get() (Legacy Coupling Retirement
-     * Track A) -- the current REQUEST's Template instance, constructed
-     * dynamically per-request with runtime theme/path parameters and
-     * genuinely unavailable until Piwigo\Bootstrap\RequestBootstrap::
-     * finalize() has run. This is not a wiring bug the way an unresolvable
-     * MailerInterface/HtmlRenderingInterface/etc. entry would be (those
-     * bind to trivially-autowireable concrete classes with no request-scoped
+     * TemplateInterface's binding is a factory resolving
+     * Piwigo\Template\CurrentTemplate::get() -- the current REQUEST's
+     * Template instance, constructed dynamically per-request with runtime
+     * theme/path parameters and genuinely unavailable until
+     * Piwigo\Bootstrap\RequestBootstrap::finalize() has run. This is not a
+     * wiring bug the way an unresolvable MailerInterface/
+     * HtmlRenderingInterface/etc. entry would be (those bind to
+     * trivially-autowireable concrete classes with no request-scoped
      * prerequisite) -- it's the correct, by-design behavior of a per-request
      * singleton facade, same category as the other request-scoped facades
      * this codebase already has (CurrentUser::get() throws the identical
@@ -66,77 +63,69 @@ final class ContainerSmokeTest extends TestCase
      * across the whole Integration run (see ExtensionLifecycleTest's own
      * PHPWG_ROOT_PATH guard comment for exactly this class of hazard).
      * Covered instead by real production traffic (every request reaches
-     * this binding) and each Track A batch's own live curl smoke.
+     * this binding).
      */
     private const array REQUEST_SCOPED_ONLY_ENTRIES = [
         TemplateInterface::class,
-        // Piwigo\Cache\PersistentCache's binding (singleton/service-locator
-        // elimination campaign, Phase 0) resolves to PersistentFileCache,
-        // whose constructor now takes Paths $paths directly -- genuinely
-        // unavailable here, same "Kernel booted with no real
-        // Paths" reasoning as TemplateInterface above, not a wiring bug.
+        // Piwigo\Cache\PersistentCache's binding resolves to
+        // PersistentFileCache, whose constructor takes Paths $paths
+        // directly -- genuinely unavailable here, same "Kernel booted with
+        // no real Paths" reasoning as TemplateInterface above, not a
+        // wiring bug.
         PersistentCache::class,
         // Piwigo\Storage\StorageRegistry's own factory binding requires
         // config/storage.php, whose own returned closure takes
-        // `Paths $paths` as a real param (singleton/service-locator
-        // elimination campaign, Phase 12 sub-phase 12F-10) -- fails to
-        // autowire for the identical "Kernel booted with no real Paths"
-        // reasoning as PersistentCache above, not a wiring bug.
+        // `Paths $paths` as a real param -- fails to autowire for the
+        // identical "Kernel booted with no real Paths" reasoning as
+        // PersistentCache above, not a wiring bug.
         StorageRegistry::class,
-        // Piwigo\Config\DeploymentPolicy's own factory binding (singleton/
-        // service-locator elimination campaign, Phase 4) takes Paths $paths
-        // as an autowired param -- same "Kernel booted with no real Paths"
-        // reasoning as PersistentCache/StorageRegistry above, not a wiring
-        // bug.
+        // Piwigo\Config\DeploymentPolicy's own factory binding takes
+        // Paths $paths as an autowired param -- same "Kernel booted with
+        // no real Paths" reasoning as PersistentCache/StorageRegistry
+        // above, not a wiring bug.
         DeploymentPolicy::class,
         // Piwigo\Core\DefaultLanguageProviderInterface resolves to
-        // Piwigo\Users\UserService, which now constructor-injects
-        // DeploymentPolicy (Phase 4) -- fails to resolve for the identical
-        // reason, one level removed.
+        // Piwigo\Users\UserService, which constructor-injects
+        // DeploymentPolicy -- fails to resolve for the identical reason,
+        // one level removed.
         DefaultLanguageProviderInterface::class,
         // Piwigo\Core\RedirectServiceInterface resolves to
-        // Piwigo\Bootstrap\RedirectService, which now constructor-injects
-        // Piwigo\Users\UserService (singleton/service-locator elimination
-        // campaign, Phase 6) -- same "Kernel booted with no real Paths"
-        // reasoning as DefaultLanguageProviderInterface above, one level
-        // removed through UserService's own DeploymentPolicy dependency.
+        // Piwigo\Bootstrap\RedirectService, which constructor-injects
+        // Piwigo\Users\UserService -- same "Kernel booted with no real
+        // Paths" reasoning as DefaultLanguageProviderInterface above, one
+        // level removed through UserService's own DeploymentPolicy
+        // dependency.
         RedirectServiceInterface::class,
         // Piwigo\Core\TelemetrySenderInterface resolves to
         // Piwigo\Admin\PiwigoInfosSender, which constructor-injects
-        // Piwigo\Admin\InstallationStats (singleton/service-locator
-        // elimination campaign, Phase 6's own ExtendedDomainAccessor
-        // sub-batch), which itself constructor-injects UserService -- same
-        // "Kernel booted with no real Paths" reasoning as
-        // DefaultLanguageProviderInterface above, two levels removed.
+        // Piwigo\Admin\InstallationStats, which itself constructor-injects
+        // UserService -- same "Kernel booted with no real Paths" reasoning
+        // as DefaultLanguageProviderInterface above, two levels removed.
         TelemetrySenderInterface::class,
         // Piwigo\Core\FilterUpdaterInterface resolves to
-        // Piwigo\Filter\FilterService, which now constructor-injects
-        // Piwigo\Core\Lang (singleton/service-locator elimination
-        // campaign, Phase 8), whose own Paths param the container can't
+        // Piwigo\Filter\FilterService, which constructor-injects
+        // Piwigo\Core\Lang, whose own Paths param the container can't
         // guess without a real one -- same "Kernel booted with no real
         // Paths" reasoning as TemplateInterface above, one level removed.
         FilterUpdaterInterface::class,
         // Piwigo\Core\MailerInterface resolves to Piwigo\Mail\MailService,
-        // which now constructor-injects Piwigo\Core\Lang (singleton/
-        // service-locator elimination campaign, Phase 11 sub-phase 11E),
-        // whose own Paths param the container can't guess without a real
-        // one -- same "Kernel booted with no real Paths" reasoning as
+        // which constructor-injects Piwigo\Core\Lang, whose own Paths
+        // param the container can't guess without a real one -- same
+        // "Kernel booted with no real Paths" reasoning as
         // FilterUpdaterInterface above.
         MailerInterface::class,
         // Piwigo\Core\UrlServiceInterface resolves to Piwigo\Url\UrlService,
-        // which now constructor-injects Piwigo\Core\Lang (singleton/
-        // service-locator elimination campaign, Phase 11 sub-phase 11E),
-        // whose own Paths param the container can't guess without a real
-        // one -- same "Kernel booted with no real Paths" reasoning as
-        // MailerInterface above.
+        // which constructor-injects Piwigo\Core\Lang, whose own Paths
+        // param the container can't guess without a real one -- same
+        // "Kernel booted with no real Paths" reasoning as MailerInterface
+        // above.
         UrlServiceInterface::class,
         // Piwigo\Core\HtmlRenderingInterface resolves to Piwigo\Html\HtmlService,
-        // which now constructor-injects Piwigo\Core\ErrorCollector
-        // (singleton/service-locator elimination campaign, Phase 11
-        // sub-phase 11E), whose own DeploymentPolicy param's factory
-        // binding needs a real Paths to autowire -- same "Kernel booted
-        // with no real Paths" reasoning as MailerInterface above, via a
-        // different (ErrorCollector, not Lang) dependency chain.
+        // which constructor-injects Piwigo\Core\ErrorCollector, whose own
+        // DeploymentPolicy param's factory binding needs a real Paths to
+        // autowire -- same "Kernel booted with no real Paths" reasoning as
+        // MailerInterface above, via a different (ErrorCollector, not
+        // Lang) dependency chain.
         HtmlRenderingInterface::class,
         // Piwigo\Validation\InputValidator's own factory binding takes
         // HtmlRenderingInterface directly, so it fails to resolve for the

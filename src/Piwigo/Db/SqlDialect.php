@@ -7,56 +7,22 @@ namespace Piwigo\Db;
 use Piwigo\Core\Env;
 
 /**
- * SQL-dialect-fragment generators extracted from `Piwigo\Db\MysqliDb`
- * (Legacy Coupling Retirement: DI+DBAL migration, Phase 1a pilot) --
- * every one of these is a pure string builder with no connection
- * dependency (confirmed by reading `MysqliDb`'s own source: none of them
- * call `self::query()`/`self::fetchAssoc()` internally), unlike
- * `MysqliDb::getEnums()`/`getRecentPeriod()`/`doMaintenanceAllTables()`,
- * which stay on the DB-access side of the migration since they do.
+ * SQL-dialect-fragment generators: pure string builders with no
+ * connection dependency of their own (none of them call a DB query
+ * method internally).
  *
- * pgsql support pass: `getRecentPeriodExpression()`/`getHour()`/
- * `dateToTs()` are now real per-platform branches (Postgres has no
- * `SUBDATE()`/`HOUR()`/`UNIX_TIMESTAMP()` -- `- make_interval(...)`/
- * `EXTRACT(HOUR FROM ...)`/`EXTRACT(EPOCH FROM ...)` are the real
- * equivalents, verified live) -- selected via `DbCredentials::fromEnv()->
- * driver` (this class is a pure static string builder with no `Connection`
- * of its own to read `getDatabasePlatform()` from, unlike
- * `SqlDialectExecutor`/`DbInfo`/the DQL functions, which branch on the
- * real connection's platform directly). A real interface split (MySQL/
- * Postgres implementations selected by DI) remains a follow-up if this
- * class ever grows enough per-platform branches to justify it -- not
- * needed for 3 methods.
+ * `getRecentPeriodExpression()`/`getHour()`/`dateToTs()` are per-platform
+ * branches -- Postgres has no `SUBDATE()`/`HOUR()`/`UNIX_TIMESTAMP()`;
+ * `- make_interval(...)`/`EXTRACT(HOUR FROM ...)`/`EXTRACT(EPOCH FROM ...)`
+ * are the real equivalents -- selected via `DbCredentials::fromEnv()->
+ * driver`, since this class has no `Connection` of its own to read
+ * `getDatabasePlatform()` from, unlike `SqlDialectExecutor`/`DbInfo`/the
+ * DQL functions, which branch on the real connection's platform directly.
  *
- * Further SQL-modernization audit, Item 15G: the 10 Calendar-exclusive
- * date-part/`CONCAT_WS`/cast-passthrough methods this class used to carry
- * (`getYear`/`getMonth`/`getWeek`/`getWeekday`/`getDayOfMonth`/
- * `getDayOfWeek`/`getDateYYYYMM`/`getDateMMDD`/`concatWs`/`castToText`)
- * moved to `Piwigo\Db\DqlFunction\*` (real DQL functions, same per-
- * platform-`instanceof`-branch shape as `RegexpFunction`/`RandFunction`/
- * `GroupConcatFunction`) once the Calendar subsystem -- their own real
- * caller -- became real DQL.
- *
- * Phase 4 Item 16: `protectColumnName()`/`concat()`/`DB_REGEX_OPERATOR`
- * removed -- confirmed direct duplicates of `Doctrine\DBAL\Platforms\
- * AbstractMySQLPlatform::quoteSingleIdentifier()`/`getConcatExpression()`/
- * `getRegexpExpression()`, real per-vendor framework primitives accessible
- * via `$connection->getDatabasePlatform()` rather than hand-rolled,
- * permanently-MySQL-only string builders. `protectColumnName()`'s only
- * real callers ({@see \Piwigo\Db\BatchWriter}) now call
- * `quoteSingleIdentifier()` directly (also a real correctness fix: it
- * escapes an embedded backtick character, which the hand-rolled version
- * never did). `concat()`/`DB_REGEX_OPERATOR` had zero real callers left to
- * migrate -- `CategoryRepository::updateImagePathsForCategory()`'s own DQL
- * conversion and {@see \Piwigo\Db\DqlFunction\RegexpFunction} had already
- * independently arrived at calling the framework's own equivalents during
- * earlier DQL-modernization items. `getBoolean()`/`booleanToString()`/
- * `booleanToInt()`, `concatWs()`, the 9 date-part-extraction methods (moved
- * to `DqlFunction\*` per Item 15G above), and `DB_RANDOM_FUNCTION` were all
- * checked against `AbstractPlatform` too and confirmed to have no
- * equivalent there, or to solve a genuinely different, MySQL-schema-
- * internal problem (`getBoolean()`'s family) -- they stay exactly as this
- * codebase's own domain-specific additions, not framework reinvention.
+ * `getBoolean()`/`booleanToString()`/`booleanToInt()` have no equivalent
+ * in DBAL's `AbstractPlatform` -- they solve a MySQL-schema-internal
+ * problem, so they stay as this codebase's own domain-specific additions
+ * rather than framework reinvention.
  */
 final class SqlDialect
 {

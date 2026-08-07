@@ -31,52 +31,29 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * The derivative image server -- P23 batch 8f: ported from i.php's ~900
- * top-level lines and 13 free functions; i.php is now a thin entry shell
- * (Paths::fromRoot() + RequestBootstrap::bootEntryPoint() +
- * RequestPipeline::handle() dispatch, matching every other P22/P23 root
- * file's own shape).
+ * The derivative image server for i.php, which is a thin entry shell that
+ * dispatches to this controller via RequestPipeline::handle().
  *
- * This controller now runs through the same bootstrap as every other
- * frontend controller -- RequestBootstrap::bootEntryPoint()'s configure()/
- * connect()/finalize() chain (plugin loading, native $_SESSION bootstrap,
- * full user resolution, template construction) has already run by the time
- * ControllerInvokerMiddleware invokes __invoke() below, so this class no
- * longer duplicates any of that: Config/CurrentLogger/CurrentUser are
- * already populated, and the permission check reads the already-resolved
- * CurrentUser instead of re-deriving it from the session cookie itself
- * (see checkDerivativePermission()'s own docblock).
+ * RequestBootstrap::bootEntryPoint()'s configure()/connect()/finalize()
+ * chain (plugin loading, native $_SESSION bootstrap, full user
+ * resolution, template construction) has already run by the time
+ * ControllerInvokerMiddleware invokes __invoke() below: Config/
+ * CurrentLogger/CurrentUser are already populated, and the permission
+ * check reads the already-resolved CurrentUser instead of re-deriving it
+ * from the session cookie (see checkDerivativePermission()'s own
+ * docblock).
  *
- * All DB work here goes through one shared DBAL Connection
- * (image/permission lookups alike) -- previously this file also
- * kept a separate legacy-mysqli connection for the image/permission
- * lookups specifically to avoid the DI-container construction cost on
- * this endpoint's per-request PHP-FPM hot path; that reasoning no longer
- * applies once the app runs under FrankenPHP workers (the container is
- * built once per worker, not per request), so Legacy Coupling Retirement:
- * DI+DBAL migration retargeted those two calls onto the same
- * Connection/QueryBuilder pattern used everywhere else in this codebase.
+ * All DB work here (image and permission lookups alike) goes through one
+ * shared DBAL Connection. Config, the logger, and the table prefix are
+ * all read through their normal injected accessors rather than raw
+ * globals.
  *
- * No globals left: $conf, $logger and $prefixeTable used to be (Legacy
- * Coupling Retirement Track A gap-fill batches G2/G5) -- PwgImage and
- * ImageStdParams read Piwigo\Config\Config:: accessors instead of a raw
- * $conf; this controller's own logger is Piwigo\Core\CurrentLogger::get(),
- * the same static accessor ImageExtImagick.php and every other shared
- * consumer read from now; and every real $prefixeTable read here was
- * already the same value as Piwigo\Db\DbCredentials::current()->prefix
- * (both trace back to the same PIWIGO_DB_PREFIX env var / 'piwigo_'
- * default) -- now
- * moot anyway, since Tables::config()/Tables::images() resolve the same
- * prefix internally. PageState's request-wide query counters, previously
- * maintained by every MysqliDb::query() call on this path, are not
- * replicated by the DBAL Connection -- this endpoint never renders a page
- * with the debug footer that stat feeds, so nothing ever read it here. The
- * derivativePath/derivativeUrlSuffix/derivativeExt/derivativeType/coi/
+ * The derivativePath/derivativeUrlSuffix/derivativeExt/derivativeType/coi/
  * srcLocation/srcPath/srcUrl/originalSize/rotationAngle/derivativeParams
- * scratch state below is this controller's own -- never read outside it
- * (unrelated to the same-named $page['root_path'] gallery-navigation
- * concept elsewhere) -- so it's private instance state instead of going
- * through PageState at all.
+ * properties below are private to this controller (unrelated to the
+ * same-named $page['root_path'] gallery-navigation concept elsewhere) --
+ * they are never read outside it, so they're plain instance state rather
+ * than going through PageState.
  */
 final class ImageDerivativeController implements ControllerInterface
 {
@@ -374,25 +351,19 @@ final class ImageDerivativeController implements ControllerInterface
 
         // no change required - redirect to source
         if (! (bool) $changes) {
-            // Part II/III (web-root isolation): $this->srcUrl used to be a
-            // raw link into upload/ (via PHPWG_ROOT_PATH, now fully retired
-            // from this class -- see parseRequest()'s/trySwitchSource()'s
-            // own comments) -- upload/ and _data/i/ are both deliberately
-            // unreachable now (SEC-33/35/38/47), so that redirect target
-            // 404d. Found live (a real Visual Regression failure, decoded
-            // and diffed rather than dismissed): every derivative whose
-            // computed size is identity to the source hits this exact
-            // path, not a rare edge case. $image_id is only set for a real
-            // DB-backed image (not the theme/plugin/representative
-            // branches above, which keep the unchanged raw $this->srcUrl
-            // link -- themes/ is a real, safe, reachable symlink); when
-            // set, redirect through action.php?part=e instead, the same
-            // permission-checked path Controller\ActionController's own
-            // 'e' case already re-verifies (including the HD-access check
-            // that a raw upload/ link also silently bypassed). $this->srcUrl
-            // itself may also already be an i.php?/... redirect to a
-            // *different* already-cached derivative type (trySwitchSource()'s
-            // own permission-checked redirect, see its own comment).
+            // upload/ and _data/i/ are both deliberately unreachable
+            // (SEC-33/35/38/47), so a raw link into either 404s. $image_id
+            // is only set for a real DB-backed image (not the
+            // theme/plugin/representative branches above, which keep the
+            // unchanged raw $this->srcUrl link -- themes/ is a real, safe,
+            // reachable symlink); when set, redirect through
+            // action.php?part=e instead, the same permission-checked path
+            // Controller\ActionController's own 'e' case re-verifies
+            // (including the HD-access check that a raw upload/ link would
+            // bypass). $this->srcUrl itself may also already be an
+            // i.php?/... redirect to a *different* already-cached
+            // derivative type (trySwitchSource()'s own permission-checked
+            // redirect, see its own comment).
             if ($image_id !== null) {
                 $this->ierror($this->urlService->getActionUrl($image_id, 'e', false), 301, [
                     'X-i' => 'No change',
@@ -460,22 +431,13 @@ final class ImageDerivativeController implements ControllerInterface
     }
 
     /**
-     * Part III (real routing pipeline): throws instead of header()+echo()+
-     * exit()ing directly -- a throw satisfies this method's own `: never`
-     * return type exactly like exit() did, so every one of this class's
-     * ~25 call sites (some several frames deep, e.g. parseRequest()/
-     * parseCustomParams()/checkDerivativePermission()) needed zero changes,
-     * the same zero-call-site-ripple mechanism Workstream C3 already
-     * established for RedirectService/HtmlService. Caught by
-     * ControllerInvokerMiddleware's own catch point, since this class is
-     * now a real, routed ControllerInterface -- no new catch point needed.
+     * Throws instead of emitting a response directly -- a throw satisfies
+     * this method's own `: never` return type, and is caught by
+     * ControllerInvokerMiddleware's own catch point.
      *
      * @param array<string, string> $extraHeaders only ever used by the one
-     *   redirect call site that used to queue an extra diagnostic header()
-     *   call of its own right before calling this method -- a raw header()
-     *   call here would never reach the client now (nothing echoes the
-     *   response directly any more, ResponseEmitter only emits whatever's
-     *   actually attached to the Response object this throws).
+     *   redirect call site that needs an extra diagnostic header alongside
+     *   the response this method throws.
      */
     private function ierror(string $msg, int $code, array $extraHeaders = []): never
     {
@@ -551,24 +513,13 @@ final class ImageDerivativeController implements ControllerInterface
 
     private function parseRequest(): DerivativeParams
     {
-        // Part III (real routing pipeline): $this->srcUrl (a real 301
-        // redirect target for the theme/plugin/representative fallback --
-        // see the "no change required" branch's own comment for the real
-        // DB-image case, already routed through action.php) used to be
-        // built from a PHPWG_ROOT_PATH-relative prefix, with the PATH_INFO
-        // branch below computing how many '../' to prepend based on the
-        // *request's own* apparent URL depth (i.php/upload/2026/08/01/...
-        // looks 4 directories deep from the browser's own relative-URL
-        // resolution, even though i.php itself is a top-level entry file)
-        // -- genuinely fragile (get the depth count wrong and the redirect
-        // 404s or lands somewhere else entirely), and PHPWG_ROOT_PATH is
-        // gone from every other entry file (Part 0). UrlService::
-        // getAbsoluteRootUrl(false) (no scheme) resolves the app's real
-        // mount path from cookiePath() -- SCRIPT_NAME/REDIRECT_URL-based,
-        // already the established, request-depth-independent mechanism
-        // this exact class's own CookieService dependency uses elsewhere in
-        // this codebase -- so building $this->srcUrl from it needs no
-        // depth computation of any kind, in either URL style below.
+        // $this->srcUrl (a real 301 redirect target for the theme/plugin/
+        // representative fallback -- see the "no change required" branch's
+        // own comment for the real DB-image case, already routed through
+        // action.php) is built from UrlService::getAbsoluteRootUrl(false)
+        // (no scheme), which resolves the app's real mount path from
+        // cookiePath() (SCRIPT_NAME/REDIRECT_URL-based) -- no URL-depth
+        // computation of any kind is needed, in either URL style below.
         if ($this->currentConfig->questionMarkInUrls() === false and
              isset($_SERVER['PATH_INFO']) and ! in_array($_SERVER['PATH_INFO'], [null, false, 0, '0', '', []], true)) {
             $req = $_SERVER['PATH_INFO'];

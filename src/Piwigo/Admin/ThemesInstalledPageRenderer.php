@@ -34,24 +34,17 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
 /**
- * Ported from admin/themes_installed.php (the "installed" tab of the
- * "themes" page slug, dispatched by ThemesSubController) -- lists installed
- * themes and handles activate/deactivate/set_default/delete.
+ * The "installed" tab of the "themes" page slug, dispatched by
+ * ThemesSubController -- lists installed themes and handles
+ * activate/deactivate/set_default/delete.
  *
- * P23 sub-batch 6i-2 fix: this file's action-handling block had NO
- * is_webmaster() gate at all on the mutation itself (only an earlier,
- * non-blocking warning message used it) and zero check_pwg_token() call
- * anywhere -- worse than the languages gap fixed in 6i-1 (which at least had
- * is_webmaster()). ExtensionLifecycle::performAction() itself does no CSRF
- * or privilege check of its own either, so a crafted
- * admin.php?page=themes&action=delete&theme=X GET request -- reachable by
- * any logged-in admin session, no interaction beyond that -- could delete a
- * theme. Fixed by adding both is_webmaster() and check_pwg_token() to the
- * action-handling block, and embedding a real token into all 4
- * *_baseurl template assigns below -- themes_installed.tpl appends the theme
- * ID directly after each *_baseurl string (no add_url_params() call to hook
- * into, unlike languages), so the token goes before the trailing
- * '&amp;theme=' so the template's own {$theme.ID} concatenation still works.
+ * ExtensionLifecycle::performAction() does no CSRF or privilege check of
+ * its own, so the action-handling block below gates on isWebmaster() and
+ * validates the token itself. The token is embedded into all 4
+ * *_baseurl template assigns below -- themes_installed.tpl appends the
+ * theme ID directly after each *_baseurl string (no add_url_params() call
+ * to hook into), so the token goes before the trailing '&amp;theme=' so
+ * the template's own {$theme.ID} concatenation still works.
  */
 final class ThemesInstalledPageRenderer
 {
@@ -75,11 +68,10 @@ final class ThemesInstalledPageRenderer
     ) {}
 
     /**
-     * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
-     * explicit param instead of `global $page['page'];` -- the one real
-     * caller (ThemesSubController) already knows its own fixed page
-     * slug statically (it's the only class registered for the 'themes'
-     * slug in config/admin_pages.php).
+     * $pageSlug is an explicit param instead of `global $page['page'];` --
+     * the one real caller (ThemesSubController) already knows its own
+     * fixed page slug statically (it's the only class registered for the
+     * 'themes' slug in config/admin_pages.php).
      */
     public function render(string $pageSlug): void
     {

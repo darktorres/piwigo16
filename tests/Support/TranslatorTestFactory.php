@@ -10,14 +10,11 @@ use Piwigo\Core\Kernel;
 use Piwigo\Lang\Translator;
 
 /**
- * Singleton/service-locator elimination campaign, Phase 12 sub-phase 12F-6:
- * replaces the deleted `Translator::get()` transitional shim for test call
- * sites -- reproduces its exact behavior (the real container-shared
- * instance once Kernel has booted, a MEMOIZED, not fresh-per-call,
- * instance otherwise). Translator is "load once, read many times" --
- * load() populates $inner/$mirror, translate()/plural() read them back --
- * so a fresh instance per call would silently lose every loaded PO file
- * between calls.
+ * Returns the real container-shared Translator instance once Kernel has
+ * booted, or a memoized (not fresh-per-call) fallback instance otherwise.
+ * Translator is "load once, read many times": load() populates
+ * $inner/$mirror, and translate()/plural() read them back, so a fresh
+ * instance per call would silently lose every loaded PO file between calls.
  */
 final class TranslatorTestFactory
 {

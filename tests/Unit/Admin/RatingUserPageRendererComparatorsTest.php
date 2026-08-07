@@ -8,9 +8,8 @@ use PHPUnit\Framework\TestCase;
 use Piwigo\Admin\RatingUserPageRenderer;
 
 /**
- * RatingUserPageRenderer's 5 uasort() comparator callbacks -- extracted
- * from include/admin/rating_user.php's own top-level free functions during
- * the P23 batch 6a port. Pure functions, no DB/globals needed.
+ * RatingUserPageRenderer's 5 uasort() comparator callbacks are pure
+ * functions, no DB/globals needed.
  */
 final class RatingUserPageRendererComparatorsTest extends TestCase
 {

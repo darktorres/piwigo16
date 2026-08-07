@@ -42,21 +42,21 @@ beforeEach(function (): void {
     Kernel::reset();
     CurrentConfigTestFactory::get()->reset();
     CurrentUserTestFactory::get()->reset();
-    // Legacy Coupling Retirement Phase 8, 8d: bootConfigOnly() now reuses
-    // an already-set CurrentConfigService instead of always resolving+
-    // loading its own -- without this reset, a set() left over from an
-    // earlier test would make these tests skip that resolve-and-load path
-    // entirely and silently pass/fail on stale state.
+    // bootConfigOnly() reuses an already-set CurrentConfigService instead
+    // of always resolving and loading its own -- without this reset, a
+    // set() left over from an earlier test would make these tests skip
+    // that resolve-and-load path entirely and silently pass/fail on stale
+    // state.
     CurrentConfigServiceTestFactory::get()->reset();
-    // No LangTestFactory::get()->reset() here (unlike afterEach below): Lang, since
-    // the singleton/service-locator elimination campaign's Phase 8, has no
-    // memoized pre-boot fallback the way CurrentUserTestFactory::get()/
-    // CurrentConfigServiceTestFactory::get() do -- see its own docblock -- and
-    // Kernel::reset() just above already tore down whatever container (and
-    // whatever Lang instance lived in it) the previous test left behind.
-    // There's nothing left to reset here; a fresh Kernel::boot() a few lines
-    // into each test body below hands out a brand new, already-empty
-    // instance from a brand new container.
+    // No LangTestFactory::get()->reset() here (unlike afterEach below):
+    // Lang has no memoized pre-boot fallback the way
+    // CurrentUserTestFactory::get()/CurrentConfigServiceTestFactory::get()
+    // do -- see its own docblock -- and Kernel::reset() just above already
+    // tore down whatever container (and whatever Lang instance lived in
+    // it) the previous test left behind. There's nothing left to reset
+    // here; a fresh Kernel::boot() a few lines into each test body below
+    // hands out a brand new, already-empty instance from a brand new
+    // container.
     TranslatorTestFactory::get()->reset();
     SentrySdk::init();
     putenv('SENTRY_DSN');
@@ -101,20 +101,17 @@ test('bootConfigOnly records a boot timing', function (): void {
     expect($timing->all()['boot'])->toBeGreaterThanOrEqual(0.0);
 });
 
-test('bootConfigOnly seeds CurrentConfig from its own property defaults (P13)', function (): void {
+test('bootConfigOnly seeds CurrentConfig from its own property defaults', function (): void {
     RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
 
-    // Same DB-state-independent claim the original assertion made
-    // (CurrentConfig::has('gallery_title')->toBeTrue(), back when P13 first
-    // wrote this test, before P23 batch 1 added the loadConfFromDb() call
-    // this same method now also makes) -- not the literal default value,
-    // since a real config-table row (this test's own DB connection, shared
-    // with whatever fixture state other suites left behind) can legitimately
+    // Asserts DB-state-independence, not the literal default value, since
+    // a real config-table row (this test's own DB connection, shared with
+    // whatever fixture state other suites left behind) can legitimately
     // override it.
     expect(CurrentConfigTestFactory::get()->galleryTitle())->not->toBe('');
 });
 
-test('bootConfigOnly merges DB-persisted config overrides into CurrentConfig (P23 batch 1)', function (): void {
+test('bootConfigOnly merges DB-persisted config overrides into CurrentConfig', function (): void {
     // tests/Fixtures/piwigo-17.0.sql overrides gallery_title away from its
     // own property default ('Piwigo') to prove loadConfFromDb() actually
     // ran, not just that the property exists.
@@ -191,9 +188,7 @@ test('bootConfigOnly reuses an already-set CurrentConfigService instead of resol
     // Kernel::boot() first, then seed the *container-resolved* instance --
     // current()'s pre-boot fallback is a different, memoized object from
     // the one bootConfigOnly()'s own Kernel::boot() call (idempotent,
-    // already booted) would later resolve via the container. Same
-    // "seed after boot, not before" fix shape as every other Current*
-    // wrapper in this campaign.
+    // already booted) would later resolve via the container.
     $paths = Paths::fromRoot(sys_get_temp_dir());
     Kernel::boot($paths);
 

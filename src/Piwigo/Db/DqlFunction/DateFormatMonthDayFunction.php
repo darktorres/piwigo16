@@ -16,22 +16,20 @@ use Doctrine\ORM\Query\TokenType;
 use Override;
 
 /**
- * Custom DQL function: "DATE_FORMAT_MONTH_DAY" "(" StringPrimary ")" --
- * a 4-digit `MMDD` grouping key, matching MySQL's own
- * `DATE_FORMAT(date, '%m%d')` shape (formerly {@see \Piwigo\Db\SqlDialect}'s
- * `getDateMMDD()`, removed once Calendar -- its only real caller --
- * became real DQL).
+ * Custom DQL function: "DATE_FORMAT_MONTH_DAY" "(" StringPrimary ")" -- a
+ * 4-digit `MMDD` grouping key, matching MySQL's own
+ * `DATE_FORMAT(date, '%m%d')` shape. Calendar is its only real caller,
+ * for its own month+day-within-year navigation grouping key.
  *
- * Further SQL-modernization audit, Item 15G: Calendar's own
- * month+day-within-year navigation grouping key -- same dedicated-
- * single-purpose-function reasoning as {@see DateFormatYearMonthFunction}'s
- * own docblock (a portable-pattern-string `DATE_FORMAT(date, pattern)`
- * isn't safe across platforms). MySQL/MariaDB branch verified against
- * real data via this project's own Integration tests. PostgreSQL/SQLite
- * branches are unverified against a real installation (see this plan's
- * own Context section) -- built from each platform's own documented
- * syntax, not empirically confirmed. Any other platform throws
- * `NotSupported` rather than guessing.
+ * A dedicated single-purpose function rather than a generic
+ * pattern-string function, because a portable-pattern-string
+ * `DATE_FORMAT(date, pattern)` isn't safe across platforms (see
+ * {@see DateFormatYearMonthFunction}'s own docblock). The MySQL/MariaDB
+ * branch is verified against real data via this project's own
+ * Integration tests. The PostgreSQL/SQLite branches are unverified
+ * against a real installation -- built from each platform's own
+ * documented syntax, not empirically confirmed. Any other platform
+ * throws `NotSupported` rather than guessing.
  */
 final class DateFormatMonthDayFunction extends FunctionNode
 {

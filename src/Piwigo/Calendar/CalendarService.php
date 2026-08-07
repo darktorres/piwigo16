@@ -17,8 +17,7 @@ use Piwigo\Permission\SqlCondition;
  * function (chronology style/view resolution, calendar object
  * construction, the view-switcher UI links) is entirely `$page`/
  * `$template`-coupled and stays in {@see CalendarRenderer::render()}
- * itself -- P23 batch 8c ported the free-function delegate this doc used
- * to describe (`initialize_calendar()`) into that method and deleted it.
+ * itself.
  */
 final readonly class CalendarService
 {
@@ -28,28 +27,24 @@ final readonly class CalendarService
     ) {}
 
     /**
-     * Null return means "nothing to do" -- mirrors initialize_calendar()'s
-     * own early `return;` for an empty sub-category set or an empty
-     * non-category item list.
+     * Null return means "nothing to do", for an empty sub-category set or
+     * an empty non-category item list.
      *
-     * $hasCategoryContext ($page['category'] isset in the original) and
-     * $categoryId (its 'id' field, once validated) are deliberately kept
-     * as two separate signals, not collapsed into "$categoryId !== null"
-     * -- a $page['category'] present but malformed (no valid int|string
-     * 'id') must still take the "specific category" branch (and its own
-     * empty-sub_ids early return), not silently fall through to the
-     * "browse everything visible" branch.
+     * $hasCategoryContext and $categoryId (its 'id' field, once validated)
+     * are deliberately kept as two separate signals, not collapsed into
+     * "$categoryId !== null" -- a category context that's present but
+     * malformed (no valid int|string 'id') must still take the "specific
+     * category" branch (and its own empty-sub_ids early return), not
+     * silently fall through to the "browse everything visible" branch.
      *
-     * Further SQL-modernization audit, Item 15G: returns a
-     * {@see CalendarQueryScope} instead of a single opaque `?SqlCondition`
-     * -- `CalendarRepository::findImageIds()` alone stays on raw DBAL (see
-     * that method's own docblock), every other `CalendarRepository`
-     * method is now real DQL. Both representations are built from the
-     * same subcategory-id resolution and `PermissionCriteria` calls,
-     * computed once; only the final field-path strings differ per target
-     * syntax (raw SQL column names vs. DQL property paths), same "one
-     * `PermissionCriteria` call per representation" shape already used
-     * throughout the rest of this DQL-modernization campaign.
+     * Returns a {@see CalendarQueryScope} rather than a single opaque
+     * `?SqlCondition`: {@see \Piwigo\Calendar\CalendarRepository::findImageIds()}
+     * alone stays on raw DBAL (see that method's own docblock), while
+     * every other `CalendarRepository` method is real DQL. Both
+     * representations are built from the same subcategory-id resolution
+     * and `PermissionCriteria` calls, computed once; only the final
+     * field-path strings differ per target syntax (raw SQL column names
+     * vs. DQL property paths).
      *
      * @param  list<bool|float|int|string>  $items  used only when $section !== 'categories'
      */

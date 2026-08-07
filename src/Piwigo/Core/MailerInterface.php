@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * P23 batch 8c: `Piwigo\Mail\MailService` (L3Presentation, forced there by
- * its real `Template` dependency for themed HTML email) can't be
+ * `Piwigo\Mail\MailService` (L3Presentation, forced there by its real
+ * `Template` dependency for themed HTML email) can't be
  * constructor-injected into L2aCoreDomain/L2bExtendedDomain classes
  * (`deptrac.yaml`'s ruleset forbids depending upward on L3). Lives in
  * `Piwigo\Core` (L1Infrastructure, same direction as `ControllerInterface`'s

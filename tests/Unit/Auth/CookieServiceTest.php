@@ -11,13 +11,10 @@ beforeEach(function (): void {
 });
 
 /**
- * CookieService's own private lazy requestMountDepth() helper (singleton/
- * service-locator elimination campaign, Phase 11 sub-phase 11G; formerly
- * the RequestMountDepth::currentStatic() shim, Phase 3) gracefully falls
- * back to 0 when Kernel hasn't booted -- most tests in this file need no
- * container at all. Tests needing a non-zero depth boot a real one via
- * KernelContainerOverride::with() instead of the former mid-test
- * RequestMountDepth::set() call.
+ * CookieService's own private lazy requestMountDepth() helper gracefully
+ * falls back to 0 when Kernel hasn't booted -- most tests in this file
+ * need no container at all. Tests needing a non-zero depth boot a real
+ * one via KernelContainerOverride::with().
  */
 function cookieServiceTestWithMountDepth(int $depth, callable $fn): mixed
 {

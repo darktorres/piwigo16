@@ -23,9 +23,8 @@ use Piwigo\Db\Tables;
  *
  * Needs a real, container-resolved HistoryService (Kernel::boot()), not a
  * hand-constructed one -- getMonthOfLastYears() takes it as an explicit
- * parameter now (singleton/service-locator elimination campaign, Phase 6),
- * resolved here the same way. Same minimal "just Kernel::boot(), no
- * IntegrationTestCase base class" shape as
+ * parameter, resolved here the same way. Same minimal "just Kernel::boot(),
+ * no IntegrationTestCase base class" shape as
  * tests/Integration/InstallationStatsTest.php, which resolves through the
  * same Bootstrap accessor family -- getMonthlyRows()/setMissingValues()/
  * getDateObject() touch no CurrentUser/Lang/Template state at all, so
@@ -66,11 +65,9 @@ function statsGetMonthOfLastYearsInvoke(): array
 }
 
 beforeEach(function (): void {
-    // AccessControl::current() (singleton/service-locator elimination
-    // campaign, Phase 7) is now part of HistoryService's own constructor
-    // chain (AccessControl -> RedirectService -> UserService -> Paths) --
-    // a bare Kernel::boot() with no Paths, which this file never needed
-    // before, no longer resolves.
+    // AccessControl is part of HistoryService's own constructor chain
+    // (AccessControl -> RedirectService -> UserService -> Paths) -- a bare
+    // Kernel::boot() with no Paths does not resolve.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
     // getMonthlyRows(null) (no $limit) reads every month-level row in the
     // WHOLE table -- this method's own count($allRows) > 1 vs <= 1

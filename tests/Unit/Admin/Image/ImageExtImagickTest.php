@@ -15,18 +15,15 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 
 /**
- * P23 Stage 1e: __construct()'s "identify couldn't determine dimensions"
- * guard used to die() -- first test coverage for this class, confirming
- * it now throws ImageProcessingException. Only runs the real external
+ * __construct()'s "identify couldn't determine dimensions" guard throws
+ * ImageProcessingException. Tests here only run the real external
  * `identify` binary when it's genuinely available in this environment
  * (same check PwgImage::is_ext_imagick() itself uses) -- no fake/mocked
- * binary, this is exercising the real shell-exec path.
- *
- * Coverage-gap batch: also drives rotate()/sharpen()/set_compression_quality()/
- * compose()/write() through the same real CLI, plus __construct()'s
- * animated-WebP branch, matching UploadServiceTest's uploadFileTiff/Pdf/
- * Psd/Eps "ext_imagick CLI" tests -- real `magick`/`convert`/`identify`
- * binaries, no mocking.
+ * binary, this exercises the real shell-exec path. This file also drives
+ * rotate()/sharpen()/set_compression_quality()/compose()/write() through
+ * the same real CLI, plus __construct()'s animated-WebP branch, matching
+ * UploadServiceTest's uploadFileTiff/Pdf/Psd/Eps "ext_imagick CLI" tests
+ * -- real `magick`/`convert`/`identify` binaries, no mocking.
  */
 function imageExtImagickTestMarker(): string
 {
@@ -127,11 +124,10 @@ function imageExtImagickTestMakeTruncatedAnimatedWebp(string $path): void
 }
 
 /**
- * ImageExtImagick reads CurrentLogger through real constructor injection
- * (singleton/service-locator elimination campaign, Phase 2) -- resolves
- * the container-shared instance rather than a bare `new CurrentLogger()`
- * so every construction in this file shares the one Kernel::boot()-seeded
- * instance, same as a real request would.
+ * ImageExtImagick reads CurrentLogger through constructor injection --
+ * resolves the container-shared instance rather than a bare
+ * `new CurrentLogger()` so every construction in this file shares the one
+ * Kernel::boot()-seeded instance, same as a real request would.
  */
 function imageExtImagickTestCurrentLogger(): CurrentLogger
 {
@@ -144,10 +140,10 @@ function imageExtImagickTestCurrentLogger(): CurrentLogger
 }
 
 /**
- * ImageExtImagick reads CurrentConfig through real constructor injection
- * (singleton/service-locator elimination campaign, Phase 9) -- resolves
- * the container-shared instance rather than a bare `new CurrentConfig()`,
- * same reasoning as imageExtImagickTestCurrentLogger() above.
+ * ImageExtImagick reads CurrentConfig through constructor injection --
+ * resolves the container-shared instance rather than a bare
+ * `new CurrentConfig()`, same reasoning as imageExtImagickTestCurrentLogger()
+ * above.
  */
 function imageExtImagickTestCurrentConfig(): CurrentConfig
 {

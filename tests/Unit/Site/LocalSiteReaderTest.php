@@ -105,12 +105,11 @@ beforeEach(function (): void {
     $this->root = sys_get_temp_dir() . '/piwigo-lsr-test-' . bin2hex(random_bytes(8));
     mkdir($this->root, 0o777, true);
     CurrentConfigTestFactory::get()->reset();
-    // LocalSiteReader now takes CurrentConfig as a real constructor
-    // collaborator (Legacy Coupling Retirement Track A batch A4) instead
-    // of reading it statically -- a fresh, per-test instance, since this
-    // file never boots the Kernel and every test constructs its own
-    // LocalSiteReader directly from it (not through CurrentConfigTestFactory::get()'s
-    // pre-boot fallback).
+    // LocalSiteReader takes CurrentConfig as a real constructor
+    // collaborator instead of reading it statically -- a fresh, per-test
+    // instance, since this file never boots the Kernel and every test
+    // constructs its own LocalSiteReader directly from it (not through
+    // CurrentConfigTestFactory::get()'s pre-boot fallback).
     $this->currentConfig = new CurrentConfig();
 });
 

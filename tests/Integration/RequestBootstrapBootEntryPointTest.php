@@ -78,12 +78,10 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        // pgsql support pass: PIWIGO_DB_DRIVER/PIWIGO_DB_PORT added for
-        // completeness -- see InstallWizardTest/InstallServiceTest's own
-        // docblocks for the real live-confirmed bug this exact list
-        // missing these two keys caused elsewhere (a permanently leaked
-        // env var corrupting every later Integration test class in the
-        // same process).
+        // This list must include PIWIGO_DB_DRIVER/PIWIGO_DB_PORT -- omitting
+        // either leaks a stale env var into every later Integration test
+        // class in the same process (see InstallWizardTest/InstallServiceTest's
+        // own docblocks for the concrete failure that causes).
         foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'] as $key) {
             $value = getenv($key);
             $this->originalDbEnv[$key] = $value === false ? '' : $value;
@@ -142,8 +140,8 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
         // additional cleanup is needed here. Paths::class must be bound
         // alongside the deliberately-wrong ConfigService::class override --
         // with() rebuilds the container from scratch with no Paths given by
-        // default, and CurrentPaths (Phase 3) is a pure shim with no state
-        // of its own to survive that rebuild; bootEntryPoint()'s own
+        // default, and CurrentPaths is a pure shim with no state of its
+        // own to survive that rebuild; bootEntryPoint()'s own
         // internal Kernel::boot($paths) call is a genuine no-op here since
         // booted is already forced true by the override.
         KernelContainerOverride::with(

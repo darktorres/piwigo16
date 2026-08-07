@@ -10,27 +10,12 @@ use Piwigo\Db\SqlDialect;
 use Piwigo\Session\SessionService;
 
 /**
- * P23 batch 8d: device-type detection relocated from
- * include/functions.inc.php -- no natural existing class home, stateless
- * beyond the session it reads/writes through SessionService.
- *
- * Singleton/service-locator elimination campaign, Phase 9: purely static,
- * no instance/constructor to receive CurrentConfig via constructor
- * injection through -- getDevice()/mobileTheme() originally read via the
- * CurrentConfig::current() transitional bridge, matching FilesystemHelper's
- * own former "no wrapper needed" precedent (see Phase 12D below for why
- * that no longer holds here).
- *
- * Phase 12 sub-phase 12D: SessionService::get() closed -- the "outside
- * this campaign's own scope" classification (Phase 4) turned out to be
- * stale, never revisited: both real callers (Page\PageTailRenderer.php,
- * Template\Template.php) already have an instance/static context capable
- * of threading a real SessionService through, so both methods now take it
- * as an explicit param (NOCTOR shape) instead of resolving the shim
- * internally. CurrentConfig::current() closed the same pass too --
- * mobileTheme()'s own 2 real callers (Page\PageTailRenderer.php,
- * Bootstrap\RequestBootstrap.php) already had a real CurrentConfig in
- * scope right next to their own mobileTheme() call site.
+ * Device-type detection, stateless beyond the session state it reads and
+ * writes through SessionService. getDevice() and mobileTheme() both take
+ * SessionService (and CurrentConfig, for mobileTheme()) as explicit
+ * params rather than resolving them internally -- their real callers
+ * (Page\PageTailRenderer.php, Template\Template.php,
+ * Bootstrap\RequestBootstrap.php) already have both in scope.
  */
 final class DeviceHelper
 {

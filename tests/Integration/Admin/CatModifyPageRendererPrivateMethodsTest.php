@@ -8,8 +8,8 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
 /**
- * Piwigo\Admin\CatModifyPageRenderer::getLocalDir()/getSiteUrl() -- both
- * private, both throw a real \Exception when their own category lookup
+ * Piwigo\Admin\CatModifyPageRenderer::getLocalDir()/getSiteUrl() are both
+ * private, and both throw a real \Exception when their own category lookup
  * (CategoryService::getCategoryUppercatsById()/getGalleriesUrlForCategory())
  * returns null (no matching row). tests/Browser/CatModifyPageRendererTest.php's
  * own docblock explains why *that* file can't reach either branch: its only
@@ -17,19 +17,17 @@ use Piwigo\Core\Paths;
  * DB read immediately before dispatching into render(), so a category that
  * stops existing mid-request never happens over real HTTP.
  *
- * Both methods are reachable directly via reflection with an id that was
- * never a real row, though -- exactly the same "private method, real DB,
+ * Both methods are reachable directly via reflection with an id that is
+ * never a real row, though -- the same "private method, real DB,
  * ReflectionMethod" shape tests/Integration/Admin/
  * IntroSubControllerGetLatestNewsTest.php and tests/Integration/Admin/
- * Integrity/C13yInternalTest.php already use for a sibling gap (the latter
- * for the identical reason: its own target reaches
+ * Integrity/C13yInternalTest.php use for a sibling gap (the latter reaches
  * CoreDomainAccessor::userService(), which needs the DI container, so
  * Kernel::boot() is called explicitly here too -- idempotent, safe
  * regardless of what ran before it in this shared process).
  *
- * A real Paths is required, not a bare boot: CategoryService's own
- * constructor now takes Lang (Phase 8), whose Paths param the container
- * can't guess without one.
+ * A real Paths is required, not a bare boot: CategoryService's constructor
+ * takes Lang, whose Paths param the container can't guess without one.
  */
 beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3)));

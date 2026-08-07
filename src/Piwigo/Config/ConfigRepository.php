@@ -194,8 +194,8 @@ final class ConfigRepository extends EntityRepository
      * original's own `fetchOne()` sentinel.
      *
      * json_decode()s the stored value back into the plain string
-     * {@see insertIgnoreRawValue()} originally encoded -- the read half
-     * of that same method's own JSON-column handling.
+     * {@see insertIgnoreRawValue()} encodes -- the read half of that
+     * same method's own JSON-column handling.
      */
     public function findRawValue(string $param): string|false
     {

@@ -52,9 +52,9 @@ final readonly class ControllerInvokerMiddleware implements MiddlewareInterface
             );
         }
 
-        // Workstream C3, catch point 2: the innermost/terminal middleware,
-        // so catching here (not in ExceptionHandlerMiddleware) means every
-        // outer middleware (SentryMiddleware's own `finally`,
+        // This is the innermost/terminal middleware, so catching here
+        // (not in ExceptionHandlerMiddleware) means every outer
+        // middleware (SentryMiddleware's own `finally`,
         // ServerTimingMiddleware's post-processing, SessionMiddleware's
         // persist, SecurityHeadersMiddleware) sees a normal Response
         // return value and unwinds exactly as if the controller had

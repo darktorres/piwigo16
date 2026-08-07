@@ -36,16 +36,14 @@ use Piwigo\Lang\Translator;
 // Only containerVersionCompare() is covered here -- checkPiwigoUpgrade()/
 // getPiwigoNewVersions()/notifyPiwigoNewVersions()/upgradeTo() all talk to
 // the real PHPWG_URL over the network via Piwigo\Http\HttpClientService's
-// static fetch()/fetchToFile() (P23 batch 8d -- was the legacy fetchRemote()
-// free function; still no injectable HTTP client seam, same limitation),
+// static fetch()/fetchToFile(), with no injectable HTTP client seam,
 // matching the project's own documented "piwigo.org outbound-call"
 // flakiness class -- not exercised here. containerVersionCompare() also
-// never touches the injected ConfigService (Legacy Coupling Retirement
-// Phase 5), so this only needs a type-satisfying instance, never an
-// actually-queried one -- Doctrine's DBAL connection is lazy (build()
-// never opens a real connection until a query runs), so constructing a
-// real ConfigRepository/ConfigService here is safe without a reachable
-// test DB.
+// never touches the injected ConfigService, so this only needs a
+// type-satisfying instance, never an actually-queried one -- Doctrine's
+// DBAL connection is lazy (build() never opens a real connection until a
+// query runs), so constructing a real ConfigRepository/ConfigService here
+// is safe without a reachable test DB.
 function core_update_service_test_activity_service(): ActivityService
 {
     return new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class));
@@ -90,8 +88,7 @@ function core_update_service_test_lang(): Lang
 /**
  * Same "no Kernel::boot(), type-satisfying instance is enough" reasoning
  * as core_update_service_test_lang() above -- every MailService::
- * __construct() shim collaborator (singleton/service-locator elimination
- * campaign, Phase 11 sub-phase 11E) built bare, DB-free.
+ * __construct() collaborator is built bare, DB-free.
  */
 function core_update_service_test_mail_service(): MailService
 {

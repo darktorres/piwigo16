@@ -431,15 +431,13 @@ final class PwgImage
     }
 
     /**
-     * Singleton/service-locator elimination campaign, Phase 12 sub-phase
-     * 12F-12: get_ext_imagick_command()/is_ext_imagick()/get_library()/
-     * get_graphics_library() below are all `public static`, no instance
-     * available for real constructor injection -- resolves the
+     * get_ext_imagick_command()/is_ext_imagick()/get_library()/
+     * get_graphics_library() below are all `public static`, with no
+     * instance available for real constructor injection -- resolves the
      * container-shared instance directly instead, same "container
      * resolve, not a constructor property" shape as
-     * Upload\UploadService::currentConfig(). Cheap, fresh-per-call
-     * fallback pre-boot -- CurrentConfig's own former pre-boot fallback
-     * was just `new self()`, no DB read at all.
+     * Upload\UploadService::currentConfig(). Falls back to a cheap,
+     * fresh-per-call `new CurrentConfig()` pre-boot -- no DB read at all.
      */
     private static function currentConfig(): CurrentConfig
     {
@@ -538,11 +536,10 @@ final class PwgImage
     }
 
     /**
-     * P23 batch 8d: ported from admin/include/functions.php's
-     * get_graphics_library() -- a natural extension of this class's own
-     * library-detection concern (is_imagick()/is_ext_imagick()/is_gd()/
-     * get_library() above), appending a version-string suffix on top of
-     * get_library()'s bare identifier.
+     * Extends this class's own library-detection concern
+     * (is_imagick()/is_ext_imagick()/is_gd()/get_library() above),
+     * appending a version-string suffix on top of get_library()'s bare
+     * identifier.
      */
     public static function get_graphics_library(): string|false
     {

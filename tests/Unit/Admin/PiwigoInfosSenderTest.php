@@ -72,8 +72,7 @@ afterEach(function (): void {
 });
 
 // PiwigoInfosSender/UserService/ImageService/CategoryService/TagService
-// all gained a required Lang constructor collaborator (singleton/
-// service-locator elimination campaign, Phase 8) and this plain Unit
+// each require a Lang constructor collaborator, and this plain Unit
 // test never boots a Kernel, so each call site below needs its own
 // throwaway, DB-free instance -- none of them are ever actually read,
 // same "send() returns before touching anything past the guard"
@@ -86,8 +85,7 @@ function piwigoInfosSenderTestLang(): Lang
 /**
  * Same "no Kernel::boot(), never actually read" reasoning as
  * piwigoInfosSenderTestLang() above -- every MailService::__construct()
- * shim collaborator (singleton/service-locator elimination campaign,
- * Phase 11 sub-phase 11E) built bare, DB-free.
+ * collaborator is built bare, DB-free.
  */
 function piwigoInfosSenderTestMailService(): MailService
 {

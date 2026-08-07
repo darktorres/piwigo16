@@ -38,15 +38,11 @@ final class C13yInternal
     ) {}
 
     /**
-     * Legacy Coupling Retirement Phase 8, 8k: registration used to be a
-     * constructor side effect -- every `new C13yInternal()` silently
-     * registered 3 more closures on the shared EventDispatcher singleton,
-     * with no way to construct the class (e.g. to call
-     * c13y_correction_user() directly) without that side effect firing.
-     * Split into an explicit method so registration only happens where a
-     * caller actually asks for it -- the one real caller
-     * (Controller\Admin\IntroSubController) calls this right after
-     * construction, same as it always did, just visibly.
+     * Registers this class's 3 event handlers on EventDispatcher.
+     * Construction alone does not register them; callers must invoke
+     * this explicitly. The only real caller is
+     * Controller\Admin\IntroSubController, which calls this right after
+     * construction.
      */
     public function registerHandlers(): void
     {

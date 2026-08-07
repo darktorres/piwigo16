@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-// script_basename() stub removed -- ActivityService::record() now calls
-// Piwigo\Core\PageFilterHelper::scriptBasename() directly (P23 batch 8d),
-// a real class method a same-named bare-function stub can no longer
-// intercept, so the stub was unreachable dead code.
 namespace Piwigo\Tests\Integration {
 
 use Override;
@@ -433,18 +429,13 @@ final class ActivityServiceTest extends IntegrationTestCase
 
     public function test_record_writes_a_null_performed_by_when_no_user_is_loaded(): void
     {
-        // Real, adversarially-verified bug fixed in this same batch:
         // activity.performed_by has an ON DELETE SET NULL foreign key to
-        // users.id, so the old `$user['id'] ?? 0` fallback (for "on a
-        // plugin autoupdate, $user is not yet loaded", per the removed
-        // comment) threw a real ForeignKeyConstraintViolationException on
-        // every such write, since 0 is never a valid user id
-        // (AUTO_INCREMENT starts at 1) -- this test would have failed with
-        // that exception before the fix. CurrentUserTestFactory::get()->isInitialized() is
-        // always true by this point (setUp() already called
-        // CurrentUserTestFactory::get()->set()) -- resetRealUserResolvedFlag() is what
-        // simulates "no real user resolved this request" now (Legacy
-        // Coupling Retirement Phase 8, 8h).
+        // users.id, and 0 is never a valid user id (AUTO_INCREMENT starts
+        // at 1), so no-known-actor must be represented as NULL, not 0.
+        // CurrentUserTestFactory::get()->isInitialized() is always true by
+        // this point (setUp() already called
+        // CurrentUserTestFactory::get()->set()) -- resetRealUserResolvedFlag()
+        // simulates "no real user resolved this request".
         CurrentUserTestFactory::get()->resetRealUserResolvedFlag();
 
         $this->service->record('test-no-user', 1, 'add');

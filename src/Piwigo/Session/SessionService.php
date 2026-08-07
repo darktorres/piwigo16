@@ -20,15 +20,11 @@ final class SessionService
 
     /**
      * Container resolve, not a constructor property -- used only inside
-     * sessionWrite()'s own internal ApiKeyRequestFlag::isActiveStatic()
-     * read below. A required constructor param here would ripple across
-     * this class's own ~27 real construction sites for the sake of one
-     * internal caller, same low-blast-radius reasoning as every other
-     * lazy helper this session (singleton/service-locator elimination
-     * campaign, Phase 11 sub-phase 11G). Falls back to a fresh,
-     * unmemoized `false`-active instance when Kernel::boot() hasn't run,
-     * matching ApiKeyRequestFlag::isActiveStatic()'s own former identical
-     * pre-boot fallback.
+     * sessionWrite()'s own ApiKeyRequestFlag::isActive() check below. A
+     * required constructor param here would ripple across this class's
+     * many real construction sites for the sake of one internal caller.
+     * Falls back to a fresh, unmemoized `false`-active instance when
+     * Kernel::boot() hasn't run.
      */
     private function apiKeyRequestFlag(): ApiKeyRequestFlag
     {
@@ -88,15 +84,14 @@ final class SessionService
 
     /**
      * Pure computation behind getRemoteAddrSessionHash(), with the
-     * "bind sessions to the client IP?" policy bit passed in explicitly.
-     *
-     * P23 batch 8f (i.php): extracted so SessionUserResolver (the i.php
-     * fast path) can share the exact composite-key hash logic while
-     * sourcing the policy bit from the legacy global $conf instead of
-     * CurrentConfig:: -- on that fast-bootstrap path CurrentConfig::$data is populated
-     * from ConfigLoader defaults/env only, never from local/config
-     * overrides, so CurrentConfig::sessionUseIpAddress() would not be
-     * authoritative there.
+     * "bind sessions to the client IP?" policy bit passed in explicitly so
+     * SessionUserResolver (the i.php fast path) can share the exact
+     * composite-key hash logic while sourcing the policy bit from the
+     * legacy global $conf instead of CurrentConfig:: -- on that
+     * fast-bootstrap path CurrentConfig::$data is populated from
+     * ConfigLoader defaults/env only, never from local config overrides,
+     * so CurrentConfig::sessionUseIpAddress() would not be authoritative
+     * there.
      */
     public static function remoteAddrHash(bool $useIpAddress): string
     {

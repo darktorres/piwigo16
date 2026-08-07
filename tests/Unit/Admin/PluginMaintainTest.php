@@ -81,13 +81,11 @@ test('autoUpdate() triggers its deprecation warning for an admin user outside a 
     });
 
     try {
-        // AccessControl::current() (Phase 7 of the singleton/service-locator
-        // elimination campaign) has no memoized pre-boot fallback, unlike
-        // CurrentUserTestFactory::get() -- a real, resolvable container is now
+        // AccessControl::current() has no memoized pre-boot fallback, unlike
+        // CurrentUserTestFactory::get() -- a real, resolvable container is
         // required for every test reaching autoUpdate(), not just the
         // WS-context one. The user status must be seeded INSIDE the
-        // callback, once the container exists (Phase 5 execution finding,
-        // same pitfall Translator/EventDispatcher already hit).
+        // callback, once the container exists.
         KernelContainerOverride::with(
             [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
             static function (): void {
@@ -163,16 +161,14 @@ test('autoUpdate() stays silent for an admin user inside an active WS request', 
     });
 
     try {
-        // PluginMaintain takes WsContext via real constructor injection
-        // (Phase 11 sub-phase 11D) -- KernelContainerOverride::with() gives
-        // this one test a real container with WsContext bound active, then
-        // tears it back down.
+        // PluginMaintain takes WsContext via constructor injection --
+        // KernelContainerOverride::with() gives this one test a real
+        // container with WsContext bound active, then tears it back down.
         // The user status must be seeded INSIDE the callback, once the
         // container exists -- seeding beforehand only reaches the pre-boot
-        // memoized CurrentUserTestFactory::get() fallback, which is a different
-        // instance from the one AccessControl::isAdmin() resolves once
-        // Kernel is booted here (Phase 5 execution finding, same pitfall
-        // Translator/EventDispatcher already hit).
+        // memoized CurrentUserTestFactory::get() fallback, which is a
+        // different instance from the one AccessControl::isAdmin() resolves
+        // once Kernel is booted here.
         KernelContainerOverride::with(
             [
                 WsContext::class => new WsContext(true),

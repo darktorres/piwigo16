@@ -12,15 +12,9 @@ use Piwigo\Lang\Translator;
 /**
  * Typed facade over the legacy $lang array.
  *
- * `self::$data` used to be a live reference to `$GLOBALS['lang']`
- * (established by `attachGlobals()`), justified by "the free function
- * `l10n()` keeps reading `$lang` directly." "Nothing is frozen" gap-closure
- * (2026-07-22): that free function is deleted (see `Piwigo\Lang\
- * Translator::translate()`'s own docblock) and nothing else reads
- * `$GLOBALS['lang']` independently of this class and `Translator` -- the
- * bridge was two classes using a global as their own private IPC channel,
- * not a real external contract. `attachGlobals()` now pulls a one-time
- * snapshot from `$translator->mirroredStrings()` instead.
+ * `attachGlobals()` populates `self::$data` with a one-time snapshot from
+ * `$translator->mirroredStrings()`. Nothing outside this class and
+ * `Translator` reads `$GLOBALS['lang']`.
  *
  * `t()` delegates to `Piwigo\Lang\Translator` (gettext-backed, P16) rather
  * than reading `self::$data` directly -- `Translator::translate()` itself
@@ -28,37 +22,30 @@ use Piwigo\Lang\Translator;
  * entry, so both PHP-array-loaded and PO-loaded strings resolve correctly
  * through one call. `self::$data` backs `has()`/`day()`/`month()` only.
  *
- * P23 batch 8d: gained `load()` (ported from the legacy `load_language()`)
- * plus its two private helpers (`getParentLanguage()`/
- * `poHeadersToLangInfo()`, ported from `get_parent_language()`/
- * `po_headers_to_lang_info()` -- both had zero real external callers,
- * confirmed by grep, so neither needs to stay public) and `args()`/
- * `buildArgs()` (ported from `l10n_args()`/`get_l10n_args()`). See
- * `DefaultLanguageProviderInterface`'s own docblock for why `load()` needs
- * a provider it can tolerate not having yet, rather than a required
- * constructor dependency.
+ * `getParentLanguage()`/`poHeadersToLangInfo()` are private -- neither has
+ * a real external caller. See `DefaultLanguageProviderInterface`'s own
+ * docblock for why `load()` needs a provider it can tolerate not having
+ * yet, rather than a required constructor dependency.
  *
- * Singleton/service-locator elimination campaign, Phase 8: converted to a
- * real, container-shared instance -- `Translator`/`HtmlRenderingInterface`/
- * `Paths`/`InstallationFlag` are constructor-injected (all already bound in
- * `container.php`). `DefaultLanguageProviderInterface` deliberately stays a
- * real, mutable, nullable instance property with its own
- * `setDefaultLanguageProvider()` instance method instead -- unlike this
- * class's other collaborators, it resolves (via its own `container.php`
- * binding) to `UserService`, whose own dependency chain reaches a Doctrine
- * repository; constructing a Doctrine repository for the first time in a
- * process makes Doctrine eagerly connect to auto-detect the DB platform
- * (the exact landmine `AccessControl::currentForCaching()`'s own docblock
- * documents finding during Phase 7's close-out). Since `Lang::t()` is
- * reached from `Template::parse()` on essentially every real page render,
- * and `Admin\Install\InstallWizard::render()` calls it directly before any
- * DB credentials exist at all, making this collaborator a required eager
- * dependency would mean the install page could never render even once on
- * a fresh install. `load()`/`currentUserLanguage()` already null-coalesce
- * around an unset provider (`AppInfo::DEFAULT_LANGUAGE` fallback) -- "not
- * yet wired" was already a real, tolerated state before this phase, so
- * this collaborator keeps that shape instead of following the "becomes an
- * ordinary constructor param" pattern the other 4 do.
+ * `Translator`/`HtmlRenderingInterface`/`Paths`/`InstallationFlag` are
+ * constructor-injected (all already bound in `container.php`).
+ * `DefaultLanguageProviderInterface` deliberately stays a real, mutable,
+ * nullable instance property with its own `setDefaultLanguageProvider()`
+ * instance method instead -- unlike this class's other collaborators, it
+ * resolves (via its own `container.php` binding) to `UserService`, whose
+ * own dependency chain reaches a Doctrine repository; constructing a
+ * Doctrine repository for the first time in a process makes Doctrine
+ * eagerly connect to auto-detect the DB platform (the exact landmine
+ * `AccessControl::currentForCaching()`'s own docblock documents). Since
+ * `Lang::t()` is reached from `Template::parse()` on essentially every
+ * real page render, and `Admin\Install\InstallWizard::render()` calls it
+ * directly before any DB credentials exist at all, making this
+ * collaborator a required eager dependency would mean the install page
+ * could never render even once on a fresh install. `load()`/
+ * `currentUserLanguage()` already null-coalesce around an unset provider
+ * (`AppInfo::DEFAULT_LANGUAGE` fallback) -- "not yet wired" is a real,
+ * tolerated state, so this collaborator keeps that shape instead of
+ * becoming an ordinary constructor param the way the other 4 do.
  */
 final class Lang
 {
@@ -76,9 +63,9 @@ final class Lang
     /**
      * Backs load()'s $lang_info (parent/code/direction/jquery_code/... --
      * see poHeadersToLangInfo()'s own docblock for the full key list).
-     * Legacy Coupling Retirement Track A gap-fill batch G5: every real
-     * external reader (MailService, IntroSubController, Template,
-     * Bootstrap\RedirectService::redirectHtml()) goes through langInfo()/
+     * Every real external reader (MailService, IntroSubController,
+     * Template, Bootstrap\RedirectService::redirectHtml()) goes through
+     * langInfo()/
      * setLangInfo()/isLangInfoInitialized() instead of a raw global -- unlike
      * $data above, nothing outside this class reads $GLOBALS['lang_info']
      * directly, so no $GLOBALS bridge is needed here.
@@ -121,13 +108,10 @@ final class Lang
     private function fatalError(string $msg): never
     {
         // fatalError() is `never`-typed -- always terminates -- and
-        // $htmlRenderer is now a required constructor collaborator
-        // (singleton/service-locator elimination campaign, Phase 8), so
+        // $htmlRenderer is a required constructor collaborator, so
         // there's no reachable fallthrough left to throw a plain
-        // RuntimeException from, unlike the old nullable-static design.
-        // PHPStan proves this (deadCode.unreachable) -- same real,
-        // permanent simplification AccessControl::checkStatus() got in
-        // Phase 7.
+        // RuntimeException from. PHPStan proves this
+        // (deadCode.unreachable).
         $this->htmlRenderer->fatalError($msg);
     }
 
@@ -174,18 +158,15 @@ final class Lang
     }
 
     /**
-     * Thin `$this->translator->plural()` delegate carrying the one
-     * behavioral difference the deleted `l10n_dec()` free function had:
-     * `Translator::plural()` requires a strict native `int`, but this
-     * boundary's real callers are Smarty-compiled-template expressions
-     * (`Template::modcompiler_translate_dec()`'s generated code -- the
-     * only real caller, confirmed by grep) whose runtime value can be a
-     * numeric DB-row string (the exact real 500 `l10n_dec()`'s own
-     * docblock already documented: menubar_categories.tpl passed one).
-     * Every hand-written .php call site instead calls its own
+     * Thin `$this->translator->plural()` delegate: `Translator::plural()`
+     * requires a strict native `int`, but this boundary's real caller is
+     * Smarty-compiled-template expressions (`Template::
+     * modcompiler_translate_dec()`'s generated code -- the only real
+     * caller, confirmed by grep) whose runtime value can be a numeric
+     * DB-row string (e.g. menubar_categories.tpl passes one). Every
+     * hand-written .php call site instead calls its own
      * constructor-injected `Translator::plural()` directly with an
-     * explicit int already in hand, per Legacy Coupling Retirement
-     * Phase 4d.
+     * explicit int already in hand.
      */
     public function plural(string $singular, string $plural, mixed $decimal): string
     {
@@ -209,7 +190,7 @@ final class Lang
     }
 
     /**
-     * Restores a translation table previously obtained from snapshot(), or
+     * Restores a translation table obtained earlier via snapshot(), or
      * resets to empty -- ready for a fresh load() -- when $data is null.
      *
      * @param array<string, string|array<int, string>>|null $data
@@ -371,18 +352,15 @@ final class Lang
               $dirname . $language . '.' . $filename :
               $dirname . $language . '/' . $filename;
 
-            // Core language files were converted to .po in P16 -- $f is a
-            // .lang.php-style path (the '.php' suffix appended above), which no
-            // longer exists on disk for the ~322 converted core files (only
-            // their .po sibling does now). The file_exists($f) branch below
-            // is kept for a different reason since Legacy Coupling
-            // Retirement Phase 8, 8l dropped .lang.php loading support
-            // entirely (see the docblock a few lines below this loop): it
-            // doubles as the generic existence check $options['return']
-            // mode needs for arbitrary non-.lang.php filenames (e.g.
-            // description.txt) -- a raw .lang.php match with no .po
-            // sibling now dead-ends into load()'s own `return false;`
-            // instead of being read.
+            // $f is a .lang.php-style path (the '.php' suffix appended
+            // above), which no longer exists on disk for core language
+            // files (only their .po sibling does now). The
+            // file_exists($f) branch below doubles as the generic
+            // existence check $options['return'] mode needs for
+            // arbitrary non-.lang.php filenames (e.g. description.txt)
+            // -- a raw .lang.php match with no .po sibling now
+            // dead-ends into load()'s own `return false;` instead of
+            // being read.
             $po_sibling = preg_replace('/\.lang\.php$/', '.po', $f);
 
             if (file_exists($f) || ($po_sibling !== null && $po_sibling !== $f && file_exists($po_sibling))) {
@@ -404,14 +382,11 @@ final class Lang
 
         // $source_file is a .lang.php-style path here (see the '.php'
         // suffix appended above); only its .po sibling is ever actually
-        // read now -- Legacy Coupling Retirement Phase 8, 8l dropped the
-        // raw .lang.php PHP-array @include fallback that used to follow
-        // (zero .lang.php files are bundled in-tree; sibling-repo plugin/
-        // theme usage doesn't count as a reason to keep it, see this
-        // class's own docblock). The existence-check loop above still
-        // accepts a raw, non-.po path as "found" -- that's not dead .lang.php
-        // support, it's the generic file-exists check $options['return']
-        // mode relies on for arbitrary filenames like description.txt.
+        // read now -- zero .lang.php files are bundled in-tree. The
+        // existence-check loop above still accepts a raw, non-.po path
+        // as "found" -- that's not dead .lang.php support, it's the
+        // generic file-exists check $options['return'] mode relies on
+        // for arbitrary filenames like description.txt.
         $po_file = preg_replace('/\.lang\.php$/', '.po', $source_file);
 
         if ($po_file === null || ! is_readable($po_file)) {

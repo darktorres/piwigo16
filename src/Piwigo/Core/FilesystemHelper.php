@@ -8,57 +8,26 @@ use Piwigo\Config\CurrentConfig;
 use RuntimeException;
 
 /**
- * P23 batch 8d: relocated from include/functions.inc.php, unchanged logic.
+ * MKGETDIR_ bitmask flags are defined as class constants (autoloaded with
+ * the class itself), so mkgetdir()'s default argument is self-contained
+ * regardless of bootstrap path.
  *
- * P23 batch 8f-4: the MKGETDIR_ bitmask flags moved here as class
- * constants (include/functions.inc.php is deleted). Beyond the mechanical
- * relocation this fixes a real, documented live fatal: mkgetdir()'s
- * default parameter used to reference the global MKGETDIR_DEFAULT, which
- * only existed once include/functions.inc.php had run -- i.php's
- * deliberately-lighter "fast bootstrap" path never loaded that file, so a
- * cold-cache thumbnail generation calling mkgetdir() with default args
- * fataled (surfaced live via admin.php?page=comments, noted in the 8f-3
- * batch log). Class constants are autoloaded with the class itself, so
- * the default is now self-contained on every path.
+ * Every real method here (mkgetdir()/secureDirectory()/getFsDirectories()/
+ * getDirs()/deltree()/getCacheSizeDerivatives()) is a pure static utility
+ * function with no natural "construct once, call several times" shape --
+ * there is no instance to speak of, so this class has no container-shared
+ * instance of its own. `HtmlRenderingInterface`/`Lang` are each bound in
+ * container.php, so this class's 2 private, internal collaborator reads
+ * (fatalError()/t()) each resolve directly from the container instead --
+ * this file is included in `Kernel::container()`'s `shimAllowedFiles`
+ * allow-list to permit that.
  *
- * Singleton/service-locator elimination campaign, Phase 3: every real
- * method here (mkgetdir()/secureDirectory()/getFsDirectories()/getDirs()/
- * deltree()/getCacheSizeDerivatives()) is a pure static utility function
- * with no natural "construct once, call several times" shape -- there is
- * no instance to speak of, so unlike most classes in this campaign this
- * one has no `createStatic()`-style factory or container-shared instance.
- * `HtmlRenderingInterface`/`Lang` are each bound in container.php, so
- * this class's 2 private, internal collaborator reads (fatalError()/t())
- * each resolve directly from the container instead -- there is no
- * caller-facing shim to track here (neither has external callers to
- * convert), so this file is simply added to Kernel::container()'s own
- * shimAllowedFiles allow-list, the same as every other class in this
- * campaign whose own internal resolver needs direct container access.
- * Sub-phase 12D: t() itself closed its own former direct Lang::current()
- * shim call this same way -- safe because Lang's own former current()
- * shim had no pre-boot fallback at all (t()'s own isBooted() guard never
- * reaches it unbooted either way), so there's no shared-instance-identity
- * risk.
- * mkgetdir()/getFsDirectories()'s own CurrentConfig::current() calls were
- * investigated the same way at the time and found NOT safely convertible
- * to a private-static-resolver-with-its-own-fallback the way fatalError()/
- * t() were -- CurrentConfig's own pre-boot fallback was memoized behind a
- * `private static` property only the shim itself could reach, and a real
- * test (FilesystemHelperTest.php's own "mkgetdir returns false when a
- * freshly-created directory ends up non-writable" case) configured state
- * on that exact shared fallback instance via CurrentConfig::current() and
- * expected mkgetdir() to read it back -- confirmed live: an independent,
- * un-shared fallback instance would have broken that test for real, not
- * just hypothetically. Sub-phase 12F-12 closed this shim for real via a
- * different mechanism than fatalError()/t()'s own private-resolver shape:
- * mkgetdir()/getFsDirectories() now take CurrentConfig as a real, explicit
- * param (NOCTOR) -- every real caller already had one constructor-injected
- * except FilesystemHelper.php's own deltree() (a purely internal
- * collaborator, not test-coupled, so it kept the private-resolver shape
- * instead -- see currentConfig() below) and ZipExtractor::extract()/
- * CoverageCollector::registerIfActive()'s own shutdown closure/
- * ErrorCollector::writeTestErrorsLog(), each fixed via its own most
- * proportional mechanism (see each file's own docblock).
+ * mkgetdir()/getFsDirectories() take CurrentConfig as a real, explicit
+ * param rather than resolving it internally -- every real caller already
+ * has one available. deltree()'s own internal trash_path mkgetdir() call
+ * is the exception, resolving CurrentConfig itself (see currentConfig()
+ * below), since threading a param through deltree()'s own public
+ * signature would ripple into every one of its real callers too.
  */
 final class FilesystemHelper
 {
@@ -108,17 +77,12 @@ final class FilesystemHelper
      * this class is a purely static utility (no wrapper instance, see this
      * class's own docblock) called from code paths that may run before
      * Kernel is booted at all (e.g. a cold-cache thumbnail generation via
-     * i.php's lighter bootstrap). Lang::current()'s own shim docblock
-     * establishes there's no pre-boot fallback for Lang (its constructor
-     * needs real collaborators) and would throw before fatalError()'s own
-     * graceful degradation is ever reached; falling back to the raw,
+     * i.php's lighter bootstrap). Lang has no pre-boot fallback (its
+     * constructor needs real collaborators), so falling back to the raw,
      * untranslated key here matches Translator::translate()'s own "no data
-     * loaded" fallback behavior, the same safe default this call site
-     * already had before Phase 8. self::lang() is only ever reached once
-     * this method's own isBooted() guard already holds, so its own
-     * unconditional container resolve (mirroring Lang::current()'s exact
-     * shim body, no separate fallback branch needed) never actually throws
-     * here.
+     * loaded" fallback behavior. self::lang() is only ever reached once
+     * this method's own isBooted() guard already holds, so its
+     * unconditional container resolve never actually throws here.
      */
     private static function t(string $key): string
     {
@@ -136,17 +100,13 @@ final class FilesystemHelper
     }
 
     /**
-     * Singleton/service-locator elimination campaign, Phase 12 sub-phase
-     * 12F-12: mkgetdir()/getFsDirectories() themselves now take
-     * CurrentConfig as a real, explicit param (this class's own docblock
-     * above explains why -- a real test depends on the exact shared
-     * instance a private-static-resolver-with-its-own-fallback couldn't
-     * reproduce). deltree()'s own internal trash_path mkgetdir() call
-     * below is different: no test depends on a specific CurrentConfig
+     * mkgetdir()/getFsDirectories() take CurrentConfig as a real, explicit
+     * param rather than resolving it here (this class's own docblock
+     * above explains why). deltree()'s own internal trash_path mkgetdir()
+     * call below is different: no test depends on a specific CurrentConfig
      * value reaching it, and threading a param through deltree()'s own
      * public signature would ripple into every one of ITS real callers,
-     * not just mkgetdir()'s -- same "internal collaborator, no
-     * caller-facing shim to track" shape as lang()/fatalError() above.
+     * not just mkgetdir()'s.
      */
     private static function currentConfig(): CurrentConfig
     {
@@ -237,11 +197,10 @@ final class FilesystemHelper
     }
 
     /**
-     * P23 batch 8d: ported from admin/include/functions.php's
-     * get_fs_directories(). Lives here (not Piwigo\Admin) because a real
-     * caller, Piwigo\Site\LocalSiteReader (L2bExtendedDomain), can't
-     * depend on L4Integration -- this class is already L1Infrastructure,
-     * reachable from every layer, and already owns the sibling
+     * Lives here (not Piwigo\Admin) because a real caller,
+     * Piwigo\Site\LocalSiteReader (L2bExtendedDomain), can't depend on
+     * L4Integration -- this class is already L1Infrastructure, reachable
+     * from every layer, and already owns the sibling
      * mkgetdir()/secureDirectory() filesystem concerns.
      *
      * @return string[]

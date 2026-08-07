@@ -9,32 +9,14 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
 
 /**
- * Gap-closure Stage 4i (docs/plan/gap-closure-p0-p23.md): replaces
- * `UserCacheInvalidator` now that `piwigo_user_cache`/
- * `piwigo_user_cache_categories` are dropped -- there's nothing left to
- * truncate or flag `need_update`. The real remaining purpose (already
- * established by Stage 4g's own fix to the old class, not new here): clear
- * the permission-related PSR-6 pools so a real access-affecting mutation
- * (category/group/image access change) takes effect on the very next
- * request, plus invalidate the cached orphan-image count
+ * Clears the permission-related PSR-6 pools so a real access-affecting
+ * mutation (category/group/image access change) takes effect on the very
+ * next request, plus invalidates the cached orphan-image count
  * (`Image\ImageService::emptyLounge()`'s own `confUpdateParam`) since the
- * same mutations can affect it too. Lives here, not `Piwigo\Users`, for the
- * same reason the old class did: real callers span every layer, including
- * `Piwigo\Group\GroupService` (L2aCoreDomain) -- this class is
- * L1Infrastructure, reachable from every layer at once.
- *
- * Dropped from the old class, not carried forward:
- * - `$persistent_cache->purge(true)` -- grep confirms `CurrentPersistentCache`/
- *   `PersistentFileCache` have zero remaining permission/category-related
- *   content (Stage 4a already moved every real consumer onto
- *   `CachePools`); its only other real consumer is the unrelated
- *   `'compiled-templates'` maintenance action, which already purges it
- *   itself.
- * - the `invalidate_user_cache` `EventDispatcher::triggerNotify()` hook --
- *   grep confirms zero real in-tree handlers.
- * - the `bool $full` parameter (old `markNeedUpdate()` vs. truncate
- *   distinction) -- grep of all ~31 real call sites found zero callers
- *   ever passed `false`.
+ * same mutations can affect it too. Lives here, not `Piwigo\Users`: real
+ * callers span every layer, including `Piwigo\Group\GroupService`
+ * (L2aCoreDomain) -- this class is L1Infrastructure, reachable from every
+ * layer at once.
  */
 final class PermissionCacheInvalidator
 {
@@ -47,16 +29,14 @@ final class PermissionCacheInvalidator
 
     /**
      * Same "container resolve, not a constructor param" reasoning as
-     * Core/Logger.php's own pageState() (singleton/service-locator
-     * elimination campaign, Phase 12 sub-phase 12D) -- ~30 real call
-     * sites across Admin/Ws/Group/Users rule out threading
-     * CurrentConfigService as an explicit param through every one.
-     * CurrentConfigService::current()'s own get() already throws
-     * unconditionally on a never-.set() instance (real callers only ever
-     * reach this after RequestBootstrap::connect() has run, well after
-     * Kernel::boot()), so an independent, unmemoized fallback here throws
-     * the exact same way the shim's own memoized one would pre-boot --
-     * no observable behavior difference either way.
+     * Core/Logger.php's own pageState() -- ~30 real call sites across
+     * Admin/Ws/Group/Users rule out threading CurrentConfigService as an
+     * explicit param through every one. When `Kernel::isBooted()` is
+     * false, the plain `new CurrentConfigService()` fallback's own get()
+     * throws unconditionally (its `configService` is never `set()`),
+     * exactly like the container-resolved instance would if reached
+     * before RequestBootstrap::connect() has run -- no observable
+     * behavior difference either way.
      */
     private static function currentConfigService(): CurrentConfigService
     {

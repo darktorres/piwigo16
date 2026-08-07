@@ -50,36 +50,10 @@ use Piwigo\Validation\InputValidator;
  * each photo individually, in the current filtered selection).
  *
  * admin.php itself already gates every page behind
- * check_status(AccessLevel::Administrator) before dispatch, so the
- * original file's own (redundant) check_status() call is dropped here --
- * same precedent as every prior P23 batch 6 sub-batch. The one real
- * mutation path (isset($_POST['submit'])) already has its own
- * check_pwg_token() call -- no CSRF gap here.
- *
- * Preserves 1 pre-existing quirk unchanged (a mechanical port doesn't fold
- * in unrelated fixes, same discipline as every prior sub-batch). $base_url
- * used to be built from PHPWG_ROOT_PATH (a filesystem path constant), not
- * UrlServiceInterface::getRootUrl() like every sibling renderer -- fixed
- * as part of Legacy Coupling Retirement gap-closure (entry-shell
- * define()/include round), since PHPWG_ROOT_PATH no longer exists at all;
- * this specific site's own pre-existing bug (U_ELEMENTS_PAGE/F_ACTION
- * rendering a filesystem path instead of a URL) is a real, if minor, side
- * effect of that constant's removal being a strict improvement, not scope
- * creep -- it had no other fix available once the constant was gone.
- *
- * Real bug fixed during gap-closure Stage 1b (the original file documented
- * it as a known, not-fixed-here issue, carried forward verbatim until now):
- * `$storage_category_id` used to be computed once, before the per-image
- * `foreach ($images as $row)` loop, from whatever `$row` the earlier "unit
- * mode form submission" loop above happened to leave behind (or undefined,
- * if that block didn't run) -- never the current image's own row, so the
- * STORAGE_CATEGORY highlighting below never triggered for the correct
- * album. It's now computed fresh inside the per-image loop, from that
- * image's own `storage_category_id` column, and compared as a real `int`
- * against `$item_category_id` (also `int|string` depending on the driver)
- * instead of the original's own `is_string()`-only check, which would
- * have failed the `===` comparison outright under Doctrine DBAL's native
- * int return for this column even with the correct row.
+ * check_status(AccessLevel::Administrator) before dispatch, so this
+ * renderer does not call check_status() itself. The one real mutation path
+ * (isset($_POST['submit'])) already has its own check_pwg_token() call --
+ * no CSRF gap here.
  */
 final class BatchManagerUnitPageRenderer
 {

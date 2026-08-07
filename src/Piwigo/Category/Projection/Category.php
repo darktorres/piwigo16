@@ -100,11 +100,10 @@ final readonly class Category
     /**
      * `$row['status']` is a plain string for a raw DBAL row, but a real
      * `CategoryStatus` instance when `$row` came from DQL array hydration
-     * against {@see CategoryEntity}'s `enumType`-mapped `$status` (Phase 5
-     * Item 21's own gotcha, applied here: `enumType` hydration applies to
-     * scalar/array DQL selects too, not just full-entity reads) --
-     * `fromRow()` accepts either shape rather than assuming one caller
-     * convention.
+     * against {@see CategoryEntity}'s `enumType`-mapped `$status` --
+     * `enumType` hydration applies to scalar/array DQL selects too, not
+     * just full-entity reads. `fromRow()` accepts either shape rather
+     * than assuming one caller convention.
      */
     private static function narrowStatus(mixed $value): string
     {

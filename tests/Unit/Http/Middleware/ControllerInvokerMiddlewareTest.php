@@ -75,15 +75,13 @@ test('invokes the resolved handler for a found route and passes route args', fun
 });
 
 test('catches ResponseReadyException from the controller and returns its response normally', function (): void {
-    // Workstream C3's real regression: PHP's exit()/die() skip pending
-    // `finally` blocks, so a controller that used to terminate the
-    // process directly (RedirectService/HtmlService, before their own
-    // conversion) left every outer middleware's own `finally` (e.g.
-    // SentryMiddleware's transaction close) unexecuted. Catching
-    // ResponseReadyException here and returning its response like any
-    // other Response means the caller (RequestPipeline's own middleware
-    // stack) sees a completely normal return -- no different from a
-    // controller that never throws at all.
+    // PHP's exit()/die() skip pending `finally` blocks, so a controller
+    // that terminates the process directly would leave every outer
+    // middleware's own `finally` (e.g. SentryMiddleware's transaction
+    // close) unexecuted. Catching ResponseReadyException here and
+    // returning its response like any other Response means the caller
+    // (RequestPipeline's own middleware stack) sees a completely normal
+    // return -- no different from a controller that never throws at all.
     $controller = new readonly class () implements ControllerInterface {
         #[Override]
         public function __invoke(ServerRequestInterface $request): ResponseInterface

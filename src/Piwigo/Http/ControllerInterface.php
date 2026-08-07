@@ -14,16 +14,13 @@ use Psr\Http\Message\ServerRequestInterface;
  * RequestHandlerInterface) -- deliberately distinct from a generic
  * middleware-chain handler, since a frontend controller is always the
  * pipeline's terminal step, never itself passed a next handler to
- * delegate to. Same interim-contract precedent as P21's
- * AdminSubControllerInterface::handle(), but returning a real
- * ResponseInterface instead of mutating $template/$page -- P22 controllers'
- * legacy render body (still Smarty) calls Template::parse($handle, false)
- * (accumulates into Template's own internal buffer instead of echoing) and
- * drains it via Piwigo\Bootstrap\PageTail::renderToString() into a real
- * Response body, rather than leaving rendering as a side effect for
- * something else to emit. Workstream C3c retired the last controllers
- * still bridging via an output-buffer capture (Piwigo\Controller\
- * LegacyRenderCapture, deleted) onto this same mechanism.
+ * delegate to, returning a real ResponseInterface instead of mutating
+ * $template/$page. Controllers whose render body is still Smarty call
+ * Template::parse($handle, false) (accumulates into Template's own
+ * internal buffer instead of echoing) and drain it via
+ * Piwigo\Bootstrap\PageTail::renderToString() into a real Response body,
+ * rather than leaving rendering as a side effect for something else to
+ * emit.
  *
  * Lives in Piwigo\Http (L3Presentation), not Piwigo\Controller
  * (L4Integration) despite the name -- deptrac.yaml only allows

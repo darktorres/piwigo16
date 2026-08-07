@@ -46,25 +46,18 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces profile.php -- lets the current user customize their own gallery
- * display settings. The legacy file's own 2 top-level functions
- * (save_profile_from_post()/load_profile_in_template()) were ported to a
- * real `Piwigo\Controller\ProfileFormHandler` class (P23 batch 8c) rather
- * than becoming private methods here -- unlike every other page-owned free
- * function this phase, a project-wide grep found a real external caller:
+ * Replaces profile.php -- lets the current user customize their own
+ * gallery display settings. `save_profile_from_post()`/
+ * `load_profile_in_template()` live in `Piwigo\Controller\
+ * ProfileFormHandler` rather than as private methods here, because
  * `Controller\Admin\ConfigurationSubController`'s "default" (Guest
- * settings) tab also calls both. `LegacyRenderCapture`'s own precedent
- * (a non-`ControllerInterface` helper class living directly in
- * `Piwigo\Controller`) is why the new class lives here rather than a new
- * `Piwigo\Profile` namespace.
+ * settings) tab also calls both. `ProfileFormHandler` is a
+ * non-`ControllerInterface` helper class living directly in
+ * `Piwigo\Controller` rather than in a dedicated `Piwigo\Profile`
+ * namespace.
  *
  * check_pwg_token() and ProfileFormHandler::saveFromPost()'s own
  * redirect() both happen before any rendering starts.
- *
- * Legacy Coupling Retirement Workstream D: converted off
- * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
- * pattern as AboutController -- see that class's own docblock for the
- * accumulator mechanics this relies on.
  */
 final class ProfileController implements ControllerInterface
 {

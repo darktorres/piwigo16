@@ -52,8 +52,7 @@ enum ExtensionType: string
 
     /**
      * The plural form used by the WS API's own `pwg.extensions.ignoreUpdate`
-     * wire parameter (and, historically, the retired `updates_ignored`
-     * config blob) -- plural, unlike $this->value (singular). Null for an
+     * wire parameter -- plural, unlike $this->value (singular). Null for an
      * unrecognized string, so callers can reject an invalid `type` param
      * the same way they already reject any other malformed input.
      */

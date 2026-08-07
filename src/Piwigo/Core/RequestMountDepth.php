@@ -13,33 +13,18 @@ namespace Piwigo\Core;
  * docblock for why it exists and why it can't be derived from real
  * filesystem paths).
  *
- * Legacy Coupling Retirement gap-closure (entry-shell define()/include
- * round): `Piwigo\Url\UrlService::getRootUrl()` used to fall back to
- * reading the raw `PHPWG_ROOT_PATH` constant for exactly this "how many
- * `../` do I prepend to reach the app's root from here" question --
- * coincidentally correct only because `admin/popuphelp.php`'s filesystem
- * depth (`PHPWG_ROOT_PATH` = `'../'`) happened to numerically match its
- * URL mount depth too, not a guaranteed general mechanism. This is the
- * real, request-scoped, URL-only equivalent, independent of wherever
- * `PHPWG_ROOT_PATH` doesn't exist any more.
- *
  * Lives at L1Infrastructure (not alongside `Router` in L3Presentation or
  * `RootPathOverride` in L2bExtendedDomain) specifically so both can depend
  * on it: `Router::pathInfo()` (L3) and `Piwigo\Url\UrlService` (L2b) both
  * need this same fact, and deptrac.yaml only allows each layer to depend
  * downward -- L1 is the lowest layer that covers both real callers.
  *
- * Container-shared, immutable value (singleton/service-locator elimination
- * campaign, Phase 3): the value is fixed once, at container-build time
+ * Container-shared, immutable value: fixed once, at container-build time
  * (`Piwigo\Core\Container`'s own build() method, threaded from the one
  * entry-shell file that knows its own real mount depth --
- * `public/admin/popuphelp.php`),
- * never mutated afterward during a request -- no "current instance"
- * concept needed at all (same lesson as the Phase 0 `CurrentPersistentCache`
- * pilot). Its own former `currentStatic()` transitional bridge is gone --
- * Piwigo\Auth\CookieService (its one remaining caller) now resolves this
- * via its own private lazy requestMountDepth() helper instead (singleton/
- * service-locator elimination campaign, Phase 11 sub-phase 11G).
+ * `public/admin/popuphelp.php`), never mutated afterward during a
+ * request. `Piwigo\Auth\CookieService` resolves this via its own private
+ * lazy requestMountDepth() helper.
  */
 final class RequestMountDepth
 {

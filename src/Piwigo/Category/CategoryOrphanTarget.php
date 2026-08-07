@@ -9,33 +9,23 @@ use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Image\ImageCategoryEntity;
 
 /**
- * Item 15 Sub-item D: {@see CategoryRepository::findOrphanedColumnValues()}/
- * {@see CategoryRepository::deleteRowsWhereColumnIn()}'s `$table`/`$column`
- * pair, enumerated -- {@see CategoryService::checkCategoriesIntegrity()}'s
- * own fixed 4-row `$relatedColumns` list, confirmed via a fresh grep before
- * converting.
+ * Enumerates the `$table`/`$column` pairs used by {@see
+ * CategoryRepository::findOrphanedColumnValues()}/{@see
+ * CategoryRepository::deleteRowsWhereColumnIn()}, matching {@see
+ * CategoryService::checkCategoriesIntegrity()}'s own fixed 4-row
+ * `$relatedColumns` list.
  *
- * Item 16I: 3 of the 4 cases converted to real DQL via
- * {@see entityClassAndProperty()} -- the original "stays on DBAL,
- * `category_id`/`cat_id` hydrates as a `CategoryId` VO on 3 of 4 targets
- * but plain int on the 4th, mixed-type IN clause is real added risk"
- * reasoning didn't hold up under direct empirical verification:
- * `getSingleColumnResult()` never applies custom Doctrine Type
- * conversion regardless of the underlying column's mapped type
- * (confirmed live -- a VO-typed `catId` column still comes back as a
- * plain int through it), and a DQL `IN (:values)` delete bound with
- * `ArrayParameterType::INTEGER` against a VO-typed field works correctly
- * (same established pattern already used throughout this campaign, and
- * live-probed again here specifically against `GroupAccessEntity::$catId`
- * before converting).
+ * 3 of the 4 cases use real DQL via {@see entityClassAndProperty()}:
+ * `getSingleColumnResult()` never applies custom Doctrine Type conversion
+ * regardless of the underlying column's mapped type (a VO-typed `catId`
+ * column still comes back as a plain int through it), and a DQL
+ * `IN (:values)` delete bound with `ArrayParameterType::INTEGER` against a
+ * VO-typed field works correctly.
  *
- * `OldPermalinks` stays on `tableAndColumn()`'s own raw DBAL path --
+ * `OldPermalinks` stays on `tableAndColumn()`'s own raw DBAL path:
  * `old_permalinks` is owned by `Piwigo\Permalink\OldPermalinkEntity`
  * (`Permalink`, `L2bExtendedDomain`), and this enum lives in `Category`
- * (`L2aCoreDomain`), which can't depend on it directly (confirmed live
- * via `deptrac analyse`, not assumed) -- the exact same real boundary
- * Item 16E/16F's own Category/Site cases hit, not the VO-typing
- * question the other 3 cases turned out not to have.
+ * (`L2aCoreDomain`), which cannot depend on it directly.
  */
 enum CategoryOrphanTarget
 {

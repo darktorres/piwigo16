@@ -8,12 +8,10 @@ use Doctrine\ORM\EntityRepository;
 use LogicException;
 
 /**
- * Persistence layer for `derivative_size`. One row per named size,
- * unified across what ImageStdParams used to keep as two separate
- * piwigo_config keys (`derivatives`'s enabled map vs `disabled_derivatives`)
- * via the `enabled` column -- a size can only ever have one row, so
- * enabling a previously-disabled size updates that row in place rather
- * than creating a second one.
+ * Persistence layer for `derivative_size`. One row per named size; the
+ * `enabled` column distinguishes enabled from disabled sizes -- a size
+ * can only ever have one row, so enabling a disabled size updates that
+ * row in place rather than creating a second one.
  *
  * syncEnabled()/syncDisabled() each own exactly one partition of the table
  * (`enabled = true` / `enabled = false` respectively) -- they upsert every

@@ -11,7 +11,7 @@ use Piwigo\Core\AppInfo;
 
 /**
  * Container-shared instance holding the authenticated-user-for-this-request
- * state (singleton/service-locator elimination campaign, Phase 5).
+ * state.
  *
  * `attachGlobals()` is called by `RequestBootstrap::finalize()`/
  * `bootConfigOnly()`/`CliBootstrap::buildApplication()` -- NOT from
@@ -28,16 +28,15 @@ final class CurrentUser
     ) {}
 
     /**
-     * Legacy Coupling Retirement Phase 8, 8h: distinguishes "a real,
-     * per-request user was resolved" from "attachGlobals() guest-seeded
-     * this singleton because nothing else has run yet" -- isInitialized()
-     * can't make that distinction, since attachGlobals() unconditionally
-     * seeds a guest user on every bootstrap path, including CLI/plugin
-     * `autoupdate` firings with no real request user. ActivityService::
-     * record() needs the distinction: a truly-unresolved actor must record
-     * as `null` (activity.performed_by's `ON DELETE SET NULL` foreign key
-     * depends on it -- `0` is not a valid id, AUTO_INCREMENT starts at 1),
-     * not the guest id.
+     * Distinguishes "a real, per-request user was resolved" from
+     * "attachGlobals() guest-seeded this singleton because nothing else
+     * has run yet" -- isInitialized() can't make that distinction, since
+     * attachGlobals() unconditionally seeds a guest user on every
+     * bootstrap path, including CLI/plugin `autoupdate` firings with no
+     * real request user. ActivityService::record() needs the distinction:
+     * a truly-unresolved actor must record as `null` (activity.
+     * performed_by's `ON DELETE SET NULL` foreign key depends on it -- `0`
+     * is not a valid id, AUTO_INCREMENT starts at 1), not the guest id.
      */
     private bool $realUserResolved = false;
 

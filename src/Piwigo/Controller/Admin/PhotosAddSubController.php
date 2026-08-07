@@ -28,19 +28,14 @@ use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin/photos_add.php's own tab-dispatch shell (page slug
- * "photos_add"). The 3 tab bodies are typed renderers:
- * PhotosAddDirectPageRenderer ("direct", P23 batch 6e, folding in
- * photos_add_direct_prepare.inc.php's form-prep body too) /
- * PhotosAddApplicationsPageRenderer / PhotosAddFtpPageRenderer -- pure
- * template/form display, no security-sensitive logic; the real upload
- * pipeline they call into (add_uploaded_file() et al) is fully migrated
- * to UploadService (see that class + its own SEC-16/SEC-21 fixes).
+ * Backs the "photos_add" admin page's tab dispatch. The "direct",
+ * "applications", and "ftp" tabs are pure template/form display, rendered
+ * respectively by PhotosAddDirectPageRenderer, PhotosAddApplicationsPageRenderer,
+ * and PhotosAddFtpPageRenderer; the actual upload pipeline lives in
+ * UploadService.
  *
- * admin.php itself already gates every page behind
- * check_status(AccessLevel::Administrator) before dispatch, so the
- * original photos_add.php's own (redundant) check_status() call is
- * dropped here.
+ * admin.php gates every page behind check_status(AccessLevel::Administrator)
+ * before dispatch, so this controller does not duplicate that check.
  */
 final class PhotosAddSubController implements AdminSubControllerInterface
 {
@@ -68,20 +63,19 @@ final class PhotosAddSubController implements AdminSubControllerInterface
     {
         $template = $this->currentTemplate->get();
 
-        // upload form config is loaded here to match the original page's
-        // own behavior (validated/used by the tab templates), even though
-        // this sub-controller doesn't read it directly itself.
+        // getUploadFormConfig()'s return value is unused here -- see this
+        // class's own docblock: the upload pipeline lives in UploadService,
+        // not this sub-controller.
         new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, $this->paths, $this->dbCredentials)
             ->getUploadFormConfig();
 
         // admin.php's own shared check_input_parameter('section', ...,
         // '/^[a-z]+[a-z_\/-]*(\.php)?$/i') already runs before dispatch and
         // blocks any '.' other than one trailing ".php" -- real path
-        // traversal is already unreachable. This sub-controller still
-        // never spliced $_GET['section'] straight into the include path
-        // (unlike the original photos_add.php, which did): a tighter
-        // 3-value allowlist is real defense-in-depth, not a fix for an
-        // actively-exploitable hole.
+        // traversal is already unreachable. This sub-controller never
+        // splices $_GET['section'] straight into an include path; the
+        // tighter 3-value allowlist below is defense-in-depth, not a fix
+        // for an actively-exploitable hole.
         $section = $request->getQueryParams()['section'] ?? null;
         $tab = is_string($section) ? $section : 'direct';
 

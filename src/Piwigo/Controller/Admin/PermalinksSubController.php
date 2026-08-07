@@ -26,39 +26,6 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
-/**
- * Replaces admin/permalinks.php (page slug "permalinks"), folded directly
- * into this controller -- same shape as every prior P23 batch 6 sub-batch's
- * shell folding. Its per-category writes already go through
- * Piwigo\Permalink\PermalinkService::deleteCatPermalink()/setCatPermalink(),
- * inlined directly at their one real call site below -- the free-function
- * bridge they used to go through (admin/include/functions_permalinks.php)
- * is deleted in this same commit: 2 of its 4 functions
- * (get_cat_id_from_permalink()/get_cat_id_from_old_permalink()) had zero
- * callers anywhere in the repo, confirmed via a direct grep, and the other
- * 2 (delete_cat_permalink()/set_cat_permalink()) only this file ever
- * called. No CSRF gap in this sub-batch -- both real mutation branches
- * (`set_permalink`, `delete_permanent`) already call `check_pwg_token()`
- * first, kept unchanged.
- *
- * `global $my_base_url;` before the inline tabsheet block below (formerly
- * the `admin/include/albums_tab.inc.php` include, folded in P23 batch
- * 8b-5) is a real bug fix, not a mechanical carry-over: that block sets
- * `$my_base_url` via a bare assignment, and without a preceding
- * `global` declaration in this method's own call frame that assignment
- * would stay local to this method, invisible to CoreTabs::addCoreTabs()'s own
- * `global $my_base_url;` read for the 'albums' tabsheet case (triggered
- * synchronously inside the block's own `$tabsheet->select()` call).
- * Verified live that this exact bug already existed, unfixed, in the
- * other 2 real callers of the same tabsheet block --
- * Piwigo\Admin\CatListPageRenderer and Piwigo\Admin\AlbumsPageRenderer
- * (both P23 batch 6f) -- neither declared `global $my_base_url;` before
- * their own `include`, so `?page=cat_list`/`?page=albums`'s own
- * "List"/"Permalinks" tab hrefs were rendering as bare `href="albums"` /
- * `href="permalinks"` instead of `admin.php?page=albums` /
- * `admin.php?page=permalinks` -- fixed in both of those files in the P23
- * batch 6j-1 commit so the pattern isn't introduced a 3rd time here.
- */
 final class PermalinksSubController implements AdminSubControllerInterface
 {
     public function __construct(

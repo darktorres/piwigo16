@@ -11,40 +11,24 @@ use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use RuntimeException;
 
 /**
- * Ported from admin/include/add_core_tabs.inc.php (P23 batch 8b-6). Its
- * one function is reached exclusively via the `tabsheet_before_select`
- * event -- confirmed via a direct grep, zero direct callers anywhere --
- * fired synchronously inside every `Tabsheet::select()` call. Registered
- * once per admin request from admin.php, before AdminDispatcher::dispatch()
- * runs, same bootstrap-time-registration shape as P23 batch 7's
- * `Piwigo\Admin\PluginLoader`.
+ * Reached exclusively via the `tabsheet_before_select` event, fired
+ * synchronously inside every `Tabsheet::select()` call. Registered once
+ * per admin request from admin.php, before AdminDispatcher::dispatch()
+ * runs.
  *
- * Singleton/service-locator elimination campaign, Phase 3: container-shared
- * instance now (`UrlServiceInterface` constructor-injected, autowired --
- * already bound in config/container.php), not a static-setter collaborator.
- * `context` is ordinary instance state, written once per request by
- * whichever writer file (`*SubController`/`*PageRenderer`) runs, read by
- * `addCoreTabs()` on `$this` -- every real writer file and the event
- * registration itself (`AdminShell::runDispatch()`) resolve this same
- * shared instance from the container, so no transitional shim is needed at
- * all (every real caller already has a constructor-injectable path to it).
+ * `UrlServiceInterface` is constructor-injected (autowired, bound in
+ * config/container.php). `context` is ordinary instance state, written
+ * once per request by whichever writer file (`*SubController`/
+ * `*PageRenderer`) runs, and read by `addCoreTabs()` on `$this` -- every
+ * real writer file and the event registration itself
+ * (`AdminShell::runDispatch()`) resolve this same shared instance from
+ * the container.
  *
- * Every `case` arm reads a different page-specific base-URL global
- * (`$my_base_url`, `$admin_album_base_url`, `$manager_link`, `$link_start`,
- * `$conf_link`, `$help_link`, `$base_url`, `$admin_photo_base_url`), set by
- * whichever controller is currently running -- unchanged from the original
- * file, this class's whole purpose is bridging those globals into tabsheet
- * entries, not something to redesign here.
- *
- * Dropped one genuinely dead block: the original file had two
- * `case 'users':` blocks in the same switch (a duplicate case value). PHP's
- * switch matches the *first* case with an equal value, so the second block
- * (setting a single `$sheets['']` entry) could never execute -- confirmed
- * via a direct read, not a static-analysis finding (this logic sat under
- * `admin/include/`, outside any dead-code check, until this fold). The
- * first block (setting `$sheets['user_list']`/`$sheets['user_activity']`)
- * is the one actually consumed by `UserListPageRenderer`/
- * `UserActivityPageRenderer`'s own `Tabsheet::set_id('users')` calls.
+ * Each `case` arm reads a different page-specific base-URL field from
+ * `CoreTabsContext` (`myBaseUrl`, `adminAlbumBaseUrl`, `managerLink`,
+ * `linkStart`, `confLink`, `helpLink`, `baseUrl`, `adminPhotoBaseUrl`),
+ * set by whichever controller is currently running; this class's whole
+ * purpose is bridging those context fields into tabsheet entries.
  */
 final class CoreTabs
 {

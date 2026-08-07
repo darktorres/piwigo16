@@ -31,19 +31,16 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Replaces admin/album.php's own tab-dispatch shell (page slug "album").
  * The 4 tab bodies are typed renderers: CatModifyPageRenderer
- * ("properties", P23 batch 6f) / ElementSetRanksPageRenderer
- * ("sort_order", P23 batch 6f) / CatPermPageRenderer ("permissions", P23
- * batch 6f) / AlbumNotificationPageRenderer ("notification", P23 batch
- * 6f) -- their write operations were extracted into
+ * ("properties"), ElementSetRanksPageRenderer ("sort_order"),
+ * CatPermPageRenderer ("permissions"), and AlbumNotificationPageRenderer
+ * ("notification"). Their write operations go through
  * Piwigo\Admin\Category\CategoryAdminService (setCategoryPermissions(),
- * saveImageOrder()) during an earlier batch.
+ * saveImageOrder()).
  *
  * admin.php's own shared check_input_parameter('tab', ...,
- * '/^[a-zA-Z\d_-]+$/') already blocks real path traversal on the 'tab'
- * param the same way it does for photos_add's 'section' -- this
- * sub-controller's own 4-value allowlist (with a safe 'properties'
- * fallback for anything else) is real defense-in-depth, not a fix for an
- * actively-exploitable hole (matching PhotosAddSubController's own note).
+ * '/^[a-zA-Z\d_-]+$/') already blocks path traversal on the 'tab' param;
+ * this sub-controller's own 4-value allowlist (with a safe 'properties'
+ * fallback for anything else) is additional defense-in-depth.
  */
 final class AlbumSubController implements AdminSubControllerInterface
 {

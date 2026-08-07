@@ -7,8 +7,7 @@ namespace Piwigo\Core;
 use LogicException;
 
 /**
- * Holds the current request's `Logger` instance -- Legacy Coupling
- * Retirement Track A gap-fill batch G5, replacing the legacy
+ * Holds the current request's `Logger` instance, replacing the legacy
  * `global $logger;` bridge.
  *
  * Two writers, matching the two independent bootstrap paths that each
@@ -17,15 +16,14 @@ use LogicException;
  * boot()` (the installer's own no-RequestBootstrap path, which needs a
  * Logger before render() runs).
  *
- * Singleton/service-locator elimination campaign, Phase 2: converted from
- * a self-managed static facade to a container-shared instance -- every
- * real reader takes it via constructor injection now, including
+ * A container-shared instance: every real reader takes it via
+ * constructor injection, including
  * `Piwigo\Ws\PwgUsers`/`Piwigo\Ws\PwgImages` (`$this->currentLogger->get()`)
- * and `Piwigo\Core\UniqueExecLock` (a real `Logger` parameter, NOCTOR).
- * The former `getStatic()` transitional bridge (for
- * `Piwigo\Admin\Upload\UploadService`'s static event handlers, which
- * can't take constructor injection) was closed in sub-phase 12F-1 -- see
- * `UploadService::currentLogger()`'s own private static resolver.
+ * and `Piwigo\Core\UniqueExecLock` (a real `Logger` parameter). The
+ * exception is `Piwigo\Admin\Upload\UploadService`, whose static event
+ * handlers can't take constructor injection and instead resolve a
+ * `Logger` through their own private static resolver
+ * (`UploadService::currentLogger()`).
  */
 final class CurrentLogger
 {

@@ -24,11 +24,9 @@ use Piwigo\Tag\TagEntity;
 use Piwigo\Users\UserEntity;
 
 /**
- * Persistence layer for admin/maintenance_actions.php's own raw SQL
- * (originally duplicated, with 2 known behavioral drifts, in
- * admin/maintenance_env.php -- see MaintenanceActionDispatcher's own
- * docblock for the consolidated ~18-case dispatch switch and the drifts
- * its consolidation fixed).
+ * Persistence layer for admin/maintenance_actions.php's own raw SQL --
+ * see MaintenanceActionDispatcher's own docblock for the dispatch switch
+ * that calls into it.
  *
  * Owns no table itself -- every method here is a cross-domain maintenance
  * sweep against a table another repository owns (history/tags/sessions
@@ -37,12 +35,11 @@ use Piwigo\Users\UserEntity;
  * Auth\AuthRepository, and clears the identity map after each bulk write
  * that bypasses one of those owned entities.
  *
- * Item 15 audit: `purgeHistoryDetail`/`purgeHistorySummary`/
- * `purgeUnusedFeeds`/`countLoungeItems`/`purgeSessionsForDeletedUsers`/
- * `deleteOrphanTags`/`purgeSearchHistory` (Item 15H, once
- * {@see \Piwigo\Search\SavedSearchEntity} existed) converted to DQL
- * against their owning entities. `repairOptimizeAllTables()` stays DBAL
- * permanently (DDL has no DQL grammar).
+ * `purgeHistoryDetail`/`purgeHistorySummary`/`purgeUnusedFeeds`/
+ * `countLoungeItems`/`purgeSessionsForDeletedUsers`/`deleteOrphanTags`/
+ * `purgeSearchHistory` operate via DQL against their owning entities.
+ * `repairOptimizeAllTables()` uses DBAL directly (DDL has no DQL
+ * grammar).
  */
 final readonly class DbMaintenanceRepository
 {
@@ -173,19 +170,17 @@ final readonly class DbMaintenanceRepository
      */
     public function repairOptimizeAllTables(): void
     {
-        // Phase 4 Item 17: the 2 pure-introspection blocks (table list,
-        // per-table primary key columns) now go through DBAL's real
-        // Schema API instead of hand-parsing SHOW TABLES/DESC output --
-        // introspectTableNames()/introspectTablePrimaryKeyConstraint() are
-        // typed, no raw-row-shape guessing against MySQL's own display
-        // formatting ('Key' === 'PRI' string matching) needed. REPAIR/
-        // ALTER ... ORDER BY/OPTIMIZE (and their Postgres equivalents)
-        // have no DBAL Schema-API or QueryBuilder equivalent (that API
-        // defines/diffs schemas for migrations, not maintenance commands)
-        // and no bind-able parameter position in any dialect (table/
-        // column identifiers in DDL-ish statements can never be
-        // placeholders) -- those stay raw SQL, spliced only from
-        // already-introspected identifier-shaped values.
+        // The table list and per-table primary key columns come from
+        // DBAL's Schema API (introspectTableNames()/
+        // introspectTablePrimaryKeyConstraint()) -- typed, no raw-row-shape
+        // guessing against MySQL's own display formatting ('Key' === 'PRI'
+        // string matching) needed. REPAIR/ALTER ... ORDER BY/OPTIMIZE (and
+        // their Postgres equivalents) have no DBAL Schema-API or
+        // QueryBuilder equivalent (that API defines/diffs schemas for
+        // migrations, not maintenance commands) and no bind-able parameter
+        // position in any dialect (table/column identifiers in DDL-ish
+        // statements can never be placeholders) -- those stay raw SQL,
+        // spliced only from already-introspected identifier-shaped values.
         $conn = $this->em->getConnection();
         $prefix = $this->dbCredentials->prefix;
         $schemaManager = $conn->createSchemaManager();
@@ -254,10 +249,6 @@ final readonly class DbMaintenanceRepository
     /**
      * Sessions belonging to a since-deleted user id -- should never happen
      * in practice, purged defensively.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C4: `users` is now
-     * mapped ({@see \Piwigo\Users\UserEntity}) -- the multi-auth column
-     * indirection this used to take as an `$idColumn` parameter is gone.
      */
     public function purgeSessionsForDeletedUsers(): void
     {

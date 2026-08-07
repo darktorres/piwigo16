@@ -22,11 +22,8 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Replaces admin/albums.php (page slug "albums") -- a flat page (no tab
  * dispatch), so this sub-controller is a pure delegate to
- * Piwigo\Admin\AlbumsPageRenderer (P23 batch 6f). The page's own
- * auto-order write logic already calls
- * Piwigo\Admin\Category\CategoryAdminService::getCategoriesRefDate()
- * (an earlier batch's dedup of a real byte-for-byte duplicate that used to
- * also live in admin/cat_list.php).
+ * Piwigo\Admin\AlbumsPageRenderer. The page's own auto-order write logic
+ * calls Piwigo\Admin\Category\CategoryAdminService::getCategoriesRefDate().
  */
 final class AlbumsSubController implements AdminSubControllerInterface
 {

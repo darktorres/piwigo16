@@ -10,17 +10,12 @@ use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 
 /**
- * Piwigo\Core\DeviceHelper -- had zero dedicated coverage (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1).
  * getSessionVar()/setSessionVar() read/write $_SESSION directly (no real
- * session_start() needed in a CLI test process); getDevice()/mobileTheme()
- * take SessionService/CurrentConfig as explicit params now (singleton/
- * service-locator elimination campaign, Phase 12 sub-phase 12D), so this
- * file builds a real SessionService directly (same construction shape as
- * TemplateTestFactory.php's own) -- its SessionRepository is unused by
- * either method here, only needs a live DB connection, available the same
- * way ExtendedDomainAccessorTest's DB-backed accessors are, via
- * tests/bootstrap.php's env loading.
+ * session_start() needed in a CLI test process). getDevice()/mobileTheme()
+ * take SessionService/CurrentConfig as explicit params, so this file
+ * builds a real SessionService directly -- its SessionRepository is
+ * unused by either method here, only needs a live DB connection,
+ * available via tests/bootstrap.php's env loading.
  */
 function deviceHelperTestSessionService(): SessionService
 {

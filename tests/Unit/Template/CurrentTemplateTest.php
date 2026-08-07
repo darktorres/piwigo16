@@ -11,12 +11,12 @@ use Piwigo\Core\Paths;
 use Piwigo\Template\CurrentTemplate;
 
 /**
- * Piwigo\Template\CurrentTemplate -- container-shared instance (singleton/
- * service-locator elimination campaign, Phase 5); each test constructs its
- * own fresh instance directly, no reset() needed. get()'s own
- * "not initialised" \LogicException guard (only reachable before any real
- * request has run RequestBootstrap::finalize(), or in a test that never
- * calls set()) is the only red line.
+ * Piwigo\Template\CurrentTemplate is normally shared via the DI
+ * container; each test constructs its own fresh instance directly, no
+ * reset() needed. get()'s own "not initialised" \LogicException guard is
+ * only reachable before any real request has run
+ * RequestBootstrap::finalize(), or in a test that never calls set() --
+ * that is the only red line.
  *
  * Same "point CurrentPaths at a fresh temp root" Template construction
  * setup as PictureRateRendererTest.php's own docblock -- a real
@@ -87,10 +87,9 @@ test('reset clears the published instance so get throws again', function (): voi
 
 test('current() falls back to a memoized instance when Kernel is not booted', function (): void {
     // Memoized (not fresh-per-call), same reasoning as
-    // CurrentUserTestFactory::get() (and formerly EventDispatcher::get()/
-    // Translator::get(), closed in sub-phases 12F-6/12F-9/12F-11): a caller that writes
-    // via current() in one call and reads via current() in a later call
-    // must see the same instance, or the write would be lost. Kernel is
+    // CurrentUserTestFactory::get(): a caller that writes via current() in
+    // one call and reads via current() in a later call must see the same
+    // instance, or the write would be lost. Kernel is
     // already booted by this file's own beforeEach() (real Template
     // construction needs a writable data dir) -- build the Template
     // *before* resetting Kernel (its constructor reaches CurrentPaths::

@@ -249,16 +249,15 @@ final class CalendarRendererTest extends IntegrationTestCase
     }
 
     /**
-     * Regression test for a fixed bug, reproduced end-to-end through the
-     * real, unmodified CalendarRenderer::render() entry point (see
+     * Exercises the DEFAULT style (monthly) with the calendar view and no
+     * year selected yet -- i.e. the very first click on a real gallery's
+     * "browse by date" link -- through the real, unmodified
+     * CalendarRenderer::render() entry point, not just the calendar
+     * class's own method in isolation (see
      * CalendarMonthlyTest::test_build_global_calendar_groups_multiple_years_and_months_correctly()
-     * for the root cause and fix): the DEFAULT style (monthly) with the
-     * calendar view and no year selected yet -- i.e. the very first click
-     * on a real gallery's "browse by date" link -- used to 500 under the
-     * standard ONLY_FULL_GROUP_BY sql_mode this project's own DbConnection
-     * never strips. Verifies the real, now-working year/month grouping
-     * survives the full render() entry point, not just the calendar
-     * class's own method in isolation.
+     * for the underlying query). Year/month grouping must work correctly
+     * under the standard ONLY_FULL_GROUP_BY sql_mode this project's own
+     * DbConnection never strips.
      */
     public function test_render_groups_multiple_years_and_months_for_the_default_monthly_calendar_view(): void
     {
@@ -298,15 +297,13 @@ final class CalendarRendererTest extends IntegrationTestCase
     }
 
     /**
-     * Regression test for a fixed bug, reproduced end-to-end with
-     * realistic input: a real gallery URL parses chronology_date tokens
-     * as strings (Piwigo\Url\UrlService::parseWellKnownParamsUrl()
-     * returns list<string>) -- render() sanitizes each non-'any',
-     * non-empty token into a real int before ever handing it to the
-     * calendar object (see its own sanitization loop), which used to
-     * silently break CalendarBase::build_next_prev()'s own
-     * is_string()-based "current period" filter. See CalendarMonthlyTest's
-     * own matching test for the isolated cause and fix.
+     * A real gallery URL parses chronology_date tokens as strings
+     * (Piwigo\Url\UrlService::parseWellKnownParamsUrl() returns
+     * list<string>) -- render() sanitizes each non-'any', non-empty token
+     * into a real int before ever handing it to the calendar object (see
+     * its own sanitization loop), which CalendarBase::build_next_prev()'s
+     * own is_string()-based "current period" filter depends on. See
+     * CalendarMonthlyTest's own matching test.
      */
     public function test_render_normalizes_chronology_date_to_ints_and_next_prev_navigation_still_works(): void
     {
@@ -332,9 +329,8 @@ final class CalendarRendererTest extends IntegrationTestCase
 
         $nav = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0]);
         self::assertArrayNotHasKey('previous', $nav);
-        // Fixed: "next" now correctly points at the real next period
-        // (2024-7), not the bug's old '3 2024' (the period already being
-        // viewed).
+        // "next" points at the real next period (2024-7), not the period
+        // already being viewed.
         self::assertSame('7 2024', $this->dig($nav, ['next', 'LABEL']));
         self::assertSame(
             '/fake-index?' . json_encode(['chronology_date' => ['2024', '7']]) . '|removed=' . json_encode(['start']),
@@ -451,8 +447,8 @@ final class CalendarRendererTest extends IntegrationTestCase
      * buildInnerSql('categories', true, ...) returns null when the given
      * category has no visible sub-category ids at all (a category id that
      * doesn't exist anywhere in the real tree) -- render()'s own early
-     * "nothing to do" return for the categories branch, distinct from
-     * (and previously untested next to) the items-branch equivalent above.
+     * "nothing to do" return for the categories branch, distinct from the
+     * items-branch equivalent above.
      */
     public function test_render_returns_early_for_a_categories_section_with_no_visible_subcategories(): void
     {

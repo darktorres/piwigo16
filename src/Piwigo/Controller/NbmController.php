@@ -35,14 +35,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces nbm.php -- the public "notification by mail" subscribe/
- * unsubscribe confirmation link target (distinct from admin/
- * notification_by_mail.php, P21's admin sender page).
- *
- * Legacy Coupling Retirement Workstream D: converted off
- * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
- * pattern as AboutController -- see that class's own docblock for the
- * accumulator mechanics this relies on.
+ * The public "notification by mail" subscribe/unsubscribe confirmation
+ * link target (distinct from admin/notification_by_mail.php, the admin
+ * sender page).
  */
 final class NbmController implements ControllerInterface
 {

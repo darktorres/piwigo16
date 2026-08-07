@@ -36,35 +36,26 @@ use Psr\Cache\CacheItemPoolInterface;
 
 /**
  * Renders the main page's subcategory thumbnails (or the recent-albums
- * listing). Ported from include/category_cats.inc.php -- re-scoped after
- * research well past the batch-4 planning pass's original one-line framing
- * ("extend CategoryTreeCache with one more column"). See P23 batch 4b's
- * plan write-up for the full adversarial-validation trail; summary of what
- * changed vs. the original SQL-driven file:
+ * listing).
  *
- * - The `user_cache_categories` JOIN's rollup columns (nb_images/
- *   count_images/count_categories/max_date_last/date_last) come from
- *   {@see CategoryTreeCache::getForUser()} (batch 3b) instead -- the same
- *   per-user tree the menubar render on this same page load already warms.
- * - `c.*` (every real `categories` column the original's JOIN needed, which
- *   CategoryTreeCache's own cached row does NOT carry, by design -- adding
- *   it there would bloat every cached tree entry for a caller this narrow)
- *   comes from a fresh {@see CategoryRepository::findFullCategoriesByIds()}
- *   call, scoped to only the current page's already-paginated cat_ids.
- * - `id_uppercat = X` (normal) / the recency filter (`recent_cats`,
- *   {@see CategoryService::isRecentCategory()}) and `ORDER BY` (
- *   {@see CategoryService::compareByRank()} / `compareByGlobalRank()`) are
- *   PHP-side predicates/sorts over the cached tree instead of SQL. Pagination
- *   is `array_slice()` over the filtered+sorted set (`count()` replaces
- *   `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()`).
- * - `user_representative_picture_id` -- a real, stateful write-back cache
- *   (not a pure rollup value; see the plan's finding 6) -- moves to
- *   `CachePools::categoryTree()`, distinctly key-prefixed (`repr_*`) from
- *   the tree cache's own `tree_*` keys, replacing the former
- *   `MysqliDb::massUpdates()` write onto `user_cache_categories`.
- * - The representative-image fallback chain, privacy-level re-pick,
- *   `\Piwigo\Config\CurrentConfig::displayFromto()` query, and all template-variable building are
- *   unaffected and port unchanged.
+ * - The `user_cache_categories` rollup columns (nb_images/count_images/
+ *   count_categories/max_date_last/date_last) come from {@see
+ *   CategoryTreeCache::getForUser()} -- the same per-user tree the menubar
+ *   render on this same page load already warms.
+ * - The remaining `categories` columns (`c.*`) come from a fresh {@see
+ *   CategoryRepository::findFullCategoriesByIds()} call, scoped to only the
+ *   current page's already-paginated cat_ids -- CategoryTreeCache's own
+ *   cached row does not carry them, by design (adding them there would
+ *   bloat every cached tree entry for a caller this narrow).
+ * - Category selection (`id_uppercat = X` / the recency filter, {@see
+ *   CategoryService::isRecentCategory()}) and ordering ({@see
+ *   CategoryService::compareByRank()} / `compareByGlobalRank()`) are
+ *   PHP-side predicates/sorts over the cached tree. Pagination is
+ *   `array_slice()` over the filtered+sorted set.
+ * - `user_representative_picture_id` is a real, stateful write-back cache
+ *   (not a pure rollup value), stored in `CachePools::categoryTree()`,
+ *   distinctly key-prefixed (`repr_*`) from the tree cache's own `tree_*`
+ *   keys.
  */
 final readonly class CategoryCatsRenderer
 {
@@ -88,14 +79,12 @@ final readonly class CategoryCatsRenderer
     ) {}
 
     /**
-     * Legacy Coupling Retirement Track A batch A5.2e: $section/$category/
-     * $startcat are explicit params instead of `global $page;` -- the one
-     * real caller (GalleryController) already has them from
-     * SectionContextRegistry::current(). Plain values rather than the
+     * $section/$category/$startcat are plain values rather than the
      * SectionContext object itself: Category is L2aCoreDomain and Section
-     * is L2bExtendedDomain, so a SectionContext parameter here is a real
+     * is L2bExtendedDomain, so a SectionContext parameter here would be a
      * `deptrac analyse` DependsOnDisallowedLayer violation (L2a may not
-     * depend on L2b), caught during A5.2e-8's verification gate.
+     * depend on L2b). The one real caller (GalleryController) already has
+     * these values from SectionContextRegistry::current().
      *
      * @param array<string, mixed>|null $category
      */

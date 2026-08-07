@@ -12,12 +12,10 @@ use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 
 /**
- * ActivityLogEntryFormatter::format() -- extracted from
- * admin/maintenance_sys.php's own per-row body during the P23 batch 6h
- * port. Pure formatting logic given a row (as
- * ActivityRepository::findSystemObjectLogWithUsernames() shapes it) and
- * the batch_manager-style $maint_actions lookup array, no DB/globals
- * needed.
+ * ActivityLogEntryFormatter::format() is pure formatting logic given a
+ * row (as ActivityRepository::findSystemObjectLogWithUsernames() shapes
+ * it) and the batch_manager-style $maint_actions lookup array -- no
+ * DB/globals needed.
  */
 /**
  * @param array{activity_id?: int, performed_by?: ?int, object_id?: int,
@@ -42,10 +40,9 @@ function makeActivityRow(array $overrides = []): SystemActivityLogEntry
 }
 
 /**
- * ActivityLogEntryFormatter::format() gained a required Lang parameter
- * (singleton/service-locator elimination campaign, Phase 8) -- but a
- * bare throwaway instance isn't enough here, unlike most other NOCTOR
- * page-renderer Unit tests: format()'s own 'date' key runs through
+ * ActivityLogEntryFormatter::format() takes a required Lang parameter,
+ * but a bare throwaway instance isn't enough here, unlike most other
+ * NOCTOR page-renderer Unit tests: format()'s own 'date' key runs through
  * DateHelper::formatDate(), which internally reaches its own private
  * static lang() resolver (a direct container resolve -- no memoized
  * pre-boot fallback, see Lang's own docblock) regardless of what gets

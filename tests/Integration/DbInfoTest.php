@@ -9,17 +9,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 
-/**
- * Piwigo\Db\DbInfo -- had zero dedicated coverage (see /home/torres/.claude/
- * plans/piped-enchanting-spark.md, Wave 1).
- *
- * pgsql-support campaign: `getEnums()` itself was deleted once its last
- * real caller was retyped onto a real PHP enum ({@see
- * \Piwigo\Category\CategoryStatus}/{@see \Piwigo\History\HistoryImageType}/
- * {@see \Piwigo\PluginConfig\PluginState}, alongside the pre-existing
- * {@see \Piwigo\Users\UserStatus}) -- its own 3 dedicated tests went with
- * it.
- */
 final class DbInfoTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
@@ -56,12 +45,10 @@ final class DbInfoTest extends IntegrationTestCase
     }
 
     /**
-     * Had zero coverage at all before the pgsql-support pass touched this
-     * method (added the per-platform epoch expression, fixed a latent
-     * double-quoted-string-literal portability bug) -- a real assertion
-     * this codebase's own conventions call for, not just a pgsql-branch
-     * addition without ever having proven the pre-existing MySQL branch
-     * correct in the first place.
+     * getTableFingerprint() computes its epoch expression differently per
+     * platform; this asserts the real value matches on both MySQL and
+     * Postgres, not just that a fingerprint string of the right shape
+     * comes back.
      */
     public function test_get_table_fingerprint_matches_the_real_epoch_and_row_count(): void
     {

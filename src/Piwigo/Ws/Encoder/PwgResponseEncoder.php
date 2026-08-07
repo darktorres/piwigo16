@@ -24,10 +24,8 @@ use Piwigo\Ws\PwgNamedStruct;
 abstract class PwgResponseEncoder
 {
     /**
-     * P23 batch 8e: relocated from include/ws_core.inc.php's
-     * WS_XML_ATTRIBUTES define() -- the array-key marker this class's own
-     * flatten() uses to distinguish XML-attribute values from XML-element
-     * values in a response array.
+     * The array-key marker flatten() uses to distinguish XML-attribute
+     * values from XML-element values in a response array.
      */
     public const string ATTRIBUTES_KEY = 'attributes_xml_';
 

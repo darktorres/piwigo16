@@ -14,124 +14,58 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * ("N Albums", "N Photos", "N Users") visible on the admin dashboard and
  * several list pages, producing false diffs unrelated to any real change.
  *
- * First-time generation / intentional re-baseline (P32 templates, P33 CSS):
+ * To (re)generate baselines:
  *   vendor/bin/pest tests/Browser/VisualRegressionTest.php --update-snapshots
  *
- * Determinism (fixed in this same commit, not a later cleanup pass — see
- * docs/PLAN.md's additive-only rule and this repo's own VR
- * discipline):
- *   - $conf['show_gt'] (page-generation-time footer) defaults to false in
- *     this codebase — verified empirically, not rendered — so no template
- *     change was needed for that.
+ * What keeps these baselines deterministic:
+ *   - $conf['show_gt'] (page-generation-time footer) defaults to false, so
+ *     it never renders and needs no special handling here.
  *   - piwigo_images.hit ("Visited N times", shown on picture.php and the
  *     admin photo editor) increments on every view — including the view
- *     this very test performs — so it drifts on every run. Frozen to a
- *     fixed value via H::freezeImageHits() right before each screenshot
- *     that would otherwise show it (see the dedicated 'picture-1' test
- *     below and the 'admin-photo-editor' test), not excluded or
- *     tolerance-widened.
+ *     this very test performs — so it drifts on every run. H::freezeImageHits()
+ *     pins it to a fixed value right before each screenshot that would
+ *     otherwise show it (see the dedicated 'picture-1' test below and the
+ *     'admin-photo-editor' test), rather than excluding it or widening the
+ *     comparison tolerance.
  *   - admin-photo-editor, the admin dashboard, admin-album and admin-users
- *     all render `time_since()`-based "N hours/days ago" text
- *     (`include/functions.inc.php`) computed from a real `new DateTime()`
- *     with no override hook — previously excluded here with a claim (never
- *     verified against the code) that the dashboard's issue was a
- *     client-side Chart.js canvas needing a full mockable-clock kernel
- *     layer (P7-P12). Re-reading the actual code found that's wrong: the
- *     dashboard's "Activity peak" widget (`admin/intro.php`) is plain
- *     server-rendered Smarty from the same kind of `new DateTime()` call —
- *     no canvas at all (a genuinely separate page, `admin/themes/default/
- *     template/stats.tpl` + `stats.js`, does use Chart.js and was likely
- *     conflated with the dashboard; it's not in this suite). Fixed with
- *     `pwg_now()` (`include/env.inc.php`) — a small test-mode-overridable
- *     "now" provider reading `PIWIGO_TEST_NOW`, wired into `time_since()`
- *     and `admin/intro.php`'s activity-chart computation. Real behavior is
- *     unaffected outside test mode.
+ *     all render `DateHelper::timeSince()`-based "N hours/days ago" text,
+ *     computed from `Env::now()` — a test-mode-overridable "now" provider
+ *     reading `PIWIGO_TEST_NOW` — so these baselines stay deterministic.
+ *     Real behavior outside test mode is unaffected.
  *   - The dashboard ALSO makes two live calls to piwigo.org unrelated to
  *     the clock: `IntroSubController::getLatestNews()` (a real news-feed
- *     fetch, P23 batch 8d — was `get_piwigo_news()`) and
- *     `pwg.extensions.checkUpdates` (a core/extension update check), both
- *     enabled by default. `pwg_now()` does nothing for these — fixed
- *     separately by disabling both config keys in the fixture itself
- *     (`RegenerateFixtureTest.php`), a genuinely pre-existing gap:
- *     `AdminSmokeTest`/`ConsoleCleanTest` already visit `/admin.php` and had
- *     been silently making these live calls the whole time, unnoticed
- *     because neither screenshot-compares and a failed fetch is swallowed
- *     silently.
+ *     fetch) and `pwg.extensions.checkUpdates` (a core/extension update
+ *     check), both enabled by default. `Env::now()` does nothing for
+ *     these — both config keys are disabled in the fixture itself
+ *     (`RegenerateFixtureTest.php`) instead.
  *   - admin-history's "Search" tab loads its results panel via an async
- *     request (admin/themes/default/js/history.js) that can still be in
- *     flight when assertScreenshotMatches() fires despite its built-in
- *     networkidle/readyState waits — a genuine timing race, fixed with
- *     H::waitUntilHidden() polling for the '.loading' spinner to actually
+ *     request that can still be in flight when assertScreenshotMatches()
+ *     fires despite its built-in networkidle/readyState waits.
+ *     H::waitUntilHidden() polls for the '.loading' spinner to actually
  *     disappear (neither assertSee() nor assertMissing() retry — both are
- *     one-shot checks, confirmed by reading their implementations after
- *     both flaked here).
- *   - Investigating that same race surfaced a real bug, fixed at the
- *     source, not routed around: pwg.history.search
- *     (include/ws_functions/pwg.php) indexed $full_cat_path/$name_of_category
- *     with a possibly-null $line['category_id'], tripping a PHP 8.5
- *     "Using null as an array offset" deprecation that got printed straight
- *     into the JSON response body — corrupting it for every real client,
- *     not just this test (jQuery's `dataType: "JSON"` ajax call, unable to
- *     parse it, silently fell into its `error:` handler forever, so
- *     '.loading' never got hidden and this screenshot never had a chance
- *     to be deterministic in the first place).
- *   - With that fixed, the Search tab's default (today's date, no filter)
- *     legitimately shows whatever real guest page-views the rest of this
- *     very run already logged — admin/history.php has no start/end GET
+ *     one-shot checks). The Search tab's default (today's date, no filter)
+ *     otherwise shows whatever real guest page-views the rest of this run
+ *     already logged — admin.php?page=history has no start/end GET
  *     override, so there's no way to pin that content via a URL param.
  *     H::truncateHistory() wipes piwigo_history right before this one
- *     screenshot, the same freeze-a-narrow-DB-slice approach as
- *     freezeImageHits(), not an exclusion.
+ *     screenshot instead, the same freeze-a-narrow-DB-slice approach as
+ *     freezeImageHits().
  *   - admin-tags races the same way, for a different reason:
- *     admin/themes/default/js/tags.js restores a "per page" cookie on
+ *     themes/admin/default/js/tags.js restores a "per page" cookie on
  *     document.ready by simulating a click on the matching pagination
  *     link, which drives a purely client-side (no network call) ~1.8s
- *     .pageLoad fade-in/fade-out + tag-box fade sequence. This had always
- *     run on every load of this page; it surfaced here (not as a
- *     pre-existing failure) once BrowserTestHelpers::navigateOk()/
- *     assertNoServerErrors() stopped going through pest-plugin-browser's
- *     assertion-retry wrapper (see that class's docblock) — the old
- *     wrapped calls incidentally spent longer than 1.8s per navigation,
- *     which had been masking this race. Fixed the same way as
- *     admin-history: H::waitUntilHidden($page, '.pageLoad').
- *   - P23 batch 6a's own admin-tags failure turned out to be a DIFFERENT,
- *     real content bug, initially misdiagnosed as a variant of the race
- *     above (the pixel-diff percentage looked similar and the failure was
- *     deterministic under git-stash A/B testing, which is also true of a
- *     real regression). Piwigo\Admin\TagsPageRenderer's first port of
- *     admin/tags.php dropped the file's `new tabsheet(); ->set_id('tags');
- *     ->assign();` block entirely — every sibling renderer in that same
- *     sub-batch (Comments/Rating/RatingUser/Menubar/Help/CatOptions) ported
- *     it correctly, Tags alone missed it. This removed the page's entire
- *     "List" tab strip from the rendered HTML, a real, permanent layout
- *     change, not a timing-dependent one — decoding the failing screenshot
- *     and diffing it against the baseline showed a missing grey tab band
- *     and every element below it shifted up, not the partial-opacity
- *     ghosting a genuine animation race would produce. Fixed at the
- *     source (TagsPageRenderer, restoring the tabsheet block), not here.
+ *     .pageLoad fade-in/fade-out + tag-box fade sequence. Handled the same
+ *     way as admin-history: H::waitUntilHidden($page, '.pageLoad').
  *   - admin-dashboard's "Activity peak in the last weeks" widget
- *     (admin/intro.php) is a second, distinct source of drift from the
- *     `pwg_now()` fix noted above — that fix only froze the WINDOW the
- *     chart queries (which weeks/days are in range), not the DATA rows
- *     themselves. pwg_activity() (include/functions.inc.php) used to
- *     rely on the `occured_on` column's DEFAULT CURRENT_TIMESTAMP — real
- *     wall-clock time — so every H::loginAsAdmin() call this suite
- *     performs before reaching this screenshot logged its own 'login'
- *     row at real "now", drifting the chart's bubble positions with
- *     whichever real calendar day the suite happened to run on. Two
- *     test-harness-only fixes were tried and discarded here before
- *     landing on the real one: a blanket `DELETE FROM piwigo_activity`
- *     broke admin-album's "Created" card (which reads its own
- *     `ACTIVITY_TABLE` 'album'/'add' row via a direct query in
- *     admin/cat_modify.php); a narrower `DELETE ... WHERE action =
- *     'login'` worked but was still a test-only workaround. Fixed
- *     properly at the source instead: pwg_activity() now sets
- *     `occured_on` explicitly from pwg_now(), the same mechanism
- *     `time_since()` already used — real behavior outside test mode is
- *     unaffected. This needed no change in this file at all beyond
- *     regenerating this one baseline (the fixture's own baked-in
- *     activity rows are a static, version-controlled file untouched by
- *     this fix, so admin-album's baseline didn't need to change).
+ *     (IntroSubController) is a second, distinct source of drift from the
+ *     `Env::now()` mechanism above — that only freezes the WINDOW the
+ *     chart queries (which weeks/days are in range), not the data rows
+ *     themselves. ActivityService::log() writes each row's `occured_on`
+ *     explicitly from `Env::now()`, so every activity row logged during
+ *     this suite (including each H::loginAsAdmin() call reaching this
+ *     screenshot) shares the same frozen clock as the chart's own window,
+ *     keeping the chart's bubble positions deterministic regardless of
+ *     which real calendar day the suite runs on.
  */
 $routes = [
     // ── Gallery (anonymous) ──────────────────────────────────────────────
@@ -146,16 +80,12 @@ $routes = [
     // .tpl (notification.tpl) only ever puts that ID inside <a href>/
     // <link href> attribute values, never in visible text, so the
     // rendered pixels are stable across requests despite the underlying
-    // data changing every time. No prior VR coverage existed for this
-    // page before Legacy Coupling Retirement Workstream D's
-    // NotificationController conversion; added as part of that batch.
+    // data changing every time.
     'notification'       => ['/notification.php', false],
     // nbm.php with no subscribe/unsubscribe query param is a deterministic
     // "Unknown identifier" error page (NbmController's else branch) -- no
     // per-request randomness like notification.php's feed ID, so a plain
-    // baseline needs no special normalization. No prior VR coverage
-    // existed before Legacy Coupling Retirement Workstream D's
-    // NbmController conversion; added as part of that batch.
+    // baseline needs no special normalization.
     'nbm'                => ['/nbm.php', false],
     'search'             => ['/search.php', false],
     'comments'           => ['/comments.php', false],
@@ -220,7 +150,7 @@ foreach ($routes as $name => [$path, $needsAuth]) {
         }
 
         if ($name === 'admin-tags') {
-            // admin/themes/default/js/tags.js fires an automatic pagination
+            // themes/admin/default/js/tags.js fires an automatic pagination
             // click on document.ready (restoring the "per page" cookie),
             // which drives a purely client-side ~1.8s .pageLoad fade-in/
             // fade-out + tag-box fade sequence — no network call involved,
@@ -233,11 +163,7 @@ foreach ($routes as $name => [$path, $needsAuth]) {
             // generated on first request) -- a genuine client-side loading
             // race against assertScreenshotMatches()'s own networkidle
             // wait, which resolves once outstanding requests finish, not
-            // once every <img> has actually painted. Confirmed via direct
-            // A/B testing (git stash) that this reproduces identically
-            // with or without unrelated code changes -- pre-existing
-            // fragility in this page's own thumbnail loading, not a
-            // content difference.
+            // once every <img> has actually painted.
             H::waitUntilImagesLoaded($page, 10.0);
         }
 

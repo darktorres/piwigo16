@@ -1377,14 +1377,13 @@ final class InstallWizardTest extends IntegrationTestCase
     /**
      * render()'s full step-2 happy path (a real session_start()/
      * setcookie() lifecycle actually taking effect, a real outbound mail/
-     * newsletter call actually succeeding) is still deliberately NOT
-     * exercised here -- see this file's own top-of-class docblock:
-     * tests/Browser/InstallTest.php already covers that through a real
-     * install.php request, and that file's own docblock documents a real
-     * hung request thread this suite previously hit trying to exercise the
-     * same real session/mail lifecycle in-process. This one pure guard at
-     * the very top of the step-2 branch -- reachable with zero session/
-     * mail setup -- is safe and cheap to exercise directly here too.
+     * newsletter call actually succeeding) is deliberately NOT exercised
+     * here -- see this file's own top-of-class docblock: tests/Browser/
+     * InstallTest.php already covers that through a real install.php
+     * request; exercising the same real session/mail lifecycle in-process
+     * risks a hung request thread. This one pure guard at the very top of
+     * the step-2 branch -- reachable with zero session/mail setup -- is
+     * safe and cheap to exercise directly here too.
      */
     public function test_render_throws_when_step_2_is_reached_without_a_successful_connection(): void
     {

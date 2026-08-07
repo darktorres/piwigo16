@@ -26,11 +26,11 @@ use Piwigo\Validation\InputValidator;
  * `preg_match()` hard-reject via `HtmlRenderingInterface::fatalError()`)
  * stays at the call site, same split as that sibling DTO.
  *
- * `author`/`title` used to be nulled in place on `$_POST` when their
- * `remove_author`/`remove_title` companion checkbox was set, so every
- * later read in the same `render()` call (the per-image datas loop) saw
- * the override -- `render()` now builds a local working copy of `post`
- * and mutates that instead of the superglobal.
+ * `render()` builds a local working copy of `post` and mutates that
+ * instead of the superglobal, so that when the `remove_author`/
+ * `remove_title` companion checkbox is set, every later read of
+ * `author`/`title` in the same `render()` call (the per-image datas
+ * loop) sees the override.
  */
 final readonly class BatchManagerGlobalRequest
 {

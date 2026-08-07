@@ -12,16 +12,13 @@ use Piwigo\Core\UniqueExecLock;
 use Piwigo\Db\DbConnection;
 
 /**
- * Phase 4 Item 18: rewritten for the GET_LOCK()/RELEASE_LOCK()/
- * IS_USED_LOCK()-based redesign -- the old config-table-row-backed
- * mechanism (INSERT IGNORE + re-SELECT race resolution, a manual
- * time()-based staleness timeout) no longer exists, so its own dedicated
- * "stale lock recovery" test no longer applies (a GET_LOCK() lock has no
- * staleness concept: it clears automatically the instant its owning
- * connection closes). "another exec already holds the lock" now needs a
- * genuinely separate physical connection to simulate real cross-process
- * contention -- a single connection can hold any number of distinct named
- * locks simultaneously without contending with itself.
+ * Locking is implemented with MySQL's GET_LOCK()/RELEASE_LOCK()/
+ * IS_USED_LOCK() functions. A GET_LOCK() lock has no staleness concept: it
+ * clears automatically the instant its owning connection closes. "Another
+ * exec already holds the lock" needs a genuinely separate physical
+ * connection to simulate real cross-process contention -- a single
+ * connection can hold any number of distinct named locks simultaneously
+ * without contending with itself.
  */
 final class UniqueExecLockTest extends IntegrationTestCase
 {
@@ -110,13 +107,10 @@ final class UniqueExecLockTest extends IntegrationTestCase
     }
 
     /**
-     * Phase 4 Item 18's own stated central claim, per the plan's own
-     * Verification section: a GET_LOCK() lock releases automatically the
-     * instant its owning connection closes -- not just after an explicit
-     * ends() call -- including an abnormal process death, unlike the old
-     * INSERT-IGNORE-row design this replaced (which needed a manual
-     * staleness timeout to ever notice). Never directly proven until now;
-     * every other test here only exercises the explicit-ends() path.
+     * A GET_LOCK() lock releases automatically the instant its owning
+     * connection closes -- not just after an explicit ends() call --
+     * including an abnormal process death. Every other test in this class
+     * only exercises the explicit-ends() path.
      */
     public function test_lock_is_released_automatically_when_its_owning_connection_closes_without_calling_ends(): void
     {

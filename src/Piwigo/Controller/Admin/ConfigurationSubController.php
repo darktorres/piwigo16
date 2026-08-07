@@ -57,67 +57,39 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Replaces admin/configuration.php (page slug "configuration") -- a large
- * tabbed page (main/watermark/sizes/comments/default/display/search),
- * folded directly into this controller -- same shape as every prior P23
- * batch 6 sub-batch's shell folding. Its own `?section=` tab dispatch
- * stays inline (matches plugins.php/themes.php's own tab-dispatch shape,
- * confirmed too deeply tied to this single file's local $page['section']
- * switch to be worth splitting into 7 separate sub-controllers).
+ * tabbed page (main/watermark/sizes/comments/default/display/search). Its
+ * own `?section=` tab dispatch stays inline rather than being split into
+ * per-tab sub-controllers, since the switch is tightly tied to this file's
+ * local `$page['section']` handling.
  *
- * admin.php itself already gates every page behind
- * check_status(AccessLevel::Administrator) before dispatch (admin.php:65),
- * so the original file's own (redundant, same level) check_status() call
- * is dropped here -- same precedent as MaintenanceSubController/
- * IntroSubController.
+ * admin.php already gates every page behind
+ * check_status(AccessLevel::Administrator) before dispatch, so this
+ * controller does not repeat that check.
  *
- * Real write paths verified during this batch: the "watermark"/"sizes"
- * tabs' POST handlers were originally admin/include/configuration_
- * {watermark,sizes}_process.inc.php, folded into processWatermark()/
- * processSizes() below in P23 sub-batch 8b-4 -- both already write
- * through typed abstractions (ImageStdParams::save()/set_and_save(),
- * UploadService::saveUploadFormConfig()) with no raw SQL. The "default" tab's
- * build_user()/ProfileFormHandler::saveFromPost() calls are the same
- * `Piwigo\Controller\ProfileFormHandler` (P23 batch 8c) pair
- * `ProfileController` (the standalone admin/profile.php page once shared
- * before P23 batch 6c deleted it as upstream-dead code -- bug:3122, 2014:
- * upstream folded "edit a user's profile" into this file's own "default"
- * tab years ago, never as a separate admin page).
+ * The "watermark" and "sizes" tabs' POST handlers (`processWatermark()`/
+ * `processSizes()` below) write through typed abstractions
+ * (`ImageStdParams::save()`/`set_and_save()`,
+ * `UploadService::saveUploadFormConfig()`), not raw SQL. The "default" tab
+ * edits the guest user's profile via
+ * `Piwigo\Controller\ProfileFormHandler::saveFromPost()`.
  *
- * Phase 5 (Legacy Coupling Retirement): the generic config-row UPDATE
- * loop used to splice its value into raw, string-concatenated SQL
- * (manual str_replace("\'", "''", ...) escaping, not a parameterized
- * query) -- now routed through the injected ConfigService instead,
- * along with this file's other two $conf-reinit calls (formerly
- * ConfigDb::loadConfFromDb()) and its one filters_views default-seed
- * call (formerly ConfigDb::confUpdateParam()).
+ * The generic config-row UPDATE loop, the two `$conf`-reinit calls, and the
+ * filters_views default-seed call all go through the injected
+ * `ConfigService`, not raw SQL.
  *
- * This batch also fixed a real, verified bug in this file: $lang['day']
- * is never actually defined by any language/*\/common.lang.php (confirmed
- * across every locale) nor any runtime code, so the direct (unguarded)
- * read on the "main" tab threw "Undefined array key" -- fixed with the
- * same ?? guard already used for this exact key elsewhere (admin/intro.php,
- * \Piwigo\Core\DateHelper::formatDateLegacy()).
+ * `$lang->days()` isn't guaranteed to define every index (no locale's
+ * `common.lang.php` defines it), so the "main" tab's read of it is
+ * `??`-guarded, matching `DateHelper::formatDateLegacy()`'s own guard for
+ * the same value.
  *
- * P23 batch 6j-3 fixed a real, previously-uncaught CSRF gap: the "sizes"
- * tab's "Reset to default values" action (`?action=restore_settings`,
- * resets ImageStdParams to Piwigo's built-in defaults) had zero
- * check_pwg_token() *and* zero is_webmaster() gate, unlike every other
- * write path in this file (the main POST-save loop and both process
- * includes each check is_webmaster()). Fixed by gating the whole block on
- * is_webmaster() (matching the sibling process-includes' own shape) plus
- * check_pwg_token(); the template's own link now carries the token too
- * (see themes/admin/default/template/configuration_sizes.tpl).
+ * The "sizes" tab's "Reset to default values" action
+ * (`?action=restore_settings`, resets `ImageStdParams` to Piwigo's built-in
+ * defaults) is gated by both `isWebmaster()` and a CSRF token check, the
+ * same as every other write path in this file.
  *
- * order_by_is_local() was a top-level function declared inside this
- * file's own 'main' case with zero external callers (confirmed via a
- * direct grep) -- folded into a private method here (non-static since
- * P9's CurrentConfig conversion gave it a $this->currentConfig read).
- * This is a
- * real correctness fix, not just style: once this switch lives inside a
- * reusable class method instead of a raw top-level include, a second
- * same-process call to handle() with section=main would otherwise fatal
- * with "Cannot redeclare function order_by_is_local()" -- the same risk
- * already converted away from by AlbumsPageRenderer/IntroSubController.
+ * `orderByIsLocal()` is a private instance method (not a top-level
+ * function) so that repeated same-process calls to `handle()` don't fatal
+ * with `Cannot redeclare function`.
  */
 final class ConfigurationSubController implements AdminSubControllerInterface
 {
@@ -177,10 +149,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     {
         $template = $this->currentTemplate->get();
 
-        // Phase 2 global-residual sweep: $page is a local scratch array
-        // for this method's own body only (no longer `global $page;`),
-        // same shape as Section\SectionPopulator::populate()'s own
-        // equivalent fix (Track A5.2e).
         /** @var array<string, mixed> $page */
         $page = [];
 
@@ -439,11 +407,9 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $picture_informations[$checkbox] =
                           ! self::emptyValue($picture_informations_raw[$checkbox] ?? null);
                     }
-                    // gap-closure Stage 1a-bis item 5: the generic save
-                    // loop below now accepts a real array (json_encode()s
-                    // it via ConfigService::confUpdateParam()'s own
-                    // encode()) -- no more manual serialize() to match
-                    // CurrentConfig::pictureInformations()'s own
+                    // The generic save loop below accepts a real array here --
+                    // ConfigService::confUpdateParam() json_encode()s it,
+                    // matching CurrentConfig::pictureInformations()'s own
                     // already-decoded-array expectation.
                     $post['picture_informations'] = $picture_informations;
                     break;
@@ -470,8 +436,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     }
                     $filters_views_post['last_filters_conf'] =
                       self::emptyValue($filters_views_raw['last_filters_conf'] ?? null) ? false : true;
-                    // gap-closure Stage 1a-bis item 5 -- same reasoning as
-                    // picture_informations above.
+                    // Same reasoning as picture_informations above: a real
+                    // array, not a manually serialized string.
                     $post['filters_views'] = $filters_views_post;
 
             }
@@ -536,17 +502,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         // TabSheet
         //
-        // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
-        // bug found via a live Browser-suite failure once CoreTabs::
-        // addCoreTabs()'s formerly-silent `global $conf_link;` null read
-        // became a real, throwing CoreTabsContext field access -- nothing
-        // had EVER called CoreTabs::setContext() with confLink for this
-        // page (AdminShell's own same-named $conf_link is a genuinely
-        // local variable in a different call frame, same class of bug as
-        // IntroSubController's own $link_start fix above). This page's
-        // own "General/Photo sizes/Watermark/Display/Comments/Search" tab
-        // strip hrefs have always rendered as bare relative paths instead
-        // of `admin.php?page=configuration&section=X`. Fixed here.
+        // CoreTabsContext's confLink must be set here (nothing else sets it
+        // for this page) so CoreTabs::addCoreTabs() renders this page's
+        // "General/Photo sizes/Watermark/Display/Comments/Search" tab strip
+        // hrefs as admin.php?page=configuration&section=X instead of bare
+        // relative paths.
         $this->coreTabs->setContext(new CoreTabsContext(confLink: $this->urlService->getRootUrl() . 'admin.php?page=configuration&amp;section='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('configuration');
@@ -658,9 +618,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $guest_id = $this->currentConfig->guestId();
 
                 $edit_user = $this->userService->buildUser(UserId::from($guest_id));
-                // P22: profile.php's own save_profile_from_post()/
-                // load_profile_in_template() ported to Piwigo\Controller\
-                // ProfileFormHandler in P23 batch 8c.
                 $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlRenderer, $this->mailService, $this->currentConfig, $this->paths);
 
                 $errors = [];
@@ -863,11 +820,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      *
      * PHPStan can't see local/config/config.inc.php's content, so it can't
      * rule out either isset() genuinely being true -- no ignores needed
-     * here (unlike before "nothing is frozen" gap-closure, 2026-07-22,
-     * retired config_default.inc.php: PHPStan previously treated the whole
-     * $conf array as unverifiable mixed from the raw include, which
-     * produced different, now-stale error identifiers; CurrentConfig::
-     * defaultsArray() gives $conf a real, checkable type instead).
+     * here.
      */
     private function orderByIsLocal(): bool
     {
@@ -967,12 +920,10 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     }
 
     /**
-     * Ported from admin/include/configuration_sizes_process.inc.php
-     * (P23 sub-batch 8b-4) -- the "sizes" tab's POST handler. This
-     * method's own is_webmaster() check is the *only* thing gating this
-     * tab's write: the generic config-row UPDATE loop in handle() itself
-     * explicitly excludes 'sizes'/'watermark' from its own is_webmaster()
-     * check.
+     * The "sizes" tab's POST handler. This method's own is_webmaster()
+     * check is the *only* thing gating this tab's write: the generic
+     * config-row UPDATE loop in handle() itself explicitly excludes
+     * 'sizes'/'watermark' from its own is_webmaster() check.
      *
      * @param array<int|string, mixed> $post handle()'s own local post
      *   working copy (see Request\ConfigurationRequest) -- read-only here,
@@ -1238,9 +1189,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     }
 
     /**
-     * Ported from admin/include/configuration_watermark_process.inc.php
-     * (P23 sub-batch 8b-4) -- the "watermark" tab's POST handler. Same
-     * is_webmaster()-is-the-only-gate shape as processSizes() above.
+     * The "watermark" tab's POST handler. Same is_webmaster()-is-the-only-
+     * gate shape as processSizes() above.
      *
      * @param array<int|string, mixed> $post handle()'s own local post
      *   working copy -- see processSizes()'s own docblock.

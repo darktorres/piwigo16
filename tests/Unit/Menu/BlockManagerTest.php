@@ -11,12 +11,11 @@ use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 
 /**
- * Piwigo\Menu\BlockManager/DisplayBlock/RegisteredBlock -- had zero
- * dedicated coverage (see /home/torres/.claude/plans/piped-enchanting-
- * spark.md, Wave 1) despite being reachable from MenubarRenderer::render()
- * on nearly every gallery page load; that indirect coverage never reaches
- * this class's own branch logic (register_block's duplicate-id guard,
- * prepare_display's position resolution/hiding, sort order) directly.
+ * Piwigo\Menu\BlockManager/DisplayBlock/RegisteredBlock are reachable
+ * from MenubarRenderer::render() on nearly every gallery page load, but
+ * that indirect coverage never reaches this class's own branch logic
+ * (register_block's duplicate-id guard, prepare_display's position
+ * resolution/hiding, sort order) directly -- covered here instead.
  * BlockManager::apply() (needs a real compiled .tpl handle) is
  * deliberately excluded -- covered incidentally through MenubarRenderer's
  * own real Browser-suite page loads instead.

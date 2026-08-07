@@ -30,16 +30,13 @@ use const pcov\inclusive;
 final class CoverageCollector
 {
     /**
-     * Singleton/service-locator elimination campaign, Phase 12 sub-phase
-     * 12F-12: registerIfActive() itself runs pre-boot (RequestBootstrap::
+     * registerIfActive() itself runs pre-boot (RequestBootstrap::
      * bootEntryPoint() calls it before Kernel::boot()), but the shutdown
      * closure it registers only executes at actual PHP process shutdown,
-     * long after boot has completed on any real request -- resolved lazily
-     * inside the closure, not captured at registration time, so it reflects
-     * Kernel's real state at that later point rather than the (always
-     * not-booted) state when registerIfActive() itself ran. CurrentConfig's
-     * own former pre-boot fallback was just `new self()`, no DB read at
-     * all, so a fresh, unmemoized instance here is safe.
+     * long after boot has completed on any real request -- Kernel's
+     * booted state is resolved lazily inside the closure via this method,
+     * not captured at registration time. A fresh, unmemoized CurrentConfig
+     * instance is safe here because its constructor performs no DB read.
      */
     private static function currentConfig(): CurrentConfig
     {

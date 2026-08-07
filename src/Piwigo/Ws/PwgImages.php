@@ -60,10 +60,8 @@ use Piwigo\Ws\Request\TagListRequest;
 use Piwigo\Ws\Request\UploadedFileRequest;
 
 /**
- * P23 batch 8e-7: relocated from include/ws_functions/pwg.images.php, the
- * largest single file in P23 batch 8. `pwg.images.*` WS methods (26
- * registrations) -- registered via callable arrays in
- * include/ws_default_methods.inc.php. The 3 private helpers
+ * `pwg.images.*` WS methods (26 registrations) -- registered via callable
+ * arrays in src/Piwigo/Ws/WsDefaultMethods.php. The 3 private helpers
  * (addImageCategoryRelations/mergeChunks/removeChunks) are internal,
  * never WS-registered themselves.
  */
@@ -160,10 +158,9 @@ final class PwgImages
             return true;
         }
 
-        // native int under DBAL (vs. guaranteed string|null under legacy
-        // mysqli) -- cast to string so array_diff() below (string-based
-        // comparison against $cat_ids, which comes from explode()-derived
-        // string tokens) keeps comparing like-for-like.
+        // native int under DBAL -- cast to string so array_diff() below
+        // (string-based comparison against $cat_ids, which comes from
+        // explode()-derived string tokens) keeps comparing like-for-like.
         $db_cat_ids = array_map(strval(...), $categoryService->getExistingIds(array_values(array_map(intval(...), $cat_ids))));
 
         $unknown_cat_ids = array_diff($cat_ids, $db_cat_ids);
@@ -637,16 +634,15 @@ final class PwgImages
             $super_order_by = true; // quick_search_result might be faster
         }
 
-        // SearchService::getQuickSearchResults()'s own 'images_where' option
+        // SearchService::getQuickSearchResults()'s 'images_where' option
         // takes a single already-built SQL string with no bound-parameter
-        // side-channel -- SearchService.php isn't part of this initiative's
-        // own file scope, so flattened back into literal SQL here rather
-        // than threading a $params/$types channel through an unscoped file.
-        // Safe to do so: every one of ImageFilterCriteria's own field
-        // values is already is_numeric()/DateHelper::isValidMysqlDatetime()-
-        // validated (see WsHelper::stdImageSqlFilterCriteria()'s own
-        // docblock) before ever reaching $filterCondition, so no
-        // injection-capable character can survive this substitution.
+        // side-channel, so the filter condition is flattened back into
+        // literal SQL here. Safe to do so: every one of
+        // ImageFilterCriteria's own field values is already
+        // is_numeric()/DateHelper::isValidMysqlDatetime()-validated (see
+        // WsHelper::stdImageSqlFilterCriteria()'s own docblock) before ever
+        // reaching $filterCondition, so no injection-capable character can
+        // survive this substitution.
         $images_where = $filterCondition->sql;
         foreach ($filterCondition->parameters as $placeholder => $value) {
             if (! is_scalar($value)) {
@@ -1037,10 +1033,6 @@ final class PwgImages
             return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
         }
 
-        // executeStatement() both runs the query and returns its real
-        // affected-row count directly, replacing the separate
-        // MysqliDb::changes() call (which only worked because this query,
-        // unlike ratesDelete()'s dormant one, was actually executed).
         $affected_rows = $this->imageService->updateLevelForImages($params['image_id'], $params['level']);
         $this->entityManager->clear();
 
@@ -1296,23 +1288,18 @@ final class PwgImages
         }
 
         // does the image already exists ?
-        // SQL-modernization audit / [SEC-20]: $params['original_sum']/
-        // original_filename used to splice raw into a hand-built SQL
-        // fragment (ImageRepository::existsWithCondition()'s own former
-        // contract) -- both are registered with zero WS-level type
-        // constraints, so this was a real SQL injection. Fixed by binding
-        // the value through existsWithColumnValue() instead.
+        // $params['original_sum']/original_filename are bound as query
+        // parameters via existsWithColumnValue(), not spliced into SQL.
         //
-        // Further SQL-modernization audit, Item 1: neither piwigo_images.md5sum
-        // nor .file was indexed, and the check-then-insert sequence below was a
-        // genuine time-of-check-to-time-of-use race (two concurrent uploads of
-        // the same value could both pass this check before either INSERT
-        // completes). A MySQL advisory lock, scoped to the specific
-        // column/value being uploaded and held from this check through
-        // addUploadedFile()'s completion, closes the race without touching the
-        // check_uniqueness=false escape hatch (the lock is only ever acquired
-        // inside this same `if`, so a caller that opts out of the uniqueness
-        // check never touches it).
+        // Neither piwigo_images.md5sum nor .file is indexed, and the
+        // check-then-insert sequence below has a time-of-check-to-time-of-use
+        // race (two concurrent uploads of the same value could both pass
+        // this check before either INSERT completes). A MySQL advisory
+        // lock, scoped to the specific column/value being uploaded and held
+        // from this check through addUploadedFile()'s completion, closes
+        // the race without affecting the check_uniqueness=false path (the
+        // lock is only ever acquired inside this same `if`, so a caller
+        // that opts out of the uniqueness check never touches it).
         $uniqueness_lock_conn = null;
         $uniqueness_lock_name = null;
 
@@ -1330,10 +1317,10 @@ final class PwgImages
                 // GET_LOCK() names are capped at 64 characters -- $uniqueness_value
                 // is a caller-supplied filename in the 'file' uniqueness mode (up to
                 // piwigo_images.file's own 255-char width), so it's hashed rather
-                // than concatenated literally. DbCredentials::current()->prefix is
+                // than concatenated literally. $this->dbCredentials->prefix is
                 // folded into the hashed input (not just a literal prefix) so it
                 // still contributes to collision-avoidance against unrelated
-                // applications on a shared MySQL server, same reasoning as Item 18.
+                // applications on a shared MySQL server.
                 $uniqueness_lock_name = 'piwigo_iu_' . sha1($this->dbCredentials->prefix . ':' . $uniqueness_column . ':' . $uniqueness_value);
                 $uniqueness_lock_ok = AdvisorySessionLock::acquire(
                     $uniqueness_lock_conn,
@@ -1651,12 +1638,11 @@ final class PwgImages
             return new PwgError(102, 'Failed to open output stream.');
         }
 
-        // Matches the original's own 2-level check: $_FILES having ANY
-        // entry at all (even one not named 'file') already commits to the
-        // "move an uploaded file" path below, rather than silently falling
-        // through to the php://input branch -- a minimal, single-fact
-        // existence check, same shape as Ws\PwgServer::isPost()'s own raw
-        // $_POST read.
+        // $_FILES having ANY entry at all (even one not named 'file')
+        // already commits to the "move an uploaded file" path below,
+        // rather than silently falling through to the php://input branch
+        // -- a minimal, single-fact existence check, same shape as
+        // Ws\PwgServer::isPost()'s own raw $_POST read.
         if ($_FILES !== []) {
             if (! $uploaded_file->present) {
                 return new PwgError(103, 'Failed to move uploaded file.');
@@ -1816,11 +1802,11 @@ final class PwgImages
             return new PwgError(500, 'missing uploaded chunk file');
         }
         // $chunkfile_path is already absolute ($upload_dir_conf above
-        // includes the $this->paths->root prefix, Part II) -- just
-        // normalize backslashes/'/./' segments before stripRoot() can
-        // compute the 'uploads' disk-relative path; everything downstream
-        // keeps using the original absolute $chunkfile_path unchanged, since
-        // the 'uploads' disk is rooted at the same real filesystem location.
+        // includes the $this->paths->root prefix) -- just normalize
+        // backslashes/'/./' segments before stripRoot() can compute the
+        // 'uploads' disk-relative path; everything downstream keeps using
+        // the original absolute $chunkfile_path unchanged, since the
+        // 'uploads' disk is rooted at the same real filesystem location.
         $paths = $this->paths;
         $chunk_root = $paths->root . $this->currentConfig->uploadDir();
         $chunk_abs_path = str_replace(['\\', '/./'], ['/', '/'], $chunkfile_path);
@@ -1980,10 +1966,8 @@ final class PwgImages
 
         // trick to bypass get_sql_condition_FandF
         if ($params['level'] !== 0 and $params['level'] > $this->currentUser->get()->level) {
-            // this will not persist -- Legacy Coupling Retirement Phase 8,
-            // 8i: CurrentUser is the only real reader now (the parallel
-            // `global $user;` array was never read by anything else in
-            // src/Piwigo/, confirmed via grep before deleting it).
+            // this will not persist -- CurrentUser is the only reader of
+            // this in-memory level override.
             $this->currentUser->set($this->currentUser->get()->withLevel($params['level']));
         }
 
@@ -2097,8 +2081,7 @@ final class PwgImages
      *    WS_TYPE flag, mandatory -- always a plain string.
      * Result rows are genuinely polymorphic (status: 'not found'|'multiple'
      * carry no other key, status: 'found' adds image_id/format_exist), and
-     * $candidates below is arbitrary client-supplied JSON -- flagged for
-     * Phase 4 (SEC-40/P26 Request DTOs).
+     * $candidates below is arbitrary client-supplied JSON.
      * @return array<int|string, array<string, mixed>>
      */
     public function formatsSearchImage(array $params, PwgServer $service): array
@@ -2120,10 +2103,9 @@ final class PwgImages
         }
 
         // we want "long" format extensions first to match "cmyk.jpg" before "jpg" for example
-        // (kept as a local variable, not written back to $conf: the original
-        // in-place usort() by reference on $this->currentConfig->formatExtensions() only ever
-        // mutated the request-local config copy anyway, since $conf is reloaded
-        // from scratch on every request)
+        // (kept as a local variable, not written back to $conf -- $conf is
+        // reloaded from scratch on every request, so mutating it here
+        // wouldn't persist anyway)
         $format_ext_list = $this->currentConfig->formatExtensions();
         usort($format_ext_list, static fn (string $a, string $b): int => strlen($b) - strlen($a));
 
@@ -2478,10 +2460,9 @@ final class PwgImages
                 return new PwgError(WsError::INVALID_PARAM, 'Do not use tag_list and tag_ids at the same time.');
             }
 
-            // realEscapeString() dropped: TagService::getTagIds()/
-            // tagIdFromTagName() go through TagRepository's parameterized
-            // DBAL queries, same "dead pre-escaping" rationale as this
-            // plan's other occurrences.
+            // TagService::getTagIds()/tagIdFromTagName() go through
+            // TagRepository's parameterized DBAL queries, so no manual
+            // escaping is needed here.
             $cleaned_tag_list = [];
             foreach ($tagListRequest->items as $tag_candidate) {
                 $cleaned_tag_list[] = strip_tags(stripslashes(is_string($tag_candidate) ? $tag_candidate : ''));

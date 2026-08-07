@@ -20,21 +20,15 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 
 /**
- * Singleton/service-locator elimination campaign, Phase 11 sub-phase 11E:
- * HtmlService's own real constructor now requires 8 collaborators
- * (CurrentConfig/EventDispatcher/ProcessCache/ErrorCollector/CurrentUser/
- * CurrentTemplate/PageState/Translator) this test suite's ~37 real call
- * sites previously never had to supply (the shim reads happened
- * internally). `Lang`/`AccessControl` are NOT among them -- HtmlService
- * itself resolves both lazily, see its own class docblock for the real
- * circular-dependency reasoning. Resolves each of the 8 from the real
- * container-shared instance when one exists (matching what every real
- * production caller already gets, including honoring any test-seeded
- * state on those instances), falling back to a fresh, DB-free, bare
- * instance for the many plain Unit tests that never boot a Kernel at all
- * -- same "no Kernel::boot(), type-satisfying instance is enough"
- * reasoning already established throughout this campaign (see
- * UrlServiceTestFactory's own docblock).
+ * HtmlService's constructor requires 8 collaborators: CurrentConfig,
+ * EventDispatcher, ProcessCache, ErrorCollector, CurrentUser,
+ * CurrentTemplate, PageState, and Translator. `Lang` and `AccessControl`
+ * are not among them -- HtmlService resolves both lazily itself; see its
+ * own class docblock for the circular-dependency reasoning. This factory
+ * resolves each of the 8 from the container-shared instance when one
+ * exists (matching what every production caller gets, including any
+ * test-seeded state on those instances), falling back to a fresh,
+ * DB-free, bare instance for Unit tests that never boot a Kernel.
  */
 final class HtmlServiceTestFactory
 {
@@ -67,13 +61,11 @@ final class HtmlServiceTestFactory
         try {
             $instance = Kernel::container()->get($class);
         } catch (Throwable) {
-            // Some callers boot Kernel with no real Paths (e.g.
-            // ContainerSmokeTest.php's own "Kernel booted with no real
-            // Paths" scenario) -- Lang/CurrentConfig-adjacent entries
-            // fail to resolve transitively in that case, same as every
-            // other REQUEST_SCOPED_ONLY_ENTRIES-class shim. Falls back to
-            // a bare instance, matching the "no Kernel::boot()" branch
-            // above.
+            // Kernel can be booted with no real Paths (e.g. in
+            // ContainerSmokeTest.php), which makes Lang/CurrentConfig-
+            // adjacent entries fail to resolve transitively. Falls back
+            // to a bare instance, matching the "no Kernel::boot()"
+            // branch above.
             return null;
         }
 

@@ -24,32 +24,24 @@ use Piwigo\Search\Projection\Search;
  * operator combinations -- see {@see findIdsByClause()}'s own docblock
  * for why that one stays generic).
  *
- * Further SQL-modernization audit, Item 15H: drops `extends
- * AbstractRepository` for a directly-injected `EntityManagerInterface`
- * (`Search` is `L2bExtendedDomain`; `Image`/`Category` are
- * `L2aCoreDomain`, an allowed downward dependency, same shape as
- * `Calendar\CalendarRepository`/`Notification\NotificationRepository`).
- * The `search` table's own basic CRUD (`findOneByClause()`/`now()`/
- * `insertSearch()`/`countByUuid()`/`findRulesByIds()`) converted to real
- * DQL/`persist()` below -- every real shape was bounded (`getSearchIdPattern()`'s
- * own 2 literal WHERE patterns, confirmed via reading every real caller).
+ * Takes a directly-injected `EntityManagerInterface` rather than
+ * extending `AbstractRepository` (`Search` is `L2bExtendedDomain`;
+ * `Image`/`Category` are `L2aCoreDomain`, an allowed downward
+ * dependency, same shape as `Calendar\CalendarRepository`/
+ * `Notification\NotificationRepository`). The `search` table's own
+ * basic CRUD runs through DQL/`persist()` below.
  * `findIdsByClause()`/`findRowsByClause()`/`quote()`/`expressionBuilder()`
- * stay generic -- the quick-search token evaluator's own real, permanent
- * need for dynamically-varying table/column/operator combinations
- * (MySQL FULLTEXT search, a plugin extensibility hook accepting raw SQL)
- * has no DQL representation, confirmed by reading it, not assumed.
- * `SearchService::getRegularSearchResults()`'s 12 advanced-search criteria
- * and `searchAllwords()` -- both genuinely bounded shapes, unlike the
- * quicksearch path -- converted to {@see findImageIdsMatching()} instead,
- * which they no longer share `findIdsByClause()` with.
+ * stay generic -- the quick-search token evaluator's own real,
+ * permanent need for dynamically-varying table/column/operator
+ * combinations (MySQL FULLTEXT search, a plugin extensibility hook
+ * accepting raw SQL) has no DQL representation.
+ * `SearchService::getRegularSearchResults()`'s 12 advanced-search
+ * criteria and `searchAllwords()` go through {@see findImageIdsMatching()}.
  * `SearchFilterRenderer`'s own filter-sidebar blocks (author/added_by/
  * filetypes/ratings/filesize/ratios/height/width/date_posted/
- * date_created) converted to {@see countImagesGroupedBy()}/
+ * date_created) go through {@see countImagesGroupedBy()}/
  * {@see findDistinctImageRows()}/{@see findDistinctImageColumnValues()}/
- * {@see findCategoryIdsAndUppercats()} -- the former generic
- * `queryRows()`/`queryKeyedColumn()`/`queryColumn()` free-form-SQL
- * executors retired entirely once these were their only real callers
- * (confirmed via grep).
+ * {@see findCategoryIdsAndUppercats()}.
  *
  * Every `mixed` below stays that way by design: $params mirrors DBAL
  * Connection::executeQuery()'s own untyped bound-parameter contract
@@ -74,11 +66,9 @@ final class SearchRepository
         }
 
         // Doctrine's native `json` Type decodes via json_decode($v, true)
-        // same as ArrayHelper::safeJsonDecode() did -- PHP auto-coerces a
-        // numeric-string JSON object key (e.g. "0") into a PHP int array
-        // key, so this same string-keys-only filter (originally
-        // Search\Projection\Search::decodeRules()'s own) still applies
-        // here.
+        // -- PHP auto-coerces a numeric-string JSON object key (e.g. "0")
+        // into a PHP int array key, so this string-keys-only filter is
+        // needed.
         return array_filter($rulesRaw, is_string(...), ARRAY_FILTER_USE_KEY);
     }
 
@@ -95,11 +85,9 @@ final class SearchRepository
     }
 
     /**
-     * Replaces the former generic `findOneByClause()`'s own 2 real WHERE
-     * shapes (`getSearchIdPattern()`'s own `'id = ?'`/`'search_uuid = ?'`
-     * literals) with 2 typed methods -- confirmed via reading every real
-     * caller (`SearchService::getSearchInfo()`, `Ws\PwgCore::
-     * historySearch()`) no other WHERE shape is ever constructed.
+     * The 2 typed methods below correspond to `getSearchIdPattern()`'s
+     * own 2 real WHERE shapes (`'id = ?'`/`'search_uuid = ?'`) -- no
+     * other WHERE shape is ever constructed.
      */
     public function findSavedSearchById(int $id): ?Search
     {
@@ -137,13 +125,9 @@ final class SearchRepository
      * forked) -- SearchService::saveSearch() always passes real values for
      * both.
      *
-     * Further SQL-modernization audit, Item 15H: converted to
-     * `persist()`/`flush()` -- DQL has no INSERT statement. The former
-     * `now()`'s own `SELECT NOW()` round-trip retired entirely;
-     * `saveSearch()`'s own `$createdOn` is now `Env::now()`-computed in
-     * PHP, matching the same "PHP-computed timestamp beats a DB round
-     * trip, and stays PIWIGO_TEST_NOW-aware" pattern used throughout this
-     * campaign.
+     * Uses `persist()`/`flush()` -- DQL has no INSERT statement.
+     * `saveSearch()`'s own `$createdOn` is `Env::now()`-computed in PHP,
+     * so it stays PIWIGO_TEST_NOW-aware.
      *
      * @param array<string, mixed> $rules
      * @return int the new row's auto-increment id
@@ -292,9 +276,8 @@ final class SearchRepository
      * blocks -- `DISTINCT` matters here because of the `ImageCategoryEntity`
      * join's own row fan-out (one row per category an image belongs to),
      * not because of the extra columns. $selectExprs are full `"expr AS
-     * alias"` strings the caller controls directly, so every existing
-     * row-consumer loop (keyed by the original raw-SQL column names) needs
-     * no changes.
+     * alias"` strings the caller controls directly, so every row-consumer
+     * loop (keyed by column name) works unchanged.
      *
      * @param  list<string>  $selectExprs
      * @return list<array<string, mixed>>
@@ -316,8 +299,8 @@ final class SearchRepository
      * $dqlPath is always a plain path expression here (`i.height`/
      * `i.width`), so grouping/ordering by it directly (not an alias) is
      * safe (unlike {@see countImagesGroupedBy()}'s own function-call
-     * case). Returns strings, matching the former `queryColumn()`-based
-     * contract every real caller here still expects.
+     * case). Returns strings, matching the contract every real caller
+     * here expects.
      *
      * @return list<string>
      */
@@ -406,20 +389,16 @@ final class SearchRepository
      * quick-search tag/category text lookups need the whole row, not just
      * the id, to build `QResults::$all_tags`/`$all_cats`).
      *
-     * pgsql support pass: real bug found live -- `SELECT *` against
-     * `images`/`categories`/`tags` picks up their real Postgres-only
-     * `tsv_search`/`tsv_author` generated columns (Phase B/F's FULLTEXT
-     * migration), which no real caller here ever wants -- confirmed live
-     * leaking straight into `QResults::$all_tags`'s own row shape.
-     * Stripped by key prefix rather than narrowing the `SELECT *` itself:
-     * this method is deliberately generic across whatever table/columns
-     * each caller's own `$fromSql` names (its own docblock: "row shape
-     * genuinely varies"), and no legitimate caller's real column name
-     * would ever start with `tsv_` (this schema's own naming convention,
-     * confirmed via a fresh grep -- every real column is a plain noun,
-     * `tsv_*` is reserved for this FULLTEXT-generated-column purpose
-     * specifically), so this can't drop a real, wanted column for either
-     * platform.
+     * `SELECT *` against `images`/`categories`/`tags` also picks up their
+     * Postgres-only `tsv_search`/`tsv_author` generated columns, which no
+     * real caller here ever wants. Stripped by key prefix rather than
+     * narrowing the `SELECT *` itself: this method is deliberately
+     * generic across whatever table/columns each caller's own `$fromSql`
+     * names, and no legitimate caller's real column name would ever
+     * start with `tsv_` (this schema's own naming convention -- every
+     * real column is a plain noun, `tsv_*` is reserved for the
+     * FULLTEXT-generated-column purpose specifically), so this can't
+     * drop a real, wanted column for either platform.
      *
      * @param  list<mixed>  $params
      * @return list<array<string, mixed>>
@@ -452,9 +431,8 @@ final class SearchRepository
      * already-safe raw fragments (numeric/date range clauses from
      * QNumericRangeScope/QDateRangeScope) into a single WHERE string,
      * where a `?`-bound parameter can't cleanly compose. Uses the real
-     * DBAL driver's own escaping (unlike the original's addslashes(),
-     * SEC-18's own fix target -- addslashes() doesn't handle every
-     * driver's/charset's escaping rules correctly).
+     * DBAL driver's own escaping -- addslashes() doesn't handle every
+     * driver's/charset's escaping rules correctly.
      */
     public function quote(string $value): string
     {
@@ -463,12 +441,11 @@ final class SearchRepository
     }
 
     /**
-     * Further SQL-modernization audit, Item 7: exposes a real
-     * Doctrine\DBAL\Query\Expression\ExpressionBuilder for composing
-     * dynamic OR/AND-joined clause lists via typed method calls (e.g.
-     * $expr->and(...$whereClauses)) instead of hand-rolled
-     * implode(' AND ', ...), same convention Permission\
-     * PermissionRepository::expressionBuilder() established for Item 2.
+     * Exposes a real Doctrine\DBAL\Query\Expression\ExpressionBuilder for
+     * composing dynamic OR/AND-joined clause lists via typed method calls
+     * (e.g. $expr->and(...$whereClauses)) instead of hand-rolled
+     * implode(' AND ', ...), same convention as
+     * Permission\PermissionRepository::expressionBuilder().
      */
     public function expressionBuilder(): ExpressionBuilder
     {

@@ -19,19 +19,16 @@ use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\CurrentUser;
 
 /**
- * P23 batch 8d: relocated from include/functions.inc.php's
- * get_nb_available_comments(), unchanged logic. Singleton/service-locator
- * elimination campaign, Phase 12 sub-phase 12A: extracted from
- * CommentService::getNbAvailableComments() -- this counter only ever
- * needed CurrentUser/CurrentConfig/AccessLevelChecker, never
- * CommentService's other 8 collaborators (Lang/CommentRepository/
+ * Extracted from CommentService::getNbAvailableComments() -- this
+ * counter only ever needs CurrentUser/CurrentConfig/AccessLevelChecker,
+ * never CommentService's other 8 collaborators (Lang/CommentRepository/
  * EphemeralKeyService/MailerInterface/HtmlRenderingInterface/
- * UrlServiceInterface/EventDispatcher/PageState), which forced
- * MenubarRenderer::render() -- its one real caller, a NOCTOR method with
- * no constructor of its own -- to gather and pass through 8 params it had
- * no other use for, purely to satisfy CommentService's constructor. Same
- * interface-segregation reasoning as AccessLevelChecker's own extraction
- * from AccessControl.
+ * UrlServiceInterface/EventDispatcher/PageState). Depending on this
+ * class instead avoids forcing MenubarRenderer::render() -- its one real
+ * caller, a method with no constructor of its own -- to gather and pass
+ * through 8 params it has no other use for, purely to satisfy
+ * CommentService's constructor. Same interface-segregation reasoning as
+ * AccessLevelChecker's own extraction from AccessControl.
  */
 final class AvailableCommentsCounter
 {

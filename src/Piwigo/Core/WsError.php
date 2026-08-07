@@ -12,10 +12,9 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * P23 batch 8e: relocated from include/ws_core.inc.php's WS_ERR_*
- * define()s. Lives at L1Infrastructure alongside WsParamType/WsParamFlag;
- * see WsParamType's own docblock for why (Piwigo\Users\UserService needs
- * to reach these too).
+ * Lives in `Piwigo\Core` (L1Infrastructure) alongside `WsParamType` and
+ * `WsParamFlag`; see `WsParamType`'s own docblock for why
+ * (`Piwigo\Users\UserService` needs to reach these values too).
  */
 final class WsError
 {

@@ -38,17 +38,11 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
 /**
- * P23 batch 8c: ported from `include/profile_functions.inc.php`'s 2
- * top-level functions (`save_profile_from_post()`/
- * `load_profile_in_template()`, itself extracted from `profile.php` in
- * P22). Both real callers are already-migrated `src/Piwigo/` classes
- * (`ProfileController`, `Controller\Admin\ConfigurationSubController`'s
- * "default" tab) -- unlike the free-function delegates elsewhere in this
- * batch, this is genuine `$_POST`/`$page`/`$template`-coupled business
- * logic with no existing typed home, so it gets its own class here
- * (`Piwigo\Controller`, matching `LegacyRenderCapture`'s own precedent of
- * a non-`ControllerInterface` helper class living directly in this
- * namespace) rather than a relocated free function.
+ * Holds `$_POST`/`$page`/`$template`-coupled profile business logic, used
+ * by `ProfileController` and `Controller\Admin\ConfigurationSubController`'s
+ * "default" tab. Lives directly in the `Piwigo\Controller` namespace as a
+ * non-`ControllerInterface` helper class, the same pattern
+ * `LegacyRenderCapture` uses.
  */
 final class ProfileFormHandler
 {
@@ -87,10 +81,10 @@ final class ProfileFormHandler
         }
 
         // A local working copy of $_POST -- the special-user/not-admin-context
-        // branches below used to unset()/overwrite several $_POST keys in
-        // place so every later read in this same method saw the overridden
-        // state; that stays entirely within this one method call, so it's
-        // mutated here instead of the real superglobal.
+        // branches below unset()/overwrite several $_POST keys in place so
+        // every later read in this same method sees the overridden state;
+        // that stays entirely within this one method call, so it's mutated
+        // here instead of the real superglobal.
         $post = $profileFormSubmitRequest->post;
 
         $conn = DbConnection::build();
@@ -276,10 +270,9 @@ final class ProfileFormHandler
                 // expand/show_nb_hits/show_nb_comments post as the literal
                 // strings 'true'/'false' ({html_radios} in
                 // profile_content.tpl uses $radio_options's own keys as
-                // the submitted value) -- real tinyint columns now (User
-                // domain Stage 1a), so the string form must become 1/0
-                // before reaching massUpdate(); every other field in
-                // $fields is untouched.
+                // the submitted value) -- these are tinyint columns, so
+                // the string form must become 1/0 before reaching
+                // massUpdate(); every other field in $fields is untouched.
                 $boolFields = ['expand', 'show_nb_hits', 'show_nb_comments'];
                 foreach ($fields as $field) {
                     if (! isset($post[$field])) {

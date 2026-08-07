@@ -19,22 +19,13 @@ use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 
 /**
- * Folds admin/include/batch_manager_filters.inc.php (the filter-panel body
- * shared by both batch_manager tabs) into a class. Its only 2 real callers
- * (BatchManagerGlobalPageRenderer, BatchManagerUnitPageRenderer) are both
- * ported in this same P23 batch 6g -- unlike admin/include/
- * albums_tab.inc.php's 3rd caller (Piwigo\Controller\Admin\
- * PermalinksSubController, P23 batch 6j-1), which is why that file stayed
- * a raw include while this one is fully folded into a shared class
- * instead.
+ * Renders the filter panel shared by the batch_manager tabs
+ * (BatchManagerGlobalPageRenderer, BatchManagerUnitPageRenderer).
  *
  * $baseUrl/$collection/$catElementsId/$pageStart are passed explicitly
- * instead of read via `global` -- both callers already compute their own
+ * instead of read via `global`: both callers already compute their own
  * local, narrowed copies of these before calling render(), so this avoids
- * re-narrowing the same $page offsets a second time (the original legacy
- * include did its own independent narrowing of $page['cat_elements_id']/
- * $page['start'], separate from -- but identical in value to -- the
- * narrowing each calling file did again later in its own body).
+ * re-narrowing the same $page offsets a second time.
  */
 final class FilterPanelRenderer
 {
@@ -140,13 +131,10 @@ final class FilterPanelRenderer
             ]
         );
 
-        // Legacy Coupling Retirement Track A batch A5.2i: the original
-        // docblock here mis-described admin/site_update.php (actually
-        // Controller\Admin\SiteUpdateSubController, a *reader* of this same
-        // value, not a writer) as "the only other writer" -- AdminShell is
-        // the sole real writer, computed once per admin request and shared
-        // by both this filter panel and SiteUpdateSubController's own
-        // save-error notice, hence PageState rather than a per-caller param.
+        // AdminShell is the sole writer of this value, computed once per
+        // admin request and shared by both this filter panel and
+        // Controller\Admin\SiteUpdateSubController's own save-error notice,
+        // hence PageState rather than a per-caller param.
         $no_md5sum_number = $pageState->noMd5sumNumber;
         if ($no_md5sum_number !== null) {
             $template->assign(

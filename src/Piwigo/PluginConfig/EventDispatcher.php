@@ -10,29 +10,21 @@ use LogicException;
 use ReflectionFunction;
 
 /**
- * Plugin event-handler registry -- container-shared instance (former
- * `get()` transitional bridge shim closed outright in sub-phase 12F-9,
- * same bridging pattern Piwigo\Session\SessionService::get()'s own former
- * shim had). Holds the state previously carried by include/
- * functions_plugins.inc.php's `global $pwg_event_handlers`
- * (grep-confirmed: never read from outside that file, safe to fully
- * internalize instead of keeping a parallel global in sync).
+ * Plugin event-handler registry, held as a container-shared instance --
+ * the sole source of truth for registered handlers (no parallel global
+ * variable mirrors this state).
  */
 final class EventDispatcher
 {
     // 'function' is declared string|array|object rather than PHPStan's
     // usual `callable` -- PHP's native `callable` type hint validates
-    // callability EAGERLY, at registration time. A real pre-existing bug
-    // this surfaced: include/common.inc.php (formerly admin/include/
-    // functions_upload.inc.php, relocated in P23 sub-batch 8b-3) registers
-    // 'pwg_image_resize' for 'upload_image_resize'/'upload_thumbnail_resize',
-    // but that function doesn't exist anywhere in this codebase (dead
-    // legacy code -- confirmed absent from both reference branches too,
-    // and those two events are never actually triggered). The original
-    // `global $pwg_event_handlers` array never validated callability until
-    // actual invocation (call_user_func_array()), so the dead registration
-    // was silently harmless. Preserving that laziness here, rather than
-    // "fixing" pwg_image_resize (out of this phase's scope).
+    // callability EAGERLY, at registration time. That matters because
+    // Bootstrap\RequestBootstrap registers 'pwg_image_resize' for the
+    // 'UploadImageResize'/'UploadThumbnailResize' events, but that
+    // function doesn't exist anywhere in this codebase; neither event is
+    // ever actually triggered, so the registration is dead but harmless.
+    // Callability is validated lazily, only at invocation
+    // (call_user_func_array()), never at registration.
     /**
      * @var array<string, array<int, list<EventHandler>>>
      */

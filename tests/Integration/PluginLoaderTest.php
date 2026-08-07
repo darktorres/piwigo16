@@ -30,24 +30,22 @@ use Piwigo\Tests\Support\KernelContainerOverride;
  * itself) rebinds Paths::class for its own scope via
  * KernelContainerOverride::with(), since Kernel is already booted (by
  * parent::setUp(), against the real repo-root Paths) by the time any test
- * method runs -- CurrentPaths (singleton/service-locator elimination
- * campaign, Phase 3) is a pure shim over whatever Paths::class the live
- * container has, not an independently rebindable static.
+ * method runs -- CurrentPaths is a pure shim over whatever Paths::class the
+ * live container has, not an independently rebindable static.
  *
  * autoupdatePlugin()'s own "filesystem version is newer" body (real
  * `Version:` header parsing, dynamically loading a real
  * `{$plugin_id}_maintain` class from a real maintain.class.php, the
  * PageStateTestFactory::get()->errors round-trip through PluginMaintain::update()'s
  * by-reference $errors param, persisting via PluginRepository::updateVersion(),
- * and logging the 'autoupdate' activity row) IS covered below now, via the
+ * and logging the 'autoupdate' activity row) is covered below, via the
  * same "write a real throwaway maintain.class.php declaring a
  * `{$id}_maintain` class" convention ExtensionLifecycleTest's own
- * writePluginMaintainFile()/buildPluginMaintain() tests already established
- * for the sibling ExtensionLifecycle::buildPluginMaintain() -- PluginLoader
- * ships an independent copy of that same dynamic-class-load-and-check
- * pattern, not a delegation to it. Those tests reach $this->activityService
- * (constructor-injected into loadPlugins() since the singleton/service-
- * locator elimination campaign, Phase 6) -- harmless for the
+ * writePluginMaintainFile()/buildPluginMaintain() tests use for the
+ * sibling ExtensionLifecycle::buildPluginMaintain() -- PluginLoader ships
+ * an independent copy of that same dynamic-class-load-and-check pattern,
+ * not a delegation to it. Those tests reach $this->activityService
+ * (constructor-injected into loadPlugins()) -- harmless for the
  * plugins-disabled/missing-file/no-version-header tests below, which never
  * reach that call.
  */

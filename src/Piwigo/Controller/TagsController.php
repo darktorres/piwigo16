@@ -38,12 +38,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Replaces tags.php -- the front-end tag cloud/letter-index browsing page
- * (distinct from P21's admin/tags.php, the orphan-tag management page).
- *
- * Legacy Coupling Retirement Workstream D: converted off
- * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
- * pattern as AboutController -- see that class's own docblock for the
- * accumulator mechanics this relies on.
+ * (distinct from the admin album's orphan-tag management page).
  */
 final class TagsController implements ControllerInterface
 {

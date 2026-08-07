@@ -127,17 +127,13 @@ test('fromEnv() falls back to the default driver when PIWIGO_DB_DRIVER is explic
  * `is_numeric($portEnv)` -- the exact same determining factor real
  * code's full `&&` chain converges on for every one of those values.
  * Confirmed live against the precise parenthesized mutation pest
- * generates (not the differently-precedenced version this docblock's
- * sibling test was originally verified against by mistake).
+ * generates.
  */
 test('DbCredentialsTestFactory::get returns a fresh read on every call when Kernel is not booted', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 3: the former
-    // current() shim (closed in sub-phase 12F-3) was a pure shim with no
-    // independent memo of its own -- when there's no container to resolve
-    // a shared instance from, it fell back to a bare fromEnv() read every
-    // time (same reasoning as every other Unit test in this codebase that
-    // never boots Kernel at all). DbCredentialsTestFactory::get()
-    // reproduces this exactly.
+    // When there's no container to resolve a shared instance from,
+    // DbCredentialsTestFactory::get() falls back to a bare fromEnv() read
+    // every time (same reasoning as every other Unit test in this codebase
+    // that never boots Kernel at all).
     putenv('PIWIGO_DB_HOST=first.example.test');
     $first = DbCredentialsTestFactory::get();
 

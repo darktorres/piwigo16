@@ -78,43 +78,33 @@ use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 
 /**
- * Replaces picture.php -- the single-photo detail page, largest and most
- * intricate controller this phase. The legacy file's own top-level
- * default_picture_content() becomes a private method registered via
- * add_event_handler()'s first-class-callable form ($this->
- * defaultPictureContent(...)) instead of the string-name form -- confirmed
- * add_event_handler() accepts `array{0: object|string, 1: string}|object|string`
- * (a Closure is an object), same conversion precedent as
- * Piwigo\Admin\Integrity\C13yInternal.php's own handler registrations.
+ * Replaces picture.php -- the single-photo detail page. Its event handler
+ * for rendering default picture content is registered via
+ * add_event_handler()'s first-class-callable form
+ * ($this->defaultPictureContent(...)); add_event_handler() accepts
+ * `array{0: object|string, 1: string}|object|string`, so a bound instance
+ * method works directly without a string-name registration.
  *
  * The "actions" switch (favorite/caddie/rate/comment moderation) is the
- * last place any exit()-capable call happens before the render body
- * (confirmed via a full-file grep for redirect()/redirect_http()/
- * page_not_found()/access_denied()/die()/exit -- every hit above the
- * "number of hits" section already throws ResponseReadyException via
- * RedirectService, unrelated to Workstream C3c below). Not every case
- * redirects, though: edit_comment falls through to the render body
- * without calling redirect() whenever no comment content was submitted
- * (i.e. just displaying the edit-comment form itself).
+ * last place any exit()-capable call happens before the render body. Not
+ * every case redirects, though: edit_comment falls through to the render
+ * body without calling redirect() whenever no comment content was
+ * submitted (i.e. just displaying the edit-comment form itself).
+ * Picture\PictureCommentRenderer::render()'s own die() calls (reached
+ * from within this body) throw ResponseReadyException.
  *
- * Workstream C3c: converted off LegacyRenderCapture's ob_start()/
- * ob_get_contents() capture -- the render body that used to be a separate
- * static closure (passed to LegacyRenderCapture::capture(), its own
- * use()-list threading every needed variable in by value) is now flat code
- * directly in this method, same "parse($handle, false) accumulates into
- * Template's own buffer, PageTail::renderToString() drains it as one
- * string" mechanism Controller\AboutController/PopuphelpController already
- * use. $urlService/$configService keep their own local aliases (still
- * referenced throughout the body) rather than being renamed to
- * $this->urlService/$this->configService everywhere -- a smaller, safer
- * diff for a ~750-line method. Picture\PictureCommentRenderer::render()'s
- * own 2 die() calls (reached from within this body) now throw
- * ResponseReadyException too -- see that class's own docblock.
+ * The render body is flat code directly in this method: it parses the
+ * template with `parse($handle, false)`, which accumulates into
+ * Template's own buffer, and PageTail::renderToString() drains that
+ * buffer as one string -- the same mechanism
+ * Controller\AboutController/PopuphelpController use.
+ * $urlService/$configService keep their own local aliases, referenced
+ * throughout the body, rather than $this->urlService/$this->configService
+ * everywhere.
  *
- * Like GalleryController, Piwigo\Section\SectionPopulator::populate() (P23
- * batch 4d) must run before check_status() -- check_restrictions() below
- * depends on SectionContextRegistry::current()->category already being
- * populated.
+ * Like GalleryController, Piwigo\Section\SectionPopulator::populate()
+ * must run before check_status(): check_restrictions() below depends on
+ * SectionContextRegistry::current()->category already being populated.
  */
 final class PictureController implements ControllerInterface
 {
@@ -161,21 +151,19 @@ final class PictureController implements ControllerInterface
     #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        // A single connection for the whole request -- mirrors the
-        // legacy single-global-mysqli-connection model this migration
-        // restores, and avoids the needless-reconnection pattern found
-        // in earlier construction-chain debt (Phase 1d finding).
+        // A single connection is used for the whole request, avoiding
+        // needless reconnects.
         $conn = DbConnection::build();
         $this->sectionPopulator
             ->populate();
 
         $template = $this->currentTemplate->get();
 
-        // Legacy Coupling Retirement Track A batch A5.2e: populate() always
-        // calls SectionContextRegistry::set() as the very last thing it
-        // does, so this is guaranteed non-null by the time this controller
-        // (its one real caller besides GalleryController) runs -- a real
-        // guard, not dead code, since the type itself is nullable.
+        // populate() always calls SectionContextRegistry::set() as the
+        // very last thing it does, so this is guaranteed non-null by the
+        // time this controller (populate()'s one other caller besides
+        // GalleryController) runs -- a real guard, not dead code, since
+        // the type itself is nullable.
         $section_context = $this->sectionContextRegistry->current();
         if (! $section_context instanceof SectionContext) {
             throw new RuntimeException('SectionContextRegistry::current() is null after SectionPopulator::populate()');
@@ -239,18 +227,13 @@ final class PictureController implements ControllerInterface
             $row_file = $row['file'];
             $image_file = is_string($row_file) ? $row_file : null;
             if (! isset($rank_of[$image_id])) {// the image can still be non accessible (filter/cat perm) and/or not in the set
-                // Phase 2 global-residual sweep: retargeted from `global
-                // $filter;` onto Piwigo\Core\FilterState, preserving the
-                // same lenient "not initialized yet -> no restriction"
-                // fallback the old `?? null` had. FilterState::
-                // visibleImages() always returns a real string (the old
-                // raw global's occasional `-1` int sentinel is now the
-                // string '-1'); the old is_string() check implicitly
-                // excluded that sentinel by type, so exclude it
-                // explicitly here to preserve the exact same behavior --
-                // '-1' means "the filter computed an empty visible-images
-                // list" (see FilterService's own "Must be not empty"
-                // comment), not a real id to match against.
+                // FilterState::visibleImages() always returns a string; if
+                // the filter has not been initialized yet, there is no
+                // restriction (fallback to ''). '-1' is a sentinel meaning
+                // "the filter computed an empty visible-images list" (see
+                // FilterService's own "Must be not empty" comment), not a
+                // real id to match against, so it is excluded explicitly
+                // alongside ''.
                 $visible_images = $this->filterState->isInitialized() ? $this->filterState->visibleImages() : '';
                 if ($visible_images !== '' && $visible_images !== '-1' &&
                   ! in_array((string) $image_id, explode(',', $visible_images), true)) {
@@ -578,13 +561,10 @@ final class PictureController implements ControllerInterface
         $configService = $this->configService;
         // $title/$refresh/$url_link are set and read entirely within
         // this method (passed straight into PageHeaderRenderer::
-        // render() below) -- confirmed via grep that no other file
-        // reads $GLOBALS['title']/['refresh']/['url_link'], unlike
-        // $url_self/$picture/$related_categories, real bridges to
-        // PictureCommentRenderer/PictureRateRenderer/
-        // PictureMetadataRenderer -- threaded into their own render()
-        // calls below as real parameters (Legacy Coupling Retirement
-        // Phase 8, 8g), formerly `global`.
+        // render() below); no other file reads them. $url_self/$picture/
+        // $related_categories are real bridges to PictureCommentRenderer/
+        // PictureRateRenderer/PictureMetadataRenderer, threaded into
+        // their own render() calls below as real parameters.
         $refresh = null;
         $url_link = null;
         $template = $this->currentTemplate->get();
@@ -1032,9 +1012,6 @@ final class PictureController implements ControllerInterface
         }
 
         // ------------------------------------------------------ picture information
-        // $infos was previously used without initialization (relying
-        // on PHP's implicit array creation on first offset write) --
-        // make it explicit.
         $infos = [];
 
         // legend

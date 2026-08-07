@@ -66,19 +66,16 @@ final class FilterService implements FilterUpdaterInterface
      */
     public function initializeFromRequest(PageState $pageState, CurrentUser $currentUser): void
     {
-        // Phase 2 global-residual sweep: $filter is now a local scratch
-        // array for this method's own body only (no longer `global
-        // $filter;`) -- the final computed values are published once,
-        // at each of this method's 2 real termination points, to
-        // Piwigo\Core\FilterState, the new cross-file read target.
-        // Genuinely transient/heterogeneous (enabled: bool, recent_period:
-        // int, categories: the FilterState-typed rollup, visible_categories/
-        // visible_images: string|int, matches: preg_match() captures) --
-        // every field is re-extracted into its own precisely-typed local
-        // before being handed to FilterState::set(), so this scratch
-        // array's own blanket type is intentionally left loose rather than
-        // risk a mid-function retype this pass can't verify (composer
-        // analyse is deferred to the end).
+        // $filter is a local scratch array for this method's own body only
+        // -- the final computed values are published once, at each of this
+        // method's 2 real termination points, to Piwigo\Core\FilterState,
+        // the cross-file read target. Genuinely transient/heterogeneous
+        // (enabled: bool, recent_period: int, categories: the
+        // FilterState-typed rollup, visible_categories/visible_images:
+        // string|int, matches: preg_match() captures) -- every field is
+        // re-extracted into its own precisely-typed local before being
+        // handed to FilterState::set(), so this scratch array's own
+        // blanket type is intentionally left loose.
         /** @var array<string, mixed> */
         $filter = [];
 
@@ -167,14 +164,12 @@ final class FilterService implements FilterUpdaterInterface
                 ];
 
                 $categoryConn = $this->conn ??= DbConnection::build();
-                // getComputedCategories() no longer mutates its $userdata
-                // argument (Legacy Coupling Retirement Phase 8, 8i) -- it
-                // returns the computed 'last_photo_date' alongside the
-                // categories instead, re-synced onto CurrentUser (via
+                // getComputedCategories() does not mutate its $userdata
+                // argument -- it returns the computed 'last_photo_date'
+                // alongside the categories, re-synced onto CurrentUser (via
                 // withRawAttribute(), the generic escape hatch: User has no
-                // named lastPhotoDate property) so every other retargeted
-                // consumer (e.g. CategoryCatsRenderer) observes the same
-                // value.
+                // named lastPhotoDate property) so every other consumer
+                // (e.g. CategoryCatsRenderer) observes the same value.
                 $accessLevelChecker = new AccessLevelChecker($currentUser, $this->currentConfig);
                 $computedCategories = new CategoryService(
                     $this->lang,
@@ -269,12 +264,10 @@ final class FilterService implements FilterUpdaterInterface
     #[Override]
     public function updateCatsWithFilteredData(array &$cats): void
     {
-        // Phase 2 global-residual sweep: retargeted from `global $filter;`
-        // onto Piwigo\Core\FilterState. isInitialized() is checked first
-        // (not just isEnabled()) to preserve the raw global's old lenient
-        // `$filter['enabled'] ?? false` semantics -- a request that never
-        // reaches RequestBootstrap::finalize() at all (no FilterState::set()
-        // call yet) silently does nothing here, same as before.
+        // isInitialized() is checked first (not just isEnabled()) to
+        // preserve lenient `$filter['enabled'] ?? false` semantics -- a
+        // request that never reaches RequestBootstrap::finalize() at all
+        // (no FilterState::set() call yet) silently does nothing here.
         if (! $this->filterState->isInitialized() || ! $this->filterState->isEnabled()) {
             return;
         }

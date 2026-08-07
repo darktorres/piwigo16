@@ -40,17 +40,9 @@ use Piwigo\Users\CurrentUser;
 use RuntimeException;
 
 /**
- * Installation helpers, ported verbatim from the former
- * admin/include/functions_install.inc.php free functions (P23 sub-batch
- * 8f-6). Static methods on purpose: this class runs on the
- * pre-installation entry path (install.php) where no DI container exists,
- * matching the Env/FilesystemHelper/MysqliDb precedent.
- *
- * The former frozen install/db/86-database.php script and
- * admin/include/functions_install.inc.php's bare activate_core_themes()
- * delegate (which forwarded to activateCoreThemes() here) were both
- * deleted in P23 batch 8g-6; InstallWizard::performInstall() now calls
- * activateCoreThemes() here directly.
+ * Installation helpers used on the pre-installation entry path
+ * (install.php), where no DI container exists. Methods are static to
+ * match the Env/FilesystemHelper/MysqliDb precedent.
  */
 final class InstallService
 {
@@ -182,12 +174,8 @@ final class InstallService
     }
 
     /**
-     * PHP5 configuration directives for known shared-hosting providers,
-     * folded verbatim from the deleted install/hosting.php (P23 sub-batch
-     * 8f-6). Historical data: nothing in the current codebase reads it any
-     * more (the last includer of install/hosting.php was removed years
-     * before the 17.x rewrite); preserved as a typed constant per the 8f-6
-     * migration decision rather than silently dropping the data file.
+     * PHP5 configuration directives for known shared-hosting providers.
+     * Not read anywhere in the current codebase.
      *
      * @var array<string, string>
      */

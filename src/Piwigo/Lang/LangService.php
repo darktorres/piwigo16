@@ -59,16 +59,15 @@ final readonly class LangService
      * returns an array with a list of {language_code => language_name} for
      * every language installed under the core language/ tree
      *
-     * P23 batch 8d: relocated from include/functions.inc.php's
-     * get_languages(), unchanged logic -- static since it needs no other
-     * instance state, matching InputValidator's own mixed static/instance
-     * precedent; takes Paths as an explicit parameter rather than
-     * $this->paths since a static method can't reach constructor-injected
-     * state, same as loadLanguageForPlugin()'s own $locale parameter.
+     * Static since it needs no other instance state, matching
+     * InputValidator's own mixed static/instance precedent; takes Paths
+     * as an explicit parameter rather than $this->paths since a static
+     * method can't reach constructor-injected state, same as
+     * loadLanguageForPlugin()'s own $locale parameter.
      *
-     * Part B: LangRepository is now ORM-backed (EntityRepository can't be
-     * `new`'d), so this resolves it via EntityManagerFactory::build()
-     * directly rather than the DI container -- same reasoning as
+     * LangRepository is ORM-backed (EntityRepository can't be `new`'d),
+     * so this resolves it via EntityManagerFactory::build() directly
+     * rather than the DI container -- same reasoning as
      * DbConnection::build() being callable from anywhere, no DI ceremony.
      *
      * @return array<string, string>

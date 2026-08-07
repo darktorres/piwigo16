@@ -11,16 +11,15 @@ use Doctrine\ORM\Mapping as ORM;
  * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
  * `date`/`time` stay plain string, not \DateTimeImmutable -- every real
  * consumer wants the raw DB DATE/TIME string form. `history_summary`
- * (this repository's other owned table) was previously claimed to have
- * no clean single-row shape an entity would help with -- re-audited
- * (Item 14 Sub-phase B1) and only true for `findSummaryRowsForHierarchy()`'s
- * own dynamic composite-nullable-key WHERE; several sibling methods are
- * genuinely clean. Now mapped as {@see HistorySummaryEntity}.
+ * (this repository's other owned table) is mapped as
+ * {@see HistorySummaryEntity}; only `findSummaryRowsForHierarchy()`'s own
+ * dynamic composite-nullable-key WHERE doesn't fit a clean single-row
+ * shape.
  *
- * `imageType` is `HistoryImageType` (native Doctrine `enumType` column,
- * pgsql-support campaign) -- `section` deliberately stays a plain
- * `?string` instead, see {@see HistoryRepository::getSectionEnumOptions()}'s
- * own docblock for why (plugin-widened at runtime, not a closed set).
+ * `imageType` is `HistoryImageType` (a native Doctrine `enumType` column)
+ * -- `section` deliberately stays a plain `?string` instead, see
+ * {@see HistoryRepository::getSectionEnumOptions()}'s own docblock for why
+ * (plugin-widened at runtime, not a closed set).
  */
 #[ORM\Entity(repositoryClass: HistoryRepository::class)]
 #[ORM\Table(name: 'history')]

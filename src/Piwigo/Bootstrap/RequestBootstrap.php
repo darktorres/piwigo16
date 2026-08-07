@@ -101,118 +101,60 @@ use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
 
 /**
- * The per-request bootstrap. Used to be the orchestration body of
- * include/common.inc.php (ported verbatim, P23 sub-batch 8f-5), with that
- * file kept on as a thin include seam every entry point targeted. The seam
- * is gone (P23 batch: include/+admin/ deletion) — bootEntryPoint() below is
- * now the real, sole entry point every root `public/*.php` file calls
- * directly.
+ * The per-request bootstrap; bootEntryPoint() is the entry point every
+ * root `public/*.php` file calls directly.
  *
- * Why three phases instead of one run(): the legacy bootstrap used to mark
- * Piwigo\Core\InstallationFlag active mid-sequence via a raw
- * `defined('PHPWG_INSTALLED') or define('PHPWG_INSTALLED', true);` guard
- * (after the install-redirect check, before the session handler
- * registration that reads InstallationFlag::isActive()) — src/Piwigo/ code
- * may not call define() (arch rule SEC-60), so that call had to live
- * outside this class, in the seam file, slotted between the phases.
- * InstallationFlag::mark() replaced the raw define() itself (Legacy
- * Coupling Retirement gap-closure, entry-shell define()/include round,
- * Part 0b) — a normal, safe static call, no longer subject to SEC-60 —
- * which is what lets bootEntryPoint() now call it directly instead of
- * needing an external seam to slot it in. The phases stay separate methods
- * regardless, preserving the original statement order exactly and the
- * standalone-callable contract
+ * Boot proceeds in three phases -- configure(), connect(), finalize() --
+ * with `InstallationFlag::mark()` called between configure() and
+ * connect(). bootConfigOnly() is a separate, lighter, standalone-callable
+ * path (config + globals only, no install-check/session/DB-user
+ * machinery) that
  * `tests/Unit/Bootstrap/RequestBootstrapBootConfigOnlyTest.php` exercises
- * directly. The former PHPWG_DOMAIN/
- * PHPWG_URL/PEM_URL define()s that used to sit here too (after
- * UserBootstrap, before language loading) are gone entirely (Legacy
- * Coupling Retirement gap-closure, entry-shell define()/include round,
- * Part 0b) -- every real reader now goes through Piwigo\Core\AppInfo::
- * DOMAIN/URL or this class's own pemUrl(), neither of which needs
- * seam-file sequencing at all.
+ * directly. Every reader of the app domain/URL goes through
+ * Piwigo\Core\AppInfo::DOMAIN/URL or this class's own pemUrl().
  *
- * Legacy Coupling Retirement Phase 8, 8a (the "boot-first" fix):
- * configure() now calls Kernel::boot($paths) as its own first statement --
+ * configure() calls Kernel::boot($paths) as its own first statement --
  * genuinely load-bearing, not just tidiness, since connect() below
  * performs real work (DB connection, plugin loading, user resolution)
- * that used to run before the former Piwigo\Bootstrap\CommonBootstrap::run()
- * (index.php/admin.php and the other P22 roots called it right after the
- * common.inc.php include, previously the *only* Kernel::boot() call on
- * this path) ever executed. That class is retired now (see
- * bootEntryPoint()'s own docblock below); bootConfigOnly()'s own
- * Kernel::boot() call is the harmless idempotent no-op today (Kernel::boot()
- * itself guards on self::$booted) -- kept there for the standalone-
- * callable contract tests/Unit/Bootstrap/RequestBootstrapBootConfigOnlyTest.php exercises
- * directly.
- *
- * Legacy Coupling Retirement Phase 8, 8d: every real ConfigDb:: call in
- * this file has been retargeted onto a container-resolved ConfigService
- * (connect() resolves it once and reuses the same instance for all 3
- * writes) -- safe only because 8c first retargeted every real
- * `$conf[...]` read out of this file onto CurrentConfig:: accessors;
- * ConfigService::loadConfFromDb() only ever writes CurrentConfig's own
- * properties directly, never $conf, unlike ConfigDb::loadConfFromDb()'s
- * dual-write.
+ * that depends on the container already being built.
  */
 final class RequestBootstrap
 {
     /**
-     * The real entry point every root `public/*.php` file calls directly —
-     * replaces the former `include $paths->root . 'include/common.inc.php';`
-     * line (P23 batch: include/+admin/ deletion). Exact same statement
-     * order as that seam file's own body: capture $t2, run the three
-     * phases below with `InstallationFlag::mark()` slotted between
-     * configure() and connect() (matching the original file's statement
-     * order precisely), catch `ResponseReadyException` from any
-     * bootstrap-phase short-circuit (install-redirect, upgrade-redirect,
-     * the 503 maintenance page) and emit it directly.
+     * The real entry point every root `public/*.php` file calls directly.
+     * Captures `$t2`, runs the three phases below with
+     * `InstallationFlag::mark()` slotted between configure() and
+     * connect(), catches `ResponseReadyException` from any bootstrap-phase
+     * short-circuit (install-redirect, the 503 maintenance page) and
+     * emits it directly.
      *
-     * Callers that never included `common.inc.php` in the first place
-     * (`i.php`, deliberately) or that skip straight to their own bespoke
-     * bootstrap (`install.php`/`upgrade.php`/`upgrade_feed.php`/
-     * `ready.php`, none of which ever depended on this class) do not call
-     * this method — see each file's own docblock for why.
+     * `i.php` never calls this method (deliberately); `install.php`/
+     * `ready.php` skip straight to their own bespoke bootstrap and never
+     * depend on this class -- see each file's own docblock for why.
      *
-     * Boot sequence consolidation (Config generic-accessor removal
-     * follow-up): SentryBootstrap::init()/ServerTiming's own 'boot' timer
-     * (seeded from `$t2`, captured right here, and stopped at both this
-     * method's own exit points below) now bracket this method's entire
-     * body -- formerly they only
-     * bracketed the former Piwigo\Bootstrap\CommonBootstrap::run() (a
-     * second call every `public/*.php` root file made right after this
-     * one), which on the real HTTP path only ever repeated
-     * already-idempotent work (see configure()/connect()'s own
-     * docblocks). A real, found-not-assumed bug: that meant Sentry never
-     * saw an error raised anywhere in this method's own body (the bulk of
-     * real per-request boot work -- DB connect, config load, plugin
-     * load, user resolution), and the 'boot' Server-Timing entry measured
-     * almost nothing real. CommonBootstrap is retired; every one of its
-     * real steps (Sentry, timing, the config/ConfigService bootstrap, and
-     * the CurrentUser/PageState/Lang attachGlobals() calls) now lives
-     * directly in this class -- see bootConfigOnly() below for the
-     * lighter, standalone-callable equivalent that used to be that
-     * class's own run().
+     * `SentryBootstrap::init()`/`ServerTiming`'s own 'boot' timer (seeded
+     * from `$t2`, captured right here, and stopped at both this method's
+     * own exit points below) bracket this method's entire body, so Sentry
+     * sees any error raised anywhere in this method's own body (the bulk
+     * of real per-request boot work -- DB connect, config load, plugin
+     * load, user resolution), and the 'boot' Server-Timing entry reflects
+     * that real work.
      *
-     * $mountDepth/$isWs/$isAdmin -- singleton/service-locator elimination
-     * campaign, Phase 3: the pre-`Kernel::boot()` marker trio
-     * (RequestMountDepth/WsContext/AdminContext), threaded through from
-     * whichever entry-shell file called this (`public/admin/popuphelp.php`,
-     * `public/ws.php`, `public/admin.php` -- the only 3 that pass anything
-     * other than the defaults) all the way down to `Piwigo\Core\Container`'s
-     * own build() method, replacing those 3 classes' former pre-boot
-     * `X::mark()`/`X::set()`
-     * calls (there is no container yet at the point those used to run).
+     * `$mountDepth`/`$isWs`/`$isAdmin` -- the pre-`Kernel::boot()` marker
+     * trio (RequestMountDepth/WsContext/AdminContext) is threaded through
+     * from whichever entry-shell file called this
+     * (`public/admin/popuphelp.php`, `public/ws.php`, `public/admin.php`
+     * -- the only 3 that pass anything other than the defaults) all the
+     * way down to `Piwigo\Core\Container`'s own build() method.
      *
-     * `ServerTiming` (also converted in Phase 3, moved from Phase 1 for the
-     * identical pre-boot entanglement, but only actually converted once the
-     * above trio's own work landed) needed a different mechanism, not the
-     * container-build-time binding the trio uses: its 'boot' timer must
-     * start ticking at the exact instant this method begins, before
-     * `configure()`'s own `Kernel::boot()` call runs -- `$t2` below captures
-     * that instant as a plain local variable (same idea as
-     * `PageState::requestStart`'s own pre-autoload capture), and
-     * `configure()` seeds the container-shared `ServerTiming` instance with
-     * it immediately after `Kernel::boot()` returns.
+     * `ServerTiming` needs a different mechanism, not the container-build-
+     * time binding the trio uses: its 'boot' timer must start ticking at
+     * the exact instant this method begins, before `configure()`'s own
+     * `Kernel::boot()` call runs -- `$t2` below captures that instant as a
+     * plain local variable (same idea as `PageState::requestStart`'s own
+     * pre-autoload capture), and `configure()` seeds the container-shared
+     * `ServerTiming` instance with it immediately after `Kernel::boot()`
+     * returns.
      */
     public static function bootEntryPoint(Paths $paths, int $mountDepth = 0, bool $isWs = false, bool $isAdmin = false): void
     {
@@ -237,21 +179,12 @@ final class RequestBootstrap
     }
 
     /**
-     * The standalone-callable, config+globals-only boot path -- formerly
-     * Piwigo\Bootstrap\CommonBootstrap::run(), moved here verbatim when
-     * that class was retired. Its only real callers were the 23 root
-     * `public/*.php` files (each already calling bootEntryPoint() first,
-     * making this a same-request repeat of already-idempotent work) and
-     * this method's own test -- bootEntryPoint() above now performs every
-     * one of these steps itself in the right place (Sentry/timing bracket
-     * its whole body; the config/ConfigService bootstrap already lived in
-     * configure()/connect(); the attachGlobals() calls now live at the end
-     * of finalize(), after language loading, matching Lang::attachGlobals()'s
-     * own real ordering requirement). No real production route needs this
-     * method anymore -- kept as the lighter path (no install-check/
-     * session/DB-user machinery) tests/Unit/Bootstrap/RequestBootstrapBootConfigOnlyTest.php
-     * exercises directly, and any future route that only needs config, not
-     * the full request machinery, can reach for.
+     * The standalone-callable, config+globals-only boot path. No real
+     * production route needs this method -- kept as the lighter path (no
+     * install-check/session/DB-user machinery) that
+     * tests/Unit/Bootstrap/RequestBootstrapBootConfigOnlyTest.php exercises
+     * directly, and any future route that only needs config, not the full
+     * request machinery, can reach for.
      */
     public static function bootConfigOnly(Paths $paths): void
     {
@@ -279,22 +212,11 @@ final class RequestBootstrap
     }
 
     /**
-     * Phase 1 — superglobal sanitization, env-file loading, static-setter
-     * wiring, Config seeding, install-sentinel check
-     * (include/common.inc.php's former lines up to the install redirect).
+     * Superglobal sanitization, env-file loading, static-setter wiring,
+     * Config seeding, and the install-sentinel check.
      *
      * bootEntryPoint() calls InstallationFlag::mark() right after this
-     * returns -- the former seam file's raw PHPWG_INSTALLED define(), now
-     * gone entirely (see this class's own docblock).
-     *
-     * One deliberate ordering deviation from the original file: the
-     * superglobal sanitization used to run before the
-     * config_default/local-config includes; it now runs right after them
-     * (the seam's includes must stay at real top-level scope, and this
-     * class only starts executing post-autoload). Equivalent for every
-     * real input: the config includes never read $_GET/$_POST/$_COOKIE/
-     * PATH_INFO, and Env's own header read ($_SERVER['HTTP_X_PIWIGO_ENV'])
-     * was never touched by the sanitizer.
+     * returns.
      *
      * Kernel::boot($paths) runs as the very first statement, ahead of
      * everything else in this method -- see this class's own docblock for
@@ -314,12 +236,12 @@ final class RequestBootstrap
         // into any earlier than this.
         self::serverTiming()->start('boot', $requestStart);
 
-        // Legacy Coupling Retirement Phase 8, 8h: the true start of each
-        // request -- resets ActivityService::record()'s "was a real user
-        // resolved this request" flag before anything else can mark it
-        // (UserBootstrap::initialize()). Monotonic within a request, so it
-        // needs a real reset here rather than relying on CurrentUser's own
-        // full reset (restricted to tests/ by an arch test).
+        // The true start of each request -- resets ActivityService::
+        // record()'s "was a real user resolved this request" flag before
+        // anything else can mark it (UserBootstrap::initialize()).
+        // Monotonic within a request, so it needs a real reset here
+        // rather than relying on CurrentUser's own full reset (restricted
+        // to tests/ by an arch test).
         self::currentUser()->resetRealUserResolvedFlag();
 
         // include/common.inc.php captures $requestStart = microtime(true)
@@ -349,22 +271,6 @@ final class RequestBootstrap
 
         Env::loadEnvFile($paths->root);
 
-        // P23 batch 8f-3: wires the static-setter HtmlRenderingInterface
-        // consumer (Piwigo\Core class-level fatal-error paths that can't
-        // take constructor/per-method injection without an unreasonable
-        // call-site ripple). Safely post-autoload here: the seam file only
-        // calls this class after its include/env.inc.php include, which is
-        // what actually requires vendor/autoload.php -- some entry points
-        // (e.g. random.php) rely entirely on that include to make every
-        // Piwigo\ class autoloadable and never require the autoloader
-        // themselves beforehand, unlike admin.php/index.php's own explicit
-        // up-front require (ordering bug caught live via a random.php
-        // smoke test). AccessControl::setHtmlRenderer()/setRedirectService()
-        // and Lang::setHtmlRenderer() used to sit here too -- removed
-        // (singleton/service-locator elimination campaign, Phases 7-8):
-        // both are now real, container-shared instances, autowired with
-        // zero manual wiring.
-
         // Piwigo\Db\Tables::*()/other Piwigo\Config\Config::* accessors used
         // further down in this bootstrap's own body (not just by code that
         // runs after full boot) read Config's static state -- these two
@@ -378,32 +284,20 @@ final class RequestBootstrap
         ConfigLoader::applyEnvOverrides();
 
         if (! file_exists($paths->siteLocal . Env::testModeInstalledStamp())) {
-            // Workstream C3, catch point 1: throws instead of the former
-            // raw header()+exit() -- see the 503 maintenance-page site
-            // below for the same conversion and why.
+            // Throws instead of calling header()+exit() directly -- see
+            // the 503 maintenance-page site below for the same pattern
+            // and why.
             throw new ResponseReadyException(ResponseFactory::redirect('install.php'));
         }
     }
 
     /**
-     * Phase 2 — dblayer include, error collector, session bootstrap, DB
-     * connection, DB-backed config, logger, plugins, and the current-user
-     * resolution (include/common.inc.php's former middle section, from the
-     * dblayer include through UserBootstrap::initialize()).
-     *
-     * The former seam file used to define PHPWG_DOMAIN/PHPWG_URL/PEM_URL
-     * right after this returned (between UserBootstrap and the language
-     * loading in finalize()); those defines are gone entirely now (Legacy
-     * Coupling Retirement gap-closure, entry-shell define()/include round,
-     * Part 0b) -- see this class's own docblock.
+     * Error collector installation, session bootstrap, DB connection,
+     * DB-backed config, logger, plugin loading, and current-user
+     * resolution (through UserBootstrap::initialize()).
      */
     public static function connect(): void
     {
-        // P23 sub-batch 8g-6: the dynamic include of include/dblayer/
-        // functions_<dblayer>.inc.php is gone -- the file's 45 facades died
-        // with the frozen install/db scripts and its top-level define()s
-        // became MysqliDb class constants, so nothing on this path needs it.
-
         // Route errors to DevTools (X-PHP-Error-N response headers) instead
         // of inline output, which corrupts JSON/XML/binary responses -- and
         // is also load-bearing for HtmlService::fatalError()'s own
@@ -422,19 +316,15 @@ final class RequestBootstrap
         self::pageState()->executionUuid = self::sessionService()->generateKey(10);
 
         // Database connection. DbConnection::build() itself deliberately
-        // never touches the session-level ONLY_FULL_GROUP_BY server mode
-        // the legacy dblayer used to strip (see that factory's own
-        // docblock) -- every request path has run without it since the
-        // earlier domain migrations. Built eagerly (not left to DBAL's own
-        // lazy first-query connect) so an unreachable DB surfaces here as
-        // the same friendly fatalError() page the legacy connect used to
-        // produce, not a raw exception from whatever call happens to run
+        // never touches the session-level ONLY_FULL_GROUP_BY server mode.
+        // Built eagerly (not left to DBAL's own lazy first-query connect)
+        // so an unreachable DB surfaces here as a friendly fatalError()
+        // page, not a raw exception from whatever call happens to run
         // first. Shared for every repository/service constructed for the
         // rest of this method -- DbConnection::build() returns a fresh
         // Connection on every call (no internal caching), so reusing this
         // one avoids opening a separate physical DB connection per
-        // repository, matching the established pattern from the Search/
-        // Section/Category domain migrations.
+        // repository.
         $conn = DbConnection::build();
         $db_password = self::dbCredentials()->password;
         try {
@@ -444,14 +334,11 @@ final class RequestBootstrap
                 ->fatalError(self::lang()->t($e->getMessage()));
         }
 
-        // Legacy Coupling Retirement Phase 8, 8d: safe now that 8c retargeted
-        // every $conf[...] read out of this file -- ConfigService::loadConfFromDb()
-        // only ever writes CurrentConfig's own properties directly, never
-        // global $conf, unlike ConfigDb::loadConfFromDb()'s dual-write.
-        // CurrentConfigService::set() here makes this resolved instance
-        // reachable via CurrentConfigService::get() for the rest of this
-        // request (finalize() below, and every Tier 2 static-utility
-        // caller) -- see its own docblock.
+        // ConfigService::loadConfFromDb() writes CurrentConfig's own
+        // properties directly. CurrentConfigService::set() here makes
+        // this resolved instance reachable via CurrentConfigService::get()
+        // for the rest of this request (finalize() below, and every
+        // Tier 2 static-utility caller) -- see its own docblock.
         $configService = Kernel::container()->get(ConfigService::class);
         if (! $configService instanceof ConfigService) {
             throw new LogicException('Container returned an unexpected type for ' . ConfigService::class);
@@ -515,36 +402,23 @@ final class RequestBootstrap
                 ->emptyLounge();
         }
 
-        // Piwigo\Bootstrap\UserBootstrap::initialize() resolves the real
-        // per-request user (build_user()/AuthService::autoLogin()/
-        // auth_key_login()) and calls CurrentUser::set() itself -- Legacy
-        // Coupling Retirement Phase 8 gap-closure retired the former
-        // `global $user` dual-write bridge this method used to pre-seed
-        // and re-sync around this call (Track A batch A3 kept it live
-        // "until every consumer is retargeted off the raw global";
-        // Bucket C's own consumer-side work, 8h/8i, was the last one).
+        // UserBootstrap::initialize() resolves the real per-request user
+        // (build_user()/AuthService::autoLogin()/auth_key_login()) and
+        // calls CurrentUser::set() itself.
         //
-        // Real bug, found live: try_log_user's own handler used to be
-        // registered down in finalize() (relocated there from the deleted
-        // include/functions_user.inc.php, "has to live somewhere that
-        // always executes"), which runs strictly *after* connect()
-        // returns -- but UserBootstrap::initialize() right below reaches
-        // AuthService::tryLogUser() directly on its own
+        // The TryLogUser handler is registered here, immediately before
+        // UserBootstrap::initialize(), rather than in finalize() where
+        // every other real caller's handler is registered: initialize()
+        // reaches AuthService::tryLogUser() directly on its own
         // pwg.images.uploadAsync username/password credential path (see
-        // that method's own docblock), well before finalize() ever gets a
-        // chance to register anything. EventDispatcher::triggerChange()
-        // with no matching handler just returns its own $default (false)
-        // unmodified, so every real uploadAsync credential login silently
-        // failed with "Invalid username/password" regardless of how
-        // correct the credentials were -- confirmed live via a raw curl
-        // reproduction against this exact request shape. Registering here
-        // instead, immediately before the one call site that needs it
-        // this early, fixes that without disturbing finalize()'s own
-        // still-later registration timing for every other real caller of
-        // tryLogUser() (the normal pwg.session.login WS dispatch, which
-        // runs during RequestPipeline::handle() -- after bootEntryPoint()
-        // (connect()+finalize()) has fully returned, so it was never
-        // actually affected by this ordering bug).
+        // that method's own docblock), before finalize() ever runs.
+        // EventDispatcher::triggerChange() with no matching handler
+        // returns its own $default (false) unmodified, so that credential
+        // path needs the handler registered this early; every other real
+        // caller of tryLogUser() (the normal pwg.session.login WS
+        // dispatch, which runs during RequestPipeline::handle() -- after
+        // bootEntryPoint() has fully returned) is unaffected by this
+        // ordering.
         self::eventDispatcher()->addTypedHandler(TryLogUser::class, new AuthService(
             new AuthRepository(EntityManagerFactory::build($conn)),
             self::activityService($conn),
@@ -571,13 +445,10 @@ final class RequestBootstrap
     }
 
     /**
-     * The PEM (piwigo extension market) base URL every real reader now
-     * calls directly instead of reading a cached PEM_URL constant (Legacy
-     * Coupling Retirement gap-closure, entry-shell define()/include
-     * round, Part 0b) -- cheap and side-effect-free (a Config read plus a
-     * string concat), so recomputing at each read site is simpler than a
-     * per-request cache and behaviourally identical (Config doesn't
-     * change mid-request).
+     * The PEM (piwigo extension market) base URL -- cheap and
+     * side-effect-free (a Config read plus a string concat), so
+     * recomputing at each read site is simpler than a per-request cache
+     * and behaviourally identical (Config doesn't change mid-request).
      */
     public static function pemUrl(): string
     {
@@ -590,10 +461,9 @@ final class RequestBootstrap
     }
 
     /**
-     * Phase 3 — language loading, auth-key messages, template creation,
+     * Language loading, auth-key messages, template creation,
      * no-photo-yet, maintenance/upgrade notices, request filter, and the
-     * default event-handler registrations (include/common.inc.php's former
-     * tail, from the Lang wiring through trigger_notify('init')).
+     * default event-handler registrations.
      */
     public static function finalize(): void
     {
@@ -694,22 +564,15 @@ final class RequestBootstrap
             $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes', $theme);
         }
 
-        // Legacy Coupling Retirement Track A / Phase 2 global-residual
-        // sweep: CurrentTemplate is now the sole target -- the former
-        // `global $template;` dual-write bridge was retired once a
-        // repo-wide scan confirmed every other consumer had already been
-        // retargeted onto CurrentTemplate::get() (this was the last site).
         self::currentTemplate()->set($template);
         // Image\SrcImage (L2aCoreDomain) reads theme conf through
         // Piwigo\Core\ThemeConfProviderInterface (implemented by Template)
         // instead of depending on Template directly (deptrac) -- wired
-        // here, not earlier, for the same "the provider IS the request's
-        // $template instance, which only exists from this point on"
-        // reason the deleted get_themeconf() free function's own
-        // $GLOBALS['template'] read had. Piwigo\Core\CurrentThemeConfProvider
-        // (singleton/service-locator elimination campaign, Phase 6) is a
-        // separate container-shared wrapper from CurrentTemplate above,
-        // not a delegate to it -- see that wrapper's own docblock.
+        // here, not earlier, because the provider IS the request's
+        // $template instance, which only exists from this point on.
+        // Piwigo\Core\CurrentThemeConfProvider is a separate
+        // container-shared wrapper from CurrentTemplate above, not a
+        // delegate to it -- see that wrapper's own docblock.
         $currentThemeConfProvider = Kernel::container()->get(CurrentThemeConfProvider::class);
         if (! $currentThemeConfProvider instanceof CurrentThemeConfProvider) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentThemeConfProvider::class);
@@ -717,11 +580,9 @@ final class RequestBootstrap
         $currentThemeConfProvider->set($template);
 
         if (self::currentConfig()->noPhotoYet() === null) {
-            // Formerly include/no_photo_yet.inc.php, a seam of exactly this
-            // one call (deleted, P23 sub-batch 8f-5). render() exits itself
-            // when it decides to take over the page. CurrentConfigService::get()
-            // reuses the instance connect() already resolved earlier in the
-            // same request (Legacy Coupling Retirement Phase 8, 8d).
+            // render() exits itself when it decides to take over the
+            // page. CurrentConfigService::get() reuses the instance
+            // connect() already resolved earlier in the same request.
             new NoPhotoYetRenderer(self::lang(), self::accessLevelChecker(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::pageState()), self::urlService(), self::paths(), self::adminContext(), self::sessionService(), self::eventDispatcher(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService(), self::currentConfig(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::htmlService(), self::installationFlag())
                 ->render();
         }
@@ -735,11 +596,8 @@ final class RequestBootstrap
             $pageState->addHeaderMessage(self::lang()->t('The gallery is locked for maintenance. Please, come back later.'));
 
             if (PageFilterHelper::scriptBasename(self::currentConfig()) !== 'identification' and ! self::accessLevelChecker()->isAdmin()) {
-                // Workstream C3, catch point 1: throws instead of the
-                // former raw header()+echo+exit() -- caught in
-                // include/common.inc.php, the one seam both dispatch
-                // contexts that reach this code (pipeline-routed root
-                // files and admin.php/admin/popuphelp.php) include.
+                // Throws instead of calling header()+echo+exit() directly
+                // -- caught by bootEntryPoint()'s own try/catch.
                 $body = '<a href="' . self::urlService()->getAbsoluteRootUrl(false) . 'identification.php">' . self::lang()->t('The gallery is locked for maintenance. Please, come back later.') . '</a>';
                 $body .= str_repeat(' ', 512); // IE6 doesn't error output if below a size
                 throw new ResponseReadyException(ResponseFactory::raw($body, [
@@ -755,8 +613,6 @@ final class RequestBootstrap
         }
 
         if (self::currentConfig()->filterPages() !== [] and (bool) PageFilterHelper::getFilterPageValue(self::currentConfig(), 'used')) {
-            // Formerly a conditional `include PHPWG_ROOT_PATH .
-            // 'include/filter.inc.php';` (deleted, P23 sub-batch 8f-5).
             new FilterService(self::filterState(), self::sessionService(), self::translator(), self::lang(), self::currentConfig(), self::eventDispatcher(), $conn)
                 ->initializeFromRequest(self::pageState(), self::currentUser());
         } else {
@@ -795,18 +651,10 @@ final class RequestBootstrap
                 return $e;
             },
         );
-        // Was registered as the bare string 'str2url' -- dead since some earlier
-        // phase migrated the global function to StringHelper::str2url() without
-        // updating this one string-literal reference (add_event_handler() doesn't
-        // get caught by a normal call-site grep). Dormant until P23 batch 8d's
-        // Tags sub-batch's live curl verification actually exercised a real
-        // trigger_change('render_tag_url', ...) call and hit "Event handler ...
-        // is not callable" -- every prior tag-creation activity-log row in the
-        // fixture is static SQL data, never actually round-tripped through this
-        // handler.
         // StringHelper::str2url() is called directly from 6+ unrelated
-        // production sites -- a thin adapter closure keeps its own signature
-        // untouched, same reasoning as pwgNl2br()/strip_tags() above.
+        // production sites -- a thin adapter closure keeps its own
+        // signature untouched, same reasoning as pwgNl2br()/strip_tags()
+        // above.
         self::eventDispatcher()->addTypedHandler(
             RenderTagUrl::class,
             static function (RenderTagUrl $e): RenderTagUrl {
@@ -816,16 +664,12 @@ final class RequestBootstrap
             },
         );
         self::eventDispatcher()->addTypedHandler(BlockManagerRegisterBlocks::class, self::htmlService()->registerDefaultMenubarBlocks(...));
-        // Relocated from include/functions_comment.inc.php (deleted, P23 batch 8c)
-        // -- that file's own top-level add_event_handler() call only ever ran via
-        // its include_once at each real caller, all of which now construct
-        // CommentService directly instead, so this registration has to live
-        // somewhere that always executes. checkForSpam() is an instance method
-        // (unlike UploadService's static upload_file handlers below), hence the
-        // bound first-class-callable form rather than a bare [Class::class, 'method']
-        // array.
+        // This registration has to live somewhere that always executes.
+        // checkForSpam() is an instance method (unlike UploadService's
+        // static upload_file handlers below), hence the bound
+        // first-class-callable form rather than a bare
+        // [Class::class, 'method'] array.
         self::eventDispatcher()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentUser(), self::currentConfig(), self::accessLevelChecker())->checkForSpam(...));
-        // Item 16E: real listener for a previously-unregistered event --
         // Category\CategoryService::deleteSite() dispatches this instead
         // of reaching into Site\SiteRepository directly (a real deptrac
         // boundary, Category is L2aCoreDomain, Site is L2bExtendedDomain).
@@ -841,24 +685,20 @@ final class RequestBootstrap
         // try_log_user's own handler is registered in connect() instead,
         // before UserBootstrap::initialize() -- see that registration's
         // own comment for why.
-        // Relocated from admin/include/functions_upload.inc.php (deleted in P23
-        // sub-batch 8b-3) -- must stay after PluginLoader::loadPlugins() (in
-        // connect() above) so a plugin's own 'upload_file' handler (if any)
-        // keeps first crack in the trigger_change() chain, matching the
-        // original file's own registration timing (its include_once always
-        // fired well after plugin loading).
+        // Must stay after PluginLoader::loadPlugins() (in connect() above)
+        // so a plugin's own 'upload_file' handler (if any) keeps first
+        // crack in the trigger_change() chain.
         //
         // 'pwg_image_resize' doesn't exist as a function anywhere in this
-        // codebase and neither event is ever triggered -- a confirmed pre-existing
+        // codebase and neither event is ever triggered -- a confirmed
         // dead-but-harmless registration, already documented in
-        // Piwigo\PluginConfig\EventDispatcher's own class docblock. Preserved
-        // unchanged rather than "fixed", per that same documented decision.
-        // addEventHandler(), not addTypedHandler() -- 'pwg_image_resize'
-        // doesn't exist as a function anywhere in this codebase, so it
-        // can't satisfy addTypedHandler()'s own callable(T): (T|void)
-        // signature check; addEventHandler()'s untyped string|array|object
-        // parameter keeps this exactly as harmless (lazy, never eagerly
-        // validated) as it was before this typed conversion.
+        // Piwigo\PluginConfig\EventDispatcher's own class docblock.
+        // Preserved unchanged rather than "fixed", per that same
+        // documented decision. addEventHandler(), not addTypedHandler():
+        // 'pwg_image_resize' can't satisfy addTypedHandler()'s own
+        // callable(T): (T|void) signature check; addEventHandler()'s
+        // untyped string|array|object parameter keeps this harmless
+        // (lazy, never eagerly validated).
         self::eventDispatcher()->addEventHandler(UploadImageResize::class, 'pwg_image_resize');
         self::eventDispatcher()->addEventHandler(UploadThumbnailResize::class, 'pwg_image_resize');
         self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFilePdf(...));
@@ -873,18 +713,15 @@ final class RequestBootstrap
         }
         self::eventDispatcher()->dispatchNotify(new Init());
 
-        // Formerly the tail of Piwigo\Bootstrap\CommonBootstrap::run(),
-        // called after this whole bootstrap already completed -- moved
-        // here (still last) when that class was retired. CurrentUser's/
-        // PageState's own `??=` guards are already satisfied by this
-        // point on the real HTTP path (UserBootstrap::initialize() in
-        // connect(), pageState()'s own resolution in configure()), so both
-        // calls are no-ops here in practice; kept for parity with callers
-        // that reach finalize() without having run those earlier steps.
-        // Lang::attachGlobals() is the one with a real ordering
-        // requirement -- it snapshots Translator's already-loaded strings,
-        // so it must run after this method's own lang()->load() calls above,
-        // not before.
+        // CurrentUser's/PageState's own `??=` guards are already
+        // satisfied by this point on the real HTTP path
+        // (UserBootstrap::initialize() in connect(), pageState()'s own
+        // resolution in configure()), so both calls are no-ops here in
+        // practice; kept for parity with callers that reach finalize()
+        // without having run those earlier steps. Lang::attachGlobals()
+        // is the one with a real ordering requirement -- it snapshots
+        // Translator's already-loaded strings, so it must run after this
+        // method's own lang()->load() calls above, not before.
         self::currentUser()->attachGlobals();
         self::pageState();
         self::lang()->attachGlobals();
@@ -909,13 +746,8 @@ final class RequestBootstrap
     }
 
     /**
-     * Resolves the container-shared instance instead of the CurrentPaths::
-     * get() shim (closed outright in sub-phase 12F-10) -- this class
-     * already has direct Kernel::container()
-     * access (arch-tested to Bootstrap/ only), so the shim here was only
-     * ever style consistency with a neighboring call, not a structural
-     * need (singleton/service-locator elimination campaign, Phase 11
-     * sub-phase 11J).
+     * Resolves the container-shared instance -- this class already has
+     * direct Kernel::container() access (arch-tested to Bootstrap/ only).
      */
     private static function paths(): Paths
     {
@@ -928,11 +760,8 @@ final class RequestBootstrap
     }
 
     /**
-     * Resolves the container-shared instance instead of the
-     * DbCredentials::current() shim -- same "already has direct
-     * Kernel::container() access, shim was style consistency only"
-     * reasoning as paths() above (singleton/service-locator elimination
-     * campaign, Phase 11 sub-phase 11J).
+     * Resolves the container-shared instance, same reasoning as paths()
+     * above.
      */
     private static function dbCredentials(): DbCredentials
     {
@@ -948,8 +777,7 @@ final class RequestBootstrap
      * Resolves the container-shared instance (not `new ApiKeyRequestFlag()`)
      * so that `UserBootstrap::initialize()`'s `activate()` call is visible
      * to every other consumer holding the same shared instance -- see that
-     * class's own docblock (singleton/service-locator elimination campaign,
-     * Phase 1).
+     * class's own docblock.
      */
     private static function apiKeyRequestFlag(): ApiKeyRequestFlag
     {
@@ -965,7 +793,7 @@ final class RequestBootstrap
      * Resolves the container-shared instance (not `new InstallationFlag()`)
      * so that this method's own `mark()` call is visible to every other
      * consumer holding the same shared instance -- see that class's own
-     * docblock (singleton/service-locator elimination campaign, Phase 1).
+     * docblock.
      */
     private static function installationFlag(): InstallationFlag
     {
@@ -982,8 +810,7 @@ final class RequestBootstrap
      * loadPlugins()`'s writes are visible to every other consumer holding
      * the same shared instance -- `PluginLoader` itself stays static and
      * lives outside `Bootstrap/`, so the instance is threaded through as an
-     * explicit parameter rather than resolved from inside `PluginLoader`
-     * (singleton/service-locator elimination campaign, Phase 1).
+     * explicit parameter rather than resolved from inside `PluginLoader`.
      */
     private static function loadedPlugins(): LoadedPlugins
     {
@@ -998,11 +825,9 @@ final class RequestBootstrap
     /**
      * Resolves the container-shared instance so that this method's own
      * `FilterService::initializeFromRequest()`/direct `set(false)` writes
-     * are visible to every other consumer holding the same shared instance
-     * (singleton/service-locator elimination campaign, Phase 2). Widened
-     * to public in Phase 11 sub-phase 11G for config/messenger.php's own
-     * `new MetadataService(...)` construction, matching this class's own
-     * established accessor-widening precedent.
+     * are visible to every other consumer holding the same shared
+     * instance. Public: config/messenger.php's own
+     * `new MetadataService(...)` construction needs it.
      */
     public static function filterState(): FilterState
     {
@@ -1016,8 +841,7 @@ final class RequestBootstrap
 
     /**
      * Resolves the container-shared instance for this method's own local
-     * `new FilterService(...)` construction (singleton/service-locator
-     * elimination campaign, Phase 4).
+     * `new FilterService(...)` construction.
      */
     private static function translator(): Translator
     {
@@ -1032,8 +856,7 @@ final class RequestBootstrap
     /**
      * Resolves the container-shared instance so that this method's own
      * attachGlobals()/load()/setDefaultLanguageProvider() writes are
-     * visible to every other consumer holding the same shared instance
-     * (singleton/service-locator elimination campaign, Phase 8).
+     * visible to every other consumer holding the same shared instance.
      */
     public static function lang(): Lang
     {
@@ -1048,8 +871,7 @@ final class RequestBootstrap
     /**
      * Resolves the container-shared instance so that this method's own
      * `set()` write is visible to every other consumer holding the same
-     * shared instance (singleton/service-locator elimination campaign,
-     * Phase 2).
+     * shared instance.
      */
     private static function currentLogger(): CurrentLogger
     {
@@ -1066,8 +888,7 @@ final class RequestBootstrap
      * (config/container.php) already calls load_from_db() at construction,
      * so simply resolving it here (rather than a bare
      * ImageStdParams::load_from_db() static call) is enough to preserve
-     * this method's own "called every request, very early" semantics
-     * (singleton/service-locator elimination campaign, Phase 4).
+     * this method's own "called every request, very early" semantics.
      */
     private static function imageStdParams(): ImageStdParams
     {
@@ -1087,8 +908,7 @@ final class RequestBootstrap
      * Kernel::container() directly itself (arch-tested to Bootstrap/ only)
      * -- same "public accessor on this class" shape as coreTabs()/
      * filesystemIntegrityChecker()/sessionService()/eventDispatcher()/
-     * deploymentPolicy() above (singleton/service-locator elimination
-     * campaign, Phase 4).
+     * deploymentPolicy() above.
      */
     public static function pageState(): PageState
     {
@@ -1104,11 +924,10 @@ final class RequestBootstrap
      * Resolves the container-shared instance so that this method's own
      * `install()` write (registering the real error handler/shutdown
      * function) is visible to every other consumer holding the same
-     * shared instance (singleton/service-locator elimination campaign,
-     * Phase 2). Public (unlike most resolver helpers here): public/
-     * install.php's own `new InstallWizard(...)` manual construction needs
-     * this to satisfy Template's own new required collaborators (Phase 11
-     * sub-phase 11E).
+     * shared instance. Public (unlike most resolver helpers here):
+     * public/install.php's own `new InstallWizard(...)` manual
+     * construction needs this to satisfy Template's own new required
+     * collaborators.
      */
     public static function errorCollector(): ErrorCollector
     {
@@ -1123,8 +942,7 @@ final class RequestBootstrap
     /**
      * Public (unlike most resolver helpers here): public/install.php's own
      * `new InstallWizard(...)` manual construction needs this to satisfy
-     * Template's own new required collaborators (singleton/service-locator
-     * elimination campaign, Phase 11 sub-phase 11E).
+     * Template's own new required collaborators.
      */
     public static function processCache(): ProcessCache
     {
@@ -1143,8 +961,7 @@ final class RequestBootstrap
      * consumer receives via constructor injection, without calling
      * Kernel::container() directly itself (arch-tested to Bootstrap/ only)
      * -- same "public accessor on this class" shape as coreTabs()/
-     * filesystemIntegrityChecker()/pageState() above (singleton/
-     * service-locator elimination campaign, Phase 5).
+     * filesystemIntegrityChecker()/pageState() above.
      */
     public static function currentUser(): CurrentUser
     {
@@ -1163,8 +980,7 @@ final class RequestBootstrap
      * consumer receives via constructor injection, without calling
      * Kernel::container() directly itself (arch-tested to Bootstrap/ only)
      * -- same "public accessor on this class" shape as coreTabs()/
-     * currentUser()/pageState() above (singleton/service-locator
-     * elimination campaign, Phase 5).
+     * currentUser()/pageState() above.
      */
     public static function currentTemplate(): CurrentTemplate
     {
@@ -1190,7 +1006,7 @@ final class RequestBootstrap
      * Public, same reason as currentTemplate()/currentConfig() above:
      * public/admin.php's own legacy-style `new AdminShell(...)` manual
      * construction needs a way to reach a container-shared InputValidator
-     * without going through the (now-closed) createStatic() shim.
+     * without calling Kernel::container() directly itself.
      */
     public static function inputValidator(): InputValidator
     {
@@ -1208,8 +1024,7 @@ final class RequestBootstrap
      * way to obtain the same container-shared instance every other
      * CurrentConfigService consumer receives via constructor injection,
      * without calling Kernel::container() directly itself (arch-tested to
-     * Bootstrap/ only) -- singleton/service-locator elimination campaign,
-     * Phase 5.
+     * Bootstrap/ only).
      */
     public static function currentConfigService(): CurrentConfigService
     {
@@ -1225,8 +1040,7 @@ final class RequestBootstrap
      * Public, same reason as currentTemplate()/currentConfigService()
      * above: public/admin.php's/install.php's/random.php's own manual
      * construction needs a way to obtain the same container-shared
-     * UrlService every other consumer receives via constructor injection
-     * -- singleton/service-locator elimination campaign, Phase 6.
+     * UrlService every other consumer receives via constructor injection.
      * Resolving the interface (not the concrete UrlService) matches every
      * other real UrlServiceInterface consumer in the codebase.
      */
@@ -1242,12 +1056,11 @@ final class RequestBootstrap
 
     /**
      * Resolves the container-shared MailService instance (via its
-     * MailerInterface binding) -- singleton/service-locator elimination
-     * campaign, Phase 6: MailService's own switchLangTo()/switchLangBack()
-     * language-switch stack and template-render cache are real per-request
-     * state that must be the SAME instance across every call within one
-     * request, not a fresh `new MailService()` per site (see MailService's
-     * own class docblock).
+     * MailerInterface binding). MailService's own
+     * switchLangTo()/switchLangBack() language-switch stack and
+     * template-render cache are real per-request state that must be the
+     * SAME instance across every call within one request, not a fresh
+     * `new MailService()` per site (see MailService's own class docblock).
      */
     private static function mailService(): MailerInterface
     {
@@ -1262,8 +1075,7 @@ final class RequestBootstrap
     /**
      * Resolves the container-shared instance so that this method's own
      * `start()`/`stop()` writes are visible to every other consumer holding
-     * the same shared instance (singleton/service-locator elimination
-     * campaign, Phase 3).
+     * the same shared instance.
      */
     private static function serverTiming(): ServerTiming
     {
@@ -1276,8 +1088,7 @@ final class RequestBootstrap
     }
 
     /**
-     * Resolves the container-shared, immutable instance -- singleton/
-     * service-locator elimination campaign, Phase 3.
+     * Resolves the container-shared, immutable instance.
      */
     private static function wsContext(): WsContext
     {
@@ -1290,17 +1101,16 @@ final class RequestBootstrap
     }
 
     /**
-     * Resolves the container-shared instance -- singleton/service-locator
-     * elimination campaign, Phase 7. Widened from private to public in
-     * Phase 12 sub-phase 12B: PluginLoader::loadPlugins() genuinely needs
-     * the full AccessControl (real checkStatus()/accessDenied()
-     * enforcement, passed through to third-party PluginMaintain
-     * subclasses); public/admin.php and public/random.php need the same
-     * full class for their own checkStatus() calls, and are both already
-     * past their own RequestBootstrap::bootEntryPoint() call, so this is
-     * the same established "real entry-shell caller reaches a
-     * RequestBootstrap public accessor" pattern every other
-     * RequestBootstrap::x() public method already serves.
+     * Resolves the container-shared instance. Public: PluginLoader::
+     * loadPlugins() genuinely needs the full AccessControl (real
+     * checkStatus()/accessDenied() enforcement, passed through to
+     * third-party PluginMaintain subclasses); public/admin.php and
+     * public/random.php need the same full class for their own
+     * checkStatus() calls, reaching it via this accessor after their own
+     * RequestBootstrap::bootEntryPoint() call has already run -- the same
+     * established "real entry-shell caller reaches a RequestBootstrap
+     * public accessor" pattern every other RequestBootstrap::x() public
+     * method already serves.
      */
     public static function accessControl(): AccessControl
     {
@@ -1313,12 +1123,11 @@ final class RequestBootstrap
     }
 
     /**
-     * Cheap, no-Doctrine-dependency counterpart to accessControl() above --
-     * singleton/service-locator elimination campaign, Phase 12A. Every real
-     * caller in this file only ever needs isAdmin()/isAGuest(), never
-     * checkStatus()/accessDenied(), so this builds AccessLevelChecker
-     * directly rather than resolving the full AccessControl through the
-     * container.
+     * Cheap, no-Doctrine-dependency counterpart to accessControl() above.
+     * Every real caller in this file only ever needs
+     * isAdmin()/isAGuest(), never checkStatus()/accessDenied(), so this
+     * builds AccessLevelChecker directly rather than resolving the full
+     * AccessControl through the container.
      */
     private static function accessLevelChecker(): AccessLevelChecker
     {
@@ -1326,11 +1135,10 @@ final class RequestBootstrap
     }
 
     /**
-     * Resolves the container-shared, immutable instance -- singleton/
-     * service-locator elimination campaign, Phase 3. Public (unlike most
-     * resolver helpers here): public/install.php's own
+     * Resolves the container-shared, immutable instance. Public (unlike
+     * most resolver helpers here): public/install.php's own
      * `new InstallWizard(...)` manual construction needs this to satisfy
-     * Template's own new required collaborators (Phase 11 sub-phase 11E).
+     * Template's own new required collaborators.
      */
     public static function adminContext(): AdminContext
     {
@@ -1344,16 +1152,14 @@ final class RequestBootstrap
 
     /**
      * Public (unlike the resolver helpers above): public/admin.php's own
-     * legacy-style `new AdminShell(...)` manual construction -- unlike
-     * every P22 controller root file, admin.php doesn't route through
-     * RequestPipeline's container-backed controller resolution, so it
-     * needs a way to obtain the same container-shared instance
+     * legacy-style `new AdminShell(...)` manual construction doesn't route
+     * through RequestPipeline's container-backed controller resolution, so
+     * it needs a way to obtain the same container-shared instance
      * Controller\Admin\IntroSubController will later receive, without
      * calling Kernel::container() directly itself (arch-tested to
      * Bootstrap/ only). Same "public accessor on this class" shape as
-     * pemUrl() above, generalised to a container resolution (singleton/
-     * service-locator elimination campaign, Phase 2) -- load-bearing for
-     * FilesystemIntegrityChecker::fsQuickCheck()'s own per-request
+     * pemUrl() above, generalised to a container resolution -- load-bearing
+     * for FilesystemIntegrityChecker::fsQuickCheck()'s own per-request
      * run-once guard, which only actually guards anything if admin.php and
      * IntroSubController share the same instance.
      */
@@ -1374,8 +1180,7 @@ final class RequestBootstrap
      * `*PageRenderer` writer file will later receive, without calling
      * Kernel::container() directly itself (arch-tested to Bootstrap/ only)
      * -- same "public accessor on this class" shape as
-     * filesystemIntegrityChecker() above (singleton/service-locator
-     * elimination campaign, Phase 3). Load-bearing for CoreTabs::
+     * filesystemIntegrityChecker() above. Load-bearing for CoreTabs::
      * setContext()/addCoreTabs()'s own request-scoped bridge, which only
      * works if every writer file and the 'tabsheet_before_select' event
      * registration below share the same instance.
@@ -1397,8 +1202,7 @@ final class RequestBootstrap
      * SessionService consumer receives via constructor injection, without
      * calling Kernel::container() directly itself (arch-tested to
      * Bootstrap/ only) -- same "public accessor on this class" shape as
-     * coreTabs()/filesystemIntegrityChecker() above (singleton/service-
-     * locator elimination campaign, Phase 4).
+     * coreTabs()/filesystemIntegrityChecker() above.
      */
     public static function sessionService(): SessionService
     {
@@ -1417,8 +1221,7 @@ final class RequestBootstrap
      * EventDispatcher consumer receives via constructor injection, without
      * calling Kernel::container() directly itself (arch-tested to
      * Bootstrap/ only) -- same "public accessor on this class" shape as
-     * coreTabs()/filesystemIntegrityChecker()/sessionService() above
-     * (singleton/service-locator elimination campaign, Phase 4).
+     * coreTabs()/filesystemIntegrityChecker()/sessionService() above.
      */
     public static function eventDispatcher(): EventDispatcher
     {
@@ -1438,7 +1241,7 @@ final class RequestBootstrap
      * calling Kernel::container() directly itself (arch-tested to
      * Bootstrap/ only) -- same "public accessor on this class" shape as
      * coreTabs()/filesystemIntegrityChecker()/sessionService()/eventDispatcher()
-     * above (singleton/service-locator elimination campaign, Phase 4).
+     * above.
      */
     public static function deploymentPolicy(): DeploymentPolicy
     {
@@ -1457,8 +1260,7 @@ final class RequestBootstrap
      * CommentService consumer receives via constructor injection, without
      * calling Kernel::container() directly itself (arch-tested to
      * Bootstrap/ only) -- same "public accessor on this class" shape as
-     * coreTabs()/sessionService()/eventDispatcher()/deploymentPolicy() above
-     * (singleton/service-locator elimination campaign, Phase 6).
+     * coreTabs()/sessionService()/eventDispatcher()/deploymentPolicy() above.
      */
     public static function commentService(): CommentService
     {
@@ -1478,7 +1280,7 @@ final class RequestBootstrap
      * Kernel::container() directly itself (arch-tested to Bootstrap/ only)
      * -- same "public accessor on this class" shape as coreTabs()/
      * sessionService()/eventDispatcher()/deploymentPolicy()/commentService()
-     * above (singleton/service-locator elimination campaign, Phase 6).
+     * above.
      */
     public static function imageService(): ImageService
     {

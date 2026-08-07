@@ -137,12 +137,10 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
 
         $this->cache->getForUser($userdata);
 
-        // getComputedCategories() no longer mutates its $userdata argument
-        // at all (Legacy Coupling Retirement Phase 8, 8i -- it returns the
-        // computed 'last_photo_date' alongside categories instead), so
-        // this assertion is now trivially true rather than guarding a real
-        // copy-before-call -- kept as a regression guard against that
-        // mutation ever coming back.
+        // getComputedCategories() does not mutate its $userdata argument --
+        // it returns the computed 'last_photo_date' alongside categories
+        // instead. This assertion guards against that mutation ever coming
+        // back.
         self::assertArrayNotHasKey('last_photo_date', $userdata);
     }
 

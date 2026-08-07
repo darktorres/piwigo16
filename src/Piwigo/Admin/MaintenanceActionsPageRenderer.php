@@ -44,17 +44,14 @@ use Piwigo\Validation\InputValidator;
  * history/sessions/feeds/search, delete orphan tags, database repair,
  * derivative cache purge, etc), all reachable from this tab's own template.
  *
- * admin.php itself already gates every page behind
- * check_status(AccessLevel::Administrator) before dispatch; the shell
- * (admin/maintenance.php, folded into MaintenanceSubController) already
- * gates every $_GET['action'] with check_pwg_token() -- this file never had
- * its own copy of either check, so nothing to drop here (unlike
- * maintenance_env.php, see MaintenanceEnvPageRenderer's own docblock).
+ * admin.php gates every page behind
+ * check_status(AccessLevel::Administrator) before dispatch, and the shell
+ * (admin/maintenance.php, folded into MaintenanceSubController) gates
+ * every $_GET['action'] with check_pwg_token(); this class does not
+ * duplicate either check.
  *
- * The action-dispatch switch itself moved to the shared
- * Piwigo\Admin\Maintenance\MaintenanceActionDispatcher (P23 batch 6h) --
- * see that class's own docblock for the 2 real drift bugs its
- * consolidation fixed relative to maintenance_env.php's own copy.
+ * The action-dispatch switch itself lives in the shared
+ * Piwigo\Admin\Maintenance\MaintenanceActionDispatcher.
  */
 final class MaintenanceActionsPageRenderer
 {

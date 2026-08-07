@@ -48,12 +48,11 @@ function nbmSubReflectSender(float $startTime, bool $isSendmailTimeout): Notific
 }
 
 /**
- * doTimeoutTreatment() reads only $this->pageState/$this->translator
- * (singleton/service-locator elimination campaign, Phase 12 sub-phase
- * 12D) -- a reflected, no-constructor instance with just those 2
- * properties hand-set needs no DB/mail/template dependency either,
- * matching nbmSubReflectSender()'s own precedent just above. Both are
- * set to the real PageStateTestFactory::get()/TranslatorTestFactory::get() pre-boot
+ * doTimeoutTreatment() reads only $this->pageState/$this->translator, so
+ * a reflected, no-constructor instance with just those 2 properties
+ * hand-set needs no DB/mail/template dependency, matching
+ * nbmSubReflectSender()'s own precedent just above. Both are set to the
+ * real PageStateTestFactory::get()/TranslatorTestFactory::get() pre-boot
  * fallback instances (this file never calls Kernel::boot()) so the
  * tests' own PageStateTestFactory::get()->errors/Translator-driven message
  * assertions below keep reading back the same shared state

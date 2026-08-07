@@ -51,11 +51,10 @@ function upload_service_test_marker(): string
 /**
  * UploadService takes CurrentLogger via constructor injection; its 6
  * `uploadFile*` static event handlers read it through the `getStatic()`
- * transitional shim instead (singleton/service-locator elimination
- * campaign, Phase 2 -- see that class's own docblock: their real callers
- * include the still-static Ws\Pwg* dispatch layer, Phase 10). Both paths
- * resolve the same container-shared instance once Kernel::boot() has run,
- * so this one helper seeds both.
+ * shim instead -- see that class's own docblock: their real callers
+ * include the still-static Ws\Pwg* dispatch layer. Both paths resolve the
+ * same container-shared instance once Kernel::boot() has run, so this one
+ * helper seeds both.
  */
 function upload_service_test_current_logger(): CurrentLogger
 {
@@ -521,12 +520,9 @@ test('pwgImageInfos reads real width/height/filesize from a generated image', fu
 });
 
 test('pwgImageInfos returns null width/height when getimagesize() can\'t read the file, instead of throwing', function (): void {
-    // Real bug, fixed during the coverage-gap-closure pass (see
-    // tests/Integration/UploadServiceTest.php's own docblock): every real
-    // upload of a non-picture file allowed via
+    // Every real upload of a non-picture file allowed via
     // CurrentConfig::uploadFormAllTypes() reaches this exact path, and
-    // piwigo_images.width/height are nullable columns precisely for it --
-    // this used to throw unconditionally, crashing every such upload.
+    // piwigo_images.width/height are nullable columns precisely for it.
     $path = upload_service_test_marker() . '/not-an-image.png';
     file_put_contents($path, 'definitely not a real PNG');
 
@@ -1003,8 +999,7 @@ test('readyForUploadMessage returns null when the real upload directory exists a
     CurrentConfigTestFactory::get()->setUploadDir('upload/');
 
     // KernelContainerOverride::with() rebinds Paths::class for this test's
-    // own scope -- CurrentPaths (singleton/service-locator elimination
-    // campaign, Phase 3) is a pure shim now, reading whatever the live
+    // own scope -- CurrentPaths is a pure shim, reading whatever the live
     // container has, not an independently-settable static.
     KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
         expect(upload_service_test_make()->readyForUploadMessage())->toBeNull();

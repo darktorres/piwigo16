@@ -12,11 +12,10 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RecentIconResolver;
 
 /**
- * Piwigo\Core\RecentIconResolver::getIcon() -- had zero dedicated coverage
- * (see /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1).
- * Needs a real DB round-trip (SqlDialect::getRecentPeriodExpression()'s
- * SUBDATE() query, resolved via Env::now() in test mode against the fixed
- * PIWIGO_TEST_NOW=2026-08-01), so this lives in Integration, not Unit.
+ * Piwigo\Core\RecentIconResolver::getIcon() needs a real DB round-trip
+ * (SqlDialect::getRecentPeriodExpression()'s SUBDATE() query, resolved via
+ * Env::now() in test mode against the fixed PIWIGO_TEST_NOW=2026-08-01),
+ * so this lives in Integration, not Unit.
  */
 final class RecentIconResolverTest extends IntegrationTestCase
 {
@@ -39,9 +38,8 @@ final class RecentIconResolverTest extends IntegrationTestCase
         }
 
         // RecentIconResolver takes ProcessCache/Lang as explicit method
-        // parameters (singleton/service-locator elimination campaign,
-        // Phase 11 sub-phase 11G) -- resolve the real container-shared
-        // instances a real caller would get.
+        // parameters -- resolve the real container-shared instances a
+        // real caller would get.
         Kernel::boot();
         $processCache = Kernel::container()->get(ProcessCache::class);
         if (! $processCache instanceof ProcessCache) {

@@ -24,17 +24,9 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Event\WsInvokeAllowed;
 
 /**
- * P23 batch 8e: relocated verbatim from include/ws_functions.inc.php's 8
- * free functions -- shared helpers called from 2-4 of the
- * include/ws_functions/pwg.*.php namespace files each.
- *
- * Singleton/service-locator elimination campaign, Phase 11 sub-phase 11A:
- * converted from a fully static utility to a real, constructor-injected
- * instance class -- only isInvokeAllowed()/stdGetUrls() ever needed a
- * collaborator (AccessControl/CurrentUser respectively), but PHP forbids
- * mixing static and instance methods of the same name, and every real
- * caller is already an instance-based Ws\Pwg* class post-Phase-10, so
- * there was no remaining reason for any method here to stay static.
+ * Shared web-service helpers, called from 2-4 of the Ws\Pwg* classes each.
+ * isInvokeAllowed()/stdGetUrls() are the only methods that need a
+ * collaborator (AccessControl/CurrentUser respectively).
  */
 final class WsHelper
 {
@@ -72,18 +64,10 @@ final class WsHelper
      * pwg.getMissingDerivatives, pwg.tags.getImages) -- all 11 f_* keys are
      * always present, per that shared registration block.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C3: converted to return a
-     * typed {@see \Piwigo\Image\ImageFilterCriteria} instead of a raw
-     * `Piwigo\Permission\SqlCondition` -- the old return type forced every
-     * consumer through a runtime `$tbl_name` alias-prefix parameter and a
-     * monotonic placeholder-suffix counter (so its own fragment could be
-     * combined with a caller's other bound fragments in one query without a
-     * name collision); each real consumer now applies these 11 fields
-     * directly against its own entity alias/column names, so neither
-     * mechanism is needed anymore. $params's own float|null/int|null typing
-     * (PwgServer's own WsParamType::FLOAT/WsParamType::INT coercion, per
-     * this method's own $params shape below) already guarantees each f_*
-     * value's real type -- the 4 date fields are validated below via
+     * $params's own float|null/int|null typing (PwgServer's own
+     * WsParamType::FLOAT/WsParamType::INT coercion, per this method's own
+     * $params shape below) already guarantees each f_* value's real type --
+     * the 4 date fields are validated below via
      * DateHelper::isValidMysqlDatetime(), which round-trips through
      * DateTime::createFromFormat() and can never let a
      * non-digit/hyphen/space/colon character through.
@@ -117,12 +101,9 @@ final class WsHelper
     /**
      * returns a "standard" (for our web service) ORDER BY sql clause for images
      *
-     * SQL-modernization audit, Item 14 Sub-phase C2: the per-token
-     * alias-remapping `switch` + `$sortable_fields` allowlist array
-     * replaced by {@see \Piwigo\Image\PhotoSortField::fromToken()} -- see
-     * that enum's own docblock for why this is deliberately scoped to just
-     * this one method (the tokenization regex itself is unchanged, same
-     * exact field-name/direction-case handling as before).
+     * Each token in $params['order'] is resolved via
+     * {@see \Piwigo\Image\PhotoSortField::fromToken()}; see that enum's own
+     * docblock for why this is scoped to just this one method.
      *
      * @param array{order: string|null, ...} $params order has no WS_TYPE flag
      *   and a null default, but PwgServer::invoke() still guarantees a plain

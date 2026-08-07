@@ -11,34 +11,31 @@ use Piwigo\Core\Paths;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Template\Template;
 
-// get_php_str_val() stays a static, instance-free utility (referenced
-// during the SEC-15 eval() audit -- it's the only remaining eval()
-// surface in this codebase) -- tested directly with no Template instance
-// needed. modcompiler_translate()/modcompiler_translate_dec() became real
-// instance methods (singleton/service-locator elimination campaign,
-// Phase 11 sub-phase 11E, closing their own compile-time CurrentConfig/
-// Lang pre-check reads onto $this->currentConfig/$this->lang -- the
+// get_php_str_val() stays a static, instance-free utility (the only
+// remaining eval() surface in this codebase) -- tested directly with no
+// Template instance needed. modcompiler_translate()/modcompiler_translate_dec()
+// are real instance methods, reading their own compile-time
+// CurrentConfig/Lang checks onto $this->currentConfig/$this->lang -- the
 // literal compiled-cache-text return values they still produce are
-// untouched, a documented permanent exception, see Template's own
-// docblock), so these tests now build a real instance via
-// TemplateTestFactory::build() -- safe the same "point CurrentPaths/Paths
+// untouched, a documented permanent exception (see Template's own
+// docblock) -- so these tests build a real instance via
+// TemplateTestFactory::build(), the same "point CurrentPaths/Paths
 // at a fresh temp root" way PictureRateRendererTest.php's own docblock
-// already established elsewhere in this suite.
+// establishes elsewhere in this suite.
 //
-// modcompiler_translate() goes through $this->lang->t() (Legacy Coupling
-// Retirement Track A batch A2; Lang itself became a real, container-shared
-// instance in the singleton/service-locator elimination campaign's
-// Phase 8), which delegates to TranslatorTestFactory::get()'s singleton -- reset
-// both, matching LangTest.php's own established pattern, so no test's
-// loaded PO state/lang table leaks into another. LangTestFactory::get() is a
-// live container resolve with no pre-boot fallback (unlike
-// TranslatorTestFactory::get()), so this file now also boots/resets a real Kernel
-// around each test. A real Paths must be supplied to boot() too -- Lang's
-// own constructor needs one, and PHP-DI can't autowire Paths on its own
-// (every property is a required string with no default); TemplateTestFactory::build()
-// resolves the exact same container-shared CurrentConfig/Lang instances
-// these tests manipulate directly, so state set before construction is
-// visible through $this->currentConfig/$this->lang at call time.
+// modcompiler_translate() goes through $this->lang->t(); Lang is a real,
+// container-shared instance that delegates to TranslatorTestFactory::get()'s
+// singleton -- reset both, matching LangTest.php's own established
+// pattern, so no test's loaded PO state/lang table leaks into another.
+// LangTestFactory::get() is a live container resolve with no pre-boot
+// fallback (unlike TranslatorTestFactory::get()), so this file also
+// boots/resets a real Kernel around each test. A real Paths must be
+// supplied to boot() too -- Lang's own constructor needs one, and PHP-DI
+// can't autowire Paths on its own (every property is a required string
+// with no default); TemplateTestFactory::build() resolves the exact same
+// container-shared CurrentConfig/Lang instances these tests manipulate
+// directly, so state set before construction is visible through
+// $this->currentConfig/$this->lang at call time.
 // setDataDirChecked('1') below skips Template::__construct()'s own
 // dataDirChecked()===null branch entirely -- that branch's own
 // $this->currentConfigService->get() call throws in this Unit test (never

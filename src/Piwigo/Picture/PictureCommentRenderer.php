@@ -35,49 +35,25 @@ use Piwigo\Users\CurrentUser;
  * Renders the picture page's comment list + add/edit form. Ported from
  * include/picture_comment.inc.php.
  *
- * Real bug fixed during this port: the original file read a bare
- * `isset($edit_comment)` / `$edit_comment`, relying on PictureController and
- * this file sharing one real top-level PHP scope -- true when picture.php
- * was a plain top-level script, silently broken once PictureController
- * became a class method whose "edit_comment" action branch sets
- * $edit_comment as a real method-local variable, invisible to the
- * LegacyRenderCapture closure this file is include()'d from (not in its
- * use() list or its own `global` declarations). Clicking "Edit" on your own
- * comment silently did nothing -- no prefill, no IN_EDIT flag. Fixed by
- * threading the value through explicitly as $editCommentId, exactly like
- * every other closure-local value already passed into this render() call.
- * This is a pure propagation fix, not an authorization change:
- * PictureController's own can_manage_comment('edit', $author_id) check is
- * what decides whether a real id ever reaches this method, and this file's
- * own can_manage_comment('edit', $comment_author_id) check (below) is what
- * decides whether any given comment row honors it -- both already existed
- * and are unchanged.
+ * $editCommentId is passed explicitly by the caller (PictureController),
+ * whose own can_manage_comment('edit', $author_id) check decides whether
+ * a real id ever reaches this method; this class's own
+ * can_manage_comment('edit', $comment_author_id) check (below) separately
+ * decides whether any given comment row honors it.
  *
- * Workstream C3c: render()'s 2 reject paths ("Session expired"/"ugly
- * spammer") now throw Piwigo\Http\ResponseReadyException instead of
- * die()ing -- caught by Http\Middleware\ControllerInvokerMiddleware, same
- * as every other controller (Workstream C3a/C3c). "Session expired" keeps
- * its original (no explicit setStatusHeader() call ever preceded it) 200
- * status; "ugly spammer" keeps its explicit 403. Piwigo\Controller\
- * PictureController, this class's one real caller, dropped its own
- * LegacyRenderCapture wrapper in the same commit, so both die() sites
- * used to skip that closure's try/finally (die()/exit() skip finally
- * entirely) and rely on PHP's own default output-buffer-flush-on-exit()
- * behavior to still send whatever partial HTML had accumulated --
- * throwing instead means a clean reject response with no partial HTML,
- * matching how Controller\ActionController::doError() already works.
+ * render()'s two reject paths ("Session expired" / "ugly spammer") throw
+ * {@see \Piwigo\Http\ResponseReadyException}, caught by
+ * Http\Middleware\ControllerInvokerMiddleware like every other
+ * controller. "Session expired" keeps a 200 status (no explicit
+ * setStatusHeader() call precedes it); "ugly spammer" uses an explicit
+ * 403.
  */
 final class PictureCommentRenderer
 {
     /**
-     * Legacy Coupling Retirement Track A batch A5.2e: $imageId/$start are
-     * explicit params instead of `global $page['image_id']`/`['start']`
-     * -- the one real caller (PictureController) already tracks $imageId
-     * as its own local variable, and $start is the confirmed-real
-     * collision with the gallery grid's own start offset (this file's
-     * comment-list pagination genuinely reuses the same value, see the
-     * nav-bar URL below stripping+reusing it), so both come from the
-     * caller directly rather than a registry read.
+     * $start deliberately reuses the gallery grid's own start-offset value
+     * (see the nav-bar URL below stripping+reusing it) -- this is the
+     * comment list's own pagination offset, not a separate value.
      */
     /**
      * @param list<array<string, mixed>> $related_categories row shape is
@@ -127,17 +103,17 @@ final class PictureCommentRenderer
 
             $postKey = $pictureCommentSubmitRequest->key;
             // insertComment() overwrites $commentErrors unconditionally as its
-            // very first statement, so whatever was previously there is
-            // never actually read by it; a fresh array is passed and the
-            // result is written back below.
+            // very first statement, so any prior contents are never actually
+            // read by it; a fresh array is passed and the result is written
+            // back below.
             $commentErrors = [];
             $commentAction = $commentService->insertComment($comm, $postKey ?? '', $commentErrors);
             $pageState->errors = $commentErrors;
 
             // Narrowed once into local variables and written back after the
             // switch, so the case bodies below don't re-read PageState
-            // directly (switch branches lose property narrowing in this
-            // codebase, see the other L10 fixes for the same pattern).
+            // directly -- switch branches lose property narrowing in this
+            // codebase.
             $commentInfos = $pageState->infos;
 
             switch ($commentAction) {
@@ -226,13 +202,12 @@ final class PictureCommentRenderer
                     $email = $row->email;
                 }
 
-                // com.date is nullable now (Comment domain Stage 1a
-                // dropped its 1970-01-01 sentinel default) -- every real
-                // insert still sets it explicitly (CommentRepository::
-                // insert()), but formatDate()'s own `false` "no date"
-                // sentinel is the correct fallback, not an assert(),
-                // matching PwgComments::getList()'s own identical guard
-                // for this same column.
+                // com.date is nullable; every real insert still sets it
+                // explicitly (CommentRepository::insert()), but
+                // formatDate()'s own `false` "no date" sentinel is the
+                // correct fallback here, not an assert() -- matches
+                // PwgComments::getList()'s own identical guard for this
+                // same column.
                 $rowDate = $row->date ?? false;
 
                 $authorEvent = $eventDispatcher->dispatchChange(new RenderCommentAuthor($author ?? ''));

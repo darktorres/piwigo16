@@ -18,13 +18,9 @@ use Piwigo\Session\SessionService;
  * "connected via identification.php" guard WS methods use to gate API key
  * self-management, and the expiration-notice email.
  *
- * P23 batch 8d: ported from include/functions_user.inc.php's
- * create_api_key()/revoke_api_key()/edit_api_key()/get_api_key()/
- * get_available_api_key()/connected_with_pwg_ui()/
- * notification_api_key_expiration(). Constructor-injects MailerInterface
- * (same reason as UserService/CommentService, P23 batch 8c finding 8 --
- * Piwigo\Mail\MailService is L3Presentation, this class is
- * L2aCoreDomain).
+ * Constructor-injects `MailerInterface` rather than
+ * `Piwigo\Mail\MailService` directly: `MailService` is `L3Presentation`
+ * and this class is `L2aCoreDomain`, which can't depend on it.
  */
 final readonly class ApiKeyService
 {
@@ -39,7 +35,6 @@ final readonly class ApiKeyService
     ) {}
 
     /**
-     * @since 16
      * @return array{auth_key: string, apikey_secret: string, apikey_name: string, user_id: int, created_on: string, duration: int, key_type: string, expired_on: string}
      */
     public function create(int $userId, int $duration, string $keyName): array
@@ -67,9 +62,6 @@ final readonly class ApiKeyService
         return $key;
     }
 
-    /**
-     * @since 16
-     */
     public function revoke(int $userId, string $pkid): string|true
     {
         if ($this->repo->countByAuthKeyAndUser($pkid, $userId) === 0) {
@@ -81,9 +73,6 @@ final readonly class ApiKeyService
         return true;
     }
 
-    /**
-     * @since 16
-     */
     public function edit(int $userId, string $pkid, ?string $apiName): string|true
     {
         if ($this->repo->countByAuthKeyAndUser($pkid, $userId) === 0) {
@@ -96,7 +85,6 @@ final readonly class ApiKeyService
     }
 
     /**
-     * @since 16
      * @return false|list<array{auth_key: string, apikey_secret: string, apikey_name: string, created_on: string, duration: ?int, expired_on: string, revoked_on: ?string, last_used_on: ?string, last_notified_on: ?string, created_on_format: string, expired_on_format: string, last_used_on_since: string, is_expired: bool, expiration: string, expired_on_since: string, revoked_on_since: ?string, revoked_on_message: ?string}>
      */
     public function get(int $userId): false|array
@@ -171,7 +159,6 @@ final readonly class ApiKeyService
     }
 
     /**
-     * @since 16
      * @return list<array{auth_key: string, apikey_secret: string, apikey_name: string, created_on: string, duration: ?int, expired_on: string, revoked_on: ?string, last_used_on: ?string, last_notified_on: ?string, created_on_format: string, expired_on_format: string, last_used_on_since: string, is_expired: bool, expiration: string, expired_on_since: string, revoked_on_since: ?string, revoked_on_message: ?string}>|false
      */
     public function getAvailable(int $userId): array|false
@@ -194,8 +181,6 @@ final readonly class ApiKeyService
 
     /**
      * Is connected with pwg_ui (identification.php).
-     *
-     * @since 16
      */
     public function connectedWithPwgUi(): bool
     {
@@ -205,8 +190,6 @@ final readonly class ApiKeyService
 
     /**
      * Notify a user when their api key is about to expire.
-     *
-     * @since 16
      */
     public function notifyExpiration(string $username, string $email, int $daysLeft): bool
     {

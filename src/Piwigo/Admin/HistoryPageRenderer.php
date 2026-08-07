@@ -25,38 +25,17 @@ use Piwigo\Validation\InputValidator;
  * Ported from admin/history.php (page slug "history") -- displays the
  * filtered history lines panel. The actual line listing is fetched
  * client-side via an async ws.php?method=pwg.history.search call
- * (Ws\PwgCore::historySearch(), out of this batch's scope); this page
- * only renders the filter form.
- *
- * Legacy Coupling Retirement Track A batch A5.2h: dropped a confirmed-dead
- * `if (isset($page['search_id'])) { ... }` navbar block -- the only write
- * path was `Ws\PwgCore::historySearch()`'s own redirect to
- * `admin.php?page=history&search_id=...`, which is commented out there
- * (confirmed by direct read), so this `isset()` was always false on a
- * real admin.php request. `nb_lines`/`start` had no other reader in this
- * file (both were read only inside that same dead block), so they're
- * gone too, not retargeted.
+ * (Ws\PwgCore::historySearch()); this page only renders the filter form.
  */
 final class HistoryPageRenderer
 {
     /**
-     * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
-     * explicit param instead of `global $page['page'];` -- the one real
-     * caller (HistorySubController) already knows its own fixed page
-     * slug statically (it's the only class registered for the
-     * 'history' slug in config/admin_pages.php); selects this page's
-     * own tab within the shared 'history' tabsheet group (see
+     * $pageSlug is an explicit param instead of `global $page['page'];` --
+     * the one real caller (HistorySubController) already knows its own
+     * fixed page slug statically (it's the only class registered for the
+     * 'history' slug in config/admin_pages.php); selects this page's own
+     * tab within the shared 'history' tabsheet group (see
      * StatsPageRenderer, its sibling in that same group).
-     * `search` (Phase 2 global-residual sweep): also confirmed dead, same
-     * as `search_id`/`nb_lines`/`start` above. This docblock's own former
-     * justification (`$page['search']` populated by `include/
-     * ws_functions/pwg.php`'s `ws_history_search()`) named a file that no
-     * longer exists -- it was ported to `Ws\PwgCore::historySearch()`,
-     * whose own `$page['search'] = unserialize(...)` write has no
-     * `global` declaration at all (a same-named but unrelated local
-     * variable), and `ws.php`/`admin.php` are separate HTTP requests
-     * regardless, so there was never a real bridge here even in
-     * principle.
      */
     public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, InputValidator $inputValidator): void
     {
@@ -80,11 +59,6 @@ final class HistoryPageRenderer
 
         $template->set_filename('history', 'history.tpl');
 
-        // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
-        // bug -- nothing had ever called CoreTabs::setContext() with
-        // linkStart for this page (same class of gap as
-        // ConfigurationSubController's own $conf_link fix), so this page's
-        // own tab strip has always rendered broken relative hrefs.
         $coreTabs->setContext(new CoreTabsContext(linkStart: $urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('history');

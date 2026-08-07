@@ -250,10 +250,9 @@ final class SearchServiceTest extends IntegrationTestCase
 
     /**
      * SearchService's own userService()/tagService() lazy-default helpers
-     * both resolve ProcessCache via this same container (singleton/
-     * service-locator elimination campaign, Phase 11 sub-phase 11G) --
-     * resolves the same shared instance so forget() here is actually
-     * observed by $this->service internally.
+     * both resolve ProcessCache via this same container, so this resolves
+     * the same shared instance -- forget() here is actually observed by
+     * $this->service internally.
      */
     private function processCache(): ProcessCache
     {
@@ -354,8 +353,7 @@ final class SearchServiceTest extends IntegrationTestCase
     {
         // Kernel is already booted in setUp() above -- resolve the same
         // container-shared instance a real request would get, matching
-        // RedirectService's own real production callers (singleton/
-        // service-locator elimination campaign, Phase 6).
+        // RedirectService's own real production callers.
         $userService = Kernel::container()->get(UserService::class);
         if (! $userService instanceof UserService) {
             throw new LogicException('Container returned an unexpected type for ' . UserService::class);
@@ -544,11 +542,10 @@ final class SearchServiceTest extends IntegrationTestCase
 
     public function test_qsearch_get_text_token_search_sql_is_injection_safe(): void
     {
-        // [SEC-18]/Further SQL-modernization audit Item 8: a term with a
-        // single quote must not break out of the generated REGEXP/MATCH
-        // clauses -- proven by actually executing them (with their own
-        // bound values) against the real fixture DB, not just eyeballing
-        // the SQL.
+        // A term with a single quote must not break out of the generated
+        // REGEXP/MATCH clauses -- proven by actually executing them (with
+        // their own bound values) against the real fixture DB, not just
+        // eyeballing the SQL.
         $token = new QSingleToken("nature's", 0, null);
 
         // ['name', 'comment'] matches the images_ft_name_comment FULLTEXT
@@ -849,7 +846,7 @@ final class SearchServiceTest extends IntegrationTestCase
     {
         // "family" only tags image 1 -- exercises qsearchGetTags() ->
         // qsearchEval() -> permission-filtered final query end to end,
-        // including the SEC-18 quote()-based FULLTEXT/REGEXP clauses.
+        // including the quote()-based FULLTEXT/REGEXP clauses.
         $results = $this->service->getQuickSearchResultsNoCache('family', []);
 
         self::assertSame([1], $results['items']);
@@ -865,10 +862,10 @@ final class SearchServiceTest extends IntegrationTestCase
     public function test_get_quick_search_results_no_cache_finds_a_category_named_match(): void
     {
         // "Nested" only matches category 2's name ("Nested Sub Album",
-        // fixture) -- exercises qsearchGetCategories()'s P23 batch 3 fix
-        // (categories filtered via $user['forbidden_categories'] instead
-        // of an INNER JOIN against user_cache_categories) end to end.
-        // Category 2 holds images 4 and 5 (piwigo_image_category fixture).
+        // fixture) -- exercises qsearchGetCategories(), which filters
+        // categories via $user['forbidden_categories'] instead of an
+        // INNER JOIN against user_cache_categories, end to end. Category 2
+        // holds images 4 and 5 (piwigo_image_category fixture).
         $results = $this->service->getQuickSearchResultsNoCache('Nested', []);
 
         self::assertSame([4, 5], $results['items']);
@@ -887,13 +884,12 @@ final class SearchServiceTest extends IntegrationTestCase
     }
 
     /**
-     * CachePools::searchResults() (gap-closure Stage 4a) replaces the
-     * older PersistentFileCache/cacheUpdateTime mechanism -- proven the
-     * same way TagServiceTest/ForbiddenCategoriesCacheTest prove their own
-     * pool wiring: mutate the underlying data (tag image 2 "family", which
-     * the fixture doesn't already do -- only image 1 is) after the first
-     * (caching) call, then show a 2nd call with the same query still
-     * returns the stale (pre-mutation) result.
+     * CachePools::searchResults() backs quick-search result caching --
+     * proven the same way TagServiceTest/ForbiddenCategoriesCacheTest prove
+     * their own pool wiring: mutate the underlying data (tag image 2
+     * "family", which the fixture doesn't already do -- only image 1 is)
+     * after the first (caching) call, then show a 2nd call with the same
+     * query still returns the stale (pre-mutation) result.
      */
     public function test_get_quick_search_results_caches_across_calls(): void
     {

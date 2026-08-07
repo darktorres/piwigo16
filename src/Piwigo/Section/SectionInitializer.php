@@ -14,20 +14,15 @@ use Piwigo\Section\Request\SectionUrlRequest;
 
 /**
  * URL token parser: "category/12-name/start-24" -> a structured
- * SectionUrlParse. Ported from the first half of
- * include/section_init.inc.php (root_path/section_url computation,
- * tokenization, the picture-page image-id parsing, and the
- * parse_section_url() call/merge) -- the much larger second half of that
- * file (category/tags/search/favorites/... DB-query building and
- * $page/$template population) was absorbed into SectionPopulator::
- * populate() in P23 batch 4d (see that class's own docblock), same as
- * category_cats.inc.php/search_filters.inc.php were ported to
- * CategoryCatsRenderer/SearchFilterRenderer.
+ * SectionUrlParse (root_path/section_url computation, tokenization, and
+ * the picture-page image-id parsing). The rest of the section population
+ * pipeline (category/tags/search/favorites/... DB-query building and
+ * $page/$template population) lives in SectionPopulator::populate().
  *
  * Contains a real bad_request() call (exit-triggering), same established
  * precedent as Html\HtmlService/Page\NoPhotoYetRenderer -- not routed
- * around, since that's the original's real terminal behavior for a
- * malformed picture identifier.
+ * around, since that's the terminal behavior for a malformed picture
+ * identifier.
  */
 final readonly class SectionInitializer
 {
@@ -52,13 +47,9 @@ final readonly class SectionInitializer
             $rewritten = is_string($rewritten) ? $rewritten : '';
             $rewritten = str_replace('//', '/', $rewritten);
             $path_count = count(explode('/', $rewritten));
-            // Legacy Coupling Retirement gap-closure (entry-shell
-            // define()/include round): used to be PHPWG_ROOT_PATH .
-            // str_repeat(...), relying on PHPWG_ROOT_PATH's own './'
-            // prefix always being stripped by the (now-removed) check
-            // below in every real gallery-facing context. RequestMountDepth
-            // generalizes this correctly instead of hardcoding "this
-            // entry file is never nested" -- see that class's own docblock.
+            // RequestMountDepth generalizes this rather than hardcoding
+            // "this entry file is never nested" -- see that class's own
+            // docblock.
             $root_path = str_repeat('../', $this->requestMountDepth->current() + $path_count - 1);
         } else {
             // PHP auto-casts a purely-numeric query-string key (e.g. "?1")

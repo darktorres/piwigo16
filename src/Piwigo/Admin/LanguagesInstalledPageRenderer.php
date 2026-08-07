@@ -34,23 +34,16 @@ use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
 
 /**
- * Ported from admin/languages_installed.php (the "installed" tab of the
- * "languages" page slug, dispatched by LanguagesSubController) -- lists
- * installed languages and handles activate/deactivate/set_default/delete.
+ * Lists installed languages and handles activate/deactivate/set_default/
+ * delete, dispatched from the "languages" page's "installed" tab by
+ * LanguagesSubController.
  *
- * P23 sub-batch 6i-1 fix: this file's action-handling block was already
- * gated on is_webmaster() and already allowlisted 'action'/'language' via
- * check_input_parameter(), but had zero check_pwg_token() call anywhere --
- * and ExtensionLifecycle::performAction() itself does no CSRF check of its
- * own either, so a crafted admin.php?page=languages&action=delete&language=X
- * GET request (an <img> tag on any page, no interaction beyond an active
- * webmaster session) could delete an active language. Fixed the same way
- * PictureModifyPageRenderer closed the sync_metadata gap in 6d: added
- * check_pwg_token() right after the existing guards, and embedded a real
- * token into $language['u_action']'s own add_url_params() call below --
+ * Action handling requires check_pwg_token() after the existing
+ * webmaster/input guards. The token is embedded in
+ * $language['u_action']'s own add_url_params() call below;
  * languages_installed.tpl's 4 action links (activate/deactivate/
- * set_default/delete) all append '&action=X' onto that same u_action base,
- * so this one call site fixes all 4 links at once.
+ * set_default/delete) all append '&action=X' onto that same u_action
+ * base, so this one call site covers all 4 links.
  */
 final class LanguagesInstalledPageRenderer
 {
@@ -75,13 +68,10 @@ final class LanguagesInstalledPageRenderer
     ) {}
 
     /**
-     * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
-     * explicit param instead of `global $page['page'];` -- the one real
-     * caller (LanguagesSubController) already knows its own fixed page
-     * slug statically (it's the only class registered for the
-     * 'languages' slug in config/admin_pages.php). Also drops a
-     * confirmed-dead `global $conf;` found incidentally (never
-     * referenced anywhere in this method).
+     * $pageSlug is an explicit param: the one real caller
+     * (LanguagesSubController) knows its own fixed page slug statically
+     * -- it's the only class registered for the 'languages' slug in
+     * config/admin_pages.php.
      */
     public function render(string $pageSlug): void
     {

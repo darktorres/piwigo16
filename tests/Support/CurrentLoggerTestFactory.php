@@ -10,13 +10,10 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 
 /**
- * Singleton/service-locator elimination campaign, Phase 12 sub-phase 12F-1:
- * replaces the deleted `CurrentLogger::getStatic()` transitional shim for
- * test call sites -- reproduces its exact behavior (a fresh, no-op
- * `severity => OFF` Logger when Kernel hasn't booted, the real
- * container-shared instance's own Logger otherwise). No shared-fallback-
- * instance test coupling to worry about here: the shim's own pre-boot
- * fallback was always a brand-new Logger per call, never memoized.
+ * Returns a fresh, no-op `severity => OFF` Logger when Kernel hasn't
+ * booted; returns the container-shared CurrentLogger instance's own
+ * Logger otherwise. The pre-boot fallback is a brand-new Logger per
+ * call, never memoized.
  */
 final class CurrentLoggerTestFactory
 {

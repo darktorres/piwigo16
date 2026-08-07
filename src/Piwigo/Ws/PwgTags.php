@@ -33,9 +33,8 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\TagService;
 
 /**
- * P23 batch 8e-3: relocated from include/ws_functions/pwg.tags.php.
  * `pwg.tags.*` WS methods (8 registrations) -- registered via callable
- * arrays in include/ws_default_methods.inc.php.
+ * arrays in WsDefaultMethods.
  */
 final class PwgTags
 {

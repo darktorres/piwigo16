@@ -8,9 +8,8 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Piwigo\Admin\StatsPageRenderer (admin.php?page=stats) -- the "history"
  * tabsheet group's stats/charts tab.
  *
- * The 2nd test below closes the `count(self::getLast(60, 'year')) > 1`
- * "multiple years of real usage history already summarized" branch this
- * file's own docblock previously called out as unreachable, plus
+ * The 2nd test below exercises the `count(self::getLast(60, 'year')) > 1`
+ * "multiple years of real usage history already summarized" branch, plus
  * getMonthStats()'s own `foreach ($historyService->getDailyRowsForMonths(...)
  * as $value)` loop body -- both by directly seeding piwigo_history_summary
  * rows rather than waiting on real elapsed time: year-only rows dated 2019/

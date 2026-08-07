@@ -70,10 +70,6 @@ final class AlbumNotificationPageRenderer
      */
     public function render(string $admin_album_base_url, array $category): void
     {
-        // Phase 2 global-residual sweep: $page is a local scratch array
-        // for this method's own body only (no longer `global $page;`),
-        // same shape as Section\SectionPopulator::populate()'s own
-        // equivalent fix (Track A5.2e).
         /** @var array<string, mixed> $page */
         $page = [];
         $template = $this->currentTemplate->get();

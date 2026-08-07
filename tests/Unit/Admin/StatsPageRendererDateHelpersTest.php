@@ -11,9 +11,8 @@ use InvalidArgumentException;
 use Piwigo\Admin\StatsPageRenderer;
 
 /**
- * StatsPageRenderer::getDateObject()/setMissingValues() -- extracted from
- * admin/stats.php's own top-level free functions during the P23 batch 6b
- * port. Pure functions, no DB/globals needed.
+ * StatsPageRenderer::getDateObject()/setMissingValues() are pure functions,
+ * no DB/globals needed.
  */
 final class StatsPageRendererDateHelpersTest extends TestCase
 {
@@ -129,9 +128,8 @@ final class StatsPageRendererDateHelpersTest extends TestCase
 
     public function test_get_date_object_treats_hour_zero_as_present_not_absent(): void
     {
-        // Regression guard for the PHPStan-flagged `!=`-to-`!==` normalization
-        // done during the port: hour '0' (midnight) must still be read as a
-        // real hour value, not treated the same as a NULL hour.
+        // hour '0' (midnight) must be read as a real hour value, not
+        // treated the same as a NULL hour.
         $date = StatsPageRenderer::getDateObject([
             'year' => '2026',
             'month' => '3',

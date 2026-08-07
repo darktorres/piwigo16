@@ -72,11 +72,9 @@ final class ScriptLoader
      * fresh inside Template::__construct() itself), so a required param
      * here would ripple across all of them for 2 defensive
      * fatalError()-only error-path call sites. `HtmlRenderingInterface` is
-     * already bound in container.php; this file is already on
+     * already bound in container.php, and this file is already on
      * StructuralTest.php's own `Kernel::container()` allow-list for its
-     * other remaining shim reads (singleton/service-locator elimination
-     * campaign, Phase 11 sub-phase 11F's own future closure), so no new
-     * exception is needed here (Phase 11 sub-phase 11E).
+     * other remaining shim reads.
      */
     private function htmlRenderer(): HtmlRenderingInterface
     {
@@ -89,14 +87,12 @@ final class ScriptLoader
     }
 
     /**
-     * Singleton/service-locator elimination campaign, Phase 6: resolves
-     * the container-shared UrlServiceInterface fresh on every call instead
-     * of reading a bare-static value some bootstrap code set once (see
-     * Image\SrcImage's own docblock for the full reasoning). Kept as a
-     * container resolve rather than a constructor param for the same
-     * reason as SrcImage/DerivativeImage -- consistent treatment across
-     * the whole UrlService-bridge trio, not because a constructor param
-     * would be unsafe here (this class's own single real production
+     * Resolves the container-shared UrlServiceInterface fresh on every
+     * call (see Image\SrcImage's own docblock for the full reasoning).
+     * Kept as a container resolve rather than a constructor param for the
+     * same reason as SrcImage/DerivativeImage -- consistent treatment
+     * across the whole UrlService-bridge trio, not because a constructor
+     * param would be unsafe here (this class's own single real production
      * construction site, Template.php, could receive one).
      */
     private static function urlService(): UrlServiceInterface
@@ -115,8 +111,7 @@ final class ScriptLoader
     /**
      * Same "no DI, genuinely static factory API" shape as urlService()
      * above -- do_combine()/check_load_dep() are both `private static`,
-     * no `$this` to inject through (singleton/service-locator elimination
-     * campaign, Phase 11 sub-phase 11F).
+     * no `$this` to inject through.
      */
     private static function eventDispatcher(): EventDispatcher
     {
@@ -164,8 +159,7 @@ final class ScriptLoader
     }
 
     /**
-     * Same reasoning as currentConfig() above (singleton/service-locator
-     * elimination campaign, Phase 11 sub-phase 11H).
+     * Same reasoning as currentConfig() above.
      */
     private static function paths(): Paths
     {

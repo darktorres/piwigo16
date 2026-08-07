@@ -62,15 +62,12 @@ final class PluginsNewPageRenderer
     ) {}
 
     /**
-     * Legacy Coupling Retirement Track A: $pageSlug (batch A5.2f) and
-     * $tab (batch A5.2h) are explicit params instead of
+     * $pageSlug and $tab are explicit params rather than
      * `global $page['page']`/`$page['tab']` -- the one real caller
      * (PluginsSubController) already knows both values statically/
      * locally (it's the only class registered for the 'plugins' slug in
      * config/admin_pages.php, and it already computes its own $tab local
-     * before dispatching here). Also drops a confirmed-dead
-     * `global $conf;` found incidentally (never referenced anywhere in
-     * this method).
+     * before dispatching here).
      */
     public function render(string $pageSlug, string $tab): void
     {

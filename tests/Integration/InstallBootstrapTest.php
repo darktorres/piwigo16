@@ -59,9 +59,8 @@ final class InstallBootstrapTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         // Resolved (and reset) before Kernel::reset() destroys the
-        // container -- unlike the old static API, an instance can no
-        // longer be reached afterwards (singleton/service-locator
-        // elimination campaign, Phase 2).
+        // container -- once destroyed, the instance can no longer be
+        // reached.
         if (Kernel::isBooted()) {
             $errorCollector = Kernel::container()->get(ErrorCollector::class);
             if ($errorCollector instanceof ErrorCollector) {

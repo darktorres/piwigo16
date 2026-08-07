@@ -7,11 +7,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Psr\Container\ContainerInterface;
 
-// P7-scoped: Kernel::boot() only builds a bare, zero-definition container at
-// this phase -- no Config/PageState/Lang/CurrentUser to assert against yet
-// (those land in P16). This intentionally does NOT mirror the reference
-// repo's fully-evolved KernelBootTest.php.
-
 beforeEach(function (): void {
     Kernel::reset();
 });
@@ -54,11 +49,10 @@ test('reset makes container throw again', function (): void {
 })->throws(LogicException::class);
 
 test('reset also resets CurrentPaths, not just its own booted/container state', function (): void {
-    // CurrentPaths (singleton/service-locator elimination campaign, Phase
-    // 3) is a pure shim reading Paths::class straight out of the live
-    // container -- proves Kernel::reset() nulling the container is enough
-    // on its own to make CurrentPathsTestFactory::get() throw again too, with no
-    // separate cascade call needed.
+    // CurrentPaths is a pure shim reading Paths::class straight out of the
+    // live container -- proves Kernel::reset() nulling the container is
+    // enough on its own to make CurrentPathsTestFactory::get() throw again
+    // too, with no separate cascade call needed.
     Kernel::boot(Paths::fromRoot('/home/torres/piwigo17-rewrite'));
     expect(CurrentPathsTestFactory::get())->toBeInstanceOf(Paths::class);
 

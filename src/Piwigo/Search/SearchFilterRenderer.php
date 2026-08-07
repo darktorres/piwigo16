@@ -29,16 +29,9 @@ use Piwigo\Users\UserService;
  * Renders the search-refinement sidebar (author/tags/date_posted/
  * date_created/added_by/album/filetypes/ratings/filesize/ratios/height/
  * width filters) plus the "ALBUMS_FOUND"/"TAGS_FOUND" search-hint block.
- * Ported from include/search_filters.inc.php -- structurally a mechanical
- * port (single complete `global` block, every local variable traced to
- * confirm none reads an undeclared outer scope), except for one real fix:
- * see the ALBUMS_FOUND block below.
  *
- * Gap-closure Stage 4a (docs/plan/gap-closure-p0-p23.md): the several
- * per-filter row/count caches below now go through
- * {@see \Piwigo\Cache\CachePools::searchResults()} (30s TTL) instead of the
- * older `PersistentCache`/`cacheUpdateTime`-keyed mechanism this class's
- * docblock previously kept deliberately out of scope.
+ * The per-filter row/count caches below go through
+ * {@see \Piwigo\Cache\CachePools::searchResults()} (30s TTL).
  *
  * Every `mixed` below stays that way by design: cacheGet()/cacheSet() are
  * a generic PSR-6 cache-pool wrapper (arbitrary cached value, same
@@ -83,21 +76,15 @@ final readonly class SearchFilterRenderer
     }
 
     /**
-     * Legacy Coupling Retirement Track A batch A5.2e: $sectionContext is an
-     * explicit param instead of `global $page;`. The rest of this method
-     * (and every private helper it calls) keeps treating `$page` as a
-     * plain local array shaped like the old global -- it's built once
-     * here from $sectionContext's own fields and mutates
-     * 'search_details' in place exactly as before, just no longer visible
-     * outside this call (nothing downstream ever read the mutated
-     * version).
+     * $page is a plain local array shaped like the old global $page --
+     * built once here from $sectionContext's own fields, mutated in place
+     * ('search_details') by this method and every private helper it
+     * calls, and not visible outside this call.
      *
-     * Batch A5.2h: returns the search id resolved by
+     * Returns the search id resolved by
      * SearchService::getValidatedSearchArray() (null when this page isn't
-     * a search results page), replacing the former
-     * `$page['search_id'] = ...` write -- the one real caller
-     * (GalleryController) passes it straight into its own
-     * HistoryService::logVisit() call.
+     * a search results page) -- the one real caller (GalleryController)
+     * passes it straight into its own HistoryService::logVisit() call.
      */
     public function render(SectionContext $sectionContext): ?int
     {
@@ -171,17 +158,14 @@ final readonly class SearchFilterRenderer
         /** @var array<string, mixed> $searchFields */
         $searchFields = &$mySearch['fields'];
 
-        // SQL-modernization audit: 'forbidden' used to hold a raw,
-        // already-'\n  AND '-prefixed string (getSqlConditionFandF()) --
-        // now a SqlCondition (getClauseForFilter() below combines it via
-        // SqlCondition::combine() instead of string concatenation, so no
-        // prefix is needed). Confirmed via direct grep this key is never
-        // read outside this file.
+        // 'forbidden' is a SqlCondition -- getClauseForFilter() below
+        // combines it via SqlCondition::combine() instead of string
+        // concatenation, so no leading " AND " prefix is needed. This key
+        // is never read outside this file.
         //
-        // Further SQL-modernization audit, Item 15H: every real consumer
-        // of this condition throughout this file (author/filetypes/
-        // added_by/ratings/filesize/ratios/height/width filter queries)
-        // now runs as real DQL against `ImageEntity i INNER JOIN
+        // Every real consumer of this condition throughout this file
+        // (author/filetypes/added_by/ratings/filesize/ratios/height/width
+        // filter queries) runs as DQL against `ImageEntity i INNER JOIN
         // ImageCategoryEntity ic` -- reuses SearchService::
         // forbiddenCondition() (that class's own docblock has the full
         // `PermissionCriteria` rationale) instead of rebuilding the same
@@ -200,7 +184,7 @@ final readonly class SearchFilterRenderer
         } else {
             $searchItemsClause = '1=1';
         }
-        unset($searchItemsClause); // kept for parity with the original's own unused local; not referenced downstream
+        unset($searchItemsClause); // unused local; not referenced downstream
 
         if (isset($searchFields['allwords']) and ! ((bool) $displayFilters['words']['access'])) {
             unset($searchFields['allwords']);
@@ -417,8 +401,7 @@ final readonly class SearchFilterRenderer
 
             if (count($addedBy) > 0) {
                 // now let's find the usernames of added_by users. added_by_id
-                // is a native ?int here (DQL-hydrated, unlike the former
-                // queryRows()'s uniform string-cast) -- is_int()||is_string(),
+                // is a native ?int here (DQL-hydrated) -- is_int()||is_string(),
                 // not is_string() alone, or every id gets silently filtered
                 // out; UserService::getUsernamesByIds()/the $usernameOf
                 // lookup below both accept either (PHP coerces a numeric
@@ -430,11 +413,8 @@ final readonly class SearchFilterRenderer
                     }
                 }
 
-                // SQL-modernization audit, Item 14 Sub-phase C4: `users` is
-                // now mapped ({@see \Piwigo\Users\UserEntity}), so this no
-                // longer needs its own raw query -- reuses
-                // UserService::getUsernamesByIds(), the same id => username
-                // map shape this block already builds.
+                // Reuses UserService::getUsernamesByIds() -- the same
+                // id => username map shape this block already builds.
                 $usernameOf = $this->userService->getUsernamesByIds($userIds);
 
                 foreach (array_keys($addedBy) as $addedByIdx) {
@@ -477,17 +457,12 @@ final readonly class SearchFilterRenderer
             if (count($catWords) > 0) {
                 $fullnameOf = [];
 
-                // Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md):
-                // the user_cache_categories INNER JOIN this visibility
-                // filter used to run through had gone permanently empty
-                // (Stage 4g deleted the table's only remaining writer) --
-                // a live regression this fix closes, replaced with the
-                // same live PermissionService condition every other
-                // visibility check in this class already uses.
+                // Uses the same live PermissionService condition every
+                // other visibility check in this class uses.
                 //
-                // Further SQL-modernization audit, Item 15H: `categories`
-                // is a single-table DQL query, no image join -- $catWordsCsv
-                // used to be spliced via implode() CSV, now bound.
+                // `categories` is a single-table DQL query, no image join
+                // -- the category ids are bound as a parameter, not
+                // spliced into the SQL.
                 $permissionCondition = $this->permissionService->getPermissionCriteria()
                     ->visibleCategoriesCondition('c.id');
                 $catWordsInts = array_map(static fn (int|string $v): int => (int) $v, $catWords);
@@ -547,13 +522,12 @@ final readonly class SearchFilterRenderer
             $searchDetailsForbidden = $searchDetailsForbiddenRaw instanceof SqlCondition ? $searchDetailsForbiddenRaw : new SqlCondition('');
             $allExtsCondition = SqlCondition::combine('AND', new SqlCondition('1=1'), $searchDetailsForbidden);
 
-            // Further SQL-modernization audit, Item 15H: SUBSTRING_INDEX has
-            // no DQL/portable-SQL built-in equivalent -- new custom
-            // SubstringIndexFunction (src/Piwigo/Db/DqlFunction/), same
-            // MySQL-verified/others-best-effort convention as every other
-            // function in that directory. extToCounterMap() rebuilds the
-            // former queryKeyedColumn()'s 'ext' => 'counter' shape from
-            // countImagesGroupedBy()'s row list.
+            // SUBSTRING_INDEX has no DQL/portable-SQL built-in equivalent
+            // -- uses the custom SubstringIndexFunction
+            // (src/Piwigo/Db/DqlFunction/), same MySQL-verified/others-
+            // best-effort convention as every other function in that
+            // directory. extToCounterMap() builds the 'ext' => 'counter'
+            // shape from countImagesGroupedBy()'s row list.
             $extToCounterMap = static function (array $rows): array {
                 $map = [];
                 foreach ($rows as $row) {
@@ -864,16 +838,12 @@ final readonly class SearchFilterRenderer
     /**
      * The "ALBUMS_FOUND" search-hint block: categories whose name/comment
      * matched the search text (SearchService::searchAllwords()'s
-     * $matching_cat_ids). Real bug avoided here, not just a simplification:
-     * searchAllwords()'s category-name/comment match applies no
-     * forbidden-categories condition at all (confirmed by reading it) --
-     * $cat_ids can genuinely contain a category this user can't see, so the
-     * original file's own `user_cache_categories` JOIN was the real,
-     * load-bearing permission filter, not redundant belt-and-suspenders.
-     * Ported as a plain PHP existence-filter against
-     * CurrentUser::get()->forbiddenCategories (same concept as batch 3a)
-     * instead of that JOIN, then CategoryRepository::findFullCategoriesByIds()
-     * (batch 4b) for the row data.
+     * $matching_cat_ids). searchAllwords()'s category-name/comment match
+     * applies no forbidden-categories condition of its own -- $cat_ids
+     * can genuinely contain a category this user can't see, so this
+     * filters against CurrentUser::get()->forbiddenCategories before
+     * loading row data via CategoryRepository::findFullCategoriesByIds().
+     * This permission filter is real and load-bearing, not redundant.
      *
      * @param array<string, mixed> $page
      */
@@ -887,8 +857,7 @@ final readonly class SearchFilterRenderer
 
         // shape from SearchService::getRegularSearchResults(): list<int>
         // (ids come back as native int under this project's mysqli driver
-        // config, not the string ids the pre-port procedural code
-        // returned) -- is_int()||is_string(), not is_string() alone, or
+        // config) -- is_int()||is_string(), not is_string() alone, or
         // every id gets silently filtered out here.
         $catIds = array_values(array_filter(
             $matchingCatIds,
@@ -909,10 +878,10 @@ final readonly class SearchFilterRenderer
             return;
         }
 
-        // CategoryRepository::findFullCategoriesByIds() (batch 4b) returns
-        // typed Category projections (P17-23 Stage 1b) -- unboxed to array
-        // here since nameCompare()'s signature (shared with every other
-        // name-sort call site in this project) takes array<string, mixed>.
+        // CategoryRepository::findFullCategoriesByIds() returns typed
+        // Category projections -- unboxed to array here since
+        // nameCompare()'s signature (shared with every other name-sort
+        // call site in this project) takes array<string, mixed>.
         $cats = array_map(
             static fn (Category $cat): array => $cat->toArray(),
             $this->categoryRepo->findFullCategoriesByIds($allowedCatIds)
@@ -937,14 +906,10 @@ final readonly class SearchFilterRenderer
     }
 
     /**
-     * Pure existence-filter (same concept as P23 batch 3a): excludes any id
-     * in $forbiddenCategoriesCsv from $catIds. Extracted from
-     * renderAlbumsFound() specifically so this fix is directly unit-testable
-     * without needing a real search-id round trip through get_search_info()
-     * (which bad_request()s on an unknown id) -- same "extract the one real
-     * new piece of logic as a pure static method" precedent as
-     * CategoryService::filterMenuRows()/isRecentCategory() from batches
-     * 3b/4b.
+     * Pure existence-filter: excludes any id in $forbiddenCategoriesCsv
+     * from $catIds. Extracted as a static method so it's directly
+     * unit-testable without needing a real search-id round trip through
+     * get_search_info() (which bad_request()s on an unknown id).
      *
      * @param  list<int>  $catIds
      * @return list<int>
@@ -1037,18 +1002,11 @@ final readonly class SearchFilterRenderer
             $preCounters = $cached['pre_counters'];
             $listOfDates = $cached['list_of_dates'];
         } else {
-            // Further SQL-modernization audit, Item 15H: these thresholds
-            // are genuinely relative to the real wall clock, deliberately
-            // NOT PIWIGO_TEST_NOW-frozen -- same real-time-relative finding
-            // SearchService::dateFilterClause()'s own preset branch needed
-            // (see feedback_verify_dql_grammar_assumptions_empirically),
-            // so this uses a bare `new \DateTime()` (real, unfrozen wall
-            // clock -- an existing, precedented idiom elsewhere in this
-            // codebase, e.g. Admin\StatsPageRenderer), not `Env::now()`.
-            // The former FROM-less `SELECT SUBDATE(NOW(), INTERVAL ...)
-            // AS ...` round-trip retires entirely -- DQL requires a FROM,
-            // no entity to select from for a query with no other purpose
-            // than this pure arithmetic.
+            // These thresholds are genuinely relative to the real wall
+            // clock, deliberately NOT PIWIGO_TEST_NOW-frozen, so this uses
+            // a bare `new \DateTime()` (real, unfrozen wall clock -- the
+            // same idiom used elsewhere in this codebase, e.g.
+            // Admin\StatsPageRenderer), not `Env::now()`.
             $thresholds = [];
             foreach (array_keys($labelForThreshold) as $threshold) {
                 $thresholds[$threshold] = (new DateTime())->modify($this->intervalForThreshold($threshold))->format('Y-m-d H:i:s');
@@ -1169,8 +1127,6 @@ final readonly class SearchFilterRenderer
     /**
      * Returns the SQL WHERE clause to be used to build filter values.
      *
-     * @since 15
-     *
      * @param array<string, mixed> $page see render()'s own docblock --
      *   by-ref because getItemsForFilter() caches its computed
      *   intersection back onto $page['search_details'] for later calls
@@ -1179,11 +1135,9 @@ final readonly class SearchFilterRenderer
      *   correct, just slower (a fresh array_intersect() per filter
      *   instead of a cache hit).
      *
-     * Further SQL-modernization audit, Item 15H: `image_id IN
-     * (id,id,...)` (CSV-spliced) -> a bound `ic.imageId IN (:x)`
-     * DQL-shaped condition against every real caller's own DQL query --
-     * every caller below now checks `str_starts_with($condition->sql,
-     * 'ic.imageId IN')` instead of the old `'image_id IN'` prefix.
+     * Returns a bound `ic.imageId IN (:x)` DQL-shaped condition against
+     * every real caller's own DQL query -- every caller below checks
+     * `str_starts_with($condition->sql, 'ic.imageId IN')`.
      */
     private function getClauseForFilter(string $filterName, array &$page): SqlCondition
     {
@@ -1225,8 +1179,6 @@ final readonly class SearchFilterRenderer
      * Returns the list of items (image_ids) to be used to build filter
      * values for a given filter. Depends on the other filters. Use a cache
      * to avoid computing the same large array_intersect several times.
-     *
-     * @since 15
      *
      * @param array<string, mixed> $page see getClauseForFilter()'s own
      *   docblock for why this is by-ref

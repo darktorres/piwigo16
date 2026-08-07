@@ -8,12 +8,11 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 
 /**
- * P23 batch 8d: pure image-path helpers relocated from
- * include/functions.inc.php -- Piwigo\Image already hosts every other
+ * Pure image-path helpers -- Piwigo\Image already hosts every other
  * path/derivative concern (SrcImage/DerivativeImage/DerivativeUrlCodec),
  * a real caller (SrcImage itself), and these 3 functions have zero
  * dependency beyond string manipulation. getElementPath()'s own
- * url_is_remote() call now takes an explicit UrlServiceInterface method
+ * url_is_remote() call takes an explicit UrlServiceInterface method
  * param -- Image is L2aCoreDomain and Url is L2bExtendedDomain, so a
  * constructor/static-property dependency isn't legal here, matching the
  * per-method-injection convention used elsewhere for a static method with

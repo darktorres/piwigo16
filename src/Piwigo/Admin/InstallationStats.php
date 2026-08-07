@@ -14,11 +14,10 @@ use Piwigo\Users\UserService;
 
 /**
  * Ported from admin/include/functions.php's get_pwg_general_statitics()/
- * get_installation_date() (P23 batch 8d). Lives under Admin\, not a
- * domain namespace -- its query set cuts across images/categories/tags/
- * users/groups/rates/history, no single domain owns it, same
- * "administrative machinery" shape as PiwigoInfosSender/PluginLoader in
- * this same namespace.
+ * get_installation_date(). Lives under Admin\, not a domain namespace --
+ * its query set cuts across images/categories/tags/users/groups/rates/
+ * history, no single domain owns it, same "administrative machinery"
+ * shape as PiwigoInfosSender/PluginLoader in this same namespace.
  */
 final class InstallationStats
 {

@@ -214,14 +214,9 @@ final class CommentRepositoryTest extends IntegrationTestCase
     public function test_username_exists_matches_an_existing_username(): void
     {
         self::assertTrue($this->repo->usernameExists('fixture_admin'));
-        // users.username is utf8mb4_bin (case-sensitive) -- fixed in
-        // Migrations\Version20260711150858, whose combined ALTER TABLE
-        // (CONVERT TO CHARACTER SET + MODIFY ... COLLATE utf8mb4_bin in one
-        // statement) turned out not to work: CONVERT TO CHARACTER SET
-        // silently won, leaving this and 8 other columns case-insensitive
-        // utf8mb4_unicode_ci. This assertion previously expected that bug's
-        // behavior (a case-insensitive match) as if it were correct; not a
-        // property of this query, but of the schema it queries.
+        // users.username is a case-sensitive (utf8mb4_bin) column, unlike
+        // most other varchar columns in this schema -- a case-differing
+        // lookup does not match.
         self::assertFalse($this->repo->usernameExists('FIXTURE_ADMIN'));
         self::assertFalse($this->repo->usernameExists('does-not-exist'));
     }
@@ -362,11 +357,9 @@ final class CommentRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * SQL-modernization audit: countAvailableWithConditions()'s own
-     * $whereClauses moved from raw trusted-SQL strings to SqlCondition
-     * fragments (see CommentRepository.php's own docblock) -- this and
-     * the tests below are its first direct coverage; none of the tests
-     * above exercise these 6 methods at all.
+     * countAvailableWithConditions()'s own $whereClauses are SqlCondition
+     * fragments, not raw trusted-SQL strings (see CommentRepository.php's
+     * own docblock).
      */
     public function test_count_available_with_conditions_counts_matching_rows_across_the_join(): void
     {
@@ -415,13 +408,13 @@ final class CommentRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * Regression: Controller\CommentsController's own author-search
-     * fragment used to splice the raw request value straight into the
-     * query (`'... = \'' . $author_search . '\' ...'`), a live SQL
-     * injection. Builds the exact SqlCondition shape that controller now
-     * builds, with a classic `' OR '1'='1` payload as the bound value --
-     * confirms it's treated as an inert literal (matches nothing, no SQL
-     * error) rather than widening the WHERE clause to match everything.
+     * Controller\CommentsController's own author-search fragment binds the
+     * request value as a SqlCondition parameter rather than splicing it
+     * into the query text. Builds the exact SqlCondition shape the
+     * controller builds, with a classic `' OR '1'='1` payload as the bound
+     * value -- confirms it's treated as an inert literal (matches nothing,
+     * no SQL error) rather than widening the WHERE clause to match
+     * everything.
      */
     public function test_find_all_with_conditions_treats_an_injection_payload_as_an_inert_literal_value(): void
     {
@@ -436,9 +429,9 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
         $result = $this->repo->findAllWithConditions([$maliciousCondition], 'com.id', 'ASC', 'all', 0);
 
-        // If the payload had broken out of its string literal (the old
-        // raw-splice behavior), `OR '1'='1'` would make the WHERE clause
-        // match every comment in the fixture, not zero.
+        // If the payload broke out of its string literal, `OR '1'='1'`
+        // would make the WHERE clause match every comment in the fixture,
+        // not zero.
         self::assertSame([], $result->rows);
         self::assertSame(0, $result->total);
     }
@@ -447,10 +440,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
     {
         // A unique `search` marker scopes findSummaryCounts() to exactly
         // these 2 rows (search resets every other filter -- see
-        // CommentRepository::buildApiConditions()'s own docblock), same
-        // isolation intent the old `id IN (:ids)` condition served before
-        // this method took a CommentApiCriteria instead of an arbitrary
-        // SqlCondition list.
+        // CommentRepository::buildApiConditions()'s own docblock).
         $marker = 'fsc-marker-' . uniqid();
         $this->repo->insert(['author' => 'fsc_author', 'authorId' => 1, 'anonymousId' => '10.30.0.6', 'content' => $marker . ' validated', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
         $this->repo->insert(['author' => 'fsc_author', 'authorId' => 1, 'anonymousId' => '10.30.0.7', 'content' => $marker . ' pending', 'validated' => false, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
@@ -534,12 +524,10 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
     public function test_find_author_counts_ignores_the_author_id_filter(): void
     {
-        // Real regression coverage for CommentRepository::findAuthorCounts()'s
-        // own documented behavior: $criteria->authorId must NOT narrow the
-        // author breakdown down to a single author (that would defeat the
-        // "how many comments per author" point of this method) -- mirrors
-        // the original Ws\PwgComments::getList()'s own
-        // unset($where_clauses['author_id']) intent, now as real code.
+        // CommentRepository::findAuthorCounts()'s own documented behavior:
+        // $criteria->authorId must NOT narrow the author breakdown down to
+        // a single author (that would defeat the "how many comments per
+        // author" point of this method).
         //
         // Isolated via imageId (fixture image 5 has zero fixture/other-test
         // comments), not `search` -- a non-empty search resets every

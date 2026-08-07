@@ -65,7 +65,6 @@ use Piwigo\Validation\InputValidator;
 use Piwigo\Ws\Request\HistorySearchPageRequest;
 
 /**
- * P23 batch 8e-4: relocated from include/ws_functions/pwg.php.
  * Top-level `pwg.*` WS methods (getVersion, getInfos, getCacheSize,
  * getMissingDerivatives, caddie.add, rates.delete, session.*,
  * getActivityList, history.log/search -- 12 registrations) -- registered
@@ -75,9 +74,7 @@ use Piwigo\Ws\Request\HistorySearchPageRequest;
  *
  * `$params`/`$param` throughout this class (every `mixed[]`/`array<string,
  * mixed>`-typed WS method parameter) is raw, unvalidated WS-protocol
- * request data -- flagged for Phase 4 (SEC-40/P26 Request DTOs), not
- * narrowed in this pass. Every real read already narrows defensively at
- * its own use site.
+ * request data; every real read narrows defensively at its own use site.
  */
 final class PwgCore
 {
@@ -273,25 +270,15 @@ final class PwgCore
     public function getCacheSize(array $params, PwgServer &$service): array
     {
         $data_location = $this->currentConfig->dataLocation();
-        // Real bug fix, not just a straight port: $data_location ('_data/')
-        // is a path relative to the install root, not to whatever the PHP
-        // process's CWD happens to be -- every other real call site of
-        // dataLocation() in this codebase (PersistentFileCache,
-        // FeedController, RequestBootstrap, Template, IntroSubController,
-        // MailService, CoreUpdateService) already composes it against
-        // its own constructor-injected $this->paths->root per Paths' own
-        // class-level contract
+        // $data_location ('_data/') is a path relative to the install root,
+        // not to the PHP process's CWD -- request-time CWD is public/ (the
+        // webroot), not the install root. Compose it against
+        // $this->paths->root, like every other call site of dataLocation()
+        // in this codebase (PersistentFileCache, FeedController,
+        // RequestBootstrap, Template, IntroSubController, MailService,
+        // CoreUpdateService), per Paths' own class-level contract
         // ("Config-driven directories ... compose against data/root at the
-        // call site"). This one was missed when ws_getCacheSize() was
-        // ported -- the pre-rewrite legacy code got away with the bare
-        // relative path because its entry scripts lived at the install
-        // root itself, but this rewrite's public/ webroot means the real
-        // request-time CWD is public/, not the root, so `du -sk _data/...`
-        // silently resolved against public/_data/ (an unrelated, near-empty
-        // stub containing only a `combined` symlink) instead of the real
-        // cache directory -- confirmed live: cache_size reported a bogus
-        // ~4KB and tsizes was always null (public/_data has no
-        // templates_c/ at all) rather than the real, much larger sizes.
+        // call site").
         $root = $this->paths->root;
 
         // Cache size
@@ -403,13 +390,6 @@ final class PwgCore
         $anonymous_id = (! in_array($params['anonymous_id'], [null, ''], true)) ? $params['anonymous_id'] : null;
         $image_id = (isset($params['image_id']) and $params['image_id'] !== 0) ? $params['image_id'] : null;
 
-        // Real bug fix, not just a MysqliDb retarget: the original (both here
-        // and in the pre-rewrite legacy include/ws_functions/pwg.php) built
-        // its own raw query and then NEVER executed it -- MysqliDb::changes()
-        // just reads $mysqli->affected_rows from whatever OTHER query last
-        // ran on the connection, completely disconnected from this DELETE.
-        // executeStatement() both runs the query for real and returns its
-        // actual affected-row count.
         $changes = $this->rateService->deleteByOptionalConditions($params['user_id'], $anonymous_id, $image_id);
         $this->entityManager->clear();
         if ($changes > 0) {
@@ -432,13 +412,9 @@ final class PwgCore
         }
 
         if ((bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['username'])) {
-            // realEscapeString() dropped: the combined
-            // "username:password" string must match authKeyLogin()'s own
-            // strict [a-z0-9]-only regex to be considered valid at all, so
-            // escaping could only ever break it, never protect it -- same
-            // "value is regex-validated to a shape that can't need SQL
-            // escaping" rationale as Bootstrap\UserBootstrap's
-            // HTTP_X_PIWIGO_API fix (Phase 1d).
+            // The combined "username:password" string must match
+            // authKeyLogin()'s own strict [a-z0-9]-only regex to be
+            // considered valid at all, so it never needs SQL escaping.
             $authenticate = $this->authService->authKeyLogin($params['username'] . ':' . $params['password']);
             if ($authenticate) {
                 $_SESSION['connected_with'] = 'ws_session_login_api_key';
@@ -486,10 +462,9 @@ final class PwgCore
         $res['pwg_token'] = new CsrfService($this->currentConfig)->getToken();
         $res['charset'] = CharsetHelper::getPwgCharset();
 
-        // Env::now() rather than SQL's NOW() -- the real DB-server clock,
-        // invisible to Env::now()'s own PIWIGO_TEST_NOW freeze, same
-        // reasoning as every other NOW()-reading call site this migration
-        // already retargeted.
+        // Env::now() (not SQL's NOW()) so this value can be frozen by
+        // PIWIGO_TEST_NOW in tests -- SQL's NOW() reads the real,
+        // unfreezable DB-server clock.
         $res['current_datetime'] = Env::now()->format('Y-m-d H:i:s');
         $res['version'] = AppInfo::VERSION;
         $res['save_visits'] = $this->historyService->isLoggingAllowed();
@@ -590,14 +565,10 @@ final class PwgCore
             $max = date_format($max_date, 'Y-m-d 23:59:59');
         }
 
-        // SQL-modernization audit, Item 14 Sub-phase B3: $where used to be
-        // a caller-built raw SqlCondition fragment (uid/id/admin-ids were
-        // spliced directly, though always WsParamType::ID-guaranteed ints;
-        // action/object were already Connection::quote()-escaped;
-        // date_min/date_max already passed through date_format(), which
-        // can't emit SQL metacharacters) -- now an ActivityListCriteria,
-        // translated into bound conditions inside ActivityRepository
-        // itself (see that class's own findPaginated() docblock).
+        // uid/id/admin-ids/action/object/date_min/date_max collapse into
+        // an ActivityListCriteria, translated into bound conditions inside
+        // ActivityRepository itself (see that class's own findPaginated()
+        // docblock).
         $connections_mode = $this->currentConfig->activityDisplayConnections();
         $admin_ids = [];
         if ($connections_mode === 'admins_only') {
@@ -908,13 +879,11 @@ final class PwgCore
         }
 
         // filename
-        // realEscapeString() dropped for filename/ip: both fields are
-        // read back later via HistoryRepository::findImageIdsByFilename()/
-        // the 'ip' rate-limit lookup, which already bind the value as a
-        // real DBAL parameter (:pattern/:ip) -- same "dead pre-escaping"
-        // rationale as this phase's other occurrences. The '*' -> '%'
-        // wildcard conversion is unrelated to escaping and stays exactly
-        // as-is.
+        // filename/ip are read back later via
+        // HistoryRepository::findImageIdsByFilename()/the 'ip' rate-limit
+        // lookup, which bind the value as a real DBAL parameter
+        // (:pattern/:ip), so neither needs escaping here. The '*' -> '%'
+        // wildcard conversion below is unrelated to escaping.
         if (! in_array($param['filename'], [null, ''], true)) {
             $search['fields']['filename'] = str_replace('*', '%', $param['filename']);
         }
@@ -973,11 +942,10 @@ final class PwgCore
         $historyEvent = $this->eventDispatcher->dispatchChange(new GetHistory([], $page['search'], $types));
         // GetHistory::$data is a non-nullable PHP `array` property --
         // dispatchChange()'s own instanceof check already guarantees a real
-        // array here, unlike the old mixed-returning trigger_change() --
-        // but PHP has no generic array-shape enforcement, so a misbehaving
-        // handler at a higher priority than historyGet() (the default
-        // handler) could still populate it with non-row-shaped elements;
-        // keep the per-element defensive filter for that.
+        // array here, but PHP has no generic array-shape enforcement, so a
+        // misbehaving handler at a higher priority than historyGet() (the
+        // default handler) could still populate it with non-row-shaped
+        // elements; keep the per-element defensive filter for that.
         /** @var array<int, array<string, mixed>> $data */
         $data = array_values(array_filter($historyEvent->data, is_array(...)));
         $historyService = $this->historyService;
@@ -1002,11 +970,8 @@ final class PwgCore
         foreach ($data as $row) {
             // user_id/category_id/image_id/search_id are int/mediumint/
             // smallint columns -- HistoryRepository::search()'s DBAL
-            // fetchAllAssociative() returns these as native PHP int, not
-            // the mysqli-era guaranteed string; an is_string()-only guard
-            // here silently dropped every real row (found via a Contract
-            // test asserting a logged visit's IMAGEID/username/category
-            // enrichment actually appears in pwg.history.search's results).
+            // fetchAllAssociative() returns these as native PHP int, so the
+            // guard below accepts both int and string.
             $row_user_id = $row['user_id'] ?? null;
             if (is_int($row_user_id) || is_string($row_user_id)) {
                 $user_ids[(string) $row_user_id] = 1;
@@ -1082,11 +1047,9 @@ final class PwgCore
         }
 
         $name_of_category = [];
-        // Declared unconditionally (not just inside the "if" below), matching
-        // $name_of_category above: it is read later regardless of whether
-        // $category_ids was empty here, and previously stayed genuinely
-        // undefined in that case (a real pre-existing bug, not just a PHPStan
-        // false positive).
+        // Declared unconditionally (not just inside the "if" below),
+        // matching $name_of_category above: both are read later regardless
+        // of whether $category_ids is empty here.
         $full_cat_path = [];
         if (count($category_ids) > 0) {
             $uppercats_of = $this->categoryService->getUppercatsById(array_map(intval(...), $category_ids));
@@ -1110,10 +1073,10 @@ final class PwgCore
             $image_infos = $this->imageService->getHistoryDisplayInfoByIds(array_keys($image_ids));
         }
 
-        // Not a real global: written, read (including via the closure
-        // below), and unset() -- all within this one function, and this is
-        // the only place in the codebase that touches $name_of_tag. The
-        // `global` keyword was always redundant; kept as a plain local.
+        // $name_of_tag is a genuinely local variable (not a real global):
+        // written, read (including via the closure below), and unset()
+        // all within this one function -- the only place in the codebase
+        // that touches it.
         $name_of_tag = [];
         if ($has_tags) {
             foreach ($this->tagService->getAll() as $tag) {
@@ -1149,9 +1112,8 @@ final class PwgCore
             // so it is really mixed -- the is_string()/is_int() narrowing
             // below is the real guard, not just defensive boilerplate.
             // user_id/category_id/image_id/search_id are int columns --
-            // DBAL returns native int, not the mysqli-era guaranteed
-            // string, so these 4 need the wider int|string check the
-            // genuinely-string columns below don't.
+            // DBAL returns native int, so these 4 need the wider int|string
+            // check the genuinely-string columns below don't.
             $line_image_type = $line['image_type'] ?? null;
             $line_image_type = is_string($line_image_type) ? $line_image_type : null;
             $line_image_id = $line['image_id'] ?? null;
@@ -1191,8 +1153,8 @@ final class PwgCore
                     $guests_ip[$ip_key] = 0;
                 }
 
-                // always int: either the literal 0 just set above, or a value
-                // this same loop previously wrote as int + 1.
+                // always int: either the literal 0 just set above, or a
+                // value this same loop already wrote as int + 1.
                 $guest_ip_count = $guests_ip[$ip_key];
                 $guests_ip[$ip_key] = $guest_ip_count + 1;
                 $summary['guests_IP'] = $guests_ip;

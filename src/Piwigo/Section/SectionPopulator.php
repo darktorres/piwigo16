@@ -39,36 +39,16 @@ use Piwigo\Users\UserService;
 use Psr\Cache\CacheItemInterface;
 
 /**
- * Ported from include/section_init.inc.php's own remaining body -- the
- * URL-token-parsing half was already extracted to SectionInitializer::
- * parse() in P20 (see that class's own docblock). This is everything
- * downstream of it: builds $page['items']/$page['title'] and everything
- * else GalleryController/PictureController read off $page for the rest of
- * the request -- per-section (categories/tags/search/favorites/
- * recent_pics/recent_cats/most_visited/best_rated/list) item-id queries,
- * chronology dispatch, meta_robots rules, the permalink-mismatch redirect
- * check, and body_classes/body_data.
+ * Builds $page['items']/$page['title'] and everything else
+ * GalleryController/PictureController read off $page for the rest of the
+ * request -- per-section (categories/tags/search/favorites/recent_pics/
+ * recent_cats/most_visited/best_rated/list) item-id queries, chronology
+ * dispatch, meta_robots rules, the permalink-mismatch redirect check, and
+ * body_classes/body_data.
  *
  * A sibling to SectionInitializer rather than a second method on it --
- * genuinely different globals and responsibility (URL parsing vs.
- * $page/$template population + real DB queries), same "one clean
- * responsibility per class" precedent as every other P23 batch 4 renderer.
- *
- * Both real callers (GalleryController, PictureController) already
- * `include` this file at true top-level method scope, before either
- * controller's own render body begins -- confirmed via a full trace of
- * every local variable this file uses: none are a bare read of a
- * variable an outer scope was expected to set (unlike the $edit_comment bug
- * fixed in P23 batch 4a), so wrapping this body in a class method carries
- * no closure-capture risk.
- *
- * The original file was one of the few in this codebase never normalized to
- * this project's strict-comparison PHPStan rules (6 empty()/25 loose "=="
- * baselined under include/section_init.inc.php). Ported to strict
- * comparisons throughout rather than reproducing and re-baselining them,
- * matching every sibling P23 batch 4 file's own already-strict style --
- * behavior-preserving in every case (each conversion accounts for the real
- * runtime type of the value being compared, not a blind ==-to-=== swap).
+ * genuinely different responsibility (URL parsing vs. $page/$template
+ * population + real DB queries).
  */
 final readonly class SectionPopulator
 {
@@ -103,36 +83,25 @@ final readonly class SectionPopulator
         $logger = $this->currentLogger->get();
         $template = $this->template;
 
-        // Legacy Coupling Retirement Track A batch A5.2e: $page is a local
-        // scratch array for this method's own body only (no longer
-        // `global $page;`) -- every line below already only touched it as
-        // if it were local; the only real change is that a SectionContext
-        // gets built from its final contents and registered at the end,
-        // instead of the array itself being visible to other code via the
-        // global. Matches 16.x-rewrite's own SectionInitializer::
-        // initialize(), this batch's reference implementation.
+        // $page is a local scratch array for this method's own body only.
+        // A SectionContext is built from its final contents and
+        // registered at the end.
         /** @var array<string, mixed> */
         $page = [];
 
-        // Legacy Coupling Retirement Track A batch A4: 'order_by' is
-        // progressively narrowed/overridden by several of this method's
-        // section-specific branches below and read back by several others
-        // -- a single local variable threaded through the whole method,
-        // seeded from CurrentConfig::orderBy().
+        // 'order_by' is progressively narrowed/overridden by several of
+        // this method's section-specific branches below and read back by
+        // several others -- a single local variable threaded through the
+        // whole method, seeded from CurrentConfig::orderBy().
         $order_by = $this->currentConfig->orderBy();
 
         $page['items'] = [];
         $page['start'] = $page['startcat'] = 0;
 
-        // Legacy Coupling Retirement Track A batch A5.2e: the real
-        // SectionContext (the full gallery-navigation-context value
-        // object) is built and registered at the very end of this method,
-        // once $page holds its final values -- registering this narrower
-        // URL-parse-only result here would leave a temporarily-wrong
-        // object in the registry for the rest of this method's own
-        // execution. No downstream code reads SectionContextRegistry::
-        // current() mid-request today (confirmed via a full-repo grep),
-        // so deferring the one real set() call to the end is safe.
+        // The real SectionContext is built and registered at the very end
+        // of this method, once $page holds its final values -- no
+        // downstream code reads SectionContextRegistry::current()
+        // mid-request, so deferring the set() call to the end is safe.
         $url_parse = new SectionInitializer($this->htmlRenderer, $this->repo, $this->redirectService, $this->urlService, $this->requestMountDepth, $this->currentConfig)
             ->parse();
 
@@ -159,10 +128,10 @@ final readonly class SectionPopulator
                     // CurrentConfig::randomIndexRedirect() is a map of URL => named
                     // condition string (see include/config_default.inc.php); a
                     // malformed local override shouldn't crash this page.
-                    // [SEC-15] RandomIndexRedirectResolver replaces the
-                    // original's eval($random_url_condition) -- a config value
-                    // with DB write access previously got arbitrary PHP
-                    // execution.
+                    // [SEC-15] RandomIndexRedirectResolver avoids
+                    // eval()'ing the condition string directly -- a config
+                    // value with DB write access could otherwise gain
+                    // arbitrary PHP execution.
                     $redirect_candidates = $this->currentConfig->randomIndexRedirect();
                     $next_token_value = $tokens[$next_token] ?? '';
                     $next_token_is_empty = $next_token_value === '' || $next_token_value === '0';
@@ -254,14 +223,14 @@ final readonly class SectionPopulator
         $forbidden_params = $forbiddenCondition->parameters;
         $forbidden_types = $forbiddenCondition->types;
 
-        // Further SQL-modernization audit, Item 15H: most_visited/
-        // best_rated's own findTopByHitsImageIds()/findTopRatedImageIds()
-        // run as real DQL (their own $order_by is a hardcoded literal
-        // below, not CurrentConfig::orderBy()'s genuinely open-ended
-        // admin-typed text like every other section here) -- needs the
-        // same condition with DQL property paths instead of raw column
-        // names. Computed unconditionally alongside $forbidden, same
-        // convention this file's own $forbidden already follows.
+        // most_visited/best_rated's own findTopByHitsImageIds()/
+        // findTopRatedImageIds() run as real DQL (their own $order_by is a
+        // hardcoded literal below, not CurrentConfig::orderBy()'s genuinely
+        // open-ended admin-typed text like every other section here) --
+        // this needs the same condition expressed with DQL property paths
+        // instead of raw column names. Computed unconditionally alongside
+        // $forbidden, same convention this file's own $forbidden already
+        // follows.
         $forbiddenConditionDql = SqlCondition::combine(
             'AND',
             $permissionCriteria->forbiddenCategoriesCondition('ic.categoryId'),
@@ -727,10 +696,7 @@ final readonly class SectionPopulator
         }
 
         // add meta robots noindex, nofollow to avoid unnecesary robot crawls.
-        // Phase 2 global-residual sweep: retargeted from `global $filter;`
-        // onto Piwigo\Core\FilterState, preserving the same lenient
-        // "not initialized yet -> treat as disabled" fallback the old `??
-        // false` had.
+        // A not-yet-initialized FilterState is treated as disabled.
         $filter_enabled = $this->filterState->isInitialized() && $this->filterState->isEnabled();
         $this->pageState->setMetaRobots(self::computeMetaRobots($page, $filter_enabled));
 
@@ -899,12 +865,7 @@ final readonly class SectionPopulator
     }
 
     /**
-     * The noindex/nofollow decision (originally inline in
-     * include/section_init.inc.php) -- extracted as a pure function so it's
-     * directly Unit-testable, same "extract the one real piece of pure
-     * logic" precedent as CategoryService::filterMenuRows()/
-     * isRecentCategory() and SearchFilterRenderer::
-     * filterAccessibleCategoryIds() from P23 batches 3b/4b/4c.
+     * The noindex/nofollow decision, as a pure function.
      *
      * @param  array<string, mixed>  $page
      * @return array<string, int>
@@ -953,21 +914,13 @@ final readonly class SectionPopulator
     }
 
     /**
-     * The permalink-mismatch redirect decision (originally inline in
-     * include/section_init.inc.php) -- extracted as a pure function for the
-     * same reason as computeMetaRobots() above. Does not itself redirect;
-     * the caller still owns the real check_restrictions()/redirect()/
-     * redirect_http() calls, matching this codebase's established
-     * precedent of keeping exit-triggering calls at the call site, not
-     * buried in an extracted predicate.
+     * The permalink-mismatch redirect decision, as a pure function. Does
+     * not itself redirect; the caller owns the real
+     * checkRestrictions()/redirect()/redirectHttp() calls.
      *
-     * $expectedCatUrlName is str2url($category['name'])), pre-computed by
-     * the caller rather than by this method -- str2url() is a global
-     * free function (include/functions.inc.php) that this project's Unit
-     * suite deliberately does not bootstrap, matching the same "no
-     * free-function calls" constraint every other extracted pure method in
-     * this codebase already follows (CategoryService::isRecentCategory(),
-     * SearchFilterRenderer::filterAccessibleCategoryIds()).
+     * $expectedCatUrlName is str2url($category['name']), pre-computed by
+     * the caller rather than by this method, since str2url() is a global
+     * free function this method avoids calling directly.
      */
     public static function needsPermalinkRedirect(
         ?string $categoryPermalink,

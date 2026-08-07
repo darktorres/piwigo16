@@ -54,9 +54,9 @@ jobs:
           coverage: none
           extensions: ${{ env.PHP_EXTENSIONS }}
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
-      # ECS checks whole files, not diffs, so pre-existing legacy violations
-      # would block unrelated commits — not a real gate until P5 applies --fix
-      # (see docs/PLAN.md P0 step 4 and lefthook.yml's matching `|| true`).
+      # ECS checks whole files, not diffs, so pre-existing violations would
+      # block unrelated commits — non-blocking here, same as lefthook.yml's
+      # matching `|| true`.
       - run: composer lint:php
         continue-on-error: true
 
@@ -83,10 +83,9 @@ jobs:
           restore-keys: ${{ runner.os }}-phpstan-
       - run: vendor/bin/phpstan analyse --no-progress
 
-  # Psalm is not gated in CI (see docs/REFERENCE.md's ADR-0026) —
-  # its global-function-resolution scanner doesn't hold up at this
-  # codebase's current scale/style (non-namespaced procedural legacy
-  # code); resumes once P6+ typed/namespaced refactoring lands.
+  # Psalm is not gated in CI (see docs/REFERENCE.md's ADR-0026) — its
+  # global-function-resolution scanner doesn't hold up at this codebase's
+  # scale/style (non-namespaced procedural legacy code).
 
   rector:
     name: Rector (dry-run, non-blocking)
@@ -100,7 +99,7 @@ jobs:
           coverage: none
           extensions: ${{ env.PHP_EXTENSIONS }}
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
-      # Not applied until P5 — see docs/PLAN.md's Rector strategy.
+      # Dry-run only, non-blocking — see docs/PLAN.md's Rector strategy.
       - run: vendor/bin/rector --dry-run
         continue-on-error: true
 
@@ -117,8 +116,7 @@ jobs:
           extensions: ${{ env.PHP_EXTENSIONS }},pcov
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
       # 0.1 is a ratchet floor just under the measured 0.2% Unit+Arch baseline
-      # (~500 legacy files are un-namespaced and untouched by these suites) —
-      # expected to climb sharply from P5 onward.
+      # (~500 legacy files are un-namespaced and untouched by these suites).
       - run: composer test:coverage
 
   audit:
@@ -133,10 +131,8 @@ jobs:
           coverage: none
           extensions: ${{ env.PHP_EXTENSIONS }}
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
-      # --abandoned=report, not the default (verified: Composer's own
-      # `--abandoned` default is "fail", not "report" -- confirmed live,
-      # this job was failing on the abandoned finding below despite this
-      # comment's original intent). phpbench/phpbench (dev-only
+      # --abandoned=report, not the default (Composer's own `--abandoned`
+      # default is "fail", not "report"). phpbench/phpbench (dev-only
       # benchmarking tool, never shipped) requires doctrine/annotations
       # ^2.0, which Composer flags abandoned with no replacement. Still
       # reported in the log below, just not escalated to a failure for a
@@ -209,7 +205,7 @@ jobs:
           coverage: none
           extensions: ${{ env.PHP_EXTENSIONS }}
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
-      # Runs cleanly with 0 subjects until P12 adds tests/Bench/*.php.
+      # Runs cleanly with 0 subjects; a no-op until tests/Bench/*.php exists.
       - run: vendor/bin/phpbench run --report=aggregate | tee phpbench-report.txt
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -302,8 +298,8 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # tests/Load/*.js doesn't exist until P32 — non-blocking (warning) per
-      # docs/PLAN.md, no-op until then.
+      # tests/Load/*.js doesn't exist yet — non-blocking (warning) per
+      # docs/PLAN.md, a no-op until it's added.
       - if: hashFiles('tests/Load/**') != ''
         run: echo "k6 load surface not present yet (P32)"
 
@@ -341,11 +337,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Every wired-up testsuite directory must contain at least one real
-      # *Test.php file. Catches the exact failure the 16.x-v2 lesson describes:
-      # a testsuite silently running 0 tests (Pest exits 0 on a --filter that
-      # matches nothing inside a non-empty suite, so file presence is the only
-      # reliable signal). tests/Integration/ hit exactly this until this phase
-      # added DatabaseConnectionTest.php.
+      # *Test.php file: Pest exits 0 on a --filter that matches nothing
+      # inside a non-empty suite, so file presence is the only reliable
+      # signal that a testsuite isn't silently running 0 tests.
       - run: |
           set -euo pipefail
           for dir in Unit Arch Integration Contract Browser; do
@@ -366,21 +360,17 @@ jobs:
   # covered by the integration/contract/browser jobs below; MariaDB has no
   # other CI coverage at all, but this job's own smoke+migration proof is
   # its intended scope, not a full-suite duplication. The pgsql leg
-  # additionally runs the full Integration/Contract/Browser suites -- now
-  # that Phase G ported IntegrationTestCase/BrowserTestHelpers off their
-  # former mysqli-only hardcoding, this is the one leg with no other job
-  # anywhere proving Postgres for real.
+  # additionally runs the full Integration/Contract/Browser suites --
+  # IntegrationTestCase/BrowserTestHelpers support Postgres, so this is
+  # the one leg with no other job anywhere proving Postgres for real.
   #
   # `HTTP_X_PIWIGO_ENV=test` is required on every bin/piwigo invocation
   # below -- Piwigo\Core\Env::testModeEnvFile() only loads .env.test (vs.
   # production .env) when that var is set; a bin/piwigo command run
-  # without it silently targets whatever .env would resolve to instead
-  # (confirmed live: an unprefixed `schema:dump` run during this phase's
-  # own verification overwrote install/piwigo_structure-mysql.sql from an
-  # unrelated database before being caught and reverted). Every real Pest
-  # suite (Integration/Contract/Browser/Unit/Arch) sets this for its own
-  # process automatically via tests/bootstrap.php, so only the raw
-  # bin/piwigo steps below need the explicit prefix.
+  # without it silently targets whatever .env would resolve to instead.
+  # Every real Pest suite (Integration/Contract/Browser/Unit/Arch) sets
+  # this for its own process automatically via tests/bootstrap.php, so
+  # only the raw bin/piwigo steps below need the explicit prefix.
   db-multi-provider:
     name: DB layer (${{ matrix.provider }})
     runs-on: ubuntu-latest
@@ -486,11 +476,9 @@ jobs:
       - if: matrix.provider == 'pgsql'
         name: Start PHP built-in server
         run: |
-          # docs/PLAN.md gap-closure, 2026-07-23: -t public, not -t . -- this
-          # job was added later (Phase H) from the recovered pre-fix snapshot,
-          # so it never picked up the same docroot fix already propagated to
-          # every other Browser-suite job in this file (see the install-flow
-          # job's own comment above for the original verified reasoning).
+          # -t public, not -t . -- index.php/health.php/etc. only exist
+          # under public/, not the repo root; see the install-flow job's
+          # server-start step below for the full reasoning.
           php -S localhost:8080 -t public > /tmp/php-server.log 2>&1 &
           until curl -sf http://localhost:8080/index.php > /dev/null; do sleep 0.5; done
       - if: matrix.provider == 'pgsql'
@@ -701,8 +689,7 @@ jobs:
           PIWIGO_DB_PREFIX=piwigo_
           PIWIGO_BASE_URL=http://localhost:8080
           ENVEOF
-      # docs/PLAN.md gap-closure, 2026-07-23: deliberately
-      # skips the 2 steps every other Browser-suite job above has --
+      # Deliberately skips the 2 steps every other Browser-suite job above has --
       # "Provision piwigo_test from the committed fixture" and `touch
       # local/.installed.test` -- both exist specifically so the *other*
       # ~70 tests (which assume an already-installed, fixture-loaded app)
@@ -714,17 +701,12 @@ jobs:
       # permanent, silent skip.
       - name: Start PHP built-in server
         run: |
-          # docs/PLAN.md gap-closure, 2026-07-23: -t public, not
-          # -t . -- verified directly (a real `php -S -t .` + `curl
-          # /index.php` locally) that `-t .` 404s immediately at the PHP dev
+          # -t public, not -t . -- `-t .` 404s immediately at the PHP dev
           # server's own routing layer, before any application code runs,
           # since index.php/health.php/etc. only exist under public/, not
-          # the repo root. This job's own health-check would spin until
-          # timeout-minutes with -t . -- the other Browser-suite jobs above
-          # carried the same bug (each burning its own full timeout every
-          # run) until it was propagated to them too; this job's own
-          # /health.php choice (see below) is unrelated to that fix and
-          # stays deliberate for this job's own reasons.
+          # the repo root. This job's own /health.php choice (see below)
+          # is unrelated to that and stays deliberate for this job's own
+          # reasons.
           php -S localhost:8080 -t public > /tmp/php-server.log 2>&1 &
           # health.php (not the clean /health URL -- that needs
           # .htaccess's RewriteRule, which php -S doesn't process) is
@@ -888,8 +870,8 @@ jobs:
         run: |
           php -S 127.0.0.1:8123 -t public > /tmp/php-server.log 2>&1 &
           until curl -sf http://127.0.0.1:8123/index.php > /dev/null; do sleep 0.5; done
-      # lighthouserc.json has no `assert` block yet (P10 adds real budgets) —
-      # collect + upload-to-filesystem only, cannot fail on scores today.
+      # lighthouserc.json has no `assert` block yet — collect +
+      # upload-to-filesystem only, cannot fail on scores today.
       - run: bunx lhci autorun
 
   # ── Supply chain (SEC-50, SEC-53) ────────────────────────────────────────
@@ -925,11 +907,9 @@ jobs:
       # (requires >= 9.0.0) via the invoking package manager's own env vars
       # — bunx sets those to point at bun itself, which cyclonedx-npm can't
       # parse as an npm version, failing with "Unsupported NPM version.
-      # Expected >= 9.0.0, got <bun's own version>" (confirmed live, and
-      # confirmed this was already failing in CI on the existing v5.0.0
-      # pin, unrelated to any version bump — real npm is already set up on
-      # PATH via actions/setup-node above, so npx is a correct, no-new-
-      # dependency fix, not a workaround).
+      # Expected >= 9.0.0, got <bun's own version>". Real npm is already
+      # set up on PATH via actions/setup-node above, so npx is a correct,
+      # no-new-dependency fix, not a workaround.
       - run: npx --yes @cyclonedx/cyclonedx-npm --package-lock-only --output-format JSON --output-file sbom-npm.cdx.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -946,7 +926,7 @@ jobs:
             sbom-composer.cdx.json
             sbom-npm.cdx.json
 
-  # ── Deployment: SEC-01 deny-rule verification (P4) ───────────────────────
+  # ── Deployment: SEC-01 deny-rule verification ────────────────────────────
   # Additive to, not a replacement for, the php -S-based suites above — the
   # only thing these two jobs test is that the shipped .htaccess/Caddyfile
   # deny rules actually work on every server this project ships, which
@@ -965,32 +945,26 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends apache2
           sudo a2enmod rewrite
-          # Confirmed via a real failing run's Apache error log (AH00035
-          # "search permissions are missing on a component of the path"),
-          # not assumed: /home/runner/work is owned by the `runner` user
-          # and isn't traversable by www-data (the default APACHE_RUN_USER),
-          # so the OS denies every request under this checkout before
-          # Apache's own <Directory>/.htaccess logic ever runs -- every
-          # "expected 403" assertion in this job happened to pass for the
-          # wrong reason (blocked by this OS-level wall, not by any
-          # rewrite rule), which is why this stayed hidden until the one
-          # assertion below that expects 200 instead. An explicit
+          # /home/runner/work is owned by the `runner` user and isn't
+          # traversable by www-data (the default APACHE_RUN_USER), so the
+          # OS denies every request under this checkout before Apache's
+          # own <Directory>/.htaccess logic ever runs. An explicit
           # <Directory> grant can't fix this -- Apache's authorization
-          # phase is never reached. Simplest correct fix: run this
-          # throwaway CI-only Apache as the `runner` user, which already
-          # owns the whole checkout.
+          # phase is never reached. This throwaway CI-only Apache instead
+          # runs as the `runner` user, which already owns the whole
+          # checkout.
           sudo sed -i \
             -e 's/^export APACHE_RUN_USER=.*/export APACHE_RUN_USER=runner/' \
             -e 's/^export APACHE_RUN_GROUP=.*/export APACHE_RUN_GROUP=runner/' \
             /etc/apache2/envvars
-      # Part II (web-root isolation): upload/, _data/i, _data/logs are
-      # .gitignore'd runtime data, absent from a bare checkout -- created
-      # here as real files so the new assertions below prove an existing,
-      # readable-on-disk file is still unreachable over HTTP, not just
-      # "this path happens not to exist". galleries/language/plugins/local/
-      # already ship a real tracked index.php each, reused as-is.
       - name: Create representative permission-gated fixture files
         run: |
+          # upload/, _data/i, _data/logs are .gitignore'd runtime data, absent
+          # from a bare checkout -- created here as real files so the
+          # assertions below prove an existing, readable-on-disk file is
+          # still unreachable over HTTP, not just "this path happens not to
+          # exist". galleries/language/plugins/local/ already ship a real
+          # tracked index.php each, reused as-is.
           mkdir -p upload/2026/01/01 _data/i _data/logs
           echo fixture > upload/2026/01/01/photo.jpg
           echo fixture > _data/i/derivative-th.jpg
@@ -1011,15 +985,12 @@ jobs:
           until curl -s -o /dev/null http://localhost/; do sleep 0.5; done
       - name: Assert SEC-01-listed paths are still denied (unchanged by the move)
         run: |
-          # Verified empirically (a throwaway isolated Apache instance, not
-          # assumed): mod_rewrite's RewriteCond %{REQUEST_URI} match fires
-          # against the literal request URI text at the DocumentRoot's own
-          # .htaccess (now public/.htaccess), independent of whether the
-          # matched path segment corresponds to a real file/directory under
-          # the new, smaller DocumentRoot -- so these paths were already
-          # 403 before Part II and stay exactly 403 after it, not 404. The
-          # move doesn't change anything for this category; it's re-asserted
-          # here only as a regression guard on the rule itself.
+          # mod_rewrite's RewriteCond %{REQUEST_URI} match fires against
+          # the literal request URI text at the DocumentRoot's own
+          # public/.htaccess, independent of whether the matched path
+          # segment corresponds to a real file/directory under
+          # DocumentRoot -- so these paths return 403, not 404. Re-asserted
+          # here as a regression guard on the rule itself.
           for path in tools/index.php install/config.sql tests/Fixtures/piwigo-17.0.sql \
               vendor/autoload.php node_modules/.bin/vite docs/PLAN.md deploy/helm/piwigo/values.yaml \
               composer.json composer.lock package.json bun.lock phpstan.neon psalm.xml rector.php ecs.php \
@@ -1036,16 +1007,13 @@ jobs:
           done
       - name: Assert vendor/ nested under themes/ stays reachable (SEC-01 gap-closure)
         run: |
-          # docs/PLAN.md gap-closure, 2026-07-23: the SEC-01
-          # vendor/ deny rule used to be unanchored across the *whole*
-          # combined regex, matching /vendor/ anywhere in the path --
-          # including themes/default/vendor/fontello/, the theme's own
-          # bundled icon font, 403ing every gallery-icon glyph sitewide.
-          # This job already asserted the real top-level vendor/ above
-          # (vendor/autoload.php -> 403) but never asserted the reverse:
-          # that a legitimate nested vendor/ under themes/ isn't swept up
-          # by the same rule. Added as a permanent regression guard so this
-          # exact class of over-broad-regex bug can't recur silently.
+          # The SEC-01 vendor/ deny rule is anchored so it doesn't match
+          # /vendor/ anywhere in the path -- this asserts a legitimate
+          # nested vendor/ under themes/ (themes/default/vendor/fontello/,
+          # the theme's own bundled icon font) isn't swept up by the same
+          # rule the top-level vendor/autoload.php check above exercises.
+          # A permanent regression guard against that class of
+          # over-broad-regex bug.
           for path in themes/default/vendor/fontello/css/gallery-icon.css \
               themes/default/vendor/fontello/font/gallery-icon.woff2; do
             status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost/${path}")
@@ -1055,13 +1023,11 @@ jobs:
               exit 1
             fi
           done
-      # Root-caused via this step's own output on a real failing run (not
-      # local guessing, which never reproduced the bug): the "Install
-      # Apache" step's APACHE_RUN_USER=runner fix above addresses the real
-      # cause (AH00035, an OS-level permission wall, not the .htaccess rule
-      # or any Directory/Require config). Kept as a standing on-failure
-      # diagnostic for this job, matching the "Container logs" pattern
-      # below in container-deny-rules.
+      # The "Install Apache" step's APACHE_RUN_USER=runner fix above
+      # addresses the real cause (AH00035, an OS-level permission wall,
+      # not the .htaccess rule or any Directory/Require config). Kept as
+      # a standing on-failure diagnostic for this job, matching the
+      # "Container logs" pattern below in container-deny-rules.
       - name: Debug Apache state on failure
         if: failure()
         run: |
@@ -1084,15 +1050,11 @@ jobs:
           echo "::endgroup::"
       - name: Assert permission-gated content is now structurally unreachable (SEC-33/35/38/47)
         run: |
-          # The real Part II fix, previously untested: unlike the SEC-01
-          # list above, none of these paths ever matched a deny rule --
-          # before Part II they were served directly off disk (DocumentRoot
-          # was the repo root), bypassing i.php's/action.php's own
-          # permission checks entirely for anyone who knew/guessed the URL.
-          # Now they're simply outside DocumentRoot (public/), so they 404
-          # like any nonexistent URL -- confirmed a real, on-disk file at
-          # each of these paths still gets a plain 404, not a deny-rule 403
-          # (there is no rule that would produce one).
+          # Unlike the SEC-01 list above, none of these paths ever match a
+          # deny rule -- they're simply outside DocumentRoot (public/), so
+          # a direct request 404s like any nonexistent URL instead of
+          # serving the file off disk and bypassing i.php's/action.php's
+          # own permission checks.
           for path in upload/2026/01/01/photo.jpg galleries/index.php local/index.php \
               language/index.php plugins/index.php \
               _data/i/derivative-th.jpg _data/logs/piwigo.log; do
@@ -1111,10 +1073,8 @@ jobs:
           # below and the php -S-based suites above. Just confirm the rewrite
           # target isn't itself swept up by the /(config|tools|...)/deny match,
           # and that public/'s 3 symlinks (themes/, dist/, _data/combined/)
-          # still resolve through the new DocumentRoot -- FollowSymLinks is
-          # required (and set) in the vhost above. (The former separate
-          # admin/themes symlink is gone -- its target relocated to
-          # themes/admin/, already covered by the themes/ symlink.)
+          # still resolve through DocumentRoot -- FollowSymLinks is
+          # required (and set) in the vhost above.
           for path in health ready; do
             status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost/${path}")
             echo "GET /${path} -> ${status}"
@@ -1161,16 +1121,15 @@ jobs:
           done
       - name: Assert permission-gated content is structurally unreachable (SEC-33/35/38/47)
         run: |
-          # Part II: Caddyfile's root is now /app/public, not /app -- unlike
-          # the @denied/@denied_files matchers above (URL-pattern rules,
-          # unaffected by the root change, still fire the same way), these
-          # paths never had a matching rule at all. They were NOT actually
-          # 404ing on "outside root" alone, though: php_server's default
-          # try_files (`{path} {path}/index.php index.php`) silently routed
-          # any non-static path to index.php instead, returning 200 (found
-          # live, verified against Caddy's own docs) -- the
-          # @deniedRelocated/@deniedData matchers added above close that gap
-          # with an explicit 403, same as the @denied/@denied_files paths.
+          # Caddyfile's root is /app/public -- unlike the @denied/
+          # @denied_files matchers above (URL-pattern rules, unaffected by
+          # the root) which still fire the same way, these paths have no
+          # matching deny rule of their own. Without one, php_server's
+          # default try_files (`{path} {path}/index.php index.php`) would
+          # silently route any non-static path to index.php instead,
+          # returning 200 -- the @deniedRelocated/@deniedData matchers
+          # close that gap with an explicit 403, same as the
+          # @denied/@denied_files paths.
           # The Dockerfile's production stage already mkdir's _data/local/
           # galleries/upload empty and chowns them to www-data -- write a
           # real file into the running container so this proves an

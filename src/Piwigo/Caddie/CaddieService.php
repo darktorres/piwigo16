@@ -9,11 +9,9 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Users\CurrentUser;
 
 /**
- * P23 batch 8d: relocated from include/functions.inc.php's fill_caddie(),
- * unchanged logic -- a real caller-facing wrapper around
- * CaddieRepository::addElements() resolving the current user id, kept out
- * of CaddieRepository itself (a pure DB-access class, no `global $user`
- * reads elsewhere in it).
+ * Caller-facing wrapper around CaddieRepository::addElements() that
+ * resolves the current user id. Kept out of CaddieRepository itself,
+ * which is a pure DB-access class with no `global $user` reads.
  */
 final class CaddieService
 {

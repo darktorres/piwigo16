@@ -9,14 +9,11 @@ use Piwigo\Core\Kernel;
 use Piwigo\PluginConfig\EventDispatcher;
 
 /**
- * Singleton/service-locator elimination campaign, Phase 12 sub-phase 12F-9:
- * replaces the deleted `EventDispatcher::get()` transitional shim for test
- * call sites -- reproduces its exact behavior (the real container-shared
- * instance once Kernel has booted, a MEMOIZED, not fresh-per-call,
- * instance otherwise). EventDispatcher accumulates handler registrations
- * across many separate addEventHandler() calls, then dispatches to them
- * from other call sites entirely -- a fresh instance per call would
- * silently lose every handler registered since the last call.
+ * Returns the container-shared instance once Kernel has booted. Before
+ * boot, returns a memoized fallback instance: EventDispatcher accumulates
+ * handler registrations across separate addEventHandler() calls and
+ * dispatches to them from other call sites, so a fresh instance per call
+ * would silently lose every handler registered since the last call.
  */
 final class EventDispatcherTestFactory
 {

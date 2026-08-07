@@ -7,9 +7,8 @@ namespace Piwigo\Users;
 /**
  * Per-user preferences: a single JSON object on user_infos.preferences,
  * mirrored into `CurrentUser::get()->preferences` for the lifetime of the
- * request (Legacy Coupling Retirement Track A batch A3 -- previously
- * `global $user['preferences']`). Constructor-injects UserRepository,
- * plain constructor injection (same shape as PermalinkService/GroupService).
+ * request. Constructor-injects UserRepository, plain constructor injection
+ * (same shape as PermalinkService/GroupService).
  */
 final readonly class PreferencesService
 {

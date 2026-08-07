@@ -9,24 +9,23 @@ use Piwigo\Category\CategoryService;
 use Psr\Cache\CacheItemPoolInterface;
 
 /**
- * Per-user cached wrapper around the *effective* permission snapshot --
- * gap-closure Stage 4b/4c/4d/4e (docs/plan/gap-closure-p0-p23.md), replacing
- * `user_cache.forbidden_categories`/`image_access_type`/`image_access_list`/
- * `nb_total_images`/`last_photo_date`. Computed together, matching
- * `UserService::getUserData()`'s own dependency chain: `imageAccessType`/
- * `imageAccessList`/`nbTotalImages` are all derived from the *structural*
- * forbidden-categories value (before the feature-1053 widening below), not
- * the effective one -- preserving that exact distinction is why this isn't
- * simply {@see ForbiddenCategoriesCache} plus 4 more fields.
+ * Per-user cached wrapper around the "effective" permission snapshot:
+ * `forbiddenCategories`, `imageAccessType`, `imageAccessList`,
+ * `nbTotalImages`, and `lastPhotoDate`. These are computed together
+ * because `imageAccessType`/`imageAccessList`/`nbTotalImages` are all
+ * derived from the *structural* forbidden-categories value (before the
+ * widening below), not the effective one -- preserving that exact
+ * distinction is why this isn't simply {@see ForbiddenCategoriesCache}
+ * plus 4 more fields.
  *
  * "Effective" forbidden categories = the structural value from
  * {@see PermissionService::getForbiddenCategories()} (same as
  * {@see ForbiddenCategoriesCache}), PLUS -- for non-admins only -- every
- * category with zero visible images (feature 1053), found via
- * {@see CategoryService::getComputedCategories()} -- called unconditionally
- * (matching the legacy code's own real behavior, not gated by admin status)
- * since `lastPhotoDate` is a real byproduct every status needs; only the
- * *widening loop* below is admin-gated.
+ * category with zero visible images, found via
+ * {@see CategoryService::getComputedCategories()} -- called
+ * unconditionally, not gated by admin status, since `lastPhotoDate` is a
+ * real byproduct every status needs; only the *widening loop* below is
+ * admin-gated.
  *
  * NOT the same value as `Filter\FilterService`'s own, separately-computed
  * `last_photo_date` -- that one deliberately passes a non-null `$filterDays`
@@ -35,24 +34,21 @@ use Psr\Cache\CacheItemPoolInterface;
  * ({@see \Piwigo\Category\CategoryRepository::findComputedCategoriesRollup()}'s
  * own `$imagesJoinCondition` docblock), so it can genuinely differ from this
  * class's unfiltered (`$filterDays = null`) value. Merging them into one
- * cache entry would silently break whichever computation is scoped
- * differently -- confirmed by reading that method's real SQL before
- * assuming this class could just absorb it too.
+ * cache entry would conflate two differently-scoped computations.
  *
- * 30s TTL ({@see \Piwigo\Cache\CachePools::effectivePermissions()}) means a
- * permission change becomes visible well within one user session, long
- * enough to avoid recomputing this multi-query calculation on every request
- * for the same user.
+ * 30s TTL ({@see \Piwigo\Cache\CachePools::effectivePermissions()}) keeps a
+ * permission change visible well within one user session, while avoiding
+ * recomputing this multi-query calculation on every request for the same
+ * user.
  *
  * A separate class rather than a PermissionService/UserService method, same
  * reasoning as {@see ForbiddenCategoriesCache}: both are constructed
  * directly (`new X(...)`, no DI container) at many call sites -- adding a
  * cache dependency to either constructor would break every one of them.
  *
- * Used directly by `UserService::getUserData()` -- gap-closure Stage 4g
- * deleted that method's old `$useCache`-gated `user_cache`-regenerating
- * block outright and replaced it with an unconditional call into this
- * class, so there is no separate legacy writer left to go stale against.
+ * `UserService::getUserData()` calls this class unconditionally to
+ * populate its permission-derived fields, so there is no separate writer
+ * of that data to go stale against.
  */
 final readonly class EffectiveForbiddenCategoriesCache
 {
@@ -65,9 +61,9 @@ final readonly class EffectiveForbiddenCategoriesCache
     ) {}
 
     /**
-     * @param  int|string  $level  `user_infos.level` -- DBAL returns this
-     *   tinyint column as a native int, not the mysqli-style string every
-     *   other caller of this class's SQL fragments historically assumed.
+     * @param  int|string  $level  `user_infos.level` as returned by DBAL: a
+     *   native int for this tinyint column; the parameter also accepts a
+     *   numeric string since not every caller passes the DBAL-native type.
      * @return array{forbiddenCategories: string, imageAccessType: string, imageAccessList: string, nbTotalImages: string, lastPhotoDate: ?string}
      */
     public function getForUser(int $userId, string $userStatus, int|string $level): array
@@ -125,9 +121,8 @@ final readonly class EffectiveForbiddenCategoriesCache
 
         $nbTotalImages = $this->permissionRepository->countAccessibleImages($structuralForbidden, $imageAccessType, $imageAccessList);
 
-        // Called unconditionally, matching the legacy code's own real
-        // behavior -- lastPhotoDate below is a real byproduct every status
-        // needs; only the widening loop that follows is admin-gated.
+        // Called unconditionally: lastPhotoDate below is needed for every
+        // user status; only the widening loop that follows is admin-gated.
         $computedCategories = $this->categoryService->getComputedCategories([
             'id' => $userId,
             'level' => $level,

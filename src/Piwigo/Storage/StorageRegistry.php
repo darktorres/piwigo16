@@ -17,16 +17,11 @@ use Piwigo\Core\Paths;
  * Named disks: uploads, derivatives, watermarks, themes, plugins, exports,
  *              local, temp.
  *
- * Singleton/service-locator elimination campaign, Phase 2: the value
- * never actually varies per request (always built from the same
- * config/storage.php), so -- same lesson as the Phase 0 pilot
- * (CurrentPersistentCache) -- there's no "current instance" concept
- * genuinely needed here: this is a plain container-resolved service
+ * The value never varies per request (always built from the same
+ * config/storage.php), so this is a plain container-resolved service
  * (`factory(...)` entry in config/container.php calling fromConfig()
  * below), not a self-managed static facade. Every real reader takes it
- * via constructor injection -- the transitional `disk()` shim (Phase 2)
- * was deleted in Phase 10 once `Piwigo\Ws\PwgImages`, its last remaining
- * caller, converted to real injection.
+ * via constructor injection.
  */
 final class StorageRegistry
 {
@@ -49,12 +44,10 @@ final class StorageRegistry
      * config/container.php calls this with a fixed
      * dirname(__DIR__) . '/config/storage.php' path, same "value never
      * varies per request" reasoning as Router::class's own routes.php
-     * binding. Singleton/service-locator elimination campaign, Phase 12
-     * sub-phase 12F-10: config/storage.php itself returns a closure now
-     * (was a plain array built from CurrentPaths::get()/
-     * CurrentConfig::current() reads, since a plain `require`d array file
-     * has no constructor/parameter seam of its own) -- $paths/
-     * $currentConfig are real params threaded through to it here instead.
+     * binding. config/storage.php returns a closure (a plain `require`d
+     * array file has no constructor/parameter seam of its own), so
+     * $paths/$currentConfig are threaded through to it here as real
+     * parameters.
      */
     public static function fromConfig(string $configPath, Paths $paths, CurrentConfig $currentConfig): self
     {

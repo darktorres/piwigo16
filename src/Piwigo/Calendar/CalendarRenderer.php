@@ -36,26 +36,19 @@ use Piwigo\Users\CurrentUser;
 use Psr\Cache\CacheItemInterface;
 
 /**
- * P23 batch 8c: ported from `initialize_calendar()`
- * (`include/functions_calendar.inc.php`, deleted) -- the `$page`/
- * `$template`-coupled half of that function (chronology style/view
- * resolution, calendar object construction, the view-switcher UI links)
- * that {@see CalendarService}'s own docblock had already documented as
- * staying outside the DB-query-builder split. Single real caller:
+ * The `$page`/`$template`-coupled half of category-page calendar
+ * rendering: chronology style/view resolution, calendar object
+ * construction, and the view-switcher UI links. Single real caller:
  * `SectionPopulator::populate()`.
  *
- * Legacy Coupling Retirement Track A batch A5.2e: render() took explicit
- * inputs and returns a {@see CalendarRenderResult} instead of reading/
- * writing `global $page;` directly -- SectionPopulator calls this from
- * *inside* its own section-context-building method, before any
- * SectionContext exists yet to read via SectionContextRegistry (an
- * "in-flight collaborator", not a downstream reader, per the batch's own
- * adversarial-validation findings). CalendarBase/CalendarMonthly/
- * CalendarWeekly got the same treatment (their own `global $page;` reads/
- * writes of `chronology_field`/`chronology_date`/`chronology_view` became
- * plain mutable instance properties on the calendar object, set by this
- * class before calling into them) since they're called synchronously from
- * within this method's own render chain and shared the identical coupling.
+ * render() takes explicit inputs and returns a {@see CalendarRenderResult}
+ * rather than reading/writing `global $page;` directly. SectionPopulator
+ * calls this from inside its own section-context-building method, before
+ * any SectionContext exists to read via SectionContextRegistry, so this
+ * class cannot rely on that registry. CalendarBase/CalendarMonthly/
+ * CalendarWeekly's `chronology_field`/`chronology_date`/`chronology_view`
+ * are plain mutable instance properties on the calendar object, set by
+ * this class before calling into them.
  */
 final readonly class CalendarRenderer
 {

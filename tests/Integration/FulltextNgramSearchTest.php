@@ -17,10 +17,10 @@ use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
 
 /**
- * Phase 5 Item 22: `categories`/`images`/`tags`' own `FULLTEXT` indexes now
- * use `WITH PARSER ngram` (`install/piwigo_structure-mysql.sql`) instead of
- * MySQL's default whitespace-tokenizing parser -- the default parser can't
- * match CJK text at all (no word-separating whitespace to tokenize on).
+ * `categories`/`images`/`tags`' own `FULLTEXT` indexes use `WITH PARSER
+ * ngram` (`install/piwigo_structure-mysql.sql`) instead of MySQL's default
+ * whitespace-tokenizing parser -- the default parser can't match CJK text
+ * at all (no word-separating whitespace to tokenize on).
  *
  * `ngram_token_size` is 2, and MySQL's own default INNODB stopword list
  * includes short, common fragments like `at`/`in`/`on` -- confirmed live
@@ -55,14 +55,14 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
         parent::setUp();
         $this->setUpConnectionFromEnv();
 
-        // pgsql support pass: this whole class exercises MySQL/InnoDB's
-        // own `WITH PARSER ngram` FULLTEXT mechanism directly (raw
-        // MATCH()/AGAINST() queries) -- a MySQL-specific tokenizer/
-        // stopword-index-creation-time behavior with no Postgres
-        // equivalent at all, not a portability gap. PostgreSQL's own
-        // FULLTEXT parity (tsvector/to_tsquery via the `simple`
-        // dictionary) is a genuinely different mechanism, already
-        // covered separately by SearchFulltextPortabilityTest.
+        // This whole class exercises MySQL/InnoDB's own `WITH PARSER
+        // ngram` FULLTEXT mechanism directly (raw MATCH()/AGAINST()
+        // queries) -- a MySQL-specific tokenizer/stopword-index-creation-
+        // time behavior with no Postgres equivalent at all, not a
+        // portability gap. PostgreSQL's own FULLTEXT parity
+        // (tsvector/to_tsquery via the `simple` dictionary) is a genuinely
+        // different mechanism, covered separately by
+        // SearchFulltextPortabilityTest.
         if ($this->dbDriver === 'pgsql') {
             self::markTestSkipped('This class exercises MySQL/InnoDB\'s own ngram FULLTEXT parser directly -- no Postgres equivalent; see SearchFulltextPortabilityTest for the Postgres tsquery/tsvector coverage instead.');
         }
@@ -100,9 +100,10 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
 
     public function test_ngram_parser_finds_a_word_containing_a_stopword_fragment(): void
     {
-        // "cat" contains "at" (a default INNODB stopword) -- the real
-        // regression this whole item's own fix targets. Real category
-        // write path (BatchWriter::singleInsert()), completely unmodified.
+        // "cat" contains "at" (a default INNODB stopword) -- a word
+        // containing a stopword fragment must still be findable through
+        // the real category write path (BatchWriter::singleInsert()),
+        // unmodified for this test.
         $catId = $this->insertCategory('My Cats and Vacation Photos');
 
         $hits = $this->fetchCount(
@@ -117,7 +118,7 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
     {
         // Real tag write path (TagRepository::insert(), a direct
         // persist()+flush(), not BatchWriter) -- a separate real write
-        // path this fix also needs to cover correctly.
+        // path from the category test above.
         $tag = 'vacation-' . bin2hex(random_bytes(4));
         $tagId = $this->tagRepo->insert($tag, $tag);
 
@@ -132,7 +133,7 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
     public function test_ngram_parser_still_matches_an_ordinary_word_without_any_stopword_fragment(): void
     {
         // Non-regression check: an ordinary word with no stopword-fragment
-        // interaction at all must keep matching, same as before this item.
+        // interaction at all must keep matching.
         $catId = $this->insertCategory('Mountain Landscape');
 
         $hits = $this->fetchCount(

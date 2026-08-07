@@ -144,12 +144,6 @@ final class SearchController implements ControllerInterface
 
             $cat_id = $cat_id_value;
 
-            // P23 batch 3: user_cache_categories's row-existence check below
-            // used to mean "category exists AND isn't forbidden/empty for
-            // this user" -- exactly what build_user()/getuserdata()
-            // (include/functions_user.inc.php) already computes into
-            // CurrentUser::get()->forbiddenCategories (see SearchService::
-            // qsearchGetCategories()'s identical fix for the full trace).
             $forbidden_categories = $this->currentUser->get()
                 ->forbiddenCategories;
             $forbidden_categories_csv = $forbidden_categories !== '' ? $forbidden_categories : '0';

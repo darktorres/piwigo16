@@ -14,27 +14,20 @@ use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\SessionServiceTestFactory;
 
-// Phase 2 global-residual sweep: FilterService::updateCatsWithFilteredData()
-// now reads Piwigo\Core\FilterState instead of `global $filter;`. The old
-// "categories is not an array" defensive-read test is gone with it, not
-// just updated -- FilterState::categories() is typed `array` and
-// FilterState::set()'s own $categories param is too, so that scenario is
-// no longer constructible through the public API; the equivalent
-// defensive guard (a corrupted unserialize() result) now lives once, at
-// the write site in FilterService::initializeFromRequest() itself, not on
-// every read.
+// FilterService::updateCatsWithFilteredData() reads Piwigo\Core\FilterState.
+// FilterState::categories() and FilterState::set()'s $categories parameter
+// are both typed `array`, so a non-array categories value cannot be
+// constructed through the public API; the defensive guard for a corrupted
+// unserialize() result lives at the write site in
+// FilterService::initializeFromRequest(), not on every read.
 //
-// Singleton/service-locator elimination campaign, Phase 2: FilterState is
-// now a container-shared instance, constructor-injected into FilterService
-// -- each test constructs its own fresh instance directly, no
-// reset()/Kernel::boot() needed.
+// FilterState is a container-shared instance, constructor-injected into
+// FilterService -- each test constructs its own fresh instance directly,
+// no Kernel::boot() needed.
 //
-// Phase 8: FilterService also takes a constructor-injected Lang -- this
-// file never boots Kernel, so resolving the real container-shared
-// instance (no memoized pre-boot fallback) isn't an option; a throwaway
-// instance is built directly instead, matching the same "real, cheap,
-// DB-free collaborators" recipe used throughout this campaign's own test
-// fallout fixes.
+// FilterService also takes a constructor-injected Lang. This file never
+// boots Kernel, so resolving the real container-shared instance isn't an
+// option here; a throwaway instance is built directly instead.
 function filterServiceTestLang(): Lang
 {
     return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());

@@ -27,15 +27,12 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
 /**
- * Picture had zero tests in any suite before this file (Stage 1c's own
- * flagged priority -- the historical $edit_comment scope-sharing bug this
- * class's own docblock documents). Covers the 3 branches of render()
- * reachable without a DB: the "no commentable category" early return, and
- * the 2 reject-response throws -- every other branch needs a real
- * CommentRepository row (findForImage()/countForImage()), which is a DB
- * call and stays at Integration level (see
- * tests/Integration/PictureCommentRendererTest.php for the
- * edit/delete permission-gating + the bug-fix regression check).
+ * Covers the 3 branches of render() reachable without a DB: the "no
+ * commentable category" early return, and the 2 reject-response throws --
+ * every other branch needs a real CommentRepository row
+ * (findForImage()/countForImage()), which is a DB call and stays at
+ * Integration level (see tests/Integration/PictureCommentRendererTest.php
+ * for the edit/delete permission-gating + the bug-fix regression check).
  */
 function picture_comment_test_rrmdir(string $dir): void
 {
@@ -78,8 +75,7 @@ beforeEach(function (): void {
     // current() resolves, or current() resolves the pre-boot memoized
     // fallback instead of the now-booted container's own instance, and
     // this set() call is invisible to every later current()->get() read
-    // in this file (Phase 5 execution finding, same pitfall Translator/
-    // EventDispatcher/CurrentUser already hit).
+    // in this file (same pitfall as Translator/EventDispatcher/CurrentUser).
     $template = makePictureCommentTestTemplate();
     CurrentTemplate::current()->set($template);
     CurrentUserTestFactory::get()->set(new User(

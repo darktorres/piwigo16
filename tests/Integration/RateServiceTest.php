@@ -2,14 +2,11 @@
 
 declare(strict_types=1);
 
-// RateService now calls Piwigo\Auth\AccessControl::isAuthorizeStatus()
-// directly (P23 batch 8d), which reads Piwigo\Users\CurrentUser (Legacy
-// Coupling Retirement Track A batch A3) -- tests below seed CurrentUser
-// instead.
-// CookieService::cookiePath() no longer reads PHPWG_ROOT_PATH (Legacy
-// Coupling Retirement gap-closure, entry-shell define()/include round --
-// it reads Piwigo\Core\RequestMountDepth instead, which defaults to 0,
-// matching the old PHPWG_ROOT_PATH='.' default with no setup needed here).
+// RateService calls Piwigo\Auth\AccessControl::isAuthorizeStatus()
+// directly, which reads Piwigo\Users\CurrentUser -- tests below seed
+// CurrentUser instead.
+// CookieService::cookiePath() reads Piwigo\Core\RequestMountDepth, which
+// defaults to 0, so no setup is needed here.
 namespace Piwigo\Tests\Integration {
 
     use Override;

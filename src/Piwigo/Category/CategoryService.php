@@ -47,20 +47,9 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 
 /**
- * Category domain business logic, ported from the deleted
- * `include/functions_category.inc.php`'s 17 functions (P23 batch 8c
- * folded the remaining `$page`/`$template`-coupled ones in here too --
- * `checkRestrictions()`, `getCategoriesMenu()`, `displaySelectCategories()`/
- * `displaySelectCatWrapper()`, `getRelatedCategoriesMenuWithUrls()` --
- * none type-hint `Template`/`$page`'s callers anywhere, only read the
- * globals via a docblock-typed `global`, same "no hard class dependency"
- * shape already established by `Piwigo\Category\CategoryDefaultRenderer`
- * importing `Template` the same way with 0 deptrac violations).
+ * Category domain business logic.
  *
- * P23 batch 8d file 3 added 17 more (`admin/include/functions.php`'s
- * Categories domain group -- `sync_users()` went to
- * `Piwigo\Users\UserService` instead, wrong domain despite the file
- * grouping). `Activity` is L2bExtendedDomain; {@see deleteSite()}/
+ * `Activity` is L2bExtendedDomain; {@see deleteSite()}/
  * {@see deleteCategories()}/{@see moveCategories()}/
  * {@see createVirtualCategory()} need it to log activity, but
  * constructor-injecting `ActivityLoggerInterface` (this class's usual
@@ -87,9 +76,8 @@ final readonly class CategoryService
      * getComputedCategories()'s own internal RecentIconResolver::getIcon()
      * call below. A required constructor param here would ripple across
      * this class's own ~21 real construction sites for the sake of this
-     * one internal read (singleton/service-locator elimination campaign,
-     * Phase 11 sub-phase 11G). Falls back to a fresh, unmemoized instance
-     * when Kernel::boot() hasn't run, matching ProcessCache::getStatic()/
+     * one internal read. Falls back to a fresh, unmemoized instance when
+     * Kernel::boot() hasn't run, matching ProcessCache::getStatic()/
      * setStatic()'s own identical pre-boot fallback.
      */
     private function processCache(): ProcessCache
@@ -186,15 +174,11 @@ final readonly class CategoryService
     }
 
     /**
-     * PHP-side port of `get_recent_photos_sql()`'s (`include/
-     * functions_user.inc.php`) SQL fragment: `$dbField >= LEAST(today -
-     * $recentPeriod days, $lastPhotoDate - 1 day)`. P23 batch 4b's
-     * CategoryCatsRenderer applies this per already-cached tree row
-     * (CategoryTreeCache) instead of building a SQL `WHERE`, matching the
-     * same existence-filter-over-cached-data pattern batch 3a/3b already
-     * established. $lastPhotoDate === null matches the original's own
-     * `if (!isset($user['last_photo_date'])) return '0=1';` -- nothing is
-     * ever "recent" without it, not merely half of the LEAST() comparison.
+     * PHP-side equivalent of the SQL fragment `$dbField >= LEAST(today -
+     * $recentPeriod days, $lastPhotoDate - 1 day)`. CategoryCatsRenderer
+     * applies this per already-cached tree row (CategoryTreeCache) instead
+     * of building a SQL `WHERE`. $lastPhotoDate === null means nothing is
+     * ever "recent" -- not merely half of the LEAST() comparison.
      */
     public static function isRecentCategory(?string $dateLast, int $recentPeriod, ?string $lastPhotoDate, DateTimeImmutable $now): bool
     {
@@ -212,14 +196,12 @@ final readonly class CategoryService
     }
 
     /**
-     * `get_categories_menu()`'s (`include/functions_category.inc.php`) menu
-     * filter, extracted as a pure function so it's testable without that
-     * free function's `$page`/`$user`/`$filter`/`$conf` global dependencies
-     * -- P23 batch 3b replaced `findMenuCategories()`'s SQL `WHERE` (a
-     * structural `id_uppercat` filter, or `PermissionService::
-     * getSqlConditionFandF()`'s `visible_categories` condition) with this
-     * PHP-side equivalent, applied to `CategoryTreeCache`'s cached,
-     * permission-filtered row set.
+     * Menu filter extracted as a pure function for testability,
+     * independent of `$page`/`$user`/`$filter`/`$conf` globals. PHP-side
+     * equivalent of a SQL `WHERE` filter (a structural `id_uppercat`
+     * filter, or `PermissionService::getSqlConditionFandF()`'s
+     * `visible_categories` condition), applied to `CategoryTreeCache`'s
+     * cached, permission-filtered row set.
      *
      * @param array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}> $allRows keyed by category id,
      *   already permission-filtered (CategoryTreeCache::getForUser())
@@ -709,19 +691,16 @@ final readonly class CategoryService
     /**
      * Returns template vars for main categories menu.
      *
-     * P23 batch 8f-1: `FilterUpdaterInterface` is an explicit parameter
-     * here, not a constructor dependency, for the same reason as
+     * `FilterUpdaterInterface` is an explicit parameter here, not a
+     * constructor dependency, for the same reason as
      * `ActivityLoggerInterface` above (~45 real construction sites, the
      * vast majority pure-read and never touching filtered-category data;
      * this is the one method that does).
      *
-     * Legacy Coupling Retirement Track A batch A5.2e: $category is an
-     * explicit param instead of `global $page['category']`. This method
-     * also used to write `count_categories` back onto that same global
-     * array once it located the matching menu row (for the caller's own
-     * later `$page['category']['count_categories']` read) -- with no
-     * global left to mutate, that value comes back through the return
-     * shape instead.
+     * $category is an explicit param, not a global read. Once the
+     * matching menu row is located, its `count_categories` value comes
+     * back through the `categoryCountCategories` return field rather
+     * than being written back into caller state.
      *
      * 'menu' rows extend CategoryTreeCache::getForUser()'s own row shape
      * with template-display fields (NAME/TITLE/URL/LEVEL/SELECTED/
@@ -738,16 +717,14 @@ final readonly class CategoryService
         $categoryPage = $category;
         $countCategories = null;
 
-        // P23 batch 3b: findMenuCategories()'s SQL WHERE (structural id_uppercat
-        // filter, or PermissionService::getSqlConditionFandF()'s
-        // visible_categories condition) is replaced by an equivalent PHP-side
-        // filter applied to CategoryTreeCache's cached, permission-filtered row
-        // set -- see that class's own docblock for why this can no longer be
-        // pushed down to SQL (it no longer reads from a DB-backed cache table).
-        // The get_categories_menu_sql_where trigger_change() hook is dropped:
-        // grep confirms zero real handlers exist for it anywhere in this repo,
-        // and its whole contract (mutate a SQL string) has no PHP-filter
-        // equivalent worth inventing for zero real consumers.
+        // findMenuCategories()'s SQL WHERE (structural id_uppercat filter, or
+        // PermissionService::getSqlConditionFandF()'s visible_categories
+        // condition) is expressed here as an equivalent PHP-side filter
+        // applied to CategoryTreeCache's cached, permission-filtered row set
+        // -- see that class's own docblock for why this can't be pushed down
+        // to SQL (it doesn't read from a DB-backed cache table). No
+        // get_categories_menu_sql_where trigger_change() handler exists
+        // anywhere in this repo, so there is no PHP-filter equivalent for it.
         $allRows = new CategoryTreeCache(
             $this,
             $this->repo,
@@ -989,25 +966,18 @@ final readonly class CategoryService
     }
 
     /**
-     * Same as getRelatedCategoriesMenu(), plus the page-URL decoration
-     * (`url` key) the former free function get_related_categories_menu()
-     * (functions_category.inc.php, P23 batch 8c) added afterward from
-     * `$page`/`make_index_url()`.
+     * Same as getRelatedCategoriesMenu(), plus page-URL decoration (`url`
+     * key) built via UrlService.
      *
      * NOTE: 'combined_categories' below carries $cat AFTER
      * getRelatedCategoriesMenu()'s own RenderCategoryName
-     * dispatchChange() already ran on 'name' (the original built this
-     * array BEFORE that render), so UrlService::makeIndexUrl()'s id-name
-     * style would embed the *rendered* name instead of the raw one if a
-     * RenderCategoryName handler is ever registered (none are today --
+     * dispatchChange() already ran on 'name', so UrlService::makeIndexUrl()'s
+     * id-name style would embed the *rendered* name instead of the raw one
+     * if a RenderCategoryName handler is ever registered (none are today --
      * PEM extensions are unwired, and RenderCategoryName is currently
      * `readonly` (no core handler mutates it either) -- so this is
-     * currently a no-op difference). Re-verify once P28 wires real event
-     * handlers.
-     *
-     * Legacy Coupling Retirement Track A batch A5.2e: $category/
-     * $combinedCategories are explicit params instead of
-     * `global $page['category']`/`['combined_categories']`.
+     * currently a no-op difference). Re-verify if a RenderCategoryName
+     * handler is ever registered.
      *
      * $category/$combinedCategories are SectionContext::$category-shaped
      * (only used wholesale as UrlService params here, never read by key);
@@ -1220,7 +1190,7 @@ final readonly class CategoryService
      * $categories is raw request input (Admin\AlbumsPageRenderer's $_POST-
      * derived array, Ws\PwgCategories' $order_new WS param) -- already
      * defensively is_array()/is_int()/is_string()-checked per element; a
-     * real validating shape belongs to Phase 4's Request DTOs, not a
+     * real validating shape belongs to a dedicated Request DTO, not a
      * retroactive narrow here.
      *
      * @param array<int, mixed> $categories

@@ -13,24 +13,21 @@ use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Url\UrlService;
 
 /**
- * DI-migration follow-on to gap-closure Stage 4: typed accessors to
- * container-resolved L3Presentation services, for the many non-Bootstrap
- * callers (static Ws method handlers, Admin page renderers, etc.) that
- * can't call `Kernel::container()` directly (arch-test-restricted to
- * `Bootstrap/` + root `index.php`, `tests/Arch/StructuralTest.php`).
- * Same shape as the established `Bootstrap\RedirectService::userService()`
- * precedent, already consumed cross-namespace today by
+ * Typed accessors to container-resolved L3Presentation services, for the
+ * many non-Bootstrap callers (static Ws method handlers, Admin page
+ * renderers, etc.) that can't call `Kernel::container()` directly
+ * (arch-test-restricted to `Bootstrap/` + root `index.php`,
+ * `tests/Arch/StructuralTest.php`). Same shape as
+ * `Bootstrap\RedirectService::userService()`, consumed cross-namespace by
  * `Ws\PwgExtensions.php`/`Ws\PwgImages.php` -- `Admin`/`Bootstrap`/
  * `Command`/`Controller`/`Job`/`Ws` are all the same deptrac
- * `L4Integration` layer, so this same-layer dependency is already
- * architecturally allowed, not just tolerated.
+ * `L4Integration` layer, so this same-layer dependency is architecturally
+ * allowed.
  *
- * `HtmlService`/`MailService`/`UrlService` were previously constructed
- * manually (`new HtmlService()` etc.) at ~440 real call sites across the
- * codebase despite being fully autowirable already -- `Connection::class`
- * is registered in `config/container.php`, and every interface these
- * classes implement (`HtmlRenderingInterface`, `MailerInterface`,
- * `UrlServiceInterface`) is already bound there too.
+ * `HtmlService`/`MailService`/`UrlService` are fully autowirable:
+ * `Connection::class` is registered in `config/container.php`, and every
+ * interface these classes implement (`HtmlRenderingInterface`,
+ * `MailerInterface`, `UrlServiceInterface`) is bound there too.
  */
 final class PresentationAccessor
 {

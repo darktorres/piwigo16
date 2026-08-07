@@ -13,21 +13,16 @@ use Piwigo\Session\PwgSession;
 use Piwigo\Session\SessionService;
 
 /**
- * Installs Piwigo's DB-backed session save handler before session_start()
- * — the top-level bootstrap body of the deleted
- * include/functions_session.inc.php (P23 sub-batch 8f-5; that file's own
- * docblock deferred exactly this relocation to this sub-batch), ported
- * verbatim. SessionMiddleware's docblock documents this as the thing that
- * registers PwgSession as the save handler "on every real request" for
- * the legacy (non-P22-pipeline) bootstrap path.
+ * Installs Piwigo's DB-backed session save handler before session_start().
+ * SessionMiddleware's docblock documents this as the thing that registers
+ * PwgSession as the save handler on every real request for the legacy
+ * bootstrap path.
  *
  * Lives in Bootstrap (L4), not Piwigo\Session (L1): the body constructs
  * Piwigo\Auth\CookieService (L2a), an upward dependency L1 may not take —
  * same "only violation-free home" reasoning as UserBootstrap. Called from
  * RequestBootstrap::connect() on every request, and directly by
- * public/install.php (upgrade.php/upgrade_feed.php were deleted in full by
- * the Stage 0 legacy in-place upgrade chain removal; no upgrade entry
- * script remains).
+ * public/install.php.
  *
  * In PHP 8.4+ calling session_set_save_handler with two parameters is
  * deprecated. To correct this, we pass a SessionHandlerInterface instance.
@@ -70,12 +65,8 @@ final class SessionBootstrap
     }
 
     /**
-     * Resolves the container-shared instance instead of the
-     * InstallationFlag::isActiveStatic() shim -- this class already has
-     * direct Kernel::container() access (arch-tested to Bootstrap/ only),
-     * so the shim here was only ever style consistency, not a structural
-     * need (singleton/service-locator elimination campaign, Phase 12
-     * sub-phase 12B).
+     * Resolves the container-shared instance -- this class already has
+     * direct Kernel::container() access (arch-tested to Bootstrap/ only).
      */
     private static function installationFlag(): InstallationFlag
     {

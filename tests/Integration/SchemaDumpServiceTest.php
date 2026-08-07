@@ -12,28 +12,23 @@ use Piwigo\Db\SchemaDumpService;
 
 /**
  * Covers whichever platform `.env.test`'s PIWIGO_DB_DRIVER points this
- * Integration suite run at (pgsql support pass: this class used to be
- * MySQL-only, deferring PostgreSQL entirely to Phase H's future
- * db-multi-provider CI matrix job -- moot once the driver-aware Phase G
- * pass made this suite itself runnable against either platform. Real bug
- * found live once it actually ran against Postgres: `dump()`'s own real
- * behavior correctly detects the connected platform and writes
- * `piwigo_structure-pgsql.sql` in that case, but this test's own
- * snapshot/restore -- and its `label` assertion -- were still hardcoded
- * to the MySQL file/label, leaving the real pgsql file mutated with no
- * restore).
+ * Integration suite run at (MySQL or PostgreSQL): `dump()`'s own real
+ * behavior detects the connected platform and writes
+ * `piwigo_structure-{mysql,pgsql}.sql` accordingly, and this test's own
+ * snapshot/restore and `label` assertion follow the same detected
+ * platform.
  *
  * SchemaDumpService::dump() writes to the real, tracked
  * install/piwigo_structure-{mysql,pgsql}.sql (there's no test-injectable
  * output path -- schema:dump is meant to run against a genuinely blank,
  * freshly-migrated database and overwrite that file for real). The
- * fixture DB here is a captured historical snapshot, not a fresh
- * Migrator run, so its schema can carry harmless rendering differences
- * (e.g. a redundant per-column CHARACTER SET clause matching the table's
- * own default) that don't reflect real drift -- snapshot/restore the
- * file around this test the same way other Integration tests here
- * snapshot/restore real env/global state, so running this test never
- * leaves an uncommitted diff in the working tree.
+ * fixture DB here is a captured snapshot, not a fresh Migrator run, so
+ * its schema can carry harmless rendering differences (e.g. a redundant
+ * per-column CHARACTER SET clause matching the table's own default) that
+ * don't reflect real drift -- snapshot/restore the file around this test
+ * the same way other Integration tests here snapshot/restore real
+ * env/global state, so running this test never leaves an uncommitted
+ * diff in the working tree.
  */
 final class SchemaDumpServiceTest extends IntegrationTestCase
 {

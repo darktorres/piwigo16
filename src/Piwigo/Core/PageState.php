@@ -7,68 +7,27 @@ namespace Piwigo\Core;
 /**
  * Typed reader/writer for the per-request page state.
  *
- * `attachGlobals()` used to reference-bridge `$GLOBALS['page']`/
- * `$GLOBALS['header_msgs']`/`$GLOBALS['header_notes']` onto this
- * singleton's properties, for legacy code that wrote `$page['errors'][] =
- * 'msg'` directly. Re-investigated and confirmed dead ("nothing is frozen"
- * gap-closure): `global $page` has zero hits repo-wide, and the two real
- * consumers this docblock used to cite (PageHeaderRenderer.php,
- * RequestBootstrap.php) already read `headerNotes`/`headerMessages` off a
- * real instance, never the raw global -- PageHeaderRenderer.php's own
- * render() now takes `PageState` as an explicit parameter, and
- * RequestBootstrap resolves it via its own `pageState()` accessor. The
- * bridge and `include/common.inc.php`'s own `$page`/`$GLOBALS['header_msgs']`/
- * `$GLOBALS['header_notes']` seeding are both gone.
+ * Container-shared; a zero-arg public constructor needs no
+ * `container.php` entry.
  *
- * Singleton/service-locator elimination campaign, Phase 4: converted to a
- * plain, container-shared instance (default autowiring -- a zero-arg
- * public constructor needs no `container.php` entry at all). The former
- * `attachGlobals()` seeding-point marker is gone entirely: constructing
- * this class no longer has any globals-bridging work to do, and
- * `RequestBootstrap` now simply resolves the shared instance from the
- * container like every other converted class in this campaign. The former
- * `current()` transitional `@deprecated` shim for callers not yet
- * converted to constructor injection closed outright in sub-phase 12F-7.
+ * `metaRobots` follows the same "computed early by one of several
+ * controllers, consumed once by PageHeaderRenderer at final page-render
+ * time" shape as bodyClasses/bodyData -- SectionPopulator computes it for
+ * gallery/picture pages, but PictureController/PopuphelpController/
+ * AdminPopuphelpController/NotificationController each set it
+ * independently for their own non-gallery pages, so it belongs here
+ * rather than on SectionContext, which only exists for the
+ * gallery-navigation-context cluster.
  *
- * Deliberately no `keyedErrors`/`setKeyedError()` (present in the plan
- * doc's inline sketch) -- no legacy correspondent and no real caller exist
- * yet; a per-field validation shape like that belongs with whichever
- * P17-23 phase first builds real form validation.
+ * `authKeyId` is request-wide auth-method state (AuthService::
+ * tryAuthKeyLogin() sets it, HistoryService::logVisit() reads it),
+ * uniform across all of logVisit()'s mutually-exclusive callers -- unlike
+ * section/category/tagIds (per-caller gallery-navigation values, threaded
+ * as explicit params), any of logVisit()'s callers could equally be
+ * reached via an auth-keyed request, so an ambient read here is correct.
  *
- * `metaRobots` (Legacy Coupling Retirement Track A batch A5.2g) is the
- * same "computed early by one of several controllers, consumed once by
- * PageHeaderRenderer at final page-render time" shape as bodyClasses/
- * bodyData -- SectionPopulator computes it for gallery/picture pages,
- * but PictureController/PopuphelpController/AdminPopuphelpController/
- * NotificationController each set it independently for their own
- * non-gallery pages, so it belongs here rather than on SectionContext
- * (which only exists for the gallery-navigation-context cluster, B1).
- *
- * `authKeyId` (batch A5.2h) is request-wide auth-method state
- * (AuthService::tryAuthKeyLogin() sets it, HistoryService::logVisit()
- * reads it), uniform across all 3 of logVisit()'s mutually-exclusive
- * callers -- unlike section/category/tagIds (real per-caller gallery-
- * navigation values, threaded as explicit params), any of logVisit()'s
- * callers could equally be reached via an auth-keyed request, so an
- * ambient read here is correct, not a repeat of that same-shaped
- * mistake.
- *
- * `countQueries`/`queriesTime` (batch A5.2h) are a running per-request
- * accumulator incremented by MysqliDb::query() on every database query;
- * TimingHelper/PageTailRenderer read the running total. No
- * `attachGlobals()` bridging for `authKeyId`/`countQueries`/
- * `queriesTime` -- confirmed via a repo-wide grep that every real
- * reader/writer is retargeted in this same batch, so there is no
- * remaining legacy consumer left to bridge for.
- *
- * `bodyId`/`pageBanner`/`nbPendingComments`/`noMd5sumNumber`/
- * `updatedVersion`/`authKeyInvalid`/`notifyApiKeyExpiration` (batch
- * A5.2i) were found by a final exhaustive repo-wide `$page` sweep done
- * while closing out Track A5.2 Phase B -- small single-writer-or-few
- * -writers/single-reader clusters missed by the original B1/page-slug/
- * meta_robots/tab-cluster batches. Same "no attachGlobals() bridging"
- * rule applies: every real reader/writer is retargeted in this same
- * batch.
+ * `countQueries`/`queriesTime` are a running per-request accumulator;
+ * TimingHelper/PageTailRenderer read the running total.
  */
 final class PageState
 {
@@ -132,28 +91,25 @@ final class PageState
     public float $queriesTime = 0.0;
 
     /**
-     * The instant (microtime(true)) this request began -- former
-     * `global $t2`. Still captured at the seam's true top-level scope
-     * (include/common.inc.php, before the autoload boundary, for maximum
-     * precision) and handed off here early in
-     * RequestBootstrap::configure()'s body (right after its own
-     * Kernel::boot() call, Legacy Coupling Retirement Phase 8 8a); every
-     * other consumer reads it from here.
+     * The instant (`microtime(true)`) this request began. Captured at
+     * `include/common.inc.php`'s top-level scope, before the autoload
+     * boundary, for maximum precision, and handed off here early in
+     * `RequestBootstrap::configure()`'s body (right after its own
+     * `Kernel::boot()` call); every other consumer reads it from here.
      */
     public float $requestStart = 0.0;
 
     /**
-     * Accumulated debug-mode query/timing HTML, shown in the page footer
-     * -- former `global $debug`, only ever populated when
-     * CurrentConfig::showQueries() is on.
+     * Accumulated debug-mode query/timing HTML, shown in the page footer.
+     * Only populated when CurrentConfig::showQueries() is on.
      */
     public string $debugOutput = '';
 
     /**
-     * Batch A5.2i: the CSS id assigned to the page's `<body>` tag, set by
-     * whichever of 13 controllers handled the request (each assigns its own
-     * fixed literal, e.g. 'theCategoryPage'/'theProfilePage') and read once
-     * by PageHeaderRenderer. Ambient like metaRobots/bodyClasses -- no
+     * The CSS id assigned to the page's `<body>` tag, set by whichever of
+     * 13 controllers handled the request (each assigns its own fixed
+     * literal, e.g. 'theCategoryPage'/'theProfilePage') and read once by
+     * PageHeaderRenderer. Ambient like metaRobots/bodyClasses -- no
      * per-caller variation, just "whichever controller ran, set this once."
      */
     public string $bodyId = '';
@@ -184,13 +140,8 @@ final class PageState
     public ?array $notifyApiKeyExpiration = null;
 
     /**
-     * Comment domain's own anti-spam rejection reasons (P26/SEC-40:
-     * CommentService::pushCrReason() used to accumulate these into
-     * `$_POST['cr']`, an undocumented debugging side-channel with no real
-     * reader anywhere in the app -- "rvelices: I use this outside to see
-     * how spam robots work", per that method's own original comment --
-     * moved here, the established per-request accumulator home, instead
-     * of a request superglobal.
+     * Comment domain's own anti-spam rejection reasons, accumulated here
+     * rather than via a request superglobal.
      *
      * @var list<string>
      */
@@ -312,12 +263,10 @@ final class PageState
     }
 
     /**
-     * Accumulates both counters together, matching the legacy MysqliDb::
-     * query()'s own original combined increment -- MysqliDb itself has
-     * since been removed (DB access now goes through Piwigo\Db\
-     * DbConnection), and no current call site invokes this method in
-     * production; countQueries/queriesTime stay at 0 outside of tests
-     * that call it directly.
+     * Accumulates both counters together. No current call site invokes
+     * this method in production (DB access goes through
+     * `Piwigo\Db\DbConnection`), so `countQueries`/`queriesTime` stay at 0
+     * outside of tests that call it directly.
      */
     public function addQueryTime(float $time): void
     {

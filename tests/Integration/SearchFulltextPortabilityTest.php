@@ -48,20 +48,19 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 /**
  * Covers qsearchGetTextTokenSearchSql()'s real per-platform FULLTEXT/
- * REGEXP branches (Piwigo\Db\* Phase F of the pgsql-support pass) end to
- * end -- built clause + real execution against real inserted rows, on
- * whichever engine .env.test currently points at (via the shared
- * DbConnection::build()), same "run against whatever's configured, no
- * driver-specific skip" approach MigrationUpgradePathTest.php already
- * established.
+ * REGEXP branches end to end -- built clause + real execution against
+ * real inserted rows, on whichever engine .env.test currently points at
+ * (via the shared DbConnection::build()), the same "run against whatever's
+ * configured, no driver-specific skip" approach MigrationUpgradePathTest.php
+ * uses.
  *
- * Deliberately does NOT extend the shared fixture-loading path
- * (resetDatabase()/loadFixture() are still mysqli-hardcoded, Phase G) --
- * inserts and cleans up its own disposable category rows directly against
- * whatever schema is already there (the committed MySQL fixture on the
- * default .env.test, or a freshly Migrator-built schema when manually
- * pointed at Postgres), the same "don't touch the real baseline" shape
- * MigrationUpgradePathTest.php/SchemaDumpServiceTest.php already use.
+ * Does not use the shared fixture-loading path (resetDatabase()/
+ * loadFixture() are mysqli-hardcoded) -- inserts and cleans up its own
+ * disposable category rows directly against whatever schema is already
+ * there (the committed MySQL fixture on the default .env.test, or a
+ * freshly Migrator-built schema when manually pointed at Postgres), the
+ * same "don't touch the real baseline" shape MigrationUpgradePathTest.php/
+ * SchemaDumpServiceTest.php use.
  */
 final class SearchFulltextPortabilityTest extends IntegrationTestCase
 {
@@ -216,12 +215,9 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
 
     /**
      * A short term (<=3 chars) always falls back to the REGEXP/~*
-     * word-boundary branch, never FULLTEXT -- and is exactly the
-     * historically-risky case (the MySQL ngram-stopword bug Version
-     * 20260804122300's own SET SESSION fix addresses; the case-
-     * insensitivity gap this Postgres branch itself needed a real ~*
-     * fix for, not a bare ~ -- see qsearchGetTextTokenSearchSql()'s own
-     * docblock).
+     * word-boundary branch, never FULLTEXT. On Postgres this requires the
+     * case-insensitive `~*` operator, not a bare `~` -- see
+     * qsearchGetTextTokenSearchSql()'s own docblock.
      */
     public function test_short_term_regexp_search_matches_a_whole_word_case_insensitively_but_not_a_substring(): void
     {

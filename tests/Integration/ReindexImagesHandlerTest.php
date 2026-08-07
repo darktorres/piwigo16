@@ -27,12 +27,11 @@ use Piwigo\Metadata\MetadataService;
 /**
  * Only exercises the empty-$imageIds path -- MetadataRepository::
  * findImagesByIds([]) short-circuits to `return []` before any real EXIF
- * file read, and TagService::setTagsOf() (still called unconditionally at
- * the end of syncMetadata(), P23 batch 8d Tags sub-batch) safely no-ops on
- * an empty tag map. A full real EXIF resync round-trip is already covered
- * by MetadataServiceTest/the P19 live-verification (see project memory) --
- * this test's job is only to prove ReindexImagesHandler correctly
- * delegates to MetadataService.
+ * file read, and TagService::setTagsOf() (called unconditionally at the
+ * end of syncMetadata()) safely no-ops on an empty tag map. A full real
+ * EXIF resync round-trip is covered by MetadataServiceTest; this test's
+ * job is only to prove ReindexImagesHandler correctly delegates to
+ * MetadataService.
  */
 final class ReindexImagesHandlerTest extends IntegrationTestCase
 {

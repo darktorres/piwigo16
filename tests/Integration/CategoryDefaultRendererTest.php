@@ -109,9 +109,8 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $htmlService = HtmlServiceTestFactory::build();
         // thumbnails.tpl's own {assign var=derivative
         // value=$pwg->derivative(...)} constructs a real DerivativeImage per
-        // thumbnail, whose get_url() now resolves UrlServiceInterface live
-        // from the container (singleton/service-locator elimination
-        // campaign, Phase 6) -- $urlService below must share the same
+        // thumbnail, whose get_url() resolves UrlServiceInterface live from
+        // the container -- $urlService below must share the same
         // container-shared RootPathOverride for setMakeFullUrl()-style
         // state to be visible across both, see that class's own docblock.
         $rootPathOverride = Kernel::container()->get(RootPathOverride::class);
@@ -267,8 +266,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $this->setImageHit(3, 17);
 
         // show_nb_hits=true makes thumbnails.tpl assign+display NB_HITS via
-        // the "translate_dec" modifier (fixed bug: it used to call the
-        // deprecated $pwg->l10n_dec() method directly).
+        // the "translate_dec" modifier.
         $this->renderer->render([3], 0, 1, 'most_visited');
 
         $html = $this->renderedThumbnailsHtml();
@@ -309,9 +307,8 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
 
         $html = $this->renderedThumbnailsHtml();
         // thumbnails.tpl renders NB_COMMENTS via the "translate_dec"
-        // modifier (fixed bug: it used to call the deprecated
-        // $pwg->l10n_dec() method directly) -- exercises the other of the
-        // 2 call sites that bug touched (NB_HITS is covered above).
+        // modifier -- the other of its 2 call sites (NB_HITS is covered
+        // above).
         self::assertStringContainsString('1 comment', $html);
         self::assertStringNotContainsString('1 comments', $html);
     }

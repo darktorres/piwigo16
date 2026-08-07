@@ -9,8 +9,7 @@ use RuntimeException;
 
 /**
  * Container-shared instance holding the current request's
- * `ThemeConfProviderInterface` implementation -- singleton/service-locator
- * elimination campaign, Phase 6.
+ * `ThemeConfProviderInterface` implementation.
  *
  * Deliberately *not* a delegate to `Piwigo\Template\CurrentTemplate`, even
  * though `Template implements ThemeConfProviderInterface` and is the only

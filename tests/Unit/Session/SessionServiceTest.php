@@ -38,9 +38,9 @@ function makeSessionService(?CurrentConfig $currentConfig = null): SessionServic
 // tests/bootstrap.php loads real PIWIGO_DB_* vars for the whole Pest
 // process -- save + restore PIWIGO_DB_HOST specifically, since
 // makeSessionService() above overwrites the real one with a deliberately
-// unreachable host and DbCredentials::current() (a pure shim now, Phase 3,
-// with no independent state of its own to un-poison -- it re-derives from
-// the process env fresh every call in this file, since Kernel never boots
+// unreachable host and DbCredentials::current() (a pure shim with no
+// independent state of its own to un-poison -- it re-derives from the
+// process env fresh every call in this file, since Kernel never boots
 // here) has no other mechanism to un-poison it for tests running later in
 // the same process.
 $originalDbHost = null;
@@ -146,14 +146,13 @@ test('getRemoteAddrSessionHash returns empty string for an ipv6 REMOTE_ADDR', fu
 });
 
 test('getRemoteAddrSessionHash returns empty string instead of throwing when REMOTE_ADDR is unset', function (): void {
-    // Real bug, found via a new Integration test that legitimately creates
-    // a session outside a real HTTP request (a CLI-driven install/
-    // bootstrap flow, with no REMOTE_ADDR at all): IpAddress::fromRemoteAddr()
-    // returns null, ->value ?? '' resolves to '', and explode('.', '')
-    // used to be handed straight to vsprintf('%02X%02X', ...), which
-    // throws a ValueError for a 1-element array instead of falling back
-    // to the same "no real IP" empty-string result this method already
-    // returns for ipv6.
+    // A session created outside a real HTTP request (a CLI-driven install/
+    // bootstrap flow, with no REMOTE_ADDR at all) hits IpAddress::
+    // fromRemoteAddr() returning null: ->value ?? '' resolves to '', and
+    // explode('.', '') yields a 1-element array, which fails the
+    // 4-element ipv4 check and falls back to the same "no real IP"
+    // empty-string result this method already returns for ipv6, rather
+    // than throwing a ValueError from vsprintf('%02X%02X', ...).
     unset($_SERVER['REMOTE_ADDR']);
     $currentConfig = new CurrentConfig();
     $currentConfig->setSessionUseIpAddress(true);
@@ -265,13 +264,12 @@ test('sessionWrite short-circuits to true without touching the repository when t
     // Same "never touches the repository's DB-backed methods" shape as
     // this file's own header comment: if this short-circuit branch
     // (SessionService's own private lazy apiKeyRequestFlag() helper,
-    // reading the same container-shared instance seeded below -- Phase 11
-    // sub-phase 11G) were broken and control fell through to
-    // $this->repo->write(), that would attempt a real connection to the
-    // deliberately unreachable PIWIGO_DB_HOST set up by
-    // makeSessionService() and this test would error out instead of
-    // passing -- so a clean `true` result here is itself proof the
-    // repository was never reached.
+    // reading the same container-shared instance seeded below) were
+    // broken and control fell through to $this->repo->write(), that would
+    // attempt a real connection to the deliberately unreachable
+    // PIWIGO_DB_HOST set up by makeSessionService() and this test would
+    // error out instead of passing -- so a clean `true` result here is
+    // itself proof the repository was never reached.
     $service = makeSessionService();
     Kernel::boot();
     $flag = Kernel::container()->get(ApiKeyRequestFlag::class);

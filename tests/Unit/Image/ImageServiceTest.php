@@ -348,22 +348,22 @@ function imageServiceTestConnAndRepo(): array
 }
 
 /**
- * ImageService's own $lang constructor param (singleton/service-locator
- * elimination campaign, Phase 8) is only ever read via its private
- * categoryService() helper, whose sole real caller (deleteElements())
- * confirmed-dead-code guards it behind `$categoryIds !== []` against the
- * real schema's own cascading FKs -- see ImageService's own class
- * docblock. Which real Lang instance backs it therefore never affects
- * any behavior exercised below, but this file mixes tests that boot a
- * real Kernel (via an inline Kernel::boot()/Kernel::reset() pair) with
- * plenty that never do -- a bare LangTestFactory::get() would throw in every
- * one of the latter, so Kernel::isBooted() picks the right shape for
- * whichever test happens to be calling this. imageServiceTestSeedCurrentLogger()
- * also boots Kernel, but via a bare `Kernel::boot()` with no Paths
- * argument (it only needs CurrentLogger) -- that leaves Piwigo\Core\Paths
- * itself unresolvable in the container, so LangTestFactory::get() (which needs
- * one) still throws even though Kernel::isBooted() is true; falling back
- * to the same throwaway construction covers that case too.
+ * ImageService's own $lang constructor param is only ever read via its
+ * private categoryService() helper, whose sole real caller
+ * (deleteElements()) confirmed-dead-code guards it behind
+ * `$categoryIds !== []` against the real schema's own cascading FKs --
+ * see ImageService's own class docblock. Which real Lang instance backs
+ * it therefore never affects any behavior exercised below, but this file
+ * mixes tests that boot a real Kernel (via an inline Kernel::boot()/
+ * Kernel::reset() pair) with plenty that never do -- a bare
+ * LangTestFactory::get() would throw in every one of the latter, so
+ * Kernel::isBooted() picks the right shape for whichever test happens to
+ * be calling this. imageServiceTestSeedCurrentLogger() also boots Kernel,
+ * but via a bare `Kernel::boot()` with no Paths argument (it only needs
+ * CurrentLogger) -- that leaves Piwigo\Core\Paths itself unresolvable in
+ * the container, so LangTestFactory::get() (which needs one) still
+ * throws even though Kernel::isBooted() is true; falling back to the
+ * same throwaway construction covers that case too.
  */
 function imageServiceTestLang(): Lang
 {
@@ -848,17 +848,13 @@ test('deleteElements() with an empty id list never fires begin_delete_elements a
 // always [], so both the real `!==` and the mutant `===`/negated forms
 // agree on never entering the branch.
 //
-// Item 16E: repo->deleteElementReferences($ids) (formerly called here,
-// right before deleteImages($ids)) was removed entirely -- an
-// earlier item had already confirmed it was equivalent-to-absent (see
-// git history) via live sed-mutation testing, for the same reason
-// re-confirmed and acted on here: every table it touched (comments,
-// image_category, image_format, image_tag, favorites, rate, caddie)
-// carries its own real `ON DELETE CASCADE` FK straight to `images.id`
-// (tests/Fixtures/piwigo-17.0.sql), so deleteImages($ids) below already
-// removes every one of those rows itself, via cascade. See
-// ImageRepositoryTest.php's own "deleteImages cascades away rows from
-// every real referencing table" test for direct coverage of this.
+// Every table that references images (comments, image_category,
+// image_format, image_tag, favorites, rate, caddie) carries its own real
+// `ON DELETE CASCADE` FK straight to `images.id` (tests/Fixtures/piwigo-17.0.sql),
+// so deleteImages($ids) below already removes every one of those rows
+// itself, via cascade. See ImageRepositoryTest.php's own "deleteImages
+// cascades away rows from every real referencing table" test for direct
+// coverage of this.
 
 test('associateImagesToCategories() returns false and does nothing when either list is empty', function (): void {
     [$conn, $repo] = imageServiceTestConnAndRepo();
@@ -1184,10 +1180,8 @@ function imageServiceTestReadLogMessages(string $logPath): array
 
 /**
  * emptyLounge() reads CurrentLogger through its own private lazy logger()
- * helper (singleton/service-locator elimination campaign, Phase 11
- * sub-phase 11G -- formerly the transitional `getStatic()` shim, Phase 2),
- * which resolves the real container-shared instance once Kernel::boot()
- * has run.
+ * helper, which resolves the real container-shared instance once
+ * Kernel::boot() has run.
  */
 function imageServiceTestSeedCurrentLogger(Logger $logger): void
 {

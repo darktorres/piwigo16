@@ -52,14 +52,11 @@ use Piwigo\Validation\InputValidator;
 /**
  * Ported from admin/picture_modify.php (the "properties" tab of the "photo"
  * page slug, dispatched by PhotoSubController). PhotoSubController threads
- * $adminPhotoBaseUrl through render() directly (Legacy Coupling Retirement
- * Phase 8, 8g -- formerly a `global $admin_photo_base_url;` read).
+ * $adminPhotoBaseUrl through render() directly.
  *
- * P23 batch 6d fix: the sync_metadata action was reachable via a plain GET
- * with no check_pwg_token() (unlike the delete/submit actions in this same
- * file, which both already had one) and its own template link (U_SYNC)
- * carried no token either -- a real CSRF gap, closed here the same way
- * U_DELETE already protects itself one line below it.
+ * The sync_metadata action requires a valid CSRF token (checked via
+ * CsrfService::checkOrFail()), and its own template link (U_SYNC) carries
+ * one, the same way U_DELETE protects itself.
  */
 final class PictureModifyPageRenderer
 {
@@ -91,20 +88,14 @@ final class PictureModifyPageRenderer
 
     public function render(string $adminPhotoBaseUrl): void
     {
-        // Phase 2 global-residual sweep: $page is a local scratch array
-        // for this method's own body only (no longer `global $page;`),
-        // same shape as Section\SectionPopulator::populate()'s own
-        // equivalent fix (Track A5.2e).
-        //
         // $page['image'] starts as ImageService::getImageInfos()'s own
         // precisely-shaped return, but $row (derived from it below) later
         // has 'added_by' widened from ?int to a resolved username string
-        // (line ~398) and a brand new 'nb_rates' key added (line ~428) --
-        // genuinely outgrows that fixed shape as this method progresses,
-        // same "risk of untested retype" call as FilterService::
+        // and a brand new 'nb_rates' key added -- it outgrows that fixed
+        // shape as this method progresses, same as FilterService::
         // initializeFromRequest()'s own scratch array. Left as
-        // array<string, mixed>, each read still narrowed defensively at
-        // its own use site (is_scalar()/is_numeric() + a default).
+        // array<string, mixed>, each read narrowed defensively at its own
+        // use site (is_scalar()/is_numeric() + a default).
         /** @var array<string, mixed> $page */
         $page = [];
         $template = $this->currentTemplate->get();

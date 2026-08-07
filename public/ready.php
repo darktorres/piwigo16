@@ -6,19 +6,19 @@ use Piwigo\Core\Env;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbCredentials;
 
-// Readiness: can we reach the configured DB. Extend once P11 adds Redis to
-// the dependency graph. Deliberately doesn't go through
-// \Piwigo\Db\DbConnection::build() — that helper assumes the full request
-// bootstrap (the DI container, PageState's query-count/show_queries
-// logging), which doesn't belong in a probe response.
-// \Piwigo\Db\DbCredentials::fromEnv() (env-only, Config generic-accessor
-// removal) is exactly the same credential source DbConnection::build()
-// itself resolves to, so this reflects whatever DB the real app would
-// connect to. fromEnv() directly, not the current() shim -- this file
-// never calls Kernel::boot() (singleton/service-locator elimination
-// campaign, Phase 12 sub-phase 12F-3), so current()'s own
-// Kernel::isBooted() branch was always false here anyway, always falling
-// straight through to this exact same fromEnv() read.
+// Readiness: can we reach the configured DB. This only checks DB
+// reachability today; extend it if Redis becomes part of the dependency
+// graph. Deliberately doesn't go through \Piwigo\Db\DbConnection::build()
+// — that helper assumes the full request bootstrap (the DI container,
+// PageState's query-count/show_queries logging), which doesn't belong in
+// a probe response.
+// \Piwigo\Db\DbCredentials::fromEnv() is exactly the same credential
+// source DbConnection::build() itself resolves to, so this reflects
+// whatever DB the real app would connect to. This file never boots the
+// Kernel, so calling fromEnv() directly is equivalent to any
+// isBooted()-gated container resolution elsewhere -- isBooted() would
+// always be false here anyway, falling straight through to this exact
+// same fromEnv() read.
 
 require __DIR__ . '/../vendor/autoload.php';
 

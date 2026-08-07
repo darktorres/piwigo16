@@ -50,10 +50,10 @@ test('load() throws when local/config/config.php does not return a DeploymentPol
 });
 
 test('load() throws with the exact message naming the real file path and get_debug_type()', function (): void {
-    // The test above only asserts the generic exception class -- the
-    // message itself is built from 6 concatenated fragments (the real
-    // file path, self::class, and get_debug_type($policy) among them),
-    // none of which were previously pinned.
+    // The test above only asserts the generic exception class -- this
+    // test pins the exact message, which is built from 6 concatenated
+    // fragments (the real file path, self::class, and
+    // get_debug_type($policy) among them).
     $root = sys_get_temp_dir() . '/piwigo-deployment-policy-test-' . bin2hex(random_bytes(4));
     mkdir($root . '/local/config', 0o777, true);
     $configFile = $root . '/local/config/config.php';

@@ -695,11 +695,10 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_ids_added_same_day_as_latest_excludes_older_images(): void
     {
-        // Item 14 DQL audit re-audit (Item 14 Sub-phase B): had zero
-        // existing coverage. Every fixture image already shares the same
-        // date_available (the "latest" day) -- add one genuinely older
-        // image to prove the DATE_SUB()-based lower bound really excludes
-        // it, not just "returns everything by accident."
+        // Every fixture image already shares the same date_available (the
+        // "latest" day) -- add one genuinely older image to prove the
+        // DATE_SUB()-based lower bound really excludes it, not just
+        // "returns everything by accident."
         $this->conn->beginTransaction();
 
         try {
@@ -737,14 +736,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_most_recent_image_category_info_returns_the_real_joined_row(): void
     {
-        // Item 14 Sub-phase B2 re-audit: the joined real-value branch had
-        // zero coverage (only the empty-table null case above was
-        // tested) -- this method's own conversion uses a blind
-        // `instanceof CategoryId` check with a silent `return null`
-        // fallback, so a wrong gotcha #1 assumption would be
-        // indistinguishable from "no image is linked" without this.
-        // Fixture: image 5 (the highest id with an image_category link)
-        // is in category 2, whose uppercats is '1,2'.
+        // This method uses a blind `instanceof CategoryId` check with a
+        // silent `return null` fallback, so a wrong VO-hydration
+        // assumption would be indistinguishable from "no image is
+        // linked" without this test. Fixture: image 5 (the highest id
+        // with an image_category link) is in category 2, whose
+        // uppercats is '1,2'.
         self::assertSame(
             ['category_id' => 2, 'uppercats' => '1,2'],
             $this->repo->findMostRecentImageCategoryInfo()
@@ -833,14 +830,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
         }
     }
 
-    // --- SQL-modernization audit: previously zero direct coverage on the
-    // methods below, plus first coverage of the new SqlCondition-taking
-    // fragment-consumer contract and the [SEC-20] injection fixes. Fixture
-    // shape: image_category links images 1/2/3 to category 1, images 4/5
-    // to category 2 (both categories commentable=1/visible=1/status=public,
-    // per tests/Fixtures/piwigo-17.0.sql); image 1's md5sum is
-    // '2e7ee450c4a4cffe42945205029782b9'; every fixture image's `author` is
-    // NULL.
+    // Fixture shape: image_category links images 1/2/3 to category 1,
+    // images 4/5 to category 2 (both categories
+    // commentable=1/visible=1/status=public, per
+    // tests/Fixtures/piwigo-17.0.sql); image 1's md5sum is
+    // '2e7ee450c4a4cffe42945205029782b9'; every fixture image's `author`
+    // is NULL.
 
     public function test_find_by_id_or_file_pattern_matches_by_id(): void
     {
@@ -913,12 +908,11 @@ final class ImageRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * [SEC-20] regression: existsWithColumnValue() replaces the former
-     * existsWithCondition(), which took an already-quote-wrapped
-     * "{$column} = '{$value}'" fragment built from Ws\PwgImages::add()'s
-     * own unvalidated original_sum/original_filename params -- a real SQL
-     * injection. A value containing SQL syntax must be treated as a
-     * literal, matching nothing, not injected as a tautology.
+     * [SEC-20] regression: existsWithColumnValue()'s own real caller
+     * (Ws\PwgImages::add()'s unvalidated original_sum/original_filename
+     * params) has zero WS-level type constraints -- a value containing SQL
+     * syntax must be treated as a literal, matching nothing, not injected
+     * as a tautology.
      */
     public function test_exists_with_column_value_treats_sql_syntax_as_a_literal_value(): void
     {
@@ -926,10 +920,8 @@ final class ImageRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * A {@see PermissionCriteria} with every dimension null -- "no
-     * restriction on any dimension", the typed equivalent of the old
-     * `new SqlCondition('')` no-op baseline these tests used before Item 14
-     * Sub-phase C1.
+     * A {@see PermissionCriteria} with every dimension null means no
+     * restriction on any dimension.
      */
     private static function noPermissionRestriction(): PermissionCriteria
     {
@@ -1216,11 +1208,10 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_next_id_returns_one_more_than_the_current_max(): void
     {
-        // Item 14 DQL audit: findNextId() converted its original
-        // IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) to COALESCE(MAX(id)+1, 1) --
-        // mathematically identical for this 2-argument case, verified here
-        // against the real, non-empty fixture table (the empty-table branch
-        // isn't practically testable against this shared fixture DB).
+        // findNextId() returns COALESCE(MAX(id)+1, 1), verified here
+        // against the real, non-empty fixture table -- the empty-table
+        // branch isn't practically testable against this shared fixture
+        // DB.
         $maxId = $this->conn->fetchOne('SELECT MAX(id) FROM ' . Tables::images());
 
         self::assertSame((is_numeric($maxId) ? (int) $maxId : 0) + 1, $this->repo->findNextId());
@@ -1228,12 +1219,10 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_ids_not_in_categories_excludes_linked_images(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage --
-        // the non-empty branch's DQL NOT IN (subquery), built via a
+        // The non-empty branch's DQL NOT IN (subquery) is built via a
         // separate QueryBuilder's own getDQL() string interpolated into
-        // the outer query, had never been exercised against the real DB.
-        // Fixture: images 1-3 are in category 1, images 4-5 are in
-        // category 2.
+        // the outer query. Fixture: images 1-3 are in category 1, images
+        // 4-5 are in category 2.
         $ids = $this->repo->findIdsNotInCategories([1]);
         sort($ids);
         self::assertSame([4, 5], $ids);
@@ -1253,7 +1242,6 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_ids_in_categories_returns_linked_images(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
         $ids = $this->repo->findIdsInCategories([2]);
         sort($ids);
         self::assertSame([4, 5], $ids);
@@ -1266,13 +1254,11 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_existing_associations_returns_real_values_not_an_empty_array(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage. This
-        // method's own conversion uses a *blind* `instanceof CategoryId`
-        // check (no raw-int fallback, unlike sibling conversions in this
-        // same file) -- if the gotcha #1 VO-hydration assumption behind it
-        // were wrong, every row would silently be skipped and this would
-        // return [] instead of throwing, so asserting the real non-empty
-        // shape is the only way to catch that.
+        // This method uses a *blind* `instanceof CategoryId` check (no
+        // raw-int fallback, unlike sibling methods in this file) -- if
+        // the VO-hydration assumption is wrong, every row is silently
+        // skipped and this returns [] instead of throwing, so asserting
+        // the real non-empty shape is the only way to catch that.
         $existing = $this->repo->findExistingAssociations([1, 2, 4], [1, 2]);
 
         self::assertArrayHasKey(1, $existing);
@@ -1285,11 +1271,6 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_max_ranks_by_category_returns_real_values_not_an_empty_array(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage, same
-        // blind-instanceof risk as findExistingAssociations() above --
-        // this one additionally combines the custom-Typed field with
-        // GROUP BY/MAX(), a shape gotcha #1 was never previously verified
-        // against.
         self::assertSame(
             ['1' => 3, '2' => 2],
             $this->repo->findMaxRanksByCategory([1, 2])
@@ -1298,8 +1279,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_virtually_associated_category_rows_returns_real_categories(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage. Every
-        // fixture image has storage_category_id NULL, so the "OR
+        // Every fixture image has storage_category_id NULL, so the "OR
         // i.storageCategoryId IS NULL" branch always applies -- image 1's
         // real category_id membership (category 1) must come back, not [].
         $rows = $this->repo->findVirtuallyAssociatedCategoryRows([1]);
@@ -1309,7 +1289,6 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_category_links_for_image_returns_the_real_category(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
         $rows = $this->repo->findCategoryLinksForImage(1);
 
         self::assertSame([[
@@ -1321,9 +1300,8 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_lounge_rows_returns_the_real_rows(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage. No
-        // fixture lounge data exists, so this inserts its own within a
-        // rolled-back transaction.
+        // No fixture lounge data exists, so this inserts its own within
+        // a rolled-back transaction.
         $this->conn->beginTransaction();
 
         try {
@@ -1356,7 +1334,6 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_lounged_image_ids_returns_the_real_ids(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
         $this->conn->beginTransaction();
 
         try {
@@ -1370,7 +1347,6 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_dissociable_image_ids_returns_images_not_stored_under_the_category(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
         // Fixture: images 1-3 are in category 1, none has a
         // storage_category_id set, so all 3 are dissociable from it.
         $ids = $this->repo->findDissociableImageIds([1, 2, 3], 1);
@@ -1394,7 +1370,6 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_count_images_in_categories_counts_distinct_images(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
         // Fixture: 5 distinct images across image_category.
         self::assertSame(5, $this->repo->countImagesInCategories());
     }
@@ -1409,7 +1384,6 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_thumbnail_rows_for_category_ordered_by_rank_returns_real_rows_in_rank_order(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
         // Fixture: category 1 has images 1,2,3 at ranks 1,2,3.
         $rows = $this->repo->findThumbnailRowsForCategoryOrderedByRank(1);
 
@@ -1418,13 +1392,11 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_image_ids_ordered_by_rank_for_category_returns_real_ids_in_rank_order(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
         self::assertSame([1, 2, 3], $this->repo->findImageIdsOrderedByRankForCategory(1));
     }
 
     public function test_find_category_ids_for_image_returns_the_real_categories(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
         self::assertSame([1], $this->repo->findCategoryIdsForImage(1));
     }
 
@@ -1435,7 +1407,6 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_orphan_image_category_link_ids_returns_links_with_no_real_image(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
         // image_category.image_id FK-references images.id ON DELETE
         // CASCADE, so a genuine orphan can only exist the way it would in
         // real life -- imported/fixed-up data that bypassed the FK, here

@@ -7,12 +7,10 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
 /**
- * Singleton/service-locator elimination campaign, Phase 12 sub-phase
- * 12F-10: CurrentPaths::get()/isSet() are deleted -- CurrentPathsTestFactory
- * reproduces their exact former behavior for test call sites (see its own
- * docblock). "not initialised" means "Kernel hasn't booted (with a real
- * Paths)", not "CurrentPaths::set() was never called" -- this class never
- * had independent static state of its own.
+ * CurrentPathsTestFactory reproduces CurrentPaths::get()/isSet() behavior
+ * for test call sites (see its own docblock). "not initialised" means
+ * "Kernel hasn't booted (with a real Paths)", not "CurrentPaths::set() was
+ * never called" -- this class has no independent static state of its own.
  */
 test('CurrentPathsTestFactory::get throws when Kernel has not booted at all', function (): void {
     expect(Kernel::isBooted())->toBeFalse();

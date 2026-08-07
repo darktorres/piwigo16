@@ -9,13 +9,10 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 
 /**
- * Singleton/service-locator elimination campaign, Phase 12 sub-phase
- * 12F-12: replaces the deleted `CurrentConfig::current()` transitional
- * shim for test call sites -- reproduces its exact behavior (the real
- * container-shared instance once Kernel has booted, a MEMOIZED, not
- * fresh-per-call, instance otherwise -- every property already carries
- * its own real, sensible hardcoded default, so the not-booted fallback is
- * safe to memoize the same way).
+ * Returns the container-shared CurrentConfig instance once Kernel has
+ * booted; falls back to a memoized (not fresh-per-call) instance
+ * otherwise. Every property already carries a real, sensible hardcoded
+ * default, so the not-booted fallback is safe to memoize the same way.
  */
 final class CurrentConfigTestFactory
 {

@@ -41,15 +41,10 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
 /**
- * Picture had zero tests in any suite before this class + its Unit
- * sibling (tests/Unit/Picture/PictureCommentRendererTest.php) -- this
- * file covers the branches those Unit tests can't: everything past
- * `$nbComments > 0`, which needs a real CommentRepository row
- * (findForImage()). The first test directly re-verifies the historical
- * $edit_comment scope-sharing bug this class's own docblock documents
- * (fixed by threading $editCommentId explicitly): with 2 real comments on
- * the same image, only the one matching the given id may ever get
- * IN_EDIT.
+ * Covers the branches past `$nbComments > 0`, which need a real
+ * CommentRepository row (findForImage()). $editCommentId is threaded
+ * explicitly, so with 2 real comments on the same image, only the one
+ * matching the given id may ever get IN_EDIT.
  */
 final class PictureCommentRendererTest extends IntegrationTestCase
 {

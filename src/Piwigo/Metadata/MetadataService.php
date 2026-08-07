@@ -33,19 +33,15 @@ use RuntimeException;
 use SimpleXMLElement;
 
 /**
- * Pure computation ported from `admin/include/functions_metadata.php`
- * (7 functions) + `include/functions_metadata.inc.php` (5 functions) --
- * both deleted in P23 sub-batch 8b-1, their real callers retargeted
- * directly here -- raw EXIF/IPTC extraction, SVG dimension parsing, GPS
- * math, keyword normalization -- plus the 2 orchestrator methods
- * (`syncMetadata()`/`getFilelist()`) that call {@see MetadataRepository}
- * for their own DB access.
+ * Pure computation over raw EXIF/IPTC/SVG file data -- extraction, SVG
+ * dimension parsing, GPS math, keyword normalization -- plus the 2
+ * orchestrator methods (`syncMetadata()`/`getFilelist()`) that call
+ * {@see MetadataRepository} for their own DB access.
  *
  * [SEC-20] `getSyncMetadata()`'s SVG dimension parsing strips any
  * `<!DOCTYPE ...>` declaration before calling `simplexml_load_string()`
- * (with `LIBXML_NONET`, never `LIBXML_NOENT`/`LIBXML_DTDLOAD`) -- the
- * original called `simplexml_load_string($xml)` on raw, uploaded-file
- * content with zero flags and no DOCTYPE stripping, an XXE vector.
+ * (with `LIBXML_NONET`, never `LIBXML_NOENT`/`LIBXML_DTDLOAD`), an XXE
+ * mitigation.
  */
 final readonly class MetadataService
 {
@@ -554,13 +550,8 @@ final readonly class MetadataService
         // (install.php/upgrade.php -- not src/Piwigo/, which itself never
         // calls define(), see tests/Arch/StructuralTest.php) already set it
         // earlier in this same request; otherwise fall back to today's date
-        // locally. admin/site_update.php (P23 batch 6j-5's own
-        // SiteUpdateSubController) used to define this constant too, but
-        // never actually called this method itself and, once absorbed into
-        // src/Piwigo/, is bound by the same no-define() rule -- it now uses
-        // its own local $dbnow directly instead, so this fallback's real
-        // callers (batch_manager_unit.php, picture_modify.php) are
-        // unaffected either way.
+        // locally. This fallback's real callers are batch_manager_unit.php
+        // and picture_modify.php.
         $definedCurrentDate = defined('CURRENT_DATE') ? constant('CURRENT_DATE') : null;
         $currentDate = is_string($definedCurrentDate) ? $definedCurrentDate : date('Y-m-d');
 

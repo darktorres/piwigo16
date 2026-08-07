@@ -38,31 +38,22 @@ use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 
 /**
- * Pure computation ported from `include/functions_picture.inc.php` --
- * slideshow param encode/decode/correct and PDF page counting, none of
- * which touch the DB (that's {@see ImageRepository}'s job). P23 batch 8d's
- * Elements/photos sub-batch added the constructor (ImageRepository +
- * ActivityLoggerInterface, the latter since Piwigo\Activity\ActivityService
- * itself is L2bExtendedDomain and this class is L2aCoreDomain -- same fix
- * as Piwigo\Tag\TagService's own deleteTags(), see
- * ActivityLoggerInterface's own docblock) and the 14 real element/lounge/
- * orphan methods below -- every existing no-arg `new ImageService()` call
- * site needed updating for the new required constructor.
+ * Slideshow param encode/decode/correct and PDF page counting -- pure
+ * computation, none of which touches the database directly (that's
+ * {@see ImageRepository}'s job).
  *
- * Legacy Coupling Retirement Phase 8, 8d: emptyLounge()'s real writes
- * (empty_lounge_running/count_orphans) go through CurrentConfigService::get()
- * (Tier 2) -- constructed throwaway at ~33 real sites, including
- * Bootstrap\RequestBootstrap.php's own `new ImageService(...)->emptyLounge()`
- * inline call (gated on LoungeMaintenance::needsEmptying()), which runs
- * after connect() has already resolved and set a real ConfigService.
- * Every other real construction site (BatchManagerGlobalPageRenderer,
- * UploadService, TagService, Ws\PwgImages, etc.) is normal post-container
- * application code, covered the same way. Singleton/service-locator
- * elimination campaign, Phase 12 sub-phase 12D: emptyLounge()/
- * countOrphans() now resolve CurrentConfigService via a new private lazy
- * currentConfigService() helper instead of the CurrentConfigService::current()
- * shim directly -- see self::logger()'s own docblock just above for the
- * identical "too many construction sites" reasoning.
+ * `ActivityLoggerInterface` is injected rather than the concrete
+ * `Piwigo\Activity\ActivityService` because that service sits in a
+ * higher dependency layer (L2bExtendedDomain) than this class
+ * (L2aCoreDomain) -- see `ActivityLoggerInterface`'s own docblock.
+ *
+ * emptyLounge()'s writes (empty_lounge_running/count_orphans) go through
+ * CurrentConfigService::get(). emptyLounge()/countOrphans() resolve
+ * CurrentConfigService via a private lazy currentConfigService() helper
+ * rather than a constructor parameter, to avoid rippling a required
+ * dependency across this class's many construction sites for the sake of
+ * those two call sites -- see self::logger()'s own docblock for the same
+ * reasoning.
  */
 final readonly class ImageService
 {
@@ -140,12 +131,8 @@ final readonly class ImageService
      * emptyLounge()'s own internal read below. A required constructor
      * param here would ripple across this class's own real construction
      * sites for the sake of this one internal read, same low-blast-radius
-     * reasoning as currentUser()/filterState() above (singleton/
-     * service-locator elimination campaign, Phase 11 sub-phase 11G). Falls
-     * back to an OFF-severity Logger when Kernel::boot() hasn't run, same
-     * pre-boot fallback shape as every other private resolver this
-     * campaign has added (e.g. `UploadService::currentLogger()`, sub-phase
-     * 12F-1).
+     * reasoning as currentUser()/filterState() above. Falls back to an
+     * OFF-severity Logger when Kernel::boot() hasn't run.
      */
     private function logger(): Logger
     {
@@ -165,12 +152,11 @@ final readonly class ImageService
 
     /**
      * Same "container resolve, not a constructor param" reasoning as
-     * self::logger() above (singleton/service-locator elimination
-     * campaign, Phase 12 sub-phase 12D) -- constructor-injecting
-     * CurrentConfigService would ripple across every one of this class's
-     * own ~33 real construction sites for the sake of emptyLounge()'s 2
-     * call sites alone, matching this class's own established
-     * CategoryService-inline-construction precedent just above.
+     * self::logger() above -- constructor-injecting CurrentConfigService
+     * would ripple across every one of this class's own real construction
+     * sites for the sake of emptyLounge()'s 2 call sites alone, matching
+     * this class's own CategoryService-inline-construction pattern just
+     * above.
      */
     private function currentConfigService(): CurrentConfigService
     {
@@ -418,14 +404,9 @@ final readonly class ImageService
             }
         }
 
-        // Item 16E: deleteElementReferences() (formerly called here first)
-        // was removed entirely -- every one of the 7 tables it touched
-        // carries a real ON DELETE CASCADE FK straight to images.id
-        // (tests/Fixtures/piwigo-17.0.sql), confirmed equivalent via live
-        // sed-mutation testing in an earlier item (see the mutation note
-        // this replaced, in this method's own test coverage) and
-        // reconfirmed here: deleteImages() below already removes every
-        // one of those rows itself, via cascade.
+        // Every table referencing images.id carries a real ON DELETE
+        // CASCADE FK (tests/Fixtures/piwigo-17.0.sql) -- deleteImages()
+        // below removes all of those rows itself, via cascade.
         $this->repo->deleteImages($ids);
 
         // are the photos used as category representant?
@@ -443,7 +424,6 @@ final readonly class ImageService
     /**
      * Instead of associating images to categories, add them in the lounge, waiting for take-off.
      *
-     * @since 12
      * @param array<int, int|string> $images - list of image ids
      * @param array<int, int|string> $categories - list of category ids
      */
@@ -465,7 +445,6 @@ final readonly class ImageService
     /**
      * Move images from the lounge to the categories they were intended for.
      *
-     * @since 12
      * @return list<array{image_id: int, category_id: int}>|null the moved
      *   image_id/category_id rows, or null if another call is already
      *   emptying the lounge concurrently
@@ -974,7 +953,6 @@ final readonly class ImageService
      * Force update on images.lastmodified column. Useful when modifying the tag
      * list.
      *
-     * @since 2.9
      * @param array<int, int|string> $imageIds
      */
     public function updateImagesLastmodified(array $imageIds): void
@@ -999,7 +977,6 @@ final readonly class ImageService
      * \Piwigo\Image\Projection\Image::fromRow()} does it once, this just
      * unboxes back to array at this public boundary.
      *
-     * @since 2.9
      * @param int|string $imageId several callers (Piwigo\Admin\
      *   PictureModifyPageRenderer, Piwigo\Controller\Admin\PhotoSubController,
      *   admin/photos_add_direct.php) pass a raw, unvalidated $_GET value

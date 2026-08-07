@@ -17,17 +17,16 @@ use UnexpectedValueException;
 
 /**
  * Forbidden-categories computation. Constructor-injects
- * PermissionRepository, GroupRepository, and CategoryRepository, plain
- * constructor injection (same shape as PermalinkService) -- the
+ * PermissionRepository, GroupRepository, and CategoryRepository directly
+ * (same shape as PermalinkService). GroupRepository is needed because the
  * group-based access check (calculate_permissions()'s user_group JOIN
- * group_access query) is why Group had to land in this same layer
- * (L2aCoreDomain), see deptrac.yaml's own comment on that namespace.
+ * group_access query) requires Group to live in this same layer
+ * (L2aCoreDomain); see deptrac.yaml's own comment on that namespace.
  * CategoryRepository (not CategoryService) is deliberate:
  * addPermissionOnCategory() needs uppercat/subcat id lookups, but
  * CategoryService already constructor-injects PermissionService, so
  * depending on CategoryService here would cycle -- the repository sits
- * below both services with no such conflict (Legacy Coupling Retirement
- * Phase 4a).
+ * below both services with no such conflict.
  */
 final readonly class PermissionService
 {
@@ -53,12 +52,8 @@ final readonly class PermissionService
     }
 
     /**
-     * get localized privacy level values
-     *
-     * P23 batch 8d: relocated from include/functions.inc.php's
-     * get_privacy_level_options(), unchanged logic -- static since it
-     * needs no repository access (a pure $conf + l10n() read), matching
-     * InputValidator's own mixed static/instance precedent.
+     * Localized privacy level values. Static since it needs no repository
+     * access -- a pure $currentConfig + l10n() read.
      *
      * @return string[]
      */
@@ -128,31 +123,21 @@ final readonly class PermissionService
     }
 
     /**
-     * SQL-modernization audit, Item 14 Sub-phase C1: typed replacement for
-     * the former `getSqlConditionFandFAsCondition()`'s own
-     * `array<string,string> $conditionFields` + raw `SqlCondition` return
-     * (deleted once every real call site migrated here -- confirmed via a
-     * full-repo grep) -- see {@see PermissionCriteria}'s own docblock for
-     * the full per-field mapping. Computes every field unconditionally (no
-     * `$conditionFields` argument -- the caller now picks which fields it
-     * actually needs off the returned object, same "typed DTO computed
-     * once, each consumer translates its own subset" pattern
-     * {@see \Piwigo\Image\ImageFilterCriteria} (Sub-phase C3) already
-     * established), same "reads session/request globals directly, no DB
-     * access of its own" shape the old method had.
+     * Returns every forbidden/visible/access criteria field at once (see
+     * {@see PermissionCriteria}'s own docblock for the full per-field
+     * mapping), so each caller picks the subset it actually needs off the
+     * returned object -- same "typed DTO computed once, each consumer
+     * translates its own subset" pattern as
+     * {@see \Piwigo\Image\ImageFilterCriteria}. Reads session/request
+     * globals directly; no DB access of its own.
      *
-     * The `UnexpectedValueException` for a malformed `image_access_type`
-     * (old code only reached this when a caller's own `$fieldName`
-     * happened to route into the `image_access_list` branch) now always
-     * runs when $imageAccessIds/$imageAccessIsAllowlist would otherwise be
-     * computed -- a deliberate widening, not an oversight:
-     * `image_access_type`/`image_access_list` are the current user's own
-     * account data (`CurrentUser::get()->rawAttributes`, set by
+     * Throws `UnexpectedValueException` for a malformed `image_access_type`
+     * whenever $imageAccessIds/$imageAccessIsAllowlist would otherwise be
+     * computed: `image_access_type`/`image_access_list` are the current
+     * user's own account data (`CurrentUser::get()->rawAttributes`, set by
      * `getuserdata()`), and an unexpected value there means that data is
-     * corrupted regardless of which condition dimension any particular
-     * caller happens to read -- the same "fail fast on corrupted account
-     * data, don't let it silently vary by caller" reasoning the old
-     * method's own `default => throw` branch already had.
+     * corrupted -- worth failing fast on regardless of which condition
+     * dimension a particular caller happens to read.
      */
     public function getPermissionCriteria(): PermissionCriteria
     {
@@ -202,11 +187,9 @@ final readonly class PermissionService
     }
 
     /**
-     * Revokes direct user-category access. Ported from
-     * admin/user_perm.php's own inline `DELETE FROM user_access` (P21
-     * Users batch) -- same "if you forbid access to a category, all
-     * sub-categories become automatically forbidden" contract as the
-     * original (caller passes get_subcat_ids()'s own expansion).
+     * Revokes direct user-category access. Forbidding access to a category
+     * also forbids every sub-category: the caller is expected to pass the
+     * already-expanded subcategory ids in $catIds.
      *
      * @param list<int> $catIds
      */
@@ -225,9 +208,9 @@ final readonly class PermissionService
 
     /**
      * Grants direct user-category access. Thin wrapper around
-     * addPermissionOnCategory() -- that method is also called from
-     * create_virtual_category()'s own inheritance logic (P21 Albums
-     * batch), out of this method's scope to duplicate.
+     * addPermissionOnCategory(), which is also called from
+     * category-creation code for its own permission-inheritance step --
+     * not duplicated here.
      *
      * @param list<int> $catIds
      */
@@ -239,26 +222,22 @@ final readonly class PermissionService
     /**
      * Grants users direct access to categories -- but only to categories
      * that are actually private; a request naming a public category is
-     * silently a no-op for that category, matching the original.
+     * silently a no-op for that category.
      *
-     * Ported from admin/include/functions.php's
-     * add_permission_on_category() (P23 batch 8d), unchanged logic. Lives
-     * here (not Piwigo\Admin) because real callers span L2aCoreDomain
-     * (this class itself, via grantUserAccess()) and L4Integration
-     * (Piwigo\Admin\Category\CategoryAdminService,
-     * Piwigo\Controller\Admin\SiteUpdateSubController) -- the same
-     * L2a-may-not-depend-on-L4 wall this batch's own FilesystemHelper/
-     * PermissionService precedent already resolved elsewhere by picking
-     * the L2a domain owner as the target instead of Piwigo\Admin.
+     * Lives here (not Piwigo\Admin) because real callers span
+     * L2aCoreDomain (this class itself, via grantUserAccess()) and
+     * L4Integration (Piwigo\Admin\Category\CategoryAdminService,
+     * Piwigo\Controller\Admin\SiteUpdateSubController) -- L2a code may not
+     * depend on L4, so this must live at the L2a domain owner instead of
+     * Piwigo\Admin.
      *
      * Calls `CategoryRepository::findUppercatIds()`/`findSubcategoryIds()`
      * directly rather than `CategoryService::getUppercatIds()`/
      * `getSubcatIds()` -- `CategoryService` already constructor-injects
-     * `PermissionService`, so depending on it here would cycle (Legacy
-     * Coupling Retirement Phase 4a). `findSubcategoryIds()` needs no
-     * separate numeric-validation pass here (unlike
-     * `CategoryService::getSubcatIds()`'s own wrapper): `$categoryIds` is
-     * already normalized to `int` two lines above.
+     * `PermissionService`, so depending on it here would cycle.
+     * `findSubcategoryIds()` needs no separate numeric-validation pass
+     * here (unlike `CategoryService::getSubcatIds()`'s own wrapper):
+     * `$categoryIds` is already normalized to `int` two lines above.
      *
      * @param int|array<int, int> $categoryIds real callers pass a mix of
      *   `list<int>` and array-key-preserving results of array_map()/

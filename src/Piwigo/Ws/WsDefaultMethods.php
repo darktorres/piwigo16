@@ -19,36 +19,13 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Event\WsAddMethods;
 
-// P23 batch 8e-8: relocated from include/ws_default_methods.inc.php's own
-// top-level ws_addDefaultMethods() function (registered as a bare string
-// callback in include/ws_init.inc.php). That file's own docblock previously
-// argued this "must stay a real global function, not a namespaced class
-// method" because add_event_handler() only accepted string callback names --
-// no longer true: WsHelper::isInvokeAllowed(...)/PwgCore::historyGet(...)
-// (both 8e-1/8e-4) already established the first-class-callable pattern for
-// this exact event-handler registration mechanism, since
-// EventDispatcher::addEventHandler()'s $func param has always accepted
-// string|array|object. WsController no longer include_once's a separate
-// include/ws_default_methods.inc.php file; this class autoloads like every
-// other Piwigo\Ws\* class.
 final class WsDefaultMethods
 {
-    // Singleton/service-locator elimination campaign, Phase 10: grows one
-    // constructor property per Pwg* class as each one's own sub-batch
-    // converts its methods from static to instance -- register()'s own
-    // registration line for a given class MUST update in the same change
-    // that converts that class (calling a real instance method via the
-    // old ClassName::method() static syntax is a fatal PHP error, not
-    // just a style issue), so this class can never be "finished ahead of"
-    // the classes it wires together. See this phase's own investigation
-    // note in the plan for why the reverse ordering (this class first)
-    // was tried and found broken. CurrentConfig/AccessControl/CurrentUser/
-    // ImageStdParams added once all 8 Pwg* classes had converted --
-    // register()'s own remaining CurrentConfig::current()/AccessControl::
-    // current()/CurrentUser::current()/ImageStdParams::current() reads
-    // were Phase-10-locked scaffolding the same way the Pwg* classes' own
-    // internal calls were (see Phase 9/5/4's own close-out notes), safe
-    // to close out only now.
+    // Each Pwg* class used by register() is injected as a constructor
+    // property; the property list here and the instance-method callbacks
+    // registered below must stay in sync -- register() calls these as real
+    // instance methods (e.g. $this->pwgCore->getVersion(...)), not static
+    // ClassName::method() calls.
     public function __construct(
         private readonly PwgCategories $pwgCategories,
         private readonly PwgCore $pwgCore,
@@ -193,14 +170,9 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.activity.downloadLog',
-            // P23 batch 8e-4: pre-existing bug, confirmed predating this
-            // migration -- 'ws_activity_downloadLog' was never defined
-            // anywhere in include/ws_functions/pwg.php (verified via a
-            // full-repo grep before deleting that file); this registration
-            // has always fataled with "call to undefined function" if ever
-            // invoked. Left as a bare (still-broken) string rather than
-            // inventing an implementation here -- flagged for its own
-            // follow-up task, out of this sub-batch's scope.
+            // 'ws_activity_downloadLog' is not a defined function -- this
+            // registration fatals with "call to undefined function" if
+            // ever invoked.
             'ws_activity_downloadLog',
             null,
             'Returns general informations.',

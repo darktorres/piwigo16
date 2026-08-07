@@ -16,30 +16,20 @@ use Piwigo\Db\Tables;
  * WsImagesChunkedUploadTest/WsUploadTest/WsImagesMaintenanceTest:
  * add()'s image_id-not-found guard, filename-uniqueness-mode duplicate
  * rejection, and high_sum branch (which also exercises removeChunks()'s
- * real delete loop via the unconditional thumb-chunk cleanup, and add()'s
- * tag_ids association, both previously untested); mergeChunks()'s stale-
- * leftover-file cleanup; pwg.images.setCategory's invalid-token guard;
- * formatsSearchImage()'s 'multiple' status; and pwg.images.upload's/
- * uploadAsync's own chunked "not the last chunk yet" branches plus
- * uploadAsync's buffer-directory age-based cleanup sweep.
+ * delete loop via the unconditional thumb-chunk cleanup, and add()'s
+ * tag_ids association); mergeChunks()'s stale-leftover-file cleanup;
+ * pwg.images.setCategory's invalid-token guard; formatsSearchImage()'s
+ * 'multiple' status; and pwg.images.upload's/uploadAsync's own chunked
+ * "not the last chunk yet" branches plus uploadAsync's buffer-directory
+ * age-based cleanup sweep.
  *
- * One real branch used to be deliberately NOT exercised here (addFile()'s
- * do_update=true branch calling UploadService::addUploadedFile() with a
- * non-null $id_image, and pwg.images.upload's own update_mode=true branch):
- * confirmed live, twice, that this exact code path 500'd in this
- * environment -- even starting from a photo created moments earlier through
- * the normal WS upload flow (image id genuinely real, not a hand-crafted DB
- * row) -- with `getimagesize(upload/2026/08/01/....jpg): Failed to open
- * stream` in PwgImage.php and `Undefined array key "file"` in SrcImage.php.
- * That was a real, pre-existing bug in the Image domain's "replace an
- * existing photo's file" pipeline (UploadService::addUploadedFile()'s
- * $id_image-not-null path: a relative-not-absolute $file_path, plus a
- * SELECT that never fetched the `file` column SrcImage's constructor
- * trusted as present) -- since fixed (commit 6abce47d17, "close 25-class
- * coverage-gap batch"). pwg.images.upload's update_mode=true branch is now
- * exercised in WsUploadTest::test_upload_update_mode_replaces_an_existing_photo_by_filename_in_category().
+ * addFile()'s own do_update=true branch (calling UploadService::
+ * addUploadedFile() with a non-null $id_image) and pwg.images.upload's
+ * own update_mode=true branch are out of this file's scope.
+ * update_mode=true is exercised in
+ * WsUploadTest::test_upload_update_mode_replaces_an_existing_photo_by_filename_in_category().
  * addFile()'s own do_update=true branch is a different WS method, out of
- * this file's/this pass's scope to re-verify.
+ * this file's scope to re-verify.
  */
 final class WsImagesUploadGapsTest extends ContractTestCase
 {

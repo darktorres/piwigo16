@@ -57,14 +57,13 @@ test('EventDispatcherTestFactory::get lazily builds and reuses the same instance
 });
 
 test('addEventHandler registers a nonexistent function name without eagerly validating callability', function (): void {
-    // Real pre-existing bug this locks in the fix for: include/common.inc.php
-    // (formerly admin/include/functions_upload.inc.php, relocated in P23
-    // sub-batch 8b-3) registers 'pwg_image_resize', a function
-    // that doesn't exist anywhere in this codebase, for two events that
-    // are never triggered. PHP's native `callable` type hint validates
-    // eagerly, which would fatal registration itself -- the original
-    // `global $pwg_event_handlers` array never did, only failing (if ever
-    // reached) at actual invocation via call_user_func_array().
+    // Pre-existing bug this locks in the fix for: include/common.inc.php
+    // registers 'pwg_image_resize', a function that doesn't exist anywhere
+    // in this codebase, for two events that are never triggered. PHP's
+    // native `callable` type hint validates eagerly, which would fatal
+    // registration itself -- addEventHandler() does not validate eagerly,
+    // only failing (if ever reached) at actual invocation via
+    // call_user_func_array().
     $dispatcher = new EventDispatcher();
 
     $registered = $dispatcher->addEventHandler('dead_event', 'this_function_does_not_exist_anywhere');

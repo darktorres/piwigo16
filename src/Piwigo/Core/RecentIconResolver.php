@@ -8,26 +8,18 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialectExecutor;
 
 /**
- * P23 batch 8d: "recent" badge/icon computation relocated from
- * include/functions.inc.php -- no natural existing class home (real
- * callers span Category and Users domains: CategoryCatsRenderer/
- * CategoryService/CategoryDefaultRenderer, and UserService), stateless
- * beyond the per-request `get_icon` memoization bridge it reads/writes
- * through (Legacy Coupling Retirement Track A gap-fill batch G5, formerly
- * `$cache['get_icon']`), unchanged.
+ * "Recent" badge/icon computation. Callers span the Category and Users
+ * domains (CategoryCatsRenderer/CategoryService/CategoryDefaultRenderer,
+ * and UserService). Stateless beyond the per-request `get_icon`
+ * memoization bridge it reads/writes through `ProcessCache`.
  *
- * Legacy Coupling Retirement: DI+DBAL migration Phase 1e --
- * `\Piwigo\Db\MysqliDb::getRecentPeriod()`'s own real `SELECT SUBDATE(...)`
- * query (a genuine DB round-trip, unlike `SqlDialect::
- * getRecentPeriodExpression()`'s pure fragment-building sibling) is now
- * executed via `DbConnection::build()`, constructed inline -- this static
- * method has no instance state to inject a Connection into. `ProcessCache`/
- * `Lang` take explicit method parameters instead (singleton/
- * service-locator elimination campaign, Phase 11 sub-phase 11G: every real
- * caller already has both available, so this closed the
- * `ProcessCache::*Static()`/`Lang::current()` shims for this file for real,
- * matching the NOCTOR explicit-param precedent used throughout this
- * campaign).
+ * The `SELECT SUBDATE(...)` query is a genuine DB round-trip (unlike
+ * `SqlDialect::getRecentPeriodExpression()`'s pure fragment-building
+ * sibling); it is executed via a `DbConnection::build()` constructed
+ * inline, since this static method has no instance state to inject a
+ * connection into. `ProcessCache`/`Lang` are taken as explicit method
+ * parameters instead, since every real caller already has both
+ * available.
  */
 final class RecentIconResolver
 {

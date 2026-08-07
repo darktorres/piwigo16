@@ -139,9 +139,7 @@ final class UserBootstrapTest extends IntegrationTestCase
     private function userService(): UserService
     {
         // Kernel::boot() already ran in setUp() -- resolve the same
-        // container-shared instance a real request would get, matching
-        // RedirectService's own real production callers (singleton/
-        // service-locator elimination campaign, Phase 6).
+        // container-shared instance a real request would get.
         $userService = Kernel::container()->get(UserService::class);
         if (! $userService instanceof UserService) {
             throw new LogicException('Container returned an unexpected type for ' . UserService::class);

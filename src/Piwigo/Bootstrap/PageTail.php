@@ -27,27 +27,21 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\UserService;
 
 /**
- * The page-footer orchestration of the deleted include/page_tail.php (P23
- * sub-batch 8f-5), ported verbatim: the "check for Piwigo updates"
+ * The page-footer orchestration: the "check for Piwigo updates"
  * notification block, then the PageTailRenderer render itself.
  *
- * Lives in Bootstrap (L4) for the same reason the deleted seam existed at
- * all: the update check constructs Piwigo\Admin\Extensions\CoreUpdateService
- * and the renderer needs the concrete Piwigo\Admin\PiwigoInfosSender behind its
+ * Lives in Bootstrap (L4) because the update check constructs
+ * Piwigo\Admin\Extensions\CoreUpdateService and the renderer needs the
+ * concrete Piwigo\Admin\PiwigoInfosSender behind its
  * Piwigo\Core\TelemetrySenderInterface constructor param — both
  * L4Integration, which PageTailRenderer (L3Presentation) may not reach
- * (confirmed via a real deptrac violation when tried; see
- * PageTailRenderer's own docblock). Bootstrap shares L4 with
- * Admin/Controller, so this is the violation-free single home — same
- * "whole orchestration lives where the highest-layer dependency does"
- * reasoning as UserBootstrap.
+ * (see PageTailRenderer's own docblock). Bootstrap shares L4 with
+ * Admin/Controller, so this is the violation-free home for the whole
+ * orchestration — same reasoning as UserBootstrap.
  *
- * Every former `include PHPWG_ROOT_PATH . 'include/page_tail.php';` site
- * (the P22 controllers, admin.php, redirect_html()) calls
- * PageTail::render() instead; the request-start instant the seam captures
- * into `global $t2` is read here from PageState (Legacy Coupling
- * Retirement Track A gap-fill batch G5), so call sites need no bootstrap
- * variable of their own.
+ * Callers reach this via PageTail::render(); the request-start instant is
+ * read here from PageState, so call sites need no bootstrap variable of
+ * their own.
  */
 final class PageTail
 {
@@ -55,20 +49,20 @@ final class PageTail
     {
         self::checkForUpdates();
 
-        // P23 batch 8f-4: PageTailRenderer (L3) receives the telemetry
-        // sender through Piwigo\Core\TelemetrySenderInterface -- this class
-        // (L4) is the one place the concrete L4 implementation gets
-        // constructed. Legacy Coupling Retirement Phase 4c: UrlServiceInterface
-        // is wired the same way, see PageTailRenderer's own docblock.
+        // PageTailRenderer (L3) receives the telemetry sender through
+        // Piwigo\Core\TelemetrySenderInterface -- this class (L4) is the
+        // one place the concrete L4 implementation gets constructed.
+        // UrlServiceInterface is wired the same way; see
+        // PageTailRenderer's own docblock.
         new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService())
             ->render(self::pageState()->requestStart);
     }
 
     /**
-     * Legacy Coupling Retirement Workstream D: the non-echoing sibling of
-     * render() -- same update-check orchestration, but returns the fully
-     * rendered page instead of sending it to the browser. For controllers
-     * returning a real PSR-7 Response instead of echoing directly.
+     * The non-echoing sibling of render() -- same update-check
+     * orchestration, but returns the fully rendered page instead of
+     * sending it to the browser. For controllers returning a real PSR-7
+     * Response instead of echoing directly.
      */
     public static function renderToString(): string
     {
@@ -81,8 +75,7 @@ final class PageTail
     /**
      * Resolves the container-shared instance -- PiwigoInfosSender lives
      * outside `Bootstrap/`, so this is called from here rather than
-     * resolving `Kernel::container()` directly (singleton/service-locator
-     * elimination campaign, Phase 2).
+     * resolving `Kernel::container()` directly.
      */
     private static function currentLogger(): CurrentLogger
     {
@@ -95,13 +88,8 @@ final class PageTail
     }
 
     /**
-     * Resolves the container-shared instance instead of the CurrentPaths::
-     * get() shim (closed outright in sub-phase 12F-10) -- this class
-     * already has direct Kernel::container()
-     * access (arch-tested to Bootstrap/ only), so the shim here was only
-     * ever style consistency with a neighboring call, not a structural
-     * need (singleton/service-locator elimination campaign, Phase 11
-     * sub-phase 11J).
+     * Resolves the container-shared instance -- this class already has
+     * direct Kernel::container() access (arch-tested to Bootstrap/ only).
      */
     private static function paths(): Paths
     {
@@ -116,8 +104,7 @@ final class PageTail
     /**
      * Same reasoning as currentLogger() above -- PiwigoInfosSender is
      * constructed manually below, outside `Bootstrap/`, so this is called
-     * from here rather than resolving `Kernel::container()` directly
-     * (singleton/service-locator elimination campaign, Phase 4).
+     * from here rather than resolving `Kernel::container()` directly.
      */
     private static function imageStdParams(): ImageStdParams
     {
@@ -133,8 +120,7 @@ final class PageTail
      * Same reasoning as currentLogger()/imageStdParams() above -- PageState
      * is only read here for its requestStart property, outside `Bootstrap/`'s
      * own manual-construction call sites, so this is called from here
-     * rather than resolving `Kernel::container()` directly (singleton/
-     * service-locator elimination campaign, Phase 4).
+     * rather than resolving `Kernel::container()` directly.
      */
     private static function pageState(): PageState
     {
@@ -149,8 +135,7 @@ final class PageTail
     /**
      * Same reasoning as currentLogger()/imageStdParams()/pageState() above
      * -- CoreUpdateService is constructed manually below, outside
-     * `Bootstrap/`'s own manual-construction call sites (singleton/
-     * service-locator elimination campaign, Phase 5).
+     * `Bootstrap/`'s own manual-construction call sites.
      */
     private static function currentTemplate(): CurrentTemplate
     {
@@ -186,8 +171,7 @@ final class PageTail
      * Same reasoning as currentLogger()/imageStdParams()/pageState()/
      * currentTemplate() above -- CoreUpdateService/PiwigoInfosSender are
      * constructed manually below, outside `Bootstrap/`'s own manual-
-     * construction call sites (singleton/service-locator elimination
-     * campaign, Phase 6).
+     * construction call sites.
      */
     private static function activityService(): ActivityService
     {
@@ -251,10 +235,10 @@ final class PageTail
 
     /**
      * Cheap, no-Doctrine-dependency counterpart to the other resolvers
-     * above -- singleton/service-locator elimination campaign, Phase 12A.
-     * PageTailRenderer only ever needs isAGuest(), never checkStatus()/
-     * accessDenied(), so this builds AccessLevelChecker directly rather
-     * than resolving the full AccessControl through the container.
+     * above -- PageTailRenderer only ever needs isAGuest(), never
+     * checkStatus()/accessDenied(), so this builds AccessLevelChecker
+     * directly rather than resolving the full AccessControl through the
+     * container.
      */
     private static function accessLevelChecker(): AccessLevelChecker
     {

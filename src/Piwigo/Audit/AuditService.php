@@ -55,9 +55,9 @@ final readonly class AuditService
         $afterJson = $after !== null ? json_encode($after, \JSON_THROW_ON_ERROR) : null;
         $ipAddress = IpAddress::fromRemoteAddr();
         // Explicit, not left to the column's DEFAULT CURRENT_TIMESTAMP, so
-        // this respects the frozen test-mode clock the same way every
-        // other P17/P18 service's own Env::now() call sites already do --
-        // real behavior outside test mode is unaffected.
+        // this respects the frozen test-mode clock the same way other
+        // Env::now() call sites do -- real behavior outside test mode is
+        // unaffected.
         $createdAt = Env::now()
             ->format('Y-m-d H:i:s');
 
@@ -135,8 +135,8 @@ final readonly class AuditService
      * MySQL's native JSON column type re-serializes a stored value into
      * its own canonical text form (notably: a space after every `:`) --
      * a value read back via findAllInOrder() is byte-for-byte different
-     * from the string record() originally passed to INSERT, even though
-     * it's the exact same JSON value. Hashing the raw string as-is would
+     * from the string record() passed to INSERT, even though it's the
+     * exact same JSON value. Hashing the raw string as-is would
      * make verifyChain() permanently disagree with record()'s own hash
      * for any row carrying JSON, defeating the whole point of the chain.
      * Decoding then re-encoding through PHP's own json_encode() collapses

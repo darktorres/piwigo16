@@ -18,39 +18,29 @@ use Piwigo\Permission\SqlCondition;
 /**
  * Persistence layer for SectionPopulator/SectionInitializer's own
  * per-section-branch item-id queries (categories/recent_pics/most_visited/
- * best_rated/list/flat-subcat), each exposed as its own named method below
+ * best_rated/list/flat-subcat), each exposed as its own named method below,
  * parameterized by the truly dynamic fragments (permission conditions,
- * order-by, limit) SectionPopulator computes per branch -- deptrac DBAL-leak
- * cleanup (2026-07-29) moved the actual query text here from
- * SectionPopulator itself, which used to build full SQL strings and hand
- * them to a generic queryColumn()/executeStatement() escape hatch. Favorites
- * queries stay in Users\UserRepository (a different domain).
+ * order-by, limit) SectionPopulator computes per branch. Favorites queries
+ * stay in Users\UserRepository (a different domain).
  *
- * Further SQL-modernization audit, Item 5: executeStatement() (a fully
- * generic executor) deleted outright -- zero real callers anywhere in
- * src/ (SectionInitializer's own direct use, described by this class's
- * former docblock, was already migrated away by the time this was
- * checked). queryColumn() stays, but as a private implementation detail
- * of the raw-SQL methods below, not a generic executor meant to be called
- * from outside this class.
+ * queryColumn() is a private implementation detail of the raw-SQL methods
+ * below, not a generic executor meant to be called from outside this
+ * class.
  *
- * Further SQL-modernization audit, Item 15H: drops `extends
- * AbstractRepository` for a directly-injected `EntityManagerInterface`
- * (`Section` is `L2bExtendedDomain`; `Image`/`Category` are
- * `L2aCoreDomain`, an allowed downward dependency, same shape as
- * `Calendar\CalendarRepository`/`Notification\NotificationRepository`).
- * 3 of the 6 methods below (`findVisibleSubcategoryIds()`/
- * `findTopByHitsImageIds()`/`findTopRatedImageIds()`) converted to real
- * DQL -- each of their own `$orderBySql` arguments traced to a hardcoded
- * literal in `SectionPopulator.php`'s own real call sites (or, for
- * `findVisibleSubcategoryIds()`, no `$orderBySql` at all), not the
- * genuinely open-ended `CurrentConfig::orderBy()`/`orderByInsideCategory()`
- * every other method here still depends on -- confirmed by reading every
- * real call site, not assumed. `findSectionImageIds()`/
- * `findRecentImageIds()`/`findImageIdsAmongList()` stay on raw DBAL (via
- * `$this->em->getConnection()`) for that same reason, a real
- * Item-16-scoped blocker matching every other `CurrentConfig::orderBy()`
- * consumer excluded across this campaign.
+ * Uses a directly-injected `EntityManagerInterface` rather than extending
+ * `AbstractRepository` (`Section` is `L2bExtendedDomain`; `Image`/
+ * `Category` are `L2aCoreDomain`, an allowed downward dependency, same
+ * shape as `Calendar\CalendarRepository`/`Notification\NotificationRepository`).
+ *
+ * `findVisibleSubcategoryIds()`/`findTopByHitsImageIds()`/
+ * `findTopRatedImageIds()` run as real DQL: each of their own
+ * `$orderBySql` arguments is a hardcoded literal (or, for
+ * `findVisibleSubcategoryIds()`, there is no `$orderBySql` at all), not
+ * the genuinely open-ended `CurrentConfig::orderBy()`/
+ * `orderByInsideCategory()` every other method here still depends on.
+ * `findSectionImageIds()`/`findRecentImageIds()`/`findImageIdsAmongList()`
+ * stay on raw DBAL (via `$this->em->getConnection()`) for that same
+ * reason.
  */
 final class SectionRepository
 {

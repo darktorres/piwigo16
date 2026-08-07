@@ -22,13 +22,12 @@ use Piwigo\Db\Tables;
 use Piwigo\Template\CurrentTemplate;
 
 /**
- * fsQuickCheck()/imagesIntegrity() had zero dedicated test file. Both need
- * a real DB (Tables::images()/imageCategory()/config()) and, for
- * fsQuickCheck(), a real Template (Lang::t()+$template->assign() writes to
- * 'header_msgs') plus a real ConfigService (confUpdateParam() persists
+ * fsQuickCheck()/imagesIntegrity() need a real DB
+ * (Tables::images()/imageCategory()/config()) and, for fsQuickCheck(), a
+ * real Template (Lang::t()+$template->assign() writes to 'header_msgs')
+ * plus a real ConfigService (confUpdateParam() persists
  * 'fs_quick_check_last_check') -- the same DI-bootstrapped shape
- * CheckIntegrityTest already established for this file's sibling
- * maintenance class.
+ * CheckIntegrityTest uses for this file's sibling maintenance class.
  *
  * `Piwigo\Db\DbConnection::build()` is NOT a singleton (confirmed via
  * direct read: `DriverManager::getConnection(self::params())` mints a
@@ -55,8 +54,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
     private Connection $conn;
 
     /**
-     * Container-shared instance (singleton/service-locator elimination
-     * campaign, Phase 2) -- resolved once per test in setUp(), after
+     * Container-shared instance, resolved once per test in setUp(), after
      * Kernel::boot(), same convention as this file's sibling Integration
      * tests.
      */
@@ -202,9 +200,10 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         // map holding the pre-overwrite ConfigEntry. Without this clear(),
         // upsert()'s find() below would resolve that stale entity, see no
         // property change once it's set back to a fresh date('c'), and
-        // flush() would silently skip the UPDATE entirely (same class of
-        // bug already fixed for TagRepository/raw-write call sites this
-        // session).
+        // flush() would silently skip the UPDATE entirely -- the same
+        // identity-map staleness hazard applies to any raw-write call site
+        // that bypasses a repository's own EntityManager (e.g.
+        // TagRepository).
         $this->configEntityManager?->clear();
 
         $this->checker->reset();

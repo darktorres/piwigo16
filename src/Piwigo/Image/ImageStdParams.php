@@ -17,31 +17,23 @@ use Piwigo\Db\EntityManagerFactory;
 /**
  * Container for standard derivatives parameters.
  *
- * P23 batch 8c: the 12 IMG_* derivative-type identifiers, formerly
- * `define()`d in `include/derivative_std_params.inc.php`, are real class
- * constants here instead -- SEC-60 forbids `define()` inside `src/Piwigo/`,
- * and this class already owned the canonical mapping from each identifier
- * to its real `DerivativeParams`. 118 real call sites across 37 files
- * retargeted in the same pass (all L2a/L2b/L4 callers -- Image/Category/
- * Calendar/Admin/Controller -- none below L2a, so no deptrac layering
- * concern, unlike finding 8's cases).
+ * The 12 IMG_* derivative-type identifiers are real class constants here
+ * (SEC-60 forbids `define()` inside `src/Piwigo/`); this class owns the
+ * canonical mapping from each identifier to its real `DerivativeParams`.
  *
  * Persistence: `load_from_db()`/`save()`/`save_disabled()`/`set_and_save()`/
  * `set_and_save_disabled()`/`restore_default()` go through
  * {@see DerivativeSettingsRepository} (the single `derivative_settings` row
  * -- quality/watermark/the on-demand custom-size throttle cache) and
  * {@see DerivativeSizeRepository} (one `derivative_size` row per named
- * size, `enabled` column replacing the former separate enabled/disabled
- * config keys) -- reached via a fresh `EntityManagerFactory::build(DbConnection::build())`
+ * size, with an `enabled` column distinguishing enabled from disabled
+ * sizes) -- reached via a fresh `EntityManagerFactory::build(DbConnection::build())`
  * per call, same "static utility, throwaway EM, no container dependency"
  * shape as `Piwigo\Caddie\CaddieService`, not the container-shared EM
  * (see `settingsRepository()`/`sizeRepository()`'s own docblock for why).
- * Retired the former `derivatives`/`disabled_derivatives` piwigo_config
- * keys (raw PHP `serialize()`, the last non-JSON exception in that table)
- * entirely -- every field below round-trips through real typed columns
- * now. Controller\Admin\ConfigurationSubController still calls all 5
- * public write methods directly from the admin Configuration page's save
- * handler; their signatures are unchanged by this persistence swap.
+ * Every field below round-trips through real typed columns.
+ * Controller\Admin\ConfigurationSubController calls all 5 public write
+ * methods directly from the admin Configuration page's save handler.
  */
 final class ImageStdParams
 {
@@ -155,7 +147,7 @@ final class ImageStdParams
      * Distinct from get_custom($w, $h, ...) above, which computes a
      * DerivativeParams for a given custom size -- this returns the raw
      * timestamp map itself, e.g. for an admin page listing every
-     * previously-generated custom size.
+     * already-generated custom size.
      *
      * @return array<string, int>
      */

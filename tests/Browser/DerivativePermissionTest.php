@@ -4,20 +4,18 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-// Workstream C3 Part III: found live while verifying ImageDerivativeController's
-// own conversion to a real, routed controller -- checkDerivativePermission()
-// (called from inside a try { ... } catch (\Exception $e) { $logger->error(...); }
-// block, itself calling ierror('Forbidden', 403)) used to be safe because
-// ierror() called exit() directly, which bypasses any enclosing catch entirely.
-// Converting ierror() to throw Piwigo\Http\ResponseReadyException (needed so
-// this class could join the real pipeline) meant that same catch (\Exception)
-// block silently swallowed the 403 and let execution continue as if nothing
-// happened -- a real anonymous request for a private album's derivative was
-// served (200) instead of denied. Fixed by re-throwing ResponseReadyException
-// before the generic catch; this test locks the fix in, both for a
-// not-yet-cached derivative (the "must generate" path) and an already-cached
-// one (the SEC-33 fast path the class's own docblock singles out: "must run
-// before EVERY fast-path exit below, not just the generate branch").
+// checkDerivativePermission() is called from inside a
+// try { ... } catch (\Exception $e) { $logger->error(...); } block that
+// itself calls ierror('Forbidden', 403), which throws
+// Piwigo\Http\ResponseReadyException. That exception must be re-thrown
+// before the generic catch (\Exception) block -- otherwise the catch
+// silently swallows the 403 and lets execution continue as if nothing
+// happened, serving a private album's derivative (200) to an anonymous
+// request instead of denying it. This test locks that in, both for a
+// not-yet-cached derivative (the "must generate" path) and an
+// already-cached one (the SEC-33 fast path the class's own docblock
+// singles out: "must run before EVERY fast-path exit below, not just the
+// generate branch").
 //
 // Fixture shape (tests/Fixtures/piwigo-17.0.sql, see CategoryRepositoryTest's
 // own docblock): category 2 "Nested Sub Album" has 2 direct images (4, 5),
@@ -26,14 +24,6 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 // suffix is freshly generated every time the fixture is regenerated (only
 // the date-based directory portion is stable, from Env::now()'s frozen
 // test clock).
-//
-// docs/PLAN.md gap-closure, 2026-07-23: both tests below used
-// to 404 with "Db file path not found" against any freshly-uploaded image
-// (visibly confirmed as a broken next/previous-photo thumbnail on a real
-// picture page, not just here) -- a real, pre-existing bug (also present in
-// the 16.x-rewrite reference identically), fixed in
-// ImageDerivativeController::parseRequest() -- see that method's own
-// docblock at the fix site for the full explanation.
 
 /**
  * Inserts a derivative size suffix ('sq', 'th', ...) before an image path's
@@ -80,9 +70,9 @@ it('denies an anonymous request for a private album\'s already-cached derivative
     H::setCategoryPrivate(2, private: true);
 
     // [SEC-33]: the permission check must run on every request, cache hit
-    // or not -- this is the exact fast path a raw exit() used to make safe
-    // by construction and a bare throw does not, without the explicit
-    // re-throw fix.
+    // or not -- ResponseReadyException must be re-thrown before the generic
+    // catch (\Exception) block, or this exact fast path serves the
+    // derivative instead of denying it.
     expect(H::httpStatus($path))->toBe(403);
 
     H::setCategoryPrivate(2, private: false);

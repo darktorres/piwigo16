@@ -14,16 +14,13 @@ use Psr\Http\Server\RequestHandlerInterface;
 /**
  * Starts the PHP session (skipping if legacy common.inc.php already
  * started one -- it already registers PwgSession as the save handler on
- * every real request via Piwigo\Bootstrap\SessionBootstrap::register(),
- * formerly include/functions_session.inc.php), then hydrates/persists a
- * Session VO as a request attribute.
+ * every real request via Piwigo\Bootstrap\SessionBootstrap::register()),
+ * then hydrates/persists a Session VO as a request attribute.
  *
- * Deliberately does not register a save handler itself: reconciling
- * "legacy already called session_set_save_handler" vs "new pipeline also
- * wants to" is a real question for whichever phase wires RequestPipeline
- * into live traffic (P22+), not this one's to answer prematurely --
- * calling session_set_save_handler() after a session is already active is
- * a hard PHP error, not just a warning.
+ * Deliberately does not register a save handler itself -- one may
+ * already be registered (see SessionBootstrap::register() above), and
+ * calling session_set_save_handler() again after a session is already
+ * active is a hard PHP error, not just a warning.
  *
  * session_start() can silently fail to activate (e.g. once any output has
  * already been sent -- confirmed empirically under CLI, not just

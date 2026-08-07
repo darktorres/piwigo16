@@ -26,19 +26,12 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 
 /**
- * Ported from admin/cat_modify.php (the "properties" tab of the "album"
- * page slug, dispatched by AlbumSubController).
+ * Renders the "properties" tab of the "album" admin page (dispatched by
+ * AlbumSubController).
  *
- * admin.php itself already gates every page behind
- * check_status(AccessLevel::Administrator) before dispatch (admin.php:65),
- * so the original cat_modify.php's own (redundant) check_status() call is
- * dropped here -- same precedent as PhotosAddSubController.
- *
- * P23 batch 6f fix: dropped a genuinely dead branch, `if (isset($redirect))
- * { redirect(...); }` -- $redirect is never assigned anywhere in this
- * file, in AlbumSubController.php (its only real caller), or via any
- * extract() call anywhere in the request path (confirmed by a direct
- * grep). Always false in the current codebase.
+ * Access control is enforced by admin.php's dispatch gate
+ * (check_status(AccessLevel::Administrator)) before this renderer runs, so
+ * render() does not repeat that check.
  */
 final class CatModifyPageRenderer
 {
@@ -133,22 +126,16 @@ final class CatModifyPageRenderer
         // 'id_uppercat' is one of the nullable fields normalized to '' above
         // (root category); otherwise it is the parent category id.
         //
-        // Bug found while writing coverage for this branch: this used to be
-        // `is_string($category['id_uppercat']) ? ... : ''`, which assumed
-        // the pre-ORM raw-row shape (mysqli hands back every column as a
-        // string). $category actually comes from
-        // Category\Projection\Category::toArray() (see this method's own
-        // top-of-file docblock), whose 'id_uppercat' key is a real ?int --
-        // so `is_string(...)` was always false for every category that
-        // actually has a parent, silently collapsing $category_id_uppercat
-        // to '' and PARENT_CAT_ID (below) to 0 for every sub-album. That fed
-        // straight into cat_modify.tpl's own `var parent_album`/
-        // `related_categories_ids` JS globals, which the move-album jstree
-        // widget (themes/admin/default/js/cat_modify.js) uses to preselect
-        // the album's real current parent -- always showing root selected
-        // instead. Accept int or string here, same pattern this file's own
-        // site_id handling already uses just below (representative_picture_id
-        // decision, ~L299).
+        // $category comes from Category\Projection\Category::toArray()
+        // (see this method's own top-of-file docblock), whose
+        // 'id_uppercat' key is a real ?int, not a numeric string -- accept
+        // int or string here, same pattern this file's own site_id
+        // handling uses just below (representative_picture_id decision,
+        // ~L299). $category_id_uppercat and PARENT_CAT_ID (below) feed
+        // cat_modify.tpl's own `var parent_album`/`related_categories_ids`
+        // JS globals, which the move-album jstree widget
+        // (themes/admin/default/js/cat_modify.js) uses to preselect the
+        // album's current parent.
         $category_id_uppercat_raw = $category['id_uppercat'];
         $category_id_uppercat = (is_int($category_id_uppercat_raw) || is_string($category_id_uppercat_raw)) ? $category_id_uppercat_raw : '';
 

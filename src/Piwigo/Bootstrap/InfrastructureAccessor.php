@@ -16,30 +16,23 @@ use Piwigo\Storage\StorageRegistry;
  * Typed accessor to the container-resolved `EntityManagerInterface` --
  * same "Kernel::container() is restricted to Bootstrap/ + index.php by an
  * arch test" rationale as CoreDomainAccessor/ExtendedDomainAccessor/
- * PresentationAccessor/AdminAccessor's own docblocks, but for
- * L1Infrastructure rather than a domain layer (there is no
- * "InfrastructureAccessor" sibling among those 4 because nothing needed
- * one until now).
+ * PresentationAccessor's own docblocks, but for L1Infrastructure rather
+ * than a domain layer.
  *
  * Distinct from `Piwigo\Db\EntityManagerFactory::build()`: that factory
  * always constructs a brand-new EntityManager (correct for its own
- * stated callers -- static methods, self-managed singletons -- which
- * must not accidentally depend on container/request state). This
- * accessor instead returns the container's own single, per-request
- * EntityManagerInterface instance -- the one every container-resolved
- * repository shares -- so a raw DBAL/BatchWriter write elsewhere in the
- * same request can clear() the *same* identity map those repositories
- * read through, not a throwaway one of its own.
+ * callers -- static methods, self-managed singletons -- which must not
+ * accidentally depend on container/request state). This accessor instead
+ * returns the container's own single, per-request EntityManagerInterface
+ * instance -- the one every container-resolved repository shares -- so a
+ * raw DBAL/BatchWriter write elsewhere in the same request can clear()
+ * the *same* identity map those repositories read through, not a
+ * throwaway one of its own.
  *
- * Singleton/service-locator elimination campaign, Phase 10: PwgImages's
- * own conversion (the last Ws/Pwg* class using this accessor) emptied
- * every real `src/Piwigo` caller of the first 3 methods -- but `config/
- * messenger.php` (outside `src/Piwigo`, and deliberately outside the
- * `Kernel::container()` arch-test boundary too, per its own docblock)
- * calls all 4 to build its handler factories' object graphs (Phase 12
- * sub-phase 12B added dbCredentials(), for the same file's own
- * DbCredentials::current() closure), so this class stays permanently, not
- * just until Phase 10's own close-out.
+ * `config/messenger.php` (outside `src/Piwigo`, and deliberately outside
+ * the `Kernel::container()` arch-test boundary too, per its own
+ * docblock) is the only caller, using all 4 methods to build its handler
+ * factories' object graphs.
  */
 final class InfrastructureAccessor
 {
@@ -56,8 +49,7 @@ final class InfrastructureAccessor
      * Same rationale as entityManager() above -- gives still-static callers
      * (e.g. config/messenger.php's handler factories) the real
      * container-shared CurrentLogger instance, not just the Logger value
-     * its own get() unwraps to (singleton/service-locator elimination
-     * campaign, Phase 2).
+     * its own get() unwraps to.
      */
     public static function currentLogger(): CurrentLogger
     {
@@ -87,8 +79,7 @@ final class InfrastructureAccessor
      * Same rationale as currentLogger()/storageRegistry() above -- gives a
      * still-static caller (e.g. Admin\Install\InstallService's own
      * genuinely-static-context install flow) the real, container-shared
-     * WsContext instance, singleton/service-locator elimination campaign,
-     * Phase 11 sub-phase 11D.
+     * WsContext instance.
      */
     public static function wsContext(): WsContext
     {
@@ -102,11 +93,9 @@ final class InfrastructureAccessor
     /**
      * Same rationale as wsContext() above -- gives config/messenger.php's
      * still-static handler factories the real, container-shared
-     * DbCredentials instance instead of the DbCredentials::current() shim
-     * (singleton/service-locator elimination campaign, Phase 12 sub-phase
-     * 12B). No Kernel::isBooted()-false fallback needed here, unlike the
-     * shim itself: this file's own handler factories only ever run after
-     * the bus (and therefore the container) is already built.
+     * DbCredentials instance. No Kernel::isBooted()-false fallback needed
+     * here: this file's own handler factories only ever run after the bus
+     * (and therefore the container) is already built.
      */
     public static function dbCredentials(): DbCredentials
     {

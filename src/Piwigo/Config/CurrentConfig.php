@@ -10,46 +10,31 @@ use ReflectionClass;
 use ReflectionProperty;
 
 /**
- * Typed facade over Piwigo's runtime configuration (P13, retyped in full
- * during Config generic-accessor removal). Every real config key is a
- * private typed property -- named getter/setter pair, no generic
- * string-keyed surface (no override()/has()/delete()/loadArray(), all
- * deleted; see design doc for the full rationale). DB-backed persistence
- * stays a two-part split (Legacy Coupling Retirement Phase 5, narrowed in
- * Phase 8, 8d, unchanged by this rename): this class is the typed
+ * Typed facade over Piwigo's runtime configuration. Every real config key is
+ * a private typed property with a named getter/setter pair; there is no
+ * generic string-keyed surface (no override()/has()/delete()/loadArray()).
+ * DB-backed persistence is a two-part split: this class is the typed
  * read/in-memory-write layer; Piwigo\Config\ConfigService is the DI/
  * Doctrine-backed persistence layer, constructor-injected where possible
- * and reached via Piwigo\Config\CurrentConfigService::get() everywhere
- * else. Renamed from Config to CurrentConfig to match this codebase's own
- * established Current* convention (CurrentUser, CurrentLogger,
- * CurrentTemplate, CurrentConfigService) -- this was the one
- * class of that same shape breaking the pattern. (CurrentPersistentCache,
- * once a sibling of this same shape, was deleted by the singleton/DI
- * elimination campaign -- see config/container.php's PersistentCache
- * binding -- since its value never actually varied per request.
- * CurrentPaths, another former sibling, was deleted the same way in
- * sub-phase 12F-10, once its own last real caller converted to
- * constructor-injected Paths.)
+ * and reached via Piwigo\Config\CurrentConfigService::get() everywhere else.
  *
- * Singleton/service-locator elimination campaign, Phase 9: converted from
- * a static-property bag to a real, container-shared instance. Sub-phase
- * 12F-12 (the campaign's final shim closure) deleted the transitional
- * `current()` bridge outright -- every real caller now takes a real,
- * constructor-injected instance or an explicit NOCTOR param instead.
+ * This is a container-shared instance. Callers take it via constructor
+ * injection, or as an explicit param at call sites with no constructor of
+ * their own (NOCTOR).
  *
  * DB credentials (db_host/db_port/db_driver/db_base/db_user/db_password/
- * db_prefix) and the handful of sysadmin-lockable settings
- * (show_php_errors/show_php_errors_on_frontend/apache_authentication/
- * external_authentification/allowed_hosts) are NOT here -- they moved to
- * Piwigo\Db\DbCredentials (env-only) and Piwigo\Config\DeploymentPolicy
- * (file-only) respectively, closing the "which source wins" overlap those
- * keys used to have with this DB-backed class.
+ * db_prefix) live in Piwigo\Db\DbCredentials (env-only). The handful of
+ * sysadmin-lockable settings (show_php_errors/show_php_errors_on_frontend/
+ * apache_authentication/external_authentification/allowed_hosts) live in
+ * Piwigo\Config\DeploymentPolicy (file-only). Neither set of keys is a
+ * property on this class, so there is no ambiguity over which source wins
+ * for them.
  *
  * Adding a new key: add a property + getter + setter by hand (matching
- * the shape of any neighboring one) -- there is no more schema/generator
- * to run. loadConfFromDb() discovers every property reflectively, so a
- * new property is picked up automatically as long as its name matches a
- * real `config` table row.
+ * the shape of any neighboring one) -- there is no schema/generator to
+ * run. loadConfFromDb() discovers every property reflectively, so a new
+ * property is picked up automatically as long as its name matches a real
+ * `config` table row.
  */
 final class CurrentConfig
 {
@@ -4213,22 +4198,16 @@ final class CurrentConfig
 
     // === blk_menubar ===
     /**
-     * Serialized per-block position overrides for the sidebar menubar (the
-     * only real Piwigo\Menu\BlockManager id anywhere in this codebase --
-     * confirmed by grepping every `new BlockManager(...)` call site). Never
-     * had a SCHEMA entry -- read via the dynamic `'blk_' . $id` bag key by
-     * BlockManager/MenubarPageRenderer. Given a real property here instead of
-     * staying dynamic, since the "id" was never actually variable in
-     * practice.
+     * Serialized per-block position overrides for the sidebar menubar. This
+     * is the only real Piwigo\Menu\BlockManager id anywhere in this
+     * codebase, so a single property is enough -- the id is never actually
+     * variable in practice.
      *
-     * `?array`, not the raw encoded blob -- matches every other array-shaped
-     * property (gap-closure Stage 1a-bis item 1). `Admin\MenubarPageRenderer`
-     * writes this directly via `Config\ConfigRepository::upsert()` (P24
-     * Part B: the row-shaped write this used to do through the now-deleted
-     * `Menu\MenubarLayoutRepository` needed no dedicated repository once
-     * `ConfigEntry` existed), `json_encode()`-d the same way `ConfigService::
-     * encode()`'s own item 5 convention does -- so the read side stays a
-     * plain `hydrate()`-driven `json_decode()`, no manual unserialize()
+     * Exposed as `?array`, not the raw encoded blob, matching every other
+     * array-shaped property. `Admin\MenubarPageRenderer` writes it directly
+     * via `Config\ConfigRepository::upsert()`, `json_encode()`-d the same
+     * way `ConfigService::encode()` encodes it; the read side is a plain
+     * `hydrate()`-driven `json_decode()`, with no manual unserialize()
      * anywhere.
      * @var array<mixed>|null
      */
@@ -4711,18 +4690,11 @@ final class CurrentConfig
     }
 
     // === order_by ===
-    // "nothing is frozen" gap-closure -- CurrentConfig::orderBy()'s structured
-    // {field,dir}[] shape modeled NOTHING any real code ever wrote: every
-    // real writer (ConfigurationSubController's save handler) always stores
-    // a raw "ORDER BY ..." SQL fragment string, and every real reader (15+
-    // call sites across BatchManager*/SearchService/CategoryService/
-    // CalendarRenderer/TagService/SectionPopulator/Ws/PwgCategories/
-    // GalleryController) already bypassed the typed accessor entirely via
-    // CurrentConfig::all()['order_by'], is_string()-guarding it themselves. Fixed
-    // here to match reality: a plain string, default matching
-    // install/config.sql's own seed row. filterOrderEntries() (the shared
-    // {field,dir}[] validator) is deleted -- nothing needs it once neither
-    // order_by nor order_by_inside_category models that shape.
+    // A raw SQL "ORDER BY ..." fragment string, not a structured
+    // {field,dir}[] shape -- every real reader across BatchManager*/
+    // SearchService/CategoryService/CalendarRenderer/TagService/
+    // SectionPopulator/Ws/PwgCategories/GalleryController treats it as one.
+    // Default matches install/config.sql's seed row.
     private string $orderBy = 'ORDER BY date_available DESC, file ASC, id ASC';
 
     public function orderBy(): string
@@ -5176,12 +5148,9 @@ final class CurrentConfig
     // ---- Bulk / test / legacy-bridge helpers -----------------------------
 
     /**
-     * Every property, keyed by property name -- reflection-based, replacing
-     * the former SCHEMA-driven all(). Sensitive-flagged properties are
-     * redacted. Private: the only remaining real caller is dumpForLog()
-     * itself; every other former all()['key'] read site had a real typed
-     * getter or moved to Piwigo\Db\DbCredentials/Piwigo\Config\
-     * DeploymentPolicy (Config generic-accessor removal).
+     * Every property, keyed by property name, gathered via reflection.
+     * Sensitive-flagged properties are redacted. Private: the only real
+     * caller is dumpForLog() itself.
      *
      * @return array<string, mixed>
      */
@@ -5190,9 +5159,8 @@ final class CurrentConfig
         $out = [];
         $reflection = new ReflectionClass($this);
         foreach ($reflection->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
-            // Excludes $fallback (the current() shim's own static memo, not
-            // a real config key) -- IS_PRIVATE alone matches static
-            // properties too, isStatic() is the only way to tell them apart.
+            // IS_PRIVATE alone also matches static properties; isStatic()
+            // is the only way to filter those out.
             if ($property->isStatic()) {
                 continue;
             }
@@ -5215,16 +5183,12 @@ final class CurrentConfig
     }
 
     /**
-     * A small, explicit snapshot of the handful of legacy config defaults
-     * still needed before a real `config` table exists to load from --
+     * A small, explicit snapshot of the config defaults needed before a
+     * real `config` table exists to load from --
      * Controller\Admin\ConfigurationSubController::orderByIsLocal() builds
      * a bare `$conf` array from this, then overlays a site's
      * local/config/config.inc.php on top. NOT a general mechanism: these
-     * are exactly the keys that real caller reads (confirmed by grep, not
-     * assumed), matching the former defaultsArray()'s own real output
-     * exactly (which only ever covered non-'custom', non-null-default
-     * SCHEMA entries -- every 'custom' key's real caller already has its
-     * own inline fallback regardless, unaffected either way).
+     * are exactly the keys that real caller reads.
      *
      * @return array<string, mixed>
      */
@@ -5244,15 +5208,13 @@ final class CurrentConfig
      * Test-only -- restricted to tests/ by an arch test, mirroring the
      * equivalent guard on Kernel's and ShutdownHandler's own
      * test-isolation reset methods. Restores every property to its own
-     * declared default, reflectively -- replaces the former
-     * `$this->data = [];` (trivial when everything read through one
-     * untyped bag; every property now needs its own reset).
+     * declared default, reflectively.
      */
     public function reset(): void
     {
         $reflection = new ReflectionClass($this);
         foreach ($reflection->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
-            // Excludes $fallback -- same reasoning as all()'s own guard above.
+            // Same isStatic() guard as all() above.
             if ($property->isStatic()) {
                 continue;
             }

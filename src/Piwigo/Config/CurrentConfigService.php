@@ -8,30 +8,22 @@ use LogicException;
 
 /**
  * Container-shared instance holding the current request's `ConfigService`
- * reference -- singleton/service-locator elimination campaign, Phase 5.
- * Same shape as `Piwigo\Template\CurrentTemplate`/`Piwigo\Users\CurrentUser`:
- * a nullable, replaceable reference to a collaborator that genuinely can be
- * swapped mid-request (or per-test, see below), not a value object whose own
- * fields get mutated in place (that's `Piwigo\Db\DbCredentials`'s shape,
- * wrong fit here since `ConfigService` is an injected collaborator with its
- * own identity, not a bag of scalars).
+ * reference. Same shape as `Piwigo\Template\CurrentTemplate`/
+ * `Piwigo\Users\CurrentUser`: a nullable, replaceable reference to a
+ * collaborator that genuinely can be swapped mid-request (or per-test, see
+ * below), not a value object whose own fields get mutated in place (that's
+ * `Piwigo\Db\DbCredentials`'s shape, wrong fit here since `ConfigService`
+ * is an injected collaborator with its own identity, not a bag of
+ * scalars). Every real caller takes this via constructor injection.
  *
- * The former `current()` transitional bridge for callers not yet converted
- * to constructor injection (memoized -- same "load once, read/write many
- * times per request" reasoning as `CurrentTemplate`/`CurrentUser`) closed
- * outright in sub-phase 12F-5: every real caller now takes this via
- * constructor injection.
- *
- * Deliberately NOT a lazily-resolving `get()` (an earlier draft of this
- * class considered that, to guarantee `ConfigService`/`Connection` never
- * resolve before `Piwigo\Admin\Install\InstallWizard::boot()`'s own
- * `DbCredentials::seed()` call on the install path) -- unnecessary: a plain
- * nullable-reference wrapper already has that property for free, exactly
- * like `CurrentTemplate`/`CurrentUser` today. Constructor-injecting this
- * class touches nothing until `get()` is actually called; only direct
- * `ConfigService` injection carries the premature-resolution risk (see
- * `Piwigo\Bootstrap\InstallBootstrap`'s own docblock for the concrete
- * bug class this avoids).
+ * This class does not eagerly resolve `ConfigService`; nothing happens
+ * until `get()` is called. Constructor-injecting `CurrentConfigService` is
+ * therefore safe wherever `ConfigService`/`Connection` must not resolve
+ * before `Piwigo\Admin\Install\InstallWizard::boot()`'s own
+ * `DbCredentials::seed()` call on the install path -- injecting
+ * `ConfigService` directly there would carry that premature-resolution
+ * risk (see `Piwigo\Bootstrap\InstallBootstrap`'s own docblock for the
+ * concrete bug class this avoids).
  *
  * `isSet()` means exactly "has `set()` been called on this instance" --
  * not "has `loadConfFromDb()` run." `Piwigo\Bootstrap\CliBootstrap::run()`

@@ -47,10 +47,8 @@ final class LocalSiteReader
         private readonly CurrentConfig $currentConfig,
         private readonly ?MetadataService $metadataService = null,
     ) {
-        // Legacy Coupling Retirement Track A batch A4: was memoized on the
-        // $conf global (flip_file_ext/flip_picture_ext never DB-persist --
-        // pure per-instance derived state), now a private property computed
-        // once per instance instead.
+        // flip_file_ext/flip_picture_ext are pure per-instance derived
+        // state (never DB-persisted), computed once per instance here.
         $this->flip_file_ext = array_flip($this->currentConfig->fileExtensions());
         $this->flip_picture_ext = array_flip($this->currentConfig->pictureExtensions());
     }
@@ -67,10 +65,9 @@ final class LocalSiteReader
     }
 
     /**
-     * Same reasoning as lang() above -- matched CurrentPaths::get()'s own
-     * identical no-graceful-fallback shape (singleton/service-locator
-     * elimination campaign, Phase 11 sub-phase 11H; that shim itself
-     * closed outright in sub-phase 12F-10).
+     * No pre-boot fallback (unlike eventDispatcher()/sessionService()
+     * below) -- there is no sensible default to construct when the
+     * container isn't booted, so this throws instead.
      */
     private function paths(): Paths
     {
@@ -86,8 +83,7 @@ final class LocalSiteReader
      * Container resolve, not a constructor property -- used only inside
      * metadataService()'s own lazy-default fallback above. A required
      * constructor param here would break this class's own "both real
-     * callers construct with just a site URL" simplicity (singleton/
-     * service-locator elimination campaign, Phase 11 sub-phase 11G).
+     * callers construct with just a site URL" simplicity.
      */
     private function lang(): Lang
     {
@@ -100,11 +96,9 @@ final class LocalSiteReader
     }
 
     /**
-     * Same reasoning as lang() above -- gracefully falls back when
-     * Kernel::boot() hasn't run, matching EventDispatcher's own former
-     * get() shim's identical pre-boot fallback (closed in sub-phase
-     * 12F-9; unlike lang() above/Lang's own former current() shim, which
-     * had no safe default and always threw).
+     * Gracefully falls back to a new EventDispatcher() when
+     * Kernel::boot() hasn't run yet -- unlike lang()/paths() above,
+     * which have no safe default and always throw.
      */
     private function eventDispatcher(): EventDispatcher
     {

@@ -11,25 +11,18 @@ use LogicException;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Lang\Translator;
 
-/**
- * P23 batch 8d: pure date/time formatting helpers relocated from
- * include/functions.inc.php -- no natural existing class home, stateless.
- */
 final class DateHelper
 {
     private static ?Translator $translatorFallback = null;
 
     /**
-     * Same "container resolve, not a constructor property" reasoning as
-     * Activity\ActivityService's own currentUser()/currentConfig() and
-     * this campaign's own Core/Logger.php precedent, adapted to a fully
-     * static context (DateHelper is never `new`'d, no `$this` to hang a
-     * resolver off of) -- ~30 real call sites across Admin/Ws/Controller/
-     * Auth rule out threading Lang/Translator as explicit params through
-     * every one. Lang's own former current() shim docblock established
-     * there's no safe pre-boot fallback for Lang (its constructor needs
-     * real collaborators), so this mirrors that shim's exact body instead
-     * of inventing a new fallback shape.
+     * Resolves via the container rather than being carried as a
+     * constructor property: DateHelper is fully static (never `new`'d, no
+     * `$this` to hang a resolver off of), and ~30 real call sites across
+     * Admin/Ws/Controller/Auth rule out threading Lang/Translator through
+     * every one as explicit params. Lang has no safe pre-boot fallback
+     * (its constructor needs real collaborators), so this always resolves
+     * through the container.
      */
     private static function lang(): Lang
     {
@@ -42,11 +35,9 @@ final class DateHelper
     }
 
     /**
-     * Same reasoning as self::lang() above, but mirrors Translator::get()'s
-     * former shim body instead (closed in sub-phase 12F-6) -- that shim
-     * DID define a safe pre-boot fallback (a fresh, memoized
-     * `new Translator(new CurrentConfig())`), so this keeps the identical
-     * shape/memoization.
+     * Same container-resolve reasoning as self::lang() above, but unlike
+     * Lang, Translator has a safe pre-boot fallback: a fresh, memoized
+     * `new Translator(new CurrentConfig())`.
      */
     private static function translator(): Translator
     {
@@ -182,7 +173,6 @@ final class DateHelper
      * @param string[]|null $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
      *    THIS PARAMETER IS PLANNED TO CHANGE
      * @param string|null $format input format respecting date() syntax
-     * @since 16
      */
     public static function formatDate(int|string|DateTime|false $original, ?array $show = null, ?string $format = null): string
     {
@@ -353,8 +343,6 @@ final class DateHelper
      * Checks if the provided string is valid for a comparison test with a datetime field in MySQL
      *
      * Possible values : YYYY-MM-DD HH:MM:SS or YYYY-MM-DD
-     *
-     * @since 16.3
      */
     public static function isValidMysqlDatetime(string $datetime): bool
     {

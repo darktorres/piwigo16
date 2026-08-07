@@ -25,29 +25,17 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Template\CurrentTemplate;
 
 /**
- * Ported from admin/element_set_ranks.php (the "sort_order" tab of the
- * "album" page slug, dispatched by AlbumSubController) -- changes the rank
- * of images inside a category.
+ * Renders the "sort_order" tab of the "album" admin page (dispatched by
+ * AlbumSubController) -- changes the rank of images inside a category.
+ * The POST handler is CSRF-protected: render() assigns PWG_TOKEN and
+ * element_set_ranks.tpl carries the matching hidden input.
  *
- * P23 batch 6f fix: the POST handler had no check_pwg_token(), unlike its
- * two sibling tabs (CatPermPageRenderer, AlbumNotificationPageRenderer),
- * both of which already protect their own POST handlers -- a real CSRF gap
- * closed here the same way, matching every prior sub-batch's precedent.
- * element_set_ranks.tpl itself never had a hidden pwg_token field either
- * (confirmed via a direct grep -- unlike cat_perm.tpl/album_notification.tpl,
- * which both already render one): this render() method now assigns
- * PWG_TOKEN and the template gained the matching hidden input, the same
- * shape as those two sibling templates, so the real "Save order" button
- * keeps working once the server-side check is enforced.
- *
- * admin.php itself already gates every page behind
- * check_status(AccessLevel::Administrator) before dispatch (admin.php:65),
- * so the original element_set_ranks.php's own (redundant) check_status()
- * call is dropped here -- same precedent as PhotosAddSubController. The
- * missing/non-numeric cat_id guard is NOT dropped (unlike check_status()):
- * it reads $_GET['cat_id'] directly rather than through
- * AlbumSubController's own already-validated $category array, so this is
- * a real, still-load-bearing check, kept unchanged.
+ * Access control is enforced by admin.php's dispatch gate
+ * (check_status(AccessLevel::Administrator)) before this renderer runs, so
+ * render() does not repeat that check. The cat_id guard is not redundant,
+ * though: it reads $_GET['cat_id'] directly rather than through
+ * AlbumSubController's own already-validated $category array, so it stays
+ * a real, load-bearing check.
  */
 final class ElementSetRanksPageRenderer
 {
@@ -93,12 +81,10 @@ final class ElementSetRanksPageRenderer
         $elementSetRanksRequest = ElementSetRanksRequest::fromGlobals();
 
         if (! $elementSetRanksRequest->isCatIdValid) {
-            // Used to be trigger_error(..., E_USER_ERROR) -- deprecated as
-            // of PHP 8.4, see HtmlService::fatalError()'s own docblock for
-            // the real replacement/reasoning. Execution always fell
-            // through to the cast below regardless (see
-            // ElementSetRanksRequest's own docblock), so nothing else
-            // changes here.
+            // recordFatal() only records the failure; it doesn't throw or
+            // return, so execution always falls through to use
+            // $elementSetRanksRequest->catId below regardless of whether
+            // cat_id was valid.
             $this->errorCollector->recordFatal('missing cat_id param');
         }
 

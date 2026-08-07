@@ -62,11 +62,8 @@ use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
 
 /**
- * Piwigo\Section\SectionPopulator::populate() -- had zero dedicated
- * coverage (the file's own docblock only extracted computeMetaRobots()/
- * needsPermalinkRedirect() as pure-Unit-testable helpers; populate()
- * itself, the bulk of the class, was never called from any Unit/
- * Integration/Browser test). Fixture (tests/Fixtures/piwigo-17.0.sql):
+ * Covers Piwigo\Section\SectionPopulator::populate() end to end.
+ * Fixture (tests/Fixtures/piwigo-17.0.sql):
  * category 1 "Sample Album" (root, uppercats='1', 3 images: 1,2,3),
  * category 2 "Nested Sub Album" (child of 1, uppercats='1,2', images 4,5);
  * tags 1 "nature" (images 1,2,3), 2 "travel" (image 1), 3 "family" (image
@@ -394,9 +391,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertNotNull($ctx);
         self::assertSame('search', $ctx->section);
         // getQuickSearchResultsNoCache()'s own 'qs' shape always adds
-        // matching_tags/matching_cats/unmatched_terms alongside 'q' --
-        // confirmed live, not just the bare ['q' => ...] this test
-        // originally assumed.
+        // matching_tags/matching_cats/unmatched_terms alongside 'q'.
         self::assertSame([
             'q' => 'nature',
             'unmatched_terms' => [],
@@ -525,22 +520,17 @@ final class SectionPopulatorTest extends IntegrationTestCase
             self::fail('populate() should have thrown ResponseReadyException.');
         } catch (ResponseReadyException $e) {
             $response = $e->response();
-            // Real, adversarially-confirmed bug fixed here: this branch's
-            // own "this is a permanent redirection" comment and its
-            // setStatusHeader(301) call were both already correct intent,
-            // but redirectHttp() had no way to carry that status into the
-            // Response object it throws -- ResponseFactory::redirect()'s
-            // own 302 default silently won every time, regardless of the
-            // real header() call already sent. redirectHttp()/
-            // RedirectServiceInterface now take an explicit $status.
+            // This branch's own setStatusHeader(301) call requires
+            // redirectHttp()/RedirectServiceInterface's own explicit
+            // $status parameter -- without it, ResponseFactory::redirect()'s
+            // 302 default takes precedence regardless of the real header()
+            // call already sent.
             self::assertSame(301, $response->getStatusCode());
-            // Also a real, adversarially-confirmed bug: duplicateIndexUrl()
-            // reads the current section's params from SectionContextRegistry,
-            // which populate() only otherwise populates at its very end --
-            // too late for this early-exit redirect, so the rebuilt URL
-            // silently lost its category entirely (bare root path). Fixed
-            // by registering the context (already-safe defensive fallbacks
-            // for every not-yet-computed field) right before this redirect.
+            // duplicateIndexUrl() reads the current section's params from
+            // SectionContextRegistry -- populate() registers the context
+            // (with defensive fallbacks for every not-yet-computed field)
+            // right before this early-exit redirect so the rebuilt URL
+            // keeps its category instead of losing it (bare root path).
             self::assertStringContainsString('category/1-sample_album', $response->getHeaderLine('Location'));
         }
     }

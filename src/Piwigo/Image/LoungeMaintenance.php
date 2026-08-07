@@ -11,35 +11,25 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\Request\EmptyLoungeRequest;
 
 /**
- * Relocated from Piwigo\Core (P23 batch 8d's original placement): its own
- * query touches `lounge`/`images`, an Image-domain concern
- * ImageRepository::findLoungeRows() already covers the "list every lounge
- * row" half of -- staying in Core\ (L1Infrastructure) would have meant
- * either duplicating that query outside its own repository, or reaching
- * "up" from L1Infrastructure into Image\ImageRepository (L2aCoreDomain),
- * a deptrac violation deptrac only allows in the other direction. Moved
- * here instead: needsEmptying() now calls
- * ImageRepository::findOldestLoungeAgeInfo() (Image, same layer), and the
- * real domain action ImageService::emptyLounge() this class's own
- * `needsEmptying()` gates (via include/common.inc.php's own
- * `needsEmptying()` caller, isn't deptrac-scanned) is now a same-layer
- * (Image -> Image) call instead of a cross-layer one.
+ * Lives in the Image domain (not Core\) because its query touches
+ * `lounge`/`images` -- the same domain `ImageRepository::findLoungeRows()`
+ * already covers. `needsEmptying()` calls
+ * `ImageRepository::findOldestLoungeAgeInfo()` (same layer), and the
+ * domain action `ImageService::emptyLounge()` this class's own
+ * `needsEmptying()` gates is a same-layer (Image -> Image) call.
  *
- * Singleton/service-locator elimination campaign, Phase 9: `needsEmptying()`
- * is a purely static method with no instance/constructor at all (same
- * shape as `Core\FilesystemHelper`) -- there is no `$this` to receive
- * `CurrentConfig` via constructor injection through. Phase 12 sub-phase
- * 12D: takes CurrentConfig as an explicit param instead (NOCTOR shape) --
- * its one real caller, Bootstrap\RequestBootstrap.php, already has one in
- * scope via its own self::currentConfig() accessor, right next to this
+ * `needsEmptying()` is a purely static method with no instance/
+ * constructor at all (same shape as `Core\FilesystemHelper`), so there is
+ * no `$this` to receive `CurrentConfig` via constructor injection through
+ * -- it takes `CurrentConfig` as an explicit parameter instead. Its one
+ * real caller, Bootstrap\RequestBootstrap.php, already has one in scope
+ * via its own self::currentConfig() accessor, right next to this
  * method's own call site.
  */
 final class LoungeMaintenance
 {
     /**
      * Checks if the lounge needs to be emptied automatically.
-     *
-     * @since 12
      */
     public static function needsEmptying(CurrentConfig $currentConfig): bool
     {

@@ -48,16 +48,12 @@ use Piwigo\Users\CurrentUser;
 /**
  * HTML rendering helpers, error pages, and status/header utilities.
  *
- * Real constructor collaborators for the 8 shims this class read
- * internally (CurrentConfig/EventDispatcher/ProcessCache/ErrorCollector/
- * CurrentUser/CurrentTemplate/PageState/Translator), plus the same
- * optional, lazy-defaulted CategoryRepository as before (Legacy Coupling
- * Retirement: DI+DBAL migration, Phase 1b -- getCatDisplayNameCache()'s
- * own need, following MailService::$webmasterMailProvider's established
- * lazy-default pattern, since this class still has hundreds of real
- * `new HtmlService(...)` construction sites and a DB-backed repository
- * isn't worth forcing on every one of them) (singleton/service-locator
- * elimination campaign, Phase 11 sub-phase 11E).
+ * Constructor collaborators are CurrentConfig, EventDispatcher,
+ * ProcessCache, ErrorCollector, CurrentUser, CurrentTemplate, PageState,
+ * and Translator, plus an optional, lazy-defaulted CategoryRepository
+ * (getCatDisplayNameCache()'s own need) -- this class still has hundreds
+ * of real `new HtmlService(...)` construction sites, and a DB-backed
+ * repository isn't worth forcing on every one of them.
  *
  * `Lang` is NOT a required constructor param, despite being a shim this
  * class reads -- it stays a lazily-resolved private helper below (same
@@ -65,57 +61,52 @@ use Piwigo\Users\CurrentUser;
  * dependency, not just churn: `Lang` itself requires
  * `HtmlRenderingInterface` (this class implements it, so
  * `HtmlService -> Lang -> HtmlRenderingInterface -> HtmlService` would be
- * a hard autowiring cycle). `AccessControl` itself had the same problem,
- * but the one thing this class actually reads from it (`isAGuest()`)
- * moved to `AccessLevelChecker` (singleton/service-locator elimination
- * campaign, Phase 12 sub-phase 12A) -- that class has no
+ * a hard autowiring cycle). `AccessControl` has the same problem; the one
+ * thing this class actually reads from it (`isAGuest()`) is read via
+ * `AccessLevelChecker` instead -- that class has no
  * `HtmlRenderingInterface` dependency of its own, so it's built from this
  * class's own already-required `currentUser`/`currentConfig` instead of a
- * container resolve. Since `UrlService` itself also
- * requires `HtmlRenderingInterface` (this class is its own
- * `htmlRenderer`), and `UrlServiceInterface` is one of the most widely
- * autowired dependencies in the whole app, HtmlService sits on an
- * unusually broad transitive dependency chain -- a required param here
- * for anything that isn't provably side-effect-free at first resolution
- * risks the exact class of regression found live during Template.php's
- * own closure this same sub-phase (ImageStdParams's eager DB-touching
+ * container resolve. `UrlService` itself also requires
+ * `HtmlRenderingInterface` (this class is its own `htmlRenderer`), and
+ * `UrlServiceInterface` is one of the most widely autowired dependencies
+ * in the whole app, so HtmlService sits on an unusually broad transitive
+ * dependency chain -- a required constructor param here for anything
+ * that isn't provably side-effect-free at first resolution risks an
+ * eager-resolution regression elsewhere in the app (e.g. a DB-touching
  * factory breaking public/install.php merely by being resolved). Every
- * one of the 8 required collaborators above was individually checked
+ * one of the required collaborators above is individually checked
  * against config/container.php for a custom factory binding with a real
  * side effect -- none has one, all are plain autowired classes.
  *
- * accessDenied()/badRequest()/pageNotFound()/pageForbidden() (Legacy
- * Coupling Retirement Phase 4b) take Piwigo\Core\RedirectServiceInterface
- * as a required *method* parameter instead, rather than a constructor
- * dependency -- Piwigo\Bootstrap\RedirectService is L4Integration, and
- * this class (L3Presentation) may not depend on it directly per
- * deptrac.yaml's ruleset; the DI container's service-locator accessor on
- * Piwigo\Core\Kernel (the only other way to reach a concrete L4 instance
- * from here without a constructor dependency) is arch-test-restricted to
- * Bootstrap/ and index.php. Every real caller already holds (or can
- * trivially construct) a RedirectServiceInterface instance of its own to
- * pass through.
+ * accessDenied()/badRequest()/pageNotFound()/pageForbidden() take
+ * Piwigo\Core\RedirectServiceInterface as a required *method* parameter
+ * instead, rather than a constructor dependency -- Piwigo\Bootstrap\
+ * RedirectService is L4Integration, and this class (L3Presentation) may
+ * not depend on it directly per deptrac.yaml's ruleset; the DI
+ * container's service-locator accessor on Piwigo\Core\Kernel (the only
+ * other way to reach a concrete L4 instance from here without a
+ * constructor dependency) is arch-test-restricted to Bootstrap/ and
+ * index.php. Every real caller already holds (or can trivially
+ * construct) a RedirectServiceInterface instance of its own to pass
+ * through.
  *
- * The remaining Url-family calls (Legacy Coupling Retirement Phase 4c)
- * go through the private urlService() helper below -- a container
- * resolve, not a constructor property: `UrlService` requires
- * `HtmlRenderingInterface` (this class implements it), so a
- * constructor-injected `UrlServiceInterface` here would close a real
- * cycle (`UrlService -> HtmlRenderingInterface -> HtmlService ->
+ * The remaining Url-family calls go through the private urlService()
+ * helper below -- a container resolve, not a constructor property:
+ * `UrlService` requires `HtmlRenderingInterface` (this class implements
+ * it), so a constructor-injected `UrlServiceInterface` here would close a
+ * real cycle (`UrlService -> HtmlRenderingInterface -> HtmlService ->
  * UrlServiceInterface -> UrlService`). PHP-DI's reflection-based
  * autowiring only ever inspects class constructors, never ordinary
  * methods, so a private helper method sidesteps that -- unlike an
  * optional/nullable constructor property of the same type, which PHP-DI
- * may still attempt to autowire. Resolves the container-shared instance
- * (singleton/service-locator elimination campaign, Phase 6), not a
- * throwaway `new UrlService($this)`, so `RootPathOverride`'s own
+ * may still attempt to autowire. Resolves the container-shared instance,
+ * not a throwaway `new UrlService($this)`, so `RootPathOverride`'s own
  * cross-instance sharing requirement holds (see that class's own
- * docblock) -- behaviorally equivalent to the old `$this`-backed
- * `HtmlRenderingInterface`, since it carries no per-instance state.
+ * docblock) -- it carries no per-instance state.
  *
- * Implements HtmlRenderingInterface (P23 batch 8f-3) so L1/L2a/L2b classes
- * that can't depend on this L3Presentation class directly can depend on
- * that interface instead -- see its own docblock.
+ * Implements HtmlRenderingInterface so L1/L2a/L2b classes that can't
+ * depend on this L3Presentation class directly can depend on that
+ * interface instead -- see its own docblock.
  */
 final class HtmlService implements HtmlRenderingInterface
 {
@@ -142,8 +133,7 @@ final class HtmlService implements HtmlRenderingInterface
      * constructor requires HtmlRenderingInterface (this class implements
      * it), so a required param here would close a real cycle
      * (`HtmlService -> Lang -> HtmlRenderingInterface -> HtmlService`).
-     * Same shape as urlService() below (singleton/service-locator
-     * elimination campaign, Phase 11 sub-phase 11E).
+     * Same shape as urlService() below.
      */
     private function lang(): Lang
     {
@@ -157,12 +147,10 @@ final class HtmlService implements HtmlRenderingInterface
 
     /**
      * Used only inside this class's own one `new PermissionService(...)`
-     * construction below (singleton/service-locator elimination campaign,
-     * Phase 11 sub-phase 11G). Falls back to a fresh, uninitialised
-     * instance when `Kernel::boot()` hasn't run, matching `FilterState`'s
-     * own former `isInitializedStatic()` shim's identical pre-boot
-     * fallback -- that PermissionService is never actually read back out
-     * on getCatDisplayNameFromId()'s own call path.
+     * construction below. Falls back to a fresh, uninitialised instance
+     * when `Kernel::boot()` hasn't run -- that PermissionService is never
+     * actually read back out on getCatDisplayNameFromId()'s own call
+     * path.
      */
     private function filterState(): FilterState
     {
@@ -181,9 +169,7 @@ final class HtmlService implements HtmlRenderingInterface
     /**
      * Built from this class's own already-required currentUser/
      * currentConfig -- AccessLevelChecker has no HtmlRenderingInterface
-     * dependency of its own, so unlike accessControl() (deleted, singleton/
-     * service-locator elimination campaign, Phase 12 sub-phase 12A) this
-     * needs no container resolve at all.
+     * dependency of its own, so this needs no container resolve at all.
      */
     private function accessLevelChecker(): AccessLevelChecker
     {
@@ -275,11 +261,6 @@ final class HtmlService implements HtmlRenderingInterface
             $add_url_params['auth'] = $authKey;
         }
 
-        // Read the just-computed value directly rather than a blind
-        // set()-then-get() round trip -- setStatic() is a silent no-op
-        // when Kernel::isBooted() is false (singleton/service-locator
-        // elimination campaign, Phase 1's transitional shim), which would
-        // otherwise make a subsequent getStatic() lose it entirely.
         if ($this->processCache->has('cat_names')) {
             $cat_names_raw = $this->processCache->get('cat_names');
         } else {
@@ -352,11 +333,10 @@ final class HtmlService implements HtmlRenderingInterface
     public function getCatDisplayNameFromId(int $catId, ?string $url = ''): string
     {
         // Throwaway CategoryService construction, not constructor injection
-        // -- HtmlService can never depend on CategoryService (Legacy
-        // Coupling Retirement Phase 4c: CategoryService needs
-        // UrlServiceInterface, which needs HtmlRenderingInterface, which
-        // HtmlService implements -- a real cycle). Reuses this class's own
-        // lazy categoryRepo() rather than building a second repository.
+        // -- HtmlService can never depend on CategoryService: CategoryService
+        // needs UrlServiceInterface, which needs HtmlRenderingInterface,
+        // which HtmlService implements -- a real cycle. Reuses this class's
+        // own lazy categoryRepo() rather than building a second repository.
         $categoryConn = DbConnection::build();
         $cat_info = new CategoryService(
             $this->lang(),
@@ -480,9 +460,9 @@ final class HtmlService implements HtmlRenderingInterface
     }
 
     /**
-     * Workstream C3: throws Piwigo\Http\ResponseReadyException (a 401 page
-     * or a redirect to the login page) instead of exiting directly -- see
-     * that exception class's own docblock for why and where it's caught.
+     * Throws Piwigo\Http\ResponseReadyException (a 401 page or a redirect
+     * to the login page) instead of exiting directly -- see that
+     * exception class's own docblock for why and where it's caught.
      */
     #[Override]
     public function accessDenied(RedirectServiceInterface $redirectService): never
@@ -506,9 +486,8 @@ final class HtmlService implements HtmlRenderingInterface
     }
 
     /**
-     * Workstream C3: redirectHtml()'s own new $status param carries the
-     * 403 through to the built Response instead of a separate
-     * setStatusHeader() call.
+     * redirectHtml()'s own $status param carries the 403 through to the
+     * built Response instead of a separate setStatusHeader() call.
      * @todo nice display if $template loaded
      */
     public function pageForbidden(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
@@ -528,9 +507,8 @@ final class HtmlService implements HtmlRenderingInterface
     }
 
     /**
-     * Workstream C3: redirectHtml()'s own new $status param carries the
-     * 400 through to the built Response instead of a separate
-     * setStatusHeader() call.
+     * redirectHtml()'s own $status param carries the 400 through to the
+     * built Response instead of a separate setStatusHeader() call.
      * @todo nice display if $template loaded
      */
     #[Override]
@@ -551,9 +529,8 @@ final class HtmlService implements HtmlRenderingInterface
     }
 
     /**
-     * Workstream C3: redirectHtml()'s own new $status param carries the
-     * 404 through to the built Response instead of a separate
-     * setStatusHeader() call.
+     * redirectHtml()'s own $status param carries the 404 through to the
+     * built Response instead of a separate setStatusHeader() call.
      * @todo nice display if $template loaded
      *
      * @param string|null $msg null is treated the same as '' below (string
@@ -577,11 +554,10 @@ final class HtmlService implements HtmlRenderingInterface
     }
 
     /**
-     * Workstream C3: throws Piwigo\Http\ResponseReadyException (a 500
-     * page) instead of exiting directly, after still logging via
+     * Throws Piwigo\Http\ResponseReadyException (a 500 page) instead of
+     * exiting directly, after still logging via
      * ErrorCollector::recordFatal() -- see this method's own body for the
-     * full reasoning (this used to be a trigger_error(E_USER_ERROR) call,
-     * deprecated as of PHP 8.4).
+     * full reasoning.
      * @todo nice display if $template loaded
      */
     #[Override]
@@ -616,30 +592,25 @@ final class HtmlService implements HtmlRenderingInterface
         }
         error_reporting(E_ALL);
 
-        // Used to be trigger_error(strip_tags($msg) . $btrace_msg,
-        // E_USER_ERROR) -- relying on ErrorCollector's installed
-        // set_error_handler() to intercept E_USER_ERROR and return true
-        // (suppressing PHP's normal fatal-and-terminate behavior) so
-        // execution could continue to the throw below. PHP 8.4 deprecates
-        // passing E_USER_ERROR to trigger_error() at all.
+        // PHP 8.4 deprecates passing E_USER_ERROR to trigger_error() at
+        // all, so this always logs via ErrorCollector::recordFatal() and
+        // throws ResponseReadyException with the 500 page below instead.
         //
-        // An earlier version of this fix called exit() when ErrorCollector
-        // wasn't active, reasoning that was the old mechanism's real
-        // default behavior with no handler installed. That's true, but
-        // wrong to imitate: ErrorCollector::installIfConfigured() only
-        // installs when the deployment policy's showPhpErrorsOnFrontend is
-        // *also* true -- a real, valid config (showPhpErrors on,
-        // showPhpErrorsOnFrontend off) leaves isActive() false on every
-        // request, where hard-exiting instead of returning the real 500
-        // page below would be a genuine regression, not a faithful port.
-        // It also broke this codebase's own established test pattern
-        // (ScriptLoaderTest.php/TemplateInstanceTest.php among others)
-        // of installing a throwaway set_error_handler() around a
-        // fatalError()-reaching call and asserting on what it captured --
-        // exit() bypasses every handler unconditionally, silently killing
-        // the whole test process instead. Always recording (regardless of
-        // isActive()) and always falling through to the real error page
-        // below is both simpler and correct for every one of these cases.
+        // Never falls back to exit() when ErrorCollector isn't active:
+        // ErrorCollector::installIfConfigured() only installs when the
+        // deployment policy's showPhpErrorsOnFrontend is *also* true -- a
+        // real, valid config (showPhpErrors on, showPhpErrorsOnFrontend
+        // off) leaves isActive() false on every request, where
+        // hard-exiting instead of returning the real 500 page below would
+        // be a genuine regression. Exiting would also bypass this
+        // codebase's test pattern (e.g. ScriptLoaderTest.php/
+        // TemplateInstanceTest.php) of installing a throwaway
+        // set_error_handler() around a fatalError()-reaching call and
+        // asserting on what it captured -- exit() bypasses every handler
+        // unconditionally, killing the test process instead. Always
+        // recording (regardless of isActive()) and always falling through
+        // to the real error page below is both simpler and correct for
+        // every one of these cases.
         $this->errorCollector->recordFatal(strip_tags($msg) . $btrace_msg);
 
         throw new ResponseReadyException(ResponseFactory::html($display, 500));
@@ -648,12 +619,11 @@ final class HtmlService implements HtmlRenderingInterface
     /**
      * Returns the breadcrumb to be displayed above thumbnails on tag page.
      *
-     * Legacy Coupling Retirement Track A batch A5.2e: $tags is an
-     * explicit param instead of `global $page['tags']` -- the one real
-     * caller (SectionPopulator::populate()) calls this from within its
-     * own execution, before any SectionContext exists yet to read via
-     * SectionContextRegistry (an "in-flight collaborator", same shape as
-     * CalendarRenderer/SearchFilterRenderer's own params).
+     * $tags is an explicit param instead of `global $page['tags']` -- the
+     * one real caller (SectionPopulator::populate()) calls this from
+     * within its own execution, before any SectionContext exists yet to
+     * read via SectionContextRegistry (an "in-flight collaborator", same
+     * shape as CalendarRenderer/SearchFilterRenderer's own params).
      *
      * @param list<array<string, mixed>> $tags
      */
@@ -669,8 +639,7 @@ final class HtmlService implements HtmlRenderingInterface
      * Returns the breadcrumb to be displayed above thumbnails on combined
      * categories page.
      *
-     * Legacy Coupling Retirement Track A batch A5.2e: $category/
-     * $combinedCategories are explicit params instead of
+     * $category/$combinedCategories are explicit params instead of
      * `global $page['category']`/`['combined_categories']` -- same
      * in-flight-collaborator reasoning as getTagsContentTitle() above.
      *
@@ -707,14 +676,12 @@ final class HtmlService implements HtmlRenderingInterface
                 $remove_url = $this->urlService()
                     ->makeIndexUrl($params);
 
-                // P23 batch 8f-4: replaces the deleted get_themeconf()
-                // free function -- this class is L3Presentation, so it may
-                // read the request's Template instance (also L3) directly,
-                // no ThemeConfProviderInterface indirection needed (unlike
+                // This class is L3Presentation, so it may read the
+                // request's Template instance (also L3) directly, no
+                // ThemeConfProviderInterface indirection needed (unlike
                 // SrcImage, L2a). CurrentTemplate is always initialized on
                 // any request that renders this markup, but this stays
-                // defensive (Phase 2 global-residual sweep: retargeted from
-                // $GLOBALS['template'] ?? null, same defensive shape).
+                // defensive.
                 $request_template = $this->currentTemplate->isInitialized() ? $this->currentTemplate->get() : null;
                 $icon_dir = $request_template instanceof Template ? $request_template->themeConf('icon_dir') : '';
 

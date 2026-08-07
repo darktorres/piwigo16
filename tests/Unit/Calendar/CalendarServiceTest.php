@@ -72,11 +72,9 @@ function makeCalendarService(): CalendarService
 
 /**
  * PermissionService::getPermissionCriteria() (buildInnerSql()'s own
- * dependency) reads FilterState via real constructor injection
- * (singleton/service-locator elimination campaign, Phase 11 sub-phase
- * 11G) -- this helper seeds the real container-shared instance directly
- * so the same object makeCalendarService() constructed with observes the
- * seeded state.
+ * dependency) reads FilterState via constructor injection -- this helper
+ * seeds the real container-shared instance directly so the same object
+ * makeCalendarService() constructed with observes the seeded state.
  */
 function seedCalendarFilterState(bool $enabled, string $visibleCategories = '', string $visibleImages = ''): void
 {
@@ -89,10 +87,7 @@ function seedCalendarFilterState(bool $enabled, string $visibleCategories = '', 
 }
 
 beforeEach(function (): void {
-    // A bare Kernel::boot() (no Paths bound) used to be enough here -- none
-    // of PermissionService/CategoryService's own dependencies needed one.
-    // CategoryService now takes Lang via constructor injection (singleton/
-    // service-locator elimination campaign, Phase 8), and Lang's own
+    // CategoryService takes Lang via constructor injection, and Lang's own
     // container resolution requires a real, bound Paths::class -- so a real
     // (if never actually read from disk here) root is needed for the
     // container to resolve it at all, same recipe as UploadServiceTest's own

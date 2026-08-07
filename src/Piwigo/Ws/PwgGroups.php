@@ -27,7 +27,6 @@ use Piwigo\Group\GroupService;
 use Piwigo\Users\CurrentUser;
 
 /**
- * P23 batch 8e-3: relocated from include/ws_functions/pwg.groups.php.
  * `pwg.groups.*` WS methods (8 registrations) -- registered via callable
  * arrays in include/ws_default_methods.inc.php.
  */

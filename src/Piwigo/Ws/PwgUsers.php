@@ -46,9 +46,8 @@ use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
 
 /**
- * P23 batch 8e-6: relocated from include/ws_functions/pwg.users.php.
  * `pwg.users.*` WS methods (16 registrations) -- registered via callable
- * arrays in include/ws_default_methods.inc.php.
+ * arrays in WsDefaultMethods.
  */
 final class PwgUsers
 {
@@ -387,12 +386,10 @@ final class PwgUsers
      * @param array{username: string, auto_password: bool, password: string|null, password_confirm?: string, email: string|null, send_password_by_mail: bool, pwg_token: string, ...} $params
      *   username/pwg_token: no 'default' key -- mandatory, always present.
      *   auto_password/send_password_by_mail: non-null bool default,
-     *   WsParamType::BOOL -- always present, always bool (auto_password's ws.php
-     *   registration previously said 'flags' => WsParamType::BOOL, a typo that
-     *   left it uncoerced -- fixed to 'type' => WsParamType::BOOL alongside this
-     *   shape). password/email: null default, no 'type' flag -- always
-     *   present, string|null. password_confirm: WsParamFlag::OPTIONAL with no
-     *   'default' key -- may be entirely absent.
+     *   WsParamType::BOOL -- always present, always bool. password/email: null
+     *   default, no 'type' flag -- always present, string|null.
+     *   password_confirm: WsParamFlag::OPTIONAL with no 'default' key -- may be
+     *   entirely absent.
      *
      * Return type genuinely can't be narrower than mixed: the success path
      * forwards $service->invoke('pwg.users.getList', ...)'s own result,
@@ -581,7 +578,6 @@ final class PwgUsers
     /**
      * API method
      * Update user
-     * @since 16
      *
      * @param array{email?: string, nb_image_page?: int, theme?: string, language?: string, recent_period?: int, expand?: bool, show_nb_comments?: bool, show_nb_hits?: bool, password?: string, new_password?: string, conf_new_password?: string, pwg_token: string, ...} $params
      *   pwg_token: no 'default' key -- mandatory, always present. every other
@@ -684,7 +680,6 @@ final class PwgUsers
     /**
      * API method
      * Set a preferences parameter to current user
-     * @since 13
      *
      * @param array{param: string, value?: string, is_json: bool, ...} $params
      *   param: no 'default' key -- mandatory, always present. value:
@@ -821,7 +816,6 @@ final class PwgUsers
     /**
      * API method
      * Returns the reset password link of the current user
-     * @since 15
      *
      * @param array{user_id: int, pwg_token: string, send_by_mail: bool, ...} $params
      *   user_id/pwg_token: no 'default' key -- mandatory, always present,
@@ -904,7 +898,6 @@ final class PwgUsers
     /**
      * API method
      * Set a user as the main user
-     * @since 15
      *
      * @param array{user_id: int, pwg_token: string, ...} $params neither has a
      *   'default' key -- both mandatory, always present, WsParamType::ID guarantees
@@ -943,7 +936,6 @@ final class PwgUsers
     /**
      * API method
      * Create a new api key for the current user
-     * @since 15
      *
      * @param array{key_name: string, duration: int, pwg_token: string, ...} $params
      *   none has a 'default' key -- all mandatory, always present; duration:
@@ -972,7 +964,7 @@ final class PwgUsers
 
         // realEscapeString() dropped: ApiKeyRepository::insert() parameterizes
         // apikey_name instead of interpolating it, same "dead pre-escaping"
-        // rationale as Ws\PwgTags::rename() (Phase 1f step 3).
+        // rationale as Ws\PwgTags::rename().
         $key_name = $params['key_name'];
         // the guard above already rejects any duration outside [1, 999999], so
         // it can never be 0 here.
@@ -991,7 +983,6 @@ final class PwgUsers
     /**
      * API method
      * Revoke a api key for the current user
-     * @since 15
      *
      * @param array{pkid: string, pwg_token: string, ...} $params neither has a
      *   'default' key -- both mandatory, always present, no 'type' flag.
@@ -1029,7 +1020,6 @@ final class PwgUsers
     /**
      * API method
      * Edit a api key for the current user
-     * @since 15
      *
      * @param array{key_name: string, pkid: string, pwg_token: string, ...} $params
      *   none has a 'default' key -- all mandatory, always present, no 'type'
@@ -1075,7 +1065,6 @@ final class PwgUsers
     /**
      * API method
      * Get all api key for the current user
-     * @since 15
      *
      * @param array{pwg_token: string, ...} $params no 'default' key --
      *   mandatory, always present, no 'type' flag.
@@ -1095,13 +1084,8 @@ final class PwgUsers
             return new PwgError(403, 'Invalid security token');
         }
 
-        // P23 batch 8e-6: fixes task #473, a real bug predating this
-        // migration -- ApiKeyService::get() takes a native int $userId (see
-        // its own signature), but this call previously cast $user_id to a
-        // *string* (matching a stale docblock claim that get_api_key()
-        // "requires a string $user_id", which was itself just describing
-        // the bug). Every other ApiKeyService method here (create/revoke/
-        // edit) already passes a plain int for the same user id value.
+        // ApiKeyService::get() takes a native int $userId, same as
+        // create()/revoke()/edit() above.
         $user_id = $this->currentUser->get()
             ->id->value;
         $api_keys = $this->apiKeyService->get($user_id);

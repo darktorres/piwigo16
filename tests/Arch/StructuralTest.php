@@ -15,8 +15,6 @@ use Piwigo\Routing\Router;
 use Piwigo\Routing\RouteResult;
 use Piwigo\Bootstrap\RequestPipeline;
 
-// P6: real structural rules for src/Piwigo/, replacing the P0 placeholder.
-
 arch()->expect('Piwigo')->toUseStrictTypes();
 
 /**
@@ -124,12 +122,11 @@ test('every Piwigo\ class under src/Piwigo/ has #[\Override] on every overriding
     expect($violations)->toBe([]);
 });
 
-// P7: Kernel::container() is a service locator -- services must receive
+// Kernel::container() is a service locator -- services must receive
 // dependencies via constructor injection instead. It exists only to let
 // Bootstrap/ reach into the container before injection is possible; every
 // root entry script (index.php included) reaches it only indirectly,
-// through a Bootstrap/ class. docs/PLAN.md: "Gate: arch test
-// enforcing this boundary from P7 onward, not deferred to P29."
+// through a Bootstrap/ class.
 
 /**
  * @return list<array{path: string, line: int}>
@@ -179,7 +176,7 @@ function findCallSitesInRootPhpFiles(string $root, string $needle): array
 }
 
 /**
- * P12: bin/piwigo has no .php extension, so it's invisible to
+ * bin/piwigo has no .php extension, so it's invisible to
  * findCallSitesInRootPhpFiles()'s glob('*.php'). Scans bin/* explicitly so
  * a future second bin/ script can't bypass the same locator boundary rules
  * root index.php and src/Piwigo/ are already held to.
@@ -216,22 +213,18 @@ function describeCallSites(array $hits): array
 }
 
 test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (): void {
-    // The root index.php clause this allowlist used to carry is gone:
-    // index.php has been pure bootstrap + dispatch through
-    // RequestBootstrap::bootEntryPoint() since P22, and never called
+    // index.php is pure bootstrap + dispatch through
+    // RequestBootstrap::bootEntryPoint() and never calls
     // Kernel::container() directly itself -- every real container access
-    // already goes through a Bootstrap/ class (Legacy Coupling Retirement
-    // Phase 8, 8e).
+    // already goes through a Bootstrap/ class.
     //
-    // Singleton/service-locator elimination campaign: a handful of classes
-    // outside Bootstrap/ also carry ONE narrow, explicitly-tracked
-    // exception each -- a transitional `@deprecated ...Static()` shim
-    // method (see e.g. Piwigo\Core\InstallationFlag::isActiveStatic()'s
-    // own docblock) that lets a not-yet-converted caller elsewhere keep
-    // working unchanged until its own phase converts it. Every entry below
-    // is removed once that class's shim is deleted -- this allow-list
-    // should shrink back to empty by the end of the campaign, not grow
-    // unbounded.
+    // A handful of classes outside Bootstrap/ each carry ONE narrow,
+    // explicitly-tracked exception: a transitional `@deprecated
+    // ...Static()` shim method (see e.g.
+    // Piwigo\Core\InstallationFlag::isActiveStatic()'s own docblock) that
+    // lets a not-yet-converted caller elsewhere keep working unchanged.
+    // Every entry below is removed once that class's shim is deleted --
+    // this allow-list should shrink back to empty, not grow unbounded.
     $repoRoot = __DIR__ . '/../..';
 
     $shimAllowedFiles = [
@@ -342,12 +335,10 @@ test('ShutdownHandler::reset() is only called from tests/', function (): void {
 test('CurrentConfig::reset() is only called from tests/', function (): void {
     // Mirrors the Kernel::reset() rule above -- reset() exists purely for
     // test isolation between cases; production code must never touch it.
-    // Singleton/service-locator elimination campaign, Phase 9: reset() is
-    // now a real instance method, not a static call -- this static-call-
-    // syntax string literal can never match real code again, so this test
-    // is now permanently, deliberately vacuous (same accepted shape as
-    // MailService::reset()'s own equivalent test after its Phase 6
-    // conversion), not an oversight.
+    // reset() is a real instance method, not a static call, so this
+    // static-call-syntax string literal can never match real code again --
+    // this test is permanently, deliberately vacuous (same shape as
+    // MailService::reset()'s own equivalent test), not an oversight.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [
@@ -358,33 +349,6 @@ test('CurrentConfig::reset() is only called from tests/', function (): void {
 
     expect(describeCallSites($hits))->toBe([]);
 });
-
-// Singleton/service-locator elimination campaign: CurrentConfig::current()
-// itself is fully deleted (Phase 12 sub-phase 12F-12, the campaign's final
-// shim closure) -- its former "transitional bridge has a shrinking, known
-// allow-list" test lived here, tracking the last 3 permanent-exception
-// files (Admin/Image/PwgImage.php, Admin/Upload/UploadService.php,
-// Core/FilesystemHelper.php) through the rest of the campaign after every
-// other real caller converted to constructor injection or an explicit
-// NOCTOR param across Phases 9-12. All 3 finally closed in 12F-12 too:
-// UploadService.php/PwgImage.php gained a 3rd/1st private static
-// currentConfig() resolver respectively (matching UploadService's own
-// established currentLogger()/imageStdParams() shape -- no test depends
-// on a shared pre-boot fallback identity for either); FilesystemHelper.php
-// took the opposite approach -- mkgetdir()/getFsDirectories() now take
-// CurrentConfig as a real, explicit NOCTOR param (the one genuine
-// exception a private resolver couldn't satisfy: FilesystemHelperTest.php
-// mutates a shared pre-boot instance and expects it read back, so a
-// resolver's own separate fallback would have silently broken that test)
-// -- rippled through all 16 real calling files, plus 3 further static
-// utilities (ZipExtractor::extract()/CoverageCollector's own shutdown
-// closure/ErrorCollector::writeTestErrorsLog()) each fixed via its own
-// most-proportional mechanism rather than one uniform pattern. The class
-// itself survives (every getter/setter and reset() are still real, live
-// instance methods) -- only the static shim accessor is gone. 1,382 real
-// test call sites across 116 files migrated to a new
-// CurrentConfigTestFactory in tests/Support/.
-
 
 test('SessionService::reset() is only called from tests/', function (): void {
     // Same test-isolation rationale as CurrentConfig::reset() above.
@@ -425,34 +389,6 @@ test('CurrentConfigService::reset() is only called from tests/', function (): vo
     expect(describeCallSites($hits))->toBe([]);
 });
 
-/**
- * P23 Stage 1f (finding #15, testable half): 24 more classes gained the
- * same "static reset() exists purely for test isolation between cases"
- * shape as the 7 above without ever getting their own arch test. Re-
- * verified directly (not trusting the plan's own stale "23 classes, no
- * exceptions" claim, which predates 2 of these classes entirely) --
- * DbCredentials::reset() turned out to have a real production caller
- * (Admin\Install\InstallWizard::performInstall(), reloading credentials
- * right after writing a fresh .env) -- both DbCredentials and CurrentPaths
- * never had a reset() at all (singleton/service-locator elimination
- * campaign, Phase 3 -- DbCredentials has its own differently-shaped
- * 'X::current()' transitional bridge allow-list test further below
- * instead; CurrentPaths's own 'get()/isSet()' allow-list test lived here
- * too until that shim closed outright in sub-phase 12F-10, deleting the
- * whole class).
- */
-// Singleton/service-locator elimination campaign:
-// InstallationFlag::isActiveStatic() itself is fully deleted (Phase 12
-// sub-phase 12B) -- its former "transitional shim has a shrinking, known
-// allow-list" test lived here. Piwigo\Core\Lang (Phase 8) and
-// Piwigo\Users\UserService (Phase 11 sub-phase 11G) had already closed
-// their own usage via real constructor injection; Bootstrap\
-// SessionBootstrap.php (a genuinely static-only class) was the last real
-// caller, closed via a private container-resolving installationFlag()
-// helper instead of the shim -- 0 remaining production callers, so the
-// shim method was deleted outright, same discipline as every other closed
-// shim in this campaign.
-
 test('Lang::reset() is only called from tests/', function (): void {
     $repoRoot = __DIR__ . '/../..';
 
@@ -483,17 +419,14 @@ test('PageState::reset() is only called from tests/', function (): void {
 });
 
 test('src/Piwigo/ contains no InputValidator::createStatic() calls', function (): void {
-    // Phase 11 sub-phase 11C close-out: every one of InputValidator's
-    // ~43 real construction sites (39 pure Request DTO
+    // InputValidator's createStatic() shim is deleted -- every real
+    // construction site (39 pure Request DTO
     // fromGlobals()/fromArray()/fromArrays() static factories, plus 4 real
     // classes calling it directly -- Piwigo\Admin\AdminShell,
     // Piwigo\Controller\Admin\{BatchManagerSubController,
-    // ConfigurationSubController,NotificationByMailSubController}) now
-    // takes InputValidator as an explicit constructor/method parameter
-    // instead of reaching for the createStatic() shim -- the shim itself
-    // (and fail()'s own former static form, which called it internally)
-    // is deleted, so this is a zero-tolerance regression guard now, not a
-    // shrinking allow-list.
+    // ConfigurationSubController,NotificationByMailSubController}) takes
+    // InputValidator as an explicit constructor/method parameter instead.
+    // Zero-tolerance regression guard, not a shrinking allow-list.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'InputValidator::createStatic(');
@@ -525,22 +458,14 @@ test('CurrentTemplate::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('CurrentTemplate::current() has zero remaining production callers (Phase 11 complete)', function (): void {
-    // Singleton/service-locator elimination campaign: this was a
-    // transitional bridge for production callers not yet converted to
-    // constructor injection. Ws/PwgExtensions.php (Phase 10),
-    // Html/HtmlService.php (11E), Template/CssLoader.php/ScriptLoader.php
-    // (11F), and Admin/Install/InstallWizard.php (11K -- its one site was
-    // a write, `CurrentTemplate::current()->set($template)`, not a
-    // timing-sensitive read) closed every real production call site.
-    // Phase 11 sub-phase 11L confirmed the allow-list below is
-    // permanently empty and reclassified `current()`'s own docblock --
-    // it stays as a real, permanent accessor for the pre-boot fallback
-    // path and ~230 Unit/Integration test call sites across ~30 files
-    // that reach the shared/fallback instance directly for setup, not
-    // campaign debt. This test remains as a regression guard: it fails
-    // the moment any src/Piwigo or public/ file calls `current()` again
-    // outside a legitimate new addition to the allow-list.
+test('CurrentTemplate::current() has zero remaining production callers', function (): void {
+    // `current()` has no remaining production call sites. It stays as a
+    // real, permanent accessor for the pre-boot fallback path and for
+    // ~230 Unit/Integration test call sites across ~30 files that reach
+    // the shared/fallback instance directly for setup. This test remains
+    // as a regression guard: it fails the moment any src/Piwigo or
+    // public/ file calls `current()` again outside a legitimate new
+    // addition to the allow-list.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
@@ -583,65 +508,29 @@ test('CurrentUser::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-// Singleton/service-locator elimination campaign: CurrentUser::current()
-// itself is fully deleted (Phase 12 sub-phase 12F-11) -- its former
-// "transitional bridge has a shrinking, known allow-list" test lived here.
-// The class itself survives (get()/set()/attachGlobals()/reset()/etc. are
-// all still real, live instance methods with their own dedicated arch
-// tests elsewhere in this file) -- only the static shim accessor is gone.
-// Every production caller had already converted to real constructor
-// injection or an explicit NOCTOR param well before this sub-phase (see
-// git history on this test for the full former allow-list narrative);
-// 12F-11 only had test call sites left to migrate, to a new
-// CurrentUserTestFactory in tests/Support/.
+// AccessControl has no circular dependency: the 8 read-only checks --
+// isAdmin()/isAGuest()/isClassicUser()/isWebmaster()/canManageComment()/
+// etc. -- live on Auth\AccessLevelChecker (CurrentUser/CurrentConfig
+// only), which every real caller takes via constructor injection.
+// checkStatus()/accessDenied() are the only methods that need
+// HtmlRenderingInterface/RedirectServiceInterface and stay on
+// AccessControl itself.
 
-// Singleton/service-locator elimination campaign: AccessControl::current()
-// itself is fully deleted (Phase 12 sub-phase 12B) -- its former
-// "transitional bridge has a shrinking, known allow-list" test lived here.
-// AccessControl's own circular dependency (RedirectServiceInterface ->
-// Bootstrap\RedirectService -> Users\UserService -> MailerInterface ->
-// Mail\MailService -> Core\UrlServiceInterface -> Url\UrlService ->
-// Core\HtmlRenderingInterface -> Html\HtmlService) turned out to be
-// artificial (Phase 12 sub-phase 12A): every real caller across the whole
-// app only ever read isAdmin()/isAGuest()/isClassicUser()/isWebmaster()/
-// canManageComment() -- never checkStatus()/accessDenied(), the only
-// methods that genuinely need HtmlRenderingInterface/
-// RedirectServiceInterface. Those 8 read-only methods moved to a new
-// class, Auth\AccessLevelChecker (CurrentUser/CurrentConfig only, no
-// circular dependency at all), which every real caller now takes via real
-// constructor injection. Sub-phase 12B closed the last 4 real production
-// callers of the shim itself (RequestBootstrap.php, PageTail.php,
-// public/admin.php, public/random.php) via a mix of real constructor
-// injection and Bootstrap-internal container resolvers -- 0 remaining
-// production callers, so the shim method was deleted outright, same
-// discipline as every other closed shim in this campaign.
-
-// P16: src/Piwigo/ is the typed source of truth for the 52 retired
+// src/Piwigo/ is the typed source of truth for the retired
 // include/constants.php constants (AppInfo/AccessLevel/ActivitySystem/
 // ValidationPattern/Tables/Config accessors) -- a regression guard, not a
-// migration (this specific claim -- zero define() calls -- was already
-// true before this phase; the 52-constant sweep confirmed it, this locks
-// it in). Legacy include//admin/ root entry points are explicitly NOT
-// scanned here (this test only covers src/Piwigo/): PHPWG_ROOT_PATH used
-// to keep being define()'d in i.php for its own not-yet-migrated call
-// sites, fully retired now (Workstream C3 Part III) -- see the sibling
+// migration. Legacy include//admin/ root entry points are explicitly NOT
+// scanned here (this test only covers src/Piwigo/) -- see the sibling
 // "no PHPWG_ROOT_PATH/PWG_LOCAL_DIR reads" test below, zero-tolerance.
 //
-// The sibling "no PHPWG_ROOT_PATH/PWG_LOCAL_DIR read in src/Piwigo/" test
-// this comment used to defer (P16: ~50 real call sites across 12 files,
-// "revisit once that migration actually lands") is below, now that the
-// migration has actually landed (Legacy Coupling Retirement gap-closure,
-// entry-shell define()/include round: both constants replaced by
-// Piwigo\Core\Paths/CurrentPaths -- DI-constructed classes get Paths
-// threaded through their constructor, everything else reads
-// CurrentPathsTestFactory::get()). Controller/ImageDerivativeController.php's own 2
-// sites (genuine URL generation, not filesystem paths) were the one
-// deliberately deferred exception, closed by Workstream C3 Part III
-// (i.php joining the real routing pipeline): UrlService::
-// getAbsoluteRootUrl(false) replaces them, the same request-depth-
-// independent mechanism (cookiePath(), SCRIPT_NAME/REDIRECT_URL-based)
-// this codebase already uses elsewhere -- zero-tolerance now, matching the
-// IN_ADMIN/IN_WS/... test below.
+// PHPWG_ROOT_PATH and PWG_LOCAL_DIR are both fully retired: Piwigo\Core\Paths
+// replaces them -- DI-constructed classes get Paths threaded through
+// their constructor, test code reads CurrentPathsTestFactory::get().
+// Controller/ImageDerivativeController.php's own 2 URL-generation sites
+// use UrlService::getAbsoluteRootUrl(false) instead, the same
+// request-depth-independent mechanism (cookiePath(),
+// SCRIPT_NAME/REDIRECT_URL-based) this codebase uses elsewhere --
+// zero-tolerance, matching the IN_ADMIN/IN_WS/... test below.
 //
 // Comment-aware (unlike findCallSites() above, plain substring match):
 // "define()" is common in explanatory prose (e.g. "the N define()
@@ -711,13 +600,12 @@ test('src/Piwigo/ contains no define() calls', function (): void {
 });
 
 test('src/Piwigo/ contains no PHPWG_ROOT_PATH/PWG_LOCAL_DIR reads', function (): void {
-    // Legacy Coupling Retirement gap-closure (entry-shell define()/include
-    // round) + Workstream C3 Part III: both constants are fully retired,
-    // zero-tolerance -- Controller/ImageDerivativeController.php's own last
-    // 2 sites (see this file's own docblock a few lines above) are gone
-    // too. A hit anywhere means a new raw read was introduced and must be
-    // migrated onto Paths/CurrentPaths (or UrlService::
-    // getAbsoluteRootUrl(false) for URL generation) instead of allowlisted.
+    // Both constants are fully retired, zero-tolerance --
+    // Controller/ImageDerivativeController.php's own last 2 sites (see
+    // this file's own comment a few lines above) are gone too. A hit
+    // anywhere means a new raw read was introduced and must be migrated
+    // onto Paths (or UrlService::getAbsoluteRootUrl(false) for URL
+    // generation) instead of allowlisted.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [
@@ -729,11 +617,11 @@ test('src/Piwigo/ contains no PHPWG_ROOT_PATH/PWG_LOCAL_DIR reads', function ():
 });
 
 test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO or a documented exception', function (): void {
-    // P26/SEC-40 completion: every page controller/WS method/domain
-    // service that used to read $_GET/$_POST/$_REQUEST/$_FILES directly
-    // now does so through a validating `{Module}/Request/{Name}` DTO's
-    // own `fromGlobals()` (the sole legitimate raw read a DTO class makes
-    // for itself -- this scan only covers files OUTSIDE any `Request/`
+    // Every page controller/WS method/domain service reads
+    // $_GET/$_POST/$_REQUEST/$_FILES only through a validating
+    // `{Module}/Request/{Name}` DTO's own `fromGlobals()` (the sole
+    // legitimate raw read a DTO class makes for itself -- this scan only
+    // covers files OUTSIDE any `Request/`
     // directory, matching `RequestFactory::fromGlobals()`'s own
     // established "the wrapper's internals are exempt from the rule it
     // enforces on everyone else" shape). A hit anywhere else means a new
@@ -793,8 +681,7 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
 });
 
 test('src/Piwigo/ contains no raw IN_ADMIN/IN_WS/PHPWG_INSTALLED/PHPWG_URL/PHPWG_DOMAIN/PEM_URL reads', function (): void {
-    // Legacy Coupling Retirement gap-closure (entry-shell define()/include
-    // round, Part 0b): all 6 are fully retired, zero-tolerance -- typed
+    // All 6 are fully retired, zero-tolerance -- typed
     // replacements (Piwigo\Core\AdminContext/WsContext/InstallationFlag/
     // AppInfo::DOMAIN/AppInfo::URL/Bootstrap\RequestBootstrap::pemUrl())
     // cover every real caller, so unlike PHPWG_ROOT_PATH/PWG_LOCAL_DIR
@@ -830,18 +717,14 @@ test('src/Piwigo/ contains no raw IN_ADMIN/IN_WS/PHPWG_INSTALLED/PHPWG_URL/PHPWG
 });
 
 test('src/Piwigo/ contains no global $filter/$pwg_loaded_plugins/$template/$page declarations', function (): void {
-    // Phase 2 global-residual sweep (2026-07-19): all 4 clusters were
-    // fully retired, not just reduced -- $filter/$pwg_loaded_plugins onto
-    // new Piwigo\Core\FilterState/Piwigo\Admin\LoadedPlugins singletons,
-    // $template onto the already-existing Piwigo\Template\CurrentTemplate,
-    // $page either deleted as confirmed-dead code or converted to a
-    // plain per-method local (matching Section\SectionPopulator's own
-    // earlier Track A5.2e precedent) or a private static guard
-    // (Admin\Maintenance\FilesystemIntegrityChecker::fsQuickCheck()).
-    // Zero-tolerance, no allowlist needed -- matches the "no define()
-    // calls" precedent above, not countExitCallsPerFile()'s allowlisted
-    // shape, since nothing here turned out to be a legitimate permanent
-    // bridge.
+    // All 4 clusters are fully retired, not just reduced --
+    // $filter/$pwg_loaded_plugins onto Piwigo\Core\FilterState/
+    // Piwigo\Admin\LoadedPlugins, $template onto
+    // Piwigo\Template\CurrentTemplate, $page either deleted as
+    // confirmed-dead code or converted to a plain per-method local or a
+    // private static guard (Admin\Maintenance\
+    // FilesystemIntegrityChecker::fsQuickCheck()). Zero-tolerance, no
+    // allowlist needed.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [
@@ -855,21 +738,12 @@ test('src/Piwigo/ contains no global $filter/$pwg_loaded_plugins/$template/$page
 });
 
 test('src/Piwigo/ contains no global $conf/$prefixeTable/$last_time/$t2 declarations', function (): void {
-    // Legacy Coupling Retirement "fix all" gap-closure (2026-07-20): the
-    // 36 remaining global statements across the 151 frozen DbPatch/
-    // VersionUpgrade migration files (plus InstallWizard's constructor and
-    // RequestBootstrap::configure()'s $t2) are retired -- Tables::/
-    // DbCredentials::current()->prefix for the table-prefix reads, and, for the handful
-    // of keys genuinely only ever set by a site's own
-    // local/config/config.inc.php (never mirrored into CurrentConfig:: mid-
-    // migration), LegacyFileConf::read()/LegacyDbLayer::value() (both in
-    // the now-deleted DbPatch namespace at the time; LegacyFileConf moved
-    // to Piwigo\Admin\Install\ directly, LegacyDbLayer's own last caller
-    // was deleted along with it -- gap-closure Stage 1a-bis). $t2
-    // (RequestBootstrap::configure()) is now an explicit parameter
-    // instead, passed straight through from include/common.inc.php's own
-    // capture. Zero-tolerance, no allowlist needed -- same shape as the
-    // test above.
+    // Table-prefix reads go through Tables::/DbCredentials::current()->prefix.
+    // Config keys only ever set by a site's own local/config/config.inc.php
+    // (never mirrored into CurrentConfig) read through
+    // LegacyFileConf::read(). $t2 (RequestBootstrap::configure()) is an
+    // explicit parameter, not a global. Zero-tolerance, no allowlist
+    // needed.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [
@@ -883,21 +757,13 @@ test('src/Piwigo/ contains no global $conf/$prefixeTable/$last_time/$t2 declarat
 });
 
 test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_notify() calls', function (): void {
-    // Phase 3 event dispatch retarget sweep (2026-07-19): the free-function
-    // bridge (src/Piwigo/PluginConfig/functions.php, a pure 1-line
-    // delegate to EventDispatcher::get()) is deleted -- all 241 real call
-    // sites across 84 files now called
-    // Piwigo\PluginConfig\EventDispatcher::get()->
-    // {addEventHandler,triggerChange,triggerNotify}() directly at the time
-    // (that shim itself has since closed outright, sub-phase 12F-9 -- every
-    // real caller takes EventDispatcher via constructor injection now).
-    // Needed a
-    // deptrac.yaml layer split first (EventDispatcher moved
-    // L2bExtendedDomain -> L1Infrastructure, split from its namespace-mate
-    // PluginRepository) since 14 real callers live in L1Infrastructure/
-    // L2aCoreDomain, which the untracked free-function form had been
-    // hiding from deptrac. Zero-tolerance, no allowlist needed -- same
-    // shape as the test above.
+    // The free-function bridge (src/Piwigo/PluginConfig/functions.php) is
+    // deleted -- every real call site takes EventDispatcher via
+    // constructor injection and calls
+    // {addEventHandler,triggerChange,triggerNotify}() directly. deptrac.yaml
+    // places EventDispatcher in L1Infrastructure (split from its
+    // namespace-mate PluginRepository) since real callers live in
+    // L1Infrastructure/L2aCoreDomain. Zero-tolerance, no allowlist needed.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [
@@ -910,8 +776,9 @@ test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_
 });
 
 /**
- * Track B typed-event-object gap closure's own door-lock. Neither
- * existing helper fits: findCallSitesOutsideComments() blanks every
+ * Ensures every event dispatch uses a typed `SomeEvent::class` object
+ * instead of a bare string key. Neither existing helper fits:
+ * findCallSitesOutsideComments() blanks every
  * T_CONSTANT_ENCAPSED_STRING token -- including its surrounding quote
  * characters -- before searching, so a needle containing a literal `'`
  * would never match anything; countExitCallsPerFile() allowlists by
@@ -1007,14 +874,11 @@ function findStringKeyedDispatchCallSites(string $dir, array $allowlist): array
 }
 
 test('src/Piwigo/ contains no string-keyed EventDispatcher dispatch calls outside the meta allowlist', function (): void {
-    // Track B typed-event-object gap closure (12 batches, landed
-    // 2026-08-02): all 155 real legacy events now dispatch through typed
-    // SomeEvent::class objects via addTypedHandler()/dispatchChange()/
-    // dispatchNotify() -- including the 7 WS-protocol-lifecycle events
-    // (get_history, ws_users_getList, ws_invoke_allowed, ws_add_methods,
-    // ws_images_uploadCompleted, sendResponse, merge_tags) originally
-    // deferred behind P25 (WS API removal), converted ahead of that on
-    // explicit direction rather than waiting.
+    // Every real event dispatches through typed SomeEvent::class objects
+    // via addTypedHandler()/dispatchChange()/dispatchNotify() --
+    // including the 7 WS-protocol-lifecycle events (get_history,
+    // ws_users_getList, ws_invoke_allowed, ws_add_methods,
+    // ws_images_uploadCompleted, sendResponse, merge_tags).
     //
     // 'trigger' is the one permanent exception: EventDispatcher's own
     // internal meta-notification channel (its dispatchChange()/
@@ -1034,17 +898,13 @@ test('src/Piwigo/ contains no string-keyed EventDispatcher dispatch calls outsid
 
 /**
  * Token-aware, unlike findCallSitesOutsideComments()'s plain (post-
- * blanking) substring match: several of Track C's retired free-function
- * names collide as a bare substring with a real, still-legitimate OOP
- * method call of the identical short name -- most visibly `redirect(`,
- * which matches both the retired bare `redirect()` free function AND
- * every real `$this->redirectService->redirect(...)` call this same
- * phase (4b) introduced. Reuses the exact "real bare call" token logic
- * (T_STRING name match, not preceded by ->/::/function/backslash,
- * immediately followed by `(`) this phase's own scan_url_calls.php/
- * scan_l10n_calls.php scripts used throughout Phase 4c/4d to find every
- * real caller in the first place -- same check, now locked in as a
- * permanent regression guard.
+ * blanking) substring match: several retired free-function names collide
+ * as a bare substring with a real, still-legitimate OOP method call of
+ * the identical short name -- most visibly `redirect(`, which matches
+ * both a bare `redirect()` call and every real
+ * `$this->redirectService->redirect(...)` call. Walks tokens for a
+ * T_STRING name match not preceded by ->/::/function/backslash,
+ * immediately followed by `(`, to distinguish the two.
  *
  * @param list<string> $names
  * @return list<array{path: string, line: int}>
@@ -1112,35 +972,30 @@ function findBareCallSites(string $dir, array $names): array
     return $hits;
 }
 
-test('src/Piwigo/ contains no bare calls to any Track C retired free function', function (): void {
-    // Legacy Coupling Retirement Track C (Phases 4a-4d, 2026-07-19/20):
-    // retires the last 4 composer.json autoload.files free-function
-    // bridges -- Category/functions.php (7 remaining functions),
-    // Http/functions.php (3), Url/functions.php (17 -- parse_section_url
-    // was already retired in an earlier session, ahead of this list),
-    // Lang/functions.php (2) -- all 4 files deleted, all their real call
-    // sites (1,349 across 151 files, per the original planning sweep)
-    // retargeted onto real class methods. Zero-tolerance, no allowlist
-    // needed -- same shape as the P16/Phase 3 tests above, using
-    // findBareCallSites() instead of findCallSitesOutsideComments() since
-    // several of these names (most notably `redirect`) collide as a bare
-    // substring with a real, still-legitimate method call of the same
-    // short name.
+test('src/Piwigo/ contains no bare calls to any retired free function', function (): void {
+    // The 4 composer.json autoload.files free-function bridges --
+    // Category/functions.php, Http/functions.php, Url/functions.php,
+    // Lang/functions.php -- are deleted; every real call site now calls a
+    // real class method instead. Zero-tolerance, no allowlist needed,
+    // using findBareCallSites() instead of findCallSitesOutsideComments()
+    // since several of these names (most notably `redirect`) collide as a
+    // bare substring with a real, still-legitimate method call of the
+    // same short name.
     $repoRoot = __DIR__ . '/../..';
 
     $retiredFunctionNames = [
-        // Phase 4a -- Category/functions.php
+        // Category/functions.php
         'get_subcat_ids', 'get_cat_info', 'get_uppercat_ids', 'set_cat_visible',
         'set_cat_status', 'set_random_representant', 'create_virtual_category',
-        // Phase 4b -- Http/functions.php
+        // Http/functions.php
         'redirect', 'redirect_html', 'redirect_http',
-        // Phase 4c -- Url/functions.php
+        // Url/functions.php
         'get_root_url', 'get_absolute_root_url', 'add_url_params', 'make_index_url',
         'duplicate_index_url', 'duplicate_picture_url', 'make_picture_url',
         'parse_section_url', 'parse_well_known_params_url', 'get_action_url',
         'get_element_url', 'set_make_full_url', 'unset_make_full_url', 'embellish_url',
         'get_gallery_home_url', 'get_query_string_diff', 'url_is_remote', 'get_user_favorites',
-        // Phase 4d -- Lang/functions.php
+        // Lang/functions.php
         'l10n', 'l10n_dec',
     ];
 
@@ -1197,13 +1052,12 @@ function countExitCallsPerFile(string $dir): array
 }
 
 test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlist', function (): void {
-    // Phase 1k close-out (2026-07-19): every site below was read in full
-    // and confirmed intentional -- grouped by rationale, not alphabetical.
-    // A new file calling die()/exit(), or a changed count in a file
-    // already listed here, fails this test until reviewed and reflected
-    // here explicitly. This is a count-based allowlist, not a line-based
-    // one: line numbers drift with unrelated edits, call-site counts
-    // don't (a genuinely new call site always changes the count).
+    // Every site below is grouped by rationale, not alphabetically. A new
+    // file calling die()/exit(), or a changed count in a file already
+    // listed here, fails this test until reviewed and reflected here
+    // explicitly. This is a count-based allowlist, not a line-based one:
+    // line numbers drift with unrelated edits, call-site counts don't (a
+    // genuinely new call site always changes the count).
     $allowlist = [
         // Ws/* raw-response mechanism: the whole Ws/ module sends its own
         // JSON-RPC/XML/PHP-serialized response and exits, by design --
@@ -1212,27 +1066,25 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // ... there is no real PSR-7 Response to construct"). Same
         // mechanism reached from Bootstrap/UserBootstrap.php's api_key
         // gate and Admin/Upload/UploadService.php's IN_WS branch.
-        // Ws/PwgImages.php's own former 5 raw die('{"jsonrpc"...}') upload-
-        // error sites (Legacy Coupling Retirement gap-closure, Workstream
-        // C2) are gone -- retargeted onto `return new PwgError(...)`, the
-        // same real error-response mechanism this file already uses
-        // everywhere else, so upload errors now honor the request's real
-        // format=/protocol instead of hardcoding raw JSON regardless.
+        // Ws/PwgImages.php's own upload-error sites return `new
+        // PwgError(...)` instead of a raw die(), the same real
+        // error-response mechanism this file already uses everywhere
+        // else, so upload errors honor the request's real format=/
+        // protocol instead of hardcoding raw JSON regardless.
         'Ws/PwgServer.php' => 1,
         'Ws/WsHelper.php' => 1,
         'Controller/WsController.php' => 1,
         'Bootstrap/UserBootstrap.php' => 2,
 
-        // Workstream C3: Html/HtmlService.php's accessDenied()/badRequest()/
+        // Html/HtmlService.php's accessDenied()/badRequest()/
         // pageNotFound()/pageForbidden()/fatalError() and Bootstrap/
         // RedirectService.php's redirectHttp()/redirectHtml() -- the
         // sanctioned HtmlRenderingInterface/RedirectServiceInterface exit
-        // mechanism every other controller/service routes through -- no
-        // longer call die()/exit() at all. Both now throw
-        // Piwigo\Http\ResponseReadyException instead, carrying a real
-        // Response up to one of 3 dispatch-context catch points (see that
-        // exception class's own docblock for why: exit()/die() skip
-        // pending `finally` blocks, which used to leave
+        // mechanism every other controller/service routes through -- never
+        // call die()/exit(). Both throw Piwigo\Http\ResponseReadyException
+        // instead, carrying a real Response up to one of 3 dispatch-context
+        // catch points (see that exception class's own docblock for why:
+        // exit()/die() skip pending `finally` blocks, which would leave
         // SentryMiddleware's performance transaction unfinished and
         // ServerTimingMiddleware's header silently skipped on every
         // redirect/error page).
@@ -1247,89 +1099,46 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         'Admin/UserActivityPageRenderer.php' => 1,
         'Controller/Admin/IntroSubController.php' => 1,
 
-        // Admin/Install/InstallWizard.php's own ?dl= database-config-
-        // download branch used to be here too (a raw header()/echo/
-        // unlink()/exit() sequence) -- found while adding coverage for
-        // that exact branch (an exit()-terminated method can't be
-        // exercised from inside the same PHP process without exit()ing
-        // the whole test run) and converted to throw
-        // Piwigo\Http\ResponseReadyException instead, the same C3
-        // mechanism this allowlist's own already-converted entries use
-        // (public/install.php's entry shell already had a catch point for
-        // it, from the mysqli-extension/already-installed guards a few
-        // lines below this same branch). Gone from this allowlist.
+        // Controller/ActionController.php's doError()/304 early-return
+        // don't call exit() -- doError() returns a real ResponseInterface
+        // (ResponseFactory::text($str, $code)), and the 304 branch returns
+        // ResponseFactory::raw() directly. doError() is only ever called
+        // from this controller's own __invoke(), never a shared class
+        // reached from multiple dispatch contexts, so every call site
+        // just needs `return $this->doError(...);`.
 
-        // Workstream C3b: Controller/ActionController.php's doError()/304
-        // early-return no longer call exit() -- doError() now returns a
-        // real ResponseInterface (ResponseFactory::text($str, $code)),
-        // and the 304 branch returns ResponseFactory::raw() directly.
-        // Simpler than C3a's ResponseReadyException mechanism: doError()
-        // is only ever called from this controller's own __invoke(),
-        // never a shared class reached from multiple dispatch contexts,
-        // so every call site just needed `return $this->doError(...);`.
-
-        // Workstream C3: Bootstrap/RequestBootstrap.php's own 2 raw sites
-        // (the install-redirect in configure(), the gallery-locked 503 in
-        // finalize()) now throw Piwigo\Http\ResponseReadyException too,
-        // caught by the same RequestBootstrap::bootEntryPoint() catch point
-        // (below) as configure()/connect()/finalize()'s other
-        // short-circuits -- both reachable from exactly one dispatch
-        // context (the bootstrap phase). (UserService.php's own 503
-        // exit() -- reachable from 3 different dispatch contexts, which is
-        // why it was deliberately NOT converted alongside these 2 -- was
-        // deleted outright in gap-closure Stage 4g, not converted: the
-        // whole lock/wait/503 mechanism it belonged to had nothing left to
-        // protect once Stage 4a-4f replaced every `user_cache` column with
-        // an independent cache-pool-backed computation.)
-        //
-        // include/+admin/ deletion batch: bootEntryPoint()'s own catch-and-
-        // emit block (`new ResponseEmitter()->emit($e->response()); exit;`)
-        // is the exact same statement that used to live at the bottom of
-        // include/common.inc.php -- outside src/Piwigo/, so never counted
-        // by this test before. Every entry point that used to `include`
-        // that seam file now calls this method directly instead, so the
-        // one exit() site simply moved into a file this test scans; it is
-        // not new debt.
+        // Bootstrap/RequestBootstrap.php's 2 raw sites (the
+        // install-redirect in configure(), the gallery-locked 503 in
+        // finalize()) throw Piwigo\Http\ResponseReadyException, caught by
+        // the same RequestBootstrap::bootEntryPoint() catch point as
+        // configure()/connect()/finalize()'s other short-circuits -- both
+        // reachable from exactly one dispatch context (the bootstrap
+        // phase). bootEntryPoint()'s own catch-and-emit block (`new
+        // ResponseEmitter()->emit($e->response()); exit;`) is this file's
+        // one exit() site.
         'Bootstrap/RequestBootstrap.php' => 1,
 
-        // Full legacy template render + exit(), matching the pre-rewrite
-        // include-then-die() page shape verbatim. Not part of Workstream
-        // C3c (which retired LegacyRenderCapture and its own 3 real
-        // callers, Picture/PictureCommentRenderer.php/Controller/Admin/
-        // AdminPopuphelpController.php/Controller/PopuphelpController.php
-        // -- all 3 now throw ResponseReadyException instead and are gone
-        // from this allowlist): this class never used LegacyRenderCapture
-        // at all (a raw $template->pparse()+exit() of its own, reached
-        // from Bootstrap\RequestBootstrap::finalize() -- catch point 1's
-        // own scope, so it's a real future C3 candidate, just not one the
-        // plan named).
+        // Full legacy template render + exit(), matching the
+        // include-then-die() page shape: a raw $template->pparse()+exit()
+        // reached from Bootstrap\RequestBootstrap::finalize().
         'Page/NoPhotoYetRenderer.php' => 1,
 
-        // Controller/ImageDerivativeController.php (i.php): Workstream C3
-        // Part III converted every real die()/exit() (ierror() now throws
-        // ResponseReadyException, sendDerivative() returns a real
-        // ResponseInterface) -- the 2 genuine early-`return` guards that
-        // still run before CurrentLogger's own construction (so ierror()
-        // itself can't be called yet) return a Response directly, not
-        // die()/exit(). Gone from this allowlist.
+        // Controller/ImageDerivativeController.php (i.php): every real
+        // die()/exit() is gone -- ierror() throws ResponseReadyException,
+        // sendDerivative() returns a real ResponseInterface, and the 2
+        // early-`return` guards that run before CurrentLogger's own
+        // construction (so ierror() itself can't be called yet) return a
+        // Response directly.
 
-        // P23 Stage 1e (gap-closure finding #17): the low-level decode/
-        // library-availability/upload-validation die() calls formerly here
-        // (Admin/Image/ImageGd.php x5, Admin/Image/ImageExtImagick.php x1,
-        // Admin/Image/PwgImage.php x2, Admin/Upload/UploadService.php x9)
-        // all now throw Piwigo\Admin\Image\ImageProcessingException
-        // instead -- the "a hard die() is correct in both real callers"
-        // rationale that used to justify them here was the audit's own
-        // "materially wrong" finding: Http\Middleware\
-        // ExceptionHandlerMiddleware already catches/logs/Sentry-reports
-        // any \Throwable for the real HTTP callers (Ws/PwgImages.php,
-        // Controller/ImageDerivativeController.php), and Symfony
-        // Messenger's own consumer loop does the same for the
-        // Job/BatchUploadJob.php background-job caller -- both strict
-        // improvements over a silent, unlogged die(). Gone from this
-        // allowlist (ImageGd.php/ImageExtImagick.php/PwgImage.php); only
-        // UploadService.php still has 1 real site, its own IN_WS branch's
-        // exit() (see the Ws/* raw-response mechanism comment above).
+        // Low-level decode/library-availability/upload-validation errors
+        // throw Piwigo\Admin\Image\ImageProcessingException instead of
+        // die(): Http\Middleware\ExceptionHandlerMiddleware catches/logs/
+        // Sentry-reports any \Throwable for the real HTTP callers
+        // (Ws/PwgImages.php, Controller/ImageDerivativeController.php),
+        // and Symfony Messenger's own consumer loop does the same for the
+        // Job/BatchUploadJob.php background-job caller. UploadService.php's
+        // only remaining site is its own IN_WS branch's exit() (see the
+        // Ws/* raw-response mechanism comment above).
         'Admin/Upload/UploadService.php' => 1,
 
         // Core/ShutdownHandler.php: exit(143), a deliberate, documented
@@ -1467,36 +1276,11 @@ test('src/Piwigo/ does not repeat the same multi-dependency service construction
 
     $violations = findDuplicateServiceConstructionChains($repoRoot . '/src/Piwigo');
 
-    // Phase 1k DI-chain audit (2026-07-19): every file with a repeated
-    // multi-arg chain was reviewed. Real gaps were fixed (private
-    // DRY-extraction helper methods, or a single reused local variable --
-    // never a constructor param, since the classes involved either
-    // already had 5-6 constructor params or the dependency was reachable
-    // via already-injected state) -- see UserService::permissionService(),
-    // MailService::userService(), and similar. What's left below is
-    // structurally exempt, not overlooked: the free-function file has no
-    // enclosing instance to hang a helper method off of, and InstallWizard
-    // runs before any DI container exists (a constructor param there would
-    // just move the manual construction to install.php, not remove it).
-    // Static `Ws/*.php` WS-method handlers do NOT get a standing exemption
-    // -- `self::helperMethod()` DRY-extracts a repeated chain exactly the
-    // same way `$this->helperMethod()` would (Legacy Coupling Retirement
-    // Phase 4a fixed several real instances this way, e.g.
-    // `Ws\PwgCategories::categoryService()`/`Ws\PwgImages::searchService()`
-    // calling `self::permissionService()` instead of repeating its chain).
-    // Zero-tolerance -- both real prior entries are fixed (Legacy Coupling
-    // Retirement Phase 8): Bootstrap/RedirectService.php|UserService in 8a
-    // (container-resolved, safe once RequestBootstrap::configure() boots
-    // the Kernel as its own first statement); Admin/Install/InstallWizard.php|UserService
-    // in 8b, via a plain private $this->userService(?Connection $conn = null)
-    // DRY-extraction helper instead -- not container-routed, since
-    // PHP-DI's request-shared instance would unsafely cache a Connection
-    // built from stale DbCredentials::current() if resolved before
-    // InstallWizard::boot()'s own DbCredentials::seed(...) call (from the
-    // submitted install form) has run. Matches
-    // RequestBootstrap::activityService()'s own established
-    // "private helper takes the already-available Connection as a
-    // parameter" precedent.
+    // Zero-tolerance: a file may not repeat the same multi-dependency
+    // service construction chain verbatim -- DRY-extract it into a
+    // private helper method (`$this->helperMethod()`, or
+    // `self::helperMethod()` for static `Ws/*.php` WS-method handlers)
+    // or a single reused local variable instead.
     $allowlist = [];
 
     $prefixLength = strlen($repoRoot . '/src/Piwigo/');
@@ -1510,15 +1294,14 @@ test('src/Piwigo/ does not repeat the same multi-dependency service construction
     expect($actual)->toBe($allowlist);
 });
 
-test('RequestFactory, ResponseEmitter, and the P9 middleware/pipeline/routing classes declare only readonly state', function (): void {
+test('RequestFactory, ResponseEmitter, and the middleware/pipeline/routing classes declare only readonly state', function (): void {
     // SEC-60 (worker-isolation, partial verification): these classes must stay
     // free of MUTABLE state so a future FrankenPHP worker loop can reuse them
     // across requests without cross-request state bleed. readonly properties
-    // set once at construction and never mutated are not a bleed risk --
-    // refined from P7's "zero properties allowed" rule, which was too strict
-    // for P9's middleware (SecurityHeadersMiddleware/RoutingMiddleware/
-    // ControllerInvokerMiddleware/MiddlewarePipeline legitimately need
-    // constructor-injected readonly properties to function). Kernel's own
+    // set once at construction and never mutated are not a bleed risk, so
+    // the middleware/pipeline classes (SecurityHeadersMiddleware/
+    // RoutingMiddleware/ControllerInvokerMiddleware/MiddlewarePipeline) may
+    // have constructor-injected readonly properties. Kernel's own
     // static state is the sanctioned exception -- it's request-isolated via
     // Kernel::reset(), which a worker loop will call between requests once
     // that mode exists.

@@ -13,15 +13,13 @@ use Doctrine\ORM\Mapping as ORM;
  * Category\Projection\Category's own already-documented decision.
  *
  * `status` is `CategoryStatus` (native Doctrine `enumType` column), same
- * pattern and same real gotcha as `Piwigo\Users\UserInfoEntity::$status`
- * (Phase 5 Item 21): `enumType` hydration applies to *any* scalar/array
- * DQL select of the field, not just full-entity reads, so every
- * `CategoryRepository` method selecting `c.status` via
- * `getArrayResult()`/`getSingleColumnResult()` was audited and updated to
- * unwrap `->value` right after fetch, preserving each method's
- * pre-existing plain-string return contract. WHERE/SET parameter binding
- * (`setParameter('status', 'private')`) is unaffected either way, so
- * those call sites are untouched.
+ * gotcha as `Piwigo\Users\UserInfoEntity::$status`: `enumType` hydration
+ * applies to *any* scalar/array DQL select of the field, not just
+ * full-entity reads, so every `CategoryRepository` method selecting
+ * `c.status` via `getArrayResult()`/`getSingleColumnResult()` must unwrap
+ * `->value` right after fetch to keep a plain-string return contract.
+ * WHERE/SET parameter binding (`setParameter('status', 'private')`) is
+ * unaffected either way.
  *
  * Only a handful of CategoryRepository's 65 methods go through this
  * entity -- the large majority are bulk id-list operations against a
@@ -29,27 +27,22 @@ use Doctrine\ORM\Mapping as ORM;
  * clauses), a dynamically-named table/column pair (findOrphanedColumnValues/
  * deleteRowsWhereColumnIn/deleteInconsistentAccess), or a cross-domain
  * table this repository doesn't own -- those stay plain DBAL via
- * $this->getEntityManager()->getConnection(), same "mixed repository"
- * shape Image/Tag's own conversions already established.
+ * $this->getEntityManager()->getConnection(), the same mixed-repository
+ * shape used for Image/Tag.
  *
- * `image_category` was previously deliberately left unmapped here,
- * reasoning that a shared entity's cross-repository coordination cost
- * wasn't worth it for the "couple of clean exceptions" among its
- * touches. Re-audited (Item 14 Sub-phase B1) and reversed: `group_access`/
- * `user_access` already prove a join-table entity works fine shared
- * across repositories, and a fuller re-read found considerably more than
- * a couple of clean single-table candidates. Now mapped as {@see
- * \Piwigo\Image\ImageCategoryEntity}, placed in `Piwigo\Image` (the
- * heaviest real consumer) rather than here.
+ * `image_category` is mapped as {@see \Piwigo\Image\ImageCategoryEntity},
+ * placed in `Piwigo\Image` (the heaviest real consumer) rather than here
+ * -- `group_access`/`user_access` already show a join-table entity works
+ * fine shared across repositories.
  *
- * `rank`'s column name is explicitly backtick-quoted -- `RANK` is a
- * reserved SQL keyword as of MySQL 8.0.2 (window functions), and a real
- * DQL `UPDATE ... SET` against an unquoted `rank` property elsewhere in
- * this migration ({@see \Piwigo\Image\ImageCategoryEntity}'s own `$rank`,
- * same column name/reserved-word shape) hit a genuine `SyntaxErrorException`
- * against the real test DB; this property isn't DQL-`UPDATE`d anywhere
- * today, but fixed proactively rather than leaving the same latent
- * landmine here.
+ * `rank`'s column name is explicitly backtick-quoted: `RANK` is a
+ * reserved SQL keyword as of MySQL 8.0.2 (window functions), and an
+ * unquoted `rank` property used in a DQL `UPDATE ... SET` ({@see
+ * \Piwigo\Image\ImageCategoryEntity}'s own `$rank`, same column
+ * name/reserved-word shape) raises a genuine `SyntaxErrorException`
+ * against a real MySQL 8 database. This property isn't DQL-`UPDATE`d
+ * anywhere today, but stays quoted proactively to avoid the same latent
+ * landmine.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'categories')]

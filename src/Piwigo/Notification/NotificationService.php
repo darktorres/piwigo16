@@ -16,14 +16,9 @@ use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\CurrentUser;
 
 /**
- * "What's new" aggregation, ported from the deleted
- * `include/functions_notification.inc.php`'s 18 functions (P23 batch 8c
- * folded the remaining 4 -- `addNewsLine()`/`news()`/
- * `getHtmlDescriptionRecentPostDate()`/`getTitleRecentPostDate()` -- in
- * here too; none read `$page`/`$template`, only `global $conf;` plus
- * URL-building/l10n free functions (make_index_url(), make_picture_url(),
- * DerivativeImage::thumb_url()), same "global read inside a service
- * method" precedent as TagService::addLevelToTags().
+ * "What's new" aggregation for the gallery: new comments, new elements,
+ * updated categories, and (for admins) unvalidated comments and new
+ * users.
  */
 final readonly class NotificationService
 {
@@ -43,22 +38,10 @@ final readonly class NotificationService
      * query this feeds into -- {@see NotificationRepository::buildQuery()}'s
      * own `new_comments` case (`comments c INNER JOIN image_category ic`).
      *
-     * SQL-modernization audit, Item 14 Sub-phase C1: replaces the old
-     * `getSqlWhereRestrictCondition('ic.image_id')` default -- fieldName
-     * `'ic.image_id'` isn't `'id'`/`'i.id'`, so the old
-     * `getSqlConditionFandFAsCondition()`'s own `visible_images` fallthrough
-     * into `forbidden_images` hit the `image_access_list` branch, not the
-     * level check; imageAccessCondition applies here, not maxLevel. Every
-     * real consumer of the returned SqlCondition applies it via
-     * `applyCondition()`'s own `isEmpty()`-skip (never an unguarded
-     * splice), so dropping the old `$forceOneCondition` parameter (no real
-     * caller ever passed `true` for this specific field) changes nothing.
-     *
-     * Further SQL-modernization audit, Item 15G: every real consumer is
-     * now DQL, so the field names below are DQL property paths
-     * (`ic.categoryId`/`ic.imageId`), not raw SQL column names
-     * (`ic.category_id`/`ic.image_id`) -- {@see NotificationRepository}'s
-     * own `ic` alias still refers to the same `image_category` join.
+     * Applies imageAccessCondition rather than maxLevel: images are gated
+     * here by the image_category access list, not by category level. The
+     * field names are DQL property paths (`ic.categoryId`/`ic.imageId`),
+     * not raw SQL column names.
      */
     public function getCommentsRestrictCondition(): SqlCondition
     {
@@ -80,27 +63,12 @@ final readonly class NotificationService
      * findRecentPostDates()/findRecentElementsForDate()/
      * findRecentCategoriesForDate() below.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C1: replaces the old
-     * `getSqlWhereRestrictCondition('id')`/`getSqlWhereRestrictCondition('i.id',
-     * true)` call sites -- fieldName `'id'`/`'i.id'` matches the old
-     * `getSqlConditionFandFAsCondition()`'s own `$fieldName === 'id' ||
-     * $fieldName === 'i.id'` branch, so the `visible_images` fallthrough
-     * into `forbidden_images` hit the images-table's own level check;
-     * maxLevel applies here, against `i.level`. Every real consumer
-     * applies the returned SqlCondition via `applyCondition()`'s own
-     * `isEmpty()`-skip, so dropping the old `$forceOneCondition` parameter
-     * (only ever passed `true` by getRecentPostDates(), and a no-op for
-     * that consumer too) changes nothing.
-     *
-     * Further SQL-modernization audit, Item 15G: every real consumer
-     * except findRecentElementsForDate() (which stays on DBAL, see that
-     * method's own docblock) is now DQL, so `ic.category_id`/`ic.image_id`
-     * become the DQL property paths `ic.categoryId`/`ic.imageId`;
-     * `i.id`/`i.level` are unchanged (ImageEntity's own property names
-     * already match). findRecentElementsForDate()'s own raw-SQL query
-     * still applies this same condition fine -- `SqlCondition`'s `sql`
-     * text is caller-composed either way, and that one query's `i`/`ic`
-     * aliases are still the same tables.
+     * Applies maxLevel against `i.level` rather than imageAccessCondition.
+     * The field names are DQL property paths (`ic.categoryId`/`ic.imageId`);
+     * `i.id`/`i.level` match ImageEntity's own property names directly.
+     * findRecentElementsForDate() stays on a raw-SQL query (see that
+     * method's own docblock), which this same condition applies to fine
+     * since `SqlCondition`'s `sql` text is caller-composed either way.
      */
     public function getElementsRestrictCondition(): SqlCondition
     {

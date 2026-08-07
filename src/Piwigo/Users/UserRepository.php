@@ -42,53 +42,39 @@ use RuntimeException;
  * slice: `users` (login/password/email), `user_infos` (profile row,
  * preferences), `user_group` (default-group assignment on registration).
  *
- * `user_infos` is ORM-mapped ({@see UserInfoEntity}); `users` is now also
- * mapped ({@see UserEntity}) -- SQL-modernization audit, Item 14
- * Sub-phase C4: `users` used to be deliberately left un-entity-mapped,
- * every method touching it taking its column names as caller-supplied
- * parameters (`\Piwigo\Config\CurrentConfig::userFields()`, Piwigo's
- * multi-auth column remapping). That indirection had zero real callers
- * (`CurrentConfig::setUserFields()` was dead code), so it was retired
- * entirely -- `users`'s columns are fixed now, and every method that used
- * to take a `$userIdColumn`/`$usernameColumn`/`$emailColumn` parameter has
- * dropped it. Some methods below still stay on plain DBAL via
- * `$this->em->getConnection()` for their own remaining,
- * unrelated blockers (documented per-method).
+ * `user_infos` is ORM-mapped ({@see UserInfoEntity}); `users` is also
+ * mapped ({@see UserEntity}) -- its columns are fixed, not
+ * caller-supplied per method. Some methods below still stay on plain DBAL
+ * via `$this->em->getConnection()` for their own remaining, unrelated
+ * blockers (documented per-method).
  *
- * `build_user()`/`getuserdata()`/`check_user_favorites()` (the original
- * free-function names) ended up ported into
- * {@see \Piwigo\Users\UserService} instead of here, as OOP methods
+ * `build_user()`/`getuserdata()`/`check_user_favorites()` ended up ported
+ * into {@see \Piwigo\Users\UserService} instead of here, as OOP methods
  * (`buildUser()`/`getUserData()`/`checkUserFavorites()`) -- `user_cache`
- * itself no longer exists (deleted in gap-closure Stage 4g, see
- * {@see UserService::getUserData()}'s own comment), and the
- * Category-domain rollup they depended on (`get_computed_categories()`)
+ * no longer exists ({@see UserService::getUserData()}'s own comment), and
+ * the Category-domain rollup they depend on (`get_computed_categories()`)
  * is now `CategoryService::getComputedCategories()`.
  *
- * Singleton/service-locator elimination campaign, Phase 11 sub-phase 11B:
- * no longer `extends EntityRepository` -- Doctrine's own `RepositoryFactory`
- * always constructs an `EntityRepository` subclass via a fixed
- * `(EntityManagerInterface $em, ClassMetadata $class)` signature, which
- * permanently blocked this class from ever taking `CurrentConfig`/
- * `EventDispatcher` (its own 2 remaining shim reads,
- * getWebmasterMailAddress()'s `CurrentConfig::webmasterId()`/
- * `EventDispatcher::dispatchChange()`, and findVisibleFavoriteImageIds()'s
- * `CurrentConfig::orderByCustom()`) via real constructor injection. Now a
- * plain, container-shared service instead, matching every other converted
- * class in this campaign; `UserInfoEntity`'s own `#[ORM\Entity]` mapping
- * no longer names this class as its `repositoryClass` (dropped in the same
- * commit), so `$em->getRepository(UserInfoEntity::class)` now returns a
- * generic `Doctrine\ORM\EntityRepository<UserInfoEntity>` instead, and
- * every DQL builder below reaches it inline
- * (`$this->em->getRepository(UserInfoEntity::class)->createQueryBuilder(...)`,
- * replacing the `$this->createQueryBuilder($alias)` sugar this class used
- * to get for free from its own (former) EntityRepository parent) rather
- * than through a private wrapper -- confirmed live that phpstan-doctrine's
- * own DQL result-type inference (each `getResult()`'s row shape, e.g.
+ * This class doesn't `extend EntityRepository` -- Doctrine's own
+ * `RepositoryFactory` always constructs an `EntityRepository` subclass
+ * via a fixed `(EntityManagerInterface $em, ClassMetadata $class)`
+ * signature, which would block this class from taking `CurrentConfig`/
+ * `EventDispatcher` (its own 2 dependencies, getWebmasterMailAddress()'s
+ * `CurrentConfig::webmasterId()`/`EventDispatcher::dispatchChange()`, and
+ * findVisibleFavoriteImageIds()'s `CurrentConfig::orderByCustom()`) via
+ * real constructor injection. It's a plain, container-shared service
+ * instead; `UserInfoEntity`'s own `#[ORM\Entity]` mapping doesn't name
+ * this class as its `repositoryClass`, so
+ * `$em->getRepository(UserInfoEntity::class)` returns a generic
+ * `Doctrine\ORM\EntityRepository<UserInfoEntity>` instead, and every DQL
+ * builder below reaches it inline
+ * (`$this->em->getRepository(UserInfoEntity::class)->createQueryBuilder(...)`)
+ * rather than through a private wrapper -- phpstan-doctrine's own DQL
+ * result-type inference (each `getResult()`'s row shape, e.g.
  * `array{userId: UserId}`) only traces a literal
  * `getRepository(X::class)->createQueryBuilder()` chain, not a call
- * hidden behind a same-file helper method; a wrapper collapsed every
- * `getResult()` below to `mixed`, cascading into ~25 real
- * offsetAccess/foreach errors across every method using it.
+ * hidden behind a same-file helper method; a wrapper collapses every
+ * `getResult()` below to `mixed`.
  */
 final class UserRepository implements WebmasterMailProviderInterface
 {
@@ -151,21 +137,9 @@ final class UserRepository implements WebmasterMailProviderInterface
     /**
      * Returns the webmaster's email address (the users row whose id
      * column matches \Piwigo\Config\CurrentConfig::webmasterId()).
-     *
-     * P23 batch 8f-4: implements Piwigo\Core\WebmasterMailProviderInterface
-     * (MailService's test seam for this exact lookup -- see that
-     * interface's own docblock); bound in config/container.php.
-     *
-     * P23 batch 8d: relocated from include/functions.inc.php's
-     * get_webmaster_mail_address(), unchanged logic (including its
-     * trigger_change('get_webmaster_mail_address', ...) filter hook) --
-     * stays zero-arg, matching the original's own signature exactly, so
-     * every real call site retargets as a pure rename.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
-     * column indirection this used to resolve via `CurrentConfig::
-     * userFields()` is gone (see this class's own docblock).
+     * Implements Piwigo\Core\WebmasterMailProviderInterface (MailService's
+     * test seam for this exact lookup -- see that interface's own
+     * docblock); bound in config/container.php.
      */
     #[Override]
     public function getWebmasterMailAddress(): string
@@ -500,14 +474,13 @@ final class UserRepository implements WebmasterMailProviderInterface
         return new UserInfoEntity(
             userId: $userId,
             nbImagePage: is_numeric($row['nb_image_page'] ?? null) ? (int) $row['nb_image_page'] : 15,
-            // Phase 5 Item 21: UserInfoEntity::$status is UserStatus
-            // (enumType-mapped) -- $row is a caller-supplied bag (not
-            // necessarily DB-sourced), so this keeps the same defensive
-            // fallback-to-guest behavior the old is_string() check had,
-            // via tryFrom() rather than Doctrine's own throw-on-mismatch
-            // from() (that throw is safe only for values already read back
-            // from the DB-constrained `enum(...)` column, not arbitrary
-            // caller input).
+            // UserInfoEntity::$status is UserStatus (enumType-mapped) --
+            // $row is a caller-supplied bag (not necessarily DB-sourced),
+            // so this uses tryFrom() with a defensive fallback to guest
+            // rather than Doctrine's own throw-on-mismatch from() (that
+            // throw is safe only for values already read back from the
+            // DB-constrained `enum(...)` column, not arbitrary caller
+            // input).
             status: is_string($row['status'] ?? null) ? (UserStatus::tryFrom($row['status']) ?? UserStatus::Guest) : UserStatus::Guest,
             language: is_string($row['language'] ?? null) ? $row['language'] : 'en_UK',
             expand: (bool) ($row['expand'] ?? false),
@@ -551,9 +524,6 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * Ported from admin/include/functions.php's get_admins() (P23 batch
-     * 8d), unchanged logic.
-     *
      * @return list<UserId>
      */
     public function findAdminIds(bool $includeWebmaster = true): array
@@ -580,31 +550,15 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * Deletes a user's row across every table referencing it. Ported from
-     * admin/include/functions.php's delete_user() (P23 batch 8d),
-     * unchanged logic -- pure cascade delete, no business logic (session
-     * purge / activity log stay in Piwigo\Users\UserService::deleteUser(),
-     * which calls this).
-     *
-     * Item 14 DQL audit: `user_access`/`user_group`/`user_auth_keys` are
-     * each entity-mapped (Category\UserAccessEntity, Group\UserGroupEntity,
-     * Auth\UserAuthKeyEntity) and each entity's own docblock documents it
-     * as having no single owning repository -- other repositories already
-     * query/delete them directly via DQL through their own EntityManager
-     * (e.g. Permission\PermissionRepository already deletes
-     * UserAccessEntity this same way), so those three convert alongside
-     * UserInfoEntity's pre-existing DQL delete below. `user_feed` IS
-     * entity-mapped too (Feed\FeedEntity), but unlike the three above it
-     * has a single documented owner (FeedRepository) with no existing
-     * cross-domain DQL precedent, so it stays on raw DBAL to avoid a new
-     * coupling. `user_mail_notification`/`favorites`/`caddie` have no
-     * entity anywhere in this migration, so those stay DBAL too.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C4: the final `users` row
-     * delete converted to real DQL alongside the other 4 -- `users` is now
-     * mapped ({@see UserEntity}), the caller-supplied dynamic id column
-     * (multi-auth) this used to need is gone (see this class's own
-     * docblock).
+     * Deletes a user's row across every table referencing it -- pure
+     * cascade delete, no business logic (session purge / activity log
+     * stay in Piwigo\Users\UserService::deleteUser(), which calls this).
+     * `user_access`/`user_auth_keys`/`user_group`/`user_infos`/`users`/
+     * `favorites` are deleted here via DQL. `user_mail_notification`/
+     * `user_feed`/`caddie` are not touched here -- each of those tables'
+     * own `user_id` column carries a real `ON DELETE CASCADE` FK straight
+     * to `users.id`, so the database cascades those rows away once the
+     * `users` row itself is deleted below.
      */
     public function deleteUser(UserId $userId): void
     {
@@ -652,32 +606,12 @@ final class UserRepository implements WebmasterMailProviderInterface
             ->getQuery()
             ->execute();
 
-        // Item 15 audit: `favorites` (Users\FavoriteEntity, same domain)
-        // converted to DQL above.
-        //
-        // Item 16E: the `user_mail_notification`/`user_feed`/`caddie` raw
-        // DBAL loop that used to sit here (a real deptrac
-        // `DependsOnDisallowedLayer` boundary -- `Users` is
-        // `L2aCoreDomain`; `Feed`/`Caddie`/`Notification`, the domains
-        // owning those 3 tables, are all `L2bExtendedDomain`) turned out
-        // to be dead code, not something needing event-based
-        // decoupling: every one of those tables' own `user_id` column
-        // carries a real `ON DELETE CASCADE` FK straight to `users.id`
-        // (tests/Fixtures/piwigo-17.0.sql), and it ran AFTER the `users`
-        // row delete just above -- MySQL had already cascaded every one
-        // of those rows away by the time this loop's own `DELETE ...
-        // WHERE user_id = ...` executed, so it always deleted exactly
-        // zero rows. Confirmed via the existing
-        // `test_delete_user_removes_every_row_across_every_related_table`
-        // Integration test, which seeds real rows in all 3 tables and
-        // still passes with the loop removed entirely.
-        //
-        // Bypassed the ORM for `favorites` and the entity deletes above
-        // it -- any entity this EntityManager already loaded for this
-        // user (UserEntity, UserInfoEntity, UserAccessEntity,
-        // UserAuthKeyEntity, UserGroupEntity, FavoriteEntity) would
-        // otherwise stay stale (same identity-map reasoning as
-        // GroupRepository::delete()'s own comment).
+        // These are DQL bulk deletes, which bypass the ORM's identity map
+        // -- any entity this EntityManager already loaded for this user
+        // (UserEntity, UserInfoEntity, UserAccessEntity, UserAuthKeyEntity,
+        // UserGroupEntity, FavoriteEntity) would otherwise stay stale
+        // (same identity-map reasoning as GroupRepository::delete()'s own
+        // comment).
         $em->clear();
     }
 
@@ -979,17 +913,8 @@ final class UserRepository implements WebmasterMailProviderInterface
     /**
      * Favorite image ids for $userId restricted to $criteria --
      * UserService::checkUserFavorites()'s own "images still in an
-     * authorized category" half of the comparison.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller only ever applies
-     * forbiddenCategoryIds, against `ic.category_id`.
-     *
-     * Further SQL-modernization audit, Item 15G: converted to real DQL --
-     * {@see \Piwigo\Image\ImageCategoryEntity} is mapped (the earlier "no
-     * entity anywhere in this migration" exclusion reason is stale), and
-     * `PermissionCriteria` needs no API changes, same finding as every
-     * other consumer across this campaign.
+     * authorized category" half of the comparison. The one real caller
+     * only ever applies forbiddenCategoryIds, against `ic.category_id`.
      *
      * @return list<int>
      */
@@ -1583,14 +1508,10 @@ final class UserRepository implements WebmasterMailProviderInterface
 
     /**
      * Per-status user counts, excluding $excludeUserId (the guest user) --
-     * Admin\UserListPageRenderer's own status-filter counters.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * column/property.
-     *
-     * Phase 5 Item 21: `status` is now `UserStatus` (enumType-mapped) --
-     * array hydration returns a real UserStatus instance per row, unwrapped
-     * to `.value` for the array key (a PHP array key can't be an object).
+     * Admin\UserListPageRenderer's own status-filter counters. `status` is
+     * `UserStatus` (enumType-mapped) -- array hydration returns a real
+     * UserStatus instance per row, unwrapped to `.value` for the array key
+     * (a PHP array key can't be an object).
      *
      * @return array<string, int> keyed by status
      */
@@ -1736,11 +1657,9 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * Further SQL-modernization audit, Item 13: Ws\PwgUsers::getList()'s
-     * own paginated, dynamically-columned user listing -- $whereClauses (a
-     * caller-built `list<string>` of trusted SQL fragments) replaced with
-     * a typed UserListCriteria; see buildListForWsCondition() above for
-     * how each field maps to its own condition. $displayColumns is the
+     * Ws\PwgUsers::getList()'s own paginated, dynamically-columned user
+     * listing; see buildListForWsCondition() above for how each criteria
+     * field maps to its own WHERE condition. $displayColumns is the
      * already-built `field expr => alias` map (always includes at least
      * `u.<idColumn> => id`), matching the WS method's client-controlled
      * `display` param -- still caller-composed, since it shapes SELECT
@@ -1748,94 +1667,40 @@ final class UserRepository implements WebmasterMailProviderInterface
      * ORDER BY -- caller must validate this first (the WS method's own
      * ValidationPattern::ORDER check), same contract as
      * {@see \Piwigo\Comment\CommentRepository::findForImage()}'s own
-     * $order. FOUND_ROWS() is only fetched when $includeTotalCount.
+     * $order. The total count is only fetched when $includeTotalCount.
      * LIMIT/OFFSET are only applied when $limit !== null.
      *
-     * Item 14 DQL audit: stays on DBAL -- `$displayColumns` is a dynamic
-     * field-expression => alias map (the WS method's own client-controlled
-     * `display` param), `$orderBy` concatenates a caller-validated raw
-     * fragment, `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` are MySQL-specific
-     * with no DQL equivalent, and the WHERE clause comes from
-     * buildListForWsCondition() above's shared SqlCondition-building
-     * machinery (also used standalone by no other method today, but kept
-     * as raw SQL to stay consistent with that helper's own contract). The
-     * multi-auth column indirection this used to take as `$idColumn`/
-     * `$usernameColumn`/`$emailColumn` parameters is gone though (see this
-     * class's own docblock) -- `users` is now mapped
-     * ({@see UserEntity}), but that alone doesn't unblock the whole
-     * method given the other 3 blockers above.
+     * Stays on raw DBAL, not DQL -- `$displayColumns` is a dynamic
+     * field-expression => alias map, `$orderBy` concatenates a
+     * caller-validated raw fragment, and the WHERE clause comes from
+     * buildListForWsCondition() above's SqlCondition-building machinery.
      *
-     * Phase 5 Item 19 used to deliberately keep this on
-     * `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()`, unlike its 4 siblings
-     * ({@see \Piwigo\Category\CategoryRepository::findListForWs()},
-     * {@see \Piwigo\Category\CategoryRepository::findAdminListForWs()},
-     * {@see \Piwigo\Image\ImageRepository::findWithConditionsPaginated()},
-     * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}) --
-     * this query is `SELECT DISTINCT`, not `GROUP BY`, and SQL window
-     * functions execute logically *before* `DISTINCT`, so `COUNT(*)
-     * OVER()` would report the pre-deduplication row count, not the
-     * actual distinct total (live-verified at the time: 5 rows collapsing
-     * to 2 distinct groups, `COUNT(*) OVER()` on the same query wrongly
-     * reporting 5).
+     * Groups by `u.id` rather than using `SELECT DISTINCT`: `u.id` (the
+     * `users` table's own primary key) is exactly the dedup key this
+     * query needs -- every column it projects is functionally dependent
+     * on it (`u.*`/`ui.*`, joined 1:1 via `ui.user_id = u.id`), and the
+     * only real source of row multiplication is the `LEFT JOIN
+     * user_group` (one row per group membership), never itself part of
+     * the SELECT list. `GROUP BY`'s functional-dependency exception,
+     * unlike `DISTINCT`'s strict same-row-literal requirement, also
+     * permits the `ORDER BY LOWER(username)`-style expressions
+     * Ws\PwgUsers::getList() can build, which aren't literally present in
+     * the SELECT list. The total count uses a separate `COUNT(DISTINCT
+     * u.id)` query rather than a window function or
+     * `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` (MySQL-only, no Postgres
+     * equivalent, and a window function would execute logically before
+     * `DISTINCT`/`GROUP BY`, over-counting the pre-deduplication rows).
      *
-     * pgsql support pass: `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` are both
-     * MySQL-only -- no Postgres equivalent exists at all (confirmed live:
-     * "syntax error at or near '.'", Postgres's parser reads the bare
-     * `SQL_CALC_FOUND_ROWS` token as an implicitly-aliased column
-     * reference -- `SELECT DISTINCT SQL_CALC_FOUND_ROWS u.id AS id` valid
-     * Postgres grammar reads as `<col=SQL_CALC_FOUND_ROWS> <alias=u>`,
-     * then chokes on the `.id` that follows). Replaced with a genuinely
-     * portable, single-code-path fix that also sidesteps the
-     * DISTINCT-vs-window-function ordering problem entirely instead of
-     * working around it per platform: a plain `COUNT(DISTINCT u.id)`
-     * aggregate has no such before/after-DISTINCT ambiguity to begin
-     * with, and `u.id` (the `users` table's own primary key) is exactly
-     * the dedup key `SELECT DISTINCT` was already collapsing on here --
-     * every column this query ever projects is functionally dependent on
-     * it (`u.*`/`ui.*`, joined 1:1 via `ui.user_id = u.id`), and the only
-     * real source of row multiplication is the `LEFT JOIN user_group`
-     * (one row per group membership) -- never itself part of the SELECT
-     * list, so two "duplicate" rows for the same user are always
-     * byte-identical. One extra round-trip query instead of a
-     * single-pass MySQL-only trick, same portable tradeoff already
-     * accepted elsewhere in this pass.
-     *
-     * Real second Postgres bug found live, fixed here too: `SELECT
-     * DISTINCT` combined with an `ORDER BY` expression not literally
-     * present in the SELECT list is rejected outright ("for SELECT
-     * DISTINCT, ORDER BY expressions must appear in select list") --
-     * hit for real via `Ws\PwgUsers::getList()`'s own case-insensitive
-     * `ORDER BY LOWER(username)` substitution (`username` alone is
-     * selected, `LOWER(username)` isn't literally the same text).
-     * `SELECT DISTINCT` is switched to `GROUP BY u.id` to fix this
-     * (`GROUP BY`'s functional-dependency exception, unlike `DISTINCT`'s
-     * strict same-row-literal requirement, permits an ORDER BY
-     * expression built purely from the grouped table's own columns with
-     * no matching SELECT-list entry).
-     *
-     * A real second, more subtle bug found live *fixing that first one*,
-     * caught only once this ran against a real WS call exercising every
-     * $displayColumns field, not just the narrower set this class's own
-     * Integration tests happened to cover: PostgreSQL's own GROUP BY
-     * functional-dependency rule is narrower than MySQL's -- confirmed
-     * directly against its own docs after a live "column ui.status must
-     * appear in the GROUP BY clause" failure -- it only ever recognizes a
-     * table's *own* primary key, never transitively through a join the
-     * way MySQL's optimizer does (MySQL: grouping by u.id, joined 1:1 to
-     * ui via a unique ui.user_id, makes every ui.* column functionally
-     * dependent too; Postgres: never, regardless of join shape). Every
-     * `ui.*` column $displayColumns can carry (confirmed via
-     * Ws\PwgUsers::getList()'s own real `$display` construction --
-     * status/level/language/theme/nb_image_page/recent_period/expand/
-     * show_nb_comments/show_nb_hits/enabled_high/registration_date/
-     * last_visit, `ug.*` never appears there at all) is wrapped in
-     * `ANY_VALUE()` below -- genuinely correct here, not just
-     * quieting the error, since `ui` is a real one-row-per-user INNER
-     * JOIN (confirmed: `ui.user_id` is user_infos' own primary key), so
-     * ANY_VALUE() only ever has exactly one real candidate value to
-     * return, same reasoning already established for
+     * PostgreSQL's `GROUP BY` functional-dependency rule only ever
+     * recognizes a table's *own* primary key, never transitively through
+     * a join the way MySQL's optimizer does -- so every `ui.*` column
+     * $displayColumns can carry is wrapped in `ANY_VALUE()` below. This is
+     * genuinely correct, not just error-quieting: `ui` is a real
+     * one-row-per-user INNER JOIN (`ui.user_id` is user_infos' own
+     * primary key), so `ANY_VALUE()` only ever has exactly one real
+     * candidate value to return, same reasoning as
      * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}'s
-     * own ANY_VALUE(u.mail_address) fix.
+     * own `ANY_VALUE(u.mail_address)`.
      *
      * @param  array<string, string>  $displayColumns
      * @return PaginatedResult<array<string, mixed>>
@@ -1997,9 +1862,9 @@ final class UserRepository implements WebmasterMailProviderInterface
 
             $result[] = [
                 'user_id' => $userId instanceof UserId ? $userId->value : null,
-                // Phase 5 Item 21: `status` is now UserStatus
-                // (enumType-mapped) -- array hydration returns a real
-                // instance, unwrapped to `.value` here.
+                // `status` is UserStatus (enumType-mapped) -- array
+                // hydration returns a real instance, unwrapped to
+                // `.value` here.
                 'status' => ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : null,
                 'language' => $row['language'] ?? null,
                 'email' => $row['email'] ?? null,
@@ -2163,10 +2028,8 @@ final class UserRepository implements WebmasterMailProviderInterface
                 continue;
             }
 
-            // Phase 5 Item 21: `status` is now UserStatus (enumType-mapped)
-            // -- array hydration returns a real instance, unwrapped to
-            // `.value` here (was is_string(), a silent-null regression
-            // once the column stopped hydrating as a plain string).
+            // `status` is UserStatus (enumType-mapped) -- array hydration
+            // returns a real instance, unwrapped to `.value` here.
             $byId[$id->value] = ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : null;
         }
 
@@ -2209,11 +2072,9 @@ final class UserRepository implements WebmasterMailProviderInterface
 
             $result[] = new ActivationKeyRow(
                 userId: $row['userId'],
-                // Phase 5 Item 21: `status` is now UserStatus
-                // (enumType-mapped) -- array hydration returns a real
-                // instance, unwrapped to `.value` here (was is_string(), a
-                // silent-empty-string regression once the column stopped
-                // hydrating as a plain string).
+                // `status` is UserStatus (enumType-mapped) -- array
+                // hydration returns a real instance, unwrapped to
+                // `.value` here.
                 status: ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : '',
                 activationKey: is_string($row['activationKey']) ? $row['activationKey'] : '',
             );

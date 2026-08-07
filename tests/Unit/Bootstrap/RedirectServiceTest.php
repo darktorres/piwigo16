@@ -27,10 +27,9 @@ use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
-// Workstream C3: redirectHttp() throws ResponseReadyException instead of
-// calling header()/exit() directly, which is what makes it unit-testable
-// for the first time -- there was never a RedirectServiceTest.php before
-// this conversion (exit()-terminated methods can't be asserted on).
+// redirectHttp() throws ResponseReadyException instead of calling
+// header()/exit() directly, which makes it possible to unit test
+// (exit()-terminated methods can't be asserted on).
 //
 // redirectHttp() is typed `: never`, so PHPStan proves any code
 // following a call to it never runs, in or out of a try block -- the
@@ -39,14 +38,12 @@ use Piwigo\Users\UserService;
 // afterwards, so every assertion sits in code PHPStan doesn't consider
 // provably dead.
 
-// Singleton/service-locator elimination campaign, Phase 6: RedirectService
-// now takes UserService via constructor injection -- neither test below
-// ever touches it (redirectHttp() never reaches $this->userService), so a
-// throwaway, never-queried instance is enough. Doctrine's DBAL connection
-// is lazy (build() never opens a real connection until a query runs), so
-// this is safe to construct with no reachable test DB, same recipe used
-// throughout this campaign (e.g. CoreUpdateServiceTest.php's own
-// core_update_service_test_user_service()).
+// RedirectService takes UserService via constructor injection -- neither
+// test below ever touches it (redirectHttp() never reaches
+// $this->userService), so a throwaway, never-queried instance is enough.
+// Doctrine's DBAL connection is lazy (build() never opens a real
+// connection until a query runs), so this is safe to construct with no
+// reachable test DB.
 /**
  * This suite never boots a Kernel (redirectHttp() never reaches
  * $this->lang either, same as $this->userService above), so resolving
@@ -61,8 +58,7 @@ function redirect_service_test_lang(): Lang
 
 /**
  * Same "no Kernel boot" reasoning as redirect_service_test_lang() above --
- * every MailService::__construct() collaborator (singleton/service-locator
- * elimination campaign, Phase 11 sub-phase 11E) built bare, DB-free.
+ * every MailService::__construct() collaborator is built bare, DB-free.
  */
 function redirect_service_test_mail_service(): MailService
 {

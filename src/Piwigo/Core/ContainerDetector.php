@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-/**
- * P23 batch 8d: containerized-environment detection relocated from
- * include/functions.inc.php -- no natural existing class home, stateless.
- */
 final class ContainerDetector
 {
     /**
@@ -21,8 +17,6 @@ final class ContainerDetector
      *  ('Official', <VersionCode>)       => PHP is running in an official container
      *  ('LinuxServer.io', <VersionCode>) => PHP is running in a LinuxServer container
      *  ('Unknown', null)                 => PHP is running in a non-identified container
-     *
-     * @since 16.3
      *
      * @return array{0: string, 1: ?string}
      */

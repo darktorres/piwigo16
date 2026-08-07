@@ -5,24 +5,24 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * Legacy Coupling Retirement Track A: `Piwigo\Template\Template` is
- * L3Presentation, but a handful of L2aCoreDomain (`Category\CategoryService`)
- * and L2bExtendedDomain (`Calendar\*`, `Search\SearchFilterRenderer`,
- * `Section\SectionPopulator`) classes have real callers needing to write
- * into the current request's template -- deptrac's ruleset forbids all of
- * those from depending upward on L3 directly. Lives in `Piwigo\Core`
- * (L1Infrastructure, same direction as `HtmlRenderingInterface`/
- * `MailerInterface`/`ActivityLoggerInterface`/`FilterUpdaterInterface`) so
- * those classes can depend downward on this instead of the concrete class.
- * `Template implements` it; bound in `config/container.php` to a factory
- * resolving `Piwigo\Template\CurrentTemplate::get()` (the current request's
- * template is constructed dynamically per-request with runtime theme/path
+ * `Piwigo\Template\Template` is L3Presentation, but L2aCoreDomain
+ * (`Category\CategoryService`) and L2bExtendedDomain (`Calendar\*`,
+ * `Search\SearchFilterRenderer`, `Section\SectionPopulator`) classes have
+ * real callers needing to write into the current request's template --
+ * deptrac's ruleset forbids all of those from depending upward on L3
+ * directly. Lives in `Piwigo\Core` (L1Infrastructure, same direction as
+ * `HtmlRenderingInterface`/`MailerInterface`/`ActivityLoggerInterface`/
+ * `FilterUpdaterInterface`) so those classes can depend downward on this
+ * instead of the concrete class. `Template implements` it; bound in
+ * `config/container.php` to a factory resolving
+ * `Piwigo\Template\CurrentTemplate::get()` (the current request's template
+ * is constructed dynamically per-request with runtime theme/path
  * parameters, so the binding can't be a plain autowired singleton).
  *
- * Same "only methods with a real L1/L2a/L2b caller are included" scoping
- * as `HtmlRenderingInterface`'s own docblock -- the 30+ other `Template`
- * methods (Smarty-plugin registration, filter wiring, theme-conf loading,
- * ...) have no L1/L2a/L2b caller and stay untouched, concrete-class-only.
+ * Only `Template` methods with a real L1/L2a/L2b caller are included here
+ * -- the 30+ other `Template` methods (Smarty-plugin registration, filter
+ * wiring, theme-conf loading, ...) have no L1/L2a/L2b caller and stay
+ * untouched, concrete-class-only.
  */
 interface TemplateInterface
 {
@@ -53,7 +53,7 @@ interface TemplateInterface
 
     /**
      * Mirrors assign()'s own arbitrary-value contract -- returns whatever
-     * was previously assigned, unmodified.
+     * was assigned, unmodified.
      */
     public function get_template_vars(?string $tpl_var = null): mixed;
 }

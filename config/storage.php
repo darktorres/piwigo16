@@ -15,14 +15,12 @@ use Piwigo\Core\Paths;
  * matching composer package -- no call-site changes required.
  *
  * Disk roots use runtime Config values so they honour site-level overrides
- * (e.g. $currentConfig->uploadDir(), $currentConfig->dataLocation()).
- * Singleton/service-locator elimination campaign, Phase 12 sub-phase
- * 12F-10: this file itself returns a closure now (instead of a plain
- * array built from CurrentPaths::get()/CurrentConfig::current() reads),
- * so StorageRegistry::fromConfig() can pass $paths/$currentConfig through
- * as real params -- see that method's own docblock. 'local' is the
- * effective (potentially PIWIGO_LOCAL_DIR-overridden) site-local
- * directory -- Paths::$siteLocal, not the always-'local/' Paths::$local.
+ * (e.g. $currentConfig->uploadDir(), $currentConfig->dataLocation()). This
+ * file returns a closure so StorageRegistry::fromConfig() can pass
+ * $paths/$currentConfig through as real params -- see that method's own
+ * docblock. 'local' is the effective (potentially PIWIGO_LOCAL_DIR-overridden)
+ * site-local directory -- Paths::$siteLocal, not the always-'local/'
+ * Paths::$local.
  *
  * @return array<string, Closure():Filesystem>
  */

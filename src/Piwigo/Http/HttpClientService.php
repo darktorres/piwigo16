@@ -20,11 +20,9 @@ use Symfony\Contracts\HttpClient\ResponseInterface as SymfonyResponseInterface;
 
 /**
  * PSR-18 HTTP client wrapping the app's shared Symfony transport
- * (self::defaultClient(), P23 batch 8d -- ported from the deleted
- * admin/include/functions.php's pwg_http_client(), whose only real
- * caller was this class's own constructor default), with an SSRF guard
- * applied to the initial URL and to every redirect target it follows,
- * not just the first request. [SEC-23]
+ * (self::defaultClient()), with an SSRF guard applied to the initial URL
+ * and to every redirect target it follows, not just the first request.
+ * [SEC-23]
  *
  * Symfony's own auto-redirect-following happens transport-side, before a
  * response is ever handed back to the caller -- there is no hook to
@@ -114,23 +112,19 @@ final readonly class HttpClientService implements ClientInterface
     }
 
     /**
-     * P23 batch 8d: ported from admin/include/functions.php's
-     * fetchRemote(), which already delegated its real network call to
-     * requestRaw() below -- this absorbs the orchestration that used to
-     * wrap that call (GET query-string building, proxy config, same-host
-     * X-Piwigo-Env test-mode header forwarding for self-requests,
-     * POST body/Content-Type construction). Static, and internally
-     * constructs its own scoped instance (matching the free function's
-     * own "new HttpClientService(trustedSelfHost: ...) per call" shape) --
-     * trustedSelfHost is only known once the target URL's host is
-     * compared against the current request's host, which varies per call,
-     * not per HttpClientService instance.
+     * Absorbs the orchestration around the real network call in
+     * requestRaw() below (GET query-string building, proxy config,
+     * same-host X-Piwigo-Env test-mode header forwarding for
+     * self-requests, POST body/Content-Type construction). Static, and
+     * internally constructs its own scoped instance -- trustedSelfHost is
+     * only known once the target URL's host is compared against the
+     * current request's host, which varies per call, not per
+     * HttpClientService instance.
      *
-     * Replaces fetchRemote()'s legacy `string|resource &$dest` dual
-     * contract with a plain return value -- covers both real usage shapes
-     * that don't need a file handle: content wanted (returned directly)
-     * and fire-and-forget (caller discards the return). See
-     * fetchToFile() for the file-resource shape.
+     * Covers both real usage shapes that don't need a file handle:
+     * content wanted (returned directly) and fire-and-forget (caller
+     * discards the return). See fetchToFile() for the file-resource
+     * shape.
      *
      * @param array<string, mixed> $getData data added to the request URL
      * @param array<string, mixed> $postData data transmitted with POST

@@ -14,16 +14,14 @@ namespace Piwigo\Admin;
 use LogicException;
 
 /**
- * Holds the current request's loaded-plugins map -- Phase 2 global-residual
- * sweep, replacing the legacy `global $pwg_loaded_plugins;` bridge.
- * Container-shared instance (singleton-DI campaign, Phase 1): the writer
+ * Holds the current request's loaded-plugins map.
+ *
+ * This is a container-shared instance: the writer
  * (`PluginLoader::loadPlugins()`/`loadPlugin()`, itself an entirely-static
  * helper outside `Bootstrap/`) receives this instance as an explicit
  * parameter from `RequestBootstrap` rather than resolving it via a static
- * accessor -- `PluginLoader` isn't itself part of this campaign's scope, so
- * threading the shared instance through as a plain parameter (the same
- * mechanism `Paths` already uses) avoids needing any static delegating
- * shim. All 3 real readers (`BatchManagerUnitPageRenderer`,
+ * accessor -- the same mechanism `Paths` uses, avoiding any static
+ * delegating shim. All 3 real readers (`BatchManagerUnitPageRenderer`,
  * `IntroSubController`, `PluginSubController`) receive it via constructor
  * injection.
  */

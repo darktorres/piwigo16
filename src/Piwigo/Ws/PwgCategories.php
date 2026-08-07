@@ -46,7 +46,6 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
 /**
- * P23 batch 8e-5: relocated from include/ws_functions/pwg.categories.php.
  * `pwg.categories.*` WS methods (12 registrations) -- registered via
  * callable arrays in include/ws_default_methods.inc.php.
  */
@@ -73,18 +72,14 @@ final class PwgCategories
     ) {}
 
     /**
-     * Gap-closure Stage 4h: getList()'s rollup columns
-     * (nb_images/count_images/count_categories/date_last/max_date_last)
-     * were never real `categories` columns -- they only ever existed via
-     * the now-dead user_cache_categories JOIN (verified against
-     * install/piwigo_structure-mysql.sql). CategoryTreeCache is the real
-     * P23 batch 3b replacement, already relied on by
-     * CategoryCatsRenderer/CategoryService::getCategoriesMenu() for the
-     * exact same computation -- reused here for the public/normal
-     * branches, whose forbidden_categories value matches what those other
-     * consumers already cache under the same user id (see getList()'s own
-     * call site for why the admin branch deliberately bypasses this
-     * instead).
+     * getList()'s rollup columns (nb_images/count_images/count_categories/
+     * date_last/max_date_last) are not real `categories` columns --
+     * computed here via CategoryTreeCache, the same computation
+     * CategoryCatsRenderer/CategoryService::getCategoriesMenu() rely on.
+     * Used for the public/normal branches, whose forbidden_categories
+     * value matches what those other consumers already cache under the
+     * same user id (see getList()'s own call site for why the admin
+     * branch deliberately bypasses this instead).
      */
     private function categoryTreeCache(): CategoryTreeCache
     {
@@ -107,17 +102,14 @@ final class PwgCategories
     }
 
     /**
-     * Gap-closure Stage 4h: replaces `user_cache_categories.
-     * user_representative_picture_id` -- a per-user "remembered random
-     * representative" override, not just a permission-visibility cache
-     * (confirmed by reading getList()'s own write-back logic below before
-     * assuming this table was only ever a visibility cache). Same
-     * CachePools::categoryTree() pool and `'repr_' . $userId . '_' . $catId'`
-     * key format as Category\CategoryCatsRenderer's own
-     * getCachedRepresentative()/setCachedRepresentative() -- deliberately
-     * shared, not a separate pool, so a user sees the same remembered
-     * representative whether browsing the website or calling this WS
-     * method.
+     * A per-user "remembered random representative" override, not just a
+     * permission-visibility cache -- see getList()'s own write-back logic
+     * below. Shares the same CachePools::categoryTree() pool and
+     * `'repr_' . $userId . '_' . $catId'` key format as
+     * Category\CategoryCatsRenderer's own getCachedRepresentative()/
+     * setCachedRepresentative(), deliberately not a separate pool, so a
+     * user sees the same remembered representative whether browsing the
+     * website or calling this WS method.
      */
     private static function getCachedRepresentative(int $userId, int $catId): ?string
     {
@@ -173,14 +165,12 @@ final class PwgCategories
         // ------------------------------------------------- get the related categories
         $catClauses = [];
         $catParams = [];
-        // Further SQL-modernization audit, Item 15G:
-        // CategoryRepository::findIdsAndImageOrderWithConditions() is now
-        // real DQL, so these clauses are DQL property paths (`c.`-
-        // prefixed) instead of raw SQL column names, and the regex match
+        // CategoryRepository::findIdsAndImageOrderWithConditions() runs
+        // these clauses as real DQL, so they're DQL property paths (`c.`-
+        // prefixed) rather than raw SQL column names, and the regex match
         // uses the portable REGEXP() DQL function ({@see
-        // \Piwigo\Db\DqlFunction\RegexpFunction}, already registered and
-        // used elsewhere) instead of a hand-resolved per-platform
-        // operator string.
+        // \Piwigo\Db\DqlFunction\RegexpFunction}) rather than a
+        // hand-resolved per-platform operator string.
         foreach ($params['cat_id'] as $i => $cat_id) {
             if ($params['recursive']) {
                 $catClauses[] = 'REGEXP(c.uppercats, :catUppercatsLike' . $i . ') = true';
@@ -385,27 +375,18 @@ final class PwgCategories
         // Which user's own "remembered random representative" cache entry
         // (CachePools::categoryTree(), see below) each row's
         // user_representative_picture_id is read from/written to --
-        // overridden to the guest identity in the public branch, same
-        // identity the old user_cache_categories JOIN used to key on.
+        // overridden to the guest identity in the public branch.
         $repr_user_id = $user_id;
 
-        // Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md): all 3
-        // branches below now add their own explicit `id NOT IN (forbidden)`
-        // condition -- a real, live regression fix, not just cleanup. The
-        // user_cache_categories INNER/LEFT JOIN this used to run through
-        // had gone permanently empty (Stage 4g deleted the table's only
-        // remaining writer), so the "normal" and "public" branches were
-        // silently returning zero categories to every non-admin caller.
-        // The admin branch already had its own explicit condition (not
-        // gated on the JOIN, whose LEFT type never filtered rows anyway --
-        // it stays unchanged).
-        // Gap-closure Stage 4h: nb_images/count_images/count_categories/
-        // date_last/max_date_last are NOT real `categories` columns
-        // (verified against install/piwigo_structure-mysql.sql) -- they
-        // only ever existed via the JOIN removed above. $rollupByCatId
-        // supplies them per-row below, computed per-branch since each
-        // identity's forbidden-categories value differs (see each
-        // branch's own comment).
+        // Each of the 3 branches below computes its own explicit `id NOT
+        // IN (forbidden)` condition against $forbiddenCategoryIds.
+        //
+        // nb_images/count_images/count_categories/date_last/max_date_last
+        // are NOT real `categories` columns (verified against
+        // install/piwigo_structure-mysql.sql) -- $rollupByCatId supplies
+        // them per-row below, computed per-branch since each identity's
+        // forbidden-categories value differs (see each branch's own
+        // comment).
         $rollupByCatId = [];
         $forbiddenCategoryIds = [];
         $publicOnly = false;
@@ -415,15 +396,14 @@ final class PwgCategories
 
             $repr_user_id = $this->currentConfig->guestId();
             // UserService::getUserData() computes the same effective
-            // (feature-1053-widened) forbidden-categories value for any
-            // given user id that CurrentUser::forbiddenCategories already
-            // holds for the current request's own user (Stage 4b/4g) --
-            // reused here since the guest identity isn't CurrentUser. Also
-            // reused (unmodified) below for the rollup: it's the same
-            // canonical value any other guest-facing consumer of
-            // CategoryTreeCache already computes/caches for this same
-            // user id, so feeding it back into that same cache pool here
-            // cannot desync it.
+            // (widened) forbidden-categories value for any given user id
+            // that CurrentUser::forbiddenCategories already holds for the
+            // current request's own user -- reused here since the guest
+            // identity isn't CurrentUser. Also reused (unmodified) below
+            // for the rollup: it's the same canonical value any other
+            // guest-facing consumer of CategoryTreeCache already
+            // computes/caches for this same user id, so feeding it back
+            // into that same cache pool here cannot desync it.
             $guest_userdata = $this->userService->getUserData(UserId::from($repr_user_id));
             $guest_forbidden_categories = $guest_userdata['forbidden_categories'] ?? '0';
             $guest_forbidden_categories = is_string($guest_forbidden_categories) ? $guest_forbidden_categories : '0';
@@ -448,17 +428,16 @@ final class PwgCategories
             // whichever computation runs first silently poison the other's
             // cache entry for up to 300s. Computed directly (uncached);
             // getComputedCategories()'s own LEFT JOIN never drops an empty
-            // category, so this also satisfies the comment above without
-            // the old JOIN's special-casing.
+            // category, so this also satisfies the comment above.
             $admin_userdata = $currentUser->toUserArray();
             $admin_userdata['forbidden_categories'] = $forbidden_categories;
             $rollupByCatId = $categoryService->getComputedCategories($admin_userdata, null)['categories'];
         } else {
             $forbiddenCategoryIds = self::csvToIntList($currentUser->forbiddenCategories);
             // $currentUser->forbiddenCategories IS the same effective value
-            // EffectiveForbiddenCategoriesCache computes for this user id
-            // (Stage 4b/4g) -- the same value any other CategoryTreeCache
-            // consumer for this user already relies on, safe to share.
+            // EffectiveForbiddenCategoriesCache computes for this user id --
+            // the same value any other CategoryTreeCache consumer for this
+            // user already relies on, safe to share.
             $rollupByCatId = $this->categoryTreeCache()
                 ->getForUser($currentUser->toUserArray());
         }
@@ -502,15 +481,15 @@ final class PwgCategories
         $cats = [];
         $urlService = $this->urlService;
         foreach ($rows as $row) {
-            // Gap-closure Stage 4h: the rollup columns (nb_images/
-            // count_images/count_categories/date_last/max_date_last)
-            // aren't real `categories` columns -- merge them in from the
-            // per-branch rollup computed above, keyed by cat_id, before
-            // any of the row shaping below reads them. A row absent from
-            // the rollup can't happen here: $rollupByCatId is computed
-            // with the same forbidden_categories value that built $where
-            // above, so every row that survived the WHERE clause also has
-            // a rollup entry -- ?? 0/null below is defensive, not expected.
+            // The rollup columns (nb_images/count_images/count_categories/
+            // date_last/max_date_last) aren't real `categories` columns --
+            // merge them in from the per-branch rollup computed above,
+            // keyed by cat_id, before any of the row shaping below reads
+            // them. A row absent from the rollup can't happen here:
+            // $rollupByCatId is computed with the same
+            // $forbiddenCategoryIds value used to select $rows above, so
+            // every row here also has a rollup entry -- ?? 0/null below is
+            // defensive, not expected.
             $catId = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
             $rollup = $rollupByCatId[$catId] ?? [];
             $row['nb_images'] = $rollup['nb_images'] ?? 0;
@@ -530,9 +509,7 @@ final class PwgCategories
                 $row[$key] = is_numeric($row[$key] ?? null) ? (int) ($row[$key] ?? 0) : 0;
             }
 
-            // Gap-closure Stage 4h: was the user_cache_categories JOIN's own
-            // user_representative_picture_id column -- see
-            // getCachedRepresentative()'s own docblock.
+            // See getCachedRepresentative()'s own docblock.
             $row['user_representative_picture_id'] = self::getCachedRepresentative($repr_user_id, $row['id']);
 
             // uppercats is a NOT NULL column of the categories table --
@@ -577,12 +554,8 @@ final class PwgCategories
                 $image_id = $categoryService->getRandomImageInCategory($row);
             } else { // searching a random representant among representant of sub-categories
                 if ($row['count_categories'] > 0 and $row['count_images'] > 0) {
-                    // Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md):
-                    // dropped the user_cache_categories INNER JOIN -- a real,
-                    // live regression fix (Stage 4g deleted the table's only
-                    // remaining writer), not just cleanup. Same query as
-                    // CategoryCatsRenderer's own identical lookup, now
-                    // shared via CategoryRepository::
+                    // Same query as CategoryCatsRenderer's own identical
+                    // lookup, shared via CategoryRepository::
                     // findRandomRepresentativeIdAmongSubcategories().
                     $subrow_image_id = $categoryService->getRandomRepresentativeIdAmongSubcategories(
                         $row['uppercats'],
@@ -602,11 +575,11 @@ final class PwgCategories
             if (isset($image_id) && is_numeric($image_id)) {
                 $image_id = (int) $image_id;
 
-                // Gap-closure Stage 4h: user_representative_picture_id is
-                // now a cache string (getCachedRepresentative()'s own
-                // return type), not the old DB column's value -- compare as
-                // int against $image_id rather than the (always-mismatched)
-                // string, or every row would be flagged "changed" here.
+                // user_representative_picture_id is a cache string
+                // (getCachedRepresentative()'s own return type) -- compare
+                // as int against $image_id rather than the
+                // (always-mismatched) string, or every row would be
+                // flagged "changed" here.
                 $cached_representative_id = is_numeric($row['user_representative_picture_id'] ?? null)
                     ? (int) $row['user_representative_picture_id']
                     : null;
@@ -679,12 +652,10 @@ final class PwgCategories
         // user_representative if we have used $user['id'] and not the guest id,
         // or else the real guest may see thumbnail that he should not
         if (! $params['public'] and (bool) count($user_representative_updates_for)) {
-            // Gap-closure Stage 4h: was a single massUpdate() against
-            // user_cache_categories -- see getCachedRepresentative()'s own
-            // docblock. $repr_user_id === $user_id here unconditionally
-            // (the enclosing `! $params['public']` guard above is the same
-            // one the original code used to justify persisting against
-            // $user_id specifically, never the guest id).
+            // See getCachedRepresentative()'s own docblock. $repr_user_id
+            // === $user_id here unconditionally -- the enclosing
+            // `! $params['public']` guard above ensures this always
+            // persists against $user_id specifically, never the guest id.
             foreach ($user_representative_updates_for as $cat_id => $image_id) {
                 self::setCachedRepresentative(
                     $repr_user_id,
@@ -854,14 +825,11 @@ final class PwgCategories
             $this->currentConfig->setNewcatDefaultPosition($params['position']);
         }
 
-        // Docs/PLAN.md gap-closure, 2026-07-23: $params['visible']/
-        // ['commentable'] (both WsParamType::BOOL, real bools by the time
-        // they reach this handler) were validated by the WS param schema
-        // but never actually read here -- a real, standalone bug (not
-        // caused by the enum->tinyint migration, just found alongside it):
-        // pwg.categories.add's own documented visible/commentable params
-        // silently did nothing, every category created via this WS method
-        // got the site-wide default regardless of what the caller asked for.
+        // $params['visible']/['commentable'] are always real bools by the
+        // time they reach this handler (WsParamType::BOOL) -- always set
+        // on $options so pwg.categories.add's own documented visible/
+        // commentable params take effect, unlike status/comment below
+        // which are only applied when actually supplied.
         $options = [
             'visible' => $params['visible'],
             'commentable' => $params['commentable'],
@@ -1062,9 +1030,7 @@ final class PwgCategories
         $this->categoryService->setRepresentativeImage($params['category_id'], $params['image_id']);
         $this->entityManager->clear();
 
-        // Gap-closure Stage 4h: was `UPDATE user_cache_categories SET
-        // user_representative_picture_id = NULL WHERE cat_id = ...` --
-        // invalidates every user's own remembered-representative cache
+        // Invalidates every user's own remembered-representative cache
         // entry (CachePools::categoryTree(), see getCachedRepresentative()'s
         // own docblock) so the admin's explicit choice above takes
         // priority on the next read. PSR-6 has no per-key-prefix bulk
@@ -1329,10 +1295,9 @@ final class PwgCategories
         PermissionCacheInvalidator::invalidate();
 
         // moveCategories() writes onto the real, constructor-injected
-        // PageState directly (Legacy Coupling Retirement Track A batch A5)
-        // -- reading it back through the same $pageState instance reflects
-        // the mutation without
-        // needing get_defined_vars(). hasErrors() (a real method call, not
+        // PageState directly -- reading it back through the same
+        // $pageState instance reflects the mutation without needing
+        // get_defined_vars(). hasErrors() (a real method call, not
         // a bare property re-read) is what stops PHPStan from treating the
         // property as still statically `[]` from the reset a few lines
         // above -- it has no visibility into moveCategories()'s internals.

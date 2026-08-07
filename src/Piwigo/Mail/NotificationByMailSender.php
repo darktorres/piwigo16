@@ -31,51 +31,32 @@ use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
- * Ported from admin/include/functions_notification_by_mail.inc.php (P23
- * batch 8b-7) -- 13 free functions threading a shared `global $env_nbm;`
- * array through a subscribe/unsubscribe/send-mail pipeline with
- * language-switch stacking. This class replaces that untyped array with
- * real instance state, constructed fresh per logical "mail-sending
- * session" -- matching the original code's own `$env_nbm` lifecycle,
- * which was always reset by `begin_users_env_nbm()` per use, never truly
- * request-global despite being a `global`.
+ * Threads a subscribe/unsubscribe/send-mail pipeline with language-switch
+ * stacking through real instance state, constructed fresh per logical
+ * "mail-sending session".
  *
  * Placed in `Piwigo\Mail` (L3Presentation in deptrac.yaml), NOT
  * `Piwigo\Notification` (L2bExtendedDomain, home of the constructor-injected
  * `NotificationByMailService` below): this class holds a real
  * `Piwigo\Template\Template` instance (`$mailTemplate`, built via
  * `MailService::getMailTemplate()`), and L2bExtendedDomain may not depend on
- * L3Presentation -- same "Template dependency forces L3/L4 placement" shape
- * already documented on `NotificationByMailService`'s own docblock and on
- * `Piwigo\Mail\MailService`'s (`deptrac.yaml`'s own comment on the Mail
- * layer). L3->L2b (this class -> NotificationByMailService) and L4->L3
- * (both real callers, NotificationByMailSubController and NbmController,
- * both L4Integration) are both allowed downward dependencies.
+ * L3Presentation. L3->L2b (this class -> NotificationByMailService) and
+ * L4->L3 (both real callers, NotificationByMailSubController and
+ * NbmController, both L4Integration) are both allowed downward
+ * dependencies.
  *
- * P23 batch 8c: every former free-function mail call
- * (`pwg_mail()`/`get_mail_template()`/`switch_lang_to()`/`switch_lang_back()`/
- * `get_str_email_format()`/`get_mail_sender_name()`/`format_email()`) now
- * calls `MailService` directly (same namespace, no `use` import needed).
- * `news()`/`news_exists()`/`get_recent_post_dates_array()`/
- * `get_title_recent_post_date()`/`get_html_description_recent_post_date()`
- * (`include/functions_notification.inc.php`, deleted) now call the
- * constructor-injected `Piwigo\Notification\NotificationService` (also
- * P23 batch 8c) -- `Notification` is L2bExtendedDomain, this class is
- * L3Presentation, same allowed downward direction as
- * `NotificationByMailService` above.
- * `set_make_full_url()`/`unset_make_full_url()`/`get_gallery_home_url()`/
- * `add_url_params()` now call the constructor-injected
- * `Piwigo\Core\UrlServiceInterface` directly, same allowed L3->L1 direction
- * as every other Url-family retarget this phase.
- * `\Piwigo\Db\MysqliDb::massUpdates()`/`::booleanToString()`/`::getBoolean()`
- * retargeted onto `Piwigo\Db\BatchWriter`/`Piwigo\Db\SqlDialect`
- * (Legacy Coupling Retirement: DI+DBAL migration, Phase 1b).
+ * Mail sending/templating calls `MailService` directly (same namespace, no
+ * `use` import needed). "What's new" queries call the constructor-injected
+ * `Piwigo\Notification\NotificationService` -- `Notification` is
+ * L2bExtendedDomain, this class is L3Presentation, same allowed downward
+ * direction as `NotificationByMailService` above. URL building calls the
+ * constructor-injected `Piwigo\Core\UrlServiceInterface` directly, same
+ * allowed L3->L1 direction. Bulk row updates and boolean-column conversion
+ * go through `Piwigo\Db\BatchWriter`/`Piwigo\Db\SqlDialect`.
  *
  * Every `$checkKeyList` param below stays mixed by design -- see
  * NotificationByMailService::getUserNotifications()'s own docblock: it
- * may come straight from $_POST (admin/notification_by_mail.php), the
- * real fix belongs to Phase 4's Request DTOs, not a retroactive narrow on
- * this thin delegate.
+ * may come straight from $_POST (admin/notification_by_mail.php).
  */
 final class NotificationByMailSender
 {
@@ -616,14 +597,10 @@ final class NotificationByMailSender
 
                                 $nbmSendRecentPostDates = $this->currentConfig->nbmSendRecentPostDates();
                                 if ($nbmSendHtmlMail and $nbmSendRecentPostDates) {
-                                    // Real bug found via PHPStan (same shape as
-                                    // FeedController's RSS equivalent):
-                                    // CurrentConfig::recentPostDates() returns a typed
-                                    // NotificationConfig object, not a raw array --
-                                    // the old is_array() check here was always
-                                    // false, so NBM recent-post-date limits always
-                                    // fell back to getRecentPostDatesArray()'s own
-                                    // hardcoded 3/3/3 defaults.
+                                    // CurrentConfig::recentPostDates() returns a
+                                    // typed NotificationConfig object, not a raw
+                                    // array -- same shape as FeedController's RSS
+                                    // equivalent.
                                     $nbmConfig = $this->currentConfig->recentPostDates()
                                         ->nbm;
                                     $nbmRecentPostDatesArgs = [

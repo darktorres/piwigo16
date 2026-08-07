@@ -247,16 +247,15 @@ function fsThemeEntry(array $overrides = []): array
  * ExtensionRepository/ConfigService/PluginMigrationRepository only satisfy
  * ExtensionLifecycle's constructor type here, never exercised by
  * missingParentTheme()/getChildrenThemes(). CurrentConfig/CurrentUser ARE
- * exercised by those 2 methods though (singleton/service-locator
- * elimination campaign, Phase 12 sub-phase 12D: missingParentTheme()/
- * getChildrenThemes() now thread $this->currentConfig/$this->currentUser
- * into ExtensionScanner::scan()'s own NOCTOR-shaped params) -- both must
- * be the real, shared CurrentConfigTestFactory::get()/CurrentUserTestFactory::get()
- * instances (not a fresh, disconnected one) so scan()'s directory lookup
- * actually sees this file's own beforeEach()-configured fixture
- * setThemesDir(), not CurrentConfig's own unrelated default. Found live:
- * a fresh CurrentConfig here silently pointed scan() at the real project
- * themes/ directory instead of the disposable fixture root.
+ * exercised by those 2 methods, which thread $this->currentConfig/
+ * $this->currentUser into ExtensionScanner::scan()'s own params -- both
+ * must be the real, shared CurrentConfigTestFactory::get()/
+ * CurrentUserTestFactory::get() instances (not a fresh, disconnected one)
+ * so scan()'s directory lookup actually sees this file's own
+ * beforeEach()-configured fixture setThemesDir(), not CurrentConfig's own
+ * unrelated default: a fresh CurrentConfig here would silently point
+ * scan() at the real project themes/ directory instead of the disposable
+ * fixture root.
  */
 function themesInstalledLifecycle(): ExtensionLifecycle
 {

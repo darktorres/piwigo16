@@ -14,13 +14,10 @@ use Doctrine\ORM\Mapping as ORM;
  * `install/piwigo_structure-mysql.sql`), not an auto-increment surrogate
  * id, same "application-assigned string id" shape as `Feed\FeedEntity`.
  *
- * Further SQL-modernization audit, Item 16B: newly mapped -- this table
- * was deliberately never entity-mapped anywhere in the campaign until
- * now (see the former {@see \Piwigo\Permalink\PermalinkRepository} class
- * docblock, since corrected). No dedicated `repositoryClass` -- unlike
- * most entities, this one is queried from `Permalink\PermalinkRepository`
- * alongside the unrelated `Category\CategoryEntity` reads that repository
- * already owns, not resolved via `$em->getRepository()`.
+ * No dedicated `repositoryClass` -- unlike most entities, this one is
+ * queried from `Permalink\PermalinkRepository` alongside the unrelated
+ * `Category\CategoryEntity` reads that repository already owns, not
+ * resolved via `$em->getRepository()`.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'old_permalinks')]

@@ -27,7 +27,6 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
 
 /**
- * P23 batch 8e-2: relocated from include/ws_functions/pwg.comments.php.
  * `pwg.userComments.*` WS methods (3 registrations, all admin_only) --
  * registered via callable arrays in include/ws_default_methods.inc.php.
  */
@@ -80,20 +79,15 @@ final class PwgComments
             return new PwgError(401, 'Per page must be: 5, 10, 25 or 50');
         }
 
-        // Further SQL-modernization audit, Item 13: author_id/image_id/
-        // f_min_date/f_max_date/search/status collapse into one
-        // CommentApiCriteria, built once and passed unchanged to all 4
-        // CommentService calls below -- each decides for itself which
-        // fields it honors (see CommentApiCriteria's own docblock),
-        // replacing the former list<SqlCondition> $where_clauses (with a
-        // string-keyed 'author_id' entry used purely as a removable
-        // marker) this method used to build once and mutate/reuse.
-        // author_id/image_id were already WsParamType::ID-guaranteed ints
-        // and f_min_date/f_max_date already passed through date_format()
-        // (which can't emit SQL metacharacters), so none of these were
-        // live injection risks -- the search term used to rely on
-        // Connection::quote() ([SEC-18]) for escaping; now a real bound
-        // parameter instead, one step further than escaping.
+        // author_id/image_id/f_min_date/f_max_date/search/status collapse
+        // into one CommentApiCriteria, built once and passed unchanged to
+        // all 4 CommentService calls below -- each decides for itself
+        // which fields it honors (see CommentApiCriteria's own docblock).
+        // author_id/image_id are already WsParamType::ID-guaranteed ints
+        // and f_min_date/f_max_date already pass through date_format()
+        // (which can't emit SQL metacharacters), so none of these are
+        // live injection risks; the search term is bound as a real
+        // parameter rather than relying on escaping.
         $authorId = (isset($params['author_id']) and $params['author_id'] !== 0) ? $params['author_id'] : null;
         $imageId = (isset($params['image_id']) and $params['image_id'] !== 0) ? $params['image_id'] : null;
 
@@ -124,12 +118,11 @@ final class PwgComments
             status: $params['status'],
         );
 
-        // summary. validated is a real tinyint(1) column now (Comment
-        // domain Stage 1a) -- numeric literals, not the old
-        // enum('true','false') strings; MySQL's non-numeric-string-to-int
-        // coercion would otherwise silently convert 'true' to 0 too,
-        // inverting the validated/pending counts (same bug class
-        // Category's own commentable/visible retype found).
+        // summary. validated is a real tinyint(1) column -- numeric
+        // literals, not enum('true','false') strings; MySQL's
+        // non-numeric-string-to-int coercion would otherwise silently
+        // convert 'true' to 0 too, inverting the validated/pending counts
+        // (same bug class as Category's own commentable/visible columns).
         $summary = $this->commentService->getSummaryCounts($criteria);
         if ($summary === null) {
             return new PwgError(500, 'Unable to compute comments summary');

@@ -47,7 +47,7 @@ final class RelPathTest extends StringVoContract
 
     public function testAcceptsDotPrefixAndDoubleDotInName(): void
     {
-        // `./galleries/foo.jpg` is the historical Piwigo path form.
+        // A leading `./` prefix is a valid path form.
         self::assertNotNull(RelPath::tryFrom('./galleries/foo.jpg'));
         // `..bar` is a legal filename component (only the literal `..` segment is rejected).
         self::assertNotNull(RelPath::tryFrom('galleries/file..bar.jpg'));

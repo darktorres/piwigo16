@@ -8,11 +8,9 @@ use PHPUnit\Framework\TestCase;
 use Piwigo\Search\SearchFilterRenderer;
 
 /**
- * SearchFilterRenderer::filterAccessibleCategoryIds() -- P23 batch 4c's real
- * fix: search_filters.inc.php's "ALBUMS_FOUND" block's own
- * `user_cache_categories` JOIN was the actual permission filter (confirmed
- * SearchService::searchAllwords()'s category-name/comment match applies no
- * forbidden-categories condition of its own), so a search hit on a
+ * SearchFilterRenderer::filterAccessibleCategoryIds() -- SearchService::
+ * searchAllwords()'s category-name/comment match applies no
+ * forbidden-categories condition of its own, so a search hit on a
  * forbidden category's name must never reach the display list. Pure
  * function, no DB/globals needed.
  */

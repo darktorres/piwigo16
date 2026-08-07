@@ -34,29 +34,19 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
 /**
- * Ported from include/functions.inc.php's send_piwigo_infos()/
- * send_piwigo_infos_retry_later() (P23 batch 8d). Lives under Admin\, not
- * a domain namespace, because it constructs `Admin\Extensions\*` (this same
- * namespace's sibling) to cross-reference installed extensions against the
- * PEM directory -- putting this in a domain namespace (L2bExtendedDomain,
- * e.g. Piwigo\Telemetry, home of the unrelated greenfield
- * TelemetryService) would make an L2b class depend on L4Integration, the
- * wrong direction. Same "administrative machinery invoked from
- * non-admin-page contexts" precedent as PluginLoader (P23 batch 7).
+ * Lives under Admin\, not a domain namespace, because it constructs
+ * `Admin\Extensions\*` (this same namespace's sibling) to cross-reference
+ * installed extensions against the PEM directory -- putting this in a
+ * domain namespace (L2bExtendedDomain, e.g. Piwigo\Telemetry, home of the
+ * unrelated TelemetryService) would make an L2b class depend on
+ * L4Integration, the wrong direction.
  *
- * P23 batch 8f-4: the send_piwigo_infos() free-function facade is deleted
- * along with include/functions.inc.php -- this class now implements
- * Piwigo\Core\TelemetrySenderInterface (bound in config/container.php),
- * and its one real caller, Piwigo\Page\PageTailRenderer (L3Presentation,
- * which cannot depend on this L4 class directly), constructor-injects
- * that interface instead; Piwigo\Bootstrap\PageTail::render() passes the
- * concrete instance. See TelemetrySenderInterface's own docblock.
- *
- * get_graphics_library()/get_pwg_general_statitics()/get_installation_date()
- * were migrated onto PwgImage::get_graphics_library()/
- * InstallationStats::getGeneralStatistics()/getInstallationDate(), and
- * fetchRemote() onto Piwigo\Http\HttpClientService::fetch(), in the
- * following file-3 sub-batches (System info, Network/HTTP).
+ * Implements Piwigo\Core\TelemetrySenderInterface (bound in
+ * config/container.php). Its one real caller, Piwigo\Page\PageTailRenderer
+ * (L3Presentation, which cannot depend on this L4 class directly),
+ * constructor-injects that interface instead; Piwigo\Bootstrap\
+ * PageTail::render() passes the concrete instance. See
+ * TelemetrySenderInterface's own docblock.
  */
 final class PiwigoInfosSender implements TelemetrySenderInterface
 {

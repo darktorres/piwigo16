@@ -86,37 +86,22 @@ final class UploadServiceTestThemeConfProvider implements ThemeConfProviderInter
  * tests/Unit/Admin/Upload/UploadServiceTest.php's own marker-directory
  * docblock.
  *
- * Two real, previously-shipped production bugs were found and fixed
- * while writing the "update an existing photo" test below (item 3):
- *
- * [BUG 1] addUploadedFile()'s $image_id-not-null ("update") branch set
+ * [BUG 1] addUploadedFile()'s $image_id-not-null ("update") branch sets
  * $file_path directly from the DB's `path` column, which is stored
  * root-relative (see the "new photo" branch's own preg_replace() against
  * CurrentPathsTestFactory::get()->root, and addFormat()'s own identical "images.path
  * ... is relative, not yet an absolute path" handling elsewhere in this
- * same class) -- but every downstream use of $file_path in this method
+ * same class) -- every downstream use of $file_path in this method
  * (StorageRegistry::stripRoot(), chmod(), get_rotation_angle()/
  * pwgImageInfos()'s own getimagesize()/filesize() calls) requires an
  * absolute path, exactly like the "new photo" branch's $file_path always
- * was. This exact mismatch was already confirmed live and documented in
- * tests/Contract/WsImagesUploadGapsTest.php's own docblock ("confirmed
- * live, twice, that this exact code path 500s ... getimagesize(upload/
- * 2026/08/01/....jpg): Failed to open stream") as a then-out-of-scope
- * pre-existing bug for a Ws-domain test-writing pass; it lives squarely
- * inside this class's own addUploadedFile(), so it's fixed here.
+ * is.
  *
  * [BUG 2] The "cache a derivative" SELECT that builds $image_infos for
- * `new SrcImage($image_infos)` never selected the `file` column, even
- * though SrcImage::__construct()'s own docblock states id/path/file are
- * all trusted NOT-NULL DB columns (unlike representative_ext, read via
- * `?? null` as genuinely optional two lines below the same read) --
- * every real addUploadedFile() call (new photo or update) hit a real
- * "Undefined array key 'file'" PHP warning right there, which
- * phpunit.xml.dist's failOnWarning="true" turns into a hard failure the
- * moment anything exercises this method in-process (as opposed to over
- * real HTTP, where a warning is merely logged) -- the other half of what
- * WsImagesUploadGapsTest's docblock documented ("Undefined array key
- * 'file' in SrcImage.php"). Fixed by adding `file` to the SELECT.
+ * `new SrcImage($image_infos)` must select the `file` column --
+ * SrcImage::__construct()'s own docblock states id/path/file are all
+ * trusted NOT-NULL DB columns (unlike representative_ext, read via
+ * `?? null` as genuinely optional two lines below the same read).
  *
  * Fixture shape (tests/Fixtures/piwigo-17.0.sql), same as
  * MetadataRepositoryTest/BatchUploadHandlerTest: images 1-5 exist before
@@ -197,17 +182,15 @@ final class UploadServiceTest extends IntegrationTestCase
         mkdir($this->marker, 0o777, true);
 
         // ActivityService/MetadataService/EntityManagerInterface/
-        // ImageService are all constructor-injected into UploadService
-        // itself now (singleton/service-locator elimination campaign,
-        // Phase 6) -- resolved from the container below just to seed those
-        // constructor args, same rationale as CategoryAdminServiceTest's
-        // own Kernel::boot() call. Re-boot Kernel
-        // (parent::setUp() already booted it against the real repo root)
-        // against this test's own throwaway marker root instead: the
-        // StorageRegistry resolution below is a container factory that
-        // reads Paths::class at first resolution, and CurrentPaths
-        // (singleton/service-locator elimination campaign, Phase 3) is a
-        // pure shim with no state of its own left to rebind after the fact.
+        // ImageService are all constructor-injected into UploadService --
+        // resolved from the container below just to seed those constructor
+        // args, same rationale as CategoryAdminServiceTest's own
+        // Kernel::boot() call. Re-boot Kernel (parent::setUp() already
+        // booted it against the real repo root) against this test's own
+        // throwaway marker root instead: the StorageRegistry resolution
+        // below is a container factory that reads Paths::class at first
+        // resolution, and CurrentPaths is a pure shim with no state of its
+        // own left to rebind after the fact.
         Kernel::reset();
         Kernel::boot(Paths::fromRoot($this->marker));
 
@@ -250,8 +233,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         // Kernel::reset() above also discards the container-shared
         // CurrentUser instance parent::setUp()'s own attachGlobals() seed
-        // populated (singleton/service-locator elimination campaign, Phase
-        // 5) -- without reseeding here, addUploadedFile()'s own
+        // populated -- without reseeding here, addUploadedFile()'s own
         // AccessControl-reaching call chain throws "not initialised"
         // against this fresh, unseeded container.
         $currentUser = Kernel::container()->get(CurrentUser::class);
@@ -293,13 +275,12 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $htmlService = HtmlServiceTestFactory::build();
         // RootPathOverride must be the one real, container-shared instance
-        // (singleton/service-locator elimination campaign, Phase 6) --
-        // addUploadedFileAddToCategories()'s own $urlService->setMakeFullUrl()
-        // call (on this instance) must be visible to DerivativeImage's/
-        // SrcImage's own internal urlService() reads (now also
-        // container-resolved), which use a *different* UrlService object
-        // than this one unless both share the same RootPathOverride. See
-        // that class's own docblock.
+        // -- addUploadedFileAddToCategories()'s own
+        // $urlService->setMakeFullUrl() call (on this instance) must be
+        // visible to DerivativeImage's/SrcImage's own internal urlService()
+        // reads (also container-resolved), which use a *different*
+        // UrlService object than this one unless both share the same
+        // RootPathOverride. See that class's own docblock.
         $rootPathOverride = Kernel::container()->get(RootPathOverride::class);
         if (! $rootPathOverride instanceof RootPathOverride) {
             throw new LogicException('Container returned an unexpected type for ' . RootPathOverride::class);
@@ -308,23 +289,22 @@ final class UploadServiceTest extends IntegrationTestCase
         // See UploadServiceTestThemeConfProvider's own docblock -- harmless
         // for every test but the finfo-fallback one, which only reaches
         // SrcImage's real theme lookup when the stored extension isn't a
-        // picture extension and has no representative_ext.
-        // Piwigo\Core\CurrentThemeConfProvider (Phase 6), not
-        // SrcImage::setThemeConfProvider() (deleted) -- see that wrapper's
-        // own docblock for why it's independent of CurrentTemplate.
+        // picture extension and has no representative_ext. Resolved via
+        // Piwigo\Core\CurrentThemeConfProvider -- see that wrapper's own
+        // docblock for why it's independent of CurrentTemplate.
         $currentThemeConfProvider = Kernel::container()->get(CurrentThemeConfProvider::class);
         if (! $currentThemeConfProvider instanceof CurrentThemeConfProvider) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentThemeConfProvider::class);
         }
         $currentThemeConfProvider->set(new UploadServiceTestThemeConfProvider());
 
-        // StorageRegistry is a container factory binding (singleton/
-        // service-locator elimination campaign, Phase 2) that reads
-        // CurrentPathsTestFactory::get() at first resolution -- resolved here, against
-        // the marker-rooted container booted above, so every disk (uploads,
-        // derivatives, ...) correctly resolves under the marker root rather
-        // than the real project root. Nothing else resolves
-        // StorageRegistry::class from this container before this point.
+        // StorageRegistry is a container factory binding that reads
+        // CurrentPathsTestFactory::get() at first resolution -- resolved
+        // here, against the marker-rooted container booted above, so every
+        // disk (uploads, derivatives, ...) correctly resolves under the
+        // marker root rather than the real project root. Nothing else
+        // resolves StorageRegistry::class from this container before this
+        // point.
         $storageRegistry = Kernel::container()->get(StorageRegistry::class);
         if (! $storageRegistry instanceof StorageRegistry) {
             throw new LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
@@ -513,11 +493,11 @@ final class UploadServiceTest extends IntegrationTestCase
     }
 
     /**
-     * [BUG 1]/[BUG 2] regression test -- see this class's own docblock.
-     * Before both fixes, this exact call threw ("Undefined array key
-     * 'file'" turned into a PHPUnit warning-failure by the SrcImage read,
-     * or a getimagesize() "Failed to open stream" from the un-prefixed
-     * relative $file_path, depending on which line executes first).
+     * Regression test for [BUG 1]/[BUG 2] -- see this class's own
+     * docblock. Without both invariants holding, this exact call throws
+     * ("Undefined array key 'file'" from the SrcImage read, or a
+     * getimagesize() "Failed to open stream" from an un-prefixed relative
+     * $file_path, depending on which line executes first).
      */
     public function test_addUploadedFile_updates_an_existing_photo_in_place(): void
     {

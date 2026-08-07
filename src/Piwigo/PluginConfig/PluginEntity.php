@@ -11,11 +11,11 @@ use Doctrine\ORM\Mapping as ORM;
  * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
  * `id` is the plugin directory-name identifier (application-assigned).
  *
- * `state` is `PluginState` (native Doctrine `enumType` column,
- * pgsql-support campaign) -- {@see PluginRepository::getDbPlugins()}'s
- * own real caller unwraps `->value` right after full-entity hydration,
- * preserving {@see \Piwigo\PluginConfig\Projection\Plugin}'s pre-existing
- * plain-string `$state` contract.
+ * `state` is `PluginState` (a native Doctrine `enumType` column) --
+ * {@see PluginRepository::getDbPlugins()}'s own real caller unwraps
+ * `->value` right after full-entity hydration, preserving
+ * {@see \Piwigo\PluginConfig\Projection\Plugin}'s plain-string `$state`
+ * contract.
  */
 #[ORM\Entity(repositoryClass: PluginRepository::class)]
 #[ORM\Table(name: 'plugins')]

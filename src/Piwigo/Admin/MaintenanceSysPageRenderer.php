@@ -16,18 +16,16 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Template\CurrentTemplate;
 
 /**
- * Ported from admin/maintenance_sys.php (the "sys" tab of the
- * "maintenance" page slug, dispatched by MaintenanceSubController) --
- * webmaster-only system activity log viewer, backed by a GET-only JSON
- * ajax endpoint (`?method=pwg.activity_sys.getList`). Read-only, so no
- * CSRF concern (matching admin.php's own gate + this file's own
- * is_webmaster() check, which is a real, stricter, still-load-bearing
- * guard on top of admin.php's AccessLevel::Administrator gate, not a
- * redundant one to drop).
+ * Renders the "sys" tab of the "maintenance" admin page (dispatched by
+ * MaintenanceSubController) -- webmaster-only system activity log viewer,
+ * backed by a GET-only JSON ajax endpoint
+ * (`?method=pwg.activity_sys.getList`). Read-only, so no CSRF concern.
  *
- * The per-row icon/color/label/detail formatting is extracted into
- * Piwigo\Admin\Maintenance\ActivityLogEntryFormatter (P23 batch 6h) --
- * see that class's own docblock.
+ * The is_webmaster() check is a real, stricter guard layered on top of
+ * admin.php's AccessLevel::Administrator gate, not a redundant one.
+ *
+ * Per-row icon/color/label/detail formatting lives in
+ * Piwigo\Admin\Maintenance\ActivityLogEntryFormatter.
  */
 final class MaintenanceSysPageRenderer
 {

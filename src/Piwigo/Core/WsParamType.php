@@ -12,12 +12,11 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * P23 batch 8e: relocated from include/ws_core.inc.php's WS_TYPE_*
- * define()s. Lives at L1Infrastructure (Piwigo\Core), not Piwigo\Ws
- * (L4Integration), because Piwigo\Users\UserService::checkAndSaveUserInfos()
- * (L2aCoreDomain) already references these values directly for its
- * WS-shaped error arrays -- L2aCoreDomain may not depend on L4Integration,
- * but every layer may depend on L1Infrastructure.
+ * Lives in `Piwigo\Core` (L1Infrastructure), not `Piwigo\Ws`
+ * (L4Integration), because `Piwigo\Users\UserService::checkAndSaveUserInfos()`
+ * (L2aCoreDomain) references these values directly for its WS-shaped
+ * error arrays: L2aCoreDomain may not depend on L4Integration, but every
+ * layer may depend on L1Infrastructure.
  */
 final class WsParamType
 {

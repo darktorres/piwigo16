@@ -16,12 +16,9 @@ use Piwigo\Db\Tables;
 use Piwigo\Image\LoungeMaintenance;
 
 /**
- * Piwigo\Image\LoungeMaintenance::needsEmptying() (relocated from
- * Piwigo\Core -- an Image-domain concern, not L1Infrastructure) -- had
- * zero dedicated coverage before this test (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1).
  * loungeActive defaults false, so every real caller's happy path never
- * reaches this method's own real logic without deliberately enabling it.
+ * reaches needsEmptying()'s own real logic without deliberately enabling
+ * it.
  */
 final class LoungeMaintenanceTest extends IntegrationTestCase
 {
@@ -73,8 +70,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         // Kernel is already booted by parent::setUp() -- resolve the same
         // container-shared instance a real request would get, matching
         // this suite's own userService()/accessControl() private-helper
-        // convention (singleton/service-locator elimination campaign,
-        // Phase 9).
+        // convention.
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);

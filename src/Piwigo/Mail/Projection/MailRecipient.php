@@ -9,9 +9,9 @@ use Piwigo\Users\UserStatus;
 /**
  * Typed row shape shared by
  * {@see \Piwigo\Mail\MailRecipientRepository::findAdminsAndWebmasters()} and
- * {@see \Piwigo\Mail\MailRecipientRepository::findByGroupAndLanguage()} (P17-23
- * Stage 1b, Mail domain) -- both are `users`/`user_infos` joins selecting the
- * same core `user_id`/`name`/`email` triple, differing only in whether
+ * {@see \Piwigo\Mail\MailRecipientRepository::findByGroupAndLanguage()} --
+ * both are `users`/`user_infos` joins selecting the same core
+ * `user_id`/`name`/`email` triple, differing only in whether
  * `status` (from `user_infos`) is also selected; `status` is simply `null`
  * for `findAdminsAndWebmasters()`'s own rows, which don't select it.
  *
@@ -37,9 +37,9 @@ final readonly class MailRecipient
             userId: is_numeric($row['user_id'] ?? null) ? (int) $row['user_id'] : 0,
             name: is_string($row['name'] ?? null) ? $row['name'] : '',
             email: is_string($row['email'] ?? null) ? $row['email'] : '',
-            // Phase 5 Item 21: see \Piwigo\Auth\Projection\AuthUser::fromRow()'s
-            // own comment -- `ui.status` array-hydrates as a UserStatus
-            // instance now, not a raw string.
+            // See \Piwigo\Auth\Projection\AuthUser::fromRow()'s own comment
+            // -- `ui.status` array-hydrates as a UserStatus instance, not a
+            // raw string.
             status: ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : null,
         );
     }

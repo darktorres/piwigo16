@@ -302,15 +302,11 @@ final class TagRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * SQL-modernization audit / [SEC-19]: findIdByNameLikeAnyPattern()
-     * replaces the former findIdByWhereFragment(), which took an
-     * already-built raw SQL fragment straight from a plugin hook -- a
-     * real, unescaped SQL injection in the ExtendedDescription plugin's
-     * own real-world handler (confirmed against its actual source). This
-     * is the regression proof: a pattern value containing SQL syntax is
-     * now always treated as a literal LIKE value (bound as a parameter),
-     * never as SQL structure -- it matches nothing (no tag name actually
-     * contains this text) rather than injecting a tautology.
+     * findIdByNameLikeAnyPattern() always binds each pattern as a query
+     * parameter: a pattern value containing SQL syntax is treated as a
+     * literal LIKE value, never as SQL structure -- it matches nothing
+     * (no tag name actually contains this text) rather than injecting a
+     * tautology.
      */
     public function test_find_id_by_name_like_any_pattern_treats_sql_syntax_as_a_literal_value(): void
     {
@@ -409,12 +405,9 @@ final class TagRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * SQL-modernization audit: countImagesPerTag()'s own former
-     * $fandFSql raw-string parameter is now a typed PermissionCriteria --
-     * these 3 tests (previously zero direct coverage on this method at all)
-     * are the first to exercise it. Fixture shape (see this class's own
-     * findTagIdsByImageIds test): image 1 has tags 1/2/3, images 2/3 have
-     * only tag 1, all three sit in category 1 (image_category).
+     * Fixture shape (see this class's own findTagIdsByImageIds test): image
+     * 1 has tags 1/2/3, images 2/3 have only tag 1, all three sit in
+     * category 1 (image_category).
      */
     public function test_count_images_per_tag_counts_distinct_images_per_tag(): void
     {
@@ -436,10 +429,9 @@ final class TagRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * SQL-modernization audit: $itemsCsv/$excludedTagIdsCsv splices
-     * bound -- previously zero direct coverage of a real (non-empty)
-     * match on this method at all. Same fixture shape as
-     * countImagesPerTag()'s own tests just above.
+     * $itemsCsv/$excludedTagIdsCsv are bound as query parameters, not
+     * spliced into the SQL. Same fixture shape as countImagesPerTag()'s own
+     * tests just above.
      */
     public function test_find_common_tags_returns_tags_used_by_the_given_images_with_counts(): void
     {
@@ -476,8 +468,7 @@ final class TagRepositoryTest extends IntegrationTestCase
     /**
      * findImageIdsForTags() is otherwise only exercised indirectly via
      * TagServiceTest's own getImageIdsForTags() tests -- this is the
-     * first direct test of its own typed params (Further SQL-
-     * modernization audit, Item 4).
+     * first direct test of its own typed params.
      */
     public function test_find_image_ids_for_tags_binds_named_parameters(): void
     {

@@ -5,19 +5,13 @@ declare(strict_types=1);
 use Piwigo\Auth\Projection\ApiKey;
 use Piwigo\Auth\UserAuthKeyEntity;
 
-/**
- * Piwigo\Auth\Projection\ApiKey -- had zero dedicated coverage (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1). Same
- * fromRow()/fromEntity()/toArray() shape already established for
- * UserInfo/Plugin's own projection tests this session.
- */
 test('fromRow narrows a full real row', function (): void {
-    // revoked_on is a real, non-null string here -- both this and the
-    // all-defaults test below previously only ever exercised revoked_on
-    // as null, which can't distinguish a real `?? null` coalesce from one
-    // mutated to the bare literal `null` (CoalesceRemoveLeft): either way
-    // `is_string(null)` is false and revokedOn defaults to null. A real
-    // revoked key is a genuine row shape (see ApiKeyService revocation).
+    // revoked_on is a real, non-null string here so the test can
+    // distinguish a real `?? null` coalesce from a mutated bare `null`
+    // literal (CoalesceRemoveLeft): with a null value, `is_string(null)`
+    // is false either way and revokedOn defaults to null regardless. A
+    // real revoked key is a genuine row shape (see ApiKeyService
+    // revocation).
     $apiKey = ApiKey::fromRow([
         'auth_key_id' => '5',
         'auth_key' => 'ck12345',

@@ -21,27 +21,22 @@ use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\UserInfoEntity;
 
 /**
- * Persistence layer for `custom_notification_query()`'s 5 known
- * "what's new" query shapes (`include/functions_notification.inc.php`)
- * plus `get_recent_post_dates()`'s own 3-query cascade (dates, then
- * per-date thumbnails/categories).
+ * Persistence layer for 5 known "what's new" query shapes plus a 3-query
+ * cascade (dates, then per-date thumbnails/categories).
  *
  * $restrictCondition is always an already-built permission fragment
  * ({@see NotificationService::getCommentsRestrictCondition()}/
  * {@see NotificationService::getElementsRestrictCondition()}, themselves
- * built from {@see \Piwigo\Permission\PermissionCriteria}) -- SQL-
- * modernization audit: this and $start/$end (the only other genuinely
- * dynamic/external-origin values here) are now always bound, via
- * QueryBuilder throughout instead of hand-assembled heredoc SQL text.
+ * built from {@see \Piwigo\Permission\PermissionCriteria}) -- this and
+ * $start/$end (the only other genuinely dynamic/external-origin values
+ * here) are always bound, via QueryBuilder throughout instead of
+ * hand-assembled heredoc SQL text.
  *
- * Further SQL-modernization audit, Item 15G: every method here is now
- * real DQL -- `comments`/`images`/`image_category`/`user_infos` are all
- * mapped, and `PermissionCriteria` needs no API changes, same finding as
- * every other consumer across this campaign. Dropped `extends
- * AbstractRepository` (this class dispatches across 4 different
- * entities depending on $type, so no single `EntityRepository<X>` fits)
- * in favor of a directly-injected `EntityManagerInterface`, same shape
- * as {@see \Piwigo\Telemetry\TelemetryService}.
+ * Every method here is real DQL -- `comments`/`images`/`image_category`/
+ * `user_infos` are all mapped. Dispatches across 4 different entities
+ * depending on $type, so no single `EntityRepository<X>` fits; holds a
+ * directly-injected `EntityManagerInterface` instead of extending
+ * `AbstractRepository`, same shape as {@see \Piwigo\Telemetry\TelemetryService}.
  */
 final class NotificationRepository
 {
@@ -210,22 +205,19 @@ final class NotificationRepository
      * DerivativeImage::thumb_url(), whose array<string, mixed>|SrcImage
      * signature already documents why the array form stays generic.
      *
-     * Further SQL-modernization audit, Item 15G: the *selection* (which
-     * image ids match $dateAvailable + $restrictCondition, in random
-     * order, capped at $maxElements) now runs as its own DQL query --
-     * every table/condition it touches is mapped and `PermissionCriteria`
-     * needs no API changes, same finding as every other consumer in this
-     * campaign.
+     * The *selection* (which image ids match $dateAvailable +
+     * $restrictCondition, in random order, capped at $maxElements) runs as
+     * its own DQL query -- every table/condition it touches is mapped and
+     * `PermissionCriteria` needs no API changes.
      *
-     * Item 16H: the final full-row-by-id fetch also converted, via
-     * {@see \Piwigo\Image\Projection\Image::fromEntity()}/`toArray()` --
-     * a ready-made mapping shim (already existed, no new code needed)
-     * translating the DQL-hydrated `ImageEntity` back into the exact
-     * raw snake_case row shape {@see \Piwigo\Image\SrcImage}'s own
-     * constructor and `DerivativeImage::thumb_url()` already expect, same
-     * reasoning {@see \Piwigo\Image\ImageRepository::findRowWithCondition()}'s
-     * own exclusion cites for staying array-shaped rather than switching
-     * every consumer to the typed projection object outright.
+     * The final full-row-by-id fetch goes through
+     * {@see \Piwigo\Image\Projection\Image::fromEntity()}/`toArray()`, a
+     * mapping shim translating the DQL-hydrated `ImageEntity` back into the
+     * exact raw snake_case row shape {@see \Piwigo\Image\SrcImage}'s own
+     * constructor and `DerivativeImage::thumb_url()` expect, same reasoning
+     * {@see \Piwigo\Image\ImageRepository::findRowWithCondition()}'s own
+     * exclusion cites for staying array-shaped rather than switching every
+     * consumer to the typed projection object outright.
      *
      * @return list<array<string, mixed>>
      */

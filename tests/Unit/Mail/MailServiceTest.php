@@ -32,12 +32,11 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
 /**
- * Every MailService::__construct() shim collaborator (singleton/
- * service-locator elimination campaign, Phase 11 sub-phase 11E), resolved
- * from a real booted container -- Kernel::boot() is idempotent, so calling
- * it here is a safe no-op for the handful of tests that already booted
- * their own (possibly custom-rooted, e.g. a fake CurrentPaths root) Kernel
- * before calling this helper.
+ * Every MailService::__construct() collaborator is resolved from a real
+ * booted container -- Kernel::boot() is idempotent, so calling it here is
+ * a safe no-op for the handful of tests that already booted their own
+ * (possibly custom-rooted, e.g. a fake CurrentPaths root) Kernel before
+ * calling this helper.
  */
 function mail_service_test_build(
     ?WebmasterMailProviderInterface $webmasterMailProvider = null,
@@ -81,13 +80,12 @@ function mail_service_test_build(
     );
 }
 
-// P23 batch 8f-4: the get_webmaster_mail_address() function stub is gone
-// (free function deleted with include/functions.inc.php). MailService now
-// takes WebmasterMailProviderInterface as an optional constructor param
-// (lazily defaulting to the real Piwigo\Users\UserRepository, which would
-// need a DB connection this isolated test doesn't have), so the tests
-// whose paths reach the webmaster lookup (getMailConfiguration() always
-// calls getMailSenderEmail()) construct the service with this real fake.
+// MailService takes WebmasterMailProviderInterface as an optional
+// constructor param (lazily defaulting to the real
+// Piwigo\Users\UserRepository, which would need a DB connection this
+// isolated test doesn't have), so the tests whose paths reach the
+// webmaster lookup (getMailConfiguration() always calls
+// getMailSenderEmail()) construct the service with this real fake.
 function mail_service_with_fake_webmaster(): MailService
 {
     return mail_service_test_build(new class implements WebmasterMailProviderInterface {
@@ -234,8 +232,7 @@ function mail_service_rrmdir(string $dir): void
 
 afterEach(function (): void {
     CurrentConfigTestFactory::get()->reset();
-    // Lang is a real, container-shared instance now (singleton/service-
-    // locator elimination campaign, Phase 8) with no pre-boot memoized
+    // Lang is a real, container-shared instance with no pre-boot memoized
     // fallback (see LangTestFactory::get()'s own docblock) -- unlike
     // Kernel::reset() below, this file's tests are a genuine mix of ones
     // that boot Kernel and ones that never do, so a bare LangTestFactory::get()
@@ -1242,10 +1239,9 @@ test('mail fires the before_parse_mail_template event with the real cache key an
     // builds the container's own (different) shared instance; seeding
     // before that boot would silently seed an instance MailService's own
     // get()-shim call never sees once the container exists (same ordering
-    // pitfall already found for Translator/EventDispatcher/CurrentUser/
-    // CurrentTemplate/CurrentConfigService elsewhere in this campaign) --
-    // also the reason a real event handler must be registered after boot
-    // too, not before.
+    // pitfall applies to Translator/EventDispatcher/CurrentUser/
+    // CurrentTemplate/CurrentConfigService) -- also the reason a real
+    // event handler must be registered after boot too, not before.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
     CurrentConfigTestFactory::get()->setMailAllowHtml(false);

@@ -17,31 +17,20 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Users\CurrentUser;
 
 /**
- * Admin-side category WRITE operations -- deliberately separate from
- * Piwigo\Category\CategoryService (P19), which was read-only (gallery
- * browsing) when this split was made; CategoryService has since grown
- * several of its own write methods too (setCatVisible()/setCatStatus()/
- * setCatCommentable()/etc.) -- the split is about admin-vs-gallery call
- * sites, not a strict read/write boundary anymore. Matches the doc's own
- * reference file inventory: "Admin/Category/: CategoryAdminService,
- * CreateCategoryResult".
+ * Admin-side category WRITE operations, kept separate from
+ * Piwigo\Category\CategoryService. The split reflects admin-vs-gallery
+ * call sites, not a strict read/write boundary -- CategoryService also
+ * exposes write methods of its own (setCatVisible()/setCatStatus()/
+ * setCatCommentable()/etc.).
  *
  * createVirtualCategory() delegates to the constructor-injected
- * CategoryService::createVirtualCategory() (Legacy Coupling Retirement
- * Phase 4a) rather than reimplementing it -- the same real method the WS
- * API (Ws\PwgCategories) already calls directly; this service only adds
- * a typed return shape for the admin call sites.
+ * CategoryService::createVirtualCategory() -- the same method the WS API
+ * (Ws\PwgCategories) calls directly -- and only adds a typed return shape
+ * for admin call sites.
  *
- * setCategoryOption()/setCategoryPermissions()/saveImageOrder() are real
- * new consolidations: getCategoriesRefDate() existed as two
- * byte-for-byte-identical copies (admin/cat_list.php and admin/albums.php,
- * confirmed via direct diff) and the other two replace inline
- * switch/if-chains that were never shared anywhere, moved here so
- * Controller\Admin\CatOptionsSubController/AlbumSubController (the real,
- * routed successors to the legacy admin/cat_options.php, admin/cat_perm.php,
- * and admin/element_set_ranks.php `include` pages, all 3 fully ported)
- * can call one typed method each instead of repeating raw SQL/branching
- * inline.
+ * Controller\Admin\CatOptionsSubController and AlbumSubController call
+ * setCategoryOption(), setCategoryPermissions(), and saveImageOrder() as
+ * single typed methods instead of repeating raw SQL/branching inline.
  */
 final class CategoryAdminService
 {
@@ -87,14 +76,11 @@ final class CategoryAdminService
         // don't want to sort sub categories
         $category_ids = $this->categoryService->getSubcatIds($ids);
 
-        // Real pre-existing bug, found by Legacy Coupling Retirement Phase
-        // 4a's Integration-test migration (the old Unit test's
-        // get_subcat_ids() stub always echoed its input back verbatim,
-        // masking this): an empty $category_ids (e.g. every id in $ids is
-        // unknown) built `WHERE category_id IN ()`, invalid SQL. The
-        // method's own closing loop already falls back to null for any id
-        // with no ref_date, so skipping straight there is the correct fix,
-        // not just a guard to avoid the crash.
+        // An empty $category_ids (e.g. every id in $ids is unknown) would
+        // build `WHERE category_id IN ()`, invalid SQL. The method's own
+        // closing loop already falls back to null for any id with no
+        // ref_date, so this returns that fallback directly instead of
+        // running the query.
         if ($category_ids === []) {
             $return = [];
             foreach ($ids as $id) {
@@ -143,13 +129,9 @@ final class CategoryAdminService
      * (comments/visible/status/representative x true/false) into one
      * parameterized method.
      *
-     * P23 batch 8f-4: takes ActivityLoggerInterface as an explicit
-     * per-method parameter (this class's only activity-writing method, 17
-     * construction sites -- same per-method-injection reasoning as
-     * CategoryService::deleteCategories()), replacing the formerly-bare
-     * pwg_activity() call kept unqualified purely for
-     * CategoryAdminServiceTest's function-shadowing spy; that test now
-     * passes a fake logger through this parameter instead.
+     * Takes ActivityLoggerInterface as an explicit per-method parameter
+     * rather than a constructor dependency, since this is the only
+     * activity-writing method on this class.
      *
      * @param list<int> $catIds
      */
@@ -160,15 +142,6 @@ final class CategoryAdminService
         }
 
         match ($section) {
-            // Docs/PLAN.md gap-closure, 2026-07-23: this whole
-            // match used to call the bare global pwg_query()/query2array()
-            // free functions for 2 of its 4 branches -- neither has ever
-            // had a real production definition (only a namespace-shadowing
-            // spy in CategoryAdminServiceTest.php, invisible outside that
-            // test process), so toggling "comments" or un-toggling
-            // "representative" here fatal-errored on every real request.
-            // Retargeted onto the same typed repository/service methods the
-            // "visible"/"status" branches already correctly used.
             'comments' => $this->categoryService->setCatCommentable($catIds, $value),
             'visible' => $this->categoryService->setCatVisible($catIds, $value),
             'status' => $this->categoryService->setCatStatus($catIds, $value ? 'public' : 'private'),

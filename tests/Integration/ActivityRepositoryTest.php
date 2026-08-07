@@ -246,11 +246,11 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         // newest first
         self::assertGreaterThan($rows[count($rows) - 1]->activityId, $rows[0]->activityId);
 
-        // Item 16G: activity_id 4's own fixture row has a real details
-        // JSON payload and a real ip_address -- both go through
-        // Doctrine's own custom Type hydration (json/ip_address) that a
-        // bare object/username assertion above would never observe if a
-        // conversion bug silently dropped either back to null.
+        // activity_id 4's own fixture row has a real details JSON payload
+        // and a real ip_address -- both go through Doctrine's own custom
+        // Type hydration (json/ip_address) that a bare object/username
+        // assertion above would never observe if a conversion bug
+        // silently dropped either back to null.
         $loginRow = null;
         foreach ($rows as $row) {
             if ($row->activityId === 4) {
@@ -298,16 +298,12 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
     public function test_find_system_object_log_with_usernames_renders_a_null_performed_by_as_system(): void
     {
-        // A real, adversarially-verified bug fixed in this same batch (see
-        // ActivityService::record()'s own fix note): activity.performed_by
-        // has an ON DELETE SET NULL foreign key to users.id, and 0 (the
-        // legacy "no known actor" sentinel) is not a valid user id --
-        // writing it throws a real ForeignKeyConstraintViolationException.
-        // null is the column's real "no known actor" value (e.g. a plugin
-        // autoupdate that ran before $user was loaded); it must render as
-        // "System" here, matching the intent the legacy
-        // IF(performed_by = 0, 'System', username) expression could no
-        // longer actually reach once this FK was added.
+        // activity.performed_by has an ON DELETE SET NULL foreign key to
+        // users.id, and 0 is not a valid user id -- writing it throws a
+        // real ForeignKeyConstraintViolationException. null is the
+        // column's real "no known actor" value (e.g. a plugin autoupdate
+        // that ran before $user was loaded); it must render as "System"
+        // here.
         $this->repo->insertMany([[
             'object' => 'system',
             'objectId' => 0,
@@ -509,14 +505,9 @@ final class ActivityRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * Phase 5 Item 15: findPaginated() had zero prior coverage -- added
-     * while converting its WHERE-building from hand-typed DQL condition
-     * strings to Doctrine\Common\Collections\Criteria, per this campaign's
-     * own "verified, not just runs" standard. Covers a plain optional-eq
-     * filter, a min/max date range, and both connectionsMode branches
-     * (the trickiest part of the conversion -- 'admins_only' compiles to
-     * a nested NOT(x AND y) DQL expression via Criteria::expr()->not()/
-     * andX()).
+     * Covers a plain optional-eq filter, a min/max date range, and both
+     * connectionsMode branches: 'admins_only' compiles to a nested
+     * NOT(x AND y) DQL expression via Criteria::expr()->not()/andX().
      */
     public function test_find_paginated_filters_by_object(): void
     {

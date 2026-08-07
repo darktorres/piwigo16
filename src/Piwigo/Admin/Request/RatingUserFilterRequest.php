@@ -9,14 +9,8 @@ namespace Piwigo\Admin\Request;
  * (page slug "rating_user") -- P26/SEC-40 Request DTO. `orderBy` is left
  * as a raw nullable int here (not clamped to a valid index) since the
  * valid range depends on the renderer's own `$available_order_by` array
- * size, a concern local to that method, not this DTO.
- *
- * Real bug found while auditing this site (not previously known): the
- * original code cast `order_by` straight into an unbounded array index
- * (`$available_order_by[$order_by_index]`) with no range check, so
- * `?order_by=99` on this admin page threw a fatal TypeError out of
- * `uasort()` (a non-callable `null` from the undefined offset). Fixed at
- * the renderer's own call site, where the valid range is known, not here.
+ * size, a concern local to that method, not this DTO. Range-checking
+ * `orderBy` against that array happens at the renderer's own call site.
  */
 final readonly class RatingUserFilterRequest
 {

@@ -9,13 +9,10 @@ use Piwigo\Core\Paths;
 use Piwigo\Storage\StorageRegistry;
 
 /**
- * Container-shared instance (singleton/service-locator elimination
- * campaign, Phase 2) -- every test constructs its own fresh instance
- * directly via `new StorageRegistry([...])`/`fromConfig()`; no reset()
- * needed for the instance API. The transitional `disk()` shim (and its
- * own dedicated Kernel-boot tests) was deleted in Phase 10 once
- * `Piwigo\Ws\PwgImages`, its last remaining caller, converted to real
- * constructor injection.
+ * StorageRegistry is normally shared via the DI container; every test
+ * constructs its own fresh instance directly via
+ * `new StorageRegistry([...])`/`fromConfig()`, so no reset() is needed
+ * for the instance API.
  */
 
 test('get round-trips a write and read on a real local disk', function (): void {
@@ -77,12 +74,11 @@ test('fromConfig loads factories from the exact given path, not a hardcoded one'
     // path -- same "value never varies per request" reasoning as
     // Router::class's own routes.php binding, see that binding's own
     // comment), fromConfig() itself is a plain, generic loader: whatever
-    // path it's given is what it requires(), verbatim. Singleton/service-
-    // locator elimination campaign, Phase 12 sub-phase 12F-10: the
-    // required file must itself return a closure now (taking Paths/
-    // CurrentConfig as real params, matching config/storage.php's own new
-    // shape), not a plain array -- this fixture's own closure never
-    // actually reads either param, so any real, cheap instance works.
+    // path it's given is what it requires(), verbatim. The required file
+    // must return a closure (taking Paths/CurrentConfig as real params,
+    // matching config/storage.php's own shape), not a plain array -- this
+    // fixture's own closure never actually reads either param, so any
+    // real, cheap instance works.
     $dir = sys_get_temp_dir() . '/piwigo-storage-registry-fromconfig-' . bin2hex(random_bytes(4));
     mkdir($dir, 0o777, true);
     file_put_contents($dir . '/storage.php', <<<'PHP'

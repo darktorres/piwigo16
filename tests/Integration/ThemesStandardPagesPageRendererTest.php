@@ -164,17 +164,14 @@ final class ThemesStandardPagesLogoStreamWrapper
  * MaintenanceActionDispatcherTest's own "construct the real renderer/
  * dispatcher directly, real Template, no fixture DB reset needed" shape.
  *
- * Writing this file's own fopen()-failure test surfaced a real,
- * pre-existing bug in the renderer, fixed alongside this test (see that
- * call site's own new comment): confUpdateParam('standard_pages_selected_
- * logo_path', ...) used to run unconditionally *before* fopen()/
- * writeStream() ever ran, so a failed write like this file's own 2nd test
- * still left config pointing at a logo file that was never actually
- * written on disk -- now persisted only once the write genuinely
- * succeeds, matching tests/Unit/Config/ConfigServiceTest.php's own stated
- * split ("DB-touching methods ... covered by
- * tests/Integration/ConfigServiceTest.php instead") for why this needs a
- * real ConfigService/DB connection rather than an unconnected one.
+ * confUpdateParam('standard_pages_selected_logo_path', ...) (see that
+ * call site's own comment) only runs once fopen()/writeStream() has
+ * genuinely succeeded -- a failed write like this file's own 2nd test
+ * leaves config pointing at no logo file at all, matching
+ * tests/Unit/Config/ConfigServiceTest.php's own stated split ("DB-touching
+ * methods ... covered by tests/Integration/ConfigServiceTest.php instead")
+ * for why this needs a real ConfigService/DB connection rather than an
+ * unconnected one.
  *
  * CurrentPaths::siteLocal (not ::root) is the one property overridden for
  * the logo-upload tests, each to its own disposable sys_get_temp_dir()
@@ -267,9 +264,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // Kernel is already booted by this point (either parent::setUp()'s
         // own default boot, or overrideSiteLocal()'s throwaway-fixture
         // reboot) -- resolve the same container-shared instance a real
-        // request would get, matching RedirectService's own real
-        // production callers (singleton/service-locator elimination
-        // campaign, Phase 6).
+        // request would get.
         $userService = Kernel::container()->get(UserService::class);
         if (! $userService instanceof UserService) {
             throw new LogicException('Container returned an unexpected type for ' . UserService::class);
@@ -291,15 +286,14 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
     private function makeRenderer(): ThemesStandardPagesPageRenderer
     {
         // StorageRegistry is built fresh here (not container-resolved
-        // once for the whole test) specifically so overrideSiteLocal()'s
-        // own Kernel::boot() below is reflected in the 'local' disk
-        // it builds -- config/storage.php's own 'local' factory closure
-        // captures whichever CurrentPathsTestFactory::get()/CurrentConfigTestFactory::get()
-        // instance is passed in explicitly at fromConfig()-call time
-        // (singleton/service-locator elimination campaign, Phase 12
-        // sub-phase 12F-10), same "must be rebuilt after CurrentPaths
-        // changes" requirement a real request never hits (CurrentPaths is
-        // fixed before the container ever resolves anything, Phase 2).
+        // once for the whole test) so that overrideSiteLocal()'s own
+        // Kernel::boot() below is reflected in the 'local' disk it builds
+        // -- config/storage.php's own 'local' factory closure captures
+        // whichever CurrentPathsTestFactory::get()/CurrentConfigTestFactory::get()
+        // instance is passed in explicitly at fromConfig()-call time, so it
+        // must be rebuilt after CurrentPaths changes. A real request never
+        // hits this because CurrentPaths is fixed before the container ever
+        // resolves anything.
         return new ThemesStandardPagesPageRenderer(
             LangTestFactory::get(),
             $this->accessControl(),
@@ -342,10 +336,9 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         ));
         // Kernel::reset() above also discards the container-shared
         // CurrentUser instance parent::setUp()'s own attachGlobals() seed
-        // populated (singleton/service-locator elimination campaign, Phase
-        // 5) -- without reseeding here, AccessControl::isWebmaster() (read
-        // by this renderer) throws "not initialised" against this fresh,
-        // unseeded container.
+        // populated -- without reseeding here, AccessControl::isWebmaster()
+        // (read by this renderer) throws "not initialised" against this
+        // fresh, unseeded container.
         CurrentUserTestFactory::get()->attachGlobals();
         // Same reasoning again -- Kernel::reset() also discards the
         // container-shared CurrentConfigService instance setUp()'s own
@@ -455,14 +448,10 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
                 CurrentTemplate::current()->get()->get_template_vars('save_error')
             );
 
-            // Regression guard for a real bug found and fixed alongside
-            // this test: confUpdateParam('standard_pages_selected_logo_path',
-            // ...) used to run unconditionally *before* fopen()/
-            // writeStream() (see the renderer's own source comment at that
-            // call site), so a failed write like this one still left config
-            // pointing at a logo file that was never actually written. Now
-            // that the persist only happens after a real successful write,
-            // nothing should be written here at all.
+            // confUpdateParam('standard_pages_selected_logo_path', ...)
+            // (see the renderer's own source comment at that call site)
+            // only persists after a real successful write -- a failed
+            // write like this one must leave nothing recorded.
             self::assertNull($this->rawConfigValue('standard_pages_selected_logo_path'));
         } finally {
             stream_wrapper_unregister($scheme);

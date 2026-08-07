@@ -9,26 +9,13 @@ use Piwigo\Core\ValidationPattern;
 use RuntimeException;
 
 /**
- * Typed replacement for the legacy `check_input_parameter()` free
- * function (formerly include/functions.inc.php) -- the request-input
- * hacking-attempt guard. That free function (and its include/ home) has
- * since been fully removed; every former call site now calls this
- * class's `validate()` directly (same end state as `get_ephemeral_key()`'s
- * own migration).
+ * Validates request-input parameters against a regex pattern, treating
+ * any mismatch as a hacking attempt.
  *
- * Container-shared instance (singleton/service-locator elimination
- * campaign, Phase 3): `$htmlRenderer` was originally a static-setter
- * collaborator because constructor-/parameter-injecting it would ripple
- * across every one of its ~90 real construction sites -- every one of
- * those sites turned out to be a `Request\*Request::fromGlobals()`/
- * `fromArray()`/`fromArrays()` static factory (P26/SEC-40), with no
- * instance context to receive constructor injection through directly.
- * Phase 11 sub-phase 11C closed this for real: every one of those ~43
- * real callers (39 pure Request DTOs plus 4 real classes calling this
- * class directly) now takes `InputValidator` as an explicit parameter
- * instead of reaching for a `createStatic()` transitional bridge --
- * `HtmlRenderingInterface` is bound in container.php, so this class
- * itself needs no explicit wiring, only its own callers do.
+ * `$htmlRenderer` is optional: callers without an instance context to
+ * inject it through (e.g. `Request\*Request::fromGlobals()`/
+ * `fromArray()`/`fromArrays()` static factories) pass an explicit
+ * `InputValidator` instance instead.
  */
 final class InputValidator
 {
@@ -45,15 +32,10 @@ final class InputValidator
     }
 
     /**
-     * Public entry point to the same safe-fallback fatal-error mechanism
-     * validate() itself uses, for Request DTOs (P26/SEC-40 --
-     * `{Module}/Request/{Name}`) whose own rejection reason doesn't fit
-     * validate()'s single-parameter-pattern model (a structural/cardinality
-     * check, e.g. "at least 2 path segments", rather than one value against
-     * one regex). Keeps every request-input rejection path -- whether
-     * pattern-based or structural -- unit-testable the same way (throws
-     * RuntimeException when no HtmlRenderingInterface is configured, same
-     * as every existing validate() call site's own test already relies on).
+     * Entry point to the same fatal-error mechanism validate() uses, for
+     * rejections that don't fit validate()'s one-value-against-one-pattern
+     * model -- e.g. a structural/cardinality check such as "at least 2
+     * path segments".
      */
     public function fail(string $msg): never
     {
@@ -114,10 +96,6 @@ final class InputValidator
         return $value === null || $value === '' || $value === 0 || $value === 0.0 || $value === '0' || $value === false || $value === [];
     }
 
-    /**
-     * P23 batch 8d: relocated from include/functions.inc.php's
-     * url_check_format(), unchanged logic.
-     */
     public static function checkUrlFormat(string $url): bool
     {
         if (str_contains($url, '"')) {
@@ -131,10 +109,6 @@ final class InputValidator
         return filter_var($url, FILTER_VALIDATE_URL) !== false;
     }
 
-    /**
-     * P23 batch 8d: relocated from include/functions.inc.php's
-     * email_check_format(), unchanged logic.
-     */
     public static function checkEmailFormat(?string $mailAddress): bool
     {
         return filter_var($mailAddress, FILTER_VALIDATE_EMAIL) !== false;

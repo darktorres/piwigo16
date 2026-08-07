@@ -10,12 +10,9 @@ use Piwigo\Core\Paths;
 use Psr\Container\ContainerExceptionInterface;
 
 /**
- * Singleton/service-locator elimination campaign, Phase 12 sub-phase
- * 12F-10: replaces the deleted `CurrentPaths::get()`/`CurrentPaths::isSet()`
- * transitional shim methods for test call sites -- reproduces their exact
- * behavior, including the real-`get()`-attempt-not-`has()` pattern (PHP-DI's
- * `has()` is unreliable for a concrete class like `Paths`, see the former
- * shim's own docblock).
+ * get()/isSet() attempt a real container `get()` rather than checking
+ * `has()` first: PHP-DI's `has()` is unreliable for a concrete class
+ * like `Paths`.
  */
 final class CurrentPathsTestFactory
 {

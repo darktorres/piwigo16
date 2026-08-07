@@ -29,8 +29,8 @@ use Piwigo\Permission\SqlCondition;
  * `include/functions_picture.inc.php` -- the other 5 ported functions
  * (slideshow param encode/decode, PDF page counting) are pure computation
  * with no DB access of their own and live on {@see ImageService} instead,
- * same Repository=DB-only/Service=business-logic split as every other P19
- * domain.
+ * same Repository=DB-only/Service=business-logic split every domain in
+ * this codebase follows.
  *
  * Owns `images` ({@see ImageEntity}) and `image_format`
  * ({@see ImageFormatEntity}) -- the single-row/simple-list methods
@@ -48,11 +48,10 @@ use Piwigo\Permission\SqlCondition;
  * lock flag) are read/written raw for the same reason -- `config`
  * specifically can't delegate to Config\ConfigRepository::upsert() the
  * way Admin\MenubarPageRenderer's own config write can (that one is a
- * plain upsert; the now-deleted Menu\MenubarLayoutRepository::saveLayout()
- * this mirrors was the same shape): tryAcquireLoungeLock() needs real
- * atomic INSERT-IGNORE claim semantics no find()+persist()+flush()
- * sequence can provide (a race would let two processes both believe
- * they won the lock), so it keeps the raw statement.
+ * plain upsert): tryAcquireLoungeLock() needs real atomic INSERT-IGNORE
+ * claim semantics no find()+persist()+flush() sequence can provide (a
+ * race would let two processes both believe they won the lock), so it
+ * keeps the raw statement.
  *
  * @extends EntityRepository<ImageEntity>
  */
@@ -62,35 +61,22 @@ final class ImageRepository extends EntityRepository
      * Applies a permission/filter `SqlCondition` via `andWhere()`, binding
      * every one of its parameters -- same shared-helper shape as
      * `Notification\NotificationRepository::applyCondition()`/
-     * `Tag\TagRepository::applyCondition()`.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation found
-     * every real caller of every one of this helper's own callers
+     * `Tag\TagRepository::applyCondition()`. Every real caller
      * (isImageAccessibleWithCondition/findRowWithCondition/
      * findRelatedCategoriesForImage/isImageCommentableWithCondition/
      * findVisibleCategoriesForImage/hasAccessibleImageWithAuthor/
      * isImageAccessibleViaCategoryWithCondition/
-     * findCategoryLinksForImageIdsWithCondition) traces back to
-     * {@see \Piwigo\Permission\PermissionService::getSqlConditionFandFAsCondition()}
-     * -- Sub-phase C1 gave that method's own output a typed
-     * {@see \Piwigo\Permission\PermissionCriteria} replacement, and every
-     * method in this cluster now takes that DTO instead of a raw
-     * SqlCondition, translating it to a bound fragment via
-     * `PermissionCriteria`'s own `*Condition()` builders before reaching
-     * this shared applier. This cluster stays on DBAL regardless (not a
-     * DQL blocker this sub-phase resolves) -- `image_category`/`categories`
-     * joins here are plain `Doctrine\DBAL\Query\QueryBuilder` queries, and
-     * converting them to DQL is a separate, unrelated concern from the
-     * permission-condition typing this sub-phase targets.
-     */
-    /**
+     * findCategoryLinksForImageIdsWithCondition) takes a typed
+     * {@see \Piwigo\Permission\PermissionCriteria} DTO and translates it
+     * to a bound fragment via that DTO's own `*Condition()` builders
+     * before reaching this shared applier.
+     *
      * Accepts either query-builder flavor -- {@see SqlCondition}'s own
      * `sql`/`parameters`/`types` shape applies identically via
      * `andWhere()`/`setParameter()` on both DBAL's and DQL's query
-     * builders, confirmed empirically (Item 15 audit): a DQL consumer
-     * just passes a DQL property path (e.g. `i.id`) into the same
-     * {@see PermissionCriteria} `*Condition()` methods a DBAL consumer
-     * already uses with a raw column name.
+     * builders: a DQL consumer passes a DQL property path (e.g. `i.id`)
+     * into the same {@see PermissionCriteria} `*Condition()` methods a
+     * DBAL consumer uses with a raw column name.
      */
     private static function applyCondition(QueryBuilder|\Doctrine\ORM\QueryBuilder $qb, SqlCondition $condition): void
     {
@@ -118,9 +104,6 @@ final class ImageRepository extends EntityRepository
      * reasoning as Auth\AuthRepository::saveLastVisitFromHistory(). Clears
      * the identity map afterward since this bypasses the ORM for a row
      * {@see ImageEntity} may already have cached.
-     *
-     * Item 15 audit: converted to a DQL bulk `UPDATE` -- DQL supports both
-     * the arithmetic (`i.hit = i.hit + 1`) and the self-assignment.
      */
     public function incrementVisitCounter(int $imageId): void
     {
@@ -365,9 +348,6 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE id IN (...), no join DQL can't express.
-     *
      * @param array<int, int|string> $imageIds
      * @return list<array{id: int, path: string, representative_ext: ?string}>
      */
@@ -400,9 +380,6 @@ final class ImageRepository extends EntityRepository
      * Same 3 columns as {@see findPathsForFileDeletion()}, plus `level` --
      * Ws\PwgCategories::getList()'s own "does the viewer's privacy level
      * allow this thumbnail" check.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE id IN (...), no join DQL can't express.
      *
      * @param  list<int>  $imageIds
      * @return list<array{id: int, path: string, representative_ext: ?string, level: int}>
@@ -442,12 +419,8 @@ final class ImageRepository extends EntityRepository
      * setPrivacyLevel()'s own WS write. Caller clears the EntityManager
      * afterward (same "caller clears" convention documented elsewhere,
      * e.g. CategoryService::setRepresentativeImage()) since this bypasses
-     * the ORM.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table bulk
-     * UPDATE, same `i.id IN (...)` shape as touchLastmodified() below;
-     * still bypasses the ORM (a DQL UPDATE doesn't touch the identity
-     * map either), so the "caller clears" contract above is unchanged.
+     * the ORM -- a DQL bulk `UPDATE` doesn't touch the identity map
+     * either.
      *
      * @param array<int, int> $imageIds
      * @return int affected row count
@@ -471,10 +444,6 @@ final class ImageRepository extends EntityRepository
      * per-action batch edit (author/name/date_creation), same "many ids,
      * one shared value" shape as updateLevelForImages() above but for a
      * text column, so $value is bound rather than interpolated.
-     *
-     * Item 15 audit: converted to real DQL -- $field is now
-     * {@see ImageTextField}, a fixed compile-time-safe property path
-     * instead of a runtime column-name string.
      *
      * @param array<int, int> $imageIds
      */
@@ -510,11 +479,6 @@ final class ImageRepository extends EntityRepository
      * Controller\Admin\SiteUpdateSubController's own metadata-sync
      * BatchWriter::SKIP_EMPTY toggle).
      *
-     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk per-row
-     * UPDATE via BatchWriter (one statement for every row), not ORM
-     * persist()/flush(); $dbfields' own column names are also
-     * caller-supplied.
-     *
      * @param array{primary: string[], update: string[]} $dbfields
      * @param array<int, array<string, mixed>> $datas
      */
@@ -541,10 +505,6 @@ final class ImageRepository extends EntityRepository
      * addUploadedFile()'s own re-upload branch -- same "dynamic column set,
      * caller already knows which fields changed" shape.
      *
-     * Item 14 DQL audit: stays on DBAL -- $updates' own keys are
-     * caller-supplied dynamic column names, not fixed DQL property
-     * paths.
-     *
      * @param array<string, mixed> $updates
      */
     public function updateFields(int $imageId, array $updates): void
@@ -568,10 +528,6 @@ final class ImageRepository extends EntityRepository
      * mirroring updateFields() above rather than a fixed-shape entity
      * construction.
      *
-     * Item 14 DQL audit: stays on DBAL -- $insert's own keys are
-     * caller-supplied dynamic column names, not fixed DQL property
-     * paths.
-     *
      * @param array<string, mixed> $insert
      */
     public function insertImage(array $insert): int
@@ -592,10 +548,6 @@ final class ImageRepository extends EntityRepository
      * batched, dbfields taken from the first row (the caller already
      * builds every row with the same keyset, same convention as
      * Tag\TagRepository::massInsertImageTags()).
-     *
-     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk multi-row
-     * INSERT via BatchWriter, not ORM persist()/flush(); the column set
-     * is also caller-supplied.
      *
      * @param array<int, array<string, mixed>> $inserts
      */
@@ -631,11 +583,9 @@ final class ImageRepository extends EntityRepository
     /**
      * Category ids for which one of $ids is the representative picture.
      *
-     * Further SQL-modernization audit, Item 15G: converted to real DQL --
      * `categories` is a cross-repository-owned table, but `Category` and
-     * `Image` are the same `L2aCoreDomain` deptrac layer, so this was
-     * never a real boundary, only a repository-ownership convention
-     * (checked deptrac.yaml's actual ruleset, not assumed).
+     * `Image` are the same `L2aCoreDomain` deptrac layer, so querying it
+     * directly here is architecturally legal per deptrac.yaml's ruleset.
      *
      * @param array<int, int|string> $ids
      * @return list<int>
@@ -658,10 +608,6 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `lounge` is now mapped
-     * ({@see LoungeEntity}). Converted to real DQL -- single-table,
-     * static ORDER BY.
-     *
      * @return list<array{image_id: int, category_id: int}>
      */
     public function findLoungeRows(): array
@@ -690,21 +636,11 @@ final class ImageRepository extends EntityRepository
      * older than the max wait time" check. Returns null when the lounge is
      * empty.
      *
-     * Real bug, found via the mutation sweep (2026-08-01): this used to
-     * also select the DB server's own NOW() ("so age can be computed
-     * without relying on PHP's own clock"), but date_available itself is
-     * always written via Env::now() (see UploadService's own comment on
-     * that exact same lesson) -- invisible to Env::now()'s PIWIGO_TEST_NOW
-     * freeze, so once real time drifted away from a frozen PIWIGO_TEST_NOW,
-     * every lounge photo looked far older than it really was and
-     * needsEmptying() fired on literally every request. The caller now
-     * computes age against Env::now() instead, matching date_available's
-     * own clock source.
-     *
-     * Item 14 DQL audit, re-corrected: `lounge` is now mapped
-     * ({@see LoungeEntity}). Converted to real DQL -- inner join into
-     * this repository's own {@see ImageEntity}; setMaxResults(1) is
-     * paired with getOneOrNullResult() per the audit's own gotcha #3.
+     * `date_available` is always written via Env::now(), so the caller
+     * must compute age against Env::now() too, not PHP's real wall-clock
+     * time or the DB server's own NOW() -- both are invisible to
+     * Env::now()'s PIWIGO_TEST_NOW freeze and would otherwise drift away
+     * from a frozen test clock.
      */
     public function findOldestLoungeAgeInfo(): ?string
     {
@@ -731,10 +667,6 @@ final class ImageRepository extends EntityRepository
      * Number of lounge rows for $categoryId not yet linked into
      * `image_category` -- Ws\PwgImages::upload()'s own "how many photos
      * are still awaiting validation in this category" response field.
-     *
-     * Item 14 DQL audit, re-corrected: both `lounge` and `image_category`
-     * are now mapped ({@see LoungeEntity}, {@see ImageCategoryEntity}).
-     * Converted to real DQL -- the subquery targets the latter directly.
      */
     public function countLoungeImagesPendingForCategory(int $categoryId): int
     {
@@ -757,11 +689,6 @@ final class ImageRepository extends EntityRepository
         return is_numeric($value) ? (int) $value : 0;
     }
 
-    /**
-     * Item 14 DQL audit, re-corrected: `lounge` is now mapped
-     * ({@see LoungeEntity}). Converted to real DQL -- single-table bulk
-     * DELETE.
-     */
     public function deleteLoungeUpTo(int $maxImageId): void
     {
         $this->getEntityManager()
@@ -776,8 +703,7 @@ final class ImageRepository extends EntityRepository
     /**
      * Atomically claims the lounge-emptying lock via `INSERT IGNORE` --
      * a no-op if another process already holds it. json_encode()s
-     * $lockValue (gap-closure Stage 1a-bis item 5: config.value is JSON
-     * now) so it round-trips through CurrentConfig::emptyLoungeRunning()'s
+     * $lockValue so it round-trips through CurrentConfig::emptyLoungeRunning()'s
      * own ConfigService::hydrate() read path too, not just
      * findLoungeLockValue() below -- a bare unquoted value would also
      * break this INSERT's own double-quote-delimited SQL literal.
@@ -785,26 +711,21 @@ final class ImageRepository extends EntityRepository
      * Stays raw DBAL rather than delegating to Config\ConfigRepository::
      * upsert() -- that method always finds-then-writes, which can't
      * reproduce this atomicity (two concurrent emptyLounge() runs could
-     * otherwise both believe they'd won the lock). Clears the identity
+     * otherwise both believe they'd won the lock). DQL has no INSERT
+     * support at all besides, and `config` is a cross-domain table
+     * {@see \Piwigo\Config\ConfigRepository} owns. Clears the identity
      * map afterward since this bypasses the ORM for a row
      * Config\ConfigEntry may already have cached.
      *
-     * Item 14 DQL audit: stays on DBAL -- DQL has no INSERT support at
-     * all, and `config` is a cross-domain table
-     * {@see \Piwigo\Config\ConfigRepository} owns besides.
-     *
-     * Item 16C: `Connection::insert()` (a plain, portable `INSERT`), not
+     * Uses `Connection::insert()` (a plain, portable `INSERT`), not
      * MySQL-specific `INSERT IGNORE` text, and not `persist()`/`flush()`
-     * either -- empirically verified that a caught
-     * {@see UniqueConstraintViolationException} from a failed `flush()`
-     * leaves the EntityManager permanently closed
+     * either: a caught {@see UniqueConstraintViolationException} from a
+     * failed `flush()` leaves the EntityManager permanently closed
      * (`Doctrine\ORM\UnitOfWork::commit()`'s own `finally` branch calls
      * `$em->close()` on any failure, and `clear()` cannot undo that),
      * which would break every other repository sharing this request's
-     * EntityManager -- a real regression a losing race against another
-     * process would trigger in normal operation, not just a theoretical
-     * edge case. Plain DBAL `insert()` never touches the ORM's unit of
-     * work, so a caught failure here has no such blast radius.
+     * EntityManager. Plain DBAL `insert()` never touches the ORM's unit
+     * of work, so a caught failure here has no such blast radius.
      */
     public function tryAcquireLoungeLock(string $lockValue): void
     {
@@ -826,16 +747,12 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Further SQL-modernization audit, Item 15G: converted to real DQL --
      * `config` is a cross-repository-owned table ({@see \Piwigo\Config\
      * ConfigEntry}), but `Config` is `L1Infrastructure` and `Image` is
      * `L2aCoreDomain`, an explicitly allowed downward dependency
-     * (`L2aCoreDomain: [L1Infrastructure, L0Data]`), so this was never a
-     * real boundary, only a repository-ownership convention (checked
-     * deptrac.yaml's actual ruleset, not assumed) -- same correction as
-     * {@see findRepresentedCategoryIds()} above.
-     * {@see tryAcquireLoungeLock()} itself stays on DBAL regardless
-     * (`INSERT IGNORE`, no DQL equivalent).
+     * (`L2aCoreDomain: [L1Infrastructure, L0Data]`), so querying it
+     * directly here is architecturally legal. {@see tryAcquireLoungeLock()}
+     * itself stays on DBAL (`INSERT IGNORE`, no DQL equivalent).
      */
     public function findLoungeLockValue(): ?string
     {
@@ -859,11 +776,9 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- per the
-     * audit's own gotcha #1, the selected `ic.categoryId` hydrates as a
-     * real {@see CategoryId} under array hydration, so it's unwrapped
-     * rather than treated as a raw int.
+     * The selected `ic.categoryId` hydrates as a real {@see CategoryId}
+     * under array hydration, so it's unwrapped below rather than treated
+     * as a raw int.
      *
      * @param array<int|string> $images real callers don't guarantee a list
      * @param array<int|string> $categories
@@ -902,11 +817,9 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- per the
-     * audit's own gotcha #1, the selected `ic.categoryId` hydrates as a
-     * real {@see CategoryId} under array hydration, so it's unwrapped
-     * rather than treated as a raw int.
+     * The selected `ic.categoryId` hydrates as a real {@see CategoryId}
+     * under array hydration, so it's unwrapped below rather than treated
+     * as a raw int.
      *
      * @param array<int|string> $categories real callers don't guarantee a list
      * @return array<int|string, int> category_id => max rank
@@ -943,16 +856,8 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * The original's own `array_filter(..., is_string(...))` relied on
-     * mysqli's legacy fetch mode returning every column as a string; DBAL's
-     * `fetchFirstColumn()` returns native ints for this `id` column, so
-     * that same filter would silently discard every row instead of being a
-     * no-op -- dropped here since the query itself already guarantees
-     * numeric ids.
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- inner join
-     * into this repository's own {@see ImageEntity}.
+     * The query already guarantees numeric ids, so no `is_string()`
+     * filtering is applied here.
      *
      * @param array<int, int|string> $images
      * @return list<int>
@@ -977,10 +882,6 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table
-     * bulk DELETE.
-     *
      * @param array<int, int> $imageIds
      */
     public function deleteImageCategoryLinks(array $imageIds, int|string $category): void
@@ -1004,10 +905,6 @@ final class ImageRepository extends EntityRepository
      * caller's requested category list. Unlike deleteImageCategoryLinks()
      * above (many images, one category), this is one image, many
      * categories.
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table
-     * bulk DELETE.
      *
      * @param list<int|string> $categoryIds
      */
@@ -1034,23 +931,15 @@ final class ImageRepository extends EntityRepository
      * excludes nothing, matching the original's own conditional `AND
      * category_id NOT IN (...)` clause).
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}), but stayed on DBAL regardless at the
-     * time -- this was a `DELETE ... JOIN`, and DQL's DELETE statement
-     * doesn't support joins at all, mapped target or not.
-     *
-     * Item 16D: converted to real DQL via a 2-step SELECT-then-DELETE --
-     * the only reason the original needed a JOIN at all was reading each
-     * image's own `storage_category_id` (a column on `images`, not
-     * `image_category`) to know which single link to spare. Step 1 reads
-     * that per $images (a single-table SELECT, `ImageEntity` already
-     * maps `storageCategoryId`); step 2 issues one single-table DQL
-     * DELETE per image with that value bound as a plain scalar
-     * parameter -- no JOIN needed once it's already in hand, same shape
-     * as {@see deleteImageCategoryLinks()} just above. $images is
-     * typically a handful of ids per real call (a single move/associate
-     * action), so N small DELETEs costs nothing meaningful over one
-     * multi-row statement.
+     * Implemented as a 2-step SELECT-then-DELETE since DQL's DELETE
+     * statement doesn't support joins: step 1 reads each image's own
+     * `storage_category_id` (a column on `images`, not `image_category`)
+     * to know which single link to spare; step 2 issues one single-table
+     * DQL DELETE per image with that value bound as a plain scalar
+     * parameter, same shape as {@see deleteImageCategoryLinks()} just
+     * above. $images is typically a handful of ids per real call (a
+     * single move/associate action), so N small DELETEs costs nothing
+     * meaningful over one multi-row statement.
      *
      * @param array<int, int|string> $images
      * @param array<int, int|string> $categories
@@ -1098,9 +987,6 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE.
-     *
      * @return list<int>
      */
     public function findImageIdsWithoutMd5sum(): array
@@ -1116,9 +1002,6 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE id IN (...).
-     *
      * @param array<int, int|string> $ids
      * @return array<int|string, string> id => path
      */
@@ -1148,10 +1031,9 @@ final class ImageRepository extends EntityRepository
      * addFile()'s own "what's the current state of this image, before we
      * merge in a bigger chunked upload" lookup.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE on the primary key, so at most one row can ever match;
-     * setMaxResults(1) still paired with getOneOrNullResult() per the
-     * audit's own gotcha #3 (it throws on >1 row otherwise).
+     * setMaxResults(1) is paired with getOneOrNullResult() even though the
+     * WHERE is on the primary key -- getOneOrNullResult() throws if more
+     * than one row matches.
      *
      * @return ?array{path: string, file: string, md5sum: ?string, width: ?int, height: ?int, filesize: ?int}
      */
@@ -1183,23 +1065,8 @@ final class ImageRepository extends EntityRepository
      * Whether at least one image has $value in $column -- Ws\PwgImages::
      * add()'s own upload-time uniqueness check ($column is one of
      * `md5sum`/`file`, selected from CurrentConfig::uniquenessMode(),
-     * never caller-controlled).
-     *
-     * SQL-modernization audit / [SEC-20]: replaces the former
-     * existsWithCondition(string $condition), which took an
-     * already-quote-wrapped `"{$column} = '{$value}'"` fragment built by
-     * the caller -- a real SQL injection, since $value there was
-     * `Ws\PwgImages::add()`'s own `$params['original_sum']`/
-     * `original_filename`, both registered with zero WS-level type
-     * constraints (same root cause as findIdsByMd5sum()'s own [SEC-20]
-     * fix above). The docblock's own former "not user input" claim was
-     * wrong: only the *column choice* came from CurrentConfig, the value
-     * itself was always raw client input. Fixed by taking the column and
-     * value as separate parameters and binding the value.
-     *
-     * Item 15 audit: converted to real DQL -- $column is now
-     * {@see ImageUniquenessColumn}, a fixed compile-time-safe property
-     * path instead of a runtime column-name string.
+     * never caller-controlled; $value is always raw, untrusted client
+     * input and must be bound as a parameter, never spliced into SQL).
      */
     public function existsWithColumnValue(ImageUniquenessColumn $column, string $value): bool
     {
@@ -1220,10 +1087,6 @@ final class ImageRepository extends EntityRepository
         return is_numeric($result) && (int) $result > 0;
     }
 
-    /**
-     * Item 14 DQL audit: converted to real DQL -- single-table, no
-     * WHERE.
-     */
     public function countAllImages(): int
     {
         return (int) $this->createQueryBuilder('i')
@@ -1236,11 +1099,6 @@ final class ImageRepository extends EntityRepository
      * Total `filesize` across every image -- Admin\InstallationStats's own
      * "disk_usage" summary figure (original photos only; format-file disk
      * usage is a separate figure, see {@see countAndSumFormats()}).
-     */
-    /**
-     * Item 14 DQL audit: converted to real DQL -- SUM() is a standard
-     * DQL aggregate function (unlike the MySQL-specific ones this audit
-     * leaves alone), single-table, no WHERE.
      */
     public function sumFilesize(): int
     {
@@ -1256,10 +1114,6 @@ final class ImageRepository extends EntityRepository
      * Row count and total `filesize` across every generated format file --
      * Admin\InstallationStats's own "nb_formats"/"formats_disk_usage"
      * summary figures.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table (this
-     * repository's own {@see ImageFormatEntity}), no WHERE, both
-     * aggregates in one round trip via getSingleResult().
      *
      * @return array{count: int, sum: int}
      */
@@ -1290,9 +1144,6 @@ final class ImageRepository extends EntityRepository
      * formatsSearchImage()'s own "build a filename-without-extension index
      * of every photo" scan.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, no
-     * WHERE.
-     *
      * @return list<array{id: int, file: string}>
      */
     public function findAllIdsAndFiles(): array
@@ -1316,9 +1167,6 @@ final class ImageRepository extends EntityRepository
      * Every image_format row's image_id/ext (unfiltered) -- Ws\PwgImages::
      * formatsSearchImage()'s own "which formats already exist per image"
      * scan.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table (this
-     * repository's own {@see ImageFormatEntity}), no WHERE.
      *
      * @return list<array{image_id: int, ext: string}>
      */
@@ -1348,10 +1196,6 @@ final class ImageRepository extends EntityRepository
      * Earliest `date_available` among every image -- Admin\
      * InstallationStats::getInstallationDate()'s own last-resort
      * installation-date candidate.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table, ORDER
-     * BY + LIMIT DQL expresses directly; setMaxResults(1) paired with
-     * getOneOrNullResult() per the audit's own gotcha #3.
      */
     public function findEarliestDateAvailable(): ?string
     {
@@ -1371,11 +1215,6 @@ final class ImageRepository extends EntityRepository
         return is_string($dateAvailable) ? $dateAvailable : null;
     }
 
-    /**
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
-     * no WHERE.
-     */
     public function countImagesInCategories(): int
     {
         $count = $this->getEntityManager()
@@ -1393,10 +1232,6 @@ final class ImageRepository extends EntityRepository
      * images -- a different figure from {@see countImagesInCategories()}
      * above) -- Ws\PwgCore::getInfos()'s own "nb_image_category" summary
      * figure.
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
-     * no WHERE.
      */
     public function countImageCategoryLinks(): int
     {
@@ -1417,10 +1252,6 @@ final class ImageRepository extends EntityRepository
      * first-inserted image's own date, by id; this one is the minimum
      * date value regardless of which image it belongs to).
      */
-    /**
-     * Item 14 DQL audit: converted to real DQL -- MIN() is a standard
-     * DQL aggregate function, single-table, no WHERE.
-     */
     public function findMinDateAvailable(): ?string
     {
         $value = $this->createQueryBuilder('i')
@@ -1436,11 +1267,6 @@ final class ImageRepository extends EntityRepository
      * Ws\PwgCore::getMissingDerivatives()'s own pagination-cursor
      * bootstrap (same MAX(id)+1 shape as {@see findNextId()} above, plus
      * COUNT(*) for the "nothing to do" early exit).
-     *
-     * Item 14 DQL audit: converted to real DQL -- MAX()/COUNT() are
-     * standard DQL aggregate functions, and DQL allows plain arithmetic
-     * on an aggregate result (`MAX(i.id) + 1`), single-table, no WHERE,
-     * both aggregates in one round trip via getSingleResult().
      *
      * @return array{nextId: int, count: int}
      */
@@ -1465,17 +1291,12 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Further SQL-modernization audit, Item 13: one page of images with id
-     * below $startId, matching $criteria -- Ws\PwgCore::
-     * getMissingDerivatives()'s own cursor-paginated scan, one real
-     * caller.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C3: converted to real
-     * DQL -- $criteria->filterCriteria is now a typed
-     * {@see \Piwigo\Image\ImageFilterCriteria} (see that class's own
-     * docblock for why this was previously a permanent-looking blocker),
-     * applied here via {@see applyImageFilterCriteria()} against this
-     * method's own `i` alias.
+     * One page of images with id below $startId, matching $criteria --
+     * Ws\PwgCore::getMissingDerivatives()'s own cursor-paginated scan, one
+     * real caller. $criteria->filterCriteria is a typed
+     * {@see \Piwigo\Image\ImageFilterCriteria}, applied here via
+     * {@see applyImageFilterCriteria()} against this method's own `i`
+     * alias.
      *
      * @return list<array{id: mixed, path: mixed, representative_ext: mixed, width: mixed, height: mixed, rotation: mixed}>
      */
@@ -1561,19 +1382,18 @@ final class ImageRepository extends EntityRepository
             $qb->andWhere($alias . '.dateCreation < :filterMaxDateCreated')
                 ->setParameter('filterMaxDateCreated', $criteria->maxDateCreated);
         }
-        // pgsql support pass: real bug found live -- width/height are
-        // plain integer columns, and while MySQL's `/` operator always
-        // computes in decimal context, PostgreSQL's `/` on two integer
-        // operands truncates to an integer (same real bug already fixed
-        // in SearchService's and FilterResolver's own ratio filters --
-        // see SearchService's own docblock for the live-confirmed
+        // width/height are plain integer columns, and while MySQL's `/`
+        // operator always computes in decimal context, PostgreSQL's `/`
+        // on two integer operands truncates to an integer (same fix
+        // applied in SearchService's and FilterResolver's own ratio
+        // filters -- see SearchService's own docblock for a worked
         // 200/150 example). `width * 1.0` forces decimal-context
         // arithmetic on both platforms without needing a DQL CAST.
         // NULLIF(height, 0) additionally guards a genuinely zero height
         // (a real, if degenerate, row) -- MySQL's `/` silently returns
-        // NULL for a zero divisor, but Postgres raises a real "division
-        // by zero" error instead, confirmed live via SearchService's own
-        // identical ratio-bucket clause.
+        // NULL for a zero divisor, but Postgres raises a "division by
+        // zero" error instead, same as SearchService's own identical
+        // ratio-bucket clause.
         if ($criteria->minRatio !== null) {
             $qb->andWhere($alias . '.width * 1.0 / NULLIF(' . $alias . '.height, 0) >= :filterMinRatio')
                 ->setParameter('filterMinRatio', $criteria->minRatio);
@@ -1592,13 +1412,6 @@ final class ImageRepository extends EntityRepository
      * id/label(computed)/filesize/file/path/representative_ext for
      * $imageIds -- Ws\PwgCore::historySearch()'s own thumbnail/label
      * enrichment step, keyed by id.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE id IN (...). MySQL's `IF(name IS NULL, file, name)` is
-     * rewritten as its exact DQL equivalent `COALESCE(name, file)`
-     * (COALESCE returns the first non-null argument, which for two
-     * arguments is exactly this IF()'s own null-check-and-fallback
-     * shape) -- COALESCE is a standard DQL function, unlike IF() itself.
      *
      * @param  list<int|string>  $imageIds
      * @return array<int|string, array<string, mixed>>
@@ -1636,10 +1449,6 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `lounge` is now mapped
-     * ({@see LoungeEntity}). Converted to real DQL -- single-table, no
-     * WHERE.
-     *
      * @return list<int>
      */
     public function findLoungedImageIds(): array
@@ -1656,10 +1465,6 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- LEFT JOIN
-     * into this repository's own entity.
-     *
      * @param list<int> $loungedIds
      * @return list<int>
      */
@@ -1733,13 +1538,10 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE id IN (...). Fetches full {@see ImageEntity} objects (plain
-     * object hydration, the original's own `SELECT *`) and reuses
+     * Fetches full {@see ImageEntity} objects and reuses
      * {@see \Piwigo\Image\Projection\Image::fromEntity()} rather than
-     * fromRow() -- no custom Doctrine Type is in play here (every
-     * ImageEntity column is a plain scalar type), so this is a direct
-     * swap, not a Gotcha #1 situation.
+     * fromRow() -- every `ImageEntity` column is a plain scalar type, no
+     * custom Doctrine Type involved.
      *
      * @param  list<int|string>  $ids
      * @return array<int, Image> keyed by image id -- PHP canonicalises a
@@ -1769,9 +1571,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk multi-row
-     * INSERT via BatchWriter, not ORM persist()/flush(); `lounge` also
-     * has no mapped Entity anywhere in this codebase.
+     * Bulk multi-row INSERT via BatchWriter, not ORM persist()/flush().
      *
      * @param  list<array{image_id: int|string, category_id: int|string}>  $inserts
      */
@@ -1791,11 +1591,8 @@ final class ImageRepository extends EntityRepository
      * $rank is optional per row -- Controller\Admin\SiteUpdateSubController's
      * own filesystem-sync insert omits it entirely (leaves it to the
      * schema's own DEFAULT), unlike ImageService::associateImagesToCategories()'s
-     * own caller which always supplies it.
-     *
-     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk multi-row
-     * INSERT via BatchWriter, not ORM persist()/flush(); `image_category`
-     * also has no mapped Entity anywhere in this codebase.
+     * own caller which always supplies it. Bulk multi-row INSERT via
+     * BatchWriter, not ORM persist()/flush().
      *
      * @param  list<array{image_id: int|string, category_id: int|string, rank?: int|string}>  $inserts
      */
@@ -1812,9 +1609,6 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk per-row
-     * UPDATE via BatchWriter, not ORM persist()/flush().
-     *
      * @param  list<array{id: int|string, md5sum: string}>  $updates
      */
     public function massUpdateMd5sums(array $updates): void
@@ -1846,9 +1640,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk per-row
-     * UPDATE via BatchWriter, not ORM persist()/flush(); `image_category`
-     * also has no mapped Entity anywhere in this codebase.
+     * Bulk per-row UPDATE via BatchWriter, not ORM persist()/flush().
      *
      * @param  list<array{category_id: int|string, image_id: int|string, rank: int}>  $datas
      */
@@ -1876,12 +1668,9 @@ final class ImageRepository extends EntityRepository
      * list) since the caller's own `array_column(..., 'id', 'id')`
      * membership-set idiom is preserved unchanged at the call site.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- inner join
-     * into this repository's own {@see ImageEntity}; per the audit's own
-     * gotcha #1, the selected `ic.categoryId` hydrates as a real
-     * {@see CategoryId} under array hydration, so it's unwrapped rather
-     * than treated as a raw int.
+     * The selected `ic.categoryId` hydrates as a real {@see CategoryId}
+     * under array hydration, so it's unwrapped below rather than treated
+     * as a raw int.
      *
      * @param array<array-key, int|string|float|bool> $imageIds
      * @return list<array<string, mixed>>
@@ -1921,10 +1710,6 @@ final class ImageRepository extends EntityRepository
      * into {@see \Piwigo\Image\SrcImage}'s own constructor, which already
      * narrows each key itself.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- inner join
-     * against this repository's own entity.
-     *
      * @return list<array<string, mixed>>
      */
     public function findThumbnailRowsForCategoryOrderedByRank(int $categoryId): array
@@ -1963,10 +1748,6 @@ final class ImageRepository extends EntityRepository
      * Ws\PwgImages::setRank()'s own multi-image "return the new order"
      * response.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
-     * static WHERE + ORDER BY.
-     *
      * @return list<int|string>
      */
     public function findImageIdsOrderedByRankForCategory(int $categoryId): array
@@ -1988,10 +1769,6 @@ final class ImageRepository extends EntityRepository
     /**
      * Whether $imageId is associated to $categoryId -- Ws\PwgImages::
      * setRank()'s own "is this image even in that category" guard.
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
-     * static WHERE.
      */
     public function isImageInCategory(int $imageId, int $categoryId): bool
     {
@@ -2015,11 +1792,9 @@ final class ImageRepository extends EntityRepository
      * Ws\PwgImages::setRank()'s own "what's the current max rank" lookup.
      * Returns null when no image in this category has a rank set yet.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
-     * static WHERE; a bare aggregate with no GROUP BY always returns
-     * exactly one row (NULL when nothing matches), so getSingleScalarResult()
-     * never throws here.
+     * A bare aggregate with no GROUP BY always returns exactly one row
+     * (NULL when nothing matches), so getSingleScalarResult() never
+     * throws here.
      */
     public function findMaxRankForCategory(int $categoryId): ?int
     {
@@ -2038,13 +1813,7 @@ final class ImageRepository extends EntityRepository
     /**
      * Bumps `rank` by 1 for every image in $categoryId whose rank is >=
      * $rank -- Ws\PwgImages::setRank()'s own "make room" step before
-     * inserting a new rank value. `image_category` isn't ORM-mapped, so
-     * no caller-side EntityManager::clear() is needed after this write.
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table
-     * bulk UPDATE; DQL's UPDATE SET clause supports the `ic.rank + 1`
-     * self-referential arithmetic directly.
+     * inserting a new rank value.
      */
     public function incrementRanksFromForCategory(int $categoryId, int $rank): void
     {
@@ -2064,10 +1833,6 @@ final class ImageRepository extends EntityRepository
     /**
      * Sets `rank` for one (imageId, categoryId) image_category row --
      * Ws\PwgImages::setRank()'s own final write.
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-row
-     * UPDATE on the composite primary key.
      */
     public function updateRankForImageInCategory(int $imageId, int $categoryId, int $rank): void
     {
@@ -2089,15 +1854,8 @@ final class ImageRepository extends EntityRepository
      * placed into -- Admin\PhotosAddDirectPageRenderer's own "default the
      * upload form to whichever album the last photo went into" lookup.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- joins this
-     * repository's own {@see ImageEntity} plus the cross-domain
-     * {@see \Piwigo\Category\CategoryEntity} (same L2aCoreDomain layer,
-     * see this repository's own header docblock and
-     * {@see ImageCategoryEntity}'s own docblock on that boundary).
-     * setMaxResults(1) is paired with getOneOrNullResult() per the
-     * audit's own gotcha #3. Per gotcha #1, the selected `ic.categoryId`
-     * hydrates as a real {@see CategoryId} under array hydration.
+     * The selected `ic.categoryId` hydrates as a real {@see CategoryId}
+     * under array hydration.
      *
      * @return array{category_id: int|string, uppercats: string}|null
      */
@@ -2133,9 +1891,6 @@ final class ImageRepository extends EntityRepository
      * -- Controller\Admin\BatchManagerSubController's own dimension-filter
      * option aggregation.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, `SELECT DISTINCT` DQL expresses directly.
-     *
      * @return list<array<string, mixed>>
      */
     public function findDistinctDimensions(): array
@@ -2162,9 +1917,6 @@ final class ImageRepository extends EntityRepository
      * Every distinct filesize among images that have one set --
      * Controller\Admin\BatchManagerSubController's own filesize-filter
      * option aggregation.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE + GROUP BY on a real column (not an alias).
      *
      * @return list<array<string, mixed>>
      */
@@ -2197,16 +1949,8 @@ final class ImageRepository extends EntityRepository
      * this extraction should re-litigate. $categoryId non-null additionally
      * joins imageCategory and restricts to that category.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}), but stays on DBAL regardless --
-     * $orderBySql is a caller-composed raw SQL fragment spliced directly
-     * into the query, which DQL has no way to embed.
-     *
-     * Item 15 audit, re-verified: this plan's own text speculated
-     * $orderBySql "likely shares tokens with PhotoSortField or needs its
-     * own small enum" -- wrong once traced to its real source
-     * (`CurrentConfig::orderBy()`, free-form admin-configurable text, not
-     * a bounded token set). No enum conversion here.
+     * Stays on DBAL -- $orderBySql is a caller-composed raw SQL fragment
+     * spliced directly into the query, which DQL has no way to embed.
      *
      * @param array<array-key, int|string|float|bool> $imageIds
      * @return list<array<string, mixed>>
@@ -2267,9 +2011,6 @@ final class ImageRepository extends EntityRepository
      * id + date_creation for $imageIds -- Admin\BatchManagerUnitPageRenderer's
      * own per-image form-submission save loop.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE id IN (...).
-     *
      * @param array<array-key, int|string> $imageIds
      * @return list<array<string, mixed>>
      */
@@ -2299,14 +2040,8 @@ final class ImageRepository extends EntityRepository
      * own per-image inline-edit grid needs far more columns than the
      * global-mode thumbnail grid does.
      *
-     * Item 14 DQL audit, re-corrected: same reasons as
-     * findBatchManagerThumbnails() above -- `image_category` is now
-     * mapped ({@see ImageCategoryEntity}), but $orderBySql is a
-     * caller-composed raw fragment DQL has no way to embed.
-     *
-     * Item 15 audit, re-verified: same "genuinely open-ended, not a small
-     * token set" re-check as findBatchManagerThumbnails() above -- no
-     * enum conversion here either.
+     * Stays on DBAL -- $orderBySql is a caller-composed raw fragment DQL
+     * has no way to embed.
      *
      * @param array<array-key, int|string|float|bool> $imageIds
      * @return list<array<string, mixed>>
@@ -2368,11 +2103,7 @@ final class ImageRepository extends EntityRepository
      * and dir -- Admin\BatchManagerUnitPageRenderer's own per-image
      * "related albums" display.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- joins the
-     * cross-domain {@see \Piwigo\Category\CategoryEntity} (same
-     * L2aCoreDomain layer). Per the audit's own gotcha #1, the aliased
-     * `ic.categoryId AS category_id` still hydrates as a real
+     * The aliased `ic.categoryId AS category_id` still hydrates as a real
      * {@see CategoryId} under array hydration despite the alias, so it's
      * unwrapped explicitly to preserve this method's own `int|string`
      * array-shape contract.
@@ -2414,14 +2145,12 @@ final class ImageRepository extends EntityRepository
      * check, a separate query from findCategoryLinksForImage() above (same
      * image_id, no uppercats/dir needed here).
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
-     * static WHERE. Per the audit's own gotcha #4, `getSingleColumnResult()`
-     * uses `HYDRATE_SCALAR_COLUMN`, which does NOT apply the `category_id`
-     * custom Type -- the selected `ic.categoryId` comes back as a raw
-     * scalar here, exactly what this method's own `list<int>` contract
-     * wants, so no VO-unwrap is needed (unlike the array/object-hydrated
-     * conversions elsewhere in this file).
+     * `getSingleColumnResult()` uses `HYDRATE_SCALAR_COLUMN`, which does
+     * NOT apply the `category_id` custom Type -- the selected
+     * `ic.categoryId` comes back as a raw scalar here, exactly what this
+     * method's own `list<int>` contract wants, so no VO-unwrap is needed
+     * (unlike the array/object-hydrated conversions elsewhere in this
+     * file).
      *
      * @return list<int>
      */
@@ -2444,11 +2173,8 @@ final class ImageRepository extends EntityRepository
      * Ids of images uploaded before the 2022-12-08 issue-1827 fix, under
      * `./upload/`, capped at $limit -- Admin\Maintenance\
      * FilesystemIntegrityChecker::fsQuickCheck()'s own sampling pool for
-     * that historical bug, merged with findImageIdsSample()'s general
-     * random pool before the actual file_exists() check.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE (the date/path literals are fixed, not caller-controlled).
+     * that issue, merged with findImageIdsSample()'s general random pool
+     * before the actual file_exists() check.
      *
      * @return list<int>
      */
@@ -2471,9 +2197,6 @@ final class ImageRepository extends EntityRepository
      * happens to return them -- FilesystemIntegrityChecker::fsQuickCheck()'s
      * own general sampling pool (the caller shuffles and slices further).
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, no
-     * WHERE.
-     *
      * @return list<int>
      */
     public function findImageIdsSample(int $limit): array
@@ -2492,9 +2215,6 @@ final class ImageRepository extends EntityRepository
      * Every path sharing its value with at least one other image row --
      * FilesystemIntegrityChecker::fsQuickCheck()'s own duplicate-path
      * detection (only the count matters to the caller).
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table,
-     * GROUP BY/HAVING on a real column DQL expresses directly.
      *
      * @return list<string>
      */
@@ -2515,10 +2235,6 @@ final class ImageRepository extends EntityRepository
      * Image ids referenced by `image_category` with no matching row in
      * `images` at all -- FilesystemIntegrityChecker::imagesIntegrity()'s
      * own orphaned-link detection.
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- LEFT JOIN
-     * FROM it into this repository's own {@see ImageEntity}.
      *
      * @return list<int>
      */
@@ -2543,10 +2259,6 @@ final class ImageRepository extends EntityRepository
      * orphaned-link cleanup, unlike deleteImageCategoryLinks() above which
      * is scoped to one category.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table
-     * bulk DELETE.
-     *
      * @param list<int> $imageIds
      */
     public function deleteImageCategoryRowsForImageIds(array $imageIds): void
@@ -2566,27 +2278,14 @@ final class ImageRepository extends EntityRepository
 
     /**
      * id/file/level for $imageId (when positive) or the first image whose
-     * file matches $imageFile (a `LIKE` pattern, `_`/`%` already escaped by
-     * the caller) -- Controller\PictureController's own "resolve the
-     * requested picture, by id or by filename" lookup.
-     *
-     * SQL-modernization audit / [SEC-20]: $imageFile used to splice raw
-     * into the query -- a real, guest-reachable SQL injection. Traced to
-     * its real source: Section\SectionInitializer::parseUrl() captures it
-     * via `preg_match('/^(\d+-)?(.*)?$/', $token, ...)`, an unrestricted
-     * capture of a raw picture.php URL path segment, and
-     * Controller\PictureController's own "already escaped by the caller"
-     * claim only neutralizes LIKE's `_`/`%` wildcards (`str_replace(['_',
-     * '%'], ['/_', '/%'], ...)`), not SQL quote characters -- a filename
-     * containing a literal `'` reached this method's raw SQL untouched.
-     * Fixed as a bound parameter.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table, the
-     * branch picks between two static WHERE shapes (not a caller-
-     * supplied fragment), both DQL expresses directly. `id` is the
-     * primary key, so that branch can never match >1 row; the LIKE
-     * branch's own setMaxResults(1) is paired with getOneOrNullResult()
-     * per the audit's own gotcha #3 either way.
+     * file matches $imageFile (a `LIKE` pattern) -- Controller\
+     * PictureController's own "resolve the requested picture, by id or by
+     * filename" lookup. $imageFile is guest-reachable, untrusted input
+     * (Section\SectionInitializer::parseUrl() captures it from a raw
+     * picture.php URL path segment); the caller's own `_`/`%` escaping
+     * only neutralizes LIKE wildcards, not SQL quote characters, so
+     * $imageFile must always be bound as a parameter here, never spliced
+     * into the query.
      *
      * @return array<string, mixed>|false
      */
@@ -2623,10 +2322,6 @@ final class ImageRepository extends EntityRepository
      * Ids of images already at $filename within $categoryId -- Ws\
      * PwgImages::upload()'s own "update_mode" replace-existing lookup.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- inner join
-     * against this repository's own entity.
-     *
      * @return list<int>
      */
     public function findIdsByFilenameInCategory(string $filename, int $categoryId): array
@@ -2649,10 +2344,6 @@ final class ImageRepository extends EntityRepository
      * `path` for $imageId, or null if it doesn't exist -- Ws\PwgImages::
      * checkFiles()'s own "does the client's local file match ours" lookup.
      */
-    /**
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE on the primary key.
-     */
     public function findPathById(int $imageId): ?string
     {
         $row = $this->createQueryBuilder('i')
@@ -2669,9 +2360,6 @@ final class ImageRepository extends EntityRepository
      * id/name/representative_ext/path for $imageId -- Ws\PwgImages::
      * upload()'s own "what does the just-uploaded/replaced photo look
      * like" lookup, used to build the response's thumbnail URLs.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE on the primary key.
      *
      * @return ?array{id: int, name: ?string, representative_ext: ?string, path: string}
      */
@@ -2699,10 +2387,6 @@ final class ImageRepository extends EntityRepository
     /**
      * Number of images linked to $categoryId -- Ws\PwgImages::upload()'s
      * own "how many photos are now in this category" response field.
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
-     * static WHERE.
      */
     public function countImagesInCategory(int $categoryId): int
     {
@@ -2722,23 +2406,12 @@ final class ImageRepository extends EntityRepository
      * Whether $imageId is reachable via at least one category satisfying
      * $criteria -- Controller\PictureController's own "can this image
      * still be accessed differently" fallback check, and Ws\PwgImages::
-     * rate()'s own accessibility gate.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- both real callers traced directly
-     * (their own surrounding code, not just their own
-     * `getSqlConditionFandFAsCondition()` field list): PictureController's
-     * caller omitted the old `forbidden_images => 'id'` field, but only
-     * because it had already independently confirmed `$row['level'] <=
-     * $user_level` a few lines above for this exact same image -- applying
-     * $criteria->maxLevel here unconditionally re-confirms the same
-     * already-true fact for that caller (a harmless redundant check, not a
-     * behavior change) while correctly gating Ws\PwgImages::rate()'s own
-     * caller, which never performed that check itself.
-     *
-     * Item 15 audit: converted to real DQL -- both `images`/`image_category`
-     * are mapped, and {@see PermissionCriteria}'s fragments needed no
-     * changes (see {@see applyCondition()}'s own docblock).
+     * rate()'s own accessibility gate. Applying $criteria->maxLevel here
+     * is a harmless redundant check for PictureController's own caller
+     * (which already independently confirms `$row['level'] <=
+     * $user_level` a few lines above for this exact same image), while
+     * correctly gating Ws\PwgImages::rate()'s own caller, which performs
+     * no such check itself.
      */
     public function isImageAccessibleWithCondition(int $imageId, PermissionCriteria $criteria): bool
     {
@@ -2763,29 +2436,19 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Every column of $imageId's own row, if it satisfies $criteria --
-     * Ws\PwgImages::getInfo()'s own image lookup.
+     * Ws\PwgImages::getInfo()'s own image lookup. Both
+     * $criteria->visibleImageIds and $criteria->maxLevel apply here (not
+     * visibleImageIds alone).
      *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller passed only
-     * `visible_images => 'id'` to the old `getSqlConditionFandFAsCondition()`,
-     * but that method's own `visible_images` case falls through into
-     * `forbidden_images` with no `break` (see its own docblock/that
-     * method's body) -- with fieldName `'id'`, this also applies the
-     * images-table's own `level <= x` check, so both visibleImageIds and
-     * maxLevel apply here, not visibleImageIds alone.
-     *
-     * Item 15 audit: stays on DBAL despite {@see PermissionCriteria} no
-     * longer being a blocker (see {@see applyCondition()}'s own
-     * docblock) -- the real remaining blocker is `SELECT *` itself: this
-     * row is {@see \Piwigo\Ws\PwgImages::getInfo()}'s own public WS
-     * response shape, read/re-emitted with its raw snake_case column
-     * names (`$image_row['rating_score']`, etc.) as real external API
-     * contract. DQL always hydrates through the entity's own (camelCase)
-     * property names, never the raw column name -- reproducing the exact
-     * original row shape would mean hand-mapping every one of
-     * `ImageEntity`'s ~25 properties back to its raw column name, real
-     * effort for no real gain on a query that's already fully bound,
-     * injection-safe DBAL.
+     * Stays on DBAL -- the blocker is `SELECT *` itself: this row is
+     * {@see \Piwigo\Ws\PwgImages::getInfo()}'s own public WS response
+     * shape, read/re-emitted with its raw snake_case column names
+     * (`$image_row['rating_score']`, etc.) as real external API contract.
+     * DQL always hydrates through the entity's own (camelCase) property
+     * names, never the raw column name -- reproducing the exact original
+     * row shape would mean hand-mapping every one of `ImageEntity`'s ~25
+     * properties back to its raw column name, real effort for no real
+     * gain on a query that's already fully bound, injection-safe DBAL.
      *
      * @return ?array<string, mixed>
      */
@@ -2818,16 +2481,7 @@ final class ImageRepository extends EntityRepository
      * unlike findVisibleCategoriesForImage() below) -- Ws\PwgImages::
      * getInfo()'s own "related categories" block.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller only ever applies
-     * $criteria->forbiddenCategoryIds, against `ic.category_id`.
-     *
-     * Item 15 audit: converted to real DQL -- unlike
-     * {@see findRowWithCondition()}, this selects a fixed, hand-picked
-     * column set (not `SELECT *`), so mapping each one back to its raw
-     * row key is a small, bounded rename rather than an open-ended
-     * `ImageEntity`-wide serializer. `commentable` hydrates as a real
-     * `bool` now (was a raw DBAL int before) -- confirmed safe: the one
+     * `commentable` hydrates as a real `bool` -- safe because the one
      * real caller ({@see \Piwigo\Ws\PwgImages::getInfo()}) already
      * `(bool)`-casts it and `unset()`s the key immediately after, before
      * the row ever reaches its own JSON response.
@@ -2868,21 +2522,9 @@ final class ImageRepository extends EntityRepository
     /**
      * Whether $imageId belongs to at least one commentable category
      * satisfying $criteria -- Ws\PwgImages::addComment()'s own "can this
-     * image receive a comment" check.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller applies
-     * forbiddenCategoryIds/visibleCategoryIds against `c.id`. It also
-     * passed `visible_images => 'image_id'` to the old
-     * `getSqlConditionFandFAsCondition()`, whose own `visible_images` case
-     * falls through into `forbidden_images` with no `break` -- with
-     * fieldName `'image_id'` (not `'id'`/`'i.id'`), that's the
-     * `image_access_list` branch, not the level check, so
-     * visibleImageIds/imageAccessIds both apply against `ic.image_id`.
-     *
-     * Item 15 audit: converted to real DQL -- {@see PermissionCriteria}'s
-     * fragments needed no changes (see {@see applyCondition()}'s own
-     * docblock).
+     * image receive a comment" check. $criteria->visibleImageIds and
+     * $criteria->imageAccessIds both apply here, against `ic.imageId`
+     * (not maxLevel).
      */
     public function isImageCommentableWithCondition(int $imageId, PermissionCriteria $criteria): bool
     {
@@ -2914,13 +2556,8 @@ final class ImageRepository extends EntityRepository
      * PictureController's own "related categories" block, ordered by
      * CategoryService::compareByGlobalRank() afterwards (not here).
      *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller applies
-     * forbiddenCategoryIds/visibleCategoryIds against `c.id`.
-     *
-     * Item 15 audit: converted to real DQL. `commentable`/`visible`
-     * hydrate as real `bool` now (were raw DBAL ints before) -- confirmed
-     * safe: {@see \Piwigo\Picture\PictureCommentRenderer::render()}'s own
+     * `commentable`/`visible` hydrate as real `bool` -- safe because
+     * {@see \Piwigo\Picture\PictureCommentRenderer::render()}'s own
      * `commentable` read already `(bool)`-casts it, and `visible` has no
      * strict-typed reader in either real consumer
      * ({@see \Piwigo\Controller\PictureController}/
@@ -2970,11 +2607,6 @@ final class ImageRepository extends EntityRepository
      * findCategoryIdsForImage() above (that one has no join, so it can
      * include ids for categories that no longer exist).
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- joins the
-     * cross-domain {@see \Piwigo\Category\CategoryEntity} (same
-     * L2aCoreDomain layer).
-     *
      * @return list<int>
      */
     public function findAssociatedCategoryIds(int $imageId): array
@@ -2995,19 +2627,10 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Ids of every image with $md5sum -- Admin\Upload\UploadService's own
-     * upload-time duplicate detection.
-     *
-     * SQL-modernization audit / [SEC-20]: $md5sum used to splice raw into
-     * the query -- a real SQL injection. Traced to its real source:
-     * Ws\PwgImages::add()'s own `$params['original_sum']`, registered
-     * with zero WS-level type constraints (`'original_sum' => []` in
-     * WsDefaultMethods.php, unlike e.g. `level`'s
-     * `WsParamType::INT|POSITIVE`) -- a fully free-form,
-     * caller-controlled string, despite its "md5sum" name. Fixed as a
-     * bound parameter.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE.
+     * upload-time duplicate detection. $md5sum is a fully free-form,
+     * caller-controlled string despite its name (registered with zero
+     * WS-level type constraints in WsDefaultMethods.php) and must be
+     * bound as a parameter, never spliced into the query.
      *
      * @return list<int>
      */
@@ -3027,12 +2650,7 @@ final class ImageRepository extends EntityRepository
     /**
      * id keyed by md5sum, for a batch of md5sums -- Ws\PwgImages::exist()'s
      * own bulk "which of these already-uploaded checksums exist" check.
-     * Parameter-bound (unlike the original's raw string interpolation of
-     * client-supplied md5sum values -- an injection risk fixed as part of
-     * this migration).
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE md5sum IN (...).
+     * $md5sums are client-supplied and parameter-bound.
      *
      * @param list<string> $md5sums
      * @return array<string, int>
@@ -3063,10 +2681,7 @@ final class ImageRepository extends EntityRepository
     /**
      * id keyed by filename, for a batch of filenames -- Ws\PwgImages::
      * exist()'s own bulk "which of these filenames already exist" check.
-     * Parameter-bound, same injection-risk fix as findIdsByMd5sums() above.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE file IN (...).
+     * $filenames are client-supplied and parameter-bound.
      *
      * @param list<string> $filenames
      * @return array<string, int>
@@ -3098,13 +2713,10 @@ final class ImageRepository extends EntityRepository
      * The format_id of $imageId's existing format row for $ext, if any --
      * Admin\Upload\UploadService's own "update an existing format vs
      * insert a new one" check.
-     */
-    /**
-     * Item 14 DQL audit: converted to real DQL -- single-table (this
-     * repository's own {@see ImageFormatEntity}), static WHERE;
-     * setMaxResults(1) paired with getOneOrNullResult() per the audit's
-     * own gotcha #3 (the original had no unique constraint on
-     * (image_id, ext) to rely on).
+     *
+     * There's no unique constraint on (image_id, ext), so more than one
+     * row could in principle match; setMaxResults(1) is paired with
+     * getOneOrNullResult() to avoid a throw in that case.
      */
     public function findFormatIdByImageAndExt(int $imageId, string $ext): ?int
     {
@@ -3127,19 +2739,9 @@ final class ImageRepository extends EntityRepository
      * Whether at least one accessible image (satisfying $criteria) has a
      * non-null author -- Controller\SearchController's own "does this
      * gallery even have authors, for this user" check.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller applies
-     * forbiddenCategoryIds/visibleCategoryIds against `ic.category_id` and
-     * visibleImageIds against `i.id`. It also passed `visible_images =>
-     * 'id'` to the old `getSqlConditionFandFAsCondition()`, whose own
-     * `visible_images` case falls through into `forbidden_images` with no
-     * `break` -- with fieldName `'id'`, that's the images-table's own
-     * `level <= x` check, so maxLevel applies here too, against `i.level`.
-     *
-     * Item 15 audit: converted to real DQL -- {@see PermissionCriteria}'s
-     * fragments needed no changes (see {@see applyCondition()}'s own
-     * docblock).
+     * $criteria->forbiddenCategoryIds/visibleCategoryIds apply against
+     * `ic.categoryId`, visibleImageIds and maxLevel apply against `i.id`/
+     * `i.level`.
      */
     public function hasAccessibleImageWithAuthor(PermissionCriteria $criteria): bool
     {
@@ -3170,17 +2772,8 @@ final class ImageRepository extends EntityRepository
      * isImageAccessibleWithCondition() above (this one starts from
      * `categories`, joined onto `image_category` by category_id, filtered
      * by image_id -- that one starts from `images`).
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller applies
-     * forbiddenCategoryIds against `ic.category_id` and (the field name it
-     * passed was `image_id`, a foreign-key column, never the images
-     * table's own `id`) imageAccessIds against `ic.image_id`, not
-     * maxLevel.
-     *
-     * Item 15 audit: converted to real DQL -- {@see PermissionCriteria}'s
-     * fragments needed no changes (see {@see applyCondition()}'s own
-     * docblock).
+     * $criteria->forbiddenCategoryIds applies against `ic.categoryId` and
+     * imageAccessIds against `ic.imageId`, not maxLevel.
      */
     public function isImageAccessibleViaCategoryWithCondition(int $imageId, PermissionCriteria $criteria): bool
     {
@@ -3204,35 +2797,27 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Further SQL-modernization audit, Item 13: every column of every
-     * image matching $criteria, joined against `image_category` and
-     * deduplicated by image id -- Ws\PwgCategories::getImages()'s own
-     * paginated listing. $criteria's 3 conditions (filter/category scope/
-     * visible-images permission) are combined internally via
-     * SqlCondition::combine(), replacing the caller-built `list<string>
-     * $whereClauses` this used to take. $orderByClause is still an
+     * Every column of every image matching $criteria, joined against
+     * `image_category` and deduplicated by image id -- Ws\PwgCategories::
+     * getImages()'s own paginated listing. $criteria's 3 conditions
+     * (filter/category scope/visible-images permission) are combined
+     * internally via SqlCondition::combine(). $orderByClause is an
      * already-built, trusted SQL fragment -- same "caller composes
      * trusted ORDER BY text" contract as
      * {@see \Piwigo\Comment\CommentRepository::findForImage()}'s own
      * $order.
      *
-     * Phase 5 Item 19: `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` replaced with
+     * `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` is replaced by
      * `COUNT(*) OVER() AS total_count`, computed in the same query as the
      * row data instead of a second round-trip coupled to connection
      * state -- `GROUP BY i.id` here (not `DISTINCT`), so the window
      * function (evaluated after GROUP BY, before LIMIT/OFFSET) reports
-     * the exact same total the old mechanism did. `total_count` is
-     * stripped back out of each row before returning -- `i.*` never
-     * included it before this change.
+     * the correct total. `total_count` is stripped back out of each row
+     * before returning, since `i.*` doesn't include it.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}), but stays on DBAL regardless --
-     * $criteria->filterCriteria is now a typed
-     * {@see \Piwigo\Image\ImageFilterCriteria} -- translated to a raw
-     * fragment here via its own `toSqlCondition()`, since this method
-     * itself can't become DQL: `i.*` is a whole-row selection DQL can't
-     * express (no fixed property list), and `$orderByClause` is a
-     * caller-composed trusted SQL fragment.
+     * Stays on DBAL -- `i.*` is a whole-row selection DQL can't express
+     * (no fixed property list), and `$orderByClause` is a caller-composed
+     * trusted SQL fragment.
      *
      * @return PaginatedResult<array<string, mixed>>
      */
@@ -3288,10 +2873,6 @@ final class ImageRepository extends EntityRepository
      * Whether an image with this id exists -- Ws\PwgCategories::
      * setRepresentative()'s own existence check.
      */
-    /**
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE on the primary key.
-     */
     public function existsById(int $id): bool
     {
         $value = $this->createQueryBuilder('i')
@@ -3308,9 +2889,6 @@ final class ImageRepository extends EntityRepository
      * Which of $ids are real image ids -- Ws\PwgImages::syncMetadata()'s
      * own "filter the caller's list down to images that actually exist"
      * step.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE id IN (...).
      *
      * @param array<int|string> $ids
      * @return list<int>
@@ -3335,23 +2913,10 @@ final class ImageRepository extends EntityRepository
     /**
      * image_id/category_id link rows for $imageIds matching $condition --
      * Ws\PwgCategories::getImages()'s own "which albums (that the caller
-     * may see) is each returned photo linked to" step.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller only ever applies
-     * forbiddenCategoryIds, against the unqualified `category_id` (single
-     * table, no join, so no alias needed). The old call site's own
-     * `forceOneCondition: true` is a no-op here regardless: an empty
-     * criteria field already produces an empty SqlCondition that
-     * applyCondition() silently skips, the same net effect as adding a
-     * harmless `1 = 1`. $imageIds' own CSV splice also bound.
-     *
-     * Further SQL-modernization audit, Item 15G: converted to real DQL --
-     * {@see ImageCategoryEntity} is mapped and {@see PermissionCriteria}
-     * needs no API changes, same finding as every other consumer in this
-     * file. `categoryId` hydrates as a {@see CategoryId} VO (the entity's
-     * own custom Doctrine type), unwrapped below same as every other
-     * `category_id` read in this codebase.
+     * may see) is each returned photo linked to" step. The one real
+     * caller only ever applies forbiddenCategoryIds, against the
+     * unqualified `category_id`. `categoryId` hydrates as a
+     * {@see CategoryId} VO, unwrapped below.
      *
      * @param  list<int>  $imageIds
      * @return list<array{image_id: int, category_id: int}>
@@ -3390,14 +2955,6 @@ final class ImageRepository extends EntityRepository
      * Next free id -- Controller\Admin\SiteUpdateSubController's own
      * manual-id assignment for directory-synced images (mirrors the
      * retired MysqliDb::nextval()).
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table, no
-     * WHERE. MySQL's `IF(MAX(id)+1 IS NULL, 1, MAX(id)+1)` is rewritten
-     * as its exact DQL equivalent `COALESCE(MAX(id)+1, 1)` (MAX(id)+1 is
-     * null only when the table is empty, in which case COALESCE falls
-     * through to the same literal 1 the original's own IF() branch
-     * returned) -- COALESCE is a standard DQL function, unlike IF()
-     * itself.
      */
     public function findNextId(): int
     {
@@ -3414,9 +2971,6 @@ final class ImageRepository extends EntityRepository
      * $categoryIds -- Controller\Admin\SiteUpdateSubController's own
      * "which files does the DB already know about, for these directory-
      * synced categories" step.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE storage_category_id IN (...).
      *
      * @param  list<int|string>  $categoryIds
      * @return array<int, string> keyed by id
@@ -3456,10 +3010,6 @@ final class ImageRepository extends EntityRepository
      * $categoryIds -- Admin\BatchManager\FilterResolver's own
      * "categories" prefilter.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
-     * static WHERE.
-     *
      * @param list<int> $categoryIds
      * @return list<int>
      */
@@ -3488,12 +3038,6 @@ final class ImageRepository extends EntityRepository
      * unfiltered. Admin\BatchManager\FilterResolver's own
      * "no_virtual_album" prefilter (paired with
      * CategoryRepository::findIdsByDirNull() above).
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- the
-     * non-empty branch's `NOT IN (...)` subquery is expressed as a real
-     * DQL subquery (DQL supports a parenthesized `SELECT ...` inside a
-     * `NOT IN`, same as SQL).
      *
      * @param list<int> $categoryIds
      * @return list<int>
@@ -3533,13 +3077,6 @@ final class ImageRepository extends EntityRepository
      * added one -- Admin\BatchManager\FilterResolver's own "last_import"
      * prefilter. Returns [] when there are no images at all.
      *
-     * Item 14 DQL audit, corrected: the original note claimed
-     * `SqlDialect::getRecentPeriodExpression()`'s own `SUBDATE(...,
-     * INTERVAL ...)` had no DQL equivalent -- wrong, same corrected
-     * `DATE_SUB()` finding as {@see
-     * \Piwigo\Comment\CommentRepository::countRecentComments()}.
-     * Converted to real DQL -- single-table, no join.
-     *
      * @return list<int>
      */
     public function findIdsAddedSameDayAsLatest(): array
@@ -3574,7 +3111,7 @@ final class ImageRepository extends EntityRepository
      * Ids of every image with no linked tag -- Admin\BatchManager\
      * FilterResolver's own "no_tag" prefilter.
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_tag` is entity-mapped
+     * Stays on DBAL -- `image_tag` is entity-mapped
      * ({@see \Piwigo\Tag\ImageTagEntity}), but it's a cross-domain table
      * {@see \Piwigo\Tag\TagRepository} owns, not this repository's own
      * entity; same "cross-domain table stays plain DBAL" boundary this
@@ -3587,9 +3124,8 @@ final class ImageRepository extends EntityRepository
         $imagesTable = Tables::images();
         $imageTagTable = Tables::imageTag();
 
-        // pgsql support pass: real bug found live -- no ORDER BY, so row
-        // order was never guaranteed; MySQL and PostgreSQL return this
-        // exact join's row order differently with none specified.
+        // Row order is otherwise unguaranteed; MySQL and PostgreSQL return
+        // this exact join's row order differently with no ORDER BY.
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
@@ -3605,15 +3141,7 @@ final class ImageRepository extends EntityRepository
      * $fields with at least one other image -- Admin\BatchManager\
      * FilterResolver's own "duplicates" prefilter. GROUP_CONCAT truncates
      * at 1024 chars by default, so a duplicate group larger than ~250 ids
-     * silently loses members -- a pre-existing limitation, not introduced
-     * here.
-     *
-     * Item 15 audit: converted to real DQL -- $fields is now
-     * {@see ImageDuplicateField}[], each case mapping to a fixed
-     * compile-time-safe property path via match(), unblocking the
-     * `groupBy()`/`GROUP_CONCAT()` combination Item 14's own audit had
-     * left on DBAL (the property-path list itself is now always
-     * enum-derived, never a raw caller-supplied column-name list).
+     * silently loses members.
      *
      * @param list<ImageDuplicateField> $fields
      * @return list<int>
@@ -3672,23 +3200,15 @@ final class ImageRepository extends EntityRepository
      * dimension/filesize). Same "caller composes trusted fragments"
      * contract as findWithConditionsPaginated() above: $whereClauses are
      * trusted SQL boolean expressions, $params are the bound values
-     * referenced by any named placeholders inside them.
+     * referenced by any named placeholders inside them. $orderBySql
+     * traces back to {@see \Piwigo\Config\CurrentConfig::orderBy()}/
+     * {@see \Piwigo\Config\CurrentConfig::orderByInsideCategory()} -- an
+     * admin-configurable raw "ORDER BY ..." string with no bounded shape.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation:
-     * $whereClauses turned out to be a genuinely finite set of shapes at
-     * every real caller ({@see \Piwigo\Admin\BatchManager\FilterResolver}'s
-     * own all_photos/level/dimension/filesize prefilters), but
-     * $orderBySql traces back to {@see \Piwigo\Config\CurrentConfig::
-     * orderBy()}/{@see \Piwigo\Config\CurrentConfig::orderByInsideCategory()}
-     * -- an admin-configurable raw "ORDER BY ..." string with no bounded
-     * shape (not one of a small fixed set the way
-     * {@see \Piwigo\Category\CategoryRepository::findActivePermalinksList()}'s
-     * own caller-composed ORDER BY was), matching this plan's own
-     * Context-section note that a real multi-dialect `CurrentConfig::
-     * orderBy()` rewrite is Item 16's territory. DQL requires the whole
-     * query expressible in DQL, not just the WHERE half, so this stays on
-     * DBAL -- $whereClauses and $orderBySql are caller-composed raw SQL
-     * fragments, not DQL property-path expressions.
+     * Stays on DBAL -- DQL requires the whole query expressible in DQL,
+     * not just the WHERE half, and $whereClauses/$orderBySql are
+     * caller-composed raw SQL fragments, not DQL property-path
+     * expressions.
      *
      * @param list<string> $whereClauses
      * @param array<string, int|float|string> $params
@@ -3699,15 +3219,13 @@ final class ImageRepository extends EntityRepository
         $imagesTable = Tables::images();
         $whereSql = $whereClauses === [] ? '' : 'WHERE ' . implode(' AND ', $whereClauses);
 
-        // pgsql support pass: real bugs found live -- (a) an empty
-        // $orderBySql applied no ordering at all, so row order was never
-        // guaranteed (MySQL and PostgreSQL disagreed on it); defaults to
-        // `ORDER BY id` for a deterministic result. (b) $orderBySql
-        // traces back to CurrentConfig::orderBy(), admin-settable raw SQL
-        // text that can legitimately be `ORDER BY RAND()` -- same real
-        // gap already fixed for CategoryRepository's own raw-DBAL
-        // fallback ("function rand() does not exist" against a real
-        // Postgres server otherwise).
+        // An empty $orderBySql defaults to `ORDER BY id` for a
+        // deterministic result across platforms. $orderBySql traces back
+        // to CurrentConfig::orderBy(), admin-settable raw SQL text that
+        // can legitimately be `ORDER BY RAND()` -- rewritten via
+        // SqlDialect::randomFunction() (same handling as
+        // CategoryRepository's own raw-DBAL fallback) since PostgreSQL has
+        // no `RAND()` function.
         $orderBySql = $orderBySql === '' ? 'ORDER BY id' : str_ireplace(
             'RAND()',
             SqlDialect::randomFunction() . '()',
@@ -3736,11 +3254,10 @@ final class ImageRepository extends EntityRepository
      * own recent-content filter computation. Same "caller composes
      * trusted fragments" contract as findWithConditionsPaginated() above.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}), but stays on DBAL regardless --
-     * $recentPeriodExpr is a caller-composed raw SQL date-arithmetic
-     * fragment, spliced directly into the WHERE clause; DQL has no way
-     * to embed an already-built trusted SQL fragment like this one.
+     * Stays on DBAL -- $recentPeriodExpr is a caller-composed raw SQL
+     * date-arithmetic fragment, spliced directly into the WHERE clause;
+     * DQL has no way to embed an already-built trusted SQL fragment like
+     * this one.
      *
      * @return list<int>
      */
@@ -3777,10 +3294,6 @@ final class ImageRepository extends EntityRepository
      * PiwigoInfosSender's own "much faster" fallback when no sync-added
      * photo exists (see findAddMethodBreakdown() below). Descending
      * counterpart of findEarliestDateAvailable() above.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table, ORDER
-     * BY + LIMIT DQL expresses directly; setMaxResults(1) paired with
-     * getOneOrNullResult() per the audit's own gotcha #3.
      */
     public function findMostRecentDateAvailable(): ?string
     {
@@ -3805,10 +3318,6 @@ final class ImageRepository extends EntityRepository
      * filesystem sync, not the API) -- Admin\PiwigoInfosSender's own
      * "is it worth running the slower sync-vs-api breakdown query" guard.
      */
-    /**
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE.
-     */
     public function countWithStorageCategory(): int
     {
         $value = $this->createQueryBuilder('i')
@@ -3825,17 +3334,14 @@ final class ImageRepository extends EntityRepository
      * counts and most recent `date_available` -- Admin\PiwigoInfosSender's
      * own "how were most photos added" telemetry breakdown.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
-     * real DQL -- MySQL's `IF(storage_category_id IS NULL, 'api', 'sync')`
-     * has no portable DQL equivalent, and reusing it as the `GROUP BY` key
-     * doesn't translate either (DQL can't group by a SELECT alias the way
-     * MySQL can, and repeating the full CASE expression in GROUP BY was
-     * judged too fragile to trust without a Postgres install to verify
-     * against). Fetches `storageCategoryId`/`dateAvailable` per row instead
-     * and groups in PHP -- only 2 buckets, and this is an admin-telemetry
-     * call, not a hot path, so scanning every image row is an acceptable
-     * trade. `date_available` values are ISO `Y-m-d H:i:s` strings, so a
-     * plain PHP string comparison reproduces MAX()'s ordering exactly.
+     * Fetches `storageCategoryId`/`dateAvailable` per row and groups in
+     * PHP rather than SQL, since MySQL's `IF(storage_category_id IS
+     * NULL, 'api', 'sync')` has no portable DQL equivalent and DQL can't
+     * group by a SELECT alias -- only 2 buckets, and this is an
+     * admin-telemetry call, not a hot path, so scanning every image row
+     * is an acceptable trade. `date_available` values are ISO
+     * `Y-m-d H:i:s` strings, so a plain PHP string comparison reproduces
+     * MAX()'s ordering exactly.
      *
      * @return list<array{add_method: string, last_added_on: ?string, nb_files: int}>
      */
@@ -3878,19 +3384,16 @@ final class ImageRepository extends EntityRepository
      * Controller\Admin\IntroSubController's own storage chart and Admin\
      * PiwigoInfosSender's own telemetry breakdown, both keyed by ext.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
-     * real DQL -- MySQL's `SUBSTRING_INDEX(path, ".", -1)` has no portable
-     * DQL equivalent, and it was also the `GROUP BY` key (`ext` is a
-     * computed alias, not a real column, and DQL can't group by a SELECT
-     * alias). Fetches `path`/`filesize` per row instead and groups in PHP
-     * -- an admin-telemetry call, not a hot path, so scanning every image
-     * row is an acceptable trade. The extension extraction below
-     * reproduces `SUBSTRING_INDEX(path, ".", -1)`'s exact semantics
-     * (substring after the last `.`, or the whole string when there's no
-     * `.` at all) rather than reusing {@see \Piwigo\Core\StringHelper::
-     * getExtension()}, which returns `''` for the no-dot case instead --
-     * a real behavioral difference from the original SQL, even though no
-     * real image path is expected to lack an extension.
+     * Fetches `path`/`filesize` per row and groups in PHP rather than
+     * SQL, since MySQL's `SUBSTRING_INDEX(path, ".", -1)` has no portable
+     * DQL equivalent and `ext` (a computed alias, not a real column) can't
+     * be a DQL `GROUP BY` key -- an admin-telemetry call, not a hot path,
+     * so scanning every image row is an acceptable trade. The extension
+     * extraction below reproduces `SUBSTRING_INDEX(path, ".", -1)`'s
+     * exact semantics (substring after the last `.`, or the whole string
+     * when there's no `.` at all) rather than reusing
+     * {@see \Piwigo\Core\StringHelper::getExtension()}, which returns
+     * `''` for the no-dot case instead.
      *
      * @return list<array{ext: string, counter: int, filesize: int}>
      */
@@ -3931,13 +3434,9 @@ final class ImageRepository extends EntityRepository
      * Per-extension row count and total filesize across every generated
      * format file -- Controller\Admin\IntroSubController's own storage
      * chart "Formats" bucket. Id-list sibling of findExtensionBreakdown()
-     * above, but against `image_format`, not `images`.
-     *
-     * Item 14 DQL audit: converted to real DQL -- single-table (this
-     * repository's own {@see ImageFormatEntity}), GROUP BY on a real
-     * column (`ext`, not an alias) -- unlike findExtensionBreakdown()
-     * above (SUBSTRING_INDEX()-derived `ext` alias), which stays on
-     * DBAL.
+     * above, but against `image_format`, not `images`. Unlike that
+     * sibling, `ext` here is a real column (not a SUBSTRING_INDEX()-derived
+     * alias), so this one groups directly in DQL.
      *
      * @return list<array{ext: string, counter: int, filesize: int}>
      */

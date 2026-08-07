@@ -33,15 +33,9 @@ use Psr\Container\ContainerInterface;
  * this method without knowing whether an earlier one already ran) must
  * not re-wire or corrupt state.
  *
- * Legacy Coupling Retirement gap-closure (entry-shell define()/include
- * round): $paths, once given, is bound as `Paths::class` inside
+ * $paths, once given, is bound as `Paths::class` inside
  * Container::build() -- the one point every real bootstrap path (HTTP,
- * CLI, install) already converges on a real Paths. Singleton/service-
- * locator elimination campaign, Phase 3: `CurrentPaths` used to keep its
- * own separate static copy via a `set()` call here; it became a pure
- * transitional shim reading straight from this same container binding
- * instead, then closed outright in sub-phase 12F-10 -- no separate
- * publish step was ever needed.
+ * CLI, install) already converges on a real Paths.
  */
 final class Kernel
 {

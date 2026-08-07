@@ -27,39 +27,22 @@ use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 
 /**
- * Singleton/service-locator elimination campaign, Phase 11 sub-phase 11E:
- * Template's own real constructor now requires 8 collaborators
- * (CurrentConfig/Lang/AdminContext/EventDispatcher/PageState/
- * ErrorCollector/ProcessCache/CurrentConfigService) this test suite's
- * ~227 real call sites previously never had to supply (the shim reads
- * happened internally). ImageStdParams is NOT among them, despite being
- * one of the shims Template itself closes -- its own container factory
- * unconditionally hits the DB (`load_from_db()`), which made it unsafe as
- * a required constructor param (confirmed live: it broke public/install.php
- * before the schema even exists). Template resolves it lazily internally
- * instead (see Template::imageStdParams()'s own docblock). Phase 11
- * sub-phase 11H added a 9th, Paths (its own former CurrentPaths::get()
- * shim usage, closed outright in sub-phase 12F-10), falling back to the
- * same Paths::fromRoot(sys_get_temp_dir())
- * already used for Lang's own fallback above. Phase 12 sub-phase 12A added
- * a 10th, AccessLevelChecker (extracted from the old AccessControl
- * circular-dependency shim), falling back to a fresh instance built from
- * the same currentConfig/currentUser resolved above. Resolves each
- * of the real 10 from the real container-shared instance when one exists
- * (matching what every real production caller already gets, including
- * honoring any test-seeded state on those instances), falling back to a
- * fresh, DB-free, bare instance for the many plain Unit tests that never
- * boot a Kernel at all -- same "no Kernel::boot(), type-satisfying
- * instance is enough" reasoning already established throughout this
- * campaign (see UrlServiceTestFactory's own docblock). Phase 12 sub-phase
- * 12D added an 11th, SessionService (its own former SessionService::get()
- * shim usage, DeviceHelper's own closure) -- unlike ImageStdParams above,
- * SessionService's container factory doesn't eagerly touch the DB
- * (SessionRepository extends Doctrine's own lazy EntityRepository), so a
+ * Resolves each collaborator from the real container-shared instance when
+ * one exists, matching what every production caller gets (including any
+ * test-seeded state on those instances). Falls back to a fresh, DB-free,
+ * bare instance for tests that never boot a Kernel.
+ *
+ * ImageStdParams is not among the resolved collaborators: its container
+ * factory unconditionally hits the DB (`load_from_db()`), which is unsafe
+ * as a required constructor param before the schema exists (e.g.
+ * public/install.php). Template resolves it lazily internally instead
+ * (see Template::imageStdParams()).
+ *
+ * SessionService's container factory does not eagerly touch the DB
+ * (SessionRepository extends Doctrine's lazy EntityRepository), so a
  * throwaway instance built from a fresh DbConnection::build() is safe as
- * the no-Kernel-booted fallback too (never actually queried unless
- * Template's own get_device modifier is invoked, which no real
- * production `install.tpl`/test template does).
+ * the no-Kernel-booted fallback -- it is only queried if Template's
+ * get_device modifier is invoked, which no production template does.
  */
 final class TemplateTestFactory
 {

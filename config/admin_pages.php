@@ -45,8 +45,7 @@ use Piwigo\Controller\Admin\UserPermSubController;
 // that handles it. This map is the complete admin page registry: admin.php
 // falls back to 'intro' for any slug not listed here, and
 // Piwigo\Bootstrap\AdminDispatcher treats an unmapped slug reaching it as
-// a programming error (the legacy `include admin/<slug>.php` fallback was
-// removed in P23 batch 9, once batch 6 had migrated every page).
+// a programming error.
 /** @var array<string, class-string<AdminSubControllerInterface>> */
 return [
     'photos_add' => PhotosAddSubController::class,

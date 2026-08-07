@@ -17,22 +17,20 @@ use Override;
 
 /**
  * Custom DQL function: "DAYOFWEEK" "(" StringPrimary ")" -- day-of-week,
- * 1=Sunday..7=Saturday, matching MySQL's own `DAYOFWEEK(date)` shape
- * (formerly {@see \Piwigo\Db\SqlDialect}'s `getDayOfWeek()`, removed once
- * Calendar -- its only real caller -- became real DQL). MySQL's native
- * 1-indexed, Sunday-first convention.
+ * 1=Sunday..7=Saturday, matching MySQL's own `DAYOFWEEK(date)` shape.
+ * MySQL's native convention is 1-indexed, Sunday-first.
  *
- * Further SQL-modernization audit, Item 15G: PostgreSQL's `EXTRACT(DOW
- * FROM date)` and SQLite's `strftime('%w', date)` are both natively
- * 0-indexed, Sunday-first (0=Sunday..6=Saturday) -- both branches below
- * add 1 to match MySQL's convention, since every real caller
- * ({@see \Piwigo\Calendar\CalendarWeekly}) depends on the exact
- * 1=Sunday..7=Saturday numbering. MySQL/MariaDB branch verified against
- * real data via this project's own Integration tests. PostgreSQL/SQLite
- * branches are unverified against a real installation (see this plan's
- * own Context section) -- built from each platform's own documented
- * syntax, not empirically confirmed. Any other platform throws
- * `NotSupported` rather than guessing.
+ * PostgreSQL's `EXTRACT(DOW FROM date)` and SQLite's `strftime('%w',
+ * date)` are both natively 0-indexed, Sunday-first (0=Sunday..6=Saturday)
+ * -- both branches below add 1 to match MySQL's convention, since every
+ * real caller ({@see \Piwigo\Calendar\CalendarWeekly}) depends on the
+ * exact 1=Sunday..7=Saturday numbering.
+ *
+ * The MySQL/MariaDB branch is verified against real data via this
+ * project's Integration tests. The PostgreSQL/SQLite branches are built
+ * from each platform's documented syntax but are not verified against a
+ * real installation. Any other platform throws `NotSupported` rather
+ * than guessing.
  */
 final class DayOfWeekFunction extends FunctionNode
 {

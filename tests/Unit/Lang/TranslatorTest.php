@@ -8,11 +8,9 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Lang\Translator;
 
 beforeEach(function (): void {
-    // Each test constructs its own fresh instance directly -- no more
-    // reset()-between-tests machinery needed for this whole category
-    // (singleton/service-locator elimination campaign, Phase 4; same
-    // "category 1" test-isolation shape as CoreTabsTest/
-    // SectionContextRegistryTest's own precedent).
+    // Each test constructs its own fresh instance directly -- no
+    // reset()-between-tests machinery needed (same test-isolation shape
+    // as CoreTabsTest/SectionContextRegistryTest's own precedent).
     $this->translator = new Translator(CurrentConfigTestFactory::get());
     $this->poFile = sys_get_temp_dir() . '/piwigo-po-test-' . bin2hex(random_bytes(8)) . '.po';
 });

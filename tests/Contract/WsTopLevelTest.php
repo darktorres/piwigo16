@@ -272,8 +272,8 @@ final class WsTopLevelTest extends ContractTestCase
      * A real Paths is required, not a bare boot: self::imageService() is
      * called unconditionally before the $image_count === 0 check below (see
      * PwgCore::getMissingDerivatives()'s own body), so it always resolves
-     * ImageService -> Lang (Phase 8) -> Paths, whose value the container
-     * can't guess without one.
+     * ImageService -> Lang -> Paths, whose value the container can't
+     * guess without one.
      */
     public function test_getMissingDerivatives_with_an_empty_gallery_returns_an_empty_array_early(): void
     {

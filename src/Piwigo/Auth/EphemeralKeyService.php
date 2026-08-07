@@ -10,19 +10,11 @@ use Piwigo\Config\CurrentConfig;
 /**
  * Short-lived, time-windowed keys sent back with a form (e.g. a signed
  * "not submitted too fast" / "not submitted too late" token), keyed by the
- * secret-key config. Reads Piwigo\Config\CurrentConfig::secretKey() directly --
- * safe since Legacy Coupling Retirement Track A batch A4's ConfigDb fix:
- * ConfigDb::loadConfFromDb()/confUpdateParam() now sync every DB-persisted
- * config row into CurrentConfig::$data at the same point they update the legacy
- * $conf global, so CurrentConfig::secretKey() reflects the real, admin/install-set
- * secret_key on every live request (previously it did not -- see
- * Piwigo\Csrf\CsrfService's own docblock for the historical P18 incident
- * this same gap caused there).
- *
- * [SEC-28] Built with sha256 + hash_equals() from the start, unlike the
- * original get_ephemeral_key()/verify_ephemeral_key() (hash_hmac('md5', ...),
- * compared with a plain !== ) -- there's no insecure intermediate state to
- * carry forward since this class doesn't exist yet on this branch.
+ * secret-key config. Reads Piwigo\Config\CurrentConfig::secretKey() directly:
+ * ConfigDb::loadConfFromDb()/confUpdateParam() sync every DB-persisted
+ * config row into CurrentConfig::$data at the same point they update the
+ * legacy $conf global, so CurrentConfig::secretKey() reflects the real,
+ * admin/install-set secret_key on every live request.
  */
 final class EphemeralKeyService
 {

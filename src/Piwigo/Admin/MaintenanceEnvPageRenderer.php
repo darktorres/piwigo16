@@ -37,25 +37,19 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Validation\InputValidator;
 
 /**
- * Ported from admin/maintenance_env.php (the "env" tab of the "maintenance"
- * page slug, dispatched by MaintenanceSubController) -- server/DB info and
- * cache/storage stats; the only 2 actions this tab's own template actually
- * links to are `phpinfo`/`check_upgrade`.
+ * Renders the "env" tab of the "maintenance" admin page (dispatched by
+ * MaintenanceSubController) -- server/DB info and cache/storage stats; the
+ * only 2 actions this tab's own template links to are
+ * `phpinfo`/`check_upgrade`.
  *
- * admin.php itself already gates every page behind
- * check_status(AccessLevel::Administrator) before dispatch, and the shell
- * (admin/maintenance.php, folded into MaintenanceSubController) already
- * gates every $_GET['action'] with check_pwg_token() before the tab-specific
- * dispatch even runs -- the original file's own SECOND copy of both checks
- * (redundant twice over: once against admin.php's blanket gate, once
- * against the shell's own per-tab gate) is dropped here.
+ * Access control is enforced by admin.php's dispatch gate, and the
+ * check_pwg_token() gate for every $_GET['action'] is enforced by
+ * MaintenanceSubController before the tab-specific dispatch runs, so
+ * render() does not repeat either check.
  *
- * The action-dispatch switch itself moved to the shared
- * Piwigo\Admin\Maintenance\MaintenanceActionDispatcher (P23 batch 6h),
- * shared with MaintenanceActionsPageRenderer -- see that class's own
- * docblock for the 2 real drift bugs its consolidation fixed relative to
- * this file's own original copy (missing pwg_activity() logging, missing
- * the empty_lounge case).
+ * The action-dispatch switch itself lives in the shared
+ * Piwigo\Admin\Maintenance\MaintenanceActionDispatcher, also used by
+ * MaintenanceActionsPageRenderer.
  */
 final class MaintenanceEnvPageRenderer
 {

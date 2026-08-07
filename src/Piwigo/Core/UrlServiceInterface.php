@@ -5,22 +5,17 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * Legacy Coupling Retirement Phase 4c: the 18 former free functions
- * bridged through `Piwigo\Url\functions.php` (now deleted; `get_root_url()`
- * alone had ~150 real call sites). `Piwigo\Url\UrlService` is
- * L2bExtendedDomain; real callers span every layer from L1Infrastructure
- * through L4Integration, so they constructor- or method-inject
- * `UrlServiceInterface` instead of depending on the concrete class
- * directly, per deptrac.yaml's ruleset -- same shape as
- * `FilterUpdaterInterface`. Lives in `Piwigo\Core` (L1Infrastructure) so
- * any layer can depend downward on this instead. `UrlService implements`
- * it; bound in `config/container.php`.
+ * `Piwigo\Url\UrlService` is L2bExtendedDomain; real callers span every
+ * layer from L1Infrastructure through L4Integration, so they constructor-
+ * or method-inject `UrlServiceInterface` instead of depending on the
+ * concrete class directly, per deptrac.yaml's ruleset. Lives in
+ * `Piwigo\Core` (L1Infrastructure) so any layer can depend downward on
+ * this instead. `UrlService implements` it; bound in
+ * `config/container.php`.
  *
- * 3 of UrlService's own public methods (`paramsForDuplication()`,
- * `addWellKnownParamsInUrl()`, `makeSectionInUrl()`) are NOT declared
- * here -- they were never bridged through the free-function file (zero
- * real external callers, confirmed via a direct grep both before and
- * after this phase), so they stay real, concrete-typed internal
+ * `UrlService`'s own `paramsForDuplication()`, `addWellKnownParamsInUrl()`,
+ * and `makeSectionInUrl()` methods are not declared here: they have no
+ * external callers, so they stay real, concrete-typed internal
  * implementation details, not part of this interface's contract.
  */
 interface UrlServiceInterface
@@ -138,7 +133,6 @@ interface UrlServiceInterface
      * List favorite image_ids of the current user. Every real caller only
      * checks key existence -- the value is always the query's own literal
      * `1`.
-     * @since 13
      *
      * @return array<int, int>
      */

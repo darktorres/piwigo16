@@ -84,13 +84,10 @@ final class ExtensionScanner
             // Deliberately not \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             // -- this class is designed to be Unit-testable without a full
             // app bootstrap (see ExtensionScannerTest's own docblock).
-            // HtmlService now has 8 required constructor collaborators
-            // (singleton/service-locator elimination campaign, Phase 11
-            // sub-phase 11E), but nameCompare() itself is a pure
-            // strcmp()-on-strtolower() comparator that touches none of
-            // them, so bare/throwaway instances are harmless here --
-            // same reasoning this file's own docblock already gives for
-            // staying boot-free.
+            // HtmlService has 8 required constructor collaborators, but
+            // nameCompare() itself is a pure strcmp()-on-strtolower()
+            // comparator that touches none of them, so bare/throwaway
+            // instances are harmless here.
             @uasort($found, new HtmlService(
                 new CurrentConfig(),
                 new EventDispatcher(),

@@ -73,14 +73,14 @@ use SensitiveParameter;
  * assigns default groups, the same real dependency that put Group in
  * L2aCoreDomain in the first place).
  *
- * P23 batch 8c: constructor-injects MailerInterface (Piwigo\Core) rather
- * than depending on Piwigo\Mail\MailService directly -- Mail lives in
- * L3Presentation (constructs Piwigo\Template\Template), and L2aCoreDomain
- * may not depend upward on L3; see deptrac.yaml's own comment on the Mail
- * namespace entry and MailerInterface's own docblock.
+ * Constructor-injects MailerInterface (Piwigo\Core) rather than depending
+ * on Piwigo\Mail\MailService directly -- Mail lives in L3Presentation
+ * (constructs Piwigo\Template\Template), and L2aCoreDomain may not depend
+ * upward on L3; see deptrac.yaml's own comment on the Mail namespace
+ * entry and MailerInterface's own docblock.
  *
- * P23 batch 8d: implements DefaultLanguageProviderInterface (Piwigo\Core)
- * so Piwigo\Core\Lang::load() (L1Infrastructure, static) can resolve the
+ * Implements DefaultLanguageProviderInterface (Piwigo\Core) so
+ * Piwigo\Core\Lang::load() (L1Infrastructure, static) can resolve the
  * DB-configured default language without depending on this class
  * directly -- see that interface's own docblock.
  */
@@ -107,9 +107,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     /**
      * Built from this class's own already-required currentUser/
      * currentConfig -- AccessLevelChecker has no RedirectServiceInterface
-     * dependency of its own, so unlike accessControl() (deleted, singleton/
-     * service-locator elimination campaign, Phase 12 sub-phase 12A) this
-     * needs no container resolve at all.
+     * dependency of its own, so this needs no container resolve at all.
      */
     private function accessLevelChecker(): AccessLevelChecker
     {
@@ -120,9 +118,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * Container resolve, not a constructor property -- used only inside
      * categoryService()'s own throwaway construction below; a required
      * param here would ripple across every one of this class's own real
-     * `new UserService(...)` construction sites for a single caller
-     * (singleton/service-locator elimination campaign, Phase 11 sub-phase
-     * 11G).
+     * `new UserService(...)` construction sites for a single caller.
      */
     private function translator(): Translator
     {
@@ -135,11 +131,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     }
 
     /**
-     * Phase 1k DI-chain audit: the same PermissionService recipe was
-     * repeated verbatim at 3 call sites in this file. Not a constructor
-     * param -- $conn is already available, and readonly class means no
-     * memoized property, so this is a plain (non-memoized) DRY extraction,
-     * not a caching optimization.
+     * The same PermissionService recipe was repeated verbatim at 3 call
+     * sites in this file. Not a constructor param -- $conn is already
+     * available, and readonly class means no memoized property, so this
+     * is a plain (non-memoized) DRY extraction, not a caching
+     * optimization.
      */
     private function permissionService(): PermissionService
     {
@@ -264,11 +260,10 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     }
 
     /**
-     * Ported from admin/include/functions.php's get_username() (P23 batch
-     * 8d), unchanged logic (including the stripslashes() call -- a real,
-     * already-established precedent in this same file, not legacy cruft).
-     * stripslashes() only ever removes chars, so a value that was already
-     * a valid Username (it came from this exact column) stays valid.
+     * The stripslashes() call here is a real, already-established
+     * precedent in this same file, not legacy cruft -- stripslashes()
+     * only ever removes chars, so a value that was already a valid
+     * Username (it came from this exact column) stays valid.
      */
     public function getUsername(UserId $userId): ?Username
     {
@@ -302,8 +297,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
     /**
      * Deletes a user and every trace of it (sessions, cache rows, activity
-     * log entry). Ported from admin/include/functions.php's delete_user()
-     * (P23 batch 8d), unchanged logic.
+     * log entry).
      */
     public function deleteUser(UserId $userId): void
     {
@@ -533,11 +527,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function getDefaultUserInfo(): array|false
     {
-        // Read the just-computed value directly rather than a blind
-        // set()-then-get() round trip -- setStatic() is a silent no-op
-        // when Kernel::isBooted() is false (singleton/service-locator
-        // elimination campaign, Phase 1's transitional shim), which would
-        // otherwise make a subsequent getStatic() lose it entirely.
+        // Reads the just-computed value directly rather than a
+        // set()-then-get() round trip through $this->processCache.
         if ($this->processCache->has('default_user')) {
             $defaultUserCached = $this->processCache->get('default_user');
         } else {
@@ -766,13 +757,10 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         unset($value);
 
         // enabled_high/expand/last_visit_from_history/show_nb_comments/
-        // show_nb_hits (user_infos) no longer need the explicit re-cast
-        // Docs/PLAN.md's own gap-closure Stage 1a added here -- Item 16H
-        // retyped UserRepository::fetchUserInfosWithThemeName() to select
-        // the full UserInfoEntity via DQL, whose mapped `boolean` columns
-        // already hydrate as real PHP bools, not the raw tinyint a DBAL
-        // row gave. Retired the cast loop in the same commit as that
-        // retype, matching this campaign's own established convention.
+        // show_nb_hits (user_infos) don't need an explicit re-cast here --
+        // UserRepository::fetchUserInfosWithThemeName() selects the full
+        // UserInfoEntity via DQL, whose mapped `boolean` columns already
+        // hydrate as real PHP bools, not the raw tinyint a DBAL row gave.
 
         // Kept out of $userdata: ArrayHelper::safeJsonDecode()'s own return
         // type is array<int|string, mixed>, and merging that into
@@ -801,21 +789,15 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             ? ArrayHelper::safeJsonDecode($preferences_raw)
             : [];
 
-        // Gap-closure Stage 4g (docs/plan/gap-closure-p0-p23.md): this used
-        // to be gated behind a `$useCache` param and a UniqueExecLock-based
-        // lock/wait/503 mechanism coordinating exclusive regeneration of
-        // the `user_cache` row -- deleted outright once 4a-4f replaced
-        // every real column with an independent cache-pool-backed
-        // computation, each already safe for uncoordinated concurrent
-        // access (a PSR-6 cache-pool miss just triggers an independent
-        // recompute per request, no shared mutable row to corrupt).
-        // Accepted, deliberate tradeoff, not an oversight: a burst of
-        // concurrent requests for the same just-invalidated user can now
-        // each independently recompute the cheap permission snapshot
-        // rather than one computing while others wait -- matches P23's
-        // own original design text exactly ("recursive CTE cached in the
-        // APCu/Redis permissions pool"), which never mentioned a lock for
-        // the replacement.
+        // No lock/wait mechanism coordinates computation of this
+        // snapshot -- a deliberate tradeoff, not an oversight. Every real
+        // column comes from an independent cache-pool-backed computation,
+        // each already safe for uncoordinated concurrent access (a PSR-6
+        // cache-pool miss just triggers an independent recompute per
+        // request, no shared mutable row to corrupt). A burst of
+        // concurrent requests for the same just-invalidated user can each
+        // independently recompute the cheap permission snapshot rather
+        // than one computing while others wait.
         $effective_status = $userdata['status'];
         assert(is_string($effective_status));
         $effective_level_raw = $userdata['level'] ?? '0';
@@ -1166,15 +1148,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
     /**
      * Register in the user session, the "context" of the last 10 viewed
-     * images.
-     *
-     * @since 16
-     */
-    /**
-     * Legacy Coupling Retirement Track A batch A5.2e: $sectionUrl/
-     * $imageId are explicit params instead of `global $page['section_url']`/
-     * `['image_id']` -- the one real caller (PictureController) already
-     * has both from SectionContextRegistry::current() right after
+     * images. The one real caller (PictureController) gets $sectionUrl/
+     * $imageId from SectionContextRegistry::current() right after
      * SectionPopulator::populate() runs.
      */
     public function saveEditContext(?string $sectionUrl, int|string|null $imageId): void
@@ -1213,8 +1188,6 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
     /**
      * Returns the "context" of the requested image.
-     *
-     * @since 16
      */
     public function getEditContext(int $imageId): false|string|null
     {
@@ -1234,7 +1207,6 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     /**
      * Check all user infos and save parameters.
      *
-     * @since 16
      * @param mixed[] $params
      *    @option string username (optional)
      *    @option string password (optional)
@@ -1252,9 +1224,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      *    @option int[] group_id (optional)
      *
      * $params is Ws-method-parameter-shaped raw input (see the assert()
-     * calls below already narrowing individual keys) -- the @option list
-     * above is exactly what a future Phase 4 Request DTO would formalize;
-     * not retyped here to stay in scope for that phase specifically.
+     * calls below already narrowing individual keys).
      *
      * @return mixed[]
      */
@@ -1586,14 +1556,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * Synchronize base users list and related users list.
      *
      * Compares and synchronizes the base users table (`Tables::users()`)
-     * with its child tables (`Tables::userInfos()`, USER_ACCESS,
-     * USER_CACHE, USER_GROUP): each base user must be present in child
-     * tables, users in child tables not present in base table must be
-     * deleted.
+     * with its child tables (`user_infos`/`user_access`/`user_group`,
+     * plus `user_mail_notification`/`user_feed`): each base user must be
+     * present in child tables, users in child tables not present in the
+     * base table must be deleted.
      *
-     * P23 batch 8d file 3: physically grouped with the Categories domain
-     * in `admin/include/functions.php` (file-position, not real domain),
-     * but touches only user-related tables and internally constructs
+     * Touches only user-related tables and internally constructs
      * {@see createUserInfos()} -- belongs here, not
      * `Piwigo\Category\CategoryService`.
      */

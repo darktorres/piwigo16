@@ -22,20 +22,20 @@ use Piwigo\Users\CurrentUser;
  * Group domain business logic: creation/rename/deletion, membership
  * management, merge/duplicate. Constructor-injects GroupRepository (plain
  * constructor injection, same shape as PermalinkService) and
- * ActivityLoggerInterface (P23 batch 8d -- pwg_activity()'s real target,
+ * ActivityLoggerInterface -- pwg_activity()'s real target,
  * Piwigo\Activity\ActivityService, is L2bExtendedDomain; this class is
  * L2aCoreDomain, so it depends on the L1Infrastructure interface instead,
- * same shape as MailerInterface -- see ActivityLoggerInterface's own
- * docblock), and calls Piwigo\Cache\PermissionCacheInvalidator (L1Infrastructure,
- * P23 batch 8d) directly for cache invalidation -- a real class dependency,
- * always allowed (L2a may depend on L1). Also constructor-injects
- * ConfigService (L1Infrastructure, Phase 5 Legacy Coupling Retirement) for
- * delete()'s email_admin_on_new_user consistency write.
+ * same shape as MailerInterface (see ActivityLoggerInterface's own
+ * docblock) -- and calls Piwigo\Cache\PermissionCacheInvalidator
+ * (L1Infrastructure) directly for cache invalidation, a real class
+ * dependency always allowed (L2a may depend on L1). Also
+ * constructor-injects ConfigService (L1Infrastructure) for delete()'s
+ * email_admin_on_new_user consistency write.
  *
  * Ids are typed VOs throughout this class's own public surface, matching
  * GroupRepository. `ActivityLoggerInterface`/`AuditService`/`EventDispatcher`
- * aren't being converted in this pass, so every call into them unwraps
- * `->value` right before the call.
+ * take plain values, not VOs, so every call into them unwraps `->value`
+ * right before the call.
  */
 final readonly class GroupService
 {
@@ -298,13 +298,11 @@ final readonly class GroupService
     /**
      * Deletes the given groups. Returns id => name of every group actually
      * deleted (empty array when none of the ids existed), or false when
-     * $groupIds is empty. Absorbs the former delete_groups() free
-     * function's own extra orchestration (P23 batch 8d): the
-     * email_admin_on_new_user config-consistency check and the [SEC-57]
-     * per-group audit trail. Does not itself invalidate the user cache --
-     * callers that need it (ws_groups_delete()) call
-     * Piwigo\Cache\PermissionCacheInvalidator::invalidate() themselves
-     * afterward, same as before.
+     * $groupIds is empty. Performs the email_admin_on_new_user
+     * config-consistency check and a [SEC-57] per-group audit trail. Does
+     * not itself invalidate the user cache -- callers that need it
+     * (ws_groups_delete()) call
+     * Piwigo\Cache\PermissionCacheInvalidator::invalidate() themselves.
      *
      * @param list<GroupId> $groupIds
      * @return false|array<int, string>

@@ -29,17 +29,16 @@ use RuntimeException;
  * the original file for a jpg/png/... or a 'representative' image
  * of a  non image file or a standard icon for the non-image file.
  *
- * Singleton/service-locator elimination campaign, Phase 6: the 4
- * `setX()`/`private static ?X $x` collaborator bridges (htmlRenderer,
- * themeConfProvider, imageRepository, urlService) are gone -- each was a
- * bare static, a real SEC-60 worker-mode leak risk. This class still
- * can't take them via constructor injection (~20 real construction sites,
- * all raw `new SrcImage($infos)` from DB rows, no DI involved) or depend
- * on `Piwigo\Url\UrlService`/`Piwigo\Template\Template` directly (deptrac:
- * this is L2aCoreDomain), so each collaborator method now resolves fresh
- * from the container instead of reading a value some bootstrap code set
- * once. `HtmlRenderingInterface`/`UrlServiceInterface`/`ImageRepository`
- * are all already bound/autowirable in `config/container.php`, so this is
+ * This class can't take its collaborators (htmlRenderer, themeConfProvider,
+ * imageRepository, urlService) via constructor injection (~20 real
+ * construction sites, all raw `new SrcImage($infos)` from DB rows, no DI
+ * involved) or depend on `Piwigo\Url\UrlService`/`Piwigo\Template\Template`
+ * directly (deptrac: this is L2aCoreDomain), so each collaborator method
+ * resolves fresh from the container on every call rather than caching in
+ * a static property -- avoiding the state-leak risk (SEC-60) a static
+ * would carry across requests in worker mode.
+ * `HtmlRenderingInterface`/`UrlServiceInterface`/`ImageRepository`
+ * are all bound/autowirable in `config/container.php`, so this is
  * a live, always-current read, not a cache. `themeConf()` resolves
  * `Piwigo\Core\CurrentThemeConfProvider` (a new, dedicated container-
  * shared wrapper, not `Piwigo\Template\CurrentTemplate`) -- see that
@@ -77,14 +76,11 @@ final class SrcImage
     }
 
     /**
-     * Singleton/service-locator elimination campaign, Phase 9: same
-     * "~20 real raw `new SrcImage($infos)` construction sites, no DI
+     * Same "~20 real raw `new SrcImage($infos)` construction sites, no DI
      * involved" constraint as the other collaborator methods above rules
-     * out real constructor injection for CurrentConfig too -- resolves
-     * fresh from the container on every call, same as urlService()/
-     * imageRepository() rather than through the former
-     * `CurrentConfig::current()` transitional bridge (that shim was
-     * Phase-10-locked to the Ws/Pwg*.php dispatch layer at the time).
+     * out constructor injection for CurrentConfig too -- resolves fresh
+     * from the container on every call, same as urlService()/
+     * imageRepository().
      */
     private static function currentConfig(): CurrentConfig
     {
@@ -102,8 +98,7 @@ final class SrcImage
     /**
      * Same "~20 real raw `new SrcImage($infos)` construction sites, no DI
      * involved" constraint as the other collaborator methods here --
-     * resolves fresh from the container on every call (singleton/
-     * service-locator elimination campaign, Phase 11 sub-phase 11H).
+     * resolves fresh from the container on every call.
      */
     private static function paths(): Paths
     {
@@ -121,8 +116,7 @@ final class SrcImage
     /**
      * Same "~20 real raw `new SrcImage($infos)` construction sites, no DI
      * involved" constraint as the other collaborator methods above --
-     * resolves fresh from the container on every call (singleton/
-     * service-locator elimination campaign, Phase 11 sub-phase 11F).
+     * resolves fresh from the container on every call.
      */
     private static function eventDispatcher(): EventDispatcher
     {

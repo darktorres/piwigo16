@@ -348,11 +348,9 @@ test('the real deferred shutdown handler writes a genuine per-request pcov dump 
         // since \pcov\stop() at line 76 ends this collection window before
         // they run) on everything from line 77 onward -- these line
         // numbers must be re-verified the same way (not re-counted by eye)
-        // if CoverageCollector.php's own source ever shifts again; this
-        // exact pair (was 46/47, before sub-phase 12F-12 added a new
-        // currentConfig() resolver method ahead of registerIfActive())
-        // has already gone stale once, confirming the risk is real, not
-        // hypothetical.
+        // if CoverageCollector.php's own source ever shifts again -- this
+        // exact pair has already gone stale once after an unrelated
+        // source edit, confirming the risk is real, not hypothetical.
         //
         // Resolved via Reflection rather than hardcoded: the subprocess
         // above requires ITS OWN vendor/autoload.php (line 273's

@@ -38,16 +38,10 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Replaces notification.php -- mints a new per-user feed subscription and
- * shows its URL. The legacy file's own top-level find_available_feed_id()
- * becomes a private method here instead of a free function -- only this
- * controller ever called it, and a bare global function risks the same
- * name-collision class of bug P21's Extensions batch found (two admin
- * pages both declaring `function cmp()`).
- *
- * Legacy Coupling Retirement Workstream D: converted off
- * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
- * pattern as AboutController -- see that class's own docblock for the
- * accumulator mechanics this relies on.
+ * shows its URL. `find_available_feed_id()` is a private method here
+ * rather than a free function: only this controller calls it, and a bare
+ * global function risks colliding with another same-named global function
+ * declared elsewhere.
  */
 final class NotificationController implements ControllerInterface
 {

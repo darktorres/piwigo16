@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * "This request is past the install-check gate" marker -- Legacy
- * Coupling Retirement gap-closure (entry-shell define()/include round,
- * Part 0b), typed replacement for the raw PHPWG_INSTALLED constant
- * everywhere OUTSIDE the install flow itself.
+ * "This request is past the install-check gate" marker -- typed
+ * replacement for the raw PHPWG_INSTALLED constant everywhere OUTSIDE
+ * the install flow itself.
  *
  * Unlike Piwigo\Core\AdminContext/WsContext, this does NOT fully retire
  * the raw define(): install.php's own performInstall() step still does
@@ -23,17 +22,11 @@ namespace Piwigo\Core;
  * net for that one remaining shell define(), not a live dependency this
  * class's own callers need to worry about.
  *
- * Singleton/service-locator elimination campaign, Phase 1: converted from
- * a self-managed static facade to a container-shared instance.
- * `RequestBootstrap` (the only writer) constructor-resolves it from the
- * container. `Piwigo\Core\Lang` (Phase 8) and `Piwigo\Users\UserService`
- * (Phase 11 sub-phase 11G) both closed their own former `isActiveStatic()`
- * transitional-bridge usage via real constructor injection;
- * `Piwigo\Bootstrap\SessionBootstrap` (a genuinely static-only class)
- * closed its own last (Phase 12 sub-phase 12B) via a private
- * container-resolving `installationFlag()` helper instead -- the shim
- * itself is deleted, every real caller now reaches the real `isActive()`
- * instance method.
+ * A container-shared instance. `RequestBootstrap` (the only writer)
+ * constructor-resolves it from the container, as do `Piwigo\Core\Lang`
+ * and `Piwigo\Users\UserService`. `Piwigo\Bootstrap\SessionBootstrap`, a
+ * genuinely static-only class, resolves it via a private
+ * container-resolving `installationFlag()` helper instead.
  */
 final class InstallationFlag
 {

@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-// NotificationService::newsExists() now calls Piwigo\Auth\AccessLevelChecker::
-// isAdmin() directly (P23 batch 8d), which reads Piwigo\Users\CurrentUser
-// (Legacy Coupling Retirement Track A batch A3) -- tests below seed
-// CurrentUser instead.
+// NotificationService::newsExists() calls Piwigo\Auth\AccessLevelChecker::
+// isAdmin() directly, which reads Piwigo\Users\CurrentUser -- tests below
+// seed CurrentUser instead.
 namespace Piwigo\Tests\Integration {
 
     use Override;
@@ -124,12 +123,9 @@ final class NotificationServiceTest extends IntegrationTestCase
 
     public function test_get_comments_restrict_condition_with_the_sentinel_forbidden_categories_value(): void
     {
-        // SQL-modernization audit: was getSqlWhereRestrictFilter(),
-        // returning an already-'WHERE '-prefixed raw string -- now
-        // getCommentsRestrictCondition() (Item 14 Sub-phase C1's typed
-        // replacement for the old getSqlWhereRestrictCondition()),
-        // returning a SqlCondition whose own ->sql has no prefix (callers
-        // compose it via QueryBuilder::andWhere() instead).
+        // getCommentsRestrictCondition() returns a SqlCondition whose own
+        // ->sql has no 'WHERE ' prefix -- callers compose it via
+        // QueryBuilder::andWhere() instead.
         //
         // setUp() seeds forbiddenCategories: '0' -- PermissionService's
         // own sentinel for "no real forbidden categories" (see
@@ -292,12 +288,11 @@ final class NotificationServiceTest extends IntegrationTestCase
     }
 
     /**
-     * CachePools::notifications() (gap-closure Stage 4a) replaces the
-     * older PersistentCache/cacheUpdateTime mechanism -- proven the same
-     * way TagServiceTest/ForbiddenCategoriesCacheTest prove their own pool
-     * wiring: mutate the underlying data after the first (caching) call,
-     * then show a 2nd call with the same params still returns the stale
-     * (pre-mutation) result.
+     * getRecentPostDates() caches its result via CachePools::notifications()
+     * -- proven the same way TagServiceTest/ForbiddenCategoriesCacheTest
+     * prove their own pool wiring: mutate the underlying data after the
+     * first (caching) call, then show a 2nd call with the same params
+     * still returns the stale (pre-mutation) result.
      */
     public function test_get_recent_post_dates_groups_and_caches(): void
     {

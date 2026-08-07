@@ -13,12 +13,8 @@ use Piwigo\Core\Lang;
  * Formats one Piwigo\Activity\ActivityRepository::
  * findSystemObjectLogWithUsernames() row into the icon/color/label/detail
  * shape the "sys" tab's `pwg.activity_sys.getList` ajax response needs.
- * Extracted from admin/maintenance_sys.php's own per-row body (P23 batch
- * 6h) -- pure data transformation given a row, zero DB/IO side effects, so
- * it's Unit-testable directly instead of only exercisable via a live
- * DB-backed Integration test, matching the established
- * MenubarPageRendererMakeConsecutiveTest/StatsPageRendererDateHelpersTest
- * precedent of extracting pure per-renderer helpers.
+ * Pure data transformation given a row, with zero DB/IO side effects, so
+ * it's Unit-testable directly.
  */
 final class ActivityLogEntryFormatter
 {

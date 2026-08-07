@@ -104,7 +104,6 @@ final class ConfigServiceTest extends IntegrationTestCase
     }
 
     /**
-     * Boot sequence #2 (Config generic-accessor removal follow-up):
      * ConfigService::allRowsFromCacheOrDb() caches the bulk load's
      * param => value map in CachePools::config() -- this is the real test
      * of both halves of that design: a write that bypasses ConfigService
@@ -241,14 +240,12 @@ final class ConfigServiceTest extends IntegrationTestCase
 
     public function test_gallery_locked_round_trips_as_a_real_bool_through_load_conf_from_db(): void
     {
-        // Real, adversarially-found bug: MaintenanceActionDispatcher used
-        // to write the *string* 'true'/'false' to this bool-typed property
-        // (harmless under the old per-type-cast convention, but silently
-        // hydrates to false either way under json_decode() -- a real
-        // string doesn't satisfy the 'bool' match arm's is_bool() check).
-        // This exercises the actual fixed call shape (a real PHP bool),
-        // not just ConfigService's own generic bool-encoding mechanism
-        // (already covered above).
+        // hydrate()'s 'bool' match arm only accepts a real is_bool()
+        // decode -- a string 'true'/'false' doesn't satisfy it and would
+        // silently hydrate to false either way. This exercises a real PHP
+        // bool going through confUpdateParam()/loadConfFromDb(), not just
+        // ConfigService's own generic bool-encoding mechanism (already
+        // covered above).
         try {
             $currentConfig = CurrentConfigTestFactory::get();
             $this->service->confUpdateParam('gallery_locked', true);
@@ -265,11 +262,10 @@ final class ConfigServiceTest extends IntegrationTestCase
 
     public function test_data_dir_checked_round_trips_as_a_real_string_through_load_conf_from_db(): void
     {
-        // Real, adversarially-found bug: Template.php used to write the
-        // real int 1 to this ?string-typed property. json_encode(1)
-        // produces a bare JSON number, and hydrate()'s 'string' match arm
-        // only accepts a real is_string() decode -- an int decode falls
-        // through to '' instead.
+        // json_encode(1) produces a bare JSON number, and hydrate()'s
+        // 'string' match arm only accepts a real is_string() decode -- an
+        // int decode falls through to '' instead, so this property must
+        // always be written as a real string.
         try {
             $this->service->confUpdateParam('data_dir_checked', '1');
             $this->service->loadConfFromDb('data_dir_checked');
@@ -287,9 +283,8 @@ final class ConfigServiceTest extends IntegrationTestCase
     /**
      * hydrate()'s own docblock names 'upload_user_access' as a real
      * example of a genuinely dynamic/unschematized param -- a row for it
-     * must load without error (and without touching any CurrentConfig
-     * property), exactly like the SCHEMA-driven design this replaces
-     * silently skipped keys with no matching accessor.
+     * must load without error and without touching any CurrentConfig
+     * property.
      */
     public function test_loadConfFromDb_silently_skips_a_row_with_no_matching_property(): void
     {

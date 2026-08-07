@@ -22,13 +22,10 @@ final class CookieService
 {
     /**
      * Container resolve, not a constructor property -- this class is still
-     * manually `new`'d at ~34 real call sites (singleton/service-locator
-     * elimination campaign, Phase 11 sub-phase 11G: a required constructor
+     * manually `new`'d at ~34 real call sites, so a required constructor
      * param would ripple across all of them for the sake of this one
-     * internal read). Falls back to 0 (the same value an unset instance
-     * already defaults to) when Kernel::boot() hasn't run, matching
-     * RequestMountDepth::currentStatic()'s own former identical
-     * pre-boot fallback.
+     * internal read. Falls back to 0 (the same value an unset instance
+     * already defaults to) when Kernel::boot() hasn't run.
      */
     private function requestMountDepth(): int
     {
@@ -116,9 +113,6 @@ final class CookieService
             // the already-narrow "plugin inside the Piwigo directory tree"
             // case above -- a genuinely external script (outside PWG
             // entirely) is a narrower, unsupported sub-case, not handled.
-            // Legacy Coupling Retirement gap-closure (entry-shell
-            // define()/include round): used to read the raw PHPWG_ROOT_PATH
-            // constant here -- see RequestMountDepth's own docblock.
             $scr .= str_repeat('../', $mountDepth);
             while (true) {
                 $new = preg_replace('#[^/]+/\.\.(/|$)#', '', $scr);

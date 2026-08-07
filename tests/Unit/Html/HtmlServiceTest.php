@@ -44,13 +44,11 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 beforeEach(function (): void {
     // ProcessCache/ErrorCollector are both real required constructor
-    // collaborators on HtmlService now (singleton/service-locator
-    // elimination campaign, Phase 11 sub-phase 11E, originally Phase 1/4)
-    // -- HtmlServiceTestFactory::build() resolves both from the real
-    // container when one is booted, which needs a real Paths too, not
-    // just any booted Kernel: ErrorCollector's own container factory
-    // resolves a DeploymentPolicy-dependent instance, whose own factory
-    // itself needs Paths bound to autowire.
+    // collaborators on HtmlService -- HtmlServiceTestFactory::build()
+    // resolves both from the real container when one is booted, which
+    // needs a real Paths too, not just any booted Kernel: ErrorCollector's
+    // own container factory resolves a DeploymentPolicy-dependent
+    // instance, whose own factory itself needs Paths bound to autowire.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3)));
     $processCache = Kernel::container()->get(ProcessCache::class);
     if ($processCache instanceof ProcessCache) {
@@ -74,10 +72,9 @@ function htmlServiceTestRenderCommentContent(HtmlService $service, string $conte
 }
 
 /**
- * ProcessCache::setStatic()/getStatic() (singleton/service-locator
- * elimination campaign, Phase 1) are gone -- resolves the same
- * container-shared instance HtmlServiceTestFactory::build() injects into
- * HtmlService, so seeding/reading it here observes the same object.
+ * Resolves the same container-shared ProcessCache instance
+ * HtmlServiceTestFactory::build() injects into HtmlService, so
+ * seeding/reading it here observes the same object.
  */
 function htmlServiceTestProcessCache(): ProcessCache
 {
@@ -90,13 +87,10 @@ function htmlServiceTestProcessCache(): ProcessCache
 }
 
 /**
- * HtmlService::urlService() now resolves UrlServiceInterface (and, via its
- * own constructor, RootPathOverride) live from the container on every call
- * (singleton/service-locator elimination campaign, Phase 6) -- a bare
- * RootPathOverride::push()/pop() static call no longer exists at all,
- * let alone affects the same instance. This resolves the one, real,
- * container-shared RootPathOverride every UrlService construction in this
- * booted Kernel shares.
+ * HtmlService::urlService() resolves UrlServiceInterface (and, via its
+ * own constructor, RootPathOverride) live from the container on every
+ * call. This resolves the one, real, container-shared RootPathOverride
+ * every UrlService construction in this booted Kernel shares.
  */
 function htmlServiceTestRootPathOverride(): RootPathOverride
 {
@@ -127,10 +121,9 @@ test('renderCommentContent bolds *word* only when a word character directly touc
     // where a real word character (letter/digit/underscore) directly
     // touches the asterisk on both sides -- a space (or start/end of
     // string) next to '*' is two non-word characters, no boundary, no
-    // match. This is the original regex's real, longstanding, pre-existing
-    // behavior (confirmed empirically), not something this migration
-    // changed -- "*bold*" surrounded by spaces is verifiably a silent
-    // no-op, only "word*bold*word" (no space) actually triggers it.
+    // match (confirmed empirically): "*bold*" surrounded by spaces is
+    // verifiably a silent no-op, only "word*bold*word" (no space)
+    // actually triggers it.
     $service = HtmlServiceTestFactory::build();
 
     expect(htmlServiceTestRenderCommentContent($service, 'a *hello* b'))->toBe('a *hello* b')
@@ -512,10 +505,9 @@ test('renderElementName falls back to an empty string when neither name nor file
 });
 
 test('renderElementName throws when a render_element_name handler returns something other than a RenderElementName instance', function (): void {
-    // dispatchChange() enforces this itself now -- the old is_string()
-    // fallback ternary this test used to kill was retired along with the
-    // typed conversion, since the class-string key + instanceof check
-    // make that failure mode structurally impossible to reach silently.
+    // dispatchChange() enforces this itself: the class-string key +
+    // instanceof check make returning a non-matching type structurally
+    // impossible to pass through silently.
     $service = HtmlServiceTestFactory::build();
     // A real, untyped plugin handler is exactly what addEventHandler()
     // (not addTypedHandler()) accepts -- PHPStan can't see third-party
@@ -574,10 +566,9 @@ test('renderElementDescription never triggers render_element_description for a g
 });
 
 test('renderElementDescription throws when a render_element_description handler returns something other than a RenderElementDescription instance', function (): void {
-    // dispatchChange() enforces this itself now -- the old is_string()
-    // fallback ternary this test used to kill was retired along with the
-    // typed conversion, since the class-string key + instanceof check
-    // make that failure mode structurally impossible to reach silently.
+    // dispatchChange() enforces this itself: the class-string key +
+    // instanceof check make returning a non-matching type structurally
+    // impossible to pass through silently.
     $service = HtmlServiceTestFactory::build();
     // See RenderElementName's own sibling test above for why this uses
     // addEventHandler(), not addTypedHandler().
@@ -855,10 +846,9 @@ test('getThumbnailTitle strips real tag markup out of the final title, not just 
 });
 
 test('getThumbnailTitle throws when a get_thumbnail_title handler returns something other than a GetThumbnailTitle instance', function (): void {
-    // dispatchChange() enforces this itself now -- the old is_string()
-    // fallback ternary this test used to kill was retired along with the
-    // typed conversion, since the class-string key + instanceof check
-    // make that failure mode structurally impossible to reach silently.
+    // dispatchChange() enforces this itself: the class-string key +
+    // instanceof check make returning a non-matching type structurally
+    // impossible to pass through silently.
     $service = HtmlServiceTestFactory::build();
     // See RenderElementName's own sibling test above for why this uses
     // addEventHandler(), not addTypedHandler().
@@ -1047,12 +1037,11 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
     mkdir($root, 0o777, true);
 
     // KernelContainerOverride::with() rebinds Paths::class for this test's
-    // own scope -- CurrentPaths (singleton/service-locator elimination
-    // campaign, Phase 3) is a pure shim now, reading whatever the live
+    // own scope -- CurrentPaths is a pure shim, reading whatever the live
     // container has, not an independently-settable static. It builds a
     // genuinely new container (Container::build(), not a mutation of the
-    // outer one), so CurrentConfig -- itself container-shared since Phase 9
-    // -- resolves to a brand-new instance inside the closure too; the
+    // outer one), so CurrentConfig -- itself container-shared -- resolves
+    // to a brand-new instance inside the closure too; the
     // setDataLocation()/setDataDirChecked() calls below must therefore run
     // AFTER entering the closure, against that new instance, or
     // Template::__construct()'s own dataDirChecked()===null branch reaches

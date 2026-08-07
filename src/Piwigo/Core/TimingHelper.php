@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-/**
- * P23 batch 8d: pure microtime/elapsed-time helpers relocated from
- * include/functions.inc.php -- no natural existing class home, stateless,
- * matches Piwigo\Auth\AccessControl's static-class precedent.
- */
 final class TimingHelper
 {
     public static function microSeconds(): string
@@ -38,10 +33,6 @@ final class TimingHelper
 
     /**
      * append a line to PageState's accumulated debug output
-     *
-     * P23 batch 8d: relocated from include/functions.inc.php's
-     * pwg_debug(), unchanged logic (former `global $debug` accumulator is
-     * now PageState's own debugOutput property).
      */
     public static function debug(string $string, PageState $pageState): void
     {

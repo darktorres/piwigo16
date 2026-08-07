@@ -53,21 +53,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces password.php -- the "forgot password" verification-code +
- * reset-key flow. The legacy file's own 6 top-level functions
- * (process_verification_code()/process_password_request()/
- * check_password_reset_key()/reset_password()/reset_password_key()/
- * reset_password_code()) become private methods here instead of free
- * functions -- confirmed via a project-wide grep that nothing outside this
- * one file calls any of them (tools/triggers_list.php's own reference is
- * static trigger-name metadata, not a real call site).
+ * The "forgot password" verification-code + reset-key flow.
  *
  * Every redirect() in this file happens before any rendering starts.
- *
- * Legacy Coupling Retirement Workstream D: converted off
- * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
- * pattern as AboutController -- see that class's own docblock for the
- * accumulator mechanics this relies on.
  */
 final class PasswordController implements ControllerInterface
 {
@@ -479,11 +467,10 @@ final class PasswordController implements ControllerInterface
                 if ($has_valid_user_id) {
                     $saveCurrentUser = $this->currentUser->get();
                     $target_user_data = $this->userService->buildUser(UserId::from((int) $user_id_raw));
-                    // PreferencesService writes onto CurrentUser::get()->id
-                    // (Legacy Coupling Retirement Track A batch A3), so the
-                    // identity must switch here too, or the preference
-                    // would land on the ORIGINAL requester instead of the
-                    // locked-out target user.
+                    // PreferencesService writes onto CurrentUser::get()->id,
+                    // so the identity must switch here too, or the
+                    // preference would land on the ORIGINAL requester
+                    // instead of the locked-out target user.
                     $this->currentUser->set(User::fromUserArray($target_user_data));
                     $this->preferencesService
                         ->updateParam('reset_password_forbidden_until', time() + 60 * 60);

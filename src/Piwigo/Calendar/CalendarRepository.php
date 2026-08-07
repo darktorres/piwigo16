@@ -128,14 +128,11 @@ final class CalendarRepository
 
     /**
      * Applies a permission/scope/date `SqlCondition` via `andWhere()`,
-     * binding every one of its parameters -- same shared-helper shape as
-     * every other `applyCondition()` in this DQL-modernization campaign.
-     * DQL-only (unlike most of its siblings elsewhere in this campaign,
-     * which stay a `QueryBuilder|Doctrine\DBAL\Query\QueryBuilder` union)
-     * -- every consumer in this file uses real DQL, including
-     * {@see findImageIds()} above whenever its own conditional DQL
-     * attempt succeeds; its raw-DBAL fallback path is a plain
-     * string-concatenated query and doesn't go through this helper.
+     * binding every one of its parameters. DQL-only: every consumer in
+     * this file uses real DQL, including {@see findImageIds()} above
+     * whenever its own conditional DQL attempt succeeds -- its raw-DBAL
+     * fallback path is a plain string-concatenated query and doesn't go
+     * through this helper.
      */
     private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
     {

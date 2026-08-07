@@ -9,8 +9,7 @@ use Piwigo\Section\SectionPopulator;
 
 /**
  * SectionPopulator::needsPermalinkRedirect() -- the permalink-mismatch
- * redirect decision extracted from include/section_init.inc.php during its
- * P23 batch 4d port. Pure function, no DB/globals needed (it does not
+ * redirect decision. Pure function, no DB/globals needed (it does not
  * itself redirect -- see the class docblock). $expectedCatUrlName is
  * str2url($category['name']) as computed by the real caller
  * (SectionPopulator::populate()) -- passed in directly here rather than

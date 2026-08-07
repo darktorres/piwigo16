@@ -22,27 +22,19 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces popuphelp.php (front-end help popup -- distinct from
- * admin/popuphelp.php, a standalone root-style entry point untouched
- * since P21). check_status() stays outside the render logic on purpose:
- * it can throw ResponseReadyException on failure directly, same as every
- * other controller (Workstream C3).
+ * Backs popuphelp.php (front-end help popup), distinct from
+ * admin/popuphelp.php, a separate root-style entry point. check_status()
+ * runs before any render logic, since it throws ResponseReadyException
+ * directly on failure, the same pattern every controller here uses.
  *
- * Workstream C3c: converted off LegacyRenderCapture's ob_start()/
- * ob_get_contents() capture, same "nothing in this chain echoes -- Page
- * HeaderRenderer only ever called assign()/parse($handle, false)
- * internally, parse('popuphelp', false) accumulates into Template's own
- * $output buffer, PageTail::renderToString() drains that whole buffer as
- * one string" mechanism Controller\AboutController already established.
- * The `?page=` validation now throws ResponseReadyException instead of
- * die()ing mid-render -- this drops the former "preserve partial legacy
- * HTML then die()" behavior LegacyRenderCapture's own docblock used to
- * document as intentional, deliberately: nothing has actually been
- * echoed to a real Response body by this point any more (Template's own
- * accumulator buffer isn't drained until PageTail::renderToString() at
- * the very end), so there's no partial HTML left to preserve -- a clean
- * 400 reject is strictly more correct, matching how
- * Controller\ActionController::doError() already works.
+ * Nothing in this chain echoes directly: PageHeaderRenderer only calls
+ * assign()/parse($handle, false) internally, parse('popuphelp', false)
+ * accumulates into Template's own $output buffer, and
+ * PageTail::renderToString() drains that whole buffer as one string at
+ * the end. Because nothing has been echoed to the Response body before
+ * that point, the `?page=` validation below can throw
+ * ResponseReadyException on an invalid value with a clean 400 response --
+ * there is no partial HTML to preserve.
  */
 final class PopuphelpController implements ControllerInterface
 {

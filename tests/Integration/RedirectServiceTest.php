@@ -113,15 +113,11 @@ final class RedirectServiceTest extends IntegrationTestCase
     {
         // Kernel is already booted by parent::setUp() -- resolve the same
         // container-shared instance a real request would get, matching
-        // RedirectService's own real production callers (singleton/
-        // service-locator elimination campaign, Phase 6). RedirectService
-        // no longer resolves UserService itself (that was the deleted
-        // `userService()` private static resolver this class used to have,
-        // along with its own "Container returned an unexpected type"
-        // \LogicException -- the equivalent check now lives on whichever
-        // Bootstrap resolver a real caller uses, e.g.
-        // RequestBootstrap::userService(), already covered by that class's
-        // own tests).
+        // RedirectService's own real production callers. RedirectService
+        // does not resolve UserService itself; the equivalent "Container
+        // returned an unexpected type" check lives on whichever Bootstrap
+        // resolver a real caller uses, e.g. RequestBootstrap::userService(),
+        // already covered by that class's own tests.
         $userService = Kernel::container()->get(UserService::class);
         if (! $userService instanceof UserService) {
             throw new LogicException('Container returned an unexpected type for ' . UserService::class);

@@ -84,10 +84,9 @@ test('confGetParam reads a property-backed key via its own typed getter', functi
  * `invokeXxx()`-via-Reflection convention for private-static pure logic
  * (see e.g. PwgTOTPTest.php's own invokeGenerateCodeFromTimestamp()).
  *
- * hydrate() is `private` (instance), not `private static` (singleton/
- * service-locator elimination campaign, Phase 9 -- ConfigService now reads/
- * writes CurrentConfig through a constructor-injected instance, not a
- * static call), so it can no longer be invoked with a null $object --
+ * hydrate() is `private` (instance), not `private static` -- ConfigService
+ * reads and writes CurrentConfig through a constructor-injected instance,
+ * not a static call, so hydrate() can't be invoked with a null $object.
  * unconnectedConfigService() itself resolves CurrentConfigTestFactory::get(),
  * matching every test below that also reads/writes through
  * CurrentConfigTestFactory::get() directly.

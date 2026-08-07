@@ -20,35 +20,26 @@ use Symfony\Component\Routing\RouteCollection;
  * prefix already stripped (e.g. "/about.php", not "/piwigo17/about.php")
  * -- UrlMatcher::match() expects a bare "pathinfo", the same contract a
  * full Symfony HttpRequest::getPathInfo() provides via
- * Request::getBaseUrl(). This app has no single front controller (each of
- * P22's 21 root files is its own independent entry point, unlike a
- * typical Symfony app's index.php), so that computation is done here from
- * SCRIPT_NAME instead: confirmed via a real live-curl 404 against a
- * genuinely-registered route (this dev instance is reached at
- * /piwigo17/about.php, not /about.php) that UrlMatcher::match() needs the
- * prefix stripped, not the raw request path.
+ * Request::getBaseUrl(). This app has no single front controller (every
+ * root PHP file is its own independent entry point, unlike a typical
+ * Symfony app's index.php), so that computation is done here from
+ * SCRIPT_NAME instead.
  *
- * MOUNT_DEPTH_ATTRIBUTE (P23 batch 6a) corrects a real bug found live:
- * every routed entry point until admin/popuphelp.php lived directly at the
- * app's mount point, so a single `dirname(SCRIPT_NAME)` call always
- * happened to strip exactly the right prefix. For a file one directory
- * deeper (admin/), `dirname(SCRIPT_NAME)` over-strips by that extra
- * directory (e.g. "/piwigo17/admin" instead of "/piwigo17"), silently
- * matching a *different*, wrong route rather than 404ing (confirmed live:
- * requests to /admin/popuphelp.php were actually being served by the
- * front-end PopuphelpController instead of AdminPopuphelpController).
+ * self::MOUNT_DEPTH_ATTRIBUTE lets an entry point that lives one (or
+ * more) directories deeper than the app's mount point (e.g.
+ * admin/popuphelp.php) request extra `dirname()` stripping beyond the
+ * single strip every root-level entry point needs -- without it,
+ * `dirname(SCRIPT_NAME)` would strip the wrong number of segments and
+ * silently match a different, wrong route instead of 404ing.
  *
- * Deriving the extra depth from real filesystem paths (SCRIPT_FILENAME vs.
- * the app root) was tried first and rejected: this dev instance serves
- * the app through a symlink (`/var/www/html/piwigo17` -> the real repo
- * checkout), and Apache's own SCRIPT_FILENAME reflects the *symlinked*
- * path while PHP's own `__DIR__`/realpath-resolved paths reflect the
- * *target* path -- the two are never string-comparable, confirmed live.
- * Instead, the entry point itself (the one file that genuinely knows its
- * own real depth below the app root, e.g. admin/popuphelp.php's own
- * bootstrap) attaches it as a request attribute before dispatch; every
- * existing root-level entry point never sets it, defaulting to 0 (no
- * behavior change for any of them).
+ * The extra depth can't be derived automatically from filesystem paths:
+ * when the app is served through a symlink, Apache's own SCRIPT_FILENAME
+ * reflects the symlinked path while PHP's own `__DIR__`/realpath-resolved
+ * paths reflect the target path, so the two are never reliably
+ * comparable. Instead, the entry point itself (the one file that
+ * genuinely knows its own depth below the app root) attaches
+ * self::MOUNT_DEPTH_ATTRIBUTE as a request attribute before dispatch;
+ * every root-level entry point never sets it, defaulting to 0.
  */
 final readonly class Router
 {

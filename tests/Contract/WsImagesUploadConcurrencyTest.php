@@ -11,14 +11,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
 /**
- * Phase 0 Item 1's own plan text calls this the single item in the whole
- * 23-item plan whose entire point is behavior under concurrent access, and
- * its own Verification section requires a genuine 3-part concurrency test
- * -- confirmed missing entirely during a full re-audit of the plan against
- * the current tree (the existing coverage in WsImagesChunkedUploadTest.php
- * only proves the *sequential* "value already exists" rejection, never
- * real contention).
- *
  * A single PHP test process can't simulate two genuinely simultaneous
  * pwg.images.add requests on its own -- the foreground callWs() call
  * blocks synchronously on a real HTTP request, which itself blocks
@@ -117,9 +109,8 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
      */
     private function spawnBackgroundLockHolderThatInsertsThenReleases(string $lockName, string $md5sum, string $file)
     {
-        // pgsql support pass: real bugs found live -- GET_LOCK()/
-        // RELEASE_LOCK()/SLEEP() are all MySQL-only, and the CLI client
-        // itself differs (mysql -e vs psql -c). The advisory-lock key
+        // GET_LOCK()/RELEASE_LOCK()/SLEEP() are all MySQL-only, and the CLI
+        // client itself differs (mysql -e vs psql -c). The advisory-lock key
         // must be the exact same derived bigint
         // Db\AdvisorySessionLock::key() computes (this shell script has
         // no access to that PHP-side helper, so it's replicated here as
@@ -167,9 +158,9 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
     }
 
     /**
-     * Part 1 of 3: two concurrent uploads of the SAME value. The real
-     * fix's whole point -- confirms the second request genuinely blocks on
-     * GET_LOCK() (not an instant, wrong-branch rejection) while the first
+     * Part 1 of 3: two concurrent uploads of the SAME value. Confirms the
+     * second request genuinely blocks on GET_LOCK() (not an instant,
+     * wrong-branch rejection) while the first
      * is in its own check-then-insert window, then correctly detects the
      * row the first inserted once unblocked, returning the clean
      * duplicate error rather than racing past the check and inserting a
@@ -263,9 +254,8 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
     /**
      * Part 3 of 3: check_uniqueness=false must never touch the lock at
      * all, even when another request currently holds it for the exact
-     * same value -- the item's own "rejected fix" section preserves this
-     * as a deliberate, intentional escape hatch, not a gap the lock should
-     * close.
+     * same value -- this is a deliberate, intentional escape hatch, not a
+     * gap the lock should close.
      */
     public function test_add_with_check_uniqueness_false_is_never_blocked_even_when_the_same_value_is_locked(): void
     {

@@ -37,68 +37,35 @@ use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin/notification_by_mail.php (page slug "notification_by_mail"),
- * folded directly into this controller -- same shape as every prior P23
- * batch 6 sub-batch's shell folding.
+ * Replaces admin/notification_by_mail.php (page slug "notification_by_mail").
  *
- * `admin/include/functions_notification_by_mail.inc.php` (P23 batch 8b-7)
- * is now folded into `Piwigo\Mail\NotificationByMailSender`, constructed
- * once as `$nbmSender` near the top of `handle()` and threaded explicitly
- * into the private methods below that need it -- replacing the
- * former `include_once` + implicit `global $env_nbm;` state-threading with
- * a real constructed dependency. `doActionSendMailNotification()`'s own
- * body moved with it (as `NotificationByMailSender::sendMailNotifications()`)
- * since it read the sender's internal `$env_nbm`-equivalent state
- * (email format, mail template, sender address) directly rather than just
- * calling the sender's own public methods -- keeping it here would have
- * meant leaking that internal state back out through new getters, when the
- * method is really part of the same mail-sending pipeline the sender
- * already owns. See `NotificationByMailSender`'s own docblock for why it
- * lives in `Piwigo\Mail` (L3Presentation), not `Piwigo\Notification`
- * (L2bExtendedDomain, which may not depend on `Piwigo\Template\Template`).
+ * `Piwigo\Mail\NotificationByMailSender` is constructed once as `$nbmSender`
+ * near the top of `handle()` and threaded explicitly into the private
+ * methods below that need it. It lives in `Piwigo\Mail` (L3Presentation)
+ * rather than `Piwigo\Notification` (L2bExtendedDomain, which may not
+ * depend on `Piwigo\Template\Template`) -- see its own docblock for why.
  *
- * admin.php itself already gates every page behind
- * check_status(AccessLevel::Administrator) before dispatch (admin.php:65),
- * so the original file's own first (redundant, same level) check_status()
- * call is dropped here -- same precedent as MaintenanceSubController/
- * ConfigurationSubController. Its SECOND check_status(get_tab_status(...))
- * call is kept unchanged: get_tab_status() requires AccessLevel::Webmaster
- * (not just Administrator) for the "param"/"subscribe" tabs, a genuinely
- * higher bar than admin.php's own gate for 2 of the 3 tabs.
+ * admin.php already gates every page behind
+ * check_status(AccessLevel::Administrator) before dispatch, so this
+ * controller does not repeat that check. It does call
+ * `checkStatus(self::getTabStatus($page_mode))`: `getTabStatus()` requires
+ * `AccessLevel::Webmaster` (not just Administrator) for the "param"/
+ * "subscribe" tabs, a higher bar than admin.php's own gate for those two of
+ * the three tabs.
  *
- * No CSRF gap: the single `if (! empty($_POST)) { check_pwg_token(); }`
- * gate (before the 3-way $page_mode switch) already covers every real
- * mutation across all 3 tabs uniformly. insertNewDataUserMailNotification()
- * runs unconditionally on every GET page load and can send real mail via
- * pwg_mail() if any users are missing their own notification-subscription
- * row -- reviewed, not a CSRF gap (nothing attacker-controlled is written;
- * the outcome is fully determined by server config and existing DB state,
- * matching the delete_orphans/sync_md5sum "real work, no attacker-
- * controlled outcome" precedent from P23 batch 6g).
+ * The CSRF check before the `$page_mode` switch covers every mutation
+ * uniformly across all 3 tabs. `insertNewDataUserMailNotification()` runs
+ * unconditionally on every GET page load and can send mail via
+ * `pwg_mail()` for any user missing a notification-subscription row; this
+ * is not a CSRF gap since nothing attacker-controlled is written and the
+ * outcome is fully determined by server config and existing DB state.
  *
- * do_timeout_treatment()/get_tab_status()/insertNewDataUserMailNotification()/
- * renderGlobalCustomizeMailContent() were top-level functions in the
- * original file with zero external callers (confirmed via a direct grep --
- * tools/triggers_list.php mentions 2 of them in a documentation string
- * only, not executable code) -- folded into private methods here, removing
- * the "cannot redeclare function on double-include" risk every prior
- * sub-batch with this shape has already converted away from
- * (do_timeout_treatment()/insertNewDataUserMailNotification() dropped
- * `static` again during Phase 12 sub-phase 12D, once their own last
- * remaining PageState::current()/Translator::get() shim calls closed for
- * real via $this->pageState/$this->translator instead).
- * doActionSendMailNotification() moved to NotificationByMailSender instead,
- * see above.
- *
- * renderGlobalCustomizeMailContent() needed different handling than the
- * other 4: it's registered as a typed event handler
- * (`addTypedHandler(NbmRenderGlobalCustomizeMailContent::class, ...)`),
- * and a bare string can't resolve to a private method from outside the
- * class. EventDispatcher::addTypedHandler()'s real signature accepts a
- * Closure -- registered via first-class callable syntax
- * (`self::renderGlobalCustomizeMailContent(...)`) instead, a real
- * Closure created from inside the class that fully preserves
- * private-method encapsulation.
+ * `renderGlobalCustomizeMailContent()` is registered as a typed event
+ * handler via
+ * `EventDispatcher::addTypedHandler(NbmRenderGlobalCustomizeMailContent::class, ...)`,
+ * which requires a `Closure`; it's passed via first-class callable syntax
+ * since a bare string can't resolve to a private method from outside the
+ * class.
  */
 final class NotificationByMailSubController implements AdminSubControllerInterface
 {

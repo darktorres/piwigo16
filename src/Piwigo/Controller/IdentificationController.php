@@ -42,23 +42,14 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces identification.php -- the login form + POST handler. Reads
+ * Backs identification.php -- the login form + POST handler. Reads
  * $_GET/$_POST/$_SESSION/$_COOKIE directly rather than through $request:
- * the underlying legacy functions this page calls (check_input_parameter(),
- * try_log_user()) are themselves written against the real superglobals,
- * not a passed-in copy, and superglobals (unlike ordinary global variables)
- * are already reachable from any scope with no `global` declaration needed
- * -- routing them through $request here would only desync two copies of
- * the same request data for no real benefit, the same "keep legacy glue
- * functioning as before" scoping this whole phase uses elsewhere.
+ * superglobals are already reachable from any scope with no `global`
+ * declaration needed, so routing them through $request here would only
+ * desync two copies of the same request data for no real benefit.
  *
  * Every redirect() in this file (both the "already logged in" and the
  * "successful login" paths) happens *before* any rendering starts.
- *
- * Legacy Coupling Retirement Workstream D: converted off
- * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
- * pattern as AboutController -- see that class's own docblock for the
- * accumulator mechanics this relies on.
  */
 final class IdentificationController implements ControllerInterface
 {

@@ -21,10 +21,9 @@ use Piwigo\Lang\Translator;
  * by every real admin page, but fully exercisable directly here as a pure
  * function of ($sheets, $tabId).
  *
- * Singleton/service-locator elimination campaign, Phase 3: CoreTabs is a
- * container-shared instance now -- each test constructs its own fresh
- * instance directly (same "no reset() needed" shape as
- * SectionContextRegistryTest.php), instead of seeding a static via
+ * CoreTabs is a container-shared instance with no static state to reset,
+ * so each test below constructs its own fresh instance directly (same
+ * shape as SectionContextRegistryTest.php) instead of seeding a static via
  * beforeEach().
  */
 function coreTabsUrlService(): UrlServiceInterface
@@ -33,11 +32,9 @@ function coreTabsUrlService(): UrlServiceInterface
 }
 
 /**
- * CoreTabs gained a required Lang constructor collaborator (singleton/
- * service-locator elimination campaign, Phase 8) and this plain Unit test
- * never boots a Kernel, so each call site below needs its own throwaway,
- * DB-free instance -- same "no data loaded, t() returns the raw key"
- * shape this file's own assertions already depended on before that phase.
+ * This plain Unit test never boots a Kernel, so each call site below
+ * needs its own throwaway, DB-free Lang instance -- with no data loaded,
+ * t() returns the raw key, matching this file's own assertions.
  */
 function coreTabsLang(): Lang
 {
@@ -45,11 +42,9 @@ function coreTabsLang(): Lang
 }
 
 /**
- * CoreTabs gained a required CurrentConfig constructor collaborator
- * (singleton/service-locator elimination campaign, Phase 9) -- same
- * "fresh, DB-free instance, no Kernel booted" reasoning as coreTabsLang()
- * above; CurrentConfig's own defaults are always the correct value to
- * read before a real config table has loaded.
+ * Same "fresh, DB-free instance, no Kernel booted" reasoning as
+ * coreTabsLang() above; CurrentConfig's own defaults are the correct
+ * value to read before a real config table has loaded.
  */
 function coreTabsCurrentConfig(): CurrentConfig
 {

@@ -5,10 +5,9 @@ declare(strict_types=1);
 use Piwigo\Admin\LoadedPlugins;
 
 /**
- * Piwigo\Admin\LoadedPlugins -- a container-shared instance (singleton-DI
- * campaign, Phase 1). Each test constructs its own fresh instance directly;
- * no reset()/Kernel::boot() needed since there's no more shared static
- * state to isolate between tests.
+ * Piwigo\Admin\LoadedPlugins -- a container-shared instance. Each test
+ * constructs its own fresh instance directly; no reset()/Kernel::boot()
+ * needed since there's no shared static state to isolate between tests.
  */
 test('get() throws before anything has ever been initialised', function (): void {
     $loadedPlugins = new LoadedPlugins();

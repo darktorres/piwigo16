@@ -101,12 +101,11 @@ final class WsServerTest extends ContractTestCase
         self::assertStringContainsString('Request format: rest Response format: not-a-real-format', $body);
         // var_export()'s own output of PwgServer's own shallow request/
         // response debug state -- confirms the die(0) branch really ran to
-        // completion rather than stopping earlier. Singleton/service-locator
-        // elimination campaign, Phase 11 sub-phase 11L: no longer
-        // var_export($this) directly -- PwgServer's own DI-injected
-        // collaborators (accessControl's own chain reaches HtmlService/
-        // MailService/UrlService and every one of their own collaborators)
-        // made a full var_export($this) exhaust the request's memory limit.
+        // completion rather than stopping earlier. Not a full
+        // var_export($this): PwgServer's own DI-injected collaborators
+        // (accessControl's own chain reaches HtmlService/MailService/
+        // UrlService and every one of their own collaborators) would make
+        // a full var_export($this) exhaust the request's memory limit.
         self::assertStringContainsString("'_requestFormat' => 'rest'", $body);
         self::assertStringContainsString("'_responseFormat' => 'not-a-real-format'", $body);
         self::assertStringContainsString("'_methods' => \n  array (\n  )", $body);
@@ -130,8 +129,8 @@ final class WsServerTest extends ContractTestCase
      * one calls run() directly in the PHPUnit CLI process, so it
      * boots/resets the Kernel locally, matching
      * Integration\ContainerSmokeTest's own boot()-then-reset() pattern. A
-     * real Paths is required, not a bare boot (Phase 11 sub-phase 11A):
-     * PwgServer now constructor-injects AccessControl, whose own chain
+     * real Paths is required, not a bare boot: PwgServer constructor-
+     * injects AccessControl, whose own chain
      * (-> RedirectService -> Lang) resolves Paths, whose value the
      * container can't guess without one -- same rationale as
      * WsTopLevelTest::test_getMissingDerivatives_with_an_empty_gallery_returns_an_empty_array_early()'s

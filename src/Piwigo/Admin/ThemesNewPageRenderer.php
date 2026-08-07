@@ -31,10 +31,9 @@ use Piwigo\Users\PreferencesService;
  * dispatched by ThemesSubController) -- browse the PEM catalog and install a
  * new theme.
  *
- * Already correctly protected before this port (confirmed by direct read):
- * its one real mutation (isset($_GET['revision']) and isset($_GET['extension']),
- * install) already gates on is_webmaster() and check_pwg_token() -- no CSRF
- * fix needed here, unlike ThemesInstalledPageRenderer.
+ * This page's one mutation (install, gated on $revision/$extension both
+ * being set) requires webmaster status and a valid CSRF token before
+ * calling PemCatalog::extractArchive() -- unlike ThemesInstalledPageRenderer.
  */
 final class ThemesNewPageRenderer
 {
@@ -56,11 +55,10 @@ final class ThemesNewPageRenderer
     ) {}
 
     /**
-     * Legacy Coupling Retirement Track A: $pageSlug (batch A5.2f) and
-     * $tab (batch A5.2h) are explicit params instead of
+     * $pageSlug and $tab are explicit params instead of
      * `global $page['page']`/`$page['tab']` -- the one real caller
-     * (ThemesSubController) already knows both values statically/
-     * locally (it's the only class registered for the 'themes' slug in
+     * (ThemesSubController) already knows both values statically/locally
+     * (it's the only class registered for the 'themes' slug in
      * config/admin_pages.php, and it already computes its own $tab local
      * before dispatching here).
      */

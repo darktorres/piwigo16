@@ -32,25 +32,19 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces about.php -- P22's own proof-of-concept controller (smallest,
- * lowest-risk real page: no POST handling, no redirects).
+ * Renders the about page: no POST handling, no redirects.
  *
- * Legacy Coupling Retirement Workstream D: converted off
- * LegacyRenderCapture's ob_start()/ob_get_contents() capture. Nothing in
- * this chain echoes anymore -- PageHeaderRenderer/MenubarRenderer only
- * ever called $template->assign()/parse($handle, true) internally
- * (confirmed by reading both, not assumed), $template->parse('about', false)
- * accumulates into Template's own $output buffer instead of the former
- * pparse()'s early flush+echo, and PageTail::renderToString() drains that
- * whole buffer (header + about content + tail) as one string instead of
- * echoing it. See Template::fetchOutput()'s own docblock for the
- * accumulator mechanics this relies on.
+ * Nothing in this render chain echoes -- PageHeaderRenderer/MenubarRenderer
+ * only ever call $template->assign()/parse($handle, true) internally,
+ * $template->parse('about', false) accumulates into Template's own
+ * $output buffer, and PageTail::renderToString() drains that whole buffer
+ * (header + about content + tail) as one string. See
+ * Template::fetchOutput()'s own docblock for the accumulator mechanics
+ * this relies on.
  *
- * check_status() stays outside this method's own render logic on
- * purpose: on failure it throws ResponseReadyException (via
- * HtmlService::accessDenied()/RedirectService::redirectHttp()/
- * redirectHtml()), same as every other controller (Workstream C3) --
- * not an exit()-based termination.
+ * accessControl->checkStatus() throws ResponseReadyException on failure
+ * (via HtmlService::accessDenied()/RedirectService::redirectHttp()/
+ * redirectHtml()) rather than terminating via exit().
  */
 final class AboutController implements ControllerInterface
 {

@@ -11,23 +11,18 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
 /**
- * Ws\PwgImages's older, 2-step chunked-upload API (Wave 1 of the
- * coverage-gap closure plan, see
- * /home/torres/.claude/plans/piped-enchanting-spark.md): addChunk (0/31),
- * add (0/97) -- pwg.images.addChunk buffers base64 chunks to disk keyed by
+ * Ws\PwgImages's older, 2-step chunked-upload API: addChunk, add --
+ * pwg.images.addChunk buffers base64 chunks to disk keyed by
  * original_sum, pwg.images.add merges them and creates the photo. Distinct
  * from the newer addSimple/upload multipart flow covered in
  * WsUploadTest.php.
  *
- * Later addition: mergeChunks()'s own write-failure guard, addChunk()'s
+ * Also covers mergeChunks()'s own write-failure guard, addChunk()'s
  * buffer-directory-creation guard, and addFile()'s 'high'-type/
  * do_update=true branches (the latter two calling
  * UploadService::addUploadedFile() with a non-null $id_image -- the
- * "replace an existing photo's file" path WsImagesUploadGapsTest's own
- * docblock once documented as a confirmed 500 in this environment; that
- * was a real images.path double-root-path bug, since fixed in
- * UploadService::addUploadedFile() -- see its own docblock -- so this path
- * genuinely succeeds now).
+ * "replace an existing photo's file" path; see that method's own
+ * docblock).
  *
  * mergeChunks()'s *other* guard (is_file() still true right after its own
  * unlink() call) is NOT chased here: upload/buffer is owned by www-data,
@@ -526,7 +521,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         // above, but the replacement now wins the comparison -- do_update
         // becomes true and addFile() proceeds to
         // UploadService::addUploadedFile() (see this file's own class
-        // docblock about that path's previously-documented-broken status).
+        // docblock).
         $md5sum = md5(uniqid());
         $imageId = $this->insertThrowawayImage($md5sum);
         // insertThrowawayImage()'s own fixed filesize (1000, i.e. ~1MB) is

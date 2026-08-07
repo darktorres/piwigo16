@@ -18,8 +18,8 @@ use Piwigo\Users\UserEntity;
 
 /**
  * Persistence layer for the activity domain: `activity` (an append-only
- * audit-ish log of admin/user actions app-wide, not to be confused with
- * the greenfield P18 AuditService/SEC-57, which is a separate, dedicated
+ * log of admin/user actions app-wide, not to be confused with
+ * {@see \Piwigo\Audit\AuditService}, a separate, dedicated
  * tamper-evident log). Also serves admin/user_activity.php's own
  * dashboard read queries.
  *
@@ -28,12 +28,11 @@ use Piwigo\Users\UserEntity;
 final class ActivityRepository extends EntityRepository implements LoginActivityLookupInterface
 {
     /**
-     * Item 16F: real DQL replacement for the raw DBAL read
-     * {@see \Piwigo\Auth\AuthRepository::countLoginActivity()} used to do
-     * directly -- `Auth` (`L2aCoreDomain`) can't depend on `Activity`
-     * (`L2bExtendedDomain`), so `AuthRepository` now constructor-injects
-     * {@see \Piwigo\Auth\LoginActivityLookupInterface} instead, wired to
-     * this class at the composition root.
+     * Implements {@see \Piwigo\Auth\LoginActivityLookupInterface} so
+     * `Auth` (`L2aCoreDomain`) can query login activity without
+     * depending directly on `Activity` (`L2bExtendedDomain`);
+     * `AuthRepository` constructor-injects the interface, wired to this
+     * class at the composition root.
      */
     #[Override]
     public function countLoginActivity(int $userId): int
@@ -91,18 +90,13 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
     /**
      * Number of logged actions per user, excluding object='system'.
      *
-     * Item 14 DQL audit: converted to DQL -- single table, aggregate DQL
-     * can express. A prior audit pass kept this on plain DBAL, documenting
-     * a phpstan-doctrine false positive that mis-inferred the nullable
-     * `performed_by` (genuinely NULL here for a non-'system' row whose
-     * acting user was later deleted, an ON-DELETE-SET-NULL FK case distinct
-     * from the system-row NULL case {@see findSystemObjectLogWithUsernames()}
-     * documents) as always non-null, which would have made the real
-     * `is_numeric()` filter below misreport as dead code. Re-verified live
-     * against the current toolchain: that false positive no longer
-     * reproduces -- `performed_by` now correctly infers as `int|null`
-     * through the DQL alias, so the `is_numeric()` guard type-checks as a
-     * real (non-dead) narrowing and PHPStan is clean.
+     * `performed_by` is nullable: a non-'system' row's acting user may
+     * have since been deleted, in which case `performed_by` is NULL
+     * (ON DELETE SET NULL foreign key) rather than referencing a deleted
+     * user id -- a case distinct from the system-row NULL case
+     * {@see findSystemObjectLogWithUsernames()} documents. The
+     * `is_numeric()` check below filters those out before using the value
+     * as an array key.
      *
      * @return array<int, int> performed_by => count
      */
@@ -191,18 +185,12 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      * user's own username -- used only by the CSV export
      * (admin/user_activity.php's `type=download_logs`).
      *
-     * Item 16G: converted to real DQL. `details` is re-encoded via
-     * `json_encode()` after DQL array hydration -- `ActivityEntity::
-     * $details`'s custom `json` Doctrine Type always decodes it to a real
-     * array on the way in, unlike the raw DBAL text this used to pass
-     * straight through. Verified the CSV export
-     * ({@see \Piwigo\Admin\UserActivityPageRenderer}) doesn't depend on
-     * exact original byte-for-byte JSON formatting -- it writes the
-     * string out as one opaque CSV cell, and its own defensive
-     * `str_replace(['`groups`', '`rank`'], ...)` cleanup (a legacy
-     * backtick-escaping artifact never found in any real fixture/DB row,
-     * confirmed via a direct query) becomes a harmless no-op against a
-     * freshly re-encoded, always-valid JSON string.
+     * `details` is decoded to an array by the entity's `json` Doctrine
+     * Type; it's re-encoded here via `json_encode()` to match this
+     * method's own return contract. The CSV export
+     * ({@see \Piwigo\Admin\UserActivityPageRenderer}) writes it out as
+     * one opaque cell and doesn't depend on exact byte-for-byte JSON
+     * formatting.
      *
      * @return list<UserActivityLogEntry>
      */
@@ -257,32 +245,17 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      * plugin/theme install/update/activate/etc.) -- a LEFT JOIN (not the
      * INNER JOIN findUserObjectLogWithUsernames() uses), since a
      * system-triggered row's performed_by is NULL (no known actor, e.g. a
-     * plugin autoupdate that ran before $user was loaded -- see
-     * ActivityService::record()'s own fix note) and has no matching user
-     * row. 'username' renders as "System" when performed_by IS NULL (the
-     * real, reachable "unknown actor" state under the column's ON DELETE
-     * SET NULL foreign key -- 0 was the legacy sentinel before that FK
-     * existed and is no longer a value this column can ever hold, confirmed
-     * via a real ForeignKeyConstraintViolationException) -- 0 is kept in
-     * the condition too, defensively, in case any pre-FK historical row
-     * still holds it. A row whose performed_by references a since-deleted
-     * user id specifically is impossible under this FK (deletion always
-     * nulls it), so that's not a distinct case to preserve.
+     * plugin autoupdate that ran before $user was loaded) and has no
+     * matching user row. 'username' renders as "System" when performed_by
+     * IS NULL; performed_by = 0 is also treated as "System" defensively,
+     * though the column's ON DELETE SET NULL foreign key means a
+     * since-deleted user's row is always nulled, never left referencing a
+     * stale id.
      *
      * `details` is decoded to `?array` here (unlike
      * {@see findUserObjectLogWithUsernames()}'s own raw string) -- its one
      * real consumer, {@see \Piwigo\Admin\Maintenance\ActivityLogEntryFormatter},
-     * does structured `$details['key']` access and used to `unserialize()`
-     * it itself.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real DQL
-     * -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}), so the
-     * `$usernameColumn`/`$idColumn` multi-auth indirection is gone (always
-     * `u.username`/`u.id`), and the MySQL `IF(...)` expression translates
-     * directly to DQL's own `CASE WHEN ... END`. Unlike
-     * {@see findUserObjectLogWithUsernames()}, `details`'s own consumer
-     * here wants the decoded array, which DQL array hydration's `json`
-     * Type conversion gives for free.
+     * does structured `$details['key']` access.
      *
      * @return list<SystemActivityLogEntry>
      */
@@ -315,37 +288,24 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
     }
 
     /**
-     * Paginated activity rows matching an already-built $condition --
-     * Ws\PwgCore::getActivityList()'s own WS listing, one real caller.
+     * Paginated activity rows matching $criteria -- Ws\PwgCore::getActivityList()'s
+     * own WS listing, one real caller.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B3: converted to real
-     * DQL -- the caller-built raw `SqlCondition` fragment (itself already
-     * a `SqlCondition::combine('AND', ...)` of a small, finite set of
-     * optional pieces, all built from the caller's own already-validated
-     * `$param`) is replaced by {@see ActivityListCriteria}, an immutable
-     * object the caller builds once from the same `$param` values, now
-     * translated into bound `andWhere()` calls here instead of a raw SQL
-     * string the caller composed itself (same shape Item 13's own
-     * Criteria classes established, e.g. {@see
-     * \Piwigo\Comment\CommentApiCriteria}). Returned rows carry whatever
-     * type each `ActivityEntity` column really is under DQL array
-     * hydration -- `ip_address` an `IpAddress` VO (not a raw string),
-     * `details` an already-decoded `array` (Doctrine's own `json` Type
-     * conversion, not a raw JSON string) -- the caller was updated to
-     * match instead of re-flattening these back to strings.
-     *
-     * Phase 5 Item 15: WHERE built via Doctrine's `Criteria`/
-     * `Criteria::expr()` and applied through `QueryBuilder::addCriteria()`
-     * -- single mapped entity (`ActivityEntity`, alias `a`), no JOIN, so
-     * genuinely eligible (see {@see \Piwigo\Comment\CommentRepository::applyApiConditions()}'s
-     * own docblock for why most other Criteria-consuming methods in this
-     * codebase aren't). The `admins_only` branch's `NOT (x AND y)` proves
-     * out `expr()->not()`/`andX()` translate to real DQL `NOT (...)` too
-     * (confirmed via `QueryExpressionVisitor::walkCompositeExpression()`'s
-     * own `CompositeExpression::TYPE_NOT` case), not just simple
-     * comparisons -- `addCriteria()` only touches WHERE/ORDER/LIMIT, so
+     * $criteria (an immutable {@see ActivityListCriteria} value object) is
+     * translated into bound `andWhere()` calls via Doctrine's `Criteria`/
+     * `Criteria::expr()`, applied through `QueryBuilder::addCriteria()` --
+     * eligible here because this query targets a single mapped entity
+     * (`ActivityEntity`, alias `a`) with no JOIN (see
+     * {@see \Piwigo\Comment\CommentRepository::applyApiConditions()}'s own
+     * docblock for why most other Criteria-consuming methods in this
+     * codebase aren't). `addCriteria()` only touches WHERE/ORDER/LIMIT;
      * this method's own `->select()`/`->orderBy()`/`->setMaxResults()`/
-     * `->setFirstResult()` calls are untouched.
+     * `->setFirstResult()` calls are set separately.
+     *
+     * Returned rows carry whatever type each `ActivityEntity` column
+     * really is under DQL array hydration -- `ip_address` is an
+     * `IpAddress` VO (not a raw string), `details` is an already-decoded
+     * `array` (not a raw JSON string).
      *
      * @return list<array<string, mixed>>
      */
@@ -436,17 +396,15 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      * Controller\Admin\IntroSubController's own dashboard "recent
      * activity" chart data.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
-     * real DQL -- MySQL's `DATE_FORMAT(occured_on, '%Y-%m-%d')` has no
-     * portable DQL equivalent, and it was also part of the `GROUP BY` key
-     * (DQL can't group by a SELECT alias). Fetches `occuredOn`/`object`/
-     * `action` per row instead and groups in PHP -- this admin dashboard
-     * chart is already bounded to a small multi-week window by its own
-     * caller ({@see \Piwigo\Controller\Admin\IntroSubController}) and
-     * session-cached for 5 minutes, so scanning every matching row is an
-     * acceptable trade. `occuredOn` is a `Y-m-d H:i:s` string (`ActivityEntity`'s
-     * own `length: 19`), so `substr($occuredOn, 0, 10)` reproduces
-     * `DATE_FORMAT(..., '%Y-%m-%d')`'s output exactly.
+     * DQL has no portable equivalent for MySQL's `DATE_FORMAT(occured_on,
+     * '%Y-%m-%d')`, and it can't group by a SELECT alias, so this fetches
+     * `occuredOn`/`object`/`action` per row and groups in PHP instead --
+     * acceptable because this admin dashboard chart is already bounded to
+     * a small multi-week window by its own caller
+     * ({@see \Piwigo\Controller\Admin\IntroSubController}) and
+     * session-cached for 5 minutes. `occuredOn` is a `Y-m-d H:i:s` string
+     * (`ActivityEntity`'s own `length: 19`), so `substr($occuredOn, 0, 10)`
+     * reproduces `DATE_FORMAT(..., '%Y-%m-%d')`'s output exactly.
      *
      * @return list<array{activity_day: string, object: string, action: string, counter: int}>
      */
@@ -490,9 +448,6 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      * oldest first -- Admin\PiwigoInfosSender's own "version upgrade
      * history" telemetry field.
      *
-     * Item 14 DQL audit: converted to DQL -- single table, fixed WHERE
-     * shape, no unmapped joins or MySQL-specific functions.
-     *
      * @return list<array{action: string, occured_on: ?string, details: ?string}>
      */
     public function findCoreUpdateHistory(): array
@@ -510,12 +465,11 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
         $history = [];
         foreach ($rows as $row) {
             $details = is_array($row) ? ($row['details'] ?? null) : null;
-            // DQL array hydration decodes the `json`-typed `details` column
-            // into a PHP array (unlike the raw-DBAL row this method used to
-            // return, where it was the raw JSON text) -- re-encode
-            // explicitly to keep this method's own `?string` contract;
-            // PiwigoInfosSender's consumer only needs it to round-trip
-            // through json_decode(), not byte-identically.
+            // DQL array hydration decodes the json-typed `details` column
+            // into a PHP array; re-encode explicitly to keep this method's
+            // own `?string` contract -- PiwigoInfosSender's consumer only
+            // needs it to round-trip through json_decode(), not
+            // byte-identically.
             $encodedDetails = is_array($details) ? json_encode($details) : false;
 
             $history[] = [
@@ -531,13 +485,10 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
     /**
      * Per (object_id, action) counts among object='system' rows --
      * Admin\PiwigoInfosSender's own telemetry "activities.system" bucket.
-     * Unlike findSystemObjectLogWithUsernames() above, this doesn't join
+     * Unlike {@see findSystemObjectLogWithUsernames()}, this doesn't join
      * `users` (only the counts matter here, not who performed each one).
-     *
-     * Item 14 DQL audit: converted to DQL -- single table, no unmapped
-     * joins, `object`/`object_id`/`action` are all non-nullable columns so
-     * no GROUP BY-on-nullable-column false positive applies here (unlike
-     * {@see countByUser()}'s own documented one).
+     * `object`/`object_id`/`action` are all non-nullable columns, so
+     * unlike {@see countByUser()}, no null-key filtering is needed here.
      *
      * @return list<array{object: string, object_id: int, action: string, counter: int}>
      */
@@ -566,12 +517,10 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      * Admin\PiwigoInfosSender's own "which apps have been used" telemetry
      * breakdown. Excludes real browser traffic (Mozilla/5.x user agents).
      *
-     * Item 14 DQL audit: converted to DQL -- single table, MIN()/MAX() are
-     * standard DQL functions (unlike the MySQL-specific ones this pass
-     * excludes). `user_agent` is nullable in the entity mapping, but the
-     * `NOT LIKE` WHERE excludes NULL rows at the SQL level (NULL NOT LIKE
-     * '...' is NULL, not TRUE), so the row-mapping below stays defensive
-     * only for phpstan-doctrine's own static type, not a real runtime case.
+     * `user_agent` is nullable in the entity mapping, but the `NOT LIKE`
+     * WHERE excludes NULL rows at the SQL level (`NULL NOT LIKE '...'` is
+     * NULL, not TRUE), so the row-mapping below stays defensive only for
+     * phpstan-doctrine's own static type, not a real runtime case.
      *
      * @return list<array{user_agent: ?string, counter: int, first_encounter: ?string, last_encounter: ?string}>
      */

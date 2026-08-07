@@ -47,45 +47,36 @@ use Piwigo\Users\UserService;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin/intro.php (the admin dashboard, page slug "intro" -- also
- * admin.php's own default `?page=` fallback), folded directly into this
- * controller -- same shape as every prior P23 batch 6 sub-batch's shell
- * folding. Its dashboard queries (activity chart, storage chart, general
- * stats via the existing InstallationStats::getGeneralStatistics()) are single-purpose
- * view-shaping for this one page, the same "page/template glue stays
- * inline" precedent as admin.php's own dashboard-badge queries (pending
- * comments/orphans/locked albums), so no new Admin\Dashboard service was
- * warranted.
+ * Renders the admin dashboard (page slug "intro" -- also admin.php's own
+ * default `?page=` fallback). Its dashboard queries (activity chart,
+ * storage chart, general stats via
+ * InstallationStats::getGeneralStatistics()) are single-purpose
+ * view-shaping for this one page and stay inline rather than living in a
+ * separate service, the same "page/template glue stays inline" pattern as
+ * admin.php's own dashboard-badge queries (pending comments/orphans/
+ * locked albums).
  *
  * admin.php itself already gates every page behind
  * check_status(AccessLevel::Administrator) before dispatch (admin.php:65),
- * so the original file's own (redundant, same level) check_status() call
- * is dropped here -- same precedent as MaintenanceSubController/
- * BatchManagerSubController.
+ * so this controller does not repeat that check.
  *
- * `$my_base_url = get_root_url() . 'admin.php?page=';` is genuinely dead
- * here, unlike the P23 batch 6i-4/6j-1 cases where dropping it broke tab
- * navigation: CoreTabs::addCoreTabs()'s own `case 'admin_home':` branch (the only
- * case this page's `$tabsheet->set_id('admin_home'); $tabsheet->
- * select('');` can ever reach) hardcodes `'url' => 'admin.php'` and never
- * reads `global $my_base_url;` at all -- confirmed by reading that case
- * directly, not assumed from the general pattern. Not ported.
+ * `$my_base_url` is not needed here: CoreTabs::addCoreTabs()'s own
+ * `case 'admin_home':` branch (the only case this page's
+ * `$tabsheet->set_id('admin_home'); $tabsheet->select('');` can ever
+ * reach) hardcodes `'url' => 'admin.php'` and never reads
+ * `global $my_base_url;` at all.
  *
- * No CSRF gap: the page is read-mostly (dashboard stats/activity chart/
- * storage chart/integrity check display). Its one write path --
+ * The page is read-mostly (dashboard stats/activity chart/storage chart/
+ * integrity check display). Its one write path --
  * `$_GET['action'] === 'hide_newsletter_subscription'` ->
  * userprefs_update_param('show_newsletter_subscription', 'false') -- has
- * no check_pwg_token(), but the mutation is a per-admin-user UI
+ * no check_pwg_token(), because the mutation is a per-admin-user UI
  * preference toggle (hides a promo banner for the currently logged-in
  * admin only, no data loss, no privilege change, no cross-user effect).
- * Reviewed and judged not worth a token gate, matching the
- * delete_orphans/sync_md5sum precedent from P23 batch 6g.
  *
- * cmp_day() was a top-level function in the original file with zero
- * external callers (confirmed via a direct grep) -- folded into a private
- * static method here, removing the "cannot redeclare function on
- * double-include" risk every prior sub-batch with this shape has already
- * converted away.
+ * cmp_day() has zero external callers and is a private static method here
+ * rather than a free function, avoiding the "cannot redeclare function"
+ * fatal error a top-level function risks if the file is loaded twice.
  */
 final class IntroSubController implements AdminSubControllerInterface
 {
@@ -115,23 +106,16 @@ final class IntroSubController implements AdminSubControllerInterface
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
-        // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
-        // bug found while retargeting this global -- nothing in this
-        // request ever wrote the true global $link_start (AdminShell's own
-        // same-named value, used for its menubar hrefs, is a genuinely
-        // local variable in a different call frame, never `global`- or
-        // $GLOBALS[]-declared), so the "pending comments" link below
-        // always rendered as a bare relative `href="comments"` instead of
-        // `admin.php?page=comments`. Computed locally instead, matching
-        // AdminShell's own exact value.
+        // $link_start is computed locally rather than read from a global:
+        // AdminShell's own same-named value (used for its menubar hrefs)
+        // is a local variable in a different call frame, never `global`-
+        // or $GLOBALS[]-declared.
         $link_start = $this->urlService->getRootUrl() . 'admin.php?page=';
         $logger = $this->currentLogger->get();
         $template = $this->currentTemplate->get();
 
-        // A single connection for the whole request -- mirrors the
-        // legacy single-global-mysqli-connection model this migration
-        // restores, and avoids the needless-reconnection pattern found
-        // in earlier construction-chain debt (Phase 1d finding).
+        // A single connection is used for the whole request, avoiding
+        // needless reconnects.
         $conn = DbConnection::build();
 
         // +-----------------------------------------------------------------------+
@@ -598,12 +582,8 @@ final class IntroSubController implements AdminSubControllerInterface
 
     /**
      * Fetches (and 24h-caches) the latest Piwigo project news for the
-     * dashboard's news panel. Ported from
-     * admin/include/functions.php's get_piwigo_news() (P23 batch 8d) --
-     * folded directly into this controller (not a new service) since its
-     * only real caller is this one dashboard page, same "single-purpose
-     * view-shaping stays inline" precedent this class's own docblock
-     * already establishes for its other dashboard queries.
+     * dashboard's news panel. Kept as a private method here (not a
+     * separate service) since this dashboard page is its only caller.
      */
     private static function getLatestNews(Lang $lang, CurrentConfig $currentConfig, Paths $paths): mixed
     {

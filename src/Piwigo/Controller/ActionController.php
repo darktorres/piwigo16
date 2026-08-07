@@ -33,31 +33,23 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces action.php -- the permission-checked original/representative/
- * format-file download handler. [SEC-33] served-path check: the
- * forbidden_categories/forbidden_images query below (unchanged from
- * legacy) is what actually closes the "anonymous reads a private album's
- * original" attack surface for this direct-download entry point (i.php's
- * own derivative-serving surface is separately, and only partially,
- * closed -- see docs/PLAN.md's SEC master checklist, SEC-33).
+ * The permission-checked original/representative/format-file download
+ * handler. [SEC-33] The forbidden_categories/forbidden_images query below
+ * is what closes the "anonymous reads a private album's original" attack
+ * surface for this direct-download entry point (i.php's own
+ * derivative-serving surface is separately, and only partially, closed --
+ * see docs/PLAN.md's SEC master checklist, SEC-33).
  *
- * Workstream C3b: doError()/the 304 early-return used to call exit()
- * directly (never return) -- simpler than the ResponseReadyException
- * mechanism the rest of C3 needed, since doError() is only ever called
- * from __invoke() itself (never a shared class like RedirectService/
- * HtmlService reached from many dispatch contexts): it just returns a
- * real ResponseInterface, and every call site returns it in turn. There's
- * no Template/Smarty rendering at all in this controller, so there's no
- * LegacyRenderCapture closure either: the whole method is flat, always
- * ending in a single ResponseFactory call on every path.
+ * doError() and the 304 early-return both just return a ResponseInterface
+ * (never exit()); every call site returns it in turn. There's no
+ * Smarty rendering in this controller, so the whole method is flat,
+ * always ending in a single ResponseFactory call on every path.
  *
  * The response body is read fully into a string via file_get_contents()
- * rather than streamed (legacy readfile()/ob_flush()/flush()) --
- * ResponseEmitter::emit() calls `echo $response->getBody()`, which fully
- * materializes a StreamInterface body into a string via __toString()
- * anyway, so a stream-backed body would buy nothing here; genuine
- * chunked streaming would need ResponseEmitter itself to change, out of
- * this phase's scope.
+ * rather than streamed: ResponseEmitter::emit() calls
+ * `echo $response->getBody()`, which fully materializes a
+ * StreamInterface body into a string via __toString() anyway, so a
+ * stream-backed body would buy nothing here.
  *
  * session_cache_limiter('public') deliberately stays in action.php's own
  * root file, not here: include/common.inc.php calls session_start()

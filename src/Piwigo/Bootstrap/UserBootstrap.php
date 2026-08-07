@@ -45,9 +45,9 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\WsInitializer;
 
 /**
- * Ported from include/user.inc.php -- cookie/session/auto-login/Apache-
- * auth/API-key orchestration deciding who the current request's user is,
- * finishing with a call to build_user() to fully populate $user.
+ * Cookie/session/auto-login/Apache-auth/API-key orchestration deciding who
+ * the current request's user is, finishing with a call to build_user() to
+ * fully populate $user.
  *
  * A sibling to RequestBootstrap, not a method on Piwigo\Auth\AuthService:
  * AuthService is L2aCoreDomain, and this orchestration's WS API-key branch
@@ -55,16 +55,8 @@ use Piwigo\Ws\WsInitializer;
  * matched by the same deptrac collector (same layer), so this is the only
  * violation-free home for the whole orchestration. AuthService's own
  * login/logout/remember-me building blocks (autoLogin()/logUser()/
- * logoutUser()) are called directly, not through their free-function
- * wrappers (auto_login()/logout_user()), since this class sits right next
- * to the real service already.
- *
- * The original file already declared its own `global $conf, $user;` /
- * `global $service;` at true top-level script scope (index.php ->
- * common.inc.php -> user.inc.php, all raw `include`s). Its own
- * `$page['user_use_cache']` write and the shouldUseUserCache() helper that
- * fed it were removed entirely once Stage 4g dropped buildUser()'s
- * $useCache parameter and the user_cache lock/wait mechanism it supported.
+ * logoutUser()) are called directly, not through free-function wrappers,
+ * since this class sits right next to the real service already.
  */
 final class UserBootstrap
 {
@@ -207,20 +199,16 @@ final class UserBootstrap
             // $_SERVER['HTTP_X_PIWIGO_API'] is already known non-empty by the
             // enclosing condition; AuthRepository::findAuthKeyDetails() (what
             // authKeyLogin() below ultimately calls) uses a real bound DBAL
-            // parameter, so the real_escape_string()-style pre-escaping this
-            // line used to apply was dead weight even before the DBAL
-            // migration -- the regex authKeyLogin() itself validates this
-            // against ([a-z0-9]/pkid-.../ only) can't contain anything
-            // needing SQL escaping in the first place.
+            // parameter. authKeyLogin() itself validates this value against
+            // a strict regex ([a-z0-9]{30} or pkid-... only), so it can't
+            // contain anything needing SQL escaping in the first place.
             $auth_header = $_SERVER['HTTP_X_PIWIGO_API'];
 
             if ((bool) $auth_header) {
                 $authenticate = $authService->authKeyLogin($auth_header, true);
                 if (! $authenticate) {
                     // A plain local read of WsInitializer::init()'s return
-                    // value -- never needed `global $service;` (see that
-                    // class's own docblock for the now-removed
-                    // $GLOBALS['service'] publish this predates).
+                    // value -- no `global $service;` needed.
                     $wsInitializer = Kernel::container()->get(WsInitializer::class);
                     if (! $wsInitializer instanceof WsInitializer) {
                         throw new LogicException('Container returned an unexpected type for ' . WsInitializer::class);
@@ -282,23 +270,18 @@ final class UserBootstrap
         $user_id_int = is_numeric($user['id']) ? (int) $user['id'] : $guest_id_int;
 
         $user = $userService->buildUser(UserId::from($user_id_int));
-        // Legacy Coupling Retirement Track A batch A3: sync CurrentUser here,
-        // not only in RequestBootstrap::connect() after this method returns
-        // -- AccessControl::isAGuest()/isGeneric() right below already read
-        // CurrentUser, and this method runs (from RequestBootstrap::connect())
-        // well before RequestBootstrap::finalize()'s own
-        // CurrentUser::attachGlobals() call, so without this sync
-        // CurrentUser::get() throws "not initialised"
-        // the first time any retargeted consumer runs within this same
-        // request (caught via a live Contract-test HTTP 500, not a unit
-        // test -- the Integration/Unit harnesses independently seed
-        // CurrentUser in their own setUp(), masking the gap).
+        // CurrentUser is synced here, not only in RequestBootstrap::connect()
+        // after this method returns -- AccessControl::isAGuest()/isGeneric()
+        // right below already read CurrentUser, and this method runs (from
+        // RequestBootstrap::connect()) well before RequestBootstrap::
+        // finalize()'s own CurrentUser::attachGlobals() call, so without
+        // this sync CurrentUser::get() throws "not initialised" the first
+        // time any consumer runs within this same request.
         $currentUser->set(User::fromUserArray($user));
-        // Legacy Coupling Retirement Phase 8, 8h: this is the only real
-        // per-request user resolver, so this is where ActivityService::
-        // record()'s "was a real user ever resolved this request" flag
-        // gets marked -- see CurrentUser::wasRealUserResolved()'s own
-        // docblock for why isInitialized() can't substitute.
+        // This is the only real per-request user resolver, so this is where
+        // ActivityService::record()'s "was a real user ever resolved this
+        // request" flag gets marked -- see CurrentUser::wasRealUserResolved()'s
+        // own docblock for why isInitialized() can't substitute.
         $currentUser->markRealUserResolved();
 
         if (RequestBootstrap::currentConfig()->browserLanguage() and ($this->accessLevelChecker->isAGuest() or $this->accessLevelChecker->isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
@@ -310,10 +293,8 @@ final class UserBootstrap
 
     /**
      * The Apache-authentication REMOTE_USER/REDIRECT_REMOTE_USER
-     * resolution loop (originally inline in include/user.inc.php) --
-     * extracted as a pure function so it's directly Unit-testable, same
-     * "extract the one real piece of pure logic" precedent as every prior
-     * P23 batch's own extractions.
+     * resolution loop, extracted as a pure function so it's directly
+     * Unit-testable.
      *
      * @param  array<int|string, mixed>  $server
      */

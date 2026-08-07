@@ -14,8 +14,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Event\Lifecycle\LoadImageLibrary;
 
 /**
- * P23 Stage 1e: __construct()'s unsupported-extension guard used to
- * die() -- first test coverage for this class, confirming it now throws
+ * __construct()'s unsupported-extension guard throws
  * ImageProcessingException. The "no image library available" branch
  * stays untested: GD is real and available in this environment, and
  * get_library()'s own fallback chain always resolves to 'gd' eventually
@@ -79,11 +78,10 @@ function pwgImageTestMarker(): string
 }
 
 /**
- * PwgImage takes CurrentLogger via constructor injection (singleton/
- * service-locator elimination campaign, Phase 2), forwarded only to the
- * 'ext_imagick' branch (ImageExtImagick::write()'s own read) -- a fresh,
- * never-set() instance is safe here since every test in this file uses
- * 'gd' or lets get_library() fall back to it (this environment has no
+ * PwgImage takes CurrentLogger via constructor injection, forwarded only
+ * to the 'ext_imagick' branch (ImageExtImagick::write()'s own read) -- a
+ * fresh, never-set() instance is safe here since every test in this file
+ * uses 'gd' or lets get_library() fall back to it (this environment has no
  * ext_imagick/imagick binary available, see this file's own docblock).
  */
 function pwgImageTestMake(string $sourceFilepath, ?string $library = null): PwgImage
@@ -698,16 +696,14 @@ test('webp_info throws for a well-formed VP8 header with an unrecognized sub-for
 });
 
 test('get_rotation_angle returns null when getimagesize() fails to read the file, instead of throwing', function (): void {
-    // Real bug, fixed during the coverage-gap-closure pass (see
-    // tests/Integration/UploadServiceTest.php's own docblock): every real
-    // call site of get_rotation_angle() (UploadService::addUploadedFile()
-    // in particular, for any non-picture file allowed via
+    // Every real call site of get_rotation_angle() (UploadService::
+    // addUploadedFile() in particular, for any non-picture file allowed via
     // CurrentConfig::uploadFormAllTypes()) calls this with no surrounding
-    // try/catch, so a genuinely non-image upload always crashed with an
-    // uncaught Exception. "Not decodable as an image at all" is a strict
-    // superset of "not a JPEG", which this method already treats as a
-    // plain `null` (no rotation) two lines below -- the throw served no
-    // real caller.
+    // try/catch, so a genuinely non-image upload must not throw. "Not
+    // decodable as an image at all" is a strict superset of "not a JPEG",
+    // which this method already treats as a plain `null` (no rotation) two
+    // lines below -- see tests/Integration/UploadServiceTest.php for the
+    // real call-site coverage.
     $path = pwgImageTestMarker() . '/does-not-exist.jpg';
 
     // getimagesize() on a missing file also emits a real PHP warning --
@@ -743,9 +739,8 @@ test('get_rotation_angle maps EXIF orientation 8 to a 90-degree rotation', funct
 });
 
 test('is_ext_imagick returns false when the configured binary directory has no real ImageMagick binary', function (): void {
-    // PwgImage's own private currentConfig() resolver (singleton/
-    // service-locator elimination campaign, Phase 12 sub-phase 12F-12)
-    // is a fresh, unmemoized instance pre-boot -- unlike FilesystemHelper's
+    // PwgImage's own private currentConfig() resolver is a fresh,
+    // unmemoized instance pre-boot -- unlike FilesystemHelper's
     // mkgetdir()/getFsDirectories() (which take CurrentConfig as a real,
     // explicit param specifically because of this exact coupling), is_
     // ext_imagick()/get_library()/get_graphics_library()/

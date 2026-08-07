@@ -8,52 +8,11 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
 
 /**
- * Current-request access-level checks: status/ACCESS_* introspection,
- * reading Piwigo\Users\CurrentUser (Legacy Coupling Retirement Track A
- * batch A3 -- previously the legacy `global $user;` bridge array directly)
- * and `global $conf;`.
- *
- * Singleton/service-locator elimination campaign, Phase 7: converted to a
- * real, container-shared instance -- HtmlRenderingInterface/
- * RedirectServiceInterface are constructor-injected (both already bound
- * in `container.php`, so this needed zero new container config).
- * checkStatus()'s former nullable-collaborator guard is gone: a
- * container-resolved instance is now *always* guaranteed both
- * collaborators (unlike the old static design, which allowed
- * setHtmlRenderer()/setRedirectService() to simply never be called), so
- * accessDenied() is unconditionally reachable -- a real, permanent
- * simplification, not just a test artifact.
- *
- * Singleton/service-locator elimination campaign, Phase 12 sub-phase 12A:
- * every method that doesn't need HtmlRenderingInterface/
- * RedirectServiceInterface (getUserStatus()/getAccessTypeStatus()/
- * isAuthorizeStatus()/isGeneric()/isAGuest()/isClassicUser()/isAdmin()/
- * isWebmaster()/canManageComment()) moved to AccessLevelChecker -- see
- * that class's own docblock for why (breaking an artificial circular
- * dependency). This class now delegates to it and keeps only
- * checkStatus() as real logic (the one method that genuinely needs
- * htmlRenderer/redirectService). Public API and behavior are unchanged;
- * only the implementation moved -- CurrentUser/CurrentConfig dropped from
- * this class's own constructor entirely, since AccessLevelChecker already
- * carries them and nothing here reads them directly anymore.
- * currentForCaching() (a degraded, never-throwing fallback built to
- * survive that same cycle's eager-Doctrine-connect risk in
- * CssLoader/ScriptLoader) is deleted -- those 2 files now take
- * AccessLevelChecker directly, which has no Doctrine dependency of its
- * own, so there is no more risk to guard against.
- *
- * Sub-phase 12B: the current() transitional-bridge shim itself is deleted
- * -- its last real production callers (RequestBootstrap.php's 3 direct
- * calls, PageTail.php's 2, public/admin.php's 1, public/random.php's 2)
- * all closed, either via real constructor injection or a private/public
- * Bootstrap-internal resolver. Every real caller now takes this class via
- * constructor injection or resolves it through Kernel::container()
- * directly from Bootstrap/-internal code.
- *
- * P23 batch 8d: ported from include/functions_user.inc.php's
- * get_user_status()/get_access_type_status()/is_autorize_status()/
- * check_status()/is_generic()/is_a_guest()/is_classic_user()/is_admin()/
- * is_webmaster()/can_manage_comment().
+ * Current-request access-level checks: delegates status/ACCESS_*
+ * introspection to {@see AccessLevelChecker} and keeps only
+ * checkStatus() as real logic here, since it's the one method that
+ * needs `HtmlRenderingInterface`/`RedirectServiceInterface` to deny
+ * access.
  */
 final class AccessControl
 {
@@ -81,10 +40,9 @@ final class AccessControl
     public function checkStatus(int $accessType, string $userStatus = ''): void
     {
         if (! $this->accessLevelChecker->isAuthorizeStatus($accessType, $userStatus)) {
-            // accessDenied() is `never`-typed -- always terminates (throws
-            // or redirects), so unlike the old nullable-collaborator design
-            // there is no reachable fallthrough left to throw a plain
-            // RuntimeException from (PHPStan proves this: deadCode.unreachable).
+            // accessDenied() is `never`-typed -- it always terminates
+            // (throws or redirects), so there's no reachable fallthrough
+            // after this call.
             $this->htmlRenderer->accessDenied($this->redirectService);
         }
     }

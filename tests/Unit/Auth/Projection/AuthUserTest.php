@@ -15,9 +15,9 @@ function fullAuthUserRow(): array
         'username' => 'fixture_admin',
         'email' => 'fixture_admin@example.test',
         'password' => '$2y$04$hash',
-        // A real row's `status` is a UserStatus instance (Phase 5 Item 21:
-        // DQL array hydration of an enumType-mapped field), not a raw
-        // string -- matches what fromRow()'s real caller actually passes.
+        // A real row's `status` is a UserStatus instance (DQL array
+        // hydration of an enumType-mapped field), not a raw string --
+        // matches what fromRow()'s real caller actually passes.
         'status' => UserStatus::Webmaster,
     ];
 }

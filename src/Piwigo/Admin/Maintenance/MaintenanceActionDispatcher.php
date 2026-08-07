@@ -38,36 +38,12 @@ use Piwigo\Template\FileCombiner;
 use Piwigo\Validation\InputValidator;
 
 /**
- * Consolidates the ~18-case maintenance action switch that was previously
- * duplicated, byte-for-byte at first but since drifted, between
- * admin/maintenance_actions.php and admin/maintenance_env.php (P23 batch
- * 6h). Both tab templates only ever link to a subset of these actions
- * (confirmed via direct grep of both .tpl files) -- actions.tpl to the 16
- * real maintenance operations, env.tpl to just `phpinfo`/`check_upgrade` --
- * but each legacy file's own switch handled the full set regardless, so
- * both tabs remain reachable exactly as before via this single shared
- * dispatcher.
- *
- * Fixes 2 real behavioral drifts found by diffing the two original
- * switches rather than trusting DbMaintenanceRepository's own docblock
- * claim that they were "identical":
- *  - admin/maintenance_env.php's copy never called pwg_activity() for any
- *    action -- so performing a real mutation via a crafted env-tab URL
- *    went completely unlogged in the sys tab's own audit view. This
- *    dispatcher always logs, matching admin/maintenance_actions.php's own
- *    (correct) behavior.
- *  - admin/maintenance_env.php's copy was missing the `empty_lounge` case
- *    entirely (silently fell through to `default:`). Restored here.
- *
- * `check_upgrade` also differed in one more way: admin/maintenance_env.php
- * (the only tab whose own UI actually links to this action) rendered a
- * real "Update to Piwigo %s" link when a new version is available;
- * admin/maintenance_actions.php's copy instead appended a generic "action
- * successfully performed." tail message that never made semantic sense for
- * this action (a copy-paste artifact of sitting directly above the shared
- * `default:` fallthrough, never reachable via that tab's own UI). This
- * dispatcher keeps the real, UI-exercised "Update to Piwigo %s" link
- * behavior as canonical.
+ * Handles the maintenance action switch shared by the "actions" and
+ * "env" admin tabs. actions.tpl links to the 16 real maintenance
+ * operations, each of which is logged via activity recording; env.tpl
+ * links to just `phpinfo`/`check_upgrade`, neither of which is logged.
+ * `check_upgrade` renders an "Update to Piwigo %s" link when a new
+ * version is available.
  */
 final class MaintenanceActionDispatcher
 {

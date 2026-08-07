@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-// Legacy Coupling Retirement follow-up: Admin\ThemesStandardPagesPageRenderer
-// used to store an absolute filesystem path in the
-// standard_pages_selected_logo_path config value, rendered directly as an
-// <img src> -- never a valid URL, and doubly broken once local/ became
-// unreachable from public/. Piwigo\Controller\CustomLogoController
-// (public/logo.php) now serves it instead.
+// Piwigo\Controller\CustomLogoController (public/logo.php) serves the
+// configured custom logo. standard_pages_selected_logo_path stores a path
+// on the 'local' disk, which is not reachable from public/ directly.
 
 const CUSTOM_LOGO_RELATIVE_PATH = 'logo/browser-test-logo.png';
 
@@ -63,7 +60,6 @@ it('renders a working custom-logo <img> on the identification page once the stan
     expect($html)->toContain('id="custom-logo" src="logo.php"');
 
     // Not just present in markup -- the src the page actually renders must
-    // itself resolve, matching the real regression this fixes (previously
-    // an absolute filesystem path, never a working URL).
+    // itself resolve to a working URL, not a raw filesystem path.
     expect(H::httpStatus('logo.php'))->toBe(200);
 });

@@ -31,38 +31,25 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserService;
 
 /**
- * Legacy Coupling Retirement Phase 4b: the former `redirect()`/
- * `redirect_html()`/`redirect_http()` free functions
- * (`Piwigo\Http\functions.php`, now deleted), ported verbatim. Lives in
- * `Bootstrap` (L4Integration) for the same reason the deleted
- * include/page_tail.php seam did: `redirectHtml()`'s real body calls
+ * Lives in `Bootstrap` (L4Integration): `redirectHtml()`'s body calls
  * `PageTail::renderToString()`, itself L4Integration -- see
  * `Piwigo\Core\RedirectServiceInterface`'s own docblock.
  *
- * Singleton/service-locator elimination campaign, Phase 6: `UserService` is
- * now a real constructor-injected dependency (was: a `userService()` private
- * static resolver reaching `Kernel::container()` on every call, the exact
- * shape the Bootstrap Accessor classes this phase converts already target --
- * this class's own docblock was the literal precedent cited for including it
- * in that phase). `currentUser()`/`currentTemplate()` below stay as
- * Kernel-container-resolving static helpers, not constructor-injected --
- * both are container-shared wrapper types this class mutates via `set()`
- * from a genuinely-static (no-`$this`-needed) call shape, matching every
- * other Bootstrap/-internal resolver of this kind; only `userService()`,
- * the actual Bootstrap-Accessor-shaped locator, was in scope here.
+ * `UserService` is a constructor-injected dependency. `currentUser()`/
+ * `currentTemplate()` below stay as Kernel-container-resolving static
+ * helpers, not constructor-injected -- both are container-shared wrapper
+ * types this class mutates via `set()` from a genuinely-static
+ * (no-`$this`-needed) call shape, matching every other
+ * Bootstrap/-internal resolver of this kind.
  *
- * Workstream C3: redirectHttp()/redirectHtml() now throw
- * Piwigo\Http\ResponseReadyException instead of calling header()/echo/
- * exit() directly -- see that exception class's own docblock for why
- * (the real Sentry-transaction/Server-Timing bug this fixes) and where
- * it's caught. redirectHtml() keeps every line up through
- * $template->parse('redirect') unchanged: neither PageHeaderRenderer::
- * render() nor Template::parse($handle, false) (the default) echo --
- * both accumulate into Template's own internal buffer (see
- * Template::fetchOutput()'s docblock), same mechanism
- * Controller\AboutController already relies on. Only the former
- * PageTail::render(); exit(); tail changes, to PageTail::renderToString()
- * (the same buffer, drained as a string instead of echoed) feeding the
+ * redirectHttp()/redirectHtml() throw `Piwigo\Http\ResponseReadyException`
+ * instead of calling header()/echo/exit() directly -- see that exception
+ * class's own docblock for why and where it's caught. Neither
+ * `PageHeaderRenderer::render()` nor `Template::parse($handle, false)`
+ * (the default) echoes -- both accumulate into Template's own internal
+ * buffer (see `Template::fetchOutput()`'s docblock), the same mechanism
+ * `Controller\AboutController` relies on. `PageTail::renderToString()`
+ * drains that same buffer as a string instead of echoing it, feeding the
  * thrown exception's Response body.
  */
 final class RedirectService implements RedirectServiceInterface
@@ -84,13 +71,8 @@ final class RedirectService implements RedirectServiceInterface
     }
 
     /**
-     * Resolves the container-shared instance instead of the CurrentPaths::
-     * get() shim (closed outright in sub-phase 12F-10) -- this class
-     * already has direct Kernel::container()
-     * access (arch-tested to Bootstrap/ only), so the shim here was only
-     * ever style consistency with a neighboring call, not a structural
-     * need (singleton/service-locator elimination campaign, Phase 11
-     * sub-phase 11J).
+     * Resolves the container-shared instance -- this class already has
+     * direct Kernel::container() access (arch-tested to Bootstrap/ only).
      */
     private static function paths(): Paths
     {
@@ -120,12 +102,10 @@ final class RedirectService implements RedirectServiceInterface
     }
 
     /**
-     * Resolve helpers matching the 3 above -- added for Template's own new
-     * required collaborators (singleton/service-locator elimination
-     * campaign, Phase 11 sub-phase 11E), same "Kernel-container-resolving
-     * static helper" shape, not constructor-injected, since this class's
-     * own `new Template(...)` construction sites are the only real
-     * consumer.
+     * Resolve helper matching the ones above -- needed for Template's own
+     * required collaborators, same "Kernel-container-resolving static
+     * helper" shape, not constructor-injected, since this class's own
+     * `new Template(...)` construction sites are the only real consumer.
      */
     private static function adminContext(): AdminContext
     {
@@ -184,17 +164,14 @@ final class RedirectService implements RedirectServiceInterface
     public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
     {
         // $template/lang_info are genuinely not always set here: this method
-        // can be called very early (e.g. a fatal before common.inc.php finishes
-        // bootstrapping), which is exactly what this check detects. Lang::
-        // isLangInfoInitialized() (Legacy Coupling Retirement Track A
-        // gap-fill batch G5) preserves the former raw global's isset()
-        // semantics for lang_info; CurrentTemplate::isInitialized() does
-        // the same for $template (Phase 2 global-residual sweep -- do not
-        // simplify the null-coalesce below, it's what makes the real
-        // early-crash fallback path reachable). $user below is a plain
-        // local -- written once, immediately consumed by the adjacent
-        // CurrentUser::set(), never read again (Legacy Coupling Retirement
-        // Phase 8, 8h).
+        // can be called very early (e.g. a fatal before the per-request
+        // bootstrap finishes), which is exactly what this check detects.
+        // Lang::isLangInfoInitialized() provides isset()-like semantics for
+        // lang_info; CurrentTemplate::isInitialized() does the same for
+        // $template -- do not simplify the null-coalesce below, it's what
+        // makes the real early-crash fallback path reachable. $user below
+        // is a plain local -- written once, immediately consumed by the
+        // adjacent CurrentUser::set(), never read again.
         $template = self::currentTemplate()->isInitialized() ? self::currentTemplate()->get() : null;
 
         if (! $this->lang->isLangInfoInitialized() || ! isset($template)) {
@@ -217,12 +194,9 @@ final class RedirectService implements RedirectServiceInterface
 
         // Neither branch above runs when $template was already set and
         // we're not in admin -- it's the pre-existing bootstrap Template
-        // in that case. Phase 2 global-residual sweep: now that $template
-        // is a real locally-typed variable (via CurrentTemplate::get())
-        // instead of an untyped global, PHPStan proves this is always a
-        // real Template by this point -- the old defensive re-check (kept
-        // because it "isn't provable statically" under the untyped
-        // global) is provably dead code now, not just redundant.
+        // in that case. $template is a real, locally-typed variable (via
+        // CurrentTemplate::get()), so PHPStan proves it's always a real
+        // Template by this point.
 
         if ($msg === '' || $msg === '0') {
             $msg = nl2br($this->lang->t('Redirection...'));

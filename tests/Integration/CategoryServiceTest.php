@@ -251,12 +251,10 @@ final class CategoryServiceTest extends IntegrationTestCase
         $currentConfig->setRateEnabled(true);
         // getCategoryRepresentantProperties()'s own DerivativeImage::thumb_url()/
         // url() calls need a real, populated ImageStdParams type map --
-        // DerivativeImage::urlService() itself now resolves
-        // UrlServiceInterface live from the container once Kernel is
-        // booted (singleton/service-locator elimination campaign, Phase
-        // 6), which this test already is via parent::setUp() -- no
-        // explicit wiring needed here anymore, same reasoning as
-        // NotificationByMailSenderTest's own identical setUp.
+        // DerivativeImage::urlService() resolves UrlServiceInterface live
+        // from the container once Kernel is booted, which this test already
+        // is via parent::setUp() -- no explicit wiring needed here, same
+        // reasoning as NotificationByMailSenderTest's own identical setUp.
         // ImageStdParams::load_from_db() itself needs CurrentConfigService.
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
         ImageStdParamsTestFactory::get()->load_from_db();
@@ -803,13 +801,13 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_delete_site_deletes_the_sites_categories_and_dispatches_delete_site_for_the_row_itself(): void
     {
-        // Item 16E: deleteSite() had zero existing coverage. Category
-        // can't depend on Site directly (a real deptrac boundary), so
-        // the site's own `sites` row is now deleted by a real listener
-        // on DeleteSite instead of a direct CategoryRepository call --
-        // this registers the SAME listener shape RequestBootstrap.php
-        // itself registers in production, to prove the wiring (not just
-        // the individual pieces) actually works end to end.
+        // Category can't depend on Site directly (a real deptrac
+        // boundary), so the site's own `sites` row is deleted by a real
+        // listener on DeleteSite instead of a direct CategoryRepository
+        // call -- this registers the SAME listener shape
+        // RequestBootstrap.php itself registers in production, to prove
+        // the wiring (not just the individual pieces) actually works end
+        // to end.
         $siteRepo = EntityManagerFactory::build($this->conn)->getRepository(SiteEntity::class);
         $siteUrl = 'p17-test-delete-site-' . bin2hex(random_bytes(4));
         $siteRepo->insert($siteUrl);
@@ -848,17 +846,16 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_check_categories_integrity_deletes_orphaned_image_category_user_access_and_group_access_rows(): void
     {
-        // Item 16I: findOrphanedColumnValues()/deleteRowsWhereColumnIn()
-        // converted 3 of CategoryOrphanTarget's 4 cases to real DQL --
-        // this file's own sibling test only ever exercised the 4th
-        // (OldPermalinks, which stays on raw DBAL, a real deptrac
-        // boundary), leaving these 3 with zero real coverage of their
-        // own orphan-cleanup behavior specifically. All 3 target tables
-        // carry a real ON DELETE CASCADE FK on the category-id column,
-        // so a genuine orphan can never arise through normal writes --
-        // disabling FK checks just for these inserts reproduces the
-        // only real way this state has ever existed in practice, same
-        // pattern FilesystemIntegrityCheckerTest's own orphan tests use.
+        // findOrphanedColumnValues()/deleteRowsWhereColumnIn() use real
+        // DQL for 3 of CategoryOrphanTarget's 4 cases (OldPermalinks stays
+        // on raw DBAL, a real deptrac boundary, and is covered by this
+        // file's sibling old-permalinks test below) -- this is the only
+        // coverage for these 3. All 3 target tables carry a real ON DELETE
+        // CASCADE FK on the category-id column, so a genuine orphan can
+        // never arise through normal writes -- disabling FK checks just
+        // for these inserts reproduces the only real way this state has
+        // ever existed in practice, same pattern
+        // FilesystemIntegrityCheckerTest's own orphan tests use.
         $this->disableForeignKeyChecks($this->conn);
         $this->conn->executeStatement('INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (1, 60000)');
         $this->conn->executeStatement('INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (1, 60000)');
@@ -1037,16 +1034,15 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_set_cat_status_private_removes_inconsistent_group_access_too(): void
     {
-        // Item 16I: deleteInconsistentAccess() converted CategoryAccessTarget::
-        // GroupAccess to real DQL too, alongside UserAccess above -- same
-        // code path, but the sibling test only ever exercised UserAccess
+        // deleteInconsistentAccess() handles CategoryAccessTarget::GroupAccess
+        // via real DQL, alongside UserAccess -- same code path as the
+        // sibling test above, which only exercises UserAccess
         // (setCatStatus()'s own foreach(CategoryAccessTarget::cases())
         // loop runs both every time, just without a group_access-specific
-        // assertion), so this closes that gap directly. A throwaway new
-        // group, not a real fixture one -- the fixture's own groups 1-3
-        // already have real access to category 1 (the "reference"),
-        // which would make it the *consistent* case this test isn't
-        // trying to cover.
+        // assertion). A throwaway new group, not a real fixture one -- the
+        // fixture's own groups 1-3 already have real access to category 1
+        // (the "reference"), which would make it the *consistent* case
+        // this test isn't trying to cover.
         $this->conn->executeStatement("INSERT INTO " . Tables::groups() . " (name) VALUES ('zzz-16i-probe-group')");
         $groupId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET status = 'private' WHERE id = 1");

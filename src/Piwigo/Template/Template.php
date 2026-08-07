@@ -46,19 +46,18 @@ use Smarty\Template as SmartyTemplate;
 use Smarty\TemplateBase;
 
 /**
- * Legacy Coupling Retirement Phase 8, 8d: the data_dir_checked write
- * inside __construct() goes through $this->currentConfigService->get()
- * -- safe even though the write fires from the constructor itself, not a
- * method called later, because every real construction site
- * (Bootstrap\RequestBootstrap.php x2, Admin\Install\InstallWizard.php) now
- * runs after its own path has already activated CurrentConfigService
- * (RequestBootstrap::connect() resolves one before finalize() ever
- * constructs a Template; InstallWizard is only ever constructed after
- * InstallBootstrap::activateConfigService()). Constructor-injecting
- * CurrentConfigService itself is safe regardless of that ordering --
- * per its own docblock, it's a plain nullable-reference wrapper that
- * "touches nothing until get() is actually called" (singleton/
- * service-locator elimination campaign, Phase 11 sub-phase 11E).
+ * The data_dir_checked write inside __construct() goes through
+ * $this->currentConfigService->get() -- safe even though the write
+ * fires from the constructor itself, not a method called later, because
+ * every real construction site (Bootstrap\RequestBootstrap.php x2,
+ * Admin\Install\InstallWizard.php) runs after its own path has already
+ * activated CurrentConfigService (RequestBootstrap::connect() resolves
+ * one before finalize() ever constructs a Template; InstallWizard is
+ * only ever constructed after InstallBootstrap::activateConfigService()).
+ * Constructor-injecting CurrentConfigService itself is safe regardless
+ * of that ordering -- per its own docblock, it's a plain
+ * nullable-reference wrapper that "touches nothing until get() is
+ * actually called".
  *
  * Every `mixed` below stays that way by design: assign()/append()/
  * get_template_vars() mirror Smarty's own arbitrary-value assign()
@@ -186,39 +185,19 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                         false // show trace
                     );
             }
-            // Legacy Coupling Retirement Phase 8, 8d: the former
-            // `if (function_exists('pwg_query'))` guard here was provably
-            // dead (pwg_query is never defined anywhere in this codebase,
-            // confirmed by a full-repo grep) -- meaning this write never
-            // actually persisted, and the mkgetdir()/is_writable() check
-            // above silently re-ran on every single request instead of
-            // once, since CurrentConfig::has('data_dir_checked') could never
-            // become true. Removed the guard and retargeted onto
-            // CurrentConfigService::get() (Tier 2 -- constructed throwaway
-            // at ~8 real sites).
+            // The try/catch tolerates two distinct real failure modes:
             //
-            // The try/catch is real, not defensive-for-its-own-sake: found
-            // live via composer test:fixture-regen. Admin\Install\InstallWizard::boot()
-            // constructs a Template (this class) *before*
-            // performInstall() creates the schema -- on a genuinely fresh
-            // install, the config table doesn't exist yet at this exact
-            // call site (confirmed via a real TableNotFoundException, not
-            // assumed). Every other real construction site
+            // On a genuinely fresh install, Admin\Install\InstallWizard::boot()
+            // constructs a Template (this class) *before* performInstall()
+            // creates the schema, so the config table doesn't exist yet at
+            // this exact call site (Doctrine\DBAL\Exception\TableNotFoundException).
+            // Every other real construction site
             // (Bootstrap\RequestBootstrap.php x2) always has an existing
             // config table by the time it runs.
-            // Harmless to skip here: this write is purely a "don't repeat
-            // this filesystem check" cache -- the very next real request
-            // (post-install, table now exists) sees CurrentConfig::has('data_dir_checked')
-            // still false and simply redoes the cheap mkgetdir/is_writable
-            // check once more, no different from before this write existed.
             //
-            // Widened from the narrower TableNotFoundException to the full
-            // Doctrine\DBAL\Exception interface -- found live via
-            // composer test:install against a genuinely fresh DB (a state
-            // fixture-regen's own DB always already had real credentials
-            // for, so it never exercised this): on the *first* GET to
-            // install.php, before the form is ever submitted,
-            // InstallWizard::boot()'s own DbCredentials::seed(['PIWIGO_DB_USER' => $this->dbuser, ...])
+            // On the *first* GET to install.php, before the form is ever
+            // submitted, InstallWizard::boot()'s own
+            // DbCredentials::seed(['PIWIGO_DB_USER' => $this->dbuser, ...])
             // (needed so a *submitted* form's real credentials win over
             // stale ones -- see that call site's own docblock) runs with
             // $this->dbuser === '' (no $_POST yet), which overwrites
@@ -228,8 +207,14 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             // stage itself (Doctrine\DBAL\Exception\ConnectionException,
             // "Access denied for user ''@'localhost'"), not the
             // table-lookup stage -- a sibling failure mode this call site
-            // must tolerate for the exact same reason it already tolerates
-            // a missing table.
+            // must tolerate for the same reason it already tolerates a
+            // missing table.
+            //
+            // Harmless to skip: this write is purely a "don't repeat this
+            // filesystem check" cache -- the very next real request
+            // (post-install, table now exists) sees
+            // CurrentConfig::has('data_dir_checked') still false and simply
+            // redoes the cheap mkgetdir/is_writable check once more.
             try {
                 // dataDirChecked() is ?string-typed (a presence marker, not
                 // a real int) -- passing the real string here so
@@ -284,10 +269,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
         $this->smarty->registerPlugin('modifier', 'l10n', $this->lang->t(...));
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
-        // AccessLevelChecker (singleton/service-locator elimination
-        // campaign, Phase 12 sub-phase 12A) has no dependency chain that
-        // can throw (unlike the old AccessControl, whose chain reached a
-        // real DB connection via RedirectService -> UserService) -- a
+        // AccessLevelChecker has no dependency chain that can throw -- a
         // required constructor property is safe here, including for
         // InstallWizard::render()'s own Template construction before
         // submitted DB credentials are known to be valid.
@@ -334,16 +316,13 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
     /**
      * Container resolve, not a constructor property -- `UrlServiceInterface`
-     * is not one of the `@deprecated transitional bridge` shims this class
-     * closes (singleton/service-locator elimination campaign, Phase 11
-     * sub-phase 11E), so it stays on this established, already-correct
-     * pattern rather than being folded into the new required-collaborator
-     * list above for no reason. `private static` (not `private`) so it's
-     * reachable from make_script_src() below, which is itself an instance
-     * method now but keeps calling this via `self::` like every other
-     * caller in this class. Resolves the container-shared instance
-     * (singleton/service-locator elimination campaign, Phase 6), not a
-     * throwaway `new UrlService($this->htmlRenderer())` -- see Image\SrcImage's
+     * stays on this established, already-correct pattern rather than
+     * being folded into the required-collaborator list above for no
+     * reason. `private static` (not `private`) so it's reachable from
+     * make_script_src() below, which is itself an instance method but
+     * keeps calling this via `self::` like every other caller in this
+     * class. Resolves the container-shared instance, not a throwaway
+     * `new UrlService($this->htmlRenderer())` -- see Image\SrcImage's
      * own docblock for why (RootPathOverride's cross-instance sharing
      * requirement).
      */
@@ -359,19 +338,16 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
     /**
      * `public` (unlike urlService() above) and referenced by its
-     * fully-qualified name -- singleton/service-locator elimination
-     * campaign, Phase 12 sub-phase 12F-8: replaces the former
-     * `\Piwigo\Core\Lang::current()` shim call inside
-     * modcompiler_translate()/modcompiler_translate_dec()'s own generated
-     * PHP source text. That text is spliced by Smarty into `templates_c/
-     * *.php` compiled-cache files and executed later by a Smarty-internal
-     * render function with no `Template` instance (`$this`) or class scope
-     * available at all -- a `private`/`self::`-style resolver like
-     * urlService() isn't reachable from there, only a real `public static`
-     * method called by its fully-qualified class name is. No pre-boot
-     * fallback needed (matching Lang::current()'s own former shape): a
-     * Smarty template only ever compiles/renders after a real request has
-     * fully booted.
+     * fully-qualified name: the generated PHP source text
+     * (modcompiler_translate()/modcompiler_translate_dec()'s own output)
+     * is spliced by Smarty into `templates_c/*.php` compiled-cache files
+     * and executed later by a Smarty-internal render function with no
+     * `Template` instance (`$this`) or class scope available at all -- a
+     * `private`/`self::`-style resolver like urlService() isn't reachable
+     * from there, only a real `public static` method called by its
+     * fully-qualified class name is. No pre-boot fallback needed: a
+     * Smarty template only ever compiles/renders after a real request
+     * has fully booted.
      */
     public static function lang(): Lang
     {
@@ -385,14 +361,12 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
     /**
      * `public` and referenced by its fully-qualified name, same reasoning
-     * as lang() above -- singleton/service-locator elimination campaign,
-     * Phase 12 sub-phase 12F-12: replaces the former
-     * `\Piwigo\Config\CurrentConfig::current()` shim call inside
-     * themes/standard_pages/themeconf.inc.php. Unlike lang()'s own compiled-
-     * cache-codegen use case, this file is a real, direct PHP `include`
-     * from load_themeconf() below -- `$this` genuinely IS the including
-     * Template instance there (confirmed live: an `include`d file shares
-     * its including method's `$this` binding, including private-property
+     * as lang() above -- used inside
+     * themes/standard_pages/themeconf.inc.php. Unlike lang()'s own
+     * compiled-cache-codegen use case, this file is a real, direct PHP
+     * `include` from load_themeconf() below -- `$this` genuinely IS the
+     * including Template instance there (an `include`d file shares its
+     * including method's `$this` binding, including private-property
      * access) -- but PHPStan analyses every file independently and can't
      * trace that inherited scope, so `$this->currentConfig` there reports
      * as undefined. A real, ordinary static method call sidesteps that
@@ -413,9 +387,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * this class's own one `new PwgTemplateAdapter(...)` construction
      * above. A required constructor param here would ripple across this
      * class's own many real construction sites for the sake of a single
-     * internal caller, same low-blast-radius reasoning as accessControl()
-     * above (singleton/service-locator elimination campaign, Phase 11
-     * sub-phase 11G).
+     * internal caller.
      */
     private function translator(): Translator
     {
@@ -435,8 +407,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * matches Core\FilesystemHelper::fatalError()'s own already-established
      * precedent for this exact interface/method combination (see that
      * method's own docblock) rather than growing this class's own
-     * constructor for a 14-site error-path-only usage (singleton/
-     * service-locator elimination campaign, Phase 11 sub-phase 11E).
+     * constructor for a 14-site error-path-only usage.
      */
     private function htmlRenderer(): HtmlRenderingInterface
     {
@@ -449,20 +420,17 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Container resolve, not a constructor property -- a real, confirmed
-     * regression found live via a curl smoke test of public/install.php:
-     * ImageStdParams's own container factory (config/container.php)
-     * unconditionally calls load_from_db() against a real DB connection.
-     * A required constructor param here would force that DB read merely
-     * by constructing a Template, or (worse) merely by *any* caller
-     * satisfying this class's own constructor signature -- InstallWizard's
-     * own real construction site had to resolve this eagerly just to
-     * build a Template, before install.php has ever confirmed the schema
-     * exists (the exact `piwigo_derivative_settings` table doesn't exist
-     * yet on a fresh install). Kept lazy here, matching accessControl()'s
-     * own shape, so nothing forces this cost except func_define_derivative()
-     * actually running (singleton/service-locator elimination campaign,
-     * Phase 11 sub-phase 11E).
+     * Container resolve, not a constructor property -- ImageStdParams's
+     * own container factory (config/container.php) unconditionally calls
+     * load_from_db() against a real DB connection. A required constructor
+     * param here would force that DB read merely by constructing a
+     * Template, or (worse) merely by *any* caller satisfying this class's
+     * own constructor signature -- InstallWizard's own real construction
+     * site had to resolve this eagerly just to build a Template, before
+     * install.php has ever confirmed the schema exists (the exact
+     * `piwigo_derivative_settings` table doesn't exist yet on a fresh
+     * install). Kept lazy here, so nothing forces this cost except
+     * func_define_derivative() actually running.
      */
     private function imageStdParams(): ImageStdParams
     {
@@ -480,8 +448,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * required constructor param here would ripple to every real
      * `new Template(...)` construction site across the app for a single
      * caller, the same low-blast-radius reasoning as htmlRenderer()/
-     * imageStdParams() above (singleton/service-locator elimination
-     * campaign, Phase 11 sub-phase 11F).
+     * imageStdParams() above.
      */
     private function currentTemplate(): CurrentTemplate
     {
@@ -608,13 +575,11 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * P23 batch 8f-4: string-narrowed variant with the exact contract of
-     * the deleted get_themeconf() free function (include/functions.inc.php)
-     * -- the corresponding $themeconf value if existing and a string,
-     * otherwise an empty string. Implements
-     * Piwigo\Core\ThemeConfProviderInterface so L2a callers (SrcImage) can
-     * reach it without depending on this L3 class; see that interface's
-     * own docblock.
+     * String-narrowed variant of get_themeconf() above: the corresponding
+     * $themeconf value if existing and a string, otherwise an empty
+     * string. Implements Piwigo\Core\ThemeConfProviderInterface so L2a
+     * callers (SrcImage) can reach it without depending on this L3 class;
+     * see that interface's own docblock.
      */
     #[Override]
     public function themeConf(string $key): string
@@ -832,8 +797,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
 
         $this->smarty->assign('ROOT_URL', self::urlService()->getRootUrl());
-        // Legacy Coupling Retirement gap-closure (entry-shell define()/
-        // include round): the .tpl-side equivalent of PHPWG_ROOT_PATH for
+        // ROOT_PATH is the .tpl-side equivalent of PHPWG_ROOT_PATH for
         // the handful of templates that need a real filesystem existence
         // check (datepicker.inc.tpl/photos_add_direct.tpl's own
         // `{if $ROOT_PATH|@cat:...|@file_exists}`), not a URL -- ROOT_URL
@@ -948,9 +912,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * The non-echoing sibling of flush()/p() -- same combined-script/CSS/
      * head-element substitutions, returned as a string instead of sent to
      * the browser. For callers that need the fully rendered page as a
-     * value (Legacy Coupling Retirement Workstream D: controllers
-     * returning a real PSR-7 Response instead of echoing directly) rather
-     * than as a side effect.
+     * value (controllers returning a real PSR-7 Response instead of
+     * echoing directly) rather than as a side effect.
      */
     public function fetchOutput(): string
     {
@@ -971,21 +934,19 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                     'AAAA_DEBUG_TOTAL_TIME__' => TimingHelper::getElapsedTime($this->pageState->requestStart, TimingHelper::getMoment()),
                 ]
             );
-            // Genuine bug, found live while closing this line's own
-            // coverage gap (never previously exercised by any test):
             // Smarty\Debug::display_debug() unconditionally calls
             // $obj->getSource() (vendor/smarty/smarty/src/Debug.php) before
             // ever checking its own `$obj instanceof Smarty` branch --
             // Smarty\Smarty itself has no getSource() method (only
             // Smarty\Template/Smarty\Template\Cached do), so passing the
-            // bare engine here always threw `Error: Call to undefined
-            // method Smarty\Smarty::getSource()`, confirmed via a real
-            // debugging=true call. A throwaway 'string:' resource template
-            // gives display_debug() a real getSource() to read, taking its
-            // Template branch instead (labels the console 'string:' rather
-            // than aggregating per-template timings) -- debug.tpl's own
-            // markup treats template_name/template_data as optional, so
-            // this degrades gracefully instead of reproducing the crash.
+            // bare engine here always throws `Error: Call to undefined
+            // method Smarty\Smarty::getSource()`. A throwaway 'string:'
+            // resource template gives display_debug() a real getSource()
+            // to read, taking its Template branch instead (labels the
+            // console 'string:' rather than aggregating per-template
+            // timings) -- debug.tpl's own markup treats
+            // template_name/template_data as optional, so this degrades
+            // gracefully instead of reproducing the crash.
             (new Debug())->display_debug($this->smarty->createTemplate('string:'), true);
         }
     }
@@ -1046,12 +1007,11 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 // instance available. Reached whenever the translation
                 // can't be resolved at compile time (cache-by-language is
                 // off -- the common, default case -- or the key is a
-                // runtime variable, or it's an unknown key): a permanent
-                // exception (singleton/service-locator elimination
-                // campaign, Phase 11 sub-phase 11E's own close-out note),
-                // not an unconverted shim caller -- self::lang() (a real
-                // public static resolver, sub-phase 12F-8) replaces the
-                // former Lang::current() shim call here.
+                // runtime variable, or it's an unknown key): self::lang()
+                // (a public static resolver) is a permanent exception to
+                // this class's constructor-injected dependencies, needed
+                // because no `$this` is available where this generated
+                // code runs.
                 return '\Piwigo\Template\Template::lang()->t(' . $params[0] . ')';
 
             default:
@@ -1260,11 +1220,11 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function func_combine_script(array $params): void
     {
         if (! isset($params['id']) || ! is_string($params['id'])) {
-            // Used to be trigger_error(..., E_USER_ERROR) -- deprecated as
-            // of PHP 8.4, see HtmlService::fatalError()'s own docblock for
-            // the real replacement/reasoning. This return is what actually
-            // prevents $params['id'] from being read below when it's
-            // genuinely missing/non-string.
+            // recordFatal() records the fatal condition without halting
+            // execution (see HtmlService::fatalError()'s own docblock for
+            // the reasoning) -- this return is what actually prevents
+            // $params['id'] from being read below when it's genuinely
+            // missing/non-string.
             $this->errorCollector->recordFatal("combine_script: missing 'id' parameter");
 
             return;

@@ -11,19 +11,18 @@ use Piwigo\Core\Paths;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin.php's historical `include PHPWG_ROOT_PATH . 'admin/' .
- * $page_slug . '.php';` dispatch. Lives in Bootstrap/ (not admin.php
+ * Dispatches an admin page by resolving its `config/admin_pages.php`
+ * sub-controller from the container. Lives in Bootstrap/ (not admin.php
  * itself) because Kernel::container() is arch-test-restricted to
  * Bootstrap/ + root index.php (tests/Arch/StructuralTest.php) --
  * admin.php is a different root file, so it must reach the container
  * through this class, the same seam RequestBootstrap/RequestPipeline
  * already use.
  *
- * Every admin page is a config/admin_pages.php sub-controller since P23
- * batch 6; the legacy-include fallback for not-yet-migrated slugs was
- * removed in P23 batch 9 (admin.php already falls back to 'intro' for
- * any slug not in the map, so an unmapped slug reaching this point is a
- * programming error, not user input).
+ * Every admin page is a config/admin_pages.php sub-controller; admin.php
+ * already falls back to 'intro' for any slug not in the map, so an
+ * unmapped slug reaching this point is a programming error, not user
+ * input.
  */
 final class AdminDispatcher
 {
@@ -58,13 +57,9 @@ final class AdminDispatcher
     }
 
     /**
-     * Resolves the container-shared instance instead of the CurrentPaths::
-     * get() shim (closed outright in sub-phase 12F-10) -- this class
-     * already has direct Kernel::container()
-     * access (arch-tested to Bootstrap/ only), so the shim here was only
-     * ever style consistency with a neighboring call, not a structural
-     * need (singleton/service-locator elimination campaign, Phase 11
-     * sub-phase 11J).
+     * Resolves the container-shared instance directly -- this class
+     * already has direct Kernel::container() access (arch-tested to
+     * Bootstrap/ only).
      */
     private static function paths(): Paths
     {

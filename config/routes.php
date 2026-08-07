@@ -28,11 +28,11 @@ use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 // Routes match the literal root-file path (e.g. /about.php) -- these files
-// stay real, individually-requested entry points until P23 deletes them
-// (the web server invokes them directly; clean-URL rewriting is a
-// pre-existing .htaccess/permalink concern this phase doesn't touch).
-// P9's own tests/Unit/Routing/RouterTest.php dispatches against an
-// in-memory RouteCollection built inline, not this file.
+// are real, individually-requested entry points (the web server invokes
+// them directly); clean-URL rewriting is a separate .htaccess/permalink
+// concern.
+// tests/Unit/Routing/RouterTest.php dispatches against an in-memory
+// RouteCollection built inline, not this file.
 
 $routes = new RouteCollection();
 
@@ -131,18 +131,16 @@ $routes->add('analytics_vitals', new Route('/analytics/vitals', [
     '_controller' => VitalsController::class,
 ]));
 
-// Workstream C3 Part III: i.php supports 2 URL styles depending on
-// Config::questionMarkInUrls() -- query-string ("/i.php?/upload/...", where
-// the query string never becomes part of the URI path Router matches
-// against, leaving a bare "/i.php") and PATH_INFO ("/i.php/upload/...",
-// a real tail after the script name) -- confirmed live via a direct
-// diagnostic request, not assumed. The wildcard `{tail}` (default '',
-// requirement '.*' so it matches slashes too) is the one route pattern in
-// this file that isn't a flat literal path, needed to match both shapes;
-// ImageDerivativeController itself still parses the real derivative
-// request from $_SERVER['PATH_INFO']/['QUERY_STRING'] directly (like every
-// other already-migrated P22 controller reads $_GET/$_POST), not from this
-// route's own {tail} capture -- see tests/Unit/Routing/RouterTest.php's own
+// i.php supports 2 URL styles depending on Config::questionMarkInUrls() --
+// query-string ("/i.php?/upload/...", where the query string never
+// becomes part of the URI path Router matches against, leaving a bare
+// "/i.php") and PATH_INFO ("/i.php/upload/...", a real tail after the
+// script name). The wildcard `{tail}` (default '', requirement '.*' so it
+// matches slashes too) is the one route pattern in this file that isn't a
+// flat literal path, needed to match both shapes; ImageDerivativeController
+// itself still parses the real derivative request from
+// $_SERVER['PATH_INFO']/['QUERY_STRING'] directly, not from this route's
+// own {tail} capture -- see tests/Unit/Routing/RouterTest.php's own
 // dedicated coverage of this exact pattern.
 $routes->add('derivative_image', new Route('/i.php{tail}', [
     '_controller' => ImageDerivativeController::class,

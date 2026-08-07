@@ -31,10 +31,9 @@ use Piwigo\Notification\Projection\UserMailNotification;
  * incMailSentFailed()/displayCounterInfo()/assignVarsNbmMailContent()/
  * sendMailNotifications()/doSubscribeUnsubscribeNotificationByMail() --
  * all reachable directly (no need to drive a full subscribe/send admin-page
- * POST), and all had zero or partial coverage (see /home/torres/.claude/
- * plans/piped-enchanting-spark.md, Wave 1). Resolved through the real DI
- * container (PresentationAccessor), same "needs a real DB connection to
- * construct" shape as ExtendedDomainAccessorTest's accessors.
+ * POST). Resolved through the real DI container (PresentationAccessor),
+ * same "needs a real DB connection to construct" shape as
+ * ExtendedDomainAccessorTest's accessors.
  *
  * A real mail-send's success/failure is normally non-deterministic here
  * (see NotificationByMailSubControllerTest's own docblock: depends on
@@ -69,12 +68,10 @@ use Piwigo\Notification\Projection\UserMailNotification;
  * that (confirmed via a full-repo grep), by the same established design
  * this class's own docblock already documents for the failure trick.
  *
- * Re-confirmed during the "domain-longtail" coverage-gap batch (2026-07-30):
- * both call sites construct `new MailService()` directly (no injectable
+ * Both call sites construct `new MailService()` directly (no injectable
  * mailer, unlike MailService::mailGroup()'s own recipient-repo seam), so
  * there is no substitution point to force `mail()` to return true short of
- * standing up a real SMTP listener -- out of scope for this batch, same
- * conclusion as above. The 5 lines this leaves uncovered
+ * standing up a real SMTP listener. The 5 lines this leaves uncovered
  * (NotificationByMailSender.php: 395, 659, 661, 662, 663) are exactly
  * incMailSentSuccess()'s 2 call sites plus sendMailNotifications()'s own
  * `$datas[] = [...]` success-branch append.
@@ -124,13 +121,12 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // thumbnail URLs (NotificationService::getHtmlDescriptionRecentPostDate()
         // -> DerivativeImage::thumb_url()) -- needs ImageStdParams loaded
         // (below) since IntegrationTestCase never runs a full
-        // RequestBootstrap. DerivativeImage::urlService() itself now
-        // resolves UrlServiceInterface live from the container once
-        // Kernel is booted (singleton/service-locator elimination
-        // campaign, Phase 6), which this test already is via
-        // parent::setUp() -- no explicit wiring needed here anymore. Same
-        // real-config-row wiring as CategoryDefaultRendererTest/
-        // CalendarMonthlyTest's own identical setUp.
+        // RequestBootstrap. DerivativeImage::urlService() resolves
+        // UrlServiceInterface live from the container once Kernel is
+        // booted, which this test already is via parent::setUp() -- no
+        // explicit wiring needed here. Same real-config-row wiring as
+        // CategoryDefaultRendererTest/CalendarMonthlyTest's own identical
+        // setUp.
         $configService->loadConfFromDb();
         ImageStdParamsTestFactory::get()->load_from_db();
 
@@ -208,28 +204,25 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // this now-Paths-less container.
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
         // Kernel::reset() also discards the container-shared Translator
-        // instance setUp()'s own Lang::load('admin.lang') call populated
-        // (singleton/service-locator elimination campaign, Phase 4 --
-        // Translator is now rebuilt fresh per container, not a true
-        // process-global survivor) -- without reloading it here, Lang::t()
-        // calls against the fresh, empty Translator fall back to their raw
-        // untranslated literal instead of the real po wording every
-        // assertion in this file expects.
+        // instance setUp()'s own Lang::load('admin.lang') call populated --
+        // Translator is rebuilt fresh per container, not a process-global
+        // survivor -- without reloading it here, Lang::t() calls against
+        // the fresh, empty Translator fall back to their raw untranslated
+        // literal instead of the real po wording every assertion in this
+        // file expects.
         LangTestFactory::get()->load('admin.lang');
         // Kernel::reset() also discards the container-shared CurrentUser
-        // instance setUp()'s own attachGlobals() seed populated
-        // (singleton/service-locator elimination campaign, Phase 5 --
-        // CurrentUser is now rebuilt fresh per container, not a true
-        // process-global survivor) -- without reseeding here, any
+        // instance setUp()'s own attachGlobals() seed populated --
+        // CurrentUser is rebuilt fresh per container, not a process-global
+        // survivor -- without reseeding here, any
         // CurrentUserTestFactory::get()->get() reached from the fresh sender
         // (e.g. via AccessControl) throws "not initialised" against this
         // now-unseeded container.
         CurrentUserTestFactory::get()->attachGlobals();
         // Kernel::reset() also discards the container-shared CurrentConfig
-        // instance (singleton/service-locator elimination campaign, Phase
-        // 9 -- CurrentConfig is now rebuilt fresh per container too, back
-        // to its own compiled-in defaults, not a true process-global
-        // survivor) -- must be set here, on the fresh post-reboot instance,
+        // instance -- CurrentConfig is rebuilt fresh per container too,
+        // back to its own compiled-in defaults, not a process-global
+        // survivor -- must be set here, on the fresh post-reboot instance,
         // not before the Kernel::reset() above, or the new container's own
         // fresh CurrentConfig would silently discard it and the rebuilt
         // sender below would read the ordinary default (20) instead of

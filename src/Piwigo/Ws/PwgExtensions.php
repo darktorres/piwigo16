@@ -42,7 +42,6 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
 /**
- * P23 batch 8e-2: relocated from include/ws_functions/pwg.extensions.php.
  * `pwg.plugins.*`/`pwg.themes.performAction`/`pwg.extensions.*` WS methods
  * (6 registrations, all admin_only) -- registered via callable arrays in
  * include/ws_default_methods.inc.php.
@@ -139,14 +138,13 @@ final class PwgExtensions
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
-        // P23 batch 8e-2: the original define('IN_ADMIN', true) here has no
-        // effect on this request -- Template::__construct() (the only
-        // reader that matters mid-request) already ran during
-        // common.inc.php's bootstrap, long before this WS callback
-        // executes; delete_compiled_templates() below and plugins::
-        // perform_action() never read IN_ADMIN themselves (verified via
-        // grep). Dropping it also avoids a real SEC-60 (no define() under
-        // src/Piwigo/) arch-test violation.
+        // No define('IN_ADMIN', true) call here: Template::__construct()
+        // (the only reader that matters mid-request) already ran during
+        // common.inc.php's bootstrap, before this WS callback executes,
+        // and delete_compiled_templates() below and plugins::
+        // perform_action() never read IN_ADMIN themselves. A define()
+        // here would also violate the SEC-60 arch-test rule (no define()
+        // under src/Piwigo/).
 
         $urlService = $this->urlService;
         $conn = DbConnection::build();
@@ -202,9 +200,8 @@ final class PwgExtensions
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
-        // P23 batch 8e-2: see pluginsPerformAction()'s own comment -- the
-        // original define('IN_ADMIN', true) here is equally a no-op for
-        // this request.
+        // See pluginsPerformAction()'s own comment -- a
+        // define('IN_ADMIN', true) here would equally be unnecessary.
 
         $urlService = $this->urlService;
         $conn = DbConnection::build();
@@ -377,15 +374,10 @@ final class PwgExtensions
      */
     public function ignoreUpdate(array $params, PwgServer &$service): PwgError|true
     {
-        // P23 batch 8e-2: the original define('IN_ADMIN', true)+
-        // include_once admin/include/functions.php here are both dropped --
-        // IN_ADMIN has no reader left in this request's lifecycle (see
-        // pluginsPerformAction()'s own comment), and
-        // admin/include/functions.php has been emptied of all functions
-        // since P23 batch 8d (the config write below went through
-        // \Piwigo\Config\ConfigDb::confUpdateParam() since P23 batch 8f-4,
-        // which deleted include/functions.inc.php entirely; Phase 5
-        // Legacy Coupling Retirement retargeted it onto CurrentConfigService).
+        // No define('IN_ADMIN', true) or include_once
+        // admin/include/functions.php here: IN_ADMIN has no reader left in
+        // this request's lifecycle (see pluginsPerformAction()'s own
+        // comment).
 
         if (! $this->accessControl->isWebmaster()) {
             return new PwgError(401, 'Access denied');

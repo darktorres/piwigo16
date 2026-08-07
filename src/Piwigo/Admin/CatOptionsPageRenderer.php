@@ -86,11 +86,9 @@ final class CatOptionsPageRenderer
             ]
         );
 
-        // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
-        // bug -- nothing had ever called CoreTabs::setContext() with
-        // linkStart for this page (same class of gap as
-        // ConfigurationSubController's own $conf_link fix), so this page's
-        // own tab strip has always rendered broken relative hrefs.
+        // CoreTabs::setContext() must be called with linkStart before
+        // Tabsheet renders this page's tab strip, or the tabs render with
+        // broken relative hrefs.
         $this->coreTabs->setContext(new CoreTabsContext(linkStart: $this->urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('cat_options');

@@ -14,9 +14,7 @@ use RuntimeException;
 
 /**
  * The DI/Doctrine-backed config persistence layer -- the real writer
- * behind Piwigo\Config\CurrentConfig:: (Legacy Coupling Retirement Phase
- * 5, narrowed to a two-part split in Phase 8, 8d; retyped in full during
- * Config generic-accessor removal). CurrentConfig is the static typed
+ * behind Piwigo\Config\CurrentConfig. CurrentConfig is the static typed
  * read layer (one property per key) and in-memory-only write via its own
  * named setters; Piwigo\Config\ConfigService (this class) is the DI/
  * Doctrine-backed persistence layer for every real writer --
@@ -25,14 +23,9 @@ use RuntimeException;
  * utilities, throwaway-constructed classes, and every pre-container
  * bootstrap/install call site).
  *
- * `value` is a real JSON column (gap-closure Stage 1a-bis item 5) --
- * encode()/hydrate() below json_encode()/json_decode() every value
- * uniformly, replacing the legacy per-PHP-type convention
- * (include/functions.inc.php's load_conf_from_db()/conf_update_param():
- * scalars as literal strings, 'true'/'false' coerced to bool on read,
- * arrays as serialize() blobs). No addslashes() -- Doctrine parameterizes
- * values safely, that legacy escaping was only ever needed for raw SQL
- * string concatenation.
+ * `value` is a real JSON column -- encode()/hydrate() below
+ * json_encode()/json_decode() every value uniformly. No addslashes() --
+ * Doctrine parameterizes values safely.
  */
 final readonly class ConfigService
 {
@@ -431,14 +424,13 @@ final readonly class ConfigService
      * The $param === null branch above is the expensive one -- a full
      * Doctrine ORM hydration of ~280 ConfigEntry entities on every request
      * that runs it (every real HTTP request, via RequestBootstrap::connect()).
-     * CachePools::config() (P23 batch 2, reserved with "no real consumer
-     * yet") caches the plain param => value map instead of the ConfigEntry
-     * objects themselves -- hydrate() only ever needs the raw string value,
-     * and a plain array sidesteps any Doctrine-entity-serialization
-     * question entirely. No TTL: config data doesn't go stale on a timer,
-     * only on a write, so confUpdateParam()/confDeleteParam() below
-     * explicitly clear this pool after every real write instead of relying
-     * on expiry.
+     * CachePools::config() caches the plain param => value map instead of
+     * the ConfigEntry objects themselves -- hydrate() only ever needs the
+     * raw string value, and a plain array sidesteps any Doctrine-entity-
+     * serialization question entirely. No TTL: config data doesn't go
+     * stale on a timer, only on a write, so confUpdateParam()/
+     * confDeleteParam() below explicitly clear this pool after every real
+     * write instead of relying on expiry.
      *
      * @return array<string, ?string>
      */

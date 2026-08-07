@@ -19,39 +19,28 @@ use Override;
 /**
  * Custom DQL function: "WEEK" "(" StringPrimary ["," SimpleArithmeticExpression]
  * ")" -- week-of-year, matching MySQL's own `WEEK(date)`/`WEEK(date, mode)`
- * shape (formerly {@see \Piwigo\Db\SqlDialect}'s `getWeek()`, removed once
- * Calendar -- its only real caller -- became real DQL). The optional 2nd
- * `mode` argument is a real, precedented Doctrine idiom -- mirrors
- * `Doctrine\ORM\Query\AST\Functions\LocateFunction`'s own optional 3rd
- * argument (`$parser->getLexer()->isNextToken(TokenType::T_COMMA)`); no
- * other function in this codebase needed one before this.
+ * shape. The optional 2nd `mode` argument follows the same optional-argument
+ * idiom as `Doctrine\ORM\Query\AST\Functions\LocateFunction`'s own optional
+ * 3rd argument (`$parser->getLexer()->isNextToken(TokenType::T_COMMA)`).
  *
- * Further SQL-modernization audit, Item 15G: MySQL's `mode` argument
- * (0-7, controlling first-day-of-week/range convention) is genuinely
- * MySQL-specific -- {@see \Piwigo\Calendar\CalendarWeekly}'s own comment
- * on its one real `mode: 5` call site ("Week 1=the first week with a
- * Monday in this year") already documents this as MySQL-version-specific
- * behavior. This item's own original note punted on porting the mode-arg
- * shape at all ("this project has no way to verify without a real
- * installation of either") -- no longer true once a real pgsql support
- * pass gave this project a real, live PostgreSQL instance to verify
- * against.
+ * MySQL's `mode` argument (0-7, controlling first-day-of-week/range
+ * convention) is genuinely MySQL-specific -- {@see \Piwigo\Calendar\CalendarWeekly}'s
+ * own comment on its one real `mode: 5` call site ("Week 1=the first week
+ * with a Monday in this year") documents this as MySQL-version-specific
+ * behavior.
  *
- * pgsql support pass: mode 5 ("first day of week: Monday, range: 0-53,
- * week 1 = the first week containing a Monday in this year") implemented
- * for real -- `date - firstMondayOfYear`, floor-divided by 7 (naturally
- * yields 0 for the handful of pre-first-Monday January days, since a
- * negative numerator floor-divides below zero, +1 corrects it back to
- * 0), where firstMondayOfYear is Jan 1 advanced to the next Monday via
- * its ISO day-of-week. Empirically verified against real MySQL 9.7 --
- * not just derived -- for every possible Jan-1 weekday (all 7 cases) and
- * across a leap year, comparing WEEK(date, 5) day-by-day for a whole
- * year against this exact expression: zero mismatches. Only mode 5 is
- * implemented (the only mode any real call site in this codebase ever
- * uses); any other mode value still throws `NotSupported` rather than
- * guessing at unverified semantics, same as before. The no-mode call
- * shape's existing best-effort (documented-unverified) translation is
- * unchanged.
+ * Only mode 5 is implemented (the only mode any real call site in this
+ * codebase uses); any other mode value throws `NotSupported` rather than
+ * guessing at unverified semantics. Mode 5 ("first day of week: Monday,
+ * range: 0-53, week 1 = the first week containing a Monday in this year")
+ * is computed as `date - firstMondayOfYear`, floor-divided by 7 (a negative
+ * numerator for the handful of pre-first-Monday January days floor-divides
+ * below zero, so +1 corrects it back to 0), where firstMondayOfYear is Jan
+ * 1 advanced to the next Monday via its ISO day-of-week. Verified against
+ * real MySQL 9.7 for every possible Jan-1 weekday and across a leap year,
+ * comparing `WEEK(date, 5)` day-by-day for a whole year against this exact
+ * expression, with zero mismatches. The no-mode call shape's translation
+ * is built from documented syntax, not empirically confirmed.
  */
 final class WeekFunction extends FunctionNode
 {

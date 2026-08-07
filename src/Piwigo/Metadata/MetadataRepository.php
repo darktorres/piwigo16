@@ -13,26 +13,19 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Metadata\Projection\MetadataImage;
 
 /**
- * Persistence layer for the 2 genuinely data-touching functions formerly
- * in `admin/include/functions_metadata.php` (`sync_metadata()`,
- * `get_filelist()`, now `syncMetadata()`/`getFilelist()` on
- * {@see MetadataService}) -- the other 10 functions across that file and
- * `include/functions_metadata.inc.php` (both deleted in P23 sub-batch
- * 8b-1) were pure computation over raw EXIF/IPTC/SVG file data (parsing,
- * charset conversion, GPS math, keyword normalization) with no DB access
- * of their own; they live on {@see MetadataService} instead.
+ * Persistence layer backing `syncMetadata()`/`getFilelist()` on
+ * {@see MetadataService} -- pure computation over raw EXIF/IPTC/SVG file
+ * data (parsing, charset conversion, GPS math, keyword normalization) with
+ * no DB access of its own lives on {@see MetadataService} instead.
  *
  * Owns no table itself -- every query here reads `images`/`categories`
  * (each owned elsewhere, Image\ImageEntity/Category\CategoryEntity), so
  * holds EntityManagerInterface directly rather than being resolved via
  * getRepository(), same shape as Auth\AuthRepository.
  *
- * Further SQL-modernization audit, Item 16A: `findImagesByIds()`/
- * `findCategoryIds()`/`findImagesByStorageCategoryIds()` -- never audited
- * by Item 14/15 -- converted to real DQL. Every real query here was
- * already bounded (fixed WHERE shapes against mapped `ImageEntity`/
- * `CategoryEntity`, `REGEXP()`'s own portable DQL function for the
- * recursive-uppercats case), no architecture needed.
+ * Every real query here is bounded (fixed WHERE shapes against mapped
+ * `ImageEntity`/`CategoryEntity`, `REGEXP()`'s own portable DQL function
+ * for the recursive-uppercats case).
  */
 final readonly class MetadataRepository
 {

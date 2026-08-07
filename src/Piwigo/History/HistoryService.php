@@ -18,37 +18,9 @@ use Piwigo\Users\CurrentUser;
 /**
  * History domain business logic: page-view search/filtering, the
  * year/month/day/hour summary rollup, autopurge, and visit logging.
- * Constructor-injects HistoryRepository (plain constructor injection,
- * same shape as PermalinkService) and, since Legacy Coupling Retirement
- * Phase 5, ConfigService for the history_sections_cache write below.
- *
- * P23 batch 8d: isLoggingAllowed()/logVisit() (ported from
- * include/functions.inc.php's do_log()/pwg_log()). AccessControl
- * (Piwigo\Auth, L2aCoreDomain) is a safe dependency from here
- * (L2bExtendedDomain) -- RateService/CommentService/SearchService already
- * establish the same precedent. logVisit()'s former bare
- * MysqliDb::query()/::insertId()/::getEnums() calls now go through
- * HistoryRepository (Legacy Coupling Retirement: DI+DBAL migration,
- * Phase 1b).
- *
- * `history_remove_summarized_column()` (originally called from
- * history_autopurge()) is deliberately NOT ported: it exists to
- * conditionally `ALTER TABLE ... DROP COLUMN summarized` against an old
- * `summarized` column that pre-Doctrine-Migration Piwigo installs may
- * still carry. This project's schema (created entirely via Doctrine
- * Migrations, see docs/plan's Version20260711150857.php and siblings)
- * never creates that column in the first place -- confirmed by grepping
- * every migration -- so the function's own `SHOW COLUMNS ... LIKE
- * "summarized"` check would always find zero rows here. Genuinely dead
- * code against this project's actual schema, not a deferred-for-later
- * gap; matches the "greenfield: remove legacy compat surfaces by default"
- * project convention.
- *
- * `history_tabsheet()` (admin UI tabsheet setup, no DB/domain logic at
- * all) also stays out of scope -- it's presentation glue, not history
- * domain logic, and is inlined directly into HistoryPageRenderer/
- * StatsPageRenderer instead (same shape as every other admin renderer's
- * own tabsheet construction, see P23 sub-batch 8b-2).
+ * Constructor-injects HistoryRepository and ConfigService (used for the
+ * history_sections_cache write below). AccessControl is a safe
+ * dependency for this domain service to hold.
  */
 final readonly class HistoryService
 {
@@ -65,8 +37,6 @@ final readonly class HistoryService
 
     /**
      * Does the current user must log visits in history table.
-     *
-     * @since 14
      */
     public function isLoggingAllowed(?int $imageId = null, ?string $imageType = null): bool
     {
@@ -87,8 +57,7 @@ final readonly class HistoryService
      * Logs the visit into the history table.
      *
      * $section/$category/$tagIds are the caller's own gallery-navigation
-     * context (Legacy Coupling Retirement Track A batch A5.2e); $searchId
-     * (batch A5.2h) is the same shape -- resolved by SearchFilterRenderer
+     * context; $searchId is resolved by SearchFilterRenderer
      * (via SearchService::getValidatedSearchArray()) while rendering the
      * "search" section, only ever non-null for the GalleryController
      * caller. All 4 params are threaded explicitly because this method

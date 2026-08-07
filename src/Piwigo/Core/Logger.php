@@ -414,10 +414,8 @@ final class Logger
     /**
      * Same "container resolve, not a constructor property" reasoning as
      * pageState() above -- used only inside open()'s own mkgetdir() call
-     * below (singleton/service-locator elimination campaign, Phase 12
-     * sub-phase 12F-12). CurrentConfig's own former pre-boot fallback was
-     * just `new self()`, no DB read at all, so a fresh, unmemoized
-     * instance here is safe.
+     * below. Constructing a CurrentConfig does no DB read, so a fresh,
+     * unmemoized instance here is safe.
      */
     private function currentConfig(): CurrentConfig
     {

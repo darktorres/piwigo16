@@ -12,15 +12,15 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * P23 batch 8e: relocated from include/ws_core.inc.php's WS_PARAM_*
- * define()s -- the 'flags' half of PwgServer::addMethod()'s per-param
- * options (WsParamType is the separate 'type' half). Lives at
- * L1Infrastructure alongside WsParamType/WsError; see WsParamType's own
- * docblock for why (Piwigo\Users\UserService needs to reach these too).
- * FORCE_ARRAY's value deliberately includes ACCEPT_ARRAY's bit (0x030000
- * = 0x010000 | 0x020000) -- PwgServer::hasFlag() checks are bitwise, so
- * this preserves "forcing array implies accepting array" exactly as the
- * original int literals did.
+ * The 'flags' half of `PwgServer::addMethod()`'s per-param options
+ * (`WsParamType` is the separate 'type' half). Lives in `Piwigo\Core`
+ * (L1Infrastructure) alongside `WsParamType`/`WsError`; see
+ * `WsParamType`'s own docblock for why (`Piwigo\Users\UserService` needs
+ * to reach these values too).
+ *
+ * `FORCE_ARRAY`'s value deliberately includes `ACCEPT_ARRAY`'s bit
+ * (0x030000 = 0x010000 | 0x020000): `PwgServer::hasFlag()` checks are
+ * bitwise, so this ensures "forcing array" implies "accepting array".
  */
 final class WsParamFlag
 {

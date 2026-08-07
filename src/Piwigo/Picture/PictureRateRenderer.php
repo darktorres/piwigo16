@@ -15,10 +15,10 @@ use Piwigo\Users\CurrentUser;
 
 /**
  * Renders the picture page's rating summary + rate form. Ported from
- * include/picture_rate.inc.php. Constructor-injects RateRepository
- * (Legacy Coupling Retirement: DI+DBAL migration, Phase 1b) -- only 1
- * real caller (PictureController), unlike PictureMetadataRenderer/
- * PictureCommentRenderer's own "no constructor deps" shape.
+ * include/picture_rate.inc.php. Constructor-injects RateRepository --
+ * unlike PictureMetadataRenderer/PictureCommentRenderer's own "no
+ * constructor deps" shape, this class has only one real caller
+ * (PictureController).
  */
 final class PictureRateRenderer
 {
@@ -31,12 +31,10 @@ final class PictureRateRenderer
     ) {}
 
     /**
-     * Legacy Coupling Retirement Track A batch A5.2e: $imageId is an
-     * explicit param instead of `global $page['image_id']` -- the one
-     * real caller (PictureController) already tracks it as its own local
-     * variable (possibly resolved/overwritten from a URL-supplied image
-     * file name before this call), so this reads that directly instead
-     * of a shared registry.
+     * $imageId may have been resolved/overwritten from a URL-supplied
+     * image file name before this call; the caller (PictureController)
+     * passes its own local value directly, rather than this method reading
+     * it from a shared registry.
      */
     /**
      * $picture is PictureController's own growing per-request display bag

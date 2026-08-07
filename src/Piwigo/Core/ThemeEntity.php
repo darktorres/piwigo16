@@ -11,24 +11,16 @@ use Doctrine\ORM\Mapping as ORM;
  * on deactivation) -- natural PK `id` (the theme directory-name
  * identifier, referenced by `user_infos.theme`), not auto-increment.
  *
- * Further SQL-modernization audit, Item 14 Sub-phase B1: {@see
- * ThemeRepository}'s own docblock previously claimed "no ORM entity
- * exists for it (no real caller ever needed one beyond the id/name
- * listing below)" -- re-audited: `Users\UserRepository::
- * countUserInfosRows()`/`fetchUserInfosWithThemeName()` LEFT JOIN
- * `themes`, a real DQL-conversion use `ThemeRepository`'s own raw
- * id/name listing didn't need to anticipate. This entity is also queried
- * directly by other domains that don't need `ThemeRepository`'s own
- * `findAllIdsAndNames()`, same shape as {@see \Piwigo\Tag\ImageTagEntity}.
- * `repositoryClass: ThemeRepository::class` (Item 15): `ThemeRepository`
- * itself converted to real DQL, so `getRepository(ThemeEntity::class)` now
- * needs to resolve to it, not a generic `EntityRepository`. Lives in
- * `Piwigo\Core` (L1Infrastructure), alongside `ThemeRepository`/
- * `ThemeCatalog`, not a new `Piwigo\Theme` namespace --
- * `deptrac.yaml`'s own L1Infrastructure collector is a fixed namespace
- * enumeration, same reasoning `ThemeCatalog`'s own docblock already
- * documents. `Users\UserRepository` (L2aCoreDomain) depending on this is
- * an allowed direction (L2aCoreDomain -> L1Infrastructure).
+ * `Users\UserRepository::countUserInfosRows()`/`fetchUserInfosWithThemeName()`
+ * LEFT JOIN `themes`; this entity is also queried directly by other
+ * domains that don't need `ThemeRepository`'s own `findAllIdsAndNames()`,
+ * same shape as {@see \Piwigo\Tag\ImageTagEntity}. `getRepository(ThemeEntity::class)`
+ * resolves to `ThemeRepository`, not a generic `EntityRepository`. Lives
+ * in `Piwigo\Core` (L1Infrastructure), alongside `ThemeRepository`/
+ * `ThemeCatalog`, not a `Piwigo\Theme` namespace -- `deptrac.yaml`'s
+ * L1Infrastructure collector is a fixed namespace enumeration.
+ * `Users\UserRepository` (L2aCoreDomain) depending on this is an allowed
+ * direction (L2aCoreDomain -> L1Infrastructure).
  */
 #[ORM\Entity(repositoryClass: ThemeRepository::class)]
 #[ORM\Table(name: 'themes')]

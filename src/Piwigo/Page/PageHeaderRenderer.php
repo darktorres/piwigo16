@@ -19,20 +19,12 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 
 /**
- * Renders the page `<head>`/opening chrome into $template. Injects
- * nothing -- same "no constructor deps" shape as Html\HtmlService/
- * Menu\MenubarRenderer: cross-domain calls (get_pwg_charset(),
- * trigger_notify()) stay as plain global-function calls to modules
- * migrated in earlier phases; the one real Url-family call
- * (getGalleryHomeUrl()) goes through the container-resolved
- * UrlServiceInterface below (singleton/service-locator elimination
- * campaign, Phase 6 -- see RootPathOverride's own docblock for why a
- * throwaway construction is no longer safe) -- this class has no
- * constructor at all today, so no dependency is added.
- * Piwigo\Bootstrap\RedirectService's own redirectHtml() early-crash
- * fallback constructs this class directly (`new PageHeaderRenderer()`),
- * same PHP-DI-autowiring-only-inspects-constructors reasoning as
- * Html\HtmlService::urlService().
+ * Renders the page `<head>`/opening chrome into $template. Has no
+ * constructor: `Piwigo\Bootstrap\RedirectService`'s own redirectHtml()
+ * early-crash fallback constructs this class directly (`new
+ * PageHeaderRenderer()`), so PHP-DI autowiring never sees a constructor
+ * to inject through. The one real Url-family call (getGalleryHomeUrl())
+ * instead goes through the container-resolved UrlServiceInterface below.
  */
 final class PageHeaderRenderer
 {
@@ -47,12 +39,9 @@ final class PageHeaderRenderer
     }
 
     /**
-     * Same reasoning as urlService() above -- this class has no
-     * constructor at all, and ~14 real render() call sites (singleton/
-     * service-locator elimination campaign, Phase 11 sub-phase 11G).
-     * Falls back to `false` when Kernel::boot() hasn't run, matching
-     * AdminContext::isActiveStatic()'s own former identical pre-boot
-     * fallback.
+     * Same reasoning as urlService() above: no constructor to inject
+     * AdminContext through. Falls back to `false` when Kernel::boot()
+     * hasn't run yet.
      */
     private static function isAdminContextActive(): bool
     {

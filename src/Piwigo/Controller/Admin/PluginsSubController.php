@@ -31,34 +31,20 @@ use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin/plugins.php's own tab-dispatch shell (page slug
- * "plugins"), folded directly into this controller (P23 sub-batch 6i-3) --
- * same shape as `LanguagesSubController`/`ThemesSubController`. Its own tab
- * dispatch is already validated (`/^(installed|update|new)$/`).
+ * Backs the "plugins" admin page's tab dispatch (the tab is restricted to
+ * `/^(installed|update|new)$/`).
  *
- * Correction (found during 6i-4): `$my_base_url` is NOT dead code, despite
- * this docblock originally claiming so. It's consumed indirectly by
- * `Piwigo\Admin\CoreTabs::addCoreTabs()`'s own `case 'plugins':` branch
- * (formerly `admin/include/add_core_tabs.inc.php`'s `add_core_tabs()`,
- * folded in P23 batch 8b-6), read via `global $my_base_url;` when
- * `Tabsheet::select()` fires its `tabsheet_before_select` event a few
- * lines below -- dropping it silently degraded every tab href (missing
- * the `admin.php?page=plugins` prefix entirely). Restored here.
+ * `CoreTabs::setContext(...)` must run before `Tabsheet::select()` below --
+ * `CoreTabs::addCoreTabs()`'s own `case 'plugins':` branch reads that
+ * context value synchronously during `select()`'s `tabsheet_before_select`
+ * event; without it, every tab href is missing its `admin.php?page=plugins`
+ * prefix.
  *
- * The "installed"/"new" tab bodies were migrated off the plugins.class.php
- * god-class (already replaced by PemCatalog/ExtensionScanner/
- * ExtensionLifecycle/ExtensionRepository in a prior P21-era pass) onto
- * Piwigo\Admin\PluginsInstalledPageRenderer/PluginsNewPageRenderer -- no
- * CSRF gap found in this cluster (real mutations already go through
- * token-protected ws.php?method=pwg.plugins.performAction), see
- * PluginsInstalledPageRenderer's own docblock for a confirmed-dead
- * template link removed instead. The "update" tab now calls the shared
- * Piwigo\Admin\UpdatesExtPageRenderer (P23 sub-batch 6i-4) instead of its
- * own raw `include admin/updates_ext.php` -- the same class
- * `LanguagesSubController`/`ThemesSubController`/`UpdatesSubController`'s
- * own "ext" tab call. This controller's own `ADMIN_PAGE_TITLE` override
- * still applies after the renderer call, exactly as it did after the raw
- * include before this port.
+ * The "installed" and "new" tabs are rendered by
+ * Piwigo\Admin\PluginsInstalledPageRenderer and
+ * Piwigo\Admin\PluginsNewPageRenderer; the "update" tab uses the shared
+ * Piwigo\Admin\UpdatesExtPageRenderer, after which this controller's own
+ * `ADMIN_PAGE_TITLE` override still applies.
  */
 final class PluginsSubController implements AdminSubControllerInterface
 {

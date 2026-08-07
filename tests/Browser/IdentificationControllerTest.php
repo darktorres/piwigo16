@@ -15,11 +15,11 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * 'login_form_error' branch) and the already-authenticated redirect
  * guard.
  *
- * Coverage-gap closure (2026-07-30): added the `$has_session_cookie`
- * "cookies blocked" branch, the `insensitive_case_logon` ->
- * UserService::searchCaseUsername() branch, and the `$_COOKIE['lang']`
- * handling block (non-string/unregistered/valid-value branches, plus the
- * French help-link swap) -- all driven with plain curl (mirroring
+ * This file also covers the `$has_session_cookie` "cookies blocked"
+ * branch, the `insensitive_case_logon` -> UserService::searchCaseUsername()
+ * branch, and the `$_COOKIE['lang']` handling block (non-string/
+ * unregistered/valid-value branches, plus the French help-link swap) --
+ * all driven with plain curl (mirroring
  * RegisterControllerTest.php's own established style for the same class
  * of test) rather than Pest's Playwright-driven $page API, since several
  * of these need precise control over which cookies are (or aren't) sent,
@@ -216,8 +216,8 @@ function identRemoveLanguage(string $code): void
 }
 
 it('shows a cookies-blocked error and does not attempt to log in when no session cookie is sent', function (): void {
-    // Regression/gap-closure coverage: identCurlNoCookies() never attaches
-    // a Set-Cookie the server previously issued (unlike identCurl()'s
+    // identCurlNoCookies() never attaches
+    // a Set-Cookie the server already issued (unlike identCurl()'s
     // cookie-jar round trip, or a real browser's very first request, which
     // Playwright still replays any cookie it already stored within the
     // same context) -- $_COOKIE[session_name()] is genuinely unset on this

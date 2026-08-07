@@ -14,23 +14,20 @@ use Symfony\Component\Cache\Adapter\RedisAdapter;
 /**
  * Creates a PSR-6 cache pool for the requested (or env-configured) backend.
  *
- * Adapter choice via PIWIGO_CACHE_ADAPTER (apcu|redis|filesystem) --
- * CurrentConfig::cacheAdapter() doesn't exist yet (P13). When unset, auto-detects:
- * APCu if available, else filesystem -- matches the doc's own documented
- * fallback design, not a workaround; ext-apcu isn't installed in every
- * environment (confirmed absent in this one). An *explicit* request for an
- * unavailable adapter (PIWIGO_CACHE_ADAPTER=apcu with no ext-apcu) fails
- * loudly instead of silently falling back -- that's a real misconfiguration
- * worth surfacing, unlike the auto-detect default case.
+ * Adapter choice via PIWIGO_CACHE_ADAPTER (apcu|redis|filesystem). When
+ * unset, auto-detects: APCu if available, else filesystem; ext-apcu isn't
+ * installed in every environment (confirmed absent in this one). An
+ * *explicit* request for an unavailable adapter (PIWIGO_CACHE_ADAPTER=apcu
+ * with no ext-apcu) fails loudly instead of silently falling back -- that's
+ * a real misconfiguration worth surfacing, unlike the auto-detect default
+ * case.
  *
- * `$namespace`/`$defaultLifetime` (P23 batch 2) let CachePools build several
- * independent, non-colliding pools sharing one backend -- every Symfony
- * cache adapter used here accepts both (ApcuAdapter/FilesystemAdapter as
- * their first two constructor params; RedisAdapter as its 2nd/3rd, after
- * the required connection), so this just threads them through instead of
- * hardcoding 'piwigo'/0 the way every call site did until now (still the
- * default, so the existing single generic pool wired in
- * config/container.php is unaffected).
+ * `$namespace`/`$defaultLifetime` let CachePools build several independent,
+ * non-colliding pools sharing one backend -- every Symfony cache adapter
+ * used here accepts both (ApcuAdapter/FilesystemAdapter as their first two
+ * constructor params; RedisAdapter as its 2nd/3rd, after the required
+ * connection). 'piwigo'/0 remain the defaults, matching the single generic
+ * pool wired in config/container.php.
  */
 final class CacheFactory
 {

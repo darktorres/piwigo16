@@ -31,8 +31,8 @@ use Piwigo\Template\CurrentTemplate;
  * checkForUpdates()'s own "the last check is old enough to recheck" branch
  * (`$check_for_updates = true;` reached through the non-null
  * `$update_notify_last_check` path, as opposed to the adjacent null-check
- * path already covered elsewhere) -- deliberately never previously
- * exercised together with a *stale* last-check value.
+ * path already covered elsewhere) -- not exercised elsewhere together with
+ * a *stale* last-check value.
  *
  * Reaching that branch would normally go on to construct
  * Piwigo\Admin\Extensions\CoreUpdateService (this project's own documented

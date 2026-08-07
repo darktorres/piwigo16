@@ -15,10 +15,10 @@ use Piwigo\Db\DbCredentials;
  * image_category, image_tag, image_format, caddie, favorites, lounge,
  * rate, old_permalinks -- 12 of the 39 tables `install/
  * piwigo_structure-mysql.sql` defines, split by domain purely for
- * authoring/review size (nothing before this baseline, so there is no
- * historical chain to replay -- see this migration's own sibling files
- * for the users/auth and admin/system domains, plus a final migration
- * adding every FK constraint once all 39 tables exist).
+ * authoring/review size. This is the first migration -- nothing runs
+ * before it -- see this migration's own sibling files for the users/auth
+ * and admin/system domains, plus a final migration adding every FK
+ * constraint once all 39 tables exist.
  *
  * MySQL/MariaDB: the exact `CREATE TABLE` text from `install/
  * piwigo_structure-mysql.sql`, copied verbatim rather than re-derived
@@ -29,11 +29,10 @@ use Piwigo\Db\DbCredentials;
  * real risk worth avoiding, not a hypothetical one).
  *
  * PostgreSQL: hand-translated, verified live against a real PostgreSQL
- * 18.4 server during this same work (tsvector/GIN generated columns,
- * `DROP DATABASE ... WITH (FORCE)`-adjacent Postgres-specific behavior,
- * `CHECK` constraint introspection format, etc. -- see this campaign's
- * own research). Translation rules applied uniformly across every table
- * in this migration set:
+ * 18.4 server (tsvector/GIN generated columns, `DROP DATABASE ... WITH
+ * (FORCE)`-adjacent Postgres-specific behavior, `CHECK` constraint
+ * introspection format, etc.). Translation rules applied uniformly across
+ * every table in this migration set:
  * - MySQL `unsigned` has no Postgres equivalent -- widened to the next
  *   signed type covering the full declared range: `tinyint unsigned`
  *   (max 255) -> `smallint`; `smallint unsigned` (max 65535, exceeds
@@ -108,17 +107,14 @@ final class Version20260804122300 extends AbstractMigration
         // Must run before any of this migration's FULLTEXT ... WITH PARSER
         // ngram tables below (categories/images/tags) -- MySQL bakes a
         // FULLTEXT index's effective stopword-filtering behavior in at
-        // CREATE TABLE time, for the lifetime of that index (confirmed
-        // live: a later per-connection SET SESSION at INSERT time has
-        // zero effect on an already-existing index). Without this, any
-        // 2-character fragment of a word matching MySQL's default
-        // stopword list (at/in/on/etc, ngram_token_size is 2) makes that
-        // whole word unsearchable -- e.g. "cat" (contains "at") becomes
-        // entirely unmatched, hitting any word containing at/in/on/etc
-        // anywhere in it (cat, chat, combat, station, water, later...).
-        // Real gap found via schema:dump's regenerated output silently
-        // dropping this line that the previously hand-maintained
-        // install/piwigo_structure-mysql.sql explicitly carried.
+        // CREATE TABLE time, for the lifetime of that index (a later
+        // per-connection SET SESSION at INSERT time has zero effect on an
+        // already-existing index). Without this, any 2-character fragment
+        // of a word matching MySQL's default stopword list (at/in/on/etc,
+        // ngram_token_size is 2) makes that whole word unsearchable --
+        // e.g. "cat" (contains "at") becomes entirely unmatched, hitting
+        // any word containing at/in/on/etc anywhere in it (cat, chat,
+        // combat, station, water, later...).
         $this->addSql('SET SESSION innodb_ft_enable_stopword = 0');
 
         $this->addSql($this->withMysqlPrefix(<<<'SQL'

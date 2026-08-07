@@ -29,9 +29,8 @@ use RuntimeException;
  */
 beforeEach(function (): void {
     unset($_SERVER['HTTPS'], $_SERVER['HTTP_X_FORWARDED_PROTO'], $_SERVER['HTTP_X_FORWARDED_HOST'], $_SERVER['HTTP_HOST']);
-    // getAbsoluteRootUrl() calls the real Piwigo\Auth\CookieService::cookiePath()
-    // (P23 batch 8c retargeted the former unqualified cookie_path() free
-    // function call) -- deterministically produce '/piwigo/' the same way
+    // getAbsoluteRootUrl() calls the real Piwigo\Auth\CookieService::cookiePath() --
+    // deterministically produce '/piwigo/' the same way
     // cookiePath()'s own SCRIPT_NAME fallback would under a real request
     // rooted at /piwigo/, rather than depending on whatever the Pest CLI
     // runner's ambient $_SERVER happens to contain.
@@ -39,10 +38,8 @@ beforeEach(function (): void {
     $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
     CurrentConfigTestFactory::get()->setUrlPort('none');
     // getRootUrl()/paramsForDuplication() read SectionContextRegistry
-    // through the transitional currentStatic() shim (singleton/
-    // service-locator elimination campaign, Phase 2 -- see that method's
-    // own docblock: UrlService is one of Phase 6's ~440 manually-`new`'d
-    // classes), which resolves the real container-shared instance once
+    // through the currentStatic() shim (see that method's own docblock),
+    // which resolves the real container-shared instance once
     // Kernel::boot() has run.
     Kernel::boot();
 });
@@ -63,15 +60,14 @@ function urlServiceTestSectionContextRegistry(): SectionContextRegistry
 }
 
 /**
- * RequestMountDepth is a container-shared, immutable value now (singleton/
- * service-locator elimination campaign, Phase 3) -- beforeEach()'s own
- * Kernel::boot() already bound the default (0), so a test needing a
- * non-zero depth rebuilds the container via KernelContainerOverride::with()
- * instead of the former mid-test RequestMountDepth::set() call. Runs $fn
- * inside that fresh container, same as SectionContextRegistry-dependent
- * tests already do via urlServiceTestSectionContextRegistry() -- callers
- * needing both do their own SectionContextRegistry ->set() call from
- * inside $fn, after the container has already been rebuilt.
+ * RequestMountDepth is a container-shared, immutable value --
+ * beforeEach()'s own Kernel::boot() already bound the default (0), so a
+ * test needing a non-zero depth rebuilds the container via
+ * KernelContainerOverride::with(). Runs $fn inside that fresh container,
+ * same as SectionContextRegistry-dependent tests do via
+ * urlServiceTestSectionContextRegistry() -- callers needing both do their
+ * own SectionContextRegistry ->set() call from inside $fn, after the
+ * container has already been rebuilt.
  */
 function urlServiceTestWithMountDepth(int $depth, callable $fn): mixed
 {
@@ -326,12 +322,11 @@ test('getAbsoluteRootUrl [SEC-29] falls back for a forged X-Forwarded-Host too',
 });
 
 test('getAbsoluteRootUrl [SEC-29] reflects a real DB-persisted gallery_url the way load_conf_from_db() would set it', function (): void {
-    // Regression test for the historical CurrentConfig::-accessor bug this file's
-    // own history records (see EphemeralKeyService's docblock for the
-    // mechanism and fix): a real DB-persisted gallery_url, simulated here
-    // via CurrentConfig::setGalleryUrl() the same way
-    // ConfigService::loadConfFromDb() now populates CurrentConfig's own
-    // properties, must be reflected by getAbsoluteRootUrl().
+    // A real DB-persisted gallery_url, simulated here via
+    // CurrentConfig::setGalleryUrl() the same way
+    // ConfigService::loadConfFromDb() populates CurrentConfig's own
+    // properties, must be reflected by getAbsoluteRootUrl() (see
+    // EphemeralKeyService's docblock for the underlying mechanism).
     CurrentConfigTestFactory::get()->setUrlPort('none');
     CurrentConfigTestFactory::get()->setGalleryUrl('https://real-admin-configured.example.test/');
     $_SERVER['HTTP_HOST'] = 'evil.test';
@@ -514,13 +509,9 @@ test('getAbsoluteRootUrl falls back to an empty host segment when no host header
 });
 
 test('getAbsoluteRootUrl omits the port segment entirely when the auto-detected server port is unavailable', function (): void {
-    // Regression test for a real, confirmed bug (found 2026-08-01 during
-    // the mutation sweep): SERVER_PORT missing used to leave $server_port
-    // null, which made `$server_port !== 80/443` vacuously true and
-    // appended a bare trailing ':' with no digits after it. Fixed by
-    // defaulting to 80, matching 16.x-rewrite's own UrlService -- a
-    // missing SERVER_PORT should behave like the default HTTP port, i.e.
-    // no port segment at all for a non-HTTPS request.
+    // A missing SERVER_PORT defaults $server_port to 80 (the standard HTTP
+    // port) rather than null, so no port segment is appended for this
+    // non-HTTPS request.
     CurrentConfigTestFactory::get()->setUrlPort('auto');
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     unset($_SERVER['SERVER_PORT']);
@@ -1181,11 +1172,10 @@ test('embellishUrl leaves a /../ segment unresolved when there is no preceding s
 test('getUserFavorites returns an empty array for a guest', function (): void {
     // getUserFavorites() reaches AccessControl::current()->isAGuest()
     // (UrlService.php's own guard) -- unlike CurrentUserTestFactory::get(),
-    // AccessControl::current() has no pre-boot memoized fallback
-    // (singleton/service-locator elimination campaign, Phase 7), so a real
-    // booted Kernel is required here now. The user status must be seeded
-    // INSIDE the callback, once the container exists (Phase 5 execution
-    // finding, same pitfall Translator/EventDispatcher already hit).
+    // AccessControl::current() has no pre-boot memoized fallback, so a
+    // real booted Kernel is required here. The user status must be seeded
+    // INSIDE the callback, once the container exists (same pitfall
+    // Translator/EventDispatcher hit too).
     KernelContainerOverride::with(
         [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
         static function (): void {

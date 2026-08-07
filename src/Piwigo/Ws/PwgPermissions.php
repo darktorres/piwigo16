@@ -18,9 +18,8 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Permission\PermissionService;
 
 /**
- * P23 batch 8e-2: relocated from include/ws_functions/pwg.permissions.php.
  * `pwg.permissions.*` WS methods (3 registrations, all admin_only) --
- * registered via callable arrays in include/ws_default_methods.inc.php.
+ * registered via callable arrays in WsDefaultMethods.
  */
 final class PwgPermissions
 {
@@ -127,12 +126,9 @@ final class PwgPermissions
      *   key -- mandatory, always present.
      * @return mixed PwgError, or the result of the pwg.permissions.getList invocation
      *
-     * P26/SEC-40: previously passed `recursive` to
-     * PermissionService::addPermissionOnCategory() by mutating
-     * `$_POST['apply_on_sub']` (that method used to read it as ambient
-     * request state) -- addPermissionOnCategory() now takes `$applyOnSub`
-     * as a real parameter, so this WS method (which has no `$_POST` of its
-     * own) passes `recursive` straight through instead.
+     * `recursive` is passed directly as the `$applyOnSub` argument to
+     * PermissionService::addPermissionOnCategory() -- this WS method has no
+     * `$_POST` state of its own.
      */
     public function add(array $params, PwgServer &$service): mixed
     {

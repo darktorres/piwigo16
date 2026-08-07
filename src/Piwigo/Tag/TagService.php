@@ -36,24 +36,17 @@ use Piwigo\Users\CurrentUser;
  * Tag domain business logic. Constructor-injects TagRepository and
  * PermissionService, plain constructor injection (same shape as
  * CalendarService, also L2aCoreDomain -- Permission is same-layer, no
- * deptrac concern). Also injects ActivityLoggerInterface (P23 batch 8d) --
+ * deptrac concern). Also injects ActivityLoggerInterface --
  * `Piwigo\Activity\ActivityService` itself is L2bExtendedDomain, so
  * deleteTags() depends on the L1Infrastructure interface instead, same
- * shape as GroupService/UserService/AuthService's own established fix for
- * this exact layering constraint (see ActivityLoggerInterface's own
- * docblock).
- *
- * Also constructor-injects EventDispatcher (singleton/service-locator
- * elimination campaign, Phase 4). Former bare MysqliDb::singleUpdate()/::massInserts() calls now
- * go through TagRepository (Legacy Coupling Retirement: DI+DBAL migration,
- * Phase 1b).
+ * shape as GroupService/UserService/AuthService's own fix for this exact
+ * layering constraint (see ActivityLoggerInterface's own docblock).
  *
  * getAllTags()/getCommonTags()/getTagListForImage()/getTagListByIds() each
- * take HtmlRenderingInterface as an explicit parameter (P23 batch 8f-3), same
- * per-method shape as
- * ActivityLoggerInterface above -- their real callers already construct an
- * HtmlService for their own unrelated needs, or can trivially do so (all
- * L3/L4/L2b, HtmlService itself injects nothing).
+ * take HtmlRenderingInterface as an explicit parameter, same per-method
+ * shape as ActivityLoggerInterface above -- their real callers already
+ * construct an HtmlService for their own unrelated needs, or can trivially
+ * do so (all L3/L4/L2b, HtmlService itself injects nothing).
  */
 final readonly class TagService
 {
@@ -80,12 +73,11 @@ final readonly class TagService
 
     /**
      * Inline-constructed rather than constructor-injected -- ImageService
-     * (P23 batch 8d, Elements/photos sub-batch) is only ever needed for
-     * updateImagesLastmodified(), so adding it as a 4th constructor param
-     * would mean touching every existing manual `new TagService(...)`
-     * call site a 2nd time for a single one-line delegation, matching
-     * MetadataService::syncMetadata()'s own established "inline-construct
-     * a one-off dependency" precedent rather than TagRepository/
+     * is only ever needed for updateImagesLastmodified(), so adding it as
+     * a constructor param would mean touching every existing manual
+     * `new TagService(...)` call site for a single one-line delegation,
+     * matching MetadataService::syncMetadata()'s own "inline-construct a
+     * one-off dependency" precedent rather than TagRepository/
      * PermissionService/ActivityLoggerInterface's own multi-method,
      * constructor-injected shape. Reuses $this->activityLogger (Image and
      * Tag are both L2aCoreDomain, so ActivityLoggerInterface -> concrete
@@ -114,8 +106,7 @@ final readonly class TagService
      * Container resolve, not a constructor property -- same "avoid a 2nd
      * touch of every manual `new TagService(...)` call site for a single
      * one-line delegation" reasoning as newImageService()'s own docblock
-     * above (singleton/service-locator elimination campaign, Phase 11
-     * sub-phase 11G).
+     * above.
      */
     private function translator(): Translator
     {
@@ -343,12 +334,9 @@ final readonly class TagService
      * Return the list of image ids corresponding to given tags. AND & OR
      * mode supported.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C3: $extraImagesWhereSql/
-     * $extraParams/$extraTypes (a caller-built bound-fragment escape hatch,
-     * only ever populated by Ws\PwgTags::getImages()'s own
-     * `WsHelper::stdImageSqlFilterCriteria()` output) replaced by
-     * `?ImageFilterCriteria $filterCriteria` -- see that class's own
-     * docblock.
+     * $filterCriteria is only ever populated by Ws\PwgTags::getImages()'s
+     * own `WsHelper::stdImageSqlFilterCriteria()` output -- see
+     * {@see ImageFilterCriteria}'s own docblock.
      *
      * @param list<TagId> $tagIds
      * @param string|null $orderBy optionally overwrite default photo order;
@@ -641,7 +629,6 @@ final readonly class TagService
      * Get list of tag ids for each image. Returns an empty list if the image has
      * no tags.
      *
-     * @since 2.9
      * @param array<int, int|string> $imageIds
      * @return array<int, list<TagId>> image_id => list of tag ids
      */
@@ -664,7 +651,6 @@ final readonly class TagService
     /**
      * Compare the list of tags, for each image. Returns image_ids where tag list has changed.
      *
-     * @since 2.9
      * @param array<int, list<TagId>> $taglistBefore - for each image_id (key), list of tag ids;
      *   all real callers pass getImageTagIds()'s return directly
      * @param array<int, list<TagId>> $taglistAfter - for each image_id (key), list of tag ids

@@ -10,19 +10,7 @@ namespace Piwigo\Core;
  * The sole mechanism for `src/Piwigo/` code (and every entry-shell file)
  * to resolve filesystem paths: a single immutable value minted once at
  * the entry point (`Paths::fromIndex(__FILE__)`/`fromRoot()`) and
- * threaded through DI from there. Legacy Coupling Retirement gap-closure
- * (entry-shell `define()`/`include` round): this class fully replaces
- * `PHPWG_ROOT_PATH` -- that constant's own former justification for
- * staying alive ("several legacy call sites hard-assume its literal
- * string shape to compute relative URL prefixes for generated links, not
- * just filesystem include paths") was a real conflation, not a permanent
- * constraint: URL-prefix generation now goes through `UrlService`'s own
- * request-derived mount prefix (`Router::pathInfo()`'s
- * `dirname($scriptName)`+`MOUNT_DEPTH_ATTRIBUTE` computation) instead of
- * ever reading a filesystem-path constant, so nothing depends on
- * `PHPWG_ROOT_PATH`'s literal value shape any more. `PHPWG_ROOT_PATH`/
- * `PWG_LOCAL_DIR` are deleted outright (zero remaining `define()`s or
- * raw reads, confirmed via a repo-wide grep, not assumed).
+ * threaded through DI from there.
  *
  * Every property is an absolute path with a trailing slash. Composition
  * is plain string concatenation: `$paths->themes . 'admin/style.css'`.
@@ -36,23 +24,16 @@ namespace Piwigo\Core;
  * `local` always means the fixed `local/` directory every install reads
  * first (`local/config/config.inc.php`'s own `local_dir_site` flag says
  * "yes, this site instance also has its own separate override
- * directory") -- `siteLocal` is the genuinely-overridable one: the former
- * `PWG_LOCAL_DIR` constant let an external, site-authored wrapper script
- * `define()` a custom value *before* including the app's entry point,
- * supporting Piwigo's classic multi-site-instance-sharing-one-codebase
- * deployment shape (confirmed still a real, tested capability --
- * `tests/Unit/Core/PathsTest.php`'s own `PIWIGO_LOCAL_DIR` override
- * tests -- not dead legacy code safe to drop, and genuinely a
- * *different* directory than `local` in that deployment shape, not
- * just an alias for it).
- * Replaced with a `PIWIGO_LOCAL_DIR` env var, the same
- * deployment-level-override idiom `ConfigLoader::ENV_MAPPING` already
- * uses for `PIWIGO_DB_*` -- strictly more robust than the old "define a
- * constant before including our file" ordering contract, not just a
- * like-for-like port. Defaults to the same value as `local` when unset
- * (matching `PWG_LOCAL_DIR`'s own `'local/'` default), so every
- * non-multi-instance install (i.e. every real install this repo's own
- * test suite exercises) has `local === siteLocal`.
+ * directory"). `siteLocal` is the genuinely-overridable one, supporting
+ * Piwigo's multi-site-instance-sharing-one-codebase deployment shape (a
+ * real, tested capability -- see `tests/Unit/Core/PathsTest.php`'s
+ * `PIWIGO_LOCAL_DIR` override tests) and is genuinely a *different*
+ * directory than `local` in that deployment shape, not just an alias for
+ * it. It is controlled by a `PIWIGO_LOCAL_DIR` env var, the same
+ * deployment-level-override idiom `ConfigLoader::ENV_MAPPING` uses for
+ * `PIWIGO_DB_*`, and defaults to the same value as `local` when unset,
+ * so every non-multi-instance install (i.e. every real install this
+ * repo's own test suite exercises) has `local === siteLocal`.
  */
 final readonly class Paths
 {

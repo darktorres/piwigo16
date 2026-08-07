@@ -20,27 +20,9 @@ use Piwigo\Users\UserStatus;
 /**
  * Persistence layer for the rate domain: `rate` itself, plus the
  * `images.rating_score` single-column bulk update -- a thin cross-domain
- * touch that stays inline here rather than becoming a new `ImageRepository`
- * dependency, same "thin cross-domain touch" precedent as History/
- * Activity's own single-column reads (see docs/PLAN.md's Epoch E section,
- * P17-P20 domain tiers).
- * Owns `rate` ({@see RateEntity}, composite PK). Item 14 DQL audit
- * (SQL-modernization plan): single/simple-condition reads and writes
- * against `rate`, plus the same-shaped single-column touches of
- * `images` (Image\ImageEntity, plain scalar columns, no custom Doctrine
- * Type), now go through real DQL -- including the class-level `images`
- * LEFT JOIN `rate` in findImageIdsWithStaleRatingScore(), which has no
- * declared association between the two entities. What stays plain DBAL
- * via $this->getEntityManager()->getConnection() is documented per
- * method with an "Item 14 DQL audit: stays on DBAL -- <reason>" note:
- * runtime-resolved multi-auth column names, joins against `users` /
- * `image_category` (neither ever entity-mapped in this migration -- Item
- * 14 Sub-phase B1 has since mapped `image_category`
- * {@see \Piwigo\Image\ImageCategoryEntity}, but crossing into it from here
- * is Sub-phase B4 scope, not yet done), or a caller-supplied raw ORDER BY
- * fragment. `ROUND()`, previously listed here too, no longer blocks
- * anything -- Sub-phase B5 Tier 2 replaced it everywhere in this file with
- * a raw `AVG()` plus a PHP-side round().
+ * touch that stays inline here rather than becoming a new
+ * `ImageRepository` dependency.
+ * Owns `rate` ({@see RateEntity}, composite PK).
  *
  * @extends EntityRepository<RateEntity>
  */
@@ -211,10 +193,10 @@ final class RateRepository extends EntityRepository
      */
     public function findImageIdsWithStaleRatingScore(): array
     {
-        // Item 14 DQL audit note: `images` (ImageEntity) and `rate`
-        // (RateEntity) are both entity-mapped but have no declared
-        // association between them, so this is a class-level (WITH-clause)
-        // arbitrary DQL join rather than an association-path join.
+        // `images` (ImageEntity) and `rate` (RateEntity) are both
+        // entity-mapped but have no declared association between them, so
+        // this is a class-level (WITH-clause) arbitrary DQL join rather
+        // than an association-path join.
         $ids = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('i.id')
@@ -249,11 +231,6 @@ final class RateRepository extends EntityRepository
     }
 
     /**
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
-     * column indirection this used to take as `$idColumn`/`$usernameColumn`
-     * parameters is gone.
-     *
      * @return array<int, string>
      */
     public function findUsernamesById(): array
@@ -284,14 +261,10 @@ final class RateRepository extends EntityRepository
      * Admin "Rating" report: distinct rated elements, optionally scoped to
      * one user (included or excluded) and/or a set of categories.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B4: converted to real
-     * DQL -- `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), queried directly here
-     * the same "no association required" way
-     * {@see \Piwigo\Category\CategoryRepository::findStorageLinkedImageIds()}
-     * queries `ImageEntity` (both `Piwigo\Image`, L2aCoreDomain -- a
-     * legal same-layer dependency from `Piwigo\Rate`, L2bExtendedDomain,
-     * per `deptrac.yaml`'s ruleset).
+     * Queries `image_category` ({@see \Piwigo\Image\ImageCategoryEntity})
+     * directly -- `Piwigo\Image` (L2aCoreDomain) is a legal dependency
+     * from `Piwigo\Rate` (L2bExtendedDomain) per `deptrac.yaml`'s
+     * ruleset.
      *
      * @param list<int> $categoryIds
      */
@@ -324,28 +297,12 @@ final class RateRepository extends EntityRepository
      * Same report as countRatedElements(), one row per rated image with its
      * rate aggregates.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B4: converted to real
-     * DQL -- `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), same "no association
-     * required" shape as {@see countRatedElements()} above; the
-     * caller-supplied raw "column DIRECTION" ORDER BY fragment turned out
-     * to be a genuinely finite set of exactly 8 shapes at its one real
-     * caller ({@see \Piwigo\Admin\RatingPageRenderer}'s own
-     * `$available_order_by` array, always `DESC`), so $orderBy now carries
-     * just the column key and this method decides the DQL `orderBy()`
-     * call itself -- DQL supports ordering by a SELECT alias
-     * (a "ResultVariable", confirmed against `vendor/doctrine/orm/.../
-     * Parser.php`'s own `OrderByItem()` grammar) for the 5 aggregate/
-     * aliased columns, and a real property path for the 3 plain
-     * `ImageEntity` columns.
-     *
-     * Real bug found and fixed here, not just carried forward: Sub-phase
-     * B5 Tier 2's own docblock previously claimed `ROUND(AVG(...), 2)` was
-     * already replaced with a raw `AVG(...)` plus PHP-side round() for
-     * this method too (true for {@see findRateSummaryForElement()}, which
-     * that Tier 2 pass did convert) -- the code here was never actually
-     * touched, a stale docblock claim not matching the code. Fixed now as
-     * part of this conversion.
+     * $orderBy carries only the column key, never a raw ORDER BY fragment
+     * -- its one real caller ({@see \Piwigo\Admin\RatingPageRenderer})
+     * always picks from a fixed set of columns, always sorted DESC, so
+     * this method builds the DQL `orderBy()` call itself: a SELECT alias
+     * for the 5 aggregate/aliased columns, a real property path for the 3
+     * plain `ImageEntity` columns.
      *
      * @param list<int> $categoryIds
      * @param string $orderBy one of 'recently_rated'/'score'/'avg_rates'/
@@ -431,8 +388,7 @@ final class RateRepository extends EntityRepository
      */
     public function findRateRowsForElement(int $elementId): array
     {
-        // Item 14 DQL audit note: converted to real DQL. Deliberately maps
-        // the hydrated RateEntity objects to Rate by hand instead of
+        // Maps the hydrated RateEntity objects to Rate by hand instead of
         // reusing Rate::fromRow() -- fromRow()'s own contract expects a
         // raw-DBAL-shaped row keyed by column name (element_id, user_id,
         // ...), whereas DQL entity/array hydration keys by PHP property
@@ -518,11 +474,6 @@ final class RateRepository extends EntityRepository
      * status (used by the page to decide whether to render them as an
      * anonymous rater).
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
-     * column indirection this used to take as `$idColumn`/`$usernameColumn`
-     * parameters is gone.
-     *
      * @return list<array{id: int, name: string, status: string}>
      */
     public function findUsersWithStatusByIdUsername(): array
@@ -544,9 +495,9 @@ final class RateRepository extends EntityRepository
             $result[] = [
                 'id' => $row['id']->value,
                 'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
-                // Phase 5 Item 21: `ui.status` (UserInfoEntity::$status) is
-                // now enumType-mapped -- array hydration returns a real
-                // UserStatus instance for it, not a raw string.
+                // `ui.status` (UserInfoEntity::$status) is enumType-mapped
+                // -- array hydration returns a real UserStatus instance for
+                // it, not a raw string.
                 'status' => ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : '',
             ];
         }
@@ -559,9 +510,9 @@ final class RateRepository extends EntityRepository
      */
     public function findAllRatesOrderedByDateDesc(): array
     {
-        // Item 14 DQL audit note: same reasoning as findRateRowsForElement()
-        // above -- maps RateEntity to Rate by hand rather than reusing
-        // Rate::fromRow(), which expects DBAL's column-name-keyed row shape.
+        // Maps RateEntity to Rate by hand rather than reusing
+        // Rate::fromRow(), which expects DBAL's column-name-keyed row shape
+        // (see findRateRowsForElement() above).
         $entities = $this->createQueryBuilder('r')
             ->orderBy('r.date', 'DESC')
             ->getQuery()
@@ -655,15 +606,13 @@ final class RateRepository extends EntityRepository
      */
     public function findTopRatedImageIds(int $limit): array
     {
-        // pgsql support pass: real bug found live -- MySQL's ORDER BY
-        // always treats NULL as the smallest value regardless of ASC/DESC
-        // (so a bare DESC sort naturally puts NULL ratingScore rows
-        // last), but PostgreSQL's default is the opposite for DESC
-        // (NULLS FIRST), putting an unrated image ahead of every real
-        // ranked one. Neither engine's own NULLS LAST syntax is portable
-        // (MySQL has none at all), so this sorts on an explicit
-        // null-last discriminant first, matching MySQL's real behavior
-        // on both platforms.
+        // MySQL's ORDER BY always treats NULL as the smallest value
+        // regardless of ASC/DESC (so a bare DESC sort naturally puts NULL
+        // ratingScore rows last), but PostgreSQL's default for DESC is
+        // NULLS FIRST, putting an unrated image ahead of every real ranked
+        // one. Neither engine has a portable NULLS LAST syntax (MySQL has
+        // none at all), so this sorts on an explicit null-last
+        // discriminant first, matching MySQL's behavior on both platforms.
         $ids = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('i.id')
@@ -681,13 +630,10 @@ final class RateRepository extends EntityRepository
      * Picture page's rating-summary widget: count + average rate for a
      * single image.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
-     * real DQL -- single-table, static WHERE; MySQL's `ROUND()` was the
-     * only remaining blocker, and it has no portable DQL/DBAL-platform
-     * equivalent. Replaced with a raw `AVG()` (a real, portable, standard
-     * DQL aggregate on its own) plus a PHP-side round() -- a plain
-     * aggregate query with no GROUP BY always returns exactly one row
-     * (count 0 / average NULL for zero matching `rate` rows), so no
+     * MySQL's `ROUND()` has no portable DQL/DBAL-platform equivalent, so
+     * this uses a raw `AVG()` plus a PHP-side round(). A plain aggregate
+     * query with no GROUP BY always returns exactly one row (count 0 /
+     * average NULL for zero matching `rate` rows), so there's no
      * getOneOrNullResult()/NonUniqueResultException concern here.
      *
      * @return array{count: int, average: ?float}
@@ -716,17 +662,14 @@ final class RateRepository extends EntityRepository
 
     /**
      * The current user's own rate for a single image. $anonymousId is only
-     * applied for non-classic (guest) users -- matches the original's own
-     * conditional `AND anonymous_id = ...` clause, always additionally
-     * filtered by $userId regardless.
+     * applied for non-classic (guest) users, always additionally filtered
+     * by $userId regardless.
      *
-     * Item 14 DQL audit note: converted to real DQL. `rate`'s PK is
-     * (element_id, user_id, anonymous_id), so without the optional
-     * anonymous_id filter more than one row can match (element_id, user_id)
-     * alone -- ->getOneOrNullResult() would throw NonUniqueResultException
-     * in that case, so this pairs the query with ->setMaxResults(1) instead,
-     * matching the original DBAL fetchOne()'s "just give me any one
-     * matching row" semantics.
+     * `rate`'s PK is (element_id, user_id, anonymous_id), so without the
+     * optional anonymous_id filter more than one row can match
+     * (element_id, user_id) alone -- ->getOneOrNullResult() would throw
+     * NonUniqueResultException in that case, so this pairs the query with
+     * ->setMaxResults(1) instead, returning any one matching row.
      */
     public function findUserRate(int $elementId, int $userId, ?string $anonymousId): ?int
     {

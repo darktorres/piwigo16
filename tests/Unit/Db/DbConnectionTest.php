@@ -10,12 +10,10 @@ use Piwigo\Db\DbConnection;
 // params() (not build()'s Connection::getParams()) is used for assertions
 // since Doctrine itself marks that getter as implementation-detail-only.
 //
-// DbConnection::params() reads DbCredentials::current() (env-only) rather
-// than CurrentConfig:: (Config generic-accessor removal moved DB
-// credentials off CurrentConfig:: entirely) -- current() falls back to a
-// fresh fromEnv() read on every call since Kernel is never booted in this
-// file, so a bare putenv() per scenario is enough to seed it, no reset()
-// needed (singleton/service-locator elimination campaign, Phase 3).
+// DbConnection::params() reads DbCredentials::current() (env-only), not
+// CurrentConfig:: -- current() falls back to a fresh fromEnv() read on
+// every call since Kernel is never booted in this file, so a bare
+// putenv() per scenario is enough to seed it, no reset() needed.
 
 $envVars = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_PORT', 'PIWIGO_DB_DRIVER'];
 $originalEnvVars = [];
@@ -100,7 +98,7 @@ test('params() switches to the native pgsql driver when db_driver is pgsql', fun
         // Kills lines 63/64/65's RemoveArrayItem (dropping 'user',
         // 'password', or 'dbname' from the pgsql params array) --
         // the mysqli-branch test above covers these keys for mysqli,
-        // but nothing previously asserted them for the pgsql branch.
+        // but nothing else here asserts them for the pgsql branch.
         ->and($params)->toHaveKey('user', 'piwigo_app')
         ->and($params)->toHaveKey('password', 'secret')
         ->and($params)->toHaveKey('dbname', 'piwigo_prod')

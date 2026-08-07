@@ -9,19 +9,13 @@ use Piwigo\Core\Kernel;
 use Piwigo\Image\ImageStdParams;
 
 /**
- * Singleton/service-locator elimination campaign, Phase 12 sub-phase 12F-4:
- * replaces the deleted `ImageStdParams::current()` transitional shim for
- * test call sites -- reproduces its exact behavior, including the one
- * genuinely risky part: unlike every other closed shim in this campaign,
- * the pre-boot fallback here is a MEMOIZED instance (not a fresh one per
- * call), eagerly populated via a real `load_from_db()` read on first
- * access. Several real Unit tests (e.g. DerivativeParamsTest's own
- * "will_watermark" cases) call `set_watermark(...)` on one call's return
- * value and expect a LATER call to read the same mutation back -- a fresh,
- * independent instance per call would silently break that coupling. All
- * real test call sites route through this one factory now, so they all
- * share this one memoized instance, exactly matching the shim's own former
- * single `private static ?self $fallback` behavior.
+ * Returns the container-shared instance once Kernel has booted. Before
+ * boot, returns a memoized fallback instance, eagerly populated via a
+ * real `load_from_db()` read on first access, rather than a fresh
+ * instance per call. Tests that call `set_watermark(...)` on one call's
+ * return value (e.g. DerivativeParamsTest's "will_watermark" cases) rely
+ * on a later call reading the same mutation back; a fresh, independent
+ * instance per call would silently break that.
  */
 final class ImageStdParamsTestFactory
 {

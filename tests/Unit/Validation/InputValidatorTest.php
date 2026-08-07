@@ -187,11 +187,10 @@ test('checkUrlFormat rejects a non-http(s) url that filter_var itself would othe
 });
 
 test('fatalError calls the installed HtmlRenderingInterface before throwing, when one is configured', function (): void {
-    // $htmlRenderer is a real constructor-injected instance property now
-    // (singleton/service-locator elimination campaign, Phase 3) -- every
-    // other test above passes none at all, relying on the same default
-    // (null) `new InputValidator()` already had before this conversion,
-    // reaching the plain `throw new \RuntimeException($msg)` fallback.
+    // $htmlRenderer is a real constructor-injected instance property --
+    // every other test above passes none at all, relying on the same
+    // default (null) `new InputValidator()` has, reaching the plain
+    // `throw new \RuntimeException($msg)` fallback.
     $renderer = new InputValidatorTestFakeHtmlRenderer();
     $validator = new InputValidator($renderer);
 

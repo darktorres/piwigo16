@@ -25,12 +25,10 @@ use RuntimeException;
  * A derivative image is constructed from a source image (SrcImage class)
  * and derivative parameters (DerivativeParams class).
  *
- * Singleton/service-locator elimination campaign, Phase 6: urlService()
- * resolves the container-shared UrlServiceInterface fresh on every call
- * instead of reading a bare-static value some bootstrap code set once
- * (see Image\SrcImage's own docblock for the full reasoning, including
- * why RootPathOverride's cross-instance sharing requirement rules out any
- * throwaway-construction alternative).
+ * urlService() resolves the container-shared UrlServiceInterface fresh on
+ * every call rather than reading a bare-static value (see Image\SrcImage's
+ * own docblock for why RootPathOverride's cross-instance sharing
+ * requirement rules out a throwaway-construction alternative).
  */
 final class DerivativeImage
 {
@@ -55,9 +53,7 @@ final class DerivativeImage
      * get_one()/build()) is almost entirely static factory methods with no
      * `$this` to inject through, so this stays a container resolve rather
      * than a constructor property, used consistently by both the static
-     * factories and the constructor's own instance-context read below
-     * (singleton/service-locator elimination campaign, Phase 11 sub-phase
-     * 11F).
+     * factories and the constructor's own instance-context read below.
      */
     private static function imageStdParams(): ImageStdParams
     {
@@ -106,8 +102,7 @@ final class DerivativeImage
     }
 
     /**
-     * Same reasoning as currentConfig() above (singleton/service-locator
-     * elimination campaign, Phase 11 sub-phase 11H).
+     * Same reasoning as currentConfig() above.
      */
     private static function paths(): Paths
     {

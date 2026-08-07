@@ -8,19 +8,15 @@ use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 
 /**
- * Workstream C3: carries a fully-built ResponseInterface up the call
- * stack to one of the 3 real dispatch-context catch points (include/
- * common.inc.php's bootstrap phase, Middleware\ControllerInvokerMiddleware
- * for the pipeline-routed controller family, Admin\AdminShell::run() for
- * the admin dispatch context) instead of terminating the process directly
- * via header()+echo+exit()/die().
+ * Carries a fully-built ResponseInterface up the call stack to one of the
+ * 3 dispatch-context catch points (include/common.inc.php's bootstrap
+ * phase, Middleware\ControllerInvokerMiddleware for the pipeline-routed
+ * controller family, Admin\AdminShell::run() for the admin dispatch
+ * context) instead of terminating the process directly via
+ * header()+echo+exit()/die().
  *
  * A function that always throws satisfies a `: never` return type exactly
- * like one that always exit()s -- so every existing call site of
- * RedirectServiceInterface/HtmlRenderingInterface (redirect()/
- * accessDenied()/badRequest()/pageNotFound()/pageForbidden()/fatalError())
- * needed zero changes; only the implementing classes and the 3 catch
- * points changed.
+ * like one that always exit()s.
  *
  * Catching this earlier than a genuine app error is essential: a
  * redirect/403/404 is expected control flow, not a bug, so it must never
@@ -30,11 +26,10 @@ use RuntimeException;
  * middleware (SentryMiddleware's own `finally`, ServerTimingMiddleware's
  * post-processing, SessionMiddleware's persist, SecurityHeadersMiddleware)
  * sees a normal Response return value and unwinds exactly as if the
- * controller had returned it directly -- fixing a real, previously-live
- * bug: PHP's exit()/die() skip pending `finally` blocks entirely (verified
- * empirically), so every redirect/error page served through the real
- * pipeline used to leave SentryMiddleware's performance transaction
- * unfinished and silently skip the Server-Timing header, always.
+ * controller had returned it directly. PHP's exit()/die() skip pending
+ * `finally` blocks entirely, so throwing here rather than terminating the
+ * process directly keeps SentryMiddleware's performance transaction and
+ * the Server-Timing header intact for every redirect/error page.
  */
 final class ResponseReadyException extends RuntimeException
 {

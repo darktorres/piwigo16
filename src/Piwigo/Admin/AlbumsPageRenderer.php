@@ -26,24 +26,18 @@ use Piwigo\Validation\InputValidator;
 /**
  * Ported from admin/albums.php (page slug "albums").
  *
- * admin.php itself already gates every page behind
+ * admin.php gates every page behind
  * check_status(AccessLevel::Administrator) before dispatch (admin.php:65),
- * so the original albums.php's own (redundant) check_status() call is
- * dropped here -- same precedent as PhotosAddSubController.
+ * so this method does not repeat that check itself.
  *
- * cmpCat()/assocToOrderedTree() were top-level functions in the original
- * file with zero external callers (confirmed via a direct grep) -- folded
- * into private (static) methods here, removing the "cannot redeclare
- * function on double-include" risk every prior sub-batch with this shape
- * has already converted away. assocToOrderedTree() stays recursive, now
- * threading $nb_photos_in/$nb_sub_photos/$is_forbidden as real parameters
- * through each recursive call instead of a `global` read (Legacy Coupling
- * Retirement Phase 8, 8g).
+ * cmpCat()/assocToOrderedTree() are private static methods.
+ * assocToOrderedTree() is recursive, threading
+ * $nb_photos_in/$nb_sub_photos/$is_forbidden as parameters through each
+ * recursive call rather than reading them from `global`.
  *
- * The tabsheet block below now calls CoreTabs::setContext() instead of a
- * bare `$my_base_url = ...;` assignment -- see CoreTabsContext's own
- * docblock for why CoreTabs::addCoreTabs() can't take this as a real
- * parameter.
+ * The tabsheet block below calls CoreTabs::setContext() rather than
+ * assigning `$my_base_url` directly -- see CoreTabsContext's own docblock
+ * for why CoreTabs::addCoreTabs() can't take this as a real parameter.
  */
 final class AlbumsPageRenderer
 {

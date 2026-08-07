@@ -18,33 +18,27 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Template\CurrentTemplate;
 
 /**
- * Ported from admin/updates_ext.php -- cross-type "which installed
- * plugins/themes/languages have a pending update" check. Shared class
- * (P23 sub-batch 6i-4), matching the ThemesStandardPagesPageRenderer "one
- * class, multiple call sites" precedent from 6i-2: called both from
- * UpdatesSubController's own "ext" tab and from LanguagesSubController/
- * ThemesSubController/PluginsSubController's own "update" tab (each of
- * which still applies its own ADMIN_PAGE_TITLE override after this
- * render() call, exactly as it did after the raw include before this
- * port).
+ * Cross-type "which installed plugins/themes/languages have a pending
+ * update" check, shared by UpdatesSubController's own "ext" tab and by
+ * LanguagesSubController/ThemesSubController/PluginsSubController's own
+ * "update" tab; each caller applies its own ADMIN_PAGE_TITLE override
+ * after this render() call.
  *
- * No CSRF gap here (confirmed by direct read and by tracing this page's
- * own ignore/reset/update actions to ws.php?method=
- * pwg.extensions.ignoreUpdate/pwg.extensions.update, both of which check
- * get_pwg_token() against $params['pwg_token'] themselves in
- * include/ws_functions/pwg.extensions.php) -- unlike its sibling
- * UpdatesPwgPageRenderer, which had a real, severe gap.
+ * This page's own ignore/reset/update actions are CSRF-protected by
+ * ws.php?method=pwg.extensions.ignoreUpdate/pwg.extensions.update, which
+ * check get_pwg_token() against $params['pwg_token'] in
+ * include/ws_functions/pwg.extensions.php -- render() itself performs no
+ * CSRF check.
  */
 final class UpdatesExtPageRenderer
 {
     /**
-     * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
-     * explicit param instead of `global $page['page'];` -- this class has
-     * 4 real callers (UpdatesSubController's own "ext" tab, and
-     * LanguagesSubController/ThemesSubController/PluginsSubController's
-     * own "update" tab), each of which already knows its own fixed page
-     * slug statically (config/admin_pages.php registers each of those 4
-     * controllers for exactly one slug), so each passes its own literal.
+     * $pageSlug is an explicit param: this class has 4 real callers
+     * (UpdatesSubController's own "ext" tab, and LanguagesSubController/
+     * ThemesSubController/PluginsSubController's own "update" tab), each
+     * of which knows its own fixed page slug statically
+     * (config/admin_pages.php registers each of those 4 controllers for
+     * exactly one slug), so each passes its own literal.
      */
     public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, PageState $pageState, CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig): void
     {

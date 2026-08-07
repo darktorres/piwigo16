@@ -11,10 +11,9 @@ use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
  * getFsDirectories()/getDirs() already have full coverage through other
- * suites' real callers (e.g. admin sync flows) -- this file only closes the
- * remaining gaps: mkgetdir()'s failure/fatalError plumbing, deltree()'s
- * trash-path branches, and getCacheSizeDerivatives() (previously untested
- * end to end).
+ * suites' real callers (e.g. admin sync flows) -- this file only closes
+ * the remaining gaps: mkgetdir()'s failure/fatalError plumbing,
+ * deltree()'s trash-path branches, and getCacheSizeDerivatives().
  *
  * mkgetdir()'s str_replace(DIRECTORY_SEPARATOR) branch (line 83) is gated
  * behind `str_starts_with(PHP_OS, 'WIN')`; PHP_OS is a compile-time
@@ -23,10 +22,9 @@ use Piwigo\Tests\Support\KernelContainerOverride;
  * dead branch, not chased.
  *
  * fatalError() resolves HtmlRenderingInterface directly from the
- * container now (singleton/service-locator elimination campaign, Phase
- * 3) -- gracefully falls back to the plain RuntimeException every test
- * above already relies on when Kernel hasn't booted, which is every test
- * in this file except the one below that needs a real, installed
+ * container -- gracefully falls back to the plain RuntimeException every
+ * test above already relies on when Kernel hasn't booted, which is every
+ * test in this file except the one below that needs a real, installed
  * renderer (via KernelContainerOverride::with()).
  */
 function filesystemHelperTestRrmdir(string $dir): void
@@ -265,17 +263,14 @@ test('mkgetdir delegates the fatal message to the installed HtmlRenderingInterfa
     chmod($parent, 0o555);
     $dir = $parent . '/child';
 
-    // fatalError() resolves HtmlRenderingInterface from the container
-    // (singleton/service-locator elimination campaign, Phase 3) --
+    // fatalError() resolves HtmlRenderingInterface from the container --
     // KernelContainerOverride::with() gives this one test a real
     // container with the fake renderer bound, then tears it back down.
     // Piwigo\Core\Paths is also bound explicitly: mkgetdir()'s own error
-    // message now builds via self::t('no write access') (this class's own
-    // private static resolver, singleton/service-locator elimination
-    // campaign, Phase 8/12D), and
-    // Lang's Paths constructor collaborator has no autowireable default
-    // -- KernelContainerOverride::with()'s own Container::build() call
-    // never binds one on its own.
+    // message builds via self::t('no write access') (this class's own
+    // private static resolver), and Lang's Paths constructor collaborator
+    // has no autowireable default -- KernelContainerOverride::with()'s own
+    // Container::build() call never binds one on its own.
     KernelContainerOverride::with(
         [
             HtmlRenderingInterface::class => filesystemHelperTestMakeFatalRenderer($capture),

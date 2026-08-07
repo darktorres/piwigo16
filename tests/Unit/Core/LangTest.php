@@ -233,14 +233,11 @@ function langTestCallPoHeadersToLangInfo(Lang $lang, array $headers): array
 }
 
 /**
- * Singleton/service-locator elimination campaign, Phase 8: Lang is now a
- * real, constructor-injected instance (Translator/HtmlRenderingInterface/
- * Paths/InstallationFlag), so every test below constructs its own fresh
- * instance via langTestMake() instead of resetting shared static state --
- * strictly simpler than the old beforeEach()/afterEach() reset dance, same
- * simplification every large facade in this campaign has already gone
- * through (see e.g. AccessControlTest.php). $defaultLanguageProvider stays
- * a real, mutable, nullable property set via setDefaultLanguageProvider()
+ * Lang is a real, constructor-injected instance (Translator/
+ * HtmlRenderingInterface/Paths/InstallationFlag) -- every test below
+ * constructs its own fresh instance via langTestMake() instead of
+ * resetting shared static state. $defaultLanguageProvider is a real,
+ * mutable, nullable property set via setDefaultLanguageProvider()
  * (see Lang's own class docblock for why) -- tests that need it call that
  * setter explicitly on their own instance instead of passing it in here.
  *
@@ -275,8 +272,8 @@ beforeEach(function (): void {
 afterEach(function (): void {
     langTestRrmdir(is_string($this->langRoot) ? $this->langRoot : '');
     // Only the current() bridge tests below actually boot the Kernel, but
-    // reset()ing unconditionally (matching PageStateTest.php/every other
-    // converted facade's own test file) is cheap and guarantees a booted
+    // reset()ing unconditionally (matching PageStateTest.php and every
+    // other facade's own test file) is cheap and guarantees a booted
     // Kernel never leaks from one test into the next.
     Kernel::reset();
 });
@@ -476,15 +473,9 @@ test('buildArgs re-indexes a string-keyed args array into a plain positional lis
 });
 
 /**
- * fatalError()'s own former nullable-collaborator fallback (a plain
- * RuntimeException thrown directly when no HtmlRenderingInterface was
- * installed) is gone since Phase 8's conversion -- a constructed Lang
- * instance always has one, so args()'s invalid-argument path
- * unconditionally reaches the installed renderer's fatalError() now. This
- * single test replaces the pre-Phase-8 file's 2 separate "wired/not
- * wired" scenarios, which tested a state that can no longer exist (see
- * Lang::fatalError()'s own docblock -- PHPStan proves the old fallthrough
- * dead code).
+ * A constructed Lang instance always has an HtmlRenderingInterface, so
+ * args()'s invalid-argument path unconditionally reaches the installed
+ * renderer's fatalError() (see Lang::fatalError()'s own docblock).
  */
 test('args delegates the fatal error to the installed HtmlRenderingInterface', function (): void {
     $capture = new stdClass();
@@ -652,10 +643,9 @@ test('load treats an empty dirname as "use the site root", both for the file loo
     // other load() test here which passes a real plugin dirname), and
     // line 299's own EmptyStringToNotEmpty (dirname === '' must actually
     // trigger the $this->paths->root substitution -- proven here by a
-    // real fixture only findable through that substituted root). Since
-    // Phase 8's conversion, Paths is a plain constructor collaborator, so
-    // this is a direct langTestMake(root: ...) instead of the pre-Phase-8
-    // KernelContainerOverride::with([Paths::class => ...]) dance.
+    // real fixture only findable through that substituted root). Paths is
+    // a plain constructor collaborator, so this is a direct
+    // langTestMake(root: ...) call.
     $root = $this->langRoot . '/site-root-empty-dirname/';
     langTestWritePo($root . 'language/en_UK/greeting.po', 'en_UK', 'Hi (site root)');
     $lang = langTestMake(root: $root);

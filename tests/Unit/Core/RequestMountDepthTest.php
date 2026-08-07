@@ -5,14 +5,10 @@ declare(strict_types=1);
 use Piwigo\Core\RequestMountDepth;
 
 /**
- * Container-shared, immutable value (singleton/service-locator elimination
- * campaign, Phase 3) -- each test constructs its own fresh instance
- * directly; no reset() needed for the instance API. Its own former
- * currentStatic() transitional shim (and this file's own 2 dedicated tests
- * for its Kernel::isBooted() branches) is gone -- Piwigo\Auth\CookieService
- * (its one remaining caller) now resolves this via its own private lazy
- * requestMountDepth() helper instead (singleton/service-locator elimination
- * campaign, Phase 11 sub-phase 11G).
+ * Container-shared, immutable value -- each test constructs its own fresh
+ * instance directly; no reset() needed for the instance API.
+ * Piwigo\Auth\CookieService is the only caller, resolving it via its own
+ * private lazy requestMountDepth() helper.
  */
 test('current reflects the value given at construction', function (): void {
     expect(new RequestMountDepth()->current())->toBe(0)

@@ -135,15 +135,14 @@ test('dispatch falls back to the raw path when SCRIPT_NAME is absent (e.g. CLI/t
 });
 
 test('dispatch matches a wildcard-tail route pattern for both i.php URL styles', function (): void {
-    // i.php (Workstream C3 Part III) supports 2 URL styles depending on
+    // i.php supports 2 URL styles depending on
     // CurrentConfig::questionMarkInUrls(): query-string ("/i.php?/upload/...",
     // where the query string never becomes part of the URI path Router
     // matches against, so the routable path is bare "/i.php") and
     // PATH_INFO ("/i.php/upload/...", where the routable path has a real
-    // tail) -- confirmed live via a real diagnostic request (both
-    // SCRIPT_NAME/PATH_INFO/QUERY_STRING captured directly), not assumed.
-    // config/routes.php's own '/i.php{tail}' pattern (tail requirement
-    // '.*', default '') must match both shapes with the same one route.
+    // tail). config/routes.php's own '/i.php{tail}' pattern (tail
+    // requirement '.*', default '') must match both shapes with the same
+    // one route.
     $routes = new RouteCollection();
     $routes->add('derivative_image', new Route(
         '/i.php{tail}',
@@ -165,11 +164,11 @@ test('dispatch matches a wildcard-tail route pattern for both i.php URL styles',
 });
 
 test('dispatch strips one extra SCRIPT_NAME directory level per MOUNT_DEPTH_ATTRIBUTE, for an entry point one subdirectory below the app root', function (): void {
-    // Reproduces admin/popuphelp.php's own real shape (P23 batch 6a): a
-    // routed entry point one directory below the app root, unlike every
-    // other routed file. Without the attribute, dirname(SCRIPT_NAME) alone
-    // over-strips by the extra "admin" segment and either 404s or -- worse,
-    // confirmed live -- silently matches a different, wrong route.
+    // Reproduces admin/popuphelp.php's own real shape: a routed entry
+    // point one directory below the app root, unlike every other routed
+    // file. Without the attribute, dirname(SCRIPT_NAME) alone over-strips
+    // by the extra "admin" segment and either 404s or -- worse -- silently
+    // matches a different, wrong route.
     $routes = new RouteCollection();
     $routes->add('admin_popuphelp', new Route('/admin/popuphelp.php', defaults: ['_controller' => 'AdminPopuphelpController']));
 

@@ -17,12 +17,10 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 // methods via reflection for precise control over dependency graphs and
 // load_mode combinations that would be awkward to construct purely
 // through the public add()/add_inline() API. get_head_scripts()/
-// get_footer_scripts()/do_combine() -> FileCombiner::combine() were
-// assumed to cascade through legacy free-function side effects (is_admin(),
-// PHPWG_ROOT_PATH-dependent plugin-path resolution) -- confirmed live
-// this is no longer true post-P23 (same finding as FileCombinerTest's own
-// direct combine() coverage), so the tests further down call them for
-// real against real files under an isolated Paths root.
+// get_footer_scripts()/do_combine() -> FileCombiner::combine() do not
+// depend on legacy free-function side effects (is_admin(),
+// PHPWG_ROOT_PATH-dependent plugin-path resolution), so the tests further
+// down call them for real against real files under an isolated Paths root.
 
 beforeEach(function (): void {
     CurrentUserTestFactory::get()->attachGlobals();
@@ -196,12 +194,10 @@ test('urlService() throws when no URL service has been set', function (): void {
     // Every call path to a private static urlService() eventually funnels
     // through do_combine() -- even a completely empty loader reaches it,
     // no filesystem or registered scripts needed. do_combine()'s own
-    // AccessControl::currentForCaching() call (singleton/service-locator
-    // elimination campaign, Phase 7) never throws -- unlike
+    // AccessControl::currentForCaching() call never throws -- unlike
     // AccessControl::current(), it degrades gracefully when Kernel isn't
     // booted (see that method's own docblock) -- so this reaches
-    // urlService()'s own, more specific "no URL service set" guard
-    // exactly like before Phase 7.
+    // urlService()'s own, more specific "no URL service set" guard.
     $loader = new ScriptLoader();
 
     expect(fn () => $loader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get())))
@@ -1020,18 +1016,16 @@ test('compute_script_topological_order fatal-errors exactly one level past the r
     // HtmlService::fatalError() always calls
     // $this->errorCollector->recordFatal() then throws
     // ResponseReadyException -- caught directly here rather than via a
-    // throwaway set_error_handler() (this class no longer triggers a
-    // PHP-level error at all: trigger_error(E_USER_ERROR) was deprecated
-    // as of PHP 8.4, see HtmlService::fatalError()'s own docblock for the
-    // real replacement). HtmlServiceTestFactory::build() resolves the
-    // same container-shared ErrorCollector instance as one of
-    // HtmlService's own required constructor collaborators (singleton/
-    // service-locator elimination campaign, Phase 11 sub-phase 11E,
-    // originally Phase 2) -- booted and reset locally, scoped to this one
-    // test (other tests in this file boot their own Kernel too, each
-    // independently). A real Paths is required too: ErrorCollector's container
-    // factory now needs a DeploymentPolicy, whose own factory needs Paths
-    // to autowire (Phase 4).
+    // throwaway set_error_handler() (this class never triggers a PHP-level
+    // error at all: trigger_error(E_USER_ERROR) was deprecated as of PHP
+    // 8.4, see HtmlService::fatalError()'s own docblock for the real
+    // replacement). HtmlServiceTestFactory::build() resolves the same
+    // container-shared ErrorCollector instance as one of HtmlService's own
+    // required constructor collaborators -- booted and reset locally,
+    // scoped to this one test (other tests in this file boot their own
+    // Kernel too, each independently). A real Paths is required too:
+    // ErrorCollector's container factory needs a DeploymentPolicy, whose
+    // own factory needs Paths to autowire.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     CurrentUserTestFactory::get()->attachGlobals();
     $errorCollector = Kernel::container()->get(ErrorCollector::class);

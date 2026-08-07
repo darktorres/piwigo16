@@ -55,25 +55,23 @@ use Piwigo\Users\UserService;
 use RuntimeException;
 
 /**
- * Search domain business logic, ported from the deleted
- * `include/functions_search.inc.php`'s 17 functions (P23 batch 8c).
+ * Search domain business logic.
  * `get_clause_for_filter()`/`get_items_for_filter()` -- entirely
  * `$page`-coupled (read `$page['search_details']`, written by this
  * service's own `getRegularSearchResults()` return value stored back into
  * `$page` by `Section\SectionPopulator`), zero DB access of their own --
- * were folded as private methods on their single real caller,
- * `Search\SearchFilterRenderer`, instead of onto this class.
+ * are private methods on their single real caller,
+ * `Search\SearchFilterRenderer`, instead of on this class.
  *
  * [SEC-18] The 3 `addslashes()` sites (REGEXP/FULLTEXT/LIKE clause
- * construction in the quick-search token evaluator) are replaced with real
- * `?`-bound parameters -- {@see qsearchGetTextTokenSearchSql()}'s own
- * docblock confirms this crosses the wire as-is, with no SQL
- * string-literal escaping step to compensate for, unlike an earlier
- * `SearchRepository::quote()`-then-splice mechanism this replaced.
- * `quote()` itself is still real, driver-safe infrastructure for a
- * caller that genuinely can't compose a `?`-bound parameter (e.g. a
- * value that must be embedded as a SQL literal, not passed positionally)
- * -- {@see \Piwigo\Search\QsearchClause}'s own docblock.
+ * construction in the quick-search token evaluator) use real `?`-bound
+ * parameters -- {@see qsearchGetTextTokenSearchSql()}'s own docblock
+ * confirms this crosses the wire as-is, with no SQL string-literal
+ * escaping step to compensate for. `quote()` itself is still real,
+ * driver-safe infrastructure for a caller that genuinely can't compose
+ * a `?`-bound parameter (e.g. a value that must be embedded as a SQL
+ * literal, not passed positionally) -- {@see \Piwigo\Search\QsearchClause}'s
+ * own docblock.
  *
  * Every `mixed` below stays that way by design: $search/$field/
  * $allwordsField (and every advanced-search-criterion param derived from
@@ -86,12 +84,9 @@ final readonly class SearchService
     /**
      * $tagService/$userService/$preferencesService are optional-with-
      * lazy-default (same reasoning as Mail\MailService's own
-     * $webmasterMailProvider): this class has external construction sites
-     * across Search/Section (fixed in the same pass as this constructor
-     * change) plus several not-yet-migrated Controller/Ws/Admin call sites
-     * (out of this phase's domain scope) that would otherwise all need a
-     * simultaneous edit for a dependency only reached on the tags/
-     * default-language/saveSearch paths.
+     * $webmasterMailProvider): several Controller/Ws/Admin call sites
+     * still construct this class without them, and each is only reached
+     * on the tags/default-language/saveSearch paths.
      */
     public function __construct(
         private AccessLevelChecker $accessLevelChecker,
@@ -132,10 +127,7 @@ final readonly class SearchService
      * Container resolve, not a constructor property -- used only inside
      * this class's own one `new UserService(...)` fallback below (matching
      * $this->tagService's own optional-with-lazy-default shape). Falls
-     * back to a fresh, unmemoized instance when Kernel::boot() hasn't run,
-     * matching ProcessCache::getStatic()/setStatic()'s own former identical
-     * pre-boot fallback (singleton/service-locator elimination campaign,
-     * Phase 11 sub-phase 11G).
+     * back to a fresh, unmemoized instance when Kernel::boot() hasn't run.
      */
     private function processCache(): ProcessCache
     {
@@ -176,29 +168,23 @@ final readonly class SearchService
     }
 
     /**
-     * Same as getSearchInfo(), plus the request-context validation the
-     * former free function get_search_info() (functions_search.inc.php,
-     * P23 batch 8c) applied around it: dies on a malformed candidate,
-     * refuses (outside the web-service API) to resolve an old-style
-     * numeric-only id once the search row already has a search_uuid (spies
-     * shouldn't be able to walk index.php?/search/123, .../124, ...), and
-     * hands the resolved id back through $resolvedSearchId for
-     * HistoryService::logVisit() to read later, when rendering the
-     * "search" section.
+     * Same as getSearchInfo(), plus request-context validation: dies on a
+     * malformed candidate, refuses (outside the web-service API) to
+     * resolve an old-style numeric-only id once the search row already
+     * has a search_uuid (spies shouldn't be able to walk
+     * index.php?/search/123, .../124, ...), and hands the resolved id
+     * back through $resolvedSearchId for HistoryService::logVisit() to
+     * read later, when rendering the "search" section.
      *
-     * Legacy Coupling Retirement Track A: $section (batch A5.2e) and
-     * $resolvedSearchId (batch A5.2h, replacing the former
-     * `$page['search_id']` write) are explicit params instead of
-     * `global $page;` -- this method's two real callers are
-     * SearchService::getValidatedSearchArray() (reached from
-     * SearchFilterRenderer::render(), which passes SectionContext::section,
-     * always available there, and returns the resolved id up its own
-     * call chain to GalleryController) and Ws\PwgImages::
-     * filteredSearchCreate() (a WS method that never runs
-     * SectionPopulator, passes null section and no out-param -- matching
-     * this gate's own original behavior there: `$page['section']` was
-     * never 'search' for a WS request either, so the write never
-     * happened for that caller anyway).
+     * $section and $resolvedSearchId are explicit params. This method's
+     * two real callers are SearchService::getValidatedSearchArray()
+     * (reached from SearchFilterRenderer::render(), which passes
+     * SectionContext::section, always available there, and returns the
+     * resolved id up its own call chain to GalleryController) and
+     * Ws\PwgImages::filteredSearchCreate() (a WS method that never runs
+     * SectionPopulator, passes null section and no out-param --
+     * `$page['section']` is never 'search' for a WS request either, so
+     * nothing is written for that caller).
      *
      * @param int|null $resolvedSearchId in/out; set to the resolved
      *   search id when $section === 'search', left untouched otherwise
@@ -244,9 +230,7 @@ final readonly class SearchService
      * getValidatedSearchInfo() (die()/fatal_error()-on-hacking-attempt
      * request-context validation, since this is only meant for a
      * user-supplied search identifier from the URL, unlike getSearchArray()'s
-     * own internal callers) and bad_request()s when nothing was found --
-     * same composition as the former free function get_search_array()
-     * (functions_search.inc.php, P23 batch 8c).
+     * own internal callers) and bad_request()s when nothing was found.
      *
      * @param int|null $resolvedSearchId in/out, see getValidatedSearchInfo()
      * @return array<string, mixed>|false
@@ -432,31 +416,28 @@ final readonly class SearchService
         $ratios = is_array($ratiosField) ? array_values(array_filter($ratiosField, is_string(...))) : [];
         if ($ratios !== [] && (bool) ($displayFilters['ratio']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            // pgsql support pass: real bug found live -- `i.width`/
-            // `i.height` are both plain integer columns, and MySQL's `/`
-            // operator always computes in DECIMAL/floating context
-            // regardless of operand types (confirmed: MySQL's own docs),
-            // but PostgreSQL's `/` on two `integer` operands TRUNCATES to
-            // an integer (confirmed live against this project's own
-            // fixture data: `200/150` is `1` on Postgres, `1.333...` on
-            // MySQL) -- every real fixture image with a genuine 1.33
-            // (Landscape) ratio was misclassified as `square` (`1 >= 0.95
-            // AND 1 <= 1.05`). `i.width * 1.0` forces decimal-context
-            // arithmetic on both platforms (a DECIMAL/numeric literal
-            // operand promotes the whole expression) without needing a
-            // DQL CAST -- DQL has none built in.
-            // pgsql support pass: real bug found live -- a genuinely
-            // zero i.height (a real, if degenerate, row the test fixture
-            // exercises on purpose) makes this division a literal
-            // divide-by-zero. MySQL's `/` silently returns NULL for that;
-            // Postgres raises a real "division by zero" DriverException,
+            // `i.width`/`i.height` are both plain integer columns. MySQL's
+            // `/` operator always computes in DECIMAL/floating context
+            // regardless of operand types, but PostgreSQL's `/` on two
+            // `integer` operands TRUNCATES to an integer (e.g. `200/150`
+            // is `1` on Postgres, `1.333...` on MySQL) -- a genuine 1.33
+            // (Landscape) ratio would otherwise misclassify as `square`
+            // (`1 >= 0.95 AND 1 <= 1.05`). `i.width * 1.0` forces
+            // decimal-context arithmetic on both platforms (a
+            // DECIMAL/numeric literal operand promotes the whole
+            // expression) without needing a DQL CAST -- DQL has none
+            // built in.
+            //
+            // A genuinely zero i.height makes this division a literal
+            // divide-by-zero: MySQL's `/` silently returns NULL for that,
+            // while Postgres raises a "division by zero" DriverException,
             // 500ing the whole request. NULLIF(i.height, 0) forces the
-            // divisor to a SQL NULL instead of a literal 0 for that one
-            // row, so the whole expression evaluates to NULL (matching
-            // MySQL's own NULL-on-zero-divisor behavior) rather than
-            // erroring -- a NULL comparison is simply false for every
-            // bucket, so a zero-height row still correctly falls through
-            // unclassified either way.
+            // divisor to a SQL NULL instead of a literal 0 for that row,
+            // so the whole expression evaluates to NULL (matching MySQL's
+            // own NULL-on-zero-divisor behavior) rather than erroring --
+            // a NULL comparison is simply false for every bucket, so a
+            // zero-height row still correctly falls through unclassified
+            // either way.
             $clauseForRatio = [
                 'Portrait' => 'i.width * 1.0 / NULLIF(i.height, 0) < 0.95',
                 // Not `BETWEEN` -- a real DQL grammar limitation found
@@ -603,8 +584,7 @@ final readonly class SearchService
     /**
      * SearchRepository's own quicksearch-facing executors are
      * positional-`?`-only (its own "generic parameterized executor"
-     * design, see that class's docblock) -- unlike every other repository
-     * in the SQL-modernization initiative, so a {@see PermissionCriteria}
+     * design, see that class's docblock), so a {@see PermissionCriteria}
      * fragment's own named-placeholder SqlCondition is rewritten to
      * positional `?`s here, same manual per-element expansion convention
      * this file's own IN-clause callers already use for their own array
@@ -641,13 +621,10 @@ final readonly class SearchService
     }
 
     /**
-     * Further SQL-modernization audit, Item 15H: `PermissionCriteria`'s own
-     * 5 `*Condition(string): SqlCondition` methods work unchanged against a
-     * DQL `QueryBuilder` -- a caller just passes a DQL property path
-     * (`ic.categoryId`) instead of a raw column name (same finding as
-     * every other consumer this campaign). This retires the former
-     * `forbiddenConditionPositional()` -- its only real caller was the
-     * regular-search (12-criteria) path converted below.
+     * `PermissionCriteria`'s own 5 `*Condition(string): SqlCondition`
+     * methods work unchanged against a DQL `QueryBuilder` -- a caller
+     * just passes a DQL property path (`ic.categoryId`) instead of a raw
+     * column name.
      * {@see positionalCondition()} itself stays -- the quicksearch token
      * evaluator's own `getQuickSearchResultsNoCache()` still builds its
      * permission fragment through it, a genuine, permanent DBAL-only
@@ -695,21 +672,16 @@ final readonly class SearchService
      * clause-building logic, differing only in the target DQL property
      * path and the preset options list.
      *
-     * Further SQL-modernization audit, Item 15H: the preset branch's own
-     * `SUBDATE(NOW(), INTERVAL ...)` converts to DQL's own real `DATE_SUB()`/
-     * `CURRENT_TIMESTAMP()` built-ins (confirmed real DQL grammar, unlike
-     * `YEAR()`/`MONTH()` -- see the Calendar redesign's own
-     * `Db\DqlFunction\` classes for that distinction) instead of a PHP
-     * `Env::now()`-computed threshold: this
+     * The preset branch uses DQL's own real `DATE_SUB()`/
+     * `CURRENT_TIMESTAMP()` built-ins (unlike `YEAR()`/`MONTH()` -- see
+     * the Calendar redesign's own `Db\DqlFunction\` classes for that
+     * distinction), not a PHP `Env::now()`-computed threshold: this
      * filter's own real semantics ("posted in the last 24h") are
      * genuinely relative to the DB server's real wall clock, deliberately
-     * NOT `PIWIGO_TEST_NOW`-frozen (unlike most other date-computation
-     * call sites this campaign converted) -- confirmed by this file's own
-     * integration test writing fixture rows via the DB's own real `NOW()`
-     * and expecting a real-time-relative threshold to match, not a frozen
-     * one. $presetOptions carries a `[int $amount, string $unit]` tuple
-     * (`$unit` one of `DATE_SUB()`'s own accepted set: `HOUR`/`DAY`/
-     * `MONTH`) instead of raw MySQL INTERVAL syntax.
+     * NOT `PIWIGO_TEST_NOW`-frozen. $presetOptions carries a `[int
+     * $amount, string $unit]` tuple (`$unit` one of `DATE_SUB()`'s own
+     * accepted set: `HOUR`/`DAY`/`MONTH`) instead of raw MySQL INTERVAL
+     * syntax.
      *
      * @param  array<string, array{0: int, 1: string}>  $presetOptions
      */
@@ -741,9 +713,9 @@ final readonly class SearchService
             $subconditions = [];
             // $customDates (a flip, kept only for its isset() lookups
             // below) canonicalizes a purely-numeric string value (e.g.
-            // (string) 20250101) into an int array key -- confirmed live,
-            // array_keys() on it would hand the loop below a genuine int,
-            // not the string substr() requires. Deduplicating the
+            // (string) 20250101) into an int array key -- array_keys() on
+            // it would hand the loop below a genuine int, not the string
+            // substr() requires. Deduplicating the
             // iteration list separately via array_unique() (which, unlike
             // array_flip()'s keys, never touches value types) sidesteps
             // that entirely.
@@ -790,19 +762,16 @@ final readonly class SearchService
     }
 
     /**
-     * Further SQL-modernization audit, Item 15H: converted to DQL, same
-     * shape as every other advanced-search criterion -- `$dqlFieldsByColumn`
-     * maps the 4 known searchable `ImageEntity` columns; each word's own
-     * field-clauses stay OR-joined and parenthesized exactly like before,
-     * and (a real pre-existing bug this redesign fixes for free, not a new
-     * behavior change) the whole word-clause group is now wrapped in an
+     * Converted to DQL, same shape as every other advanced-search
+     * criterion -- `$dqlFieldsByColumn` maps the 4 known searchable
+     * `ImageEntity` columns; each word's own field-clauses stay OR-joined
+     * and parenthesized. The whole word-clause group is wrapped in an
      * *outer* pair of parens before it's AND-combined with $forbidden --
-     * the former raw-string version glued `$filterClause . ' ' .
-     * $forbiddenSql` unparenthesized, so an 'OR' $allwordsMode with 2+
-     * words let $forbidden's own permission restriction bind only to the
+     * without those outer parens, an 'OR' $allwordsMode with 2+ words
+     * would let $forbidden's own permission restriction bind only to the
      * last OR-branch instead of the whole clause, same class of fix
-     * dateFilterClause()'s own custom-range branch already needed its
-     * outer parens for.
+     * dateFilterClause()'s own custom-range branch also needs its outer
+     * parens for.
      *
      * @param  array<array-key, mixed>  $allwordsField
      * @param  list<string>  $words
@@ -829,12 +798,11 @@ final readonly class SearchService
         $catIdsByWord = [];
         $tagIdsByWord = [];
 
-        // Further SQL-modernization audit, Item 7: the category-name/
-        // comment and tag-name lookups below, plus the image lookups by
-        // matching category/tag ids, are retargeted onto CategoryService/
-        // TagService (which own those tables) instead of SearchRepository's
-        // own generic findIdsByClause() -- cross-domain sub-lookups, not a
-        // genuine search-domain query shape.
+        // The category-name/comment and tag-name lookups below, plus the
+        // image lookups by matching category/tag ids, go through
+        // CategoryService/TagService (which own those tables) instead of
+        // SearchRepository's own generic findIdsByClause() -- cross-domain
+        // sub-lookups, not a genuine search-domain query shape.
         $searchesTags = in_array('tags', $searchFields, true);
         $tagService = $searchesTags ? $this->tagService() : null;
 
@@ -909,15 +877,11 @@ final readonly class SearchService
     }
 
     /**
-     * Further SQL-modernization audit, Item 8: free-text search terms are
-     * now bound as real `?` parameters instead of manually quote()'d and
-     * spliced inline -- [SEC-18]'s own quote()-based fix already replaced
-     * the original's addslashes(), but a bound parameter is stronger still
-     * (the uniform fix every other clause in this modernization lineage
-     * already got). $values is positional, in the exact order its
-     * corresponding `?` appears across $clauses -- callers thread it
-     * straight through to whichever of SearchRepository's positional-`?`
-     * executors they already use.
+     * Free-text search terms are bound as real `?` parameters, never
+     * manually quote()'d and spliced inline. $values is positional, in
+     * the exact order its corresponding `?` appears across $clauses --
+     * callers thread it straight through to whichever of
+     * SearchRepository's positional-`?` executors they already use.
      *
      * @param  string[]  $fields
      * @return array{0: list<non-falsy-string>, 1: list<string>}
@@ -925,26 +889,26 @@ final readonly class SearchService
     public function qsearchGetTextTokenSearchSql(QSingleToken $token, array $fields): array
     {
         // Neither REGEXP nor MATCH()/AGAINST() has a Postgres equivalent --
-        // ~* (POSIX case-INSENSITIVE regex match, verified live to need \y
-        // not \b for a real word boundary -- 'the cat sat' ~* '\bcat\b' is
-        // false, ~* '\ycat\y' is true) and a tsquery match against the real
-        // per-table tsv_search/tsv_author generated column Phase B's
-        // migrations already create (see toTsqueryTerm()'s own docblock)
-        // are the real ones. ~* specifically, not ~ (case-SENSITIVE) --
-        // every real $fields column here (name/comment/author) inherits
-        // its table's default utf8mb4_unicode_ci collation with no
-        // per-column override, and MySQL's REGEXP case-sensitivity follows
-        // the operand's collation, so REGEXP against these columns is
-        // already case-insensitive today (verified live: both
-        // 'Mountain View' REGEXP '\\bmountain\\b' and 'mountain view'
-        // REGEXP '\\bMountain\\b' match) -- a bare ~ would silently make
-        // search case-sensitive only on Postgres, a real behavior
-        // regression, not a portability wash. $fields' own shape
-        // ({'name','comment'} on categories/images, {'name'} on tags,
-        // {'author'} on images) deterministically picks the tsvector
-        // column: every shape except {'author'} maps to tsv_search,
-        // matching how each migration paired that generated column with
-        // exactly the same field combination.
+        // ~* (POSIX case-INSENSITIVE regex match, needs \y not \b for a
+        // real word boundary -- 'the cat sat' ~* '\bcat\b' is false, ~*
+        // '\ycat\y' is true) and a tsquery match against the real
+        // per-table tsv_search/tsv_author generated column (see
+        // toTsqueryTerm()'s own docblock) are the real ones. ~*
+        // specifically, not ~ (case-SENSITIVE) -- every real $fields
+        // column here (name/comment/author) inherits its table's default
+        // utf8mb4_unicode_ci collation with no per-column override, and
+        // MySQL's REGEXP case-sensitivity follows the operand's
+        // collation, so REGEXP against these columns is already
+        // case-insensitive today (both 'Mountain View' REGEXP
+        // '\\bmountain\\b' and 'mountain view' REGEXP '\\bMountain\\b'
+        // match) -- a bare ~ would silently make search case-sensitive
+        // only on Postgres, a real behavior regression, not a
+        // portability wash. $fields' own shape ({'name','comment'} on
+        // categories/images, {'name'} on tags, {'author'} on images)
+        // deterministically picks the tsvector column: every shape
+        // except {'author'} maps to tsv_search, matching how each
+        // migration paired that generated column with exactly the same
+        // field combination.
         $isPostgres = DbCredentials::fromEnv()->driver === 'pgsql';
 
         $clauses = [];
@@ -992,15 +956,8 @@ final readonly class SearchService
 
                 // A single literal backslash here ('\\b' is a 2-char PHP
                 // string: backslash + b) is exactly what REGEXP needs to
-                // see -- a real bound parameter (Further SQL-modernization
-                // audit, Item 8) crosses the wire as-is, with no SQL
-                // string-literal escaping step to compensate for, unlike
-                // the former quote()-then-splice mechanism this replaced
-                // (which needed the source string pre-doubled specifically
-                // to survive quote()'s own literal-escaping round trip --
-                // confirmed empirically against a real connection that a
-                // bound '\bword\b' pattern matches correctly with no such
-                // doubling at all).
+                // see -- a bound parameter crosses the wire as-is, with no
+                // SQL string-literal escaping step to compensate for.
                 $pre = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_BEGIN)) ? '' : ($useRegexpICU ? '\\b' : '[[:<:]]');
                 $post = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_END)) ? '' : ($useRegexpICU ? '\\b' : '[[:>:]]');
                 foreach ($fields as $field) {
@@ -1067,10 +1024,10 @@ final readonly class SearchService
      * (&|!():<->) unescaped could throw a parse error or silently change
      * the query's meaning; splitting first and rejoining with only the
      * &/</-/> characters this method itself controls avoids that
-     * entirely, with no bespoke escaper needed. Whitespace specifically
-     * is real, found live: the eligibility check's own punctuation-only
-     * split pattern leaves a plain multi-word phrase like "blue sky"
-     * completely unsplit (space isn't in that charset, and that check
+     * entirely, with no bespoke escaper needed. Whitespace matters too:
+     * the eligibility check's own punctuation-only split pattern leaves
+     * a plain multi-word phrase like "blue sky" completely unsplit
+     * (space isn't in that charset, and that check
      * only needs the longest delimited run's length, not real per-word
      * boundaries) -- passed straight through unsplit here too, a bare
      * "blue sky" would go to to_tsquery() as one un-operatored 2-word
@@ -1102,24 +1059,21 @@ final readonly class SearchService
 
     /**
      * [SEC-18] The LIKE clause's free-text term is bound via a `?`
-     * parameter, replacing the original's `addslashes()`-based inline
-     * splicing -- `%`/`_` are still backslash-escaped manually first
+     * parameter -- `%`/`_` are still backslash-escaped manually first
      * (LIKE's own wildcard syntax, meaningful even inside a bound value,
      * not a SQL string-literal concern a bound parameter would already
      * handle).
      *
-     * pgsql support pass: `CONVERT(file, CHAR)` dropped for Postgres --
-     * `images.file` is a plain `varchar(255)` on both platforms (`COLLATE
-     * utf8mb4_bin`/`COLLATE "C"`, both real byte-order/case-sensitive
-     * collations), never a binary/blob type this cast would have a real
-     * purpose against; a defensive no-op even on the MySQL side (kept
-     * there unchanged rather than removed, out of this pass's scope).
-     * Plain `LIKE` is the correct case-SENSITIVE match on Postgres too
-     * (its own default, unlike MySQL's collation-dependent default) --
-     * confirmed the column's real collation on both platforms is a
-     * case-sensitive one, not the case-insensitive default this schema
-     * uses elsewhere, so no `ILIKE` is needed to preserve the existing
-     * behavior.
+     * `CONVERT(file, CHAR)` is dropped for Postgres -- `images.file` is a
+     * plain `varchar(255)` on both platforms (`COLLATE utf8mb4_bin`/
+     * `COLLATE "C"`, both real byte-order/case-sensitive collations),
+     * never a binary/blob type this cast would have a real purpose
+     * against (kept as a defensive no-op on the MySQL side). Plain
+     * `LIKE` is the correct case-SENSITIVE match on Postgres too (its
+     * own default, unlike MySQL's collation-dependent default) -- the
+     * column's real collation on both platforms is a case-sensitive
+     * one, not the case-insensitive default this schema uses elsewhere,
+     * so no `ILIKE` is needed.
      */
     public function qsearchGetImages(QExpression $expr, QResults $qsr): void
     {
@@ -1173,9 +1127,9 @@ final readonly class SearchService
                     break;
                 case 'ratio':
                     assert($scope !== null);
-                    // Same real Postgres integer-division-truncation and
-                    // divide-by-zero bugs as getRegularSearchResults()'s
-                    // own ratio buckets -- see that call site's docblock.
+                    // Same integer-division-truncation and divide-by-zero
+                    // risk as getRegularSearchResults()'s own ratio
+                    // buckets -- see that call site's docblock.
                     // `width*1.0` forces decimal-context arithmetic on
                     // both platforms; NULLIF(height, 0) guards a
                     // genuinely zero height the same way.
@@ -1320,17 +1274,11 @@ final readonly class SearchService
 
     public function qsearchGetCategories(QExpression $expr, QResults $qsr): void
     {
-        // P23 batch 3: user_cache_categories's INNER JOIN below used to
-        // filter to "categories this user's cache row exists for" -- exactly
-        // the set build_user()/getuserdata() (include/functions_user.inc.php)
-        // already computes into $user['forbidden_categories'] (private/locked
+        // CurrentUser::get()->forbiddenCategories (private/locked
         // categories via calculate_permissions(), extended with 0-image
-        // categories for non-admins -- verified by tracing getuserdata()'s
-        // cache-population branch, which appends to the same
-        // forbidden_categories value it later writes into
-        // user_cache_categories via get_computed_categories()/\Piwigo\Db\MysqliDb::massInserts()).
-        // Reading it directly here needs no query at all, on either a
-        // cache-hit or cache-miss request.
+        // categories for non-admins) already holds the set of categories
+        // to exclude here. Reading it directly needs no query at all, on
+        // either a cache-hit or cache-miss request.
         $forbiddenCategories = $this->currentUser->get()
             ->forbiddenCategories;
         $forbiddenIds = array_values(array_map(intval(...), array_filter(explode(',', $forbiddenCategories), is_numeric(...))));
@@ -1435,9 +1383,9 @@ final readonly class SearchService
     }
 
     /**
-     * Pure computation over `QResults` -- no DB access of its own. Ported
-     * verbatim (recursive AND/OR/NOT boolean-expression evaluation over
-     * already-fetched id sets).
+     * Pure computation over `QResults` -- no DB access of its own.
+     * Recursive AND/OR/NOT boolean-expression evaluation over
+     * already-fetched id sets.
      *
      * @param  string[]  $ignoredTerms
      * @return array<int, int>

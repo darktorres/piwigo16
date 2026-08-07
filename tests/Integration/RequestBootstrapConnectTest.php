@@ -26,17 +26,14 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 
 /**
- * Piwigo\Bootstrap\RequestBootstrap::connect() -- Phase 2 of the HTTP boot
- * sequence. Never called directly by any existing Unit/Integration test
- * before this file (only reachable, until now, through the Browser suite's
- * real HTTP requests via bootEntryPoint() -> connect()); safe to call
- * standalone here, same "call the phase directly with hand-built
- * preconditions" contract RequestBootstrapConfigureTest/
- * RequestBootstrapFinalizeTest already establish for configure()/
- * finalize() -- connect() does no template-rendering/language-loading work
- * of its own (finalize()'s job), so every precondition it needs (a booted
- * Kernel, real DB credentials, the config table's own current state) can
- * be set up by hand.
+ * Piwigo\Bootstrap\RequestBootstrap::connect() runs between configure()
+ * and finalize() in the HTTP boot sequence. It does no template-rendering
+ * or language-loading work of its own (that's finalize()'s job), so every
+ * precondition it needs (a booted Kernel, real DB credentials, the config
+ * table's own current state) is set up by hand in this test, the same
+ * "call the phase directly with hand-built preconditions" contract
+ * RequestBootstrapConfigureTest/RequestBootstrapFinalizeTest use for
+ * configure()/finalize().
  *
  * Covers real branches the Browser suite's fixture state never naturally
  * exercises:
@@ -85,14 +82,14 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        // pgsql support pass: PIWIGO_DB_DRIVER/PIWIGO_DB_PORT added for
-        // completeness -- see InstallWizardTest/InstallServiceTest's own
-        // docblocks for the real live-confirmed bug this exact list
-        // missing these two keys caused elsewhere (a permanently leaked
-        // env var corrupting every later Integration test class in the
-        // same process). This class's own seed() call below doesn't
-        // currently touch either key, but capturing them here too closes
-        // the same class of gap before a future edit could reintroduce it.
+        // PIWIGO_DB_DRIVER/PIWIGO_DB_PORT are included for completeness --
+        // see InstallWizardTest/InstallServiceTest's own docblocks for the
+        // live-confirmed bug a missing key in this list causes elsewhere (a
+        // permanently leaked env var corrupting every later Integration
+        // test class in the same process). This class's own seed() call
+        // below doesn't currently touch either key, but capturing them here
+        // too closes the same class of gap before a future edit could
+        // reintroduce it.
         foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'] as $key) {
             $value = getenv($key);
             $this->originalDbEnv[$key] = $value === false ? '' : $value;
@@ -198,12 +195,10 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
         $this->configService->confUpdateParam('lounge_max_duration', 60);
 
         // Anchored on Env::now() rather than the DB server's own real
-        // NOW(), matching the real bug fixed in
-        // LoungeMaintenance::needsEmptying()/ImageRepository::
-        // findOldestLoungeAgeInfo() itself (2026-08-01): the two clock
-        // sources agreed only as long as real wall-clock time stayed close
-        // to a frozen PIWIGO_TEST_NOW, and drifted apart the moment it
-        // didn't.
+        // NOW() -- LoungeMaintenance::needsEmptying()/ImageRepository::
+        // findOldestLoungeAgeInfo() compute lounge-photo age against
+        // Env::now(), so this test's own frozen PIWIGO_TEST_NOW must stay
+        // close to real wall-clock time for the two clock sources to agree.
         $dateAvailable = $this->conn->fetchOne('SELECT date_available FROM ' . Tables::images() . ' WHERE id = 1');
         self::assertIsString($dateAvailable);
         $this->conn->executeStatement('DELETE FROM ' . Tables::lounge());

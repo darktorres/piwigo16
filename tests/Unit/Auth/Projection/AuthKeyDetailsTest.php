@@ -24,9 +24,9 @@ function fullAuthKeyDetailsRow(): array
         'last_used_on' => '2026-07-20 12:00:00',
         'last_notified_on' => '2026-07-22 09:00:00',
         'apikey_secret' => 'fixture-secret',
-        // A real row's `status` is a UserStatus instance (Phase 5 Item 21:
-        // DQL array hydration of an enumType-mapped field), not a raw
-        // string -- matches what fromRow()'s real caller actually passes.
+        // A real row's `status` is a UserStatus instance (DQL array
+        // hydration of an enumType-mapped field), not a raw string --
+        // matches what fromRow()'s real caller actually passes.
         'status' => UserStatus::Normal,
         'username' => 'fixture_admin',
         'email' => 'fixture_admin@example.test',

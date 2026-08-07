@@ -9,30 +9,22 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Users\CurrentUser;
 
 /**
- * The cheap half of what used to be a single `AccessControl`: status/
- * ACCESS_* introspection reading only `CurrentUser`/`CurrentConfig`, never
- * `HtmlRenderingInterface`/`RedirectServiceInterface`.
+ * Status/ACCESS_* introspection reading only `CurrentUser`/`CurrentConfig`,
+ * never `HtmlRenderingInterface`/`RedirectServiceInterface` -- this makes
+ * it safe to construct eagerly, unlike {@see AccessControl}.
  *
- * Singleton/service-locator elimination campaign, Phase 12 sub-phase 12A:
- * extracted from `AccessControl` specifically to break an artificial
- * circular dependency -- `AccessControl`'s own `HtmlRenderingInterface`/
- * `RedirectServiceInterface` collaborators route back through
- * `RedirectService -> UserService -> MailerInterface -> MailService ->
- * UrlServiceInterface -> UrlService -> HtmlRenderingInterface ->
- * HtmlService`, so `HtmlService`/`MailService`/`UrlService`/`Template`/
- * `UserService`/`CategoryService`/`PermissionService` could never take the
- * full `AccessControl` via real constructor injection. Every one of those
- * 7 classes' own real usage, read directly, only ever called `isAdmin()`/
- * `isAGuest()`/`isClassicUser()`/`isWebmaster()` -- never `checkStatus()`/
- * `accessDenied()`/`canManageComment()`, the only `AccessControl` methods
- * that actually need the two interfaces -- confirming the cycle was
- * accidental, not load-bearing. This class has none of that: it's exactly
- * as safe to construct eagerly as `CurrentUser`/`CurrentConfig`
- * themselves.
+ * `AccessControl`'s own `HtmlRenderingInterface`/`RedirectServiceInterface`
+ * collaborators route back through `RedirectService -> UserService ->
+ * MailerInterface -> MailService -> UrlServiceInterface -> UrlService ->
+ * HtmlRenderingInterface -> HtmlService`, so `HtmlService`/`MailService`/
+ * `UrlService`/`Template`/`UserService`/`CategoryService`/
+ * `PermissionService` depend on this class instead of the full
+ * `AccessControl`, since they only need `isAdmin()`/`isAGuest()`/
+ * `isClassicUser()`/`isWebmaster()`, never `checkStatus()`/
+ * `accessDenied()`/`canManageComment()`.
  *
- * `AccessControl` composes this class internally for its own identically-
- * named methods (unchanged public API, unchanged behavior) rather than
- * duplicating the logic.
+ * `AccessControl` composes this class internally for its own
+ * identically-named methods rather than duplicating the logic.
  */
 final class AccessLevelChecker
 {

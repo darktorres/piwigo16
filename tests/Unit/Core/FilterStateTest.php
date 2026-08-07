@@ -12,9 +12,9 @@ use Piwigo\Core\FilterState;
  * RequestBootstrap::finalize() always calls set() (directly or via its
  * disabled-filter fallback) before anything else can read this class.
  *
- * Container-shared instance (singleton/service-locator elimination
- * campaign, Phase 2) -- each test constructs its own fresh instance
- * directly; no reset()/Kernel::boot() needed.
+ * FilterState is a container-shared instance in production; each test
+ * here constructs its own fresh instance directly, so no reset()/
+ * Kernel::boot() is needed.
  */
 test('every getter throws before set() has ever been called', function (): void {
     $filterState = new FilterState();

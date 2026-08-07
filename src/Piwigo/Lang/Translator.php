@@ -19,25 +19,20 @@ use Piwigo\Config\CurrentConfig;
  *
  * `Gettext\Generator\ArrayGenerator` -- the class gettext/translator's own
  * `Translator::createFromTranslations()` expects to bridge a `Translations`
- * object into its internal dictionary array -- was removed from
- * gettext/gettext by v5.7 (confirmed absent from the installed v5.7.3:
- * only Generator/GeneratorInterface/MoGenerator/PoGenerator remain under
- * `Generator/`), even though gettext/translator v1.2.3's own composer.json
- * still declares `"gettext/gettext": "^5.0.0"` as compatible. `load()`
- * below builds gettext/translator's expected `['domain', 'plural-forms',
- * 'messages']` array shape directly instead of going through the missing
- * class -- same dictionary shape, one fewer (broken) indirection.
+ * object into its internal dictionary array -- is absent from the
+ * installed gettext/gettext v5.7.3 (only Generator/GeneratorInterface/
+ * MoGenerator/PoGenerator remain under `Generator/`), even though
+ * gettext/translator v1.2.3's own composer.json still declares
+ * `"gettext/gettext": "^5.0.0"` as compatible. `load()` below builds
+ * gettext/translator's expected `['domain', 'plural-forms', 'messages']`
+ * array shape directly instead of going through the missing class --
+ * same dictionary shape, one fewer (broken) indirection.
  *
  * Multiple load() calls accumulate translations (common + admin + upgrade
  * etc). $mirror is a flat string map kept in sync (via mirror()) as
- * translate()'s own fallback for keys gettext has no entry for -- "nothing
- * is frozen" gap-closure (2026-07-22): this used to be $GLOBALS['lang'],
- * justified as "for plugin/theme code that reads it directly," but nothing
- * in-tree (nor any *code*, as opposed to a docblock claim) ever read that
- * global independently of this class and Piwigo\Core\Lang -- external
- * plugin/theme compatibility is never a valid reason to keep an in-tree
- * global either way. Converted to a real private property; Piwigo\Core\
- * Lang now pulls from mirroredStrings() instead of reading the global.
+ * translate()'s own fallback for keys gettext has no entry for. It is a
+ * real private property; `Piwigo\Core\Lang` pulls from mirroredStrings()
+ * rather than reading a global.
  */
 final class Translator
 {
@@ -218,14 +213,9 @@ final class Translator
             $val = $this->mirror[$key];
         }
 
-        // Legacy Coupling Retirement Phase 4d: moved here (from the
-        // deleted l10n() free function) rather than staying in Lang::t() --
-        // testing $val === $key after both real resolution paths above
-        // (gettext() then $GLOBALS['lang']) are exhausted is strictly more
-        // accurate than l10n()'s own former shallow `! isset($lang[$key])`
-        // check (which only ever looked at the fallback array), and this
-        // way every Lang::t() caller gets the diagnostic too, not just
-        // former l10n() callers.
+        // Testing $val === $key only after both real resolution paths
+        // above (gettext() then the $mirror fallback) are exhausted keeps
+        // this diagnostic accurate for every Lang::t() caller.
         if ($this->currentConfig->debugL10n() && $val === $key && $key !== '') {
             trigger_error('[l10n] language key "' . $key . '" not defined', E_USER_WARNING);
         }
@@ -360,9 +350,8 @@ final class Translator
             // docblock for how this was confirmed. gettext/gettext's own
             // Translation::$pluralTranslations has no property/return type
             // (bare `array`), so $pluralForms[0] is genuinely unverified
-            // mixed to PHPStan -- a real gap $mirror's own now-real typed
-            // property surfaces (previously hidden: $GLOBALS['lang'] was
-            // mixed to PHPStan regardless).
+            // mixed to PHPStan -- a real gap $mirror's own typed property
+            // now surfaces.
             $pluralOriginal = $entry->getPlural();
             $pluralForms = $entry->getPluralTranslations();
             $pluralForm0 = $pluralForms[0] ?? null;

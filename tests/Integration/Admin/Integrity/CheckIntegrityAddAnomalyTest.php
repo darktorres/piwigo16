@@ -20,22 +20,15 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Lang\Translator;
 
 // add_anomaly()/get_htlm_links_more_info() are CheckIntegrity's own pure
-// data-structure logic -- no event/template dependency at all -- but since
-// the derivative_settings/derivative_size-adjacent migration gave
-// CheckIntegrity a real constructor dependency (IntegrityIgnoredAnomalyRepository,
-// replacing the former c13y_ignore piwigo_config blob), constructing one at
-// all now needs a real EntityManager/DB connection, even though neither
-// method under test here ever touches it. Relocated from
-// tests/Unit/Admin/Integrity/CheckIntegrityTest.php for exactly that reason
-// -- check()/display() (tests/Integration/CheckIntegrityTest.php) already
-// established the DB-backed Integration precedent for this class.
+// data-structure logic -- no event/template dependency at all -- but
+// CheckIntegrity's constructor takes a real IntegrityIgnoredAnomalyRepository
+// dependency, so constructing one at all needs a real EntityManager/DB
+// connection, even though neither method under test here ever touches it.
 
 // This file never boots Kernel (no DB-backed collaborator under test
 // actually needs it), so resolving the real container-shared Lang
-// instance (no memoized pre-boot fallback, Phase 8) isn't an option --
-// a throwaway instance is built directly instead, matching the same
-// "real, cheap, DB-free collaborators" recipe used throughout the
-// campaign's own test fallout fixes.
+// instance isn't an option (there is no memoized pre-boot fallback) --
+// a throwaway instance is built directly instead.
 function checkIntegrityAddAnomalyTestLang(): Lang
 {
     return new Lang(new Translator(new CurrentConfig()), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());

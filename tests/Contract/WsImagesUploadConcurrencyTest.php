@@ -31,6 +31,9 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
     /** @var list<int> image ids created by a test, deleted in tearDown. */
     private array $createdImageIds = [];
 
+    /** @var array<1|2, resource>|null */
+    private ?array $lockHolderPipes = null;
+
     #[Override]
     protected function setUp(): void
     {
@@ -151,8 +154,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
         $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
         $proc = proc_open($cmd, $descriptors, $pipes, null, $env);
         self::assertIsResource($proc, 'proc_open failed for the background lock-holder process');
-        fclose($pipes[1]);
-        fclose($pipes[2]);
+        $this->lockHolderPipes = $pipes;
 
         return $proc;
     }
@@ -199,8 +201,10 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
             self::assertGreaterThan(0.15, $elapsed, 'must have genuinely blocked waiting for the other connection\'s lock, not returned instantly');
             self::assertLessThan(10.0, $elapsed, 'must unblock promptly once the other connection releases, not wait anywhere near the full 30s timeout');
         } finally {
+            $stdout = $this->lockHolderPipes !== null ? stream_get_contents($this->lockHolderPipes[1]) : '';
+            $stderr = $this->lockHolderPipes !== null ? stream_get_contents($this->lockHolderPipes[2]) : '';
             $exit = proc_close($proc);
-            self::assertSame(0, $exit, 'background lock-holder process failed');
+            self::assertSame(0, $exit, "background lock-holder process failed. stdout=[{$stdout}] stderr=[{$stderr}]");
             $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE md5sum = ?', [$md5sum]);
         }
     }

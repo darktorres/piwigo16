@@ -35,9 +35,10 @@ use Piwigo\Db\Type\IpAddressType;
 use Piwigo\Db\Type\LangCodeType;
 use Piwigo\Db\Type\Md5SumType;
 use Piwigo\Db\Type\PermalinkType;
+use Piwigo\Db\Type\PluginIdType;
 use Piwigo\Db\Type\SqlDateTimeType;
 use Piwigo\Db\Type\SqlDateType;
-use Piwigo\Db\Type\PluginIdType;
+use Piwigo\Db\Type\SqlTimeType;
 use Piwigo\Db\Type\TagIdType;
 use Piwigo\Db\Type\ThemeIdType;
 use Piwigo\Db\Type\UserIdType;
@@ -101,6 +102,7 @@ final class EntityManagerFactory
             'username' => UsernameType::class,
             'sql_date' => SqlDateType::class,
             'sql_datetime' => SqlDateTimeType::class,
+            'sql_time' => SqlTimeType::class,
         ] as $name => $class) {
             if (! Type::hasType($name)) {
                 Type::addType($name, $class);

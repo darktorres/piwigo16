@@ -94,7 +94,7 @@ cleanly onto the original scope.
 | P21 | Admin controller migration | Done | 4 |
 | P22 | Frontend controller migration | Done | 7 |
 | P23 | Legacy deletion & cleanup | Done, 2 gaps found in later audit (see below) | 123 |
-| P24 | Post-P23 remediation & hardening (globals/DBAL/event/l10n coupling retirement, coverage + mutation-testing hardening, SQL bound-parameter sweep, singleton/DI elimination) | In progress — remediation sub-tracks done, 2 gaps found (see below); singleton/DI campaign ongoing (Phase 0–4 done, Phase 5 partial) | 405 `(p24)` + 16 `(sql)` + 25 `(di)`/`(lang)` |
+| P24 | Post-P23 remediation & hardening (globals/DBAL/event/l10n coupling retirement, coverage + mutation-testing hardening, SQL bound-parameter sweep, singleton/DI elimination) | In progress — remediation sub-tracks done, 2 gaps found (see below); singleton/DI campaign **complete** (Phases 0–12F, zero shims remain) | 405 `(p24)` + 16 `(sql)` + 74 `(di)`/`(lang)` |
 | P25 | REST resource layer + OpenAPI (WS API removed) | Not started | 0 |
 | P26 | Type correctness + mixed elimination | Real progress (Request DTO migration, Phase 4) | 89 |
 | P27 | Security hardening | Not started | 0 |
@@ -600,8 +600,9 @@ consolidation, not copied from the gap-closure doc's own claims:
 
 ### Epoch F — Post-P23 Remediation & Hardening (P24)
 
-**In progress, not done** — see the singleton/DI campaign subsection
-below. Formalizes the informal `(p24)` commit-tag convention (405 commits
+**In progress, not done** — the singleton/DI campaign subsection below
+is now complete; the other P24 sub-tracks (DBAL → ORM migration Part B
+below) are not. Formalizes the informal `(p24)` commit-tag convention (405 commits
 as of 2026-08-03, up from 271 when this doc's status table was last
 written) as this doc's own real P24, rather than leaving it an unnumbered
 status-table row diverging from the commit tags. Not the original plan's
@@ -831,35 +832,34 @@ a plugin-hook injection in `TagRepository::findIdByWhereFragment()`
 (SEC-19-tagged). `CategoryRepository::countByVisible()`'s own splice was
 found and fixed in a re-audit the same day, after the main sweep.
 
-**Singleton/DI elimination campaign** (2026-08-02 onward, `feat(di)`/
-`feat(lang)`, 25 commits so far — **in progress, not done**). A 10-phase
-campaign converting every static-singleton/service-locator anti-pattern
-(~55 classes across three shapes, plus the entire `Piwigo\Ws\*`
-static-dispatch layer as its own Phase 10) to constructor-injected DI. Real
-motivation beyond style: SEC-60 ("Worker-mode request isolation") needs no
-process-persistent static state, and FrankenPHP worker mode (`ADR-0013`) is
-a committed-to future direction incompatible with it as-is. Mechanism: a
-transitional `@deprecated`-tagged static shim for callers not yet converted
-per class, tracked via a shrinking arch-test allow-list, with a hard
-"zero shims remain" gate at Phase 10's end — not ad-hoc
-`Kernel::container()->get()` calls. **Status as of 2026-08-03**: Phase 0
-(foundation + `CurrentPersistentCache` pilot), Phase 1
-(`ProcessCache`/`InstallationFlag`/`ApiKeyRequestFlag`, plus several more
-converted in the same window — `LoadedPlugins`, `FilterState`,
-`CurrentLogger`, `SectionContextRegistry` — exact phase boundary among
-those not re-verified here), Phase 2 (`StorageRegistry`/`ErrorCollector`/
-`FilesystemIntegrityChecker`), Phase 3 (`CurrentPaths`/`DbCredentials`/
-`CoreTabs`/the pre-boot marker trio/`InputValidator`/`FilesystemHelper`'s
-collaborator/`ServerTiming`, the last found as a real gap in an earlier
-pass and closed later), and Phase 4 (`SessionService`/`Translator`/
-`EventDispatcher`/`DeploymentPolicy`/`ImageStdParams`/`PageState`) are all
-complete. Phase 5 (`CurrentUser`/`CurrentTemplate`/`CurrentConfigService`,
-75–180 sites each) **partially done** — `CurrentUser` and `CurrentTemplate`
-converted, `CurrentConfigService` next. Phases 6–10 not started (Phase 10 =
-the `Piwigo\Ws\*` static-dispatch layer, ~13k lines, deliberately last).
-Full per-class detail (shim design, real bugs found along the way,
-test-suite fallout per class) lives in the campaign's own plan file, not
-reproduced here.
+**Singleton/DI elimination campaign** (2026-08-02–2026-08-06, `feat(di)`/
+`feat(lang)`, 74 commits — **complete**). A 10-phase campaign (grew a
+close-out Phase 12 with 6 further lettered sub-phases, 12A–12F, once
+Phase 11 finished and a handful of permanent-exception shims turned out
+to be closeable after all) converting every static-singleton/
+service-locator anti-pattern (~55 classes across three shapes, plus the
+entire `Piwigo\Ws\*` static-dispatch layer as its own Phase 10) to
+constructor-injected DI. Real motivation beyond style: SEC-60 ("Worker-mode
+request isolation") needs no process-persistent static state, and
+FrankenPHP worker mode (`ADR-0013`) is a committed-to future direction
+incompatible with it as-is. Mechanism: a transitional `@deprecated`-tagged
+static shim for callers not yet converted per class, tracked via a
+shrinking arch-test allow-list, with a hard "zero shims remain" gate --
+met for real: `grep -rn "@deprecated" src/Piwigo` returns nothing (the
+4 remaining hits of the bare substring are all past-tense prose describing
+already-closed shims, not live tags; confirmed via a stricter
+`^\s*\*\s*@deprecated\b` pattern, zero hits). Phases 0–11 converted every
+class with real production callers; Phase 12's own sub-phases (12A
+interface segregation, 12B accessor-exists sweep, 12C leftover-bug sweep,
+12D genuinely-static NOCTOR sweep, 12E `CsrfService.php`'s 148-site churn,
+12F's 12 lettered sub-phases 12F-1 through 12F-12) closed the last dozen
+shims that had zero production callers left but still carried real test
+debt -- from 4 test sites (`CurrentLogger::getStatic()`) up to 1,382
+(`CurrentConfig::current()`, the campaign's final shim, closed in 12F-12).
+`Kernel` itself carries no such tag and was never a shim to begin with --
+the one principled DI root every system needs. Full per-class detail
+(shim design, real bugs found along the way, test-suite fallout per
+class) lives in the campaign's own plan files, not reproduced here.
 
 ### Epoch G — REST/OpenAPI + Types (P25–P26)
 

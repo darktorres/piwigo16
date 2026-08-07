@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Auth\Projection\ApiKey;
 use Piwigo\Auth\UserAuthKeyEntity;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
 test('fromRow narrows a full real row', function (): void {
@@ -79,9 +80,9 @@ test('fromEntity copies every field from a real UserAuthKeyEntity', function ():
         authKey: 'ck98765',
         apikeySecret: 'ent-secret',
         userId: UserId::from(7),
-        createdOn: '2026-06-01 00:00:00',
+        createdOn: SqlDateTime::from('2026-06-01 00:00:00'),
         duration: 60,
-        expiredOn: '2026-08-01 00:00:00',
+        expiredOn: SqlDateTime::from('2026-08-01 00:00:00'),
         apikeyName: 'Entity Key',
         keyType: 'session',
         revokedOn: '2026-07-10 00:00:00',
@@ -106,9 +107,9 @@ test('fromEntity defaults authKeyId to 0 when the entity has none yet', function
         authKey: 'ck00000',
         apikeySecret: null,
         userId: UserId::from(1),
-        createdOn: '2026-06-01 00:00:00',
+        createdOn: SqlDateTime::from('2026-06-01 00:00:00'),
         duration: null,
-        expiredOn: '2026-08-01 00:00:00',
+        expiredOn: SqlDateTime::from('2026-08-01 00:00:00'),
         apikeyName: null,
         keyType: null,
     );

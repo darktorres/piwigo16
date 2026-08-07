@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Auth\Projection;
 
 use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Users\UserStatus;
@@ -27,7 +28,8 @@ use Piwigo\Users\UserStatus;
  * array-hydrates as a UserId instance, not a scalar, so `fromRow()`'s own
  * `userId` narrowing checks `instanceof UserId` rather than `is_scalar()`
  * (which would always be false and silently break every real login
- * through this security-sensitive path).
+ * through this security-sensitive path). `UserAuthKeyEntity::$expiredOn`
+ * is `SqlDateTime`-typed too (Phase 5) -- `expiredOn` narrows the same way.
  */
 final readonly class AuthKeyDetails
 {
@@ -59,7 +61,9 @@ final readonly class AuthKeyDetails
             authKeyId: is_scalar($row['auth_key_id'] ?? null) ? (string) $row['auth_key_id'] : '',
             userId: ($row['user_id'] ?? null) instanceof UserId ? (string) $row['user_id']->value : '',
             authKey: is_scalar($row['auth_key'] ?? null) ? (string) $row['auth_key'] : '',
-            expiredOn: is_scalar($row['expired_on'] ?? null) ? (string) $row['expired_on'] : '',
+            expiredOn: ($row['expired_on'] ?? null) instanceof SqlDateTime
+                ? $row['expired_on']->value
+                : (is_scalar($row['expired_on'] ?? null) ? (string) $row['expired_on'] : ''),
             revokedOn: is_scalar($row['revoked_on'] ?? null) ? (string) $row['revoked_on'] : null,
             lastUsedOn: is_scalar($row['last_used_on'] ?? null) ? (string) $row['last_used_on'] : null,
             lastNotifiedOn: is_scalar($row['last_notified_on'] ?? null) ? (string) $row['last_notified_on'] : null,

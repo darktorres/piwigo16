@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
@@ -18,9 +19,12 @@ use Piwigo\Common\ValueObject\UserId;
  * query this entity directly via DQL through their own EntityManager,
  * matching Group\UserGroupEntity/GroupAccessEntity's own no-owner
  * precedent. `created_on`/`expired_on` are genuine NOT NULL columns
- * (unlike every other datetime-shaped column here); every other datetime
- * column stays plain ?string, not \DateTimeImmutable, matching
- * Auth\Projection\ApiKey's own already-documented decision.
+ * (unlike every other datetime-shaped column here) and are `SqlDateTime`-
+ * typed (Phase 5) -- both real construction sites (AuthRepository::
+ * insertAuthKey()/ApiKeyRepository::insert()) trace to an
+ * Env::now()-derived value. Every other datetime column stays plain
+ * ?string, not \DateTimeImmutable, matching Auth\Projection\ApiKey's own
+ * already-documented decision.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'user_auth_keys')]
@@ -38,12 +42,12 @@ final class UserAuthKeyEntity
         public ?string $apikeySecret,
         #[ORM\Column(name: 'user_id', type: 'user_id')]
         public UserId $userId,
-        #[ORM\Column(name: 'created_on', type: 'string', length: 19)]
-        public string $createdOn,
+        #[ORM\Column(name: 'created_on', type: 'sql_datetime', length: 19)]
+        public SqlDateTime $createdOn,
         #[ORM\Column(type: 'integer', nullable: true)]
         public ?int $duration,
-        #[ORM\Column(name: 'expired_on', type: 'string', length: 19)]
-        public string $expiredOn,
+        #[ORM\Column(name: 'expired_on', type: 'sql_datetime', length: 19)]
+        public SqlDateTime $expiredOn,
         #[ORM\Column(name: 'apikey_name', type: 'string', length: 100, nullable: true)]
         public ?string $apikeyName,
         #[ORM\Column(name: 'key_type', type: 'string', length: 40, nullable: true)]

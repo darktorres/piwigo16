@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Auth\Projection\AuthKeyDetails;
 use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Users\UserStatus;
@@ -21,7 +22,11 @@ function fullAuthKeyDetailsRow(): array
         // as `status` below.
         'user_id' => UserId::from(1),
         'auth_key' => str_repeat('a', 30),
-        'expired_on' => '2026-08-01 00:00:00',
+        // A real row's `expired_on` is a SqlDateTime instance
+        // (UserAuthKeyEntity::$expiredOn is SqlDateTime-typed, DQL array
+        // hydration applies the custom Type), not a raw string -- same
+        // reasoning as `user_id`/`status` above.
+        'expired_on' => SqlDateTime::from('2026-08-01 00:00:00'),
         // Real, non-null values (a genuine revoked/notified/apikey row
         // shape) -- all null would leave every `?? null` coalesce on
         // these 3 columns unable to tell a real value apart from one
@@ -91,6 +96,13 @@ test('fromRow casts a non-string scalar (e.g. a real DBAL int/float) to string f
         ->and($key->lastUsedOn)->toBe('3.5')
         ->and($key->lastNotifiedOn)->toBe('42')
         ->and($key->apikeySecret)->toBe('7');
+});
+
+test('fromRow casts a raw expired_on string when hydration did not apply the custom Type', function (): void {
+    $row = fullAuthKeyDetailsRow();
+    $row['expired_on'] = '2026-09-01 00:00:00';
+
+    expect(AuthKeyDetails::fromRow($row)->expiredOn)->toBe('2026-09-01 00:00:00');
 });
 
 test('fromRow defaults every NOT NULL column to an empty string when absent', function (): void {

@@ -7,6 +7,7 @@ namespace Piwigo\Auth;
 use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\Projection\ApiKey;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
@@ -39,9 +40,9 @@ final readonly class ApiKeyRepository
             authKey: $key['auth_key'],
             apikeySecret: $key['apikey_secret'],
             userId: UserId::from($key['user_id']),
-            createdOn: $key['created_on'],
+            createdOn: SqlDateTime::from($key['created_on']),
             duration: $key['duration'],
-            expiredOn: $key['expired_on'],
+            expiredOn: SqlDateTime::from($key['expired_on']),
             apikeyName: $key['apikey_name'],
             keyType: $key['key_type'],
         );

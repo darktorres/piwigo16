@@ -6,6 +6,7 @@ namespace Piwigo\Auth\Projection;
 
 use InvalidArgumentException;
 use Piwigo\Auth\UserAuthKeyEntity;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
@@ -19,7 +20,11 @@ use Piwigo\Common\ValueObject\UserId;
  * `createdOn`/`expiredOn` stay non-nullable `string` -- both are genuine
  * `NOT NULL` columns (unlike most other domains' own now-nullable
  * timestamp columns), so `fromRow()`'s own fallback default is a
- * defensive floor, not an expected real value.
+ * defensive floor, not an expected real value. `UserAuthKeyEntity`'s own
+ * `$createdOn`/`$expiredOn` are `SqlDateTime`-typed (Phase 5) --
+ * `fromEntity()` unwraps `->value`, `fromRow()` accepts either a real
+ * `SqlDateTime` instance (a `getArrayResult()`-hydrated row) or a raw
+ * string.
  *
  * `userId` is `UserId`, not `?UserId` -- `user_auth_keys.user_id` is
  * `NOT NULL` with a real `fk_user_auth_keys_user_id` FOREIGN KEY onto
@@ -52,9 +57,9 @@ final readonly class ApiKey
             apikeySecret: $entity->apikeySecret,
             apikeyName: $entity->apikeyName,
             userId: $entity->userId,
-            createdOn: $entity->createdOn,
+            createdOn: $entity->createdOn->value,
             duration: $entity->duration,
-            expiredOn: $entity->expiredOn,
+            expiredOn: $entity->expiredOn->value,
             keyType: $entity->keyType,
             revokedOn: $entity->revokedOn,
             lastUsedOn: $entity->lastUsedOn,
@@ -79,9 +84,13 @@ final readonly class ApiKey
             apikeySecret: is_string($row['apikey_secret'] ?? null) ? $row['apikey_secret'] : null,
             apikeyName: is_string($row['apikey_name'] ?? null) ? $row['apikey_name'] : null,
             userId: $userId,
-            createdOn: is_string($row['created_on'] ?? null) ? $row['created_on'] : '',
+            createdOn: ($row['created_on'] ?? null) instanceof SqlDateTime
+                ? $row['created_on']->value
+                : (is_string($row['created_on'] ?? null) ? $row['created_on'] : ''),
             duration: is_numeric($row['duration'] ?? null) ? (int) $row['duration'] : null,
-            expiredOn: is_string($row['expired_on'] ?? null) ? $row['expired_on'] : '',
+            expiredOn: ($row['expired_on'] ?? null) instanceof SqlDateTime
+                ? $row['expired_on']->value
+                : (is_string($row['expired_on'] ?? null) ? $row['expired_on'] : ''),
             keyType: is_string($row['key_type'] ?? null) ? $row['key_type'] : null,
             revokedOn: is_string($row['revoked_on'] ?? null) ? $row['revoked_on'] : null,
             lastUsedOn: is_string($row['last_used_on'] ?? null) ? $row['last_used_on'] : null,

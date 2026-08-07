@@ -12,6 +12,7 @@ use Piwigo\Auth\Projection\AuthKeyDetails;
 use Piwigo\Auth\Projection\AuthUser;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Users\UserEntity;
@@ -219,9 +220,9 @@ final readonly class AuthRepository
             authKey: $key['auth_key'],
             apikeySecret: null,
             userId: UserId::from($key['user_id']),
-            createdOn: $key['created_on'],
+            createdOn: SqlDateTime::from($key['created_on']),
             duration: $key['duration'],
-            expiredOn: $key['expired_on'],
+            expiredOn: SqlDateTime::from($key['expired_on']),
             apikeyName: null,
             keyType: $key['key_type'],
         );

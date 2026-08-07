@@ -7,6 +7,8 @@ namespace Piwigo\Permalink;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Category\CategoryEntity;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Core\Env;
 use Piwigo\Permalink\Projection\OldPermalink;
 
@@ -51,17 +53,30 @@ final readonly class PermalinkRepository
      * null -- an INNER JOIN against `categories` (not just reading
      * `OldPermalinkEntity::$catId` directly) matters: a stale
      * `old_permalinks` row referencing an already-deleted category must
-     * still resolve to null here.
+     * still resolve to null here, same real-existence-check behavior the
+     * original's own join preserved.
+     *
+     * `op.permalink` is VO-typed ({@see \Piwigo\Db\Type\PermalinkType}),
+     * whose `convertToDatabaseValue()` is strict (VO-only, throws on a
+     * raw scalar) -- `tryFrom()`, not `from()`, since this method already
+     * models "no match" as a valid, graceful outcome (`?int`), and a
+     * caller-supplied string that can't even be a well-formed permalink
+     * can never match a real row either way.
      */
     public function findOldCategoryId(string $permalink): ?int
     {
+        $permalinkVo = Permalink::tryFrom($permalink);
+        if ($permalinkVo === null) {
+            return null;
+        }
+
         $ids = $this->em->createQueryBuilder()
             ->select('c.id')
             ->from(OldPermalinkEntity::class, 'op')
             ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'op.catId = c.id')
             ->where('op.permalink = :permalink')
             ->setMaxResults(1)
-            ->setParameter('permalink', $permalink)
+            ->setParameter('permalink', $permalinkVo)
             ->getQuery()
             ->getSingleColumnResult();
 
@@ -104,7 +119,15 @@ final readonly class PermalinkRepository
      * Marks an existing old-permalink row (cat_id, permalink) as deleted
      * now. The timestamp is PHP-computed via {@see Env::now()} (stays
      * PIWIGO_TEST_NOW-aware for deterministic tests) rather than a raw
-     * SQL NOW().
+     * SQL NOW() -- same pattern used throughout this campaign.
+     *
+     * `$permalink` wraps via `Permalink::from()`, not `tryFrom()` --
+     * unlike findOldCategoryId(), this method's only real caller
+     * ({@see \Piwigo\Permalink\PermalinkService::deleteCatPermalink()})
+     * always reaches it with a value it just read back out of
+     * `categories.permalink` itself (findPermalinkByCategoryId()), so
+     * it's guaranteed already-valid, same reasoning as
+     * {@see \Piwigo\Category\CategoryRepository::touchOldPermalinkHit()}.
      */
     public function markOldPermalinkDeleted(int $catId, string $permalink): void
     {
@@ -114,8 +137,8 @@ final readonly class PermalinkRepository
             ->where('op.catId = :catId')
             ->andWhere('op.permalink = :permalink')
             ->setParameter('deleted', Env::now()->format('Y-m-d H:i:s'))
-            ->setParameter('catId', $catId)
-            ->setParameter('permalink', $permalink)
+            ->setParameter('catId', CategoryId::from($catId))
+            ->setParameter('permalink', Permalink::from($permalink))
             ->getQuery()
             ->execute();
         $this->em->clear();
@@ -126,12 +149,21 @@ final readonly class PermalinkRepository
      * category never actually used this permalink live -- it's being
      * recorded purely so the name can't be reused without going through
      * the permalink-history deletion flow first).
+     *
+     * `$permalink` wraps via `Permalink::from()` -- same "already read
+     * back from categories.permalink" guaranteed-valid context as
+     * markOldPermalinkDeleted()'s own (this method's only real caller is
+     * the sibling branch of the same
+     * {@see \Piwigo\Permalink\PermalinkService::deleteCatPermalink()}
+     * call site) -- and constructing OldPermalinkEntity directly
+     * requires the VOs regardless, since its properties are typed
+     * `Permalink`/`CategoryId`, not `string`/`int`.
      */
     public function insertOldPermalinkDeleted(int $catId, string $permalink): void
     {
         $this->em->persist(new OldPermalinkEntity(
-            permalink: $permalink,
-            catId: $catId,
+            permalink: Permalink::from($permalink),
+            catId: CategoryId::from($catId),
             dateDeleted: Env::now()->format('Y-m-d H:i:s'),
             lastHit: null,
             hit: 0,
@@ -139,14 +171,21 @@ final readonly class PermalinkRepository
         $this->em->flush();
     }
 
+    /**
+     * `$permalink` wraps via `Permalink::from()` -- this method's only
+     * real caller ({@see \Piwigo\Permalink\PermalinkService::
+     * setCatPermalink()}) reaches it only after its own manual charset/
+     * numeric validation (mirrored by Permalink's own constraints) has
+     * already passed for this exact value.
+     */
     public function deleteOldPermalink(int $catId, string $permalink): void
     {
         $this->em->createQueryBuilder()
             ->delete(OldPermalinkEntity::class, 'op')
             ->where('op.catId = :catId')
             ->andWhere('op.permalink = :permalink')
-            ->setParameter('catId', $catId)
-            ->setParameter('permalink', $permalink)
+            ->setParameter('catId', CategoryId::from($catId))
+            ->setParameter('permalink', Permalink::from($permalink))
             ->getQuery()
             ->execute();
         $this->em->clear();
@@ -158,14 +197,30 @@ final readonly class PermalinkRepository
      * only has the permalink string from the link it renders). No LIMIT
      * needed: `permalink` is old_permalinks' own primary key (see
      * install/piwigo_structure-mysql.sql), so at most one row can ever
-     * match. Returns whether a row was actually deleted.
+     * match. Returns whether a row was actually deleted, mirroring the
+     * legacy \Piwigo\Db\MysqliDb::changes() == 0 check this replaces.
+     *
+     * `tryFrom()`, not `from()` -- unlike the other 4 methods in this
+     * class, this one's only real caller
+     * ({@see \Piwigo\Controller\Admin\PermalinksSubController}) reaches it
+     * with a raw admin-submitted POST field value
+     * ({@see \Piwigo\Controller\Admin\Request\PermalinksRequest::
+     * $deletePermanent}), not a value already read back from a real row --
+     * a malformed value can never match a real permalink anyway, so it's
+     * treated the same as any other no-match, matching this method's own
+     * existing `bool` not-found contract instead of throwing.
      */
     public function deleteOldPermalinkByValue(string $permalink): bool
     {
+        $permalinkVo = Permalink::tryFrom($permalink);
+        if ($permalinkVo === null) {
+            return false;
+        }
+
         $affected = $this->em->createQueryBuilder()
             ->delete(OldPermalinkEntity::class, 'op')
             ->where('op.permalink = :permalink')
-            ->setParameter('permalink', $permalink)
+            ->setParameter('permalink', $permalinkVo)
             ->getQuery()
             ->execute();
         $this->em->clear();

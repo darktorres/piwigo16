@@ -31,6 +31,7 @@ use Piwigo\Db\Type\GroupIdType;
 use Piwigo\Db\Type\ImageIdType;
 use Piwigo\Db\Type\IpAddressType;
 use Piwigo\Db\Type\Md5SumType;
+use Piwigo\Db\Type\PermalinkType;
 use Piwigo\Db\Type\RelPathType;
 use Piwigo\Db\Type\TagIdType;
 use Piwigo\Db\Type\UserIdType;
@@ -85,6 +86,7 @@ final class EntityManagerFactory
             'image_id' => ImageIdType::class,
             'md5sum' => Md5SumType::class,
             'rel_path' => RelPathType::class,
+            'permalink' => PermalinkType::class,
         ] as $name => $class) {
             if (! Type::hasType($name)) {
                 Type::addType($name, $class);

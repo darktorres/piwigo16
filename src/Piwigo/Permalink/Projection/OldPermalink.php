@@ -32,12 +32,17 @@ final readonly class OldPermalink
      * (`findAllOrderedBy()`) went DQL -- `OldPermalinkEntity`'s own
      * properties are already typed, so no defensive casting is needed
      * the way `fromRow()`'s own untyped raw-array input required.
+     *
+     * `catId`/`permalink` unwrap `->value` -- the entity's own properties
+     * are `CategoryId`/`Permalink` VOs (see the entity's own docblock),
+     * but this projection stays plain `int`/`string` by design, matching
+     * the rest of this codebase's Projection classes.
      */
     public static function fromEntity(OldPermalinkEntity $entity): self
     {
         return new self(
-            catId: $entity->catId,
-            permalink: $entity->permalink,
+            catId: $entity->catId->value,
+            permalink: $entity->permalink->value,
             dateDeleted: $entity->dateDeleted,
             lastHit: $entity->lastHit,
             hit: $entity->hit,

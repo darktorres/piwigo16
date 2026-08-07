@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Piwigo\Admin\Category\CreateCategoryResult;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\Dto\UserGroupPair;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Permalink\OldPermalinkEntity;
 use Piwigo\Permalink\Projection\OldPermalink;
 
@@ -52,8 +54,8 @@ test('CreateCategoryResult::success carries the info message and the new categor
 
 test('OldPermalink::fromEntity copies every field straight through', function (): void {
     $permalink = OldPermalink::fromEntity(new OldPermalinkEntity(
-        permalink: 'old-album-name',
-        catId: 4,
+        permalink: Permalink::from('old-album-name'),
+        catId: CategoryId::from(4),
         dateDeleted: '2026-07-01 00:00:00',
         lastHit: '2026-07-15 12:00:00',
         hit: 12,
@@ -68,8 +70,8 @@ test('OldPermalink::fromEntity copies every field straight through', function ()
 
 test('OldPermalink::fromEntity leaves null dateDeleted/lastHit as null', function (): void {
     $permalink = OldPermalink::fromEntity(new OldPermalinkEntity(
-        permalink: 'my-album',
-        catId: 1,
+        permalink: Permalink::from('my-album'),
+        catId: CategoryId::from(1),
         dateDeleted: null,
         lastHit: null,
         hit: 0,

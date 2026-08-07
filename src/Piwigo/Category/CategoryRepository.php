@@ -14,6 +14,7 @@ use Piwigo\Category\Projection\Category;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\BatchWriter;
@@ -24,6 +25,7 @@ use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\PhotoSortField;
+use Piwigo\Permalink\OldPermalinkEntity;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 
@@ -36,13 +38,17 @@ use Piwigo\Permission\SqlCondition;
  * rather than constructed here -- same "repository takes a pre-built
  * permission condition string" shape as RateRepository/CommentRepository.
  *
- * Owns `categories` ({@see CategoryEntity}) and `old_permalinks` ({@see
- * OldPermalinkEntity}), and shares `user_access` ({@see UserAccessEntity})/
- * `group_access` ({@see \Piwigo\Group\GroupAccessEntity})/`image_category`
- * ({@see \Piwigo\Image\ImageCategoryEntity}, placed in the Image domain,
- * its heaviest real consumer) with Group/Image/Permission. Only the
- * single-row/simple-id-list methods against those tables go through DQL;
- * the large majority of this repository's 65 methods are dynamic-fragment
+ * Owns `categories` ({@see CategoryEntity}); `old_permalinks` is owned by
+ * the Permalink domain ({@see \Piwigo\Permalink\OldPermalinkEntity}, see
+ * its own docblock -- this repository is one of its 3 real consumers,
+ * queried directly rather than via `$em->getRepository()`, same shape as
+ * the shared tables below), and shares `user_access` ({@see UserAccessEntity})/
+ * `group_access` ({@see \Piwigo\Group\GroupAccessEntity}, created during
+ * the Group batch)/`image_category` ({@see \Piwigo\Image\ImageCategoryEntity},
+ * placed in the Image domain, its heaviest real consumer -- Item 14
+ * Sub-phase B1) with Group/Image/Permission -- only the single-row/
+ * simple-id-list methods against those tables go through DQL; the large
+ * majority of this repository's 65 methods are dynamic-fragment
  * (caller-built permission/ORDER BY SQL), dynamically table/column-named
  * (findOrphanedColumnValues/deleteRowsWhereColumnIn/deleteInconsistentAccess),
  * or cross-domain joins/reads (typically against `images`, owned by the
@@ -270,13 +276,19 @@ final class CategoryRepository
      * @return array<string, array{id: int, permalink: string, is_old: int}>
      *
      * Item 14 DQL audit, re-corrected: `old_permalinks` is now mapped ({@see
-     * OldPermalinkEntity}). Converted to real DQL -- still two single-table
-     * selects unioned in PHP (DQL itself has no UNION), one against
-     * OldPermalinkEntity and one against this repository's own
+     * \Piwigo\Permalink\OldPermalinkEntity}). Converted to real DQL -- still
+     * two single-table selects unioned in PHP (DQL itself has no UNION),
+     * one against OldPermalinkEntity and one against this repository's own
      * CategoryEntity. `op.catId` maps through the `category_id` custom
      * Doctrine Type, so getArrayResult() hydrates it as a CategoryId value
      * object (Gotcha #1 shape) -- read via instanceof, unlike the plain-int
      * `c.id` from the categories side.
+     *
+     * `op.permalink` maps through the `permalink` custom Doctrine Type
+     * too, so it hydrates as a Permalink value object for old-rows --
+     * `c.permalink` (from the still-untyped CategoryEntity side) stays a
+     * plain string in the same merged result set, so both shapes are
+     * unwrapped before the merge.
      */
     public function findPermalinkMatches(array $permalinks): array
     {
@@ -310,6 +322,7 @@ final class CategoryRepository
             $id = $row['id'] ?? null;
             $idValue = $id instanceof CategoryId ? $id->value : (is_numeric($id) ? (int) $id : null);
             $permalink = $row['permalink'] ?? null;
+            $permalink = $permalink instanceof Permalink ? $permalink->value : $permalink;
             $isOld = $row['is_old'] ?? null;
 
             if ($idValue === null || ! is_string($permalink) || ! is_numeric($isOld)) {
@@ -347,6 +360,14 @@ final class CategoryRepository
      * repository (only array/scalar reads), so there's no identity map
      * entry for this bulk UPDATE to leave stale -- $em->clear() would be a
      * no-op here.
+     *
+     * `$permalink` stays a raw `string` param -- unlike this method's own
+     * `$catId`, its only real caller ({@see \Piwigo\Category\CategoryService::
+     * findCategoryIdFromPermalinks()}) reaches it exclusively through a
+     * value already round-tripped out of {@see findPermalinkMatches()}'s
+     * own `old_permalinks` rows (its `is_old` branch), so it's guaranteed
+     * to already satisfy `Permalink::from()`'s constraints -- wrapped
+     * internally, right at the bind.
      */
     public function touchOldPermalinkHit(string $permalink, int $catId): void
     {
@@ -357,7 +378,7 @@ final class CategoryRepository
             ->set('op.hit', 'op.hit + 1')
             ->where('op.permalink = :permalink')
             ->andWhere('op.catId = :catId')
-            ->setParameter('permalink', $permalink)
+            ->setParameter('permalink', Permalink::from($permalink))
             ->setParameter('catId', CategoryId::from($catId))
             ->getQuery()
             ->execute();

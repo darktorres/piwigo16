@@ -1,5 +1,5 @@
 {
-    "_hash": "e52e2871723ef742cce72b41724f93ccf0c74e78d44b529c55f5b9fb8f4d4ba4",
+    "_hash": "a04317ba0b25504ebae817b8261df1b1963c038631794e49d891c46662244587",
     "patches": {
         "pestphp/pest-plugin-browser": [
             {
@@ -39,6 +39,16 @@
                 "description": "Bound the composed --filter argument length in MutationTest::start() -- a mutation covered by hundreds/thousands of tests can build a --filter regex past Linux's 128 KiB MAX_ARG_STRLEN, crashing proc_open() with ProcessStartFailedException (\"Argument list too long\") and killing the entire test:mutate run; falls back to running the full testsuite for that one mutant instead, which is always correctness-preserving",
                 "url": "patches/pest-plugin-mutate-5.0.1-bound-filter-argument-length.patch",
                 "sha256": "de97dde126381265b371d6a66c9bfe32b6edd25f5bf8ff3fe8e15b46903a2f22",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            },
+            {
+                "package": "pestphp/pest-plugin-mutate",
+                "description": "Fix MutationTestRunner::run() building $coveredLines directly from lineCoverage()'s raw per-line array, which since phpunit/php-code-coverage 14 is keyed by an interned test index (int) with the hit count as the value, not a list of test id strings -- MutationTest::start() then fed a hit-count int straight into preg_match(), fatalling with 'Argument #2 ($subject) must be of type string, int given' on the very first covered mutation. Resolves each surviving index back to its real test id via testIds() before handing $coveredLines off",
+                "url": "patches/pest-plugin-mutate-5.0.1-resolve-interned-test-index.patch",
+                "sha256": "f76880213ec1b603c0887dc354cdcbf810370ee2b4966c31addf6a7eb09414b5",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

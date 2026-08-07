@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Event\Album;
 
+use Piwigo\Common\ValueObject\TagId;
+
 /**
  * Typed event for the legacy `merge_tags` notification. No handler is
  * registered for it anywhere today.
@@ -11,10 +13,10 @@ namespace Piwigo\Event\Album;
 final readonly class MergeTags
 {
     /**
-     * @param array<int, int> $mergeTagIds
+     * @param list<TagId> $mergeTagIds
      */
     public function __construct(
-        public int $destinationTagId,
+        public TagId $destinationTagId,
         public array $mergeTagIds,
     ) {}
 }

@@ -10,6 +10,7 @@ use Piwigo\Auth\Event\FinalizeLogin;
 use Piwigo\Auth\Projection\AuthUser;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\DateHelper;
@@ -251,7 +252,7 @@ final readonly class AuthService
                             $_SESSION['connected_with'] = 'pwg_ui';
                         }
                         $this->logUser($cookie[0], true);
-                        $this->eventDispatcher->dispatchNotify(new LoginSuccess(stripslashes($calculated['username'])));
+                        $this->eventDispatcher->dispatchNotify(new LoginSuccess(Username::tryFrom(stripslashes($calculated['username']))));
 
                         return true;
                     }
@@ -351,7 +352,7 @@ final readonly class AuthService
         // exists -- it doesn't depend on the lookup at all.
         if ($ip !== '' && $this->failedLoginRepo->countRecentByIp($ip, $windowStart) >= $maxAttempts) {
             $this->failedLoginRepo->recordFailure(null, $ip, $nowFormatted);
-            $this->eventDispatcher->dispatchNotify(new LoginFailure(stripslashes($username)));
+            $this->eventDispatcher->dispatchNotify(new LoginFailure(Username::tryFrom(stripslashes($username))));
             return $event;
         }
 
@@ -368,7 +369,7 @@ final readonly class AuthService
         // still provides for every not-yet-locked-out attempt.
         if ($userId !== null && $this->failedLoginRepo->countRecentByUserId($userId, $windowStart) >= $maxAttempts) {
             $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
-            $this->eventDispatcher->dispatchNotify(new LoginFailure(stripslashes($username)));
+            $this->eventDispatcher->dispatchNotify(new LoginFailure(Username::tryFrom(stripslashes($username))));
             return $event;
         }
 
@@ -399,7 +400,7 @@ final readonly class AuthService
                 $this->activityLogger->record('user', $user_found->id, 'login_failure_wrong_password');
             }
             $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
-            $this->eventDispatcher->dispatchNotify(new LoginFailure(stripslashes($username)));
+            $this->eventDispatcher->dispatchNotify(new LoginFailure(Username::tryFrom(stripslashes($username))));
             return $event;
         }
 
@@ -442,7 +443,7 @@ final readonly class AuthService
         if (! $can_login) {
             $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
             $this->activityLogger->record('user', $user_found->id, $reason ?? 'login_failure_before_log_user');
-            $this->eventDispatcher->dispatchNotify(new LoginFailureBeforeLogUser(stripslashes($username)));
+            $this->eventDispatcher->dispatchNotify(new LoginFailureBeforeLogUser(Username::tryFrom(stripslashes($username))));
             return $event;
         }
 
@@ -453,7 +454,7 @@ final readonly class AuthService
         }
 
         $this->clearFakeUserCache();
-        $this->eventDispatcher->dispatchNotify(new LoginSuccess(stripslashes($username)));
+        $this->eventDispatcher->dispatchNotify(new LoginSuccess(Username::tryFrom(stripslashes($username))));
         $event->success = true;
 
         return $event;
@@ -621,7 +622,7 @@ final readonly class AuthService
         }
 
         $this->logUser($key_user_id, false);
-        $this->eventDispatcher->dispatchNotify(new LoginSuccess($key->username));
+        $this->eventDispatcher->dispatchNotify(new LoginSuccess(Username::tryFrom($key->username)));
 
         // to be registered in history table by HistoryService::logVisit()
         $this->pageState->setAuthKeyId((int) $key->authKeyId);

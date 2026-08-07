@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\History;
 
 use Piwigo\Auth\AccessControl;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -49,7 +50,7 @@ final readonly class HistoryService
             $doLog = $this->currentConfig->historyGuest();
         }
 
-        return $this->eventDispatcher->dispatchChange(new PwgLogAllowed($doLog, $imageId, $imageType))
+        return $this->eventDispatcher->dispatchChange(new PwgLogAllowed($doLog, ImageId::tryFrom($imageId), $imageType))
             ->doLog;
     }
 

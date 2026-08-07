@@ -162,10 +162,10 @@ final class UserRepository implements WebmasterMailProviderInterface
         // users.mail_address is nullable — a webmaster without an email set
         // is real, not a bug, so this degrades to '' rather than asserting
         // non-null.
-        $email = is_string($value) ? $value : '';
+        $email = is_string($value) ? Email::tryFrom($value) : null;
 
         return $this->eventDispatcher->dispatchChange(new GetWebmasterMailAddress($email))
-            ->email;
+            ->email->value ?? '';
     }
 
     /**

@@ -485,7 +485,10 @@ final class PwgTags
             ]);
         }
 
-        $this->eventDispatcher->dispatchNotify(new MergeTags($params['destination_tag_id'], $merge_tag));
+        $this->eventDispatcher->dispatchNotify(new MergeTags(
+            TagId::from($params['destination_tag_id']),
+            array_values(array_map(TagId::from(...), $merge_tag))
+        ));
 
         $this->tagService->deleteTags(array_values(array_map(TagId::from(...), $merge_tag)));
 

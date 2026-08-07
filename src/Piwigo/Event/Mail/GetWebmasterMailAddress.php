@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Event\Mail;
 
+use Piwigo\Common\ValueObject\Email;
+
 /**
  * Typed event for the legacy `get_webmaster_mail_address` filter. No
- * handler is registered for it anywhere today.
+ * handler is registered for it anywhere today. `$email` is nullable --
+ * a webmaster without an email address on file is real, not a bug (see
+ * `UserRepository::getWebmasterMailAddress()`'s own docblock).
  */
 final readonly class GetWebmasterMailAddress
 {
     public function __construct(
-        public string $email,
+        public ?Email $email,
     ) {}
 }

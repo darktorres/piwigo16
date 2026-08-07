@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Event\Picture;
 
+use Piwigo\Common\ValueObject\ImageId;
+
 /**
  * Typed event for the legacy `pwg_log_allowed` filter. No handler is
  * registered for it anywhere today. `$imageType` is a plain `?string`,
@@ -15,7 +17,7 @@ final readonly class PwgLogAllowed
 {
     public function __construct(
         public bool $doLog,
-        public ?int $imageId,
+        public ?ImageId $imageId,
         public ?string $imageType,
     ) {}
 }

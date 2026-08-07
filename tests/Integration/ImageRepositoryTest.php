@@ -15,6 +15,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Image\CategoryImagesCriteria;
 use Piwigo\Image\ImageFilterCriteria;
@@ -833,6 +834,47 @@ final class ImageRepositoryTest extends IntegrationTestCase
         }
     }
 
+    /**
+     * [Mutation] findAddMethodBreakdown() computes a running max in PHP
+     * across unordered rows (no ORDER BY -- see its own docblock), so an
+     * implementation that always overwrites `last_added_on` instead of
+     * comparing, or compares the wrong way, must end up wrong here
+     * regardless of which of these 3 rows PostgreSQL's unordered scan
+     * happens to visit first or last: the group's true maximum date sits
+     * strictly between the other two dates, so it can only be captured by
+     * a real running-max comparison, never by "whichever row happened to
+     * be first/last processed".
+     */
+    public function test_find_add_method_breakdown_tracks_the_true_maximum_and_returns_a_reindexed_list(): void
+    {
+        $this->conn->beginTransaction();
+
+        try {
+            $this->conn->executeStatement(
+                "INSERT INTO " . Tables::images() . " (file, date_available) VALUES ('p18-earliest.jpg', '2010-01-01 00:00:00')"
+            );
+            $this->conn->executeStatement(
+                "INSERT INTO " . Tables::images() . " (file, date_available) VALUES ('p18-max.jpg', '2030-01-01 00:00:00')"
+            );
+            $this->conn->executeStatement(
+                "INSERT INTO " . Tables::images() . " (file, date_available) VALUES ('p18-middle.jpg', '2020-01-01 00:00:00')"
+            );
+
+            $breakdown = $this->repo->findAddMethodBreakdown();
+
+            // findAddMethodBreakdown()'s own array_values() re-keying has
+            // no external observer: its only consumer (PiwigoInfosSender)
+            // reads it via foreach, which is indifferent to list vs.
+            // string-keyed shape, and it's never JSON-encoded anywhere --
+            // so this test only needs the by-add_method values below, not
+            // a separate list-shape assertion.
+            $byMethod = array_column($breakdown, null, 'add_method');
+            self::assertSame('2030-01-01 00:00:00', $byMethod['api']['last_added_on']);
+        } finally {
+            $this->conn->rollBack();
+        }
+    }
+
     // Fixture shape: image_category links images 1/2/3 to category 1,
     // images 4/5 to category 2 (both categories
     // commentable=1/visible=1/status=public, per
@@ -882,6 +924,26 @@ final class ImageRepositoryTest extends IntegrationTestCase
     public function test_find_ids_by_md5sum_returns_empty_for_no_match(): void
     {
         self::assertSame([], $this->repo->findIdsByMd5sum('no-such-md5sum'));
+    }
+
+    /**
+     * [Mutation] Every fixture image already has a real md5sum -- null one
+     * out within a rolled-back transaction to reach the real, non-empty
+     * branch. getSingleColumnResult() bypasses Doctrine's own Type
+     * conversion, so the id comes back as a raw driver scalar that must be
+     * explicitly cast to int, not already an int/ImageId.
+     */
+    public function test_find_image_ids_without_md5sum_returns_the_real_ids_as_ints(): void
+    {
+        $this->conn->beginTransaction();
+
+        try {
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET md5sum = NULL WHERE id = 2');
+
+            self::assertSame([2], $this->repo->findImageIdsWithoutMd5sum());
+        } finally {
+            $this->conn->rollBack();
+        }
     }
 
     /**
@@ -1280,6 +1342,34 @@ final class ImageRepositoryTest extends IntegrationTestCase
         );
     }
 
+    /**
+     * [Mutation] getSingleColumnResult() bypasses Doctrine's own custom-
+     * Type conversion (it fetches the raw driver column directly), so
+     * `c.id` comes back as a raw scalar that must be explicitly mapped to
+     * int here, not already an int/ImageId.
+     */
+    public function test_find_represented_category_ids_returns_the_real_category(): void
+    {
+        // Fixture: category 1's representative_picture_id is image 1;
+        // category 2's is image 4.
+        self::assertSame([1], $this->repo->findRepresentedCategoryIds([1]));
+        self::assertSame([2], $this->repo->findRepresentedCategoryIds([4]));
+    }
+
+    /**
+     * [Mutation] 'not-a-number' must be defensively mapped to 0 before
+     * binding as an ArrayParameterType::INTEGER parameter --
+     * representative_picture_id is a foreign key into images.id (always a
+     * real, positive id), so 0 can never match a real category, but 1
+     * legitimately does (this fixture's own category 1) -- an unguarded
+     * pass-through of the raw value would error against the database, and
+     * a wrong default could spuriously match a real category.
+     */
+    public function test_find_represented_category_ids_treats_non_numeric_ids_as_a_harmless_zero(): void
+    {
+        self::assertSame([], $this->repo->findRepresentedCategoryIds(['not-a-number']));
+    }
+
     public function test_find_virtually_associated_category_rows_returns_real_categories(): void
     {
         // Every fixture image has storage_category_id NULL, so the "OR
@@ -1383,6 +1473,39 @@ final class ImageRepositoryTest extends IntegrationTestCase
         // figure as countImagesInCategories() here, but a genuinely
         // different query (no DISTINCT).
         self::assertSame(5, $this->repo->countImageCategoryLinks());
+    }
+
+    /**
+     * [Mutation] A bare `COUNT(i.id)` DQL aggregate isn't a Doctrine
+     * TypedExpression, so the ORM can't infer its real numeric type and
+     * hydrates it through the generic scalar 'string' type instead --
+     * getSingleScalarResult() returns a raw string here, not an int. This
+     * method's own `(int)` cast is what actually produces the declared
+     * `int` return type; without it, strict_types=1 would throw a
+     * TypeError on this exact call rather than silently pass.
+     */
+    public function test_count_all_images_returns_the_real_total(): void
+    {
+        self::assertSame(5, $this->repo->countAllImages());
+    }
+
+    /**
+     * [Mutation] This method stays on raw DBAL (`Connection::
+     * fetchFirstColumn()`), which never applies Doctrine's own Type
+     * conversion, so the ids come back as raw driver scalars that must be
+     * explicitly mapped to int.
+     */
+    public function test_find_ids_visible_in_categories_recently_available_returns_the_real_ids_as_ints(): void
+    {
+        // Fixture: images 1-3 are in category 1, all dated 2026-08-01 --
+        // a 10-year lookback comfortably covers that against Env::now()'s
+        // frozen test clock.
+        $recentPeriodExpr = SqlDialect::getRecentPeriodExpression(3650);
+
+        $ids = $this->repo->findIdsVisibleInCategoriesRecentlyAvailable('1', $recentPeriodExpr);
+        sort($ids);
+
+        self::assertSame([1, 2, 3], $ids);
     }
 
     public function test_find_thumbnail_rows_for_category_ordered_by_rank_returns_real_rows_in_rank_order(): void

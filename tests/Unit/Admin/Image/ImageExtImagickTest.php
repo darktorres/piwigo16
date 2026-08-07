@@ -160,6 +160,45 @@ function imageExtImagickTestMake(string $path): ImageExtImagick
     return new ImageExtImagick($path, imageExtImagickTestCurrentLogger(), imageExtImagickTestCurrentConfig());
 }
 
+/**
+ * Resolves the real, absolute path of a binary via the same `command -v`
+ * idiom PwgImage::get_ext_imagick_command() itself uses internally --
+ * used to build a private, non-PATH symlink to the real magick/convert
+ * binary (see the write() imagickdir-prefix test below).
+ */
+function imageExtImagickTestRealBinaryPath(string $commandName): string
+{
+    exec('command -v ' . escapeshellarg($commandName), $out, $status);
+    if ($status !== 0 || ! isset($out[0]) || $out[0] === '') {
+        throw new RuntimeException("Unable to locate the real '{$commandName}' binary via \`command -v\`.");
+    }
+
+    return $out[0];
+}
+
+/**
+ * Recursively removes a directory -- used for the standalone log
+ * directories some tests below point a real, DEBUG-severity Logger at
+ * (separate from imageExtImagickTestMarker(), same convention as
+ * ImageServiceTest's own imageServiceTestRrmdir()), since Logger's own
+ * open() may add more than a single flat file under it.
+ */
+function imageExtImagickTestRrmdir(string $dir): void
+{
+    if (! is_dir($dir)) {
+        return;
+    }
+    $nodes = scandir($dir);
+    foreach ($nodes !== false ? $nodes : [] as $node) {
+        if ($node === '.' || $node === '..') {
+            continue;
+        }
+        $path = $dir . '/' . $node;
+        is_dir($path) ? imageExtImagickTestRrmdir($path) : unlink($path);
+    }
+    rmdir($dir);
+}
+
 beforeEach(function (): void {
     mkdir(imageExtImagickTestMarker(), 0o777, true);
     Kernel::boot();
@@ -187,10 +226,78 @@ test('construct throws when identify cannot determine the image dimensions', fun
         ->toThrow(ImageProcessingException::class, '[External ImageMagick] Corrupt image');
 });
 
+test('construct concatenates the imagickdir prefix directly onto the identify binary name', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+    // Concatenated adjacent to 'identify' via escapeshellarg() -- see
+    // write()'s own [SEC-16] comment -- so this genuinely points exec() at
+    // a nonexistent path regardless of which real binary this environment
+    // already resolves 'identify' to via PATH. Same convention as
+    // PwgImageTest's own is_ext_imagick() "nonexistent dir" tests.
+    imageExtImagickTestCurrentConfig()->setExtImagickDir('/totally/nonexistent/dir/');
+
+    $path = imageExtImagickTestMarker() . '/prefix-src.jpg';
+    imageExtImagickTestMakeJpeg($path, 12, 9, 5, 5, 5);
+
+    expect(fn () => imageExtImagickTestMake($path))
+        ->toThrow(ImageProcessingException::class, '[External ImageMagick] Corrupt image');
+});
+
+test('construct casts a since-vanished source path\'s realpath() failure to an empty string instead of passing bool into escapeshellarg', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    $path = imageExtImagickTestMarker() . '/does-not-exist-at-all.jpg';
+    // Deliberately never created on disk -- realpath() genuinely returns
+    // false here, at construct() time. Without the (string) cast,
+    // escapeshellarg(false) would throw a TypeError under this file's own
+    // strict_types=1 instead of the real ImageProcessingException below.
+
+    expect(fn () => imageExtImagickTestMake($path))
+        ->toThrow(ImageProcessingException::class, '[External ImageMagick] Corrupt image');
+});
+
+test('construct embeds a genuine var_export() dump of the raw CLI output, after the message prefix, in the corrupt-image exception', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    $path = imageExtImagickTestMarker() . '/corrupt-dump-src.jpg';
+    file_put_contents($path, 'not a real image, just garbage bytes');
+
+    try {
+        imageExtImagickTestMake($path);
+        throw new RuntimeException('Expected ImageProcessingException was not thrown.');
+    } catch (ImageProcessingException $imageProcessingException) {
+        // toStartWith() proves the prefix comes *before* the dump (not the
+        // reverse); toContain('array (') proves var_export()'s 2nd arg is
+        // genuinely `true` (returns the string) rather than `false`
+        // (which would print directly and return null here instead).
+        expect($imageProcessingException->getMessage())
+            ->toStartWith("[External ImageMagick] Corrupt image\n")
+            ->toContain('array (');
+    }
+});
+
 test('construct detects an animated WebP and reads dimensions via getimagesize instead of identify', function (): void {
     imageExtImagickTestSkipIfUnavailable();
 
     $path = imageExtImagickTestMarker() . '/animated.webp';
+    imageExtImagickTestMakeAnimatedWebp($path, 20, 14);
+
+    $image = imageExtImagickTestMake($path);
+
+    expect($image->is_animated_webp)->toBeTrue()
+        ->and($image->get_width())->toBe(20)
+        ->and($image->get_height())->toBe(14);
+});
+
+test('construct treats an uppercase .WEBP extension as webp case-insensitively', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    // StringHelper::getExtension() preserves case verbatim (a plain
+    // substr() after the last dot) -- without construct()'s own
+    // strtolower(), 'WEBP' !== 'webp' would skip the animated-webp branch
+    // entirely and fall through to the multi-frame `identify` command,
+    // which can't parse concatenated per-frame dimensions and throws
+    // instead (confirmed live: "20x1420x14" fails the single-pair regex).
+    $path = imageExtImagickTestMarker() . '/animated-uppercase.WEBP';
     imageExtImagickTestMakeAnimatedWebp($path, 20, 14);
 
     $image = imageExtImagickTestMake($path);
@@ -243,6 +350,41 @@ test('construct sets MAGICK_THREAD_LIMIT=1 when SCRIPT_FILENAME starts with /kun
     }
 });
 
+test('construct does not set MAGICK_THREAD_LIMIT when SCRIPT_FILENAME does not start with /kunden/', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    $path = imageExtImagickTestMarker() . '/non-kunden-src.jpg';
+    imageExtImagickTestMakeJpeg($path, 10, 10, 1, 2, 3);
+
+    $originalScriptFilename = $_SERVER['SCRIPT_FILENAME'] ?? null;
+    $originalThreadLimit = getenv('MAGICK_THREAD_LIMIT');
+    // A real string that does *not* start with '/kunden/' -- is_string()
+    // alone (the BooleanAndToBooleanOr mutant) is still true here, so this
+    // genuinely isolates the str_starts_with() half of the condition.
+    $_SERVER['SCRIPT_FILENAME'] = '/var/www/html/i.php';
+    // Deliberately cleared, not just captured -- leaves a clean baseline so
+    // this test can tell "construct() left it alone" apart from "some
+    // earlier state already happened to be unset".
+    putenv('MAGICK_THREAD_LIMIT');
+
+    try {
+        imageExtImagickTestMake($path);
+
+        expect(getenv('MAGICK_THREAD_LIMIT'))->toBeFalse();
+    } finally {
+        if ($originalScriptFilename === null) {
+            unset($_SERVER['SCRIPT_FILENAME']);
+        } else {
+            $_SERVER['SCRIPT_FILENAME'] = $originalScriptFilename;
+        }
+        if ($originalThreadLimit === false) {
+            putenv('MAGICK_THREAD_LIMIT');
+        } else {
+            putenv('MAGICK_THREAD_LIMIT=' . $originalThreadLimit);
+        }
+    }
+});
+
 test('rotate by 0 degrees is a no-op that adds no command', function (): void {
     imageExtImagickTestSkipIfUnavailable();
 
@@ -251,6 +393,26 @@ test('rotate by 0 degrees is a no-op that adds no command', function (): void {
     $image = imageExtImagickTestMake($path);
 
     $result = $image->rotate(0);
+
+    expect($result)->toBeTrue()
+        ->and($image->commands)->toBe([])
+        ->and($image->get_width())->toBe(40)
+        ->and($image->get_height())->toBe(20);
+});
+
+test('rotate by a literal float 0.0 is also a no-op that adds no command', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    // rotate(0) (int) above only ever exercises the first `$rotation ===
+    // 0` disjunct (int-vs-int) -- it short-circuits before the second
+    // `$rotation === 0.0` disjunct is ever reached. A literal float 0.0
+    // fails the int disjunct (0.0 !== 0 is a type mismatch under ===) and
+    // is the only input that actually reaches/depends on the float one.
+    $path = imageExtImagickTestMarker() . '/rotate-float-noop.jpg';
+    imageExtImagickTestMakeJpeg($path, 40, 20, 10, 20, 30);
+    $image = imageExtImagickTestMake($path);
+
+    $result = $image->rotate(0.0);
 
     expect($result)->toBeTrue()
         ->and($image->commands)->toBe([])
@@ -273,6 +435,27 @@ test('rotate by 90 degrees swaps width/height and queues rotate+orient commands'
         ->and($image->commands)->toBe(['rotate' => -90, 'orient' => 'top-left']);
 });
 
+test('rotate by 270 degrees swaps width/height and queues rotate+orient commands', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    // The 90-degree test above only ever exercises the first `(float)
+    // $rotation === 90.0` disjunct -- it short-circuits before the second
+    // `(float) $rotation === 270.0` disjunct is ever reached. 270 is the
+    // only input that actually reaches/depends on that second disjunct
+    // (and its own (float) cast: comparing bare int 270 against float
+    // 270.0 via strict === would otherwise never match).
+    $path = imageExtImagickTestMarker() . '/rotate-270.jpg';
+    imageExtImagickTestMakeJpeg($path, 40, 20, 10, 20, 30);
+    $image = imageExtImagickTestMake($path);
+
+    $result = $image->rotate(270);
+
+    expect($result)->toBeTrue()
+        ->and($image->get_width())->toBe(20)
+        ->and($image->get_height())->toBe(40)
+        ->and($image->commands)->toBe(['rotate' => -270, 'orient' => 'top-left']);
+});
+
 test('set_compression_quality caps the requested quality via animatedWebpCompressionQuality for an animated webp source', function (): void {
     imageExtImagickTestSkipIfUnavailable();
     imageExtImagickTestCurrentConfig()->setAnimatedWebpCompressionQuality(40);
@@ -285,6 +468,48 @@ test('set_compression_quality caps the requested quality via animatedWebpCompres
 
     expect($result)->toBeTrue()
         ->and($image->commands['quality'])->toBe(40);
+});
+
+test('write always queues the interlace=line command for progressive JPEG rendering', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    $path = imageExtImagickTestMarker() . '/interlace-src.jpg';
+    $dest = imageExtImagickTestMarker() . '/interlace-out.jpg';
+    imageExtImagickTestMakeJpeg($path, 8, 8, 1, 1, 1);
+    $image = imageExtImagickTestMake($path);
+
+    $image->write($dest);
+
+    expect($image->commands['interlace'] ?? null)->toBe('line');
+});
+
+test('write adds the sampling-factor command only when ext_imagick_version compares strictly greater than 6.6', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    $path = imageExtImagickTestMarker() . '/sampling-src.jpg';
+    imageExtImagickTestMakeJpeg($path, 8, 8, 1, 1, 1);
+    // imageExtImagickTestSkipIfUnavailable() itself already refreshed this
+    // to the real, live detected version via is_ext_imagick() -- captured
+    // here so it can be restored, not assumed to start at ''.
+    $originalVersion = PwgImage::$ext_imagick_version;
+
+    try {
+        // Strictly greater than '6.6' -- the add_command() call must fire.
+        PwgImage::$ext_imagick_version = '7.0';
+        $imageGreater = imageExtImagickTestMake($path);
+        $imageGreater->write(imageExtImagickTestMarker() . '/sampling-greater-out.jpg');
+        expect($imageGreater->commands['sampling-factor'] ?? null)->toBe('4:2:2');
+
+        // Exactly '6.6' (version_compare() returns 0) -- *not* greater, so
+        // the add_command() call must *not* fire. This exact-equality case
+        // is what actually discriminates >, >=, and <= from each other.
+        PwgImage::$ext_imagick_version = '6.6';
+        $imageEqual = imageExtImagickTestMake($path);
+        $imageEqual->write(imageExtImagickTestMarker() . '/sampling-equal-out.jpg');
+        expect($imageEqual->commands)->not->toHaveKey('sampling-factor');
+    } finally {
+        PwgImage::$ext_imagick_version = $originalVersion;
+    }
 });
 
 test('sharpen builds the morphology convolve command and produces a valid derivative via write()', function (): void {
@@ -496,4 +721,185 @@ test('write adds the -layers coalesce flag and preserves every frame of an anima
     expect(file_exists($dest))->toBeTrue();
     expect(filesize($dest))->toBeGreaterThan(0);
     expect(imageExtImagickTestFrameCount($dest))->toBeGreaterThan(1);
+});
+
+test('write concatenates the imagickdir prefix directly onto the convert/magick binary name', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    $path = imageExtImagickTestMarker() . '/dirprefix-src.jpg';
+    $dest = imageExtImagickTestMarker() . '/dirprefix-out.jpg';
+    imageExtImagickTestMakeJpeg($path, 12, 9, 5, 5, 5);
+    $image = imageExtImagickTestMake($path);
+
+    // A real symlink to the actual convert/magick binary, placed inside
+    // this test's own private marker directory -- one that is genuinely
+    // never on PATH -- proves the imagickdir prefix concatenation is
+    // itself what makes the binary resolve, not PATH doing it for us
+    // regardless of concatenation order/presence. Unlike the "nonexistent
+    // dir" trick used for construct()'s own identify command above, a
+    // nonexistent dir here can't discriminate a swapped concatenation
+    // order from the real one: with an empty/missing dir, *both* the
+    // correct and the reordered command end up trying (and failing) to
+    // execute a nonexistent path, so this needs a real, working target to
+    // tell them apart.
+    $commandName = PwgImage::get_ext_imagick_command();
+    $realBinaryPath = imageExtImagickTestRealBinaryPath($commandName);
+    $privateBinPath = imageExtImagickTestMarker() . '/' . $commandName;
+    symlink($realBinaryPath, $privateBinPath);
+
+    $image->imagickdir = imageExtImagickTestMarker() . '/';
+
+    $result = $image->write($dest);
+
+    expect($result)->toBeTrue()
+        ->and(file_exists($dest))->toBeTrue();
+    $info = getimagesize($dest);
+    if ($info === false) {
+        throw new RuntimeException('getimagesize failed');
+    }
+    expect($info[0])->toBe(12)
+        ->and($info[1])->toBe(9);
+});
+
+test('write casts a since-deleted source file\'s realpath() failure to an empty string instead of passing bool into escapeshellarg', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    $path = imageExtImagickTestMarker() . '/write-vanish-src.jpg';
+    imageExtImagickTestMakeJpeg($path, 10, 10, 1, 1, 1);
+    $image = imageExtImagickTestMake($path);
+    // Source now genuinely gone -- realpath() at write() time returns
+    // false. Without the (string) cast, escapeshellarg(false) would throw
+    // a TypeError under this file's own strict_types=1 instead of write()
+    // completing (and returning true, per its own always-succeeds
+    // contract) with a real, swallowed CLI failure below.
+    unlink($path);
+
+    $dest = imageExtImagickTestMarker() . '/write-vanish-out.jpg';
+
+    /** @var array<int, array{0: int, 1: string}> $captured */
+    $captured = [];
+    set_error_handler(static function (int $errno, string $errstr) use (&$captured): bool {
+        $captured[] = [$errno, $errstr];
+
+        return true;
+    });
+    try {
+        $result = $image->write($dest);
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($result)->toBeTrue()
+        ->and(file_exists($dest))->toBeFalse();
+});
+
+test('write adds the -layers coalesce flag to the logged command for an animated webp source', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    $logDir = sys_get_temp_dir() . '/piwigo-imageextimagick-test-log-' . bin2hex(random_bytes(8));
+    mkdir($logDir, 0o777, true);
+    imageExtImagickTestCurrentLogger()->set(new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'coalesce.log']));
+
+    try {
+        $path = imageExtImagickTestMarker() . '/coalesce-anim-src.webp';
+        $dest = imageExtImagickTestMarker() . '/coalesce-anim-out.webp';
+        imageExtImagickTestMakeAnimatedWebp($path, 20, 14);
+        $image = imageExtImagickTestMake($path);
+        expect($image->is_animated_webp)->toBeTrue();
+
+        $image->write($dest);
+
+        // Frame count alone (this file's own earlier "-layers coalesce"
+        // test) doesn't actually discriminate whether the flag was really
+        // added -- a simple, non-optimized 2-frame animation round-trips
+        // to the same frame count either way (confirmed live). The
+        // *logged* $exec command is the only real, non-mocked window onto
+        // whether the flag itself was actually built into the command.
+        $logContent = file_get_contents($logDir . '/coalesce.log');
+        if ($logContent === false) {
+            throw new RuntimeException('Failed to read the real log file written by write().');
+        }
+        expect($logContent)->toContain(' -layers coalesce ');
+    } finally {
+        imageExtImagickTestRrmdir($logDir);
+    }
+});
+
+test('write omits the parameter value for every "no value" sentinel (null/0/0.0/\'0\'/\'\') but keeps a real value', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    $logDir = sys_get_temp_dir() . '/piwigo-imageextimagick-test-log-' . bin2hex(random_bytes(8));
+    mkdir($logDir, 0o777, true);
+    imageExtImagickTestCurrentLogger()->set(new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'sentinel.log']));
+
+    try {
+        $path = imageExtImagickTestMarker() . '/sentinel-src.jpg';
+        $dest = imageExtImagickTestMarker() . '/sentinel-out.jpg';
+        imageExtImagickTestMakeJpeg($path, 10, 10, 1, 1, 1);
+        $image = imageExtImagickTestMake($path);
+
+        $image->add_command('optnull', null);
+        $image->add_command('optzeroint', 0);
+        $image->add_command('optzerofloat', 0.0);
+        $image->add_command('optzerostr', '0');
+        $image->add_command('optemptystr', '');
+        $image->add_command('optreal', 5);
+
+        // Fake, non-real ImageMagick flag names -- write()'s own exec()
+        // call is expected to genuinely fail against these (real CLI
+        // failure, real E_USER_WARNING via trigger_error(), swallowed
+        // below same as this file's own "triggers E_USER_WARNING" test
+        // above). This test only cares about the *logged* $exec string
+        // built before that call, not whether the call itself succeeds.
+        set_error_handler(static fn (): bool => true);
+        try {
+            $image->write($dest);
+        } finally {
+            restore_error_handler();
+        }
+
+        $logContent = file_get_contents($logDir . '/sentinel.log');
+        if ($logContent === false) {
+            throw new RuntimeException('Failed to read the real log file written by write().');
+        }
+        // One exact, contiguous substring: proves null/0/0.0/'0'/'' each
+        // contribute *only* their '-flagname' token (no trailing value,
+        // and critically no extra space from an empty-string append), and
+        // that a real value (5) still gets its own value appended right
+        // after its flag.
+        expect($logContent)->toContain(' -optnull -optzeroint -optzerofloat -optzerostr -optemptystr -optreal 5');
+    } finally {
+        imageExtImagickTestRrmdir($logDir);
+    }
+});
+
+test('write does not log an error when the CLI call succeeds with no output at all', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    $logDir = sys_get_temp_dir() . '/piwigo-imageextimagick-test-log-' . bin2hex(random_bytes(8));
+    mkdir($logDir, 0o777, true);
+    imageExtImagickTestCurrentLogger()->set(new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'success.log']));
+
+    try {
+        $path = imageExtImagickTestMarker() . '/success-src.jpg';
+        $dest = imageExtImagickTestMarker() . '/success-out.jpg';
+        imageExtImagickTestMakeJpeg($path, 10, 10, 1, 2, 3);
+        $image = imageExtImagickTestMake($path);
+
+        $result = $image->write($dest);
+
+        expect($result)->toBeTrue()
+            ->and(file_exists($dest))->toBeTrue();
+
+        // A real, successful convert/magick call genuinely produces zero
+        // lines of CLI output (confirmed live) -- count($returnarray)
+        // stays 0, so $logger->error()/trigger_error() must never fire.
+        $logContent = file_get_contents($logDir . '/success.log');
+        if ($logContent === false) {
+            throw new RuntimeException('Failed to read the real log file written by write().');
+        }
+        expect($logContent)->not->toContain("\t[ERROR]\t");
+    } finally {
+        imageExtImagickTestRrmdir($logDir);
+    }
 });

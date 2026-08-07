@@ -152,19 +152,58 @@ test('fromRow defaults every nullable column to null when absent', function (): 
     // to their type's zero value instead, matching every other narrowing
     // helper in this codebase (is_numeric(...) ? (int) ... : 0, etc.) --
     // never actually null for a real fetched row, since these are NOT NULL
-    // DB columns; this only guards a malformed/partial row.
-    //
-    // Confirmed-equivalent, same mysqli-native-types root cause as
-    // ImageRepository.php's own consolidated docblock: fromRow()'s
-    // Decrement/IncrementInteger on line 92's id default, line 99's hit
-    // default, and line 109's level default, plus EmptyStringToNotEmpty
-    // on line 93's file default, line 107's path default, and line
-    // 115's lastmodified default. Live sed-mutate-and-rerun spot-checked
-    // lines 92, 99, and 107 (one int-default and one string-default
-    // representative of each column position) against the full suite;
-    // the same reasoning generalizes identically to the other 3 (id/hit/
-    // level are all NOT NULL ints, file/path/lastmodified are all NOT
-    // NULL strings, on the exact same driver/query shape).
+    // DB columns; this only guards a malformed/partial row. Those six
+    // defaults are exact-value-asserted below ("throws when id cannot be
+    // coerced...", "defaults file, path, and lastmodified...", "defaults
+    // hit and level..."): the id case in particular is not an equivalent
+    // mutant -- ImageId::from() rejects its own 0 fallback, so an
+    // IncrementInteger mutant (0 -> 1) turns that throw into a silent
+    // ImageId(1), which only an exact-message throw assertion catches.
+});
+
+test('fromRow throws when id cannot be coerced to a positive integer, since its only fallback (0) is itself an invalid ImageId', function (): void {
+    $row = fullImageRow();
+    $row['id'] = 'not-a-number';
+
+    expect(fn () => Image::fromRow($row))
+        ->toThrow(InvalidArgumentException::class, 'ImageId must be a positive integer, got 0');
+});
+
+test('fromRow defaults file, path, and lastmodified to an empty string when the row value is not a string', function (): void {
+    $row = fullImageRow();
+    $row['file'] = null;
+    $row['path'] = null;
+    $row['lastmodified'] = null;
+
+    $image = Image::fromRow($row);
+
+    expect($image->file)->toBe('')
+        ->and($image->path)->toBe('')
+        ->and($image->lastmodified)->toBe('');
+});
+
+test('fromRow defaults hit and level to 0 when the row value is not numeric', function (): void {
+    $row = fullImageRow();
+    $row['hit'] = 'not-a-number';
+    $row['level'] = 'not-a-number';
+
+    $image = Image::fromRow($row);
+
+    expect($image->hit)->toBe(0)
+        ->and($image->level)->toBe(0);
+});
+
+test('toArray unwraps storage_category_id, md5sum, and added_by to null (not a null-property-access warning) when those VOs are themselves null', function (): void {
+    $row = fullImageRow();
+    $row['storage_category_id'] = null;
+    $row['md5sum'] = null;
+    $row['added_by'] = null;
+
+    $roundTripped = Image::fromRow($row)->toArray();
+
+    expect($roundTripped['storage_category_id'])->toBeNull()
+        ->and($roundTripped['md5sum'])->toBeNull()
+        ->and($roundTripped['added_by'])->toBeNull();
 });
 
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {

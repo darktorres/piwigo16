@@ -101,6 +101,31 @@ test('parseOrderByFragment is case-insensitive on the ORDER BY prefix and direct
     ]);
 });
 
+test('parseOrderByFragment trims whitespace the ORDER BY prefix regex would not otherwise consume (e.g. a leading NUL byte)', function (): void {
+    // The prefix regex's own `^\s*` already absorbs ordinary leading
+    // whitespace before "ORDER BY", so unwrapping the outer trim() call
+    // is only observable via a char trim()'s default charlist covers
+    // but PCRE's \s does not -- a leading NUL byte is one: trim()
+    // strips it, but \s* doesn't match it, so without trim() the
+    // prefix regex fails to match at all (its `^` anchor can never
+    // skip past the NUL) and the whole fragment is wrongly rejected.
+    expect(PhotoSortField::parseOrderByFragment("\0ORDER BY id ASC"))->toBe([
+        ['field' => PhotoSortField::Id, 'dir' => 'ASC'],
+    ]);
+});
+
+test('parseOrderByFragment lowercases the captured field token before matching it, since the per-entry regex is case-insensitive on the field name too', function (): void {
+    // The per-entry regex's `[a-z_]+` is matched with the /i flag, so
+    // an uppercase field name is captured verbatim (e.g. "ID", not
+    // "id") -- fromSortFieldToken()'s own match() arms are lowercase
+    // literals compared with strict ===, so a captured token that
+    // isn't lowercased first would never match any of them and the
+    // whole fragment would be wrongly rejected as unparseable.
+    expect(PhotoSortField::parseOrderByFragment('ORDER BY ID ASC'))->toBe([
+        ['field' => PhotoSortField::Id, 'dir' => 'ASC'],
+    ]);
+});
+
 test('parseOrderByFragment returns null for text outside the bounded vocabulary', function (string $fragment): void {
     expect(PhotoSortField::parseOrderByFragment($fragment))->toBeNull();
 })->with([

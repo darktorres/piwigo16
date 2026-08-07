@@ -212,6 +212,27 @@ test('parseCustomParams() rejects a plain size token with no crop/min-size token
         ->and((string) $response->getBody())->toBe('Sizing arr');
 });
 
+test('parseCustomParams() 400s a plain size token that is the only token given, instead of falling through to a TypeError', function (): void {
+    // 1 total token (no 's'/'e' prefix), so 0 tokens remain after the
+    // first shift -- unlike the 2-total-token case above, line 497's
+    // RemoveMethodCall mutant is NOT equivalent here: with the
+    // ierror('Sizing arr', 400) call removed, execution falls through to
+    // array_shift() on an already-empty array (null), then
+    // DerivativeUrlCodec::charToFraction(null), which throws an uncaught
+    // TypeError under strict_types instead of the controlled 400 response
+    // -- a real, directly observable difference (handled error response
+    // vs. an uncaught fatal).
+    $currentLogger = new CurrentLogger();
+    $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+    $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
+
+    $exception = callIerrorFor400($controller, ['100x100']);
+
+    $response = $exception->response();
+    expect($response->getStatusCode())->toBe(400)
+        ->and((string) $response->getBody())->toBe('Sizing arr');
+});
+
 test('parseCustomParams() accepts a size+crop+min-size token triple, exactly at the 2-remaining-tokens boundary', function (): void {
     // 3 total tokens -> exactly 2 remain after the first shift, the
     // real code's own boundary for "just enough" (`count($tokens) < 2`

@@ -6,6 +6,8 @@ namespace Piwigo\Tests\Unit\Image;
 
 use RuntimeException;
 use Exception;
+use stdClass;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Error;
 use Piwigo\Db\DbConnection;
@@ -21,6 +23,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Picture\GetMimetypeLocation;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\SrcImage;
@@ -642,6 +645,147 @@ test('get_size() persists the real, correctly-ordered width/height back onto the
         expect($row)->toBe(['width' => 77, 'height' => 55]);
     } finally {
         $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        srcImageTestRrmdir($root);
+    }
+});
+
+test('urlService() throws when the container returns an unexpected type for UrlServiceInterface', function (): void {
+    // Kills line 71's InstanceOfToTrue -- container()->get(UrlServiceInterface::class)
+    // never legitimately returns something other than a UrlServiceInterface
+    // instance through Kernel::boot()'s own public API; only
+    // KernelContainerOverride::withWrongTypeFor() can reach this branch.
+    // $src is built under a normal boot first (its constructor only needs
+    // currentConfig(), which the override below leaves untouched), then
+    // reused inside the override the same way the pre-existing
+    // "no UrlServiceInterface installed" test above reuses a pre-built
+    // $src across a Kernel::reset().
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-urlservice-wrong-type'));
+    $src = new SrcImage([
+        'id' => 1,
+        'path' => 'upload/2026/07/photo.jpg',
+        'file' => 'photo.jpg',
+    ]);
+
+    expect(fn () => KernelContainerOverride::withWrongTypeFor(UrlServiceInterface::class, function () use ($src): void {
+        $src->get_url();
+    }))->toThrow(RuntimeException::class, 'SrcImage: no URL service set (RequestBootstrap not run yet?)');
+});
+
+test('currentConfig() throws when the container returns an unexpected type for CurrentConfig', function (): void {
+    // Kills line 91's InstanceOfToTrue -- same "never legitimately happens
+    // through Kernel::boot()'s own public API" reasoning as urlService()'s
+    // own sibling test above. The constructor is the only entry point that
+    // reaches currentConfig() (it needs pictureExtensions() to classify
+    // the extension), so it has to run entirely inside the override.
+    expect(fn () => KernelContainerOverride::withWrongTypeFor(CurrentConfig::class, function (): void {
+        new SrcImage([
+            'id' => 1,
+            'path' => 'upload/2026/07/photo.jpg',
+            'file' => 'photo.jpg',
+        ]);
+    }))->toThrow(RuntimeException::class, 'SrcImage: no CurrentConfig set (RequestBootstrap not run yet?)');
+});
+
+test('paths() throws when the container returns an unexpected type for Paths', function (): void {
+    // Kills line 109's InstanceOfToTrue -- get_path() is the simplest
+    // public entry point that reaches paths() without needing anything
+    // else from the container. Same reuse-a-pre-built-$src shape as
+    // urlService()'s own sibling test above.
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-paths-wrong-type'));
+    $src = new SrcImage([
+        'id' => 1,
+        'path' => 'upload/2026/07/photo.jpg',
+        'file' => 'photo.jpg',
+    ]);
+
+    expect(fn () => KernelContainerOverride::withWrongTypeFor(Paths::class, function () use ($src): void {
+        $src->get_path();
+    }))->toThrow(RuntimeException::class, 'SrcImage: no Paths set (RequestBootstrap not run yet?)');
+});
+
+test('eventDispatcher() throws when the container returns an unexpected type for EventDispatcher', function (): void {
+    // Kills line 127's InstanceOfToTrue -- eventDispatcher() is only
+    // reached from the constructor's mimetype-icon fallback branch (a
+    // non-picture extension with no representative_ext). Same "never
+    // legitimately happens through Kernel::boot()'s own public API"
+    // reasoning as the other 3 collaborator guards' own sibling tests
+    // above, so the whole construction has to run inside the override.
+    // The theme-conf provider must be seeded INSIDE the override's own
+    // closure -- CurrentThemeConfProvider::current() resolves a different
+    // instance once Kernel is booted than the pre-boot memoized fallback
+    // it returns beforehand (see the mimetype-icon test's own comment
+    // further above).
+    expect(fn () => KernelContainerOverride::withWrongTypeFor(EventDispatcher::class, function (): void {
+        srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
+
+        new SrcImage([
+            'id' => 1,
+            'path' => 'upload/2026/07/file.qqq',
+            'file' => 'file.qqq',
+        ]);
+    }))->toThrow(RuntimeException::class, 'SrcImage: no EventDispatcher set (RequestBootstrap not run yet?)');
+});
+
+test('constructor normalizes rotation via modulo 4, not modulo 3 or modulo 5', function (): void {
+    // Kills line 228's DecrementInteger (`% 3`) and IncrementInteger
+    // (`% 5`) -- every existing rotation test elsewhere in this file uses
+    // 1 or 2, and both happen to produce the SAME result under %3/%4/%5
+    // (1 % 3 === 1 % 4 === 1 % 5 === 1, and 2 % 3 === 2 % 4 === 2 % 5 ===
+    // 2), so none of them can tell the 3 moduli apart. rotation=4 is the
+    // smallest value where they genuinely disagree: 4 % 4 = 0 (real code),
+    // 4 % 3 = 1 (DecrementInteger mutant), 4 % 5 = 4 (IncrementInteger
+    // mutant) -- all 3 distinguishable via an exact-value assertion on
+    // $src->rotation alone.
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-rotation-modulo-4'));
+    $src = new SrcImage([
+        'id' => 1,
+        'path' => 'upload/2026/07/photo.jpg',
+        'file' => 'photo.jpg',
+        'width' => 300,
+        'height' => 200,
+        'rotation' => 4,
+    ]);
+
+    expect($src->rotation)->toBe(0);
+    expect($src->get_size())->toBe([300, 200]);
+});
+
+test('get_size() re-read skips the persistence call when the container returns an unexpected type for ImageRepository', function (): void {
+    // Kills line 307's InstanceOfToTrue -- the "persists the real,
+    // correctly-ordered width/height" test above always binds a REAL
+    // ImageRepository, where the mutant's unconditional `if (true)`
+    // happens to behave identically (its own instanceof check is true
+    // there too, so that test can't tell the two branches apart). Only a
+    // genuinely wrong-typed container binding (never legitimate through
+    // Kernel::boot()'s own public API) does: the mutant would call
+    // updateDimensions() on a plain stdClass and fatally error instead of
+    // just returning the freshly re-read size. Paths::class has to be
+    // explicitly rebound alongside ImageRepository::class here --
+    // KernelContainerOverride::with() builds a brand new container with
+    // no Paths::class binding of its own (Kernel::boot() is what supplies
+    // that in the real world), so get_path() would otherwise resolve a
+    // different root than the one the PNG below was written under.
+    $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
+    srcImageTestMakePng($root . '/upload/2026/07/skip-persist.png', 41, 31);
+
+    try {
+        $size = KernelContainerOverride::with([
+            Paths::class => Paths::fromRoot($root),
+            ImageRepository::class => new stdClass(),
+        ], function (): ?array {
+            $src = new SrcImage([
+                'id' => 1,
+                'path' => 'upload/2026/07/skip-persist.png',
+                'file' => 'skip-persist.png',
+                'width' => null,
+                'height' => null,
+            ]);
+
+            return $src->get_size();
+        });
+
+        expect($size)->toBe([41, 31]);
+    } finally {
         srcImageTestRrmdir($root);
     }
 });

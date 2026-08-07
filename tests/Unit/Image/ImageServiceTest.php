@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Image;
 
+use PHPUnit\Framework\Assert;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Db\EntityManagerFactory;
@@ -43,6 +44,11 @@ use Piwigo\Event\Picture\DeleteElements;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use RuntimeException;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Core\FilterState;
+use Piwigo\Config\CurrentConfigService;
+use ReflectionMethod;
+use Piwigo\Tests\Support\KernelContainerOverride;
 
 beforeEach(function (): void {
     CurrentConfigTestFactory::get()->setSlideshowPeriod(4);
@@ -54,6 +60,130 @@ beforeEach(function (): void {
 afterEach(function (): void {
     CurrentConfigTestFactory::get()->reset();
 });
+
+test('currentUser() throws when the container returns an unexpected type for CurrentUser', function (): void {
+    // Kills line 93's InstanceOfToTrue -- currentUser() is a private,
+    // container-resolving helper reached via categoryService() (itself
+    // reached via associateImagesToCategories()'s own real-insert
+    // branch), which builds a PermissionService whose constructor calls
+    // $this->currentUser() as its own very first container resolve --
+    // before filterState()/accessLevelChecker() ever run. Its guard can
+    // only ever fire when the container's real binding for
+    // CurrentUser::class resolves to something other than a CurrentUser
+    // instance, something that never legitimately happens through
+    // Kernel::boot()'s own public API.
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/curruserwrongtype.jpg');
+    $service = imageServiceTestNewService($repo, $conn);
+
+    try {
+        KernelContainerOverride::withWrongTypeFor(CurrentUser::class, function () use ($service, $imageId): void {
+            $service->associateImagesToCategories([$imageId], [1]);
+        });
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+    }
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentUser::class);
+
+test('currentUser() returns the container-shared instance once Kernel is booted, not a fresh disconnected one', function (): void {
+    // Kills line 97's RemoveEarlyReturn -- only object identity against
+    // Kernel::container()->get(CurrentUser::class) distinguishes real
+    // code's early `return $currentUser;` (the container's own shared
+    // instance) from the mutant, which would fall through to the bottom
+    // `return new CurrentUser($this->currentConfig);` fallback
+    // regardless of Kernel::isBooted(), a brand new object never ===
+    // to the container's own.
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
+    Kernel::boot(Paths::fromRoot($root));
+
+    try {
+        $service = imageServiceTestNewService($repo, $conn, Paths::fromRoot($root));
+        $method = new ReflectionMethod(ImageService::class, 'currentUser');
+
+        $resolved = $method->invoke($service);
+        $containerInstance = Kernel::container()->get(CurrentUser::class);
+
+        expect($containerInstance)->toBeInstanceOf(CurrentUser::class);
+        expect($resolved)->toBe($containerInstance);
+    } finally {
+        Kernel::reset();
+        imageServiceTestRrmdir($root);
+    }
+});
+
+test('filterState() throws when the container returns an unexpected type for FilterState', function (): void {
+    // Kills line 121's InstanceOfToTrue -- filterState() is reached
+    // immediately after currentUser() inside the same PermissionService
+    // construction categoryService() performs; CurrentUser::class is left
+    // bound to the real container definition here (only FilterState::class
+    // is overridden), so currentUser() itself still resolves normally and
+    // this isolates filterState()'s own guard specifically.
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/filterstatewrongtype.jpg');
+    $service = imageServiceTestNewService($repo, $conn);
+
+    try {
+        KernelContainerOverride::withWrongTypeFor(FilterState::class, function () use ($service, $imageId): void {
+            $service->associateImagesToCategories([$imageId], [1]);
+        });
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+    }
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . FilterState::class);
+
+test('filterState() returns the container-shared instance once Kernel is booted, not a fresh disconnected one', function (): void {
+    // Kills line 125's RemoveEarlyReturn, same reasoning as currentUser()'s
+    // sibling test above.
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
+    Kernel::boot(Paths::fromRoot($root));
+
+    try {
+        $service = imageServiceTestNewService($repo, $conn, Paths::fromRoot($root));
+        $method = new ReflectionMethod(ImageService::class, 'filterState');
+
+        $resolved = $method->invoke($service);
+        $containerInstance = Kernel::container()->get(FilterState::class);
+
+        expect($containerInstance)->toBeInstanceOf(FilterState::class);
+        expect($resolved)->toBe($containerInstance);
+    } finally {
+        Kernel::reset();
+        imageServiceTestRrmdir($root);
+    }
+});
+
+test('logger() throws when the container returns an unexpected type for CurrentLogger', function (): void {
+    // Kills line 143's InstanceOfToTrue -- emptyLounge() calls logger()
+    // as its very first statement, before touching the shared
+    // empty_lounge_running lock/row at all, so this doesn't need the
+    // cross-process advisory lock dance every other emptyLounge() test
+    // elsewhere in this file requires.
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    $service = imageServiceTestNewService($repo, $conn);
+
+    KernelContainerOverride::withWrongTypeFor(CurrentLogger::class, function () use ($service): void {
+        $service->emptyLounge();
+    });
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentLogger::class);
+
+test('currentConfigService() throws when the container returns an unexpected type for CurrentConfigService', function (): void {
+    // Kills line 167's InstanceOfToTrue -- countOrphans() is the
+    // simplest public entry point that reaches currentConfigService()
+    // (only when $currentConfig->countOrphans() is null, which is
+    // CurrentConfigTestFactory's own default state after afterEach's
+    // reset()).
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    expect(CurrentConfigTestFactory::get()->countOrphans())->toBeNull();
+    $service = imageServiceTestNewService($repo, $conn);
+
+    KernelContainerOverride::withWrongTypeFor(CurrentConfigService::class, function () use ($service): void {
+        $service->countOrphans();
+    });
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentConfigService::class);
 
 test('getDefaultSlideshowParams reads conf', function (): void {
     $params = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->getDefaultSlideshowParams();
@@ -769,6 +899,64 @@ test('deleteElements() returns 0 without touching the database when physical del
     }
 });
 
+test('deleteElements() with physical deletion removing zero files never fires delete_elements or records the activity', function (): void {
+    // Kills line 404's IfNegated/IdenticalToNotIdentical and line 405's
+    // RemoveEarlyReturn together -- all three mutants share the same
+    // observable difference in this exact scenario (physicalDeletion
+    // reduces $ids down to []): the sibling test above only asserts the
+    // *return value* (0) and that the row survives, both of which every
+    // one of these mutants reproduces too (deleteImages([]) has its own
+    // internal empty-ids guard, findRepresentedCategoryIds([]) compiles
+    // to a real, valid `IN (NULL)` matching zero rows, and count([]) is
+    // 0 regardless) -- so none of that distinguishes them. What real
+    // code's early `return 0;` actually skips, and every one of these
+    // mutants wrongly falls through to, is dispatching DeleteElements($ids)
+    // with an empty $ids and calling activityLogger->record(), neither of
+    // which real code ever does once physical deletion removed nothing.
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
+    Kernel::boot(Paths::fromRoot($root));
+    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
+
+    mkdir($root . '/upload/2026/07/locked3', 0o777, true);
+    $blockedId = imageServiceTestInsertImage($conn, 'upload/2026/07/locked3/blocked.jpg');
+    file_put_contents($root . '/upload/2026/07/locked3/blocked.jpg', 'x');
+    chmod($root . '/upload/2026/07/locked3', 0o555);
+
+    $deleteFired = false;
+    $deleteHandler = function () use (&$deleteFired): void {
+        $deleteFired = true;
+    };
+    EventDispatcherTestFactory::get()->addTypedHandler(DeleteElements::class, $deleteHandler);
+
+    $activityRepo = EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class);
+    expect($activityRepo)->toBeInstanceOf(ActivityRepository::class);
+    $activityService = new ActivityService($activityRepo);
+
+    try {
+        $service = new ImageService(imageServiceTestLang(), $repo, $activityService, SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot($root));
+        $urlService = new ImageServiceTestFakeUrlService();
+
+        set_error_handler(static fn (): bool => true);
+        try {
+            $result = $service->deleteElements([$blockedId], $urlService, physicalDeletion: true);
+        } finally {
+            restore_error_handler();
+        }
+
+        expect($result)->toBe(0);
+        expect($deleteFired)->toBeFalse();
+        expect($activityService->getOccuredOnForObject($blockedId, 'photo', 'delete'))->toBeNull();
+    } finally {
+        EventDispatcherTestFactory::get()->removeEventHandler(DeleteElements::class, $deleteHandler);
+        chmod($root . '/upload/2026/07/locked3', 0o755);
+        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$blockedId]);
+        imageServiceTestRrmdir($root);
+        Kernel::reset();
+        CurrentConfigTestFactory::get()->reset();
+    }
+});
+
 test('deleteElements() fires begin_delete_elements and delete_elements with the exact real ids, deletes the image row, and records the activity', function (): void {
     // Kills line 271's IfNegated/IdenticalToNotIdentical (the empty-ids
     // guard), line 274's RemoveMethodCall (begin_delete_elements),
@@ -1124,6 +1312,37 @@ test('getImageInfos() delegates a fatal error to HtmlRenderingInterface when die
 
     expect(fn () => $service->getImageInfos(999_999, $renderer, dieOnMissing: true))->toThrow(ImageServiceTestFatalSignal::class);
     expect($renderer->lastMessage)->toBe('photo 999999 does not exist');
+});
+
+test('getImageInfos() returns the real row for an existing image id, not null', function (): void {
+    // Kills line 1004's TernaryNegated and IdenticalToNotIdentical, which
+    // both reduce to the identical mutant condition
+    // (`$imageIdVo !== null ? null : $this->repo->findById($imageIdVo)`,
+    // swapping which side of the ternary calls findById()). Every
+    // existing getImageInfos() test above only ever exercises a
+    // non-numeric id or a genuinely-missing numeric id -- for both, real
+    // code and the mutant agree that $image ends up null, just via a
+    // different path (real code's tryFrom() success calls findById(),
+    // which itself returns null for a missing row; the mutant skips
+    // findById() entirely and hard-codes null). Only a genuinely EXISTING
+    // id distinguishes them: real code calls findById() and gets the real
+    // row back; the mutant's flipped condition takes the null branch
+    // instead and never calls findById() at all, always returning null
+    // for ANY existing id.
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/realgetinfos.jpg');
+
+    try {
+        $service = imageServiceTestNewService($repo, $conn);
+        $renderer = new ImageServiceTestFakeHtmlRenderer();
+
+        $info = $service->getImageInfos($imageId, $renderer);
+
+        Assert::assertIsArray($info);
+        expect($info['id'])->toBe($imageId);
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+    }
 });
 
 /**

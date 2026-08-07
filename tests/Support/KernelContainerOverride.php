@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Support;
 
+use Psr\Container\ContainerExceptionInterface;
 use ReflectionProperty;
 use stdClass;
 use Piwigo\Core\Container;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 
 /**
  * Test-only reflection seam for the Bootstrap\*Accessor "Container
@@ -38,8 +40,35 @@ final class KernelContainerOverride
      */
     public static function with(array $definitions, callable $fn): mixed
     {
+        // Container::build()'s own $paths param is what makes Paths::class
+        // resolvable at all (it has no binding of its own in
+        // config/container.php -- see that file's own comment on
+        // Paths::class). Carrying over whatever Paths the caller's own
+        // prior Kernel::boot() already established keeps every OTHER, not
+        // overridden, real dependency chain resolvable exactly as it would
+        // under that real boot -- without it, any real (non-overridden)
+        // chain that transitively needs Paths (e.g. UrlService ->
+        // HtmlService -> ErrorCollector) fails on an unrelated
+        // "$root has no value defined or guessable" autowiring error
+        // instead of reaching the guard actually under test.
+        //
+        // The caller's currently-booted container may itself have no real
+        // Paths available (e.g. a bare Kernel::boot() with no Paths arg,
+        // same call some tests use to exercise "not booted" defaults) --
+        // in that case Kernel::container()->get(Paths::class) throws the
+        // exact same autowiring error this whole carry-through exists to
+        // avoid, so there's genuinely nothing to carry over.
+        $paths = null;
+        if (Kernel::isBooted()) {
+            try {
+                $existingPaths = Kernel::container()->get(Paths::class);
+                $paths = $existingPaths instanceof Paths ? $existingPaths : null;
+            } catch (ContainerExceptionInterface) {
+                $paths = null;
+            }
+        }
         Kernel::reset();
-        $container = Container::build($definitions);
+        $container = Container::build($definitions, $paths instanceof Paths ? $paths : null);
 
         (new ReflectionProperty(Kernel::class, 'container'))->setValue(null, $container);
         (new ReflectionProperty(Kernel::class, 'booted'))->setValue(null, true);

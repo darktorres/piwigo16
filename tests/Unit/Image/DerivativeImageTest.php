@@ -7,7 +7,9 @@ namespace Piwigo\Tests\Unit\Image;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Error;
 use Exception;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Image\WatermarkParams;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
@@ -21,6 +23,7 @@ use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Image\SizingParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Tests\Support\KernelContainerOverride;
+use ReflectionMethod;
 use ReflectionProperty;
 use RuntimeException;
 
@@ -147,6 +150,53 @@ test('url() throws a RuntimeException when RequestBootstrap has not set a Curren
         ->toThrow(RuntimeException::class, 'DerivativeImage: no CurrentConfig set (RequestBootstrap not run yet?)');
 });
 
+test('url() throws a RuntimeException when the container returns an unexpected type for CurrentConfig', function (): void {
+    // Kills line 97's InstanceOfToTrue -- currentConfig()'s own
+    // instanceof guard, paired with the "not booted" half tested by the
+    // sibling test above. This half can only ever fire when the
+    // container's real binding for CurrentConfig::class resolves to
+    // something other than a CurrentConfig instance, something that
+    // never legitimately happens through Kernel::boot()'s own public
+    // API -- KernelContainerOverride::withWrongTypeFor() rebinds it to a
+    // plain stdClass to force the branch. $src is built under a real
+    // prior boot (same reasoning as the sibling test above: SrcImage's
+    // own constructor needs a booted Kernel), then reused once the
+    // container is swapped out from under it.
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-currentconfig-wrong-type'));
+    $src = new SrcImage([
+        'id' => 42,
+        'path' => 'upload/2026/07/photo.jpg',
+        'file' => 'photo.jpg',
+    ]);
+
+    KernelContainerOverride::withWrongTypeFor(CurrentConfig::class, function () use ($src): void {
+        expect(fn () => DerivativeImage::url(new DerivativeParams(SizingParams::classic(50, 50)), $src))
+            ->toThrow(RuntimeException::class, 'DerivativeImage: no CurrentConfig set (RequestBootstrap not run yet?)');
+    });
+});
+
+test('constructing a DerivativeImage throws a RuntimeException when the container returns an unexpected type for ImageStdParams', function (): void {
+    // Kills line 64's InstanceOfToTrue -- imageStdParams()'s own
+    // instanceof guard. Passing a string $type routes the constructor
+    // through `self::imageStdParams()->get_by_type($type)` before
+    // self::build() ever runs, the simplest public entry point that
+    // reaches imageStdParams() alone -- unlike build()'s own
+    // imageStdParams() read (only reachable via the is_identity() branch,
+    // which needs has_size()=true and a whole seeded type map).
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-stdparams-wrong-type'));
+    $src = new SrcImage([
+        'id' => 1,
+        'path' => 'upload/2026/07/photo.jpg',
+        'file' => 'photo.jpg',
+    ]);
+    $currentConfig = CurrentConfigTestFactory::get();
+
+    KernelContainerOverride::withWrongTypeFor(ImageStdParams::class, function () use ($src, $currentConfig): void {
+        expect(fn () => new DerivativeImage(ImageStdParams::THUMB, $src, $currentConfig))
+            ->toThrow(RuntimeException::class, 'DerivativeImage: no ImageStdParams set (RequestBootstrap not run yet?)');
+    });
+});
+
 test('get_url() throws a RuntimeException when RequestBootstrap has not set a URL service yet', function (): void {
     // Unlike url() above, the instance get_url() method never reads
     // currentConfig() -- constructing the DerivativeImage instance itself
@@ -167,6 +217,78 @@ test('get_url() throws a RuntimeException when RequestBootstrap has not set a UR
 
     expect(fn () => $derivative->get_url())
         ->toThrow(RuntimeException::class, 'DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
+});
+
+test('get_url() throws a RuntimeException when the container returns an unexpected type for UrlServiceInterface', function (): void {
+    // Kills line 43's InstanceOfToTrue -- urlService()'s own instanceof
+    // guard, paired with the "not booted" half tested by the sibling
+    // test above. This half can only ever fire when the container's real
+    // binding for UrlServiceInterface::class resolves to something other
+    // than a UrlServiceInterface instance, something that never
+    // legitimately happens through Kernel::boot()'s own public API. The
+    // instance is built under a real boot first (params is real and
+    // non-null, so get_url() actually reaches urlService()), then the
+    // container is swapped out from under it via
+    // KernelContainerOverride::withWrongTypeFor().
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-urlservice-wrong-type'));
+    $src = new SrcImage([
+        'id' => 1,
+        'path' => 'gallery/photo.jpg',
+        'file' => 'photo.jpg',
+    ]);
+    $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
+
+    KernelContainerOverride::withWrongTypeFor(UrlServiceInterface::class, function () use ($derivative): void {
+        expect(fn () => $derivative->get_url())
+            ->toThrow(RuntimeException::class, 'DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
+    });
+});
+
+test('eventDispatcher() throws a RuntimeException when the container returns an unexpected type for EventDispatcher', function (): void {
+    // Kills line 77's InstanceOfToTrue -- eventDispatcher()'s own
+    // instanceof guard. Unlike the urlService()/ImageStdParams guards
+    // above, this can't be reached through the public get_url() API: it
+    // calls self::urlService() first, which -- now that
+    // KernelContainerOverride carries the real Paths through -- actually
+    // resolves UrlService, whose own HtmlRenderingInterface dependency
+    // (HtmlService) *also* constructor-injects EventDispatcher. That
+    // makes HtmlService's own constructor the first thing to observe the
+    // stdClass override, as a hard TypeError, before get_url() ever
+    // reaches eventDispatcher()'s own instanceof guard. Calling the
+    // private static method directly is the only way to isolate this
+    // guard from that unrelated, earlier collaborator-construction
+    // failure (no setAccessible() call -- a deprecated no-op since PHP
+    // 8.1).
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-eventdispatcher-wrong-type'));
+
+    $eventDispatcherMethod = new ReflectionMethod(DerivativeImage::class, 'eventDispatcher');
+
+    KernelContainerOverride::withWrongTypeFor(EventDispatcher::class, function () use ($eventDispatcherMethod): void {
+        expect(static fn (): mixed => $eventDispatcherMethod->invoke(null))
+            ->toThrow(RuntimeException::class, 'DerivativeImage: no EventDispatcher set (RequestBootstrap not run yet?)');
+    });
+});
+
+test('get_path() throws a RuntimeException when the container returns an unexpected type for Paths', function (): void {
+    // Kills line 113's InstanceOfToTrue -- paths()'s own instanceof
+    // guard. get_path() is the simplest public entry point that reaches
+    // paths() alone: derivativeUrlStyle() defaults to 2 (not the "auto"
+    // 0 that would additionally route build() itself through paths()
+    // during construction), so the instance builds cleanly under the
+    // real container before Paths::class is swapped out for get_path()'s
+    // own call.
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-paths-wrong-type'));
+    $src = new SrcImage([
+        'id' => 1,
+        'path' => 'gallery/photo.jpg',
+        'file' => 'photo.jpg',
+    ]);
+    $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
+
+    KernelContainerOverride::withWrongTypeFor(Paths::class, function () use ($derivative): void {
+        expect(fn () => $derivative->get_path())
+            ->toThrow(RuntimeException::class, 'DerivativeImage: no Paths set (RequestBootstrap not run yet?)');
+    });
 });
 
 /**

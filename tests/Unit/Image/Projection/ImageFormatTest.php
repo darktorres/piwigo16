@@ -47,6 +47,23 @@ test('fromRow throws for a missing/malformed row, image_id has no valid zero-def
         ->toThrow(InvalidArgumentException::class, 'ImageId must be a positive integer, got 0');
 });
 
+test('fromRow defaults format_id to 0 and ext to an empty string when the row omits them', function (): void {
+    // Kills fromRow()'s DecrementInteger/IncrementInteger on format_id's
+    // `: 0` fallback (mutated to -1/1) and EmptyStringToNotEmpty on ext's
+    // `: ''` fallback -- the "malformed row" test above never observes
+    // either default: it passes a totally empty row, so
+    // ImageId::from(0) throws before the constructor call even
+    // completes, discarding both already-computed default values before
+    // either is ever asserted. Here image_id is real and valid, so
+    // construction succeeds and both defaults are directly observable.
+    $format = ImageFormat::fromRow([
+        'image_id' => '4',
+    ]);
+
+    expect($format->formatId)->toBe(0);
+    expect($format->ext)->toBe('');
+});
+
 test('fromEntity copies every field from a real ImageFormatEntity', function (): void {
     $entity = new ImageFormatEntity(
         imageId: ImageId::from(5),

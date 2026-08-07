@@ -331,4 +331,301 @@ final class ImageStdParamsTest extends IntegrationTestCase
         $enabledValue = $rows[0]['enabled'];
         self::assertSame(1, is_numeric($enabledValue) ? (int) $enabledValue : -1);
     }
+
+    public function test_watermark_from_json_rejects_a_non_array_min_size_and_a_pair_with_one_non_numeric_element(): void
+    {
+        // WatermarkParams::$min_size defaults to [500, 500] --
+        // watermarkFromJson()'s own guard must reject anything that isn't a
+        // genuine 2-element numeric array and leave that default intact,
+        // rather than coercing a malformed value into a bogus min_size.
+        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSettings());
+        $this->conn->insert(Tables::derivativeSettings(), [
+            'id' => 1,
+            'default_quality' => 95,
+            // A 2-character string: is_array() is false, but (via PHP's
+            // string-offset access) isset($minSize[0], $minSize[1]) and
+            // both is_numeric() checks would still pass on '1'/'2' --
+            // exercises the is_array() conjunct specifically.
+            'watermark_json' => json_encode(['min_size' => '12']),
+            'custom_json' => '{}',
+        ]);
+
+        $this->imageStdParams->load_from_db();
+
+        self::assertSame([500, 500], $this->imageStdParams->get_watermark()->min_size);
+
+        // A genuine 2-element array where the first element is numeric but
+        // the second isn't -- exercises the trailing is_numeric($minSize[1])
+        // conjunct specifically (is_array()/isset() both pass here).
+        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSettings());
+        $this->conn->insert(Tables::derivativeSettings(), [
+            'id' => 1,
+            'default_quality' => 95,
+            'watermark_json' => json_encode(['min_size' => [300, 'abc']]),
+            'custom_json' => '{}',
+        ]);
+
+        $this->imageStdParams->load_from_db();
+
+        self::assertSame([500, 500], $this->imageStdParams->get_watermark()->min_size);
+    }
+
+    public function test_watermark_from_json_casts_numeric_string_json_values_to_int(): void
+    {
+        // watermarkToJson()/set_watermark() always produce/consume real PHP
+        // ints, so a save()/load_from_db() round trip through this class's
+        // own API never exercises these (int) casts -- only a hand-edited
+        // or externally-written row (Doctrine's `json` column type only
+        // guarantees valid JSON, not that every value already has the
+        // right PHP type) can contain numeric strings here.
+        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSettings());
+        $this->conn->insert(Tables::derivativeSettings(), [
+            'id' => 1,
+            'default_quality' => 95,
+            'watermark_json' => json_encode([
+                'min_size' => ['300', '250'],
+                'xpos' => '77',
+                'xrepeat' => '4',
+                'yrepeat' => '6',
+            ]),
+            'custom_json' => '{}',
+        ]);
+
+        $this->imageStdParams->load_from_db();
+
+        self::assertSame([300, 250], $this->imageStdParams->get_watermark()->min_size);
+        self::assertSame(77, $this->imageStdParams->get_watermark()->xpos);
+        self::assertSame(4, $this->imageStdParams->get_watermark()->xrepeat);
+        self::assertSame(6, $this->imageStdParams->get_watermark()->yrepeat);
+    }
+
+    public function test_sizes_from_entities_treats_a_size_with_only_one_of_min_width_or_min_height_set_as_having_no_min_size(): void
+    {
+        // SizingParams::min_size is only ever meaningful as a genuine
+        // 2-element pair (see its own constructor docblock) --
+        // sizesFromEntities() must require BOTH minWidth and minHeight
+        // non-null, not treat "either one set" as enough to build a
+        // malformed 1-real/1-null pair.
+        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
+        $this->conn->insert(Tables::derivativeSize(), [
+            'name' => 'thumb',
+            'enabled' => 1,
+            'max_width' => 200,
+            'max_height' => 150,
+            'max_crop' => '0.5000',
+            'min_width' => 80,
+            'min_height' => null,
+            'sharpen' => '0.0000',
+            'last_mod_time' => 0,
+        ]);
+        $this->conn->insert(Tables::derivativeSize(), [
+            'name' => '3xlarge',
+            'enabled' => 0,
+            'max_width' => 2232,
+            'max_height' => 1674,
+            'max_crop' => '0.0000',
+            'min_width' => null,
+            'min_height' => null,
+            'sharpen' => '0.0000',
+            'last_mod_time' => 0,
+        ]);
+
+        $this->imageStdParams->load_from_db();
+
+        self::assertNull($this->imageStdParams->get_defined_type_map()['thumb']->sizing->min_size);
+    }
+
+    public function test_sizes_from_entities_orders_canonical_types_first_then_appends_any_unrecognized_names(): void
+    {
+        // DerivativeSizeRepository::findAllEnabled() has no ORDER BY (name
+        // is the PK, so rows come back alphabetically) -- sizesFromEntities()
+        // must re-sort into the canonical square/thumb/.../4xlarge order
+        // (see this method's own comment), not just leave the DB's
+        // alphabetical order in place. 'medium' sorts before 'xsmall'
+        // alphabetically but after it in ImageStdParams::ALL_TYPES, so this
+        // pair alone is enough to distinguish the two orders. 'bogus_type'
+        // -- a name outside ImageStdParams::ALL_TYPES, something the DB
+        // schema has no CHECK constraint to prevent -- must still surface
+        // via the canonical loop's own fallback rather than being silently
+        // dropped.
+        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
+        $this->conn->insert(Tables::derivativeSize(), [
+            'name' => 'medium',
+            'enabled' => 1,
+            'max_width' => 792,
+            'max_height' => 594,
+            'max_crop' => '0.0000',
+            'min_width' => null,
+            'min_height' => null,
+            'sharpen' => '0.0000',
+            'last_mod_time' => 0,
+        ]);
+        $this->conn->insert(Tables::derivativeSize(), [
+            'name' => 'xsmall',
+            'enabled' => 1,
+            'max_width' => 432,
+            'max_height' => 324,
+            'max_crop' => '0.0000',
+            'min_width' => null,
+            'min_height' => null,
+            'sharpen' => '0.0000',
+            'last_mod_time' => 0,
+        ]);
+        $this->conn->insert(Tables::derivativeSize(), [
+            'name' => 'bogus_type',
+            'enabled' => 1,
+            'max_width' => 10,
+            'max_height' => 10,
+            'max_crop' => '0.0000',
+            'min_width' => null,
+            'min_height' => null,
+            'sharpen' => '0.0000',
+            'last_mod_time' => 0,
+        ]);
+        $this->conn->insert(Tables::derivativeSize(), [
+            'name' => '3xlarge',
+            'enabled' => 0,
+            'max_width' => 2232,
+            'max_height' => 1674,
+            'max_crop' => '0.0000',
+            'min_width' => null,
+            'min_height' => null,
+            'sharpen' => '0.0000',
+            'last_mod_time' => 0,
+        ]);
+
+        $this->imageStdParams->load_from_db();
+
+        self::assertSame(['xsmall', 'medium', 'bogus_type'], array_keys($this->imageStdParams->get_defined_type_map()));
+    }
+
+    public function test_apply_global_never_enables_watermarking_when_the_watermark_file_is_empty(): void
+    {
+        // A fresh instance's $watermark stays null until set_watermark()/
+        // load_from_db() populates it; apply_global() lazily defaults it to
+        // a fresh WatermarkParams() whose file stays ''. That empty-file
+        // check must short-circuit the whole expression, even for a size
+        // whose ideal_size is large enough that the default min_size
+        // ([500, 500]) would otherwise satisfy the size comparison below.
+        $params = new DerivativeParams(SizingParams::classic(999, 999));
+
+        $this->imageStdParams->apply_global($params);
+
+        self::assertFalse($params->use_watermark);
+    }
+
+    public function test_apply_global_compares_each_axis_of_the_watermarks_min_size_against_the_matching_axis_of_the_sizes_ideal_size(): void
+    {
+        $watermark = new WatermarkParams();
+        $watermark->file = 'w.png';
+
+        // Isolates the width (index 0) comparison: min_size[0] equals
+        // ideal_size[0] exactly (80<=80 is true), while the height (index 1)
+        // pair is unambiguously false (9000<=1 isn't) -- so use_watermark
+        // can only end up true here via the width comparison. The extra
+        // -1/1 entries are deliberately chosen so that reading the wrong
+        // array index, using '<'/'>' instead of '<=', or turning the "or"
+        // into an "and" would each flip the result.
+        $watermark->min_size = [-1 => 9999, 0 => 80, 1 => 9000];
+        $this->imageStdParams->set_watermark($watermark);
+        $params = new DerivativeParams(new SizingParams([-1 => 1, 0 => 80, 1 => 1]));
+
+        $this->imageStdParams->apply_global($params);
+
+        self::assertTrue($params->use_watermark);
+
+        // Mirrors the above, isolating the height (index 1) comparison
+        // instead: 80<=80 is true there, while the width (index 0) pair is
+        // unambiguously false (9000<=1 isn't).
+        $watermark->min_size = [0 => 9000, 1 => 80, 2 => 9999];
+        $this->imageStdParams->set_watermark($watermark);
+        $params2 = new DerivativeParams(new SizingParams([0 => 1, 1 => 80, 2 => 1]));
+
+        $this->imageStdParams->apply_global($params2);
+
+        self::assertTrue($params2->use_watermark);
+    }
+
+    public function test_build_maps_applies_the_watermark_to_every_defined_size(): void
+    {
+        $watermark = new WatermarkParams();
+        $watermark->file = 'w.png';
+        $watermark->min_size = [10, 10];
+        $this->imageStdParams->set_watermark($watermark);
+
+        $params = new DerivativeParams(SizingParams::classic(200, 200));
+        $this->imageStdParams->set_and_save(['thumb' => $params]);
+
+        $defined = $this->imageStdParams->get_defined_type_map();
+        self::assertSame('thumb', $defined['thumb']->type);
+        self::assertTrue($defined['thumb']->use_watermark);
+    }
+
+    public function test_build_maps_backfills_from_the_smallest_defined_type_all_the_way_down_to_index_zero(): void
+    {
+        // Only 'square' (index 0 in ImageStdParams::ALL_TYPES, the very
+        // smallest type) is defined -- every other type must fall back to
+        // it. build_maps()'s own inner search loop starts at $i - 1 and
+        // walks down to (and including) index 0; if that lower bound were
+        // ever off by one, 'square' -- sitting at the boundary itself --
+        // would never be found, and every other type would stay entirely
+        // undefined.
+        $square = new DerivativeParams(SizingParams::square(120));
+        $this->imageStdParams->set_and_save(['square' => $square]);
+
+        $allTypeMap = $this->imageStdParams->get_all_type_map();
+        self::assertCount(11, $allTypeMap);
+
+        $expectedUndefined = array_fill_keys(
+            ['thumb', '2small', 'xsmall', 'small', 'medium', 'large', 'xlarge', 'xxlarge', '3xlarge', '4xlarge'],
+            'square',
+        );
+        self::assertSame($expectedUndefined, $this->imageStdParams->get_undefined_type_map());
+        self::assertSame($allTypeMap['square'], $allTypeMap['thumb']);
+        self::assertSame($allTypeMap['square'], $allTypeMap['4xlarge']);
+    }
+
+    public function test_build_maps_never_treats_an_out_of_bounds_negative_index_as_a_valid_fallback(): void
+    {
+        // ALL_TYPES is a plain 0..10-indexed array; build_maps()'s own inner
+        // search loop must stop once it reaches index 0 (the smallest real
+        // type) rather than also reading self::ALL_TYPES[-1] (undefined ->
+        // null, which PHP then coerces to the empty-string array key '').
+        // A row named '' is nothing the application itself ever writes, but
+        // the schema has no CHECK constraint against it (see
+        // DerivativeSizeEntity's own docblock) -- planting one directly is
+        // the only way to observe whether that extra, out-of-bounds
+        // iteration would wrongly treat it as a valid fallback source.
+        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
+        $this->conn->insert(Tables::derivativeSize(), [
+            'name' => '',
+            'enabled' => 1,
+            'max_width' => 999,
+            'max_height' => 999,
+            'max_crop' => '0.0000',
+            'min_width' => null,
+            'min_height' => null,
+            'sharpen' => '0.0000',
+            'last_mod_time' => 0,
+        ]);
+        $this->conn->insert(Tables::derivativeSize(), [
+            'name' => '3xlarge',
+            'enabled' => 0,
+            'max_width' => 2232,
+            'max_height' => 1674,
+            'max_crop' => '0.0000',
+            'min_width' => null,
+            'min_height' => null,
+            'sharpen' => '0.0000',
+            'last_mod_time' => 0,
+        ]);
+
+        $this->imageStdParams->load_from_db();
+
+        // None of ImageStdParams::ALL_TYPES is defined (only the '' row
+        // is) -- every real type must stay genuinely undefined, not
+        // silently backfilled from the out-of-bounds '' entry.
+        self::assertSame([], $this->imageStdParams->get_undefined_type_map());
+        self::assertCount(1, $this->imageStdParams->get_all_type_map());
+    }
 }

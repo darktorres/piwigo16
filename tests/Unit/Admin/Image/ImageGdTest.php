@@ -135,6 +135,25 @@ test('construct decodes a real GIF', function (): void {
     expect($img->get_height())->toBe(9);
 });
 
+test('construct lowercases the file extension before matching it', function (): void {
+    // Real gap, found via mutation testing: every existing decode test
+    // here uses a lowercase extension -- removing the strtolower() call
+    // wrapping StringHelper::getExtension() was invisible without a real
+    // uppercase-suffixed file, which would otherwise fall through to the
+    // "unsupported file extension" branch instead of decoding.
+    $path = imageGdTestMarker() . '/photo.PNG';
+    $gdImg = imagecreatetruecolor(15, 8);
+    if ($gdImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagepng($gdImg, $path);
+
+    $img = new ImageGd($path);
+
+    expect($img->get_width())->toBe(15);
+    expect($img->get_height())->toBe(8);
+});
+
 test('get_width and get_height report the real decoded dimensions, not transposed', function (): void {
     $path = imageGdTestMarker() . '/dims.jpg';
     $gdImg = imagecreatetruecolor(64, 12);
@@ -233,6 +252,39 @@ test('crop accepts real float width/height/x/y without a TypeError', function ()
     expect($img->get_height())->toBe(20);
 });
 
+test('crop writes into every pixel of the destination canvas, including the far edge', function (): void {
+    // Real gap, found via mutation testing: the existing crop-region test
+    // only samples pixel (0,0) -- never the opposite corner, which is
+    // exactly where imagecopymerge()'s dst_x/dst_y literals (both 0) land.
+    // Shifting either to -1 leaves that far corner as the freshly-
+    // allocated destination canvas's own default black, never overwritten
+    // by the merge.
+    $path = imageGdTestMarker() . '/crop-edge.png';
+    $gdImg = imagecreatetruecolor(10, 10);
+    if ($gdImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    $green = imagecolorallocate($gdImg, 0, 200, 0);
+    if ($green === false) {
+        throw new RuntimeException('imagecolorallocate failed');
+    }
+    imagefilledrectangle($gdImg, 0, 0, 9, 9, $green);
+    imagepng($gdImg, $path);
+
+    $img = new ImageGd($path);
+    $result = $img->crop(10, 10, 0, 0);
+
+    expect($result)->toBeTrue();
+    $color = imagecolorat($img->image, 9, 9);
+    if ($color === false) {
+        throw new RuntimeException('imagecolorat failed');
+    }
+    $rgb = imagecolorsforindex($img->image, $color);
+    expect($rgb['red'])->toBe(0);
+    expect($rgb['green'])->toBe(200);
+    expect($rgb['blue'])->toBe(0);
+});
+
 test('resize produces a real image scaled to exactly the requested dimensions', function (): void {
     $path = imageGdTestMarker() . '/resize.jpg';
     $gdImg = imagecreatetruecolor(80, 40);
@@ -265,6 +317,84 @@ test('resize accepts real float width/height without a TypeError', function (): 
     expect($img->get_height())->toBe(20);
 });
 
+test('resize writes into every pixel of the destination canvas, including both edges', function (): void {
+    // Real gap, found via mutation testing: neither existing resize test
+    // samples pixel colors at all. imagecopyresampled()'s dst_x/dst_y
+    // literals (both 0) place the resampled content within the
+    // destination canvas -- shifting either by +-1 leaves one edge (the
+    // near or the far one, depending on direction) as the freshly-
+    // allocated canvas's own default black, never overwritten.
+    $path = imageGdTestMarker() . '/resize-edge.png';
+    $gdImg = imagecreatetruecolor(10, 10);
+    if ($gdImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    $green = imagecolorallocate($gdImg, 0, 200, 0);
+    if ($green === false) {
+        throw new RuntimeException('imagecolorallocate failed');
+    }
+    imagefilledrectangle($gdImg, 0, 0, 9, 9, $green);
+    imagepng($gdImg, $path);
+
+    $img = new ImageGd($path);
+    $result = $img->resize(10, 10);
+
+    expect($result)->toBeTrue();
+    foreach ([[0, 0], [9, 9]] as [$px, $py]) {
+        $color = imagecolorat($img->image, $px, $py);
+        if ($color === false) {
+            throw new RuntimeException('imagecolorat failed');
+        }
+        $rgb = imagecolorsforindex($img->image, $color);
+        expect($rgb['red'])->toBe(0);
+        expect($rgb['green'])->toBe(200);
+        expect($rgb['blue'])->toBe(0);
+    }
+});
+
+test('resize samples from the correct source region, not shifted by one pixel', function (): void {
+    // Real gap, found via mutation testing: imagecopyresampled()'s src_x/
+    // src_y literals (both 0) determine which part of the source image
+    // feeds the resampled output. A 1:1 resize (same target size as
+    // source) turns this into a plain identity copy, so a 3-quadrant
+    // source image pins down exactly which source pixel each destination
+    // pixel is read from.
+    $path = imageGdTestMarker() . '/resize-quadrants.png';
+    $gdImg = imagecreatetruecolor(20, 20);
+    if ($gdImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    $red = imagecolorallocate($gdImg, 255, 0, 0);
+    $blue = imagecolorallocate($gdImg, 0, 0, 255);
+    $green = imagecolorallocate($gdImg, 0, 255, 0);
+    if ($red === false || $blue === false || $green === false) {
+        throw new RuntimeException('imagecolorallocate failed');
+    }
+    imagefilledrectangle($gdImg, 0, 0, 9, 9, $red);
+    imagefilledrectangle($gdImg, 10, 0, 19, 9, $blue);
+    imagefilledrectangle($gdImg, 0, 10, 9, 19, $green);
+    imagepng($gdImg, $path);
+
+    $img = new ImageGd($path);
+    $result = $img->resize(20, 20);
+
+    expect($result)->toBeTrue();
+
+    $atRed = imagecolorat($img->image, 9, 9);
+    $atBlue = imagecolorat($img->image, 10, 9);
+    $atGreen = imagecolorat($img->image, 9, 10);
+    if ($atRed === false || $atBlue === false || $atGreen === false) {
+        throw new RuntimeException('imagecolorat failed');
+    }
+    $redRgb = imagecolorsforindex($img->image, $atRed);
+    $blueRgb = imagecolorsforindex($img->image, $atBlue);
+    $greenRgb = imagecolorsforindex($img->image, $atGreen);
+
+    expect([$redRgb['red'], $redRgb['green'], $redRgb['blue']])->toBe([255, 0, 0]);
+    expect([$blueRgb['red'], $blueRgb['green'], $blueRgb['blue']])->toBe([0, 0, 255]);
+    expect([$greenRgb['red'], $greenRgb['green'], $greenRgb['blue']])->toBe([0, 255, 0]);
+});
+
 test('rotate produces a real image with width/height swapped for a 90-degree turn', function (): void {
     $path = imageGdTestMarker() . '/rotate.jpg';
     $gdImg = imagecreatetruecolor(30, 10);
@@ -279,6 +409,42 @@ test('rotate produces a real image with width/height swapped for a 90-degree tur
     expect($result)->toBeTrue();
     expect($img->get_width())->toBe(10);
     expect($img->get_height())->toBe(30);
+});
+
+test('rotate fills newly exposed corners with the documented background color', function (): void {
+    // Real gap, found via mutation testing: the existing rotate test only
+    // uses a 90-degree turn, which is an exact geometric swap with no
+    // newly-exposed background pixels at all (every output pixel maps to
+    // a real source pixel). imagerotate()'s 3rd argument (background
+    // color, 0) is only observable for angles that are not a multiple of
+    // 90, which genuinely expose new corner regions with no source data.
+    $path = imageGdTestMarker() . '/rotate-bg.jpg';
+    $gdImg = imagecreatetruecolor(20, 20);
+    if ($gdImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    $red = imagecolorallocate($gdImg, 255, 0, 0);
+    if ($red === false) {
+        throw new RuntimeException('imagecolorallocate failed');
+    }
+    imagefilledrectangle($gdImg, 0, 0, 19, 19, $red);
+    imagejpeg($gdImg, $path, 100);
+    $img = new ImageGd($path);
+
+    $result = $img->rotate(45);
+
+    expect($result)->toBeTrue();
+    // The extreme (0,0) corner of the enlarged bounding canvas sits well
+    // outside the rotated (now diamond-shaped) red square -- a real
+    // background pixel, far from any anti-aliased edge.
+    $color = imagecolorat($img->image, 0, 0);
+    if ($color === false) {
+        throw new RuntimeException('imagecolorat failed');
+    }
+    $rgb = imagecolorsforindex($img->image, $color);
+    expect($rgb['red'])->toBe(0);
+    expect($rgb['green'])->toBe(0);
+    expect($rgb['blue'])->toBe(0);
 });
 
 test('set_compression_quality stores the requested quality and reports success', function (): void {
@@ -311,6 +477,39 @@ test('sharpen applies a real convolution and reports success', function (): void
     $img = new ImageGd($path);
 
     expect($img->sharpen(50))->toBeTrue();
+});
+
+test('sharpen leaves a uniform region at exactly its original value', function (): void {
+    // Real gap, found via mutation testing: the existing sharpen test
+    // only checks the boolean return value, never any actual pixel data.
+    // PwgImage::get_sharpen_matrix() always normalizes its kernel to sum
+    // to exactly 1 (every cell divided by the matrix's own total), so for
+    // any uniform (flat-color) region, imageconvolution()'s div=1/offset=0
+    // literals must leave every channel completely unchanged -- any
+    // div/offset mutation shows up as an exact, deterministic shift.
+    $path = imageGdTestMarker() . '/sharpen-exact.png';
+    $gdImg = imagecreatetruecolor(10, 10);
+    if ($gdImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    $gray = imagecolorallocate($gdImg, 100, 100, 100);
+    if ($gray === false) {
+        throw new RuntimeException('imagecolorallocate failed');
+    }
+    imagefilledrectangle($gdImg, 0, 0, 9, 9, $gray);
+    imagepng($gdImg, $path);
+    $img = new ImageGd($path);
+
+    expect($img->sharpen(50))->toBeTrue();
+
+    $color = imagecolorat($img->image, 5, 5);
+    if ($color === false) {
+        throw new RuntimeException('imagecolorat failed');
+    }
+    $rgb = imagecolorsforindex($img->image, $color);
+    expect($rgb['red'])->toBe(100);
+    expect($rgb['green'])->toBe(100);
+    expect($rgb['blue'])->toBe(100);
 });
 
 test('write saves as PNG when the destination extension is .png', function (): void {
@@ -366,6 +565,29 @@ test('write falls back to JPEG for any other destination extension', function ()
         throw new RuntimeException('getimagesize failed');
     }
     expect($info[2])->toBe(IMAGETYPE_JPEG);
+});
+
+test('write lowercases the destination extension before matching it', function (): void {
+    // Real gap, found via mutation testing: every existing write() test
+    // uses a lowercase destination extension -- removing the strtolower()
+    // call wrapping StringHelper::getExtension() was invisible without a
+    // real uppercase-suffixed destination, which would otherwise fall
+    // through past the 'png'/'gif' checks straight to the JPEG default.
+    $path = imageGdTestMarker() . '/writesrc-upper.jpg';
+    $dest = imageGdTestMarker() . '/writedest-upper.PNG';
+    $gdImg = imagecreatetruecolor(6, 6);
+    if ($gdImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagejpeg($gdImg, $path);
+    $img = new ImageGd($path);
+
+    expect($img->write($dest))->toBeTrue();
+    $info = getimagesize($dest);
+    if ($info === false) {
+        throw new RuntimeException('getimagesize failed');
+    }
+    expect($info[2])->toBe(IMAGETYPE_PNG);
 });
 
 test('compose throws when the overlay uses a different image backend', function (): void {
@@ -537,4 +759,89 @@ test('compose merges a same-backend overlay onto the base image', function (): v
     }
     $rgb = imagecolorsforindex($img->image, $color);
     expect($rgb['green'])->toBe(255);
+});
+
+test('compose accepts real float x/y/opacity without a TypeError', function (): void {
+    // Real gap, found via mutation testing: every existing compose() test
+    // passes int literals for x/y/opacity, never exercising the (int)
+    // casts this method's own docblock says were added specifically
+    // because GD's native functions throw a TypeError on a float argument
+    // (x/y feed imagecopy()/imagecopymerge(); opacity feeds
+    // imagecopymerge()'s $pct) -- a real caller (i.php's watermark
+    // positioning, per that same comment) always passes floats.
+    $basePath = imageGdTestMarker() . '/compose-float-base.jpg';
+    $overlayPath = imageGdTestMarker() . '/compose-float-overlay.png';
+    $baseImg = imagecreatetruecolor(20, 20);
+    if ($baseImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagejpeg($baseImg, $basePath);
+
+    $overlayImg = imagecreatetruecolor(8, 8);
+    if ($overlayImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagepng($overlayImg, $overlayPath);
+
+    $img = new ImageGd($basePath);
+    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
+
+    $result = $img->compose($overlay, 2.0, 2.0, 100.0);
+
+    expect($result)->toBeTrue();
+});
+
+test('compose samples the cut region and the overlay from the correct offsets, not shifted by one pixel', function (): void {
+    // Real gap, found via mutation testing: the "merges a same-backend
+    // overlay" test above uses a solid-colored overlay and only samples
+    // pixel (2,2) -- the overlay's own top-left corner, unaffected by an
+    // off-by-one in any of the several imagecopy()/imagecopymerge()
+    // offset literals along compose()'s cut->merge pipeline. A 3-quadrant
+    // overlay pins down exactly which overlay pixel lands at each
+    // destination pixel.
+    $basePath = imageGdTestMarker() . '/compose-quad-base.jpg';
+    $overlayPath = imageGdTestMarker() . '/compose-quad-overlay.png';
+    $baseImg = imagecreatetruecolor(20, 20);
+    if ($baseImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    $red = imagecolorallocate($baseImg, 255, 0, 0);
+    if ($red === false) {
+        throw new RuntimeException('imagecolorallocate failed');
+    }
+    imagefilledrectangle($baseImg, 0, 0, 19, 19, $red);
+    imagejpeg($baseImg, $basePath);
+
+    $overlayImg = imagecreatetruecolor(8, 8);
+    if ($overlayImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    $green = imagecolorallocate($overlayImg, 0, 255, 0);
+    $yellow = imagecolorallocate($overlayImg, 255, 255, 0);
+    $cyan = imagecolorallocate($overlayImg, 0, 255, 255);
+    if ($green === false || $yellow === false || $cyan === false) {
+        throw new RuntimeException('imagecolorallocate failed');
+    }
+    imagefilledrectangle($overlayImg, 0, 0, 3, 3, $green);
+    imagefilledrectangle($overlayImg, 4, 0, 7, 3, $yellow);
+    imagefilledrectangle($overlayImg, 0, 4, 3, 7, $cyan);
+    imagepng($overlayImg, $overlayPath);
+
+    $img = new ImageGd($basePath);
+    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
+
+    expect($img->compose($overlay, 2, 2, 100))->toBeTrue();
+
+    // (5,5) = local overlay coordinate (3,3), the last pixel still inside
+    // the top-left (green) quadrant -- any 1px shift in either direction,
+    // at any stage of the cut->merge pipeline, samples an adjacent
+    // quadrant here instead.
+    $color = imagecolorat($img->image, 5, 5);
+    if ($color === false) {
+        throw new RuntimeException('imagecolorat failed');
+    }
+    $rgb = imagecolorsforindex($img->image, $color);
+    expect($rgb['red'])->toBe(0);
+    expect($rgb['green'])->toBe(255);
+    expect($rgb['blue'])->toBe(0);
 });

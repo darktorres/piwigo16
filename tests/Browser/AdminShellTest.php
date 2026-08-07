@@ -124,7 +124,7 @@ it('shows the pending-comments counter when at least one unvalidated comment exi
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
     $db = H::connect();
     H::dbQuery($db, sprintf(
-        "INSERT INTO %scomments (image_id, date, author, anonymous_id, content, validated) VALUES (%d, NOW(), '%s', '127.0.0.9', '%s', 0)",
+        "INSERT INTO %scomments (image_id, date, author, anonymous_id, content, validated) VALUES (%d, NOW(), '%s', '127.0.0.9', '%s', FALSE)",
         $prefix,
         $imageId,
         H::dbEscape($db, 'AdminShell Test Author'),

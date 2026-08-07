@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
  * @return array<string, mixed>
@@ -25,6 +26,15 @@ test('fromRow narrows every column to its real type', function (): void {
         ->and($summary->date)->toBe('2026-08-01 00:00:00')
         ->and($summary->author)->toBe('power_user')
         ->and($summary->content)->toBe('I keep coming back to this one.');
+});
+
+test('fromRow keeps an already-hydrated SqlDateTime instance as-is', function (): void {
+    // Covers the getArrayResult() Gotcha #1 shape: a real Doctrine array
+    // hydration would already have converted date via SqlDateTimeType.
+    $row = fullCommentSummaryRow();
+    $row['date'] = SqlDateTime::from('2026-08-02 12:00:00');
+
+    expect(CommentSummary::fromRow($row)->date)->toBe('2026-08-02 12:00:00');
 });
 
 test('fromRow defaults every nullable column to null when absent', function (): void {

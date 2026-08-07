@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
  * Typed row shape for `piwigo_comments` (P17-23 Stage 1b, Comment domain --
@@ -96,7 +97,9 @@ final readonly class Comment
             author: is_string($row['author'] ?? null) ? $row['author'] : null,
             authorId: is_numeric($row['author_id'] ?? null) ? (int) $row['author_id'] : null,
             userEmail: ($row['user_email'] ?? null) instanceof Email ? $row['user_email']->value : null,
-            date: is_string($row['date'] ?? null) ? $row['date'] : null,
+            date: ($row['date'] ?? null) instanceof SqlDateTime
+                ? $row['date']->value
+                : (is_string($row['date'] ?? null) ? $row['date'] : null),
             imageId: $imageId,
             websiteUrl: is_string($row['website_url'] ?? null) ? $row['website_url'] : null,
             email: is_string($row['email'] ?? null) ? $row['email'] : null,

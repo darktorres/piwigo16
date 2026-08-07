@@ -6,6 +6,7 @@ namespace Piwigo\Comment\Projection;
 
 use InvalidArgumentException;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
  * Typed row shape for {@see \Piwigo\Ws\PwgImages::getInfo()}'s own
@@ -17,9 +18,13 @@ use Piwigo\Common\ValueObject\CommentId;
  * notes for why `AdminListingRow`/`AuthorCount`/`RecentCommentRow` aren't
  * built here).
  *
- * `date` stays `?string`, not `SqlDateTime` -- that VO's own domain-wide
- * propagation is Stage C, out of scope for this CommentId-focused pass,
- * same reasoning `Comment\Projection\Comment::$date` already documents.
+ * `date` stays `?string`, not `SqlDateTime`, at the DTO level -- this
+ * Projection's own convention (matches `Comment\Projection\Comment::$date`).
+ * `CommentEntity::$date` itself is `SqlDateTime`-typed (Phase 5) --
+ * `findSummariesForImage()` (this class's one real caller, which builds
+ * this DTO directly rather than through `fromRow()`) already unwraps it
+ * the same way `fromRow()` does here, for the same `getArrayResult()`
+ * Gotcha #1 reason.
  */
 final readonly class CommentSummary
 {
@@ -40,9 +45,11 @@ final readonly class CommentSummary
             throw new InvalidArgumentException(sprintf('Expected a positive comment id, got %s', get_debug_type($row['id'] ?? null)));
         }
 
+        $dateValue = $row['date'] ?? null;
+
         return new self(
             id: $id,
-            date: is_string($row['date'] ?? null) ? $row['date'] : null,
+            date: $dateValue instanceof SqlDateTime ? $dateValue->value : (is_string($dateValue) ? $dateValue : null),
             author: is_string($row['author'] ?? null) ? $row['author'] : null,
             content: is_string($row['content'] ?? null) ? $row['content'] : null,
         );

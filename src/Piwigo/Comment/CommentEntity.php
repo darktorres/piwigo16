@@ -7,12 +7,14 @@ namespace Piwigo\Comment;
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
  * Maps the `comments` table (`piwigo_comments` once
  * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * `date`/`validationDate` stay plain ?string, not \DateTimeImmutable --
- * every real consumer wants the raw DB DATETIME string form. `validated`
+ * `date`/`validationDate` are `SqlDateTime`-typed (Phase 5) -- both real
+ * write paths (`CommentRepository::insert()`/`update()`/`validate()`)
+ * trace to an `Env::now()`-derived value. `validated`
  * is a real boolean column (Comment domain Stage 1a). `author_id` stays
  * plain ?int -- Stage A1 only types this domain's own CommentId; UserId
  * propagation across every other domain's foreign-key-shaped column
@@ -37,8 +39,8 @@ final class CommentEntity
     public function __construct(
         #[ORM\Column(name: 'image_id', type: 'image_id')]
         public ImageId $imageId,
-        #[ORM\Column(type: 'string', length: 19, nullable: true)]
-        public ?string $date,
+        #[ORM\Column(type: 'sql_datetime', length: 19, nullable: true)]
+        public ?SqlDateTime $date,
         #[ORM\Column(type: 'string', length: 255, nullable: true)]
         public ?string $author,
         #[ORM\Column(type: 'string', length: 255, nullable: true)]
@@ -53,7 +55,7 @@ final class CommentEntity
         public ?string $content,
         #[ORM\Column(type: 'boolean')]
         public bool $validated,
-        #[ORM\Column(name: 'validation_date', type: 'string', length: 19, nullable: true)]
-        public ?string $validationDate,
+        #[ORM\Column(name: 'validation_date', type: 'sql_datetime', length: 19, nullable: true)]
+        public ?SqlDateTime $validationDate,
     ) {}
 }

@@ -6,6 +6,7 @@ use Piwigo\Comment\Projection\Comment;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
  * @return array<string, mixed>
@@ -141,16 +142,13 @@ test('fromRow keeps an already-hydrated ImageId instance as-is', function (): vo
     expect(Comment::fromRow($row)->imageId)->toEqual(ImageId::from(9));
 });
 
-test('fromRow accepts an already-hydrated ImageId instance for image_id, not just a raw scalar', function (): void {
-    // Same DQL-array-hydration acceptance as id's own instance branch
-    // above, applied to image_id: is_numeric() on an ImageId object is
-    // false, so a mutant that never takes the instanceof branch would
-    // fall through to the is_numeric()/0-default path and silently lose
-    // the real value.
+test('fromRow keeps an already-hydrated SqlDateTime instance for date as-is', function (): void {
+    // Covers the getArrayResult() Gotcha #1 shape: a real Doctrine array
+    // hydration would already have converted date via SqlDateTimeType.
     $row = fullCommentRow();
-    $row['image_id'] = ImageId::from(9);
+    $row['date'] = SqlDateTime::from('2026-08-02 12:00:00');
 
-    expect(Comment::fromRow($row)->imageId)->toBe(9);
+    expect(Comment::fromRow($row)->date)->toBe('2026-08-02 12:00:00');
 });
 
 test('fromRow casts a numeric-but-falsy-as-int validated string correctly via the int cast', function (): void {

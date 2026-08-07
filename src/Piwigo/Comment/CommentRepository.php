@@ -17,6 +17,7 @@ use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\Env;
 use Piwigo\Db\Tables;
@@ -59,8 +60,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         // own docblock; date/validation_date must share the same time
         // reference that the flood-window comparison reads, not the real
         // DB-server clock.
-        $now = Env::now()
-            ->format('Y-m-d H:i:s');
+        $now = SqlDateTime::from(Env::now()
+            ->format('Y-m-d H:i:s'));
 
         $entity = new CommentEntity(
             imageId: ImageId::from($data['imageId']),
@@ -563,9 +564,11 @@ final class CommentRepository extends EntityRepository implements CommentCounter
                 throw new UnexpectedValueException(sprintf('Expected c.id to hydrate as a CommentId, got %s', get_debug_type($id)));
             }
 
+            $rowDate = $row['date'] ?? null;
+
             $summaries[] = new CommentSummary(
                 id: $id,
-                date: is_string($row['date'] ?? null) ? $row['date'] : null,
+                date: $rowDate instanceof SqlDateTime ? $rowDate->value : (is_string($rowDate) ? $rowDate : null),
                 author: is_string($row['author'] ?? null) ? $row['author'] : null,
                 content: is_string($row['content'] ?? null) ? $row['content'] : null,
             );

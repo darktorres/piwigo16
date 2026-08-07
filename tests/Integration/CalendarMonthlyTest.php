@@ -19,6 +19,7 @@ use Piwigo\Calendar\CalendarRepository;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\DbConnection;
@@ -92,7 +93,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::current()->reset();
+        CurrentConfigTestFactory::get()->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         LangTestFactory::get()->reset();
@@ -111,7 +112,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
         $this->urlService = new CalendarMonthlyTestFakeUrlService();
 
-        $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
+        $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
         $configService->loadConfFromDb();
         ImageStdParamsTestFactory::get()->load_from_db();
     }
@@ -126,7 +127,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
     private function makeCalendar(): CalendarMonthly
     {
-        $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParamsTestFactory::get());
+        $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
         $calendar->chronology_field = 'posted';
         $calendar->initialize($this->makeScope('id IN (1,2,3,4,5)'));
 
@@ -188,12 +189,12 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
     public function test_initialize_selects_date_available_for_posted_and_date_creation_for_created(): void
     {
-        $posted = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParamsTestFactory::get());
+        $posted = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
         $posted->chronology_field = 'posted';
         $posted->initialize($this->makeScope());
         self::assertSame('date_available', $posted->date_field);
 
-        $created = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParamsTestFactory::get());
+        $created = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
         $created->chronology_field = 'created';
         $created->initialize($this->makeScope());
         self::assertSame('date_creation', $created->date_field);
@@ -418,7 +419,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
             ->executeQuery()
             ->fetchAssociative();
         self::assertIsArray($row1);
-        $expectedDerivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage($row1), CurrentConfig::current());
+        $expectedDerivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage($row1), CurrentConfigTestFactory::get());
         self::assertSame($expectedDerivative->get_url(), $day10['IMAGE']);
 
         // Empty grid cells (no images) carry only DAY, no DOW/IMAGE/etc.
@@ -564,7 +565,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_created_field_uses_date_creation_and_returns_an_empty_calendar_for_zero_matching_rows(): void
     {
-        $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParamsTestFactory::get());
+        $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
         $calendar->chronology_field = 'created';
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [];
@@ -600,7 +601,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_build_nav_bar_auto_narrows_chronology_date_and_skips_the_bar_for_a_single_value(): void
     {
-        $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParamsTestFactory::get());
+        $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
         $calendar->chronology_field = 'posted';
         $calendar->chronology_view = CalendarBase::CAL_VIEW_LIST;
         $calendar->chronology_date = [2025];
@@ -756,7 +757,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_build_global_calendar_bails_out_to_year_view_when_only_one_year_exists(): void
     {
-        $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParamsTestFactory::get());
+        $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
         $calendar->chronology_field = 'posted';
         $calendar->initialize($this->makeScope('id IN (1,2,3)'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
@@ -775,7 +776,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_build_year_calendar_bails_out_to_month_view_when_only_one_month_exists(): void
     {
-        $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParamsTestFactory::get());
+        $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
         $calendar->chronology_field = 'posted';
         $calendar->initialize($this->makeScope('id IN (4,5)'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
@@ -799,7 +800,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-09-15 00:00:00' WHERE id = 1");
 
         try {
-            $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParamsTestFactory::get());
+            $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
             $calendar->chronology_field = 'posted';
             $calendar->initialize($this->makeScope('id = 1'));
             $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
@@ -826,7 +827,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_build_month_calendar_pads_trailing_days_to_complete_the_final_week(): void
     {
-        $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParamsTestFactory::get());
+        $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
         $calendar->chronology_field = 'posted';
         $calendar->initialize($this->makeScope('id = 3'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
@@ -853,7 +854,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         // layout). image 3 is fixture-dated 2024-07-04, the same
         // fixture row and month this file's own setUp() already
         // establishes.
-        $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current(), ImageStdParamsTestFactory::get());
+        $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
         $calendar->chronology_field = 'posted';
         $calendar->initialize($this->makeScope('id = 3'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;

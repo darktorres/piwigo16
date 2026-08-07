@@ -14,6 +14,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Db\Tables;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\CurrentThemeConfProvider;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -97,11 +98,11 @@ function srcImageTestRrmdir(string $dir): void
 }
 
 beforeEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
 });
 
 afterEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     Kernel::reset();
     srcImageTestSetThemeConfProvider(null);
 });

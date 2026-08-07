@@ -11,6 +11,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\PluginConfig\EventDispatcher;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\CurrentLogger;
@@ -219,7 +220,7 @@ final class HistoryServiceTest extends IntegrationTestCase
 
     public function test_autopurge_is_a_no_op_when_under_the_keep_lines_threshold(): void
     {
-        CurrentConfig::current()->setHistoryAutopurgeKeepLines(10);
+        CurrentConfigTestFactory::get()->setHistoryAutopurgeKeepLines(10);
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
 
         $this->service->autopurge();
@@ -229,7 +230,7 @@ final class HistoryServiceTest extends IntegrationTestCase
 
     public function test_autopurge_is_a_no_op_when_nothing_is_summarized_yet(): void
     {
-        CurrentConfig::current()->setHistoryAutopurgeKeepLines(1);
+        CurrentConfigTestFactory::get()->setHistoryAutopurgeKeepLines(1);
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
         $this->insertHistoryLine(1, '2026-07-12', '04:00:00');
 
@@ -240,7 +241,7 @@ final class HistoryServiceTest extends IntegrationTestCase
 
     public function test_autopurge_deletes_old_summarized_lines(): void
     {
-        $currentConfig = CurrentConfig::current();
+        $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->setHistoryAutopurgeKeepLines(1);
         $currentConfig->setHistoryAutopurgeBlocksize(1);
         $id1 = $this->insertHistoryLine(1, '2026-07-10', '03:00:00');
@@ -368,7 +369,7 @@ final class HistoryServiceTest extends IntegrationTestCase
                 'DELETE FROM ' . Tables::history() . " WHERE section = 'my_custom_section'"
             );
             $repo->alterSectionEnum($originalOptions);
-            $currentConfig = CurrentConfig::current();
+            $currentConfig = CurrentConfigTestFactory::get();
             $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig);
             $configService->confDeleteParam('history_sections_cache');
             $currentConfig->setHistorySectionsCache(null);
@@ -387,7 +388,7 @@ final class HistoryServiceTest extends IntegrationTestCase
      */
     public function test_log_visit_triggers_autopurge_when_the_new_id_is_a_multiple_of_autopurge_every(): void
     {
-        $currentConfig = CurrentConfig::current();
+        $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->setHistoryAutopurgeEvery(1);
         $currentConfig->setHistoryAutopurgeKeepLines(1);
         $currentConfig->setHistoryAutopurgeBlocksize(1);

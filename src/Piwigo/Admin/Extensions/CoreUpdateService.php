@@ -291,7 +291,7 @@ final readonly class CoreUpdateService
 
         $path = $this->paths->root . $dataLocation . 'update';
         $filename = $path . '/' . $code . '.zip';
-        @FilesystemHelper::mkgetdir($path);
+        @FilesystemHelper::mkgetdir($path, $this->currentConfig);
 
         $chunkNum = 0;
         $end = false;
@@ -329,7 +329,7 @@ final readonly class CoreUpdateService
             return;
         }
 
-        $result = $this->zipExtractor->extract($filename, $this->paths->root, $removePath, 0755);
+        $result = $this->zipExtractor->extract($filename, $this->paths->root, $removePath, $this->currentConfig, 0755);
         if ($result === null) {
             FilesystemHelper::deltree($this->paths->root . $dataLocation . 'update');
             $this->pageState->addError($this->lang->t('An error has occured during upgrade.'));
@@ -344,6 +344,7 @@ final readonly class CoreUpdateService
                       $filename,
                       $this->paths->root,
                       $removePath,
+                      $this->currentConfig,
                       0755,
                       $removePath . '/' . $extract['filename']
                   )) !== null

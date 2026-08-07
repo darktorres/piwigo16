@@ -23,6 +23,7 @@ use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -97,7 +98,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         // (a full RequestBootstrap dependency this test never boots) just
         // to persist a "don't recheck this" cache flag -- skip it the same
         // way a real request's 2nd-and-later call already does.
-        CurrentConfig::current()->setDataDirChecked('1');
+        CurrentConfigTestFactory::get()->setDataDirChecked('1');
         // render()'s final assign_var_from_handle() really compiles
         // comment_list.tpl -- root/theme='default' is what points
         // Smarty's template_dir at the real themes/default/template/
@@ -139,9 +140,9 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $commentIdA = $this->insertComment($imageId, $ownerId, 'First comment.');
         $commentIdB = $this->insertComment($imageId, $ownerId, 'Second comment.');
         $this->seedUser($ownerId, UserStatus::Normal);
-        CurrentConfig::current()->setUserCanEditComment(true);
+        CurrentConfigTestFactory::get()->setUserCanEditComment(true);
 
-        $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()), $commentIdB, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+        $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $commentIdB, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
         $rows = $this->renderedComments();
         $rowA = $this->findRenderedRow($rows, $commentIdA);
@@ -158,8 +159,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $ownerId = 3;
         $otherUserId = 4;
         $commentId = $this->insertComment($imageId, $ownerId, 'Owned by user 3.');
-        CurrentConfig::current()->setUserCanEditComment(true);
-        CurrentConfig::current()->setUserCanDeleteComment(true);
+        CurrentConfigTestFactory::get()->setUserCanEditComment(true);
+        CurrentConfigTestFactory::get()->setUserCanDeleteComment(true);
 
         $this->seedUser($ownerId, UserStatus::Normal);
         $ownerRow = $this->findRenderedRow(
@@ -181,12 +182,12 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_rejects_a_guest_submission_with_session_expired_when_comments_for_all_is_disabled(): void
     {
-        CurrentConfig::current()->setCommentsForall(false);
+        CurrentConfigTestFactory::get()->setCommentsForall(false);
         $imageId = 3;
         $_POST['content'] = 'A guest comment attempt.';
 
         try {
-            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
             self::fail('Expected a ResponseReadyException');
         } catch (ResponseReadyException $e) {
             self::assertSame(200, $e->response()->getStatusCode());
@@ -202,7 +203,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['content'] = 'Spam attempt on a non-commentable picture.';
 
         try {
-            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()), null, $imageId, 0, $this->urlService(), [['commentable' => false]], '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), [['commentable' => false]], '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
             self::fail('Expected a ResponseReadyException');
         } catch (ResponseReadyException $e) {
             self::assertSame(403, $e->response()->getStatusCode());
@@ -214,20 +215,20 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_moderates_a_valid_guest_submission_when_comments_validation_is_enabled(): void
     {
-        CurrentConfig::current()->setCommentsForall(true);
-        CurrentConfig::current()->setCommentsValidation(true);
-        CurrentConfig::current()->setCommentsAuthorMandatory(false);
-        CurrentConfig::current()->setCommentsEmailMandatory(false);
-        CurrentConfig::current()->setAntiFloodTime(0);
+        CurrentConfigTestFactory::get()->setCommentsForall(true);
+        CurrentConfigTestFactory::get()->setCommentsValidation(true);
+        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
+        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
+        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
         // Real production default (true) would otherwise attempt a real
         // MailerInterface::mail() send for this exact outcome.
-        CurrentConfig::current()->setEmailAdminOnCommentValidation(false);
+        CurrentConfigTestFactory::get()->setEmailAdminOnCommentValidation(false);
         $imageId = 3;
         $_POST['content'] = 'A moderated comment.';
-        $_POST['key'] = new EphemeralKeyService(CurrentConfig::current())->generate(0, (string) $imageId);
+        $_POST['key'] = new EphemeralKeyService(CurrentConfigTestFactory::get())->generate(0, (string) $imageId);
 
         try {
-            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame(
                 [
@@ -246,17 +247,17 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_validates_a_guest_submission_immediately_when_comments_validation_is_disabled(): void
     {
-        CurrentConfig::current()->setCommentsForall(true);
-        CurrentConfig::current()->setCommentsValidation(false);
-        CurrentConfig::current()->setCommentsAuthorMandatory(false);
-        CurrentConfig::current()->setCommentsEmailMandatory(false);
-        CurrentConfig::current()->setAntiFloodTime(0);
+        CurrentConfigTestFactory::get()->setCommentsForall(true);
+        CurrentConfigTestFactory::get()->setCommentsValidation(false);
+        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
+        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
+        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
         $imageId = 3;
         $_POST['content'] = 'A validated comment.';
-        $_POST['key'] = new EphemeralKeyService(CurrentConfig::current())->generate(0, (string) $imageId);
+        $_POST['key'] = new EphemeralKeyService(CurrentConfigTestFactory::get())->generate(0, (string) $imageId);
 
         try {
-            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame(['Your comment has been registered'], PageStateTestFactory::get()->infos);
         } finally {
@@ -267,10 +268,10 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_rejects_an_invalid_key_and_repopulates_the_add_comment_form(): void
     {
-        CurrentConfig::current()->setCommentsForall(true);
-        CurrentConfig::current()->setCommentsAuthorMandatory(false);
-        CurrentConfig::current()->setCommentsEmailMandatory(false);
-        CurrentConfig::current()->setAntiFloodTime(0);
+        CurrentConfigTestFactory::get()->setCommentsForall(true);
+        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
+        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
+        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
         $imageId = 3;
         $_POST['author'] = 'Some Author';
         $_POST['content'] = 'Rejected <b>content</b>.';
@@ -281,7 +282,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['key'] = 'totally-invalid-key';
 
         try {
-            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame(
                 ['Your comment has NOT been registered because it did not pass the validation rules'],
@@ -310,7 +311,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_GET['comments_order'] = 'desc';
 
         try {
-            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
             self::assertSame('desc', SessionServiceTestFactory::get()->getSessionVar('comments_order'));
             // The nav link toggles to the opposite of whatever order is now
@@ -371,8 +372,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $imageId = 3;
         $ownerId = 3;
         $commentId = $this->insertComment($imageId, $ownerId, 'Owned by user 3.');
-        CurrentConfig::current()->setUserCanEditComment(false);
-        CurrentConfig::current()->setUserCanDeleteComment(false);
+        CurrentConfigTestFactory::get()->setUserCanEditComment(false);
+        CurrentConfigTestFactory::get()->setUserCanDeleteComment(false);
 
         $this->seedUser(1, UserStatus::Admin);
         $adminRow = $this->findRenderedRow(
@@ -389,7 +390,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
      */
     private function renderComments(int $imageId): array
     {
-        $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current(), $this->mailService(), PresentationAccessor::htmlService());
+        $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
         return $this->renderedComments();
     }
@@ -406,7 +407,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     private function sessionService(): SessionService
     {
-        return new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current());
+        return new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfigTestFactory::get());
     }
 
     private function mailService(): MailService

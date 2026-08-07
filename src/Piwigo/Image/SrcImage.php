@@ -82,9 +82,9 @@ final class SrcImage
      * involved" constraint as the other collaborator methods above rules
      * out real constructor injection for CurrentConfig too -- resolves
      * fresh from the container on every call, same as urlService()/
-     * imageRepository() rather than through the `CurrentConfig::current()`
-     * transitional bridge (that shim is Phase-10-locked to the Ws/Pwg*.php
-     * dispatch layer -- see its own arch-test allow-list).
+     * imageRepository() rather than through the former
+     * `CurrentConfig::current()` transitional bridge (that shim was
+     * Phase-10-locked to the Ws/Pwg*.php dispatch layer at the time).
      */
     private static function currentConfig(): CurrentConfig
     {

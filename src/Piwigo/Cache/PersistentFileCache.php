@@ -81,7 +81,7 @@ final class PersistentFileCache extends PersistentCache
         $path = $this->dir . $key . '.cache';
         $written = @file_put_contents($path, $serialized);
         if ($written === false) {
-            FilesystemHelper::mkgetdir($this->dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
+            FilesystemHelper::mkgetdir($this->dir, $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
             $written = @file_put_contents($path, $serialized);
             if ($written === false) {
                 return false;

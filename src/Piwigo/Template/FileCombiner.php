@@ -148,7 +148,7 @@ final class FileCombiner
                     $output .= "\n";
                 }
                 $output = "/*BEGIN header */\n" . $header . "\n" . $output;
-                FilesystemHelper::mkgetdir(dirname($this->paths->root . $file));
+                FilesystemHelper::mkgetdir(dirname($this->paths->root . $file), $this->currentConfig);
                 file_put_contents($this->paths->root . $file, $output);
                 @chmod($this->paths->root . $file, 0644);
             }
@@ -225,7 +225,7 @@ final class FileCombiner
             // directory) while still pointing $combinable->path at the
             // never-written file. Found live while adding coverage for this
             // branch.
-            FilesystemHelper::mkgetdir(dirname($this->paths->root . $file));
+            FilesystemHelper::mkgetdir(dirname($this->paths->root . $file), $this->currentConfig);
             file_put_contents($this->paths->root . $file, $content);
             $combinable->path = $file;
 

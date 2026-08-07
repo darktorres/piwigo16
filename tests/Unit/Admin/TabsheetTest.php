@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -56,7 +57,7 @@ afterEach(function (): void {
     tabsheetTestRrmdir(CurrentPathsTestFactory::get()->root);
     CurrentTemplate::current()->reset();
     Kernel::reset();
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
 });
 
 test('the constructor defaults name/titlename and starts with no tabs and nothing selected', function (): void {

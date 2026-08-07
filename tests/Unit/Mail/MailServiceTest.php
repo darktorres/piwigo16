@@ -7,6 +7,7 @@ use Symfony\Component\Mime\Email;
 use Symfony\Component\Mailer\Mailer;
 use Piwigo\Mail\BoundedSendmailTransport;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -117,7 +118,7 @@ function mail_service_with_fake_webmaster(): MailService
 function mail_service_capture_send(MailService $service, string|array $to, array $args = [], array $tpl = []): array
 {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
 
     $capturedTo = null;
     $capturedArgs = null;
@@ -232,7 +233,7 @@ function mail_service_rrmdir(string $dir): void
 }
 
 afterEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     // Lang is a real, container-shared instance now (singleton/service-
     // locator elimination campaign, Phase 8) with no pre-boot memoized
     // fallback (see LangTestFactory::get()'s own docblock) -- unlike
@@ -550,7 +551,7 @@ test('getMailTemplate resolves the real, absolute theme root and the given email
     // concatenation can make the resolved dir start with it.
     $fakeRoot = Paths::fromRoot('/tmp/piwigo-mailservice-test-fake-root-' . getmypid() . '/');
     Kernel::boot($fakeRoot);
-    CurrentConfig::current()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
     $service = mail_service_test_build();
 
     $htmlTemplate = $service->getMailTemplate('text/html');
@@ -584,7 +585,7 @@ test('moveCssToBody inlines a <style> block into the element it targets', functi
 
 test('getMailSenderName falls back to gallery_title when mail_sender_name is unset', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setGalleryTitle('My Gallery');
+    CurrentConfigTestFactory::get()->setGalleryTitle('My Gallery');
     $service = mail_service_test_build();
 
     expect($service->getMailSenderName())->toBe('My Gallery');
@@ -592,7 +593,7 @@ test('getMailSenderName falls back to gallery_title when mail_sender_name is uns
 
 test('getMailSenderName uses mail_sender_name when configured', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderName('Custom Sender');
+    CurrentConfigTestFactory::get()->setMailSenderName('Custom Sender');
     $service = mail_service_test_build();
 
     expect($service->getMailSenderName())->toBe('Custom Sender');
@@ -600,8 +601,8 @@ test('getMailSenderName uses mail_sender_name when configured', function (): voi
 
 test('getMailSenderEmail uses the configured mail_sender_email without falling back to the webmaster address', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     // No WebmasterMailProviderInterface fake needed here -- a configured,
     // non-empty mail_sender_email short-circuits before webmasterMailAddress()
     // (which would otherwise need a real DB connection) is ever reached.
@@ -618,7 +619,7 @@ test('getMailConfiguration reports use_smtp false when smtp_host is unset', func
 
 test('getMailConfiguration reports use_smtp true when smtp_host is configured', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setSmtpHost('smtp.example.test');
+    CurrentConfigTestFactory::get()->setSmtpHost('smtp.example.test');
     $service = mail_service_with_fake_webmaster();
 
     expect($service->getMailConfiguration()['use_smtp'])->toBeTrue();
@@ -626,10 +627,10 @@ test('getMailConfiguration reports use_smtp true when smtp_host is configured', 
 
 test('getMailConfiguration reads debug_mail-adjacent smtp settings from CurrentConfig::', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setSmtpHost('smtp.example.test');
-    CurrentConfig::current()->setSmtpUser('mailuser');
-    CurrentConfig::current()->setSmtpPassword('secret');
-    CurrentConfig::current()->setSmtpSecure('tls');
+    CurrentConfigTestFactory::get()->setSmtpHost('smtp.example.test');
+    CurrentConfigTestFactory::get()->setSmtpUser('mailuser');
+    CurrentConfigTestFactory::get()->setSmtpPassword('secret');
+    CurrentConfigTestFactory::get()->setSmtpSecure('tls');
     $service = mail_service_with_fake_webmaster();
 
     $config = $service->getMailConfiguration();
@@ -667,7 +668,7 @@ test('generateSetPasswordMail builds an HTML mail with the activation link and a
 
 test('generateCodeVerificationMail embeds the raw verification code and the current gallery title', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setGalleryTitle('My Gallery');
+    CurrentConfigTestFactory::get()->setGalleryTitle('My Gallery');
     $service = mail_service_test_build();
 
     $mail = $service->generateCodeVerificationMail('482913');
@@ -781,7 +782,7 @@ test('generateSetPasswordMail uses the render_lost_password_mail_content handler
 
 test('generateCodeVerificationMail assembles the exact HTML content, in order, from every concatenated piece', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setGalleryTitle('My Gallery');
+    CurrentConfigTestFactory::get()->setGalleryTitle('My Gallery');
     $service = mail_service_test_build();
 
     $mail = $service->generateCodeVerificationMail('482913');
@@ -880,8 +881,8 @@ test('emptyValue treats 0, 0.0 and false as empty, same as null/""/[]', function
 
 test('mail actually appends a real, non-falsy auth_key to the generated links', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'auth_key' => 'REAL123']);
@@ -891,8 +892,8 @@ test('mail actually appends a real, non-falsy auth_key to the generated links', 
 
 test('mail builds a To address for every recipient in a comma-separated list', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test, jane@example.test', ['subject' => 'x', 'content' => 'y']);
@@ -903,9 +904,9 @@ test('mail builds a To address for every recipient in a comma-separated list', f
 
 test('mail defaults the From address to the configured mail sender email/name when args[from] is absent', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setMailSenderName('Test Sender');
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderName('Test Sender');
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
@@ -916,8 +917,8 @@ test('mail defaults the From address to the configured mail sender email/name wh
 
 test('mail uses an explicit args[from] instead of the configured default', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'from' => ['email' => 'other@example.test', 'name' => 'Other']]);
@@ -928,9 +929,9 @@ test('mail uses an explicit args[from] instead of the configured default', funct
 
 test('mail defaults reply-to to the same address/name it resolved for From', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setMailSenderName('Test Sender');
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderName('Test Sender');
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
@@ -941,8 +942,8 @@ test('mail defaults reply-to to the same address/name it resolved for From', fun
 
 test('mail uses explicit reply_to_mail_address/reply_to_name instead of falling back to From', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', [
@@ -957,8 +958,8 @@ test('mail uses explicit reply_to_mail_address/reply_to_name instead of falling 
 
 test('mail defaults the subject to exactly "Piwigo" when absent', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['content' => 'y']);
@@ -968,8 +969,8 @@ test('mail defaults the subject to exactly "Piwigo" when absent', function (): v
 
 test('mail strips embedded newlines and surrounding whitespace from the subject (header injection)', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => "  Hi\r\nBcc: evil@test  ", 'content' => 'y']);
@@ -979,8 +980,8 @@ test('mail strips embedded newlines and surrounding whitespace from the subject 
 
 test('mail builds a Cc address when args[Cc] is a real, non-empty value', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'Cc' => 'cc@example.test']);
@@ -991,8 +992,8 @@ test('mail builds a Cc address when args[Cc] is a real, non-empty value', functi
 
 test('mail adds no Cc address at all when args[Cc] is absent', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
@@ -1002,9 +1003,9 @@ test('mail adds no Cc address at all when args[Cc] is absent', function (): void
 
 test('mail Bcc\'s only the explicit recipient when send_bcc_mail_webmaster is false', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setSendBccMailWebmaster(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setSendBccMailWebmaster(false);
     $service = mail_service_with_fake_webmaster();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'Bcc' => 'bcc@example.test']);
@@ -1015,9 +1016,9 @@ test('mail Bcc\'s only the explicit recipient when send_bcc_mail_webmaster is fa
 
 test('mail Bcc\'s the webmaster address when send_bcc_mail_webmaster is true, even with no explicit Bcc', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setSendBccMailWebmaster(true);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setSendBccMailWebmaster(true);
     $service = mail_service_with_fake_webmaster();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
@@ -1028,9 +1029,9 @@ test('mail Bcc\'s the webmaster address when send_bcc_mail_webmaster is true, ev
 
 test('mail replaces an unset theme with the configured mail_theme', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setMailTheme('dark');
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailTheme('dark');
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
@@ -1040,9 +1041,9 @@ test('mail replaces an unset theme with the configured mail_theme', function ():
 
 test('mail replaces an invalid theme with the configured mail_theme instead of leaving it as-is', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setMailTheme('dark');
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailTheme('dark');
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'theme' => 'bogus']);
@@ -1052,8 +1053,8 @@ test('mail replaces an invalid theme with the configured mail_theme instead of l
 
 test('mail preserves an explicit, valid theme ("clear")', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'theme' => 'clear']);
@@ -1063,8 +1064,8 @@ test('mail preserves an explicit, valid theme ("clear")', function (): void {
 
 test('mail preserves an explicit, valid theme ("dark")', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'theme' => 'dark']);
@@ -1074,8 +1075,8 @@ test('mail preserves an explicit, valid theme ("dark")', function (): void {
 
 test('mail defaults args[content] to an empty string when the key is entirely absent', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x']);
@@ -1085,9 +1086,9 @@ test('mail defaults args[content] to an empty string when the key is entirely ab
 
 test('mail decomposes a "[Title] Subtitle" subject into mail_title/mail_subtitle when neither was preset', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setGalleryTitle('My Gallery');
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setGalleryTitle('My Gallery');
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => '[Foo] Bar baz', 'content' => 'y']);
@@ -1097,9 +1098,9 @@ test('mail decomposes a "[Title] Subtitle" subject into mail_title/mail_subtitle
 
 test('mail does not decompose the subject when mail_title was already explicitly set', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setGalleryTitle('My Gallery');
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setGalleryTitle('My Gallery');
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => '[Foo] Bar baz', 'content' => 'y', 'mail_title' => 'PresetTitle']);
@@ -1112,9 +1113,9 @@ test('mail does not decompose the subject when mail_title was already explicitly
 
 test('mail includes the html part only when mail_allow_html is true and email_format isn\'t forced to text/plain', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setMailAllowHtml(true);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailAllowHtml(true);
     // Boots Kernel here (idempotently no-op'd by mail_service_capture_send()'s
     // own later call) so LangTestFactory::get() below resolves the same
     // container-shared instance mail()'s own real $this->lang->langInfo()
@@ -1129,9 +1130,9 @@ test('mail includes the html part only when mail_allow_html is true and email_fo
 
 test('mail omits the html part when mail_allow_html is true but email_format explicitly forces text/plain', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setMailAllowHtml(true);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailAllowHtml(true);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'email_format' => 'text/plain']);
@@ -1141,9 +1142,9 @@ test('mail omits the html part when mail_allow_html is true but email_format exp
 
 test('mail omits the html part entirely when mail_allow_html is false', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
@@ -1153,9 +1154,9 @@ test('mail omits the html part entirely when mail_allow_html is false', function
 
 test('mail converts a text/plain content into HTML: paragraph-wrapped, escaped, line-broken, and link-ified, in that exact combined form', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setMailAllowHtml(true);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailAllowHtml(true);
     LangTestFactory::get()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
     $service = mail_service_test_build();
 
@@ -1182,8 +1183,8 @@ test('mail converts a text/plain content into HTML: paragraph-wrapped, escaped, 
 
 test('mail converts a text/html content into plain text (tags stripped) for the plain-text part', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => '<strong>Bold</strong> text', 'content_format' => 'text/html']);
@@ -1194,10 +1195,10 @@ test('mail converts a text/html content into plain text (tags stripped) for the 
 
 test('mail assigns every real GALLERY_TITLE/GALLERY_URL/VERSION/PHPWG_URL/CONTACT_MAIL template variable, all visible in the plain-text footer together', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setGalleryTitle('My Real Gallery');
-    CurrentConfig::current()->setShowVersion(true);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setGalleryTitle('My Real Gallery');
+    CurrentConfigTestFactory::get()->setShowVersion(true);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
@@ -1211,9 +1212,9 @@ test('mail assigns every real GALLERY_TITLE/GALLERY_URL/VERSION/PHPWG_URL/CONTAC
 
 test('mail omits the version number entirely from the footer when show_version is false', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setShowVersion(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setShowVersion(false);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
@@ -1224,9 +1225,9 @@ test('mail omits the version number entirely from the footer when show_version i
 
 test('mail assigns the real CONTENT_ENCODING charset into the html header\'s meta tag', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setMailAllowHtml(true);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailAllowHtml(true);
     LangTestFactory::get()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
     $service = mail_service_test_build();
 
@@ -1236,7 +1237,7 @@ test('mail assigns the real CONTENT_ENCODING charset into the html header\'s met
 });
 
 test('mail fires the before_parse_mail_template event with the real cache key and content type', function (): void {
-    // Kernel must boot before the CurrentConfig writes below -- CurrentConfig::current()
+    // Kernel must boot before the CurrentConfig writes below -- CurrentConfigTestFactory::get()
     // resolves the pre-boot memoized fallback instance until Kernel::boot()
     // builds the container's own (different) shared instance; seeding
     // before that boot would silently seed an instance MailService's own
@@ -1246,8 +1247,8 @@ test('mail fires the before_parse_mail_template event with the real cache key an
     // also the reason a real event handler must be registered after boot
     // too, not before.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $capturedCacheKey = null;
@@ -1269,8 +1270,8 @@ test('mail fires the before_parse_mail_template event with the real cache key an
 
 test('mail keys its per-request template cache by auth_key too, not reusing one auth_key\'s rendered link for another', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $result1 = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'auth_key' => 'AAA']);
@@ -1303,8 +1304,8 @@ test('mail keeps the html and plain-text cache entries of the SAME call separate
     // incorrectly reusing the html Template object (and its already-
     // rendered <html>/<style> markup) for the supposedly plain-text part.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(true);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(true);
     LangTestFactory::get()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
     $service = mail_service_test_build();
 
@@ -1317,8 +1318,8 @@ test('mail keeps the html and plain-text cache entries of the SAME call separate
 
 test('mail keys its per-request template cache by lang_info[code] too, not reusing one language\'s direction/translations for another', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(true);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(true);
     $service = mail_service_test_build();
 
     LangTestFactory::get()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
@@ -1339,8 +1340,8 @@ test('mail keys its per-request template cache by theme too, not reusing one the
     // and 16.x-rewrite's own MailService, a genuine cross-codebase bug,
     // not a rewrite regression. Emogrifier lowercases inlined hex colors.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(true);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(true);
     LangTestFactory::get()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
     $service = mail_service_test_build();
 
@@ -1363,8 +1364,8 @@ test('mail keys its per-request template cache by theme too, not reusing one the
 
 test('mail inlines the global mail CSS into the html part\'s elements, on top of the selected theme\'s own CSS', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(true);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(true);
     LangTestFactory::get()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
     $service = mail_service_test_build();
 
@@ -1375,8 +1376,8 @@ test('mail inlines the global mail CSS into the html part\'s elements, on top of
 
 test('mail computes GALLERY_URL as a genuine absolute URL (setMakeFullUrl active), not the bare relative path', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
@@ -1386,9 +1387,9 @@ test('mail computes GALLERY_URL as a genuine absolute URL (setMakeFullUrl active
 
 test('mail Bcc\'s the webmaster with an explicitly empty name, not a null/missing one', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setSendBccMailWebmaster(true);
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setSendBccMailWebmaster(true);
     $service = mail_service_with_fake_webmaster();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
@@ -1398,9 +1399,9 @@ test('mail Bcc\'s the webmaster with an explicitly empty name, not a null/missin
 
 test('mail defaults the smtp port to 25 when smtp_host has no explicit ":port" suffix', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setDataDirChecked('1');
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
     // No port given (unlike every other smtp_host test in this file, which
     // always supplies "host:port") -- distinguishes str_contains($host, ':')
     // actually gating the split, not just always splitting. This
@@ -1408,7 +1409,7 @@ test('mail defaults the smtp port to 25 when smtp_host has no explicit ":port" s
     // privileged port under 1024) -- the real Transport's own connection
     // failure message reveals the exact host:port it tried, which is
     // enough to prove the default was applied.
-    CurrentConfig::current()->setSmtpHost('127.0.0.1');
+    CurrentConfigTestFactory::get()->setSmtpHost('127.0.0.1');
     $capturedWarning = null;
     set_error_handler(function (int $errno, string $errstr) use (&$capturedWarning): bool {
         $capturedWarning = $errstr;
@@ -1428,13 +1429,13 @@ test('mail defaults the smtp port to 25 when smtp_host has no explicit ":port" s
 
 test('mail actually reaches a real Transport and sends when no before_send_mail listener intercepts it', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
 
     $port = random_int(20_000, 60_000);
     [$proc, $markerFile] = mail_service_start_fake_smtp('success', $port);
-    CurrentConfig::current()->setSmtpHost('127.0.0.1:' . $port);
+    CurrentConfigTestFactory::get()->setSmtpHost('127.0.0.1:' . $port);
 
     try {
         $service = mail_service_test_build();
@@ -1454,13 +1455,13 @@ test('mail actually reaches a real Transport and sends when no before_send_mail 
 
 test('mail returns false and logs a Mailer Error when the real Transport rejects the message', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentConfig::current()->setMailSenderEmail('sender@example.test');
-    CurrentConfig::current()->setMailAllowHtml(false);
-    CurrentConfig::current()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
+    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
 
     $port = random_int(20_000, 60_000);
     [$proc, $markerFile] = mail_service_start_fake_smtp('reject_rcpt', $port);
-    CurrentConfig::current()->setSmtpHost('127.0.0.1:' . $port);
+    CurrentConfigTestFactory::get()->setSmtpHost('127.0.0.1:' . $port);
 
     // The rejected RCPT also makes Symfony's own EsmtpTransport attempt a
     // post-failure write (RESET/QUIT) against a connection this disposable

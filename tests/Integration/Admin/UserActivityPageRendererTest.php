@@ -8,6 +8,7 @@ use Override;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use LogicException;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Users\UserService;
@@ -115,7 +116,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         // flow reaches CurrentConfigServiceTestFactory::get()->get() -- same wiring every
         // other Integration test constructing a real Template directly
         // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
         CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
 
         $_GET = [];

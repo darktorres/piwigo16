@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\PageFilterHelper;
 
 /**
@@ -45,11 +46,11 @@ function pageFilterHelperTestRestoreServerKeys(array $saved): void
 }
 
 beforeEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
 });
 
 afterEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
 });
 
 test('scriptBasename lowercases SCRIPT_NAME and uses it when it is the only candidate present', function (): void {
@@ -65,7 +66,7 @@ test('scriptBasename lowercases SCRIPT_NAME and uses it when it is the only cand
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
     try {
-        expect(PageFilterHelper::scriptBasename(CurrentConfig::current()))->toBe('upper');
+        expect(PageFilterHelper::scriptBasename(CurrentConfigTestFactory::get()))->toBe('upper');
     } finally {
         pageFilterHelperTestRestoreServerKeys($saved);
     }
@@ -86,7 +87,7 @@ test('scriptBasename skips a genuinely unset candidate without crashing, falling
     unset($_SERVER['PHP_SELF']);
 
     try {
-        expect(PageFilterHelper::scriptBasename(CurrentConfig::current()))->toBe('picture');
+        expect(PageFilterHelper::scriptBasename(CurrentConfigTestFactory::get()))->toBe('picture');
     } finally {
         pageFilterHelperTestRestoreServerKeys($saved);
     }
@@ -101,7 +102,7 @@ test('scriptBasename uses PHP_SELF when it is the only candidate present', funct
     $_SERVER['PHP_SELF'] = '/gallery/picture.php';
 
     try {
-        expect(PageFilterHelper::scriptBasename(CurrentConfig::current()))->toBe('picture');
+        expect(PageFilterHelper::scriptBasename(CurrentConfigTestFactory::get()))->toBe('picture');
     } finally {
         pageFilterHelperTestRestoreServerKeys($saved);
     }
@@ -120,13 +121,13 @@ test('scriptBasename uses PHP_SELF when it is the only candidate present', funct
  */
 test('scriptBasename skips a candidate whose extension is not .php when phpExtensionInUrls is enforced, falling through to the next one', function (): void {
     $saved = pageFilterHelperTestSaveServerKeys();
-    CurrentConfig::current()->setPhpExtensionInUrls(true);
+    CurrentConfigTestFactory::get()->setPhpExtensionInUrls(true);
     $_SERVER['SCRIPT_NAME'] = '/gallery/index.html';
     $_SERVER['SCRIPT_FILENAME'] = '/var/www/piwigo/picture.php';
     unset($_SERVER['PHP_SELF']);
 
     try {
-        expect(PageFilterHelper::scriptBasename(CurrentConfig::current()))->toBe('picture');
+        expect(PageFilterHelper::scriptBasename(CurrentConfigTestFactory::get()))->toBe('picture');
     } finally {
         pageFilterHelperTestRestoreServerKeys($saved);
     }
@@ -137,13 +138,13 @@ test('getFilterPageValue returns null when neither the page nor the default entr
     $_SERVER['SCRIPT_NAME'] = '/gallery/picture.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
-    CurrentConfig::current()->setFilterPages([
+    CurrentConfigTestFactory::get()->setFilterPages([
         'picture' => ['show_thumbnail_caption' => true],
         'default' => ['hide_menu' => false],
     ]);
 
     try {
-        expect(PageFilterHelper::getFilterPageValue(CurrentConfig::current(), 'unrelated_setting'))->toBeNull();
+        expect(PageFilterHelper::getFilterPageValue(CurrentConfigTestFactory::get(), 'unrelated_setting'))->toBeNull();
     } finally {
         pageFilterHelperTestRestoreServerKeys($saved);
     }
@@ -160,14 +161,14 @@ test('getFilterPageValue returns the page-specific value when configured, fallin
     $_SERVER['SCRIPT_NAME'] = '/gallery/picture.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
-    CurrentConfig::current()->setFilterPages([
+    CurrentConfigTestFactory::get()->setFilterPages([
         'picture' => ['show_thumbnail_caption' => true],
         'default' => ['hide_menu' => false],
     ]);
 
     try {
-        expect(PageFilterHelper::getFilterPageValue(CurrentConfig::current(), 'show_thumbnail_caption'))->toBeTrue()
-            ->and(PageFilterHelper::getFilterPageValue(CurrentConfig::current(), 'hide_menu'))->toBeFalse();
+        expect(PageFilterHelper::getFilterPageValue(CurrentConfigTestFactory::get(), 'show_thumbnail_caption'))->toBeTrue()
+            ->and(PageFilterHelper::getFilterPageValue(CurrentConfigTestFactory::get(), 'hide_menu'))->toBeFalse();
     } finally {
         pageFilterHelperTestRestoreServerKeys($saved);
     }
@@ -181,13 +182,13 @@ test('scriptBasename falls through to the next candidate when basename() reduces
     // instead; the mutant wrongly accepts and returns the empty string
     // immediately.
     $saved = pageFilterHelperTestSaveServerKeys();
-    CurrentConfig::current()->setPhpExtensionInUrls(false);
+    CurrentConfigTestFactory::get()->setPhpExtensionInUrls(false);
     $_SERVER['SCRIPT_NAME'] = '/';
     $_SERVER['SCRIPT_FILENAME'] = '/var/www/piwigo/picture.php';
     unset($_SERVER['PHP_SELF']);
 
     try {
-        expect(PageFilterHelper::scriptBasename(CurrentConfig::current()))->toBe('picture');
+        expect(PageFilterHelper::scriptBasename(CurrentConfigTestFactory::get()))->toBe('picture');
     } finally {
         pageFilterHelperTestRestoreServerKeys($saved);
     }

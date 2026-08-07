@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 beforeEach(function (): void {
-    CurrentConfig::current()->setSecretKey('test-secret-key');
+    CurrentConfigTestFactory::get()->setSecretKey('test-secret-key');
     $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 });
 
 afterEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
 });
 
 test('generate then verify round-trips immediately', function (): void {
@@ -23,7 +24,7 @@ test('generate then verify round-trips immediately', function (): void {
     // future" relative to its own un-rounded microtime(true) call a moment
     // later. Same fix as the "different additional data" test below: a
     // hand-crafted, 1-second-old key sidesteps the race entirely.
-    $service = new EphemeralKeyService(CurrentConfig::current());
+    $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
     $issuedAt = round(microtime(true), 1) - 1.0;
     $signature = hash_hmac('sha256', (string) $issuedAt . substr('127.0.0.1', 0, 5) . '0', 'test-secret-key');
     $key = (string) $issuedAt . ':0:' . $signature;
@@ -40,7 +41,7 @@ test('generate then verify round-trips immediately using generate()\'s own real 
     // instead of avoiding generate() entirely: `$time - (float)(-1)` widens
     // the "not before" check by a full second, so a same-instant
     // generate()-then-verify() can never land on the wrong side of it.
-    $service = new EphemeralKeyService(CurrentConfig::current());
+    $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
 
     $key = $service->generate(-1);
 
@@ -54,7 +55,7 @@ test('generate then verify round-trips with non-empty additionalDataToHash, hash
     // string (nothing to drop). A real, non-empty value on both the
     // generate() and verify() sides is the only way to prove it's
     // actually threaded through generate()'s own concat correctly.
-    $service = new EphemeralKeyService(CurrentConfig::current());
+    $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
 
     $key = $service->generate(-1, 'real-form-token');
 
@@ -67,7 +68,7 @@ test('generate then verify round-trips when REMOTE_ADDR is absent, both sides de
     // to it must default identically for a real key produced with no
     // REMOTE_ADDR to still verify.
     unset($_SERVER['REMOTE_ADDR']);
-    $service = new EphemeralKeyService(CurrentConfig::current());
+    $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
 
     $key = $service->generate(-1);
 
@@ -75,14 +76,14 @@ test('generate then verify round-trips when REMOTE_ADDR is absent, both sides de
 });
 
 test('verify rejects a key before its valid_after_seconds window has elapsed', function (): void {
-    $service = new EphemeralKeyService(CurrentConfig::current());
+    $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
     $key = $service->generate(1000);
 
     expect($service->verify($key))->toBeFalse();
 });
 
 test('verify rejects a key older than the 60 minute expiration', function (): void {
-    $service = new EphemeralKeyService(CurrentConfig::current());
+    $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
     $issuedAt = round(microtime(true), 1) - 3601.0;
     $signature = hash_hmac('sha256', (string) $issuedAt . substr('127.0.0.1', 0, 5) . '0', 'test-secret-key');
     $key = (string) $issuedAt . ':0:' . $signature;
@@ -91,14 +92,14 @@ test('verify rejects a key older than the 60 minute expiration', function (): vo
 });
 
 test('verify rejects a malformed key with the wrong number of parts', function (): void {
-    $service = new EphemeralKeyService(CurrentConfig::current());
+    $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
 
     expect($service->verify('not-a-valid-key'))->toBeFalse()
         ->and($service->verify('1:2:3:4'))->toBeFalse();
 });
 
 test('verify rejects a key with the right shape but non-numeric issuedAt/validAfterSeconds parts', function (): void {
-    $service = new EphemeralKeyService(CurrentConfig::current());
+    $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
 
     expect($service->verify('not-a-number:0:somesignature'))->toBeFalse()
         ->and($service->verify('123.0:not-a-number:somesignature'))->toBeFalse();
@@ -115,7 +116,7 @@ test('verify rejects a non-numeric issuedAt even when its leading digits and a m
     // sidesteps that: paired with a signature computed over this exact
     // raw (unstringified) key material, only the is_numeric() guard
     // itself stands between this key and a false "verified".
-    $service = new EphemeralKeyService(CurrentConfig::current());
+    $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
     $issuedAtRaw = (string) round(microtime(true), 1) . 'xyz';
     $validAfterSecondsRaw = '-1';
     $signature = hash_hmac(
@@ -129,7 +130,7 @@ test('verify rejects a non-numeric issuedAt even when its leading digits and a m
 });
 
 test('verify rejects a tampered signature', function (): void {
-    $service = new EphemeralKeyService(CurrentConfig::current());
+    $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
     $key = $service->generate(0);
     $tampered = substr($key, 0, -1) . (str_ends_with($key, 'a') ? 'b' : 'a');
 
@@ -141,7 +142,7 @@ test('verify rejects a key generated with different additional data', function (
     // doesn't race round(microtime(true), 1)'s up-to-0.1s rounding-forward
     // artifact the way an immediate generate()-then-verify() round trip can
     // -- same reasoning as the "older than 60 minute expiration" test above.
-    $service = new EphemeralKeyService(CurrentConfig::current());
+    $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
     $issuedAt = round(microtime(true), 1) - 1.0;
     $signature = hash_hmac('sha256', (string) $issuedAt . substr('127.0.0.1', 0, 5) . '0form-a', 'test-secret-key');
     $key = (string) $issuedAt . ':0:' . $signature;
@@ -151,7 +152,7 @@ test('verify rejects a key generated with different additional data', function (
 });
 
 test('verify rejects a key generated from a different remote address', function (): void {
-    $service = new EphemeralKeyService(CurrentConfig::current());
+    $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
     $_SERVER['REMOTE_ADDR'] = '10.0.0.1';
     $key = $service->generate(0);
 
@@ -163,7 +164,7 @@ test('verify accepts a key when only the first 5 chars of the remote address mat
     // Distinguishes substr($remote_addr, 0, 5) from the full address: two
     // genuinely different IPs sharing the same 5-char prefix ('192.1')
     // must still verify, proving only the prefix is hashed on either side.
-    $service = new EphemeralKeyService(CurrentConfig::current());
+    $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
     $_SERVER['REMOTE_ADDR'] = '192.168.1.1';
     $key = $service->generate(-1);
 
@@ -172,10 +173,10 @@ test('verify accepts a key when only the first 5 chars of the remote address mat
 });
 
 test('generate produces a different signature when the secret key changes', function (): void {
-    $service = new EphemeralKeyService(CurrentConfig::current());
+    $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
     $key = $service->generate(0);
 
-    CurrentConfig::current()->setSecretKey('a-different-secret');
+    CurrentConfigTestFactory::get()->setSecretKey('a-different-secret');
 
     expect($service->verify($key))->toBeFalse();
 });
@@ -191,7 +192,7 @@ test('generate does not throw when REMOTE_ADDR is not a string', function (): vo
     // is always a string when set), but $_SERVER is untyped, and the fix
     // is real regardless.
     $_SERVER['REMOTE_ADDR'] = ['not', 'a', 'string'];
-    $service = new EphemeralKeyService(CurrentConfig::current());
+    $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
 
     expect(fn () => $service->generate(0))->not->toThrow(TypeError::class);
 });

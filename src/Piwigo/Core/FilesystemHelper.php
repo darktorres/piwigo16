@@ -40,18 +40,25 @@ use RuntimeException;
  * reaches it unbooted either way), so there's no shared-instance-identity
  * risk.
  * mkgetdir()/getFsDirectories()'s own CurrentConfig::current() calls were
- * investigated the same way and found NOT safely convertible the same
- * way (see the CurrentConfig::current() allow-list's own comment in
- * tests/Arch/StructuralTest.php for the full trace) -- CurrentConfig's
- * own pre-boot fallback is memoized behind a `private static` property
- * only the shim itself can reach, and a real test
- * (FilesystemHelperTest.php's own "mkgetdir returns false when a
- * freshly-created directory ends up non-writable" case) configures state
- * on that exact shared fallback instance via CurrentConfig::current()
- * and expects mkgetdir() to read it back -- confirmed live: an
- * independent, un-shared fallback instance here breaks that test for
- * real, not just hypothetically. This file's `CurrentConfig::current()`
- * entries stay a genuine, structurally-confirmed permanent exception.
+ * investigated the same way at the time and found NOT safely convertible
+ * to a private-static-resolver-with-its-own-fallback the way fatalError()/
+ * t() were -- CurrentConfig's own pre-boot fallback was memoized behind a
+ * `private static` property only the shim itself could reach, and a real
+ * test (FilesystemHelperTest.php's own "mkgetdir returns false when a
+ * freshly-created directory ends up non-writable" case) configured state
+ * on that exact shared fallback instance via CurrentConfig::current() and
+ * expected mkgetdir() to read it back -- confirmed live: an independent,
+ * un-shared fallback instance would have broken that test for real, not
+ * just hypothetically. Sub-phase 12F-12 closed this shim for real via a
+ * different mechanism than fatalError()/t()'s own private-resolver shape:
+ * mkgetdir()/getFsDirectories() now take CurrentConfig as a real, explicit
+ * param (NOCTOR) -- every real caller already had one constructor-injected
+ * except FilesystemHelper.php's own deltree() (a purely internal
+ * collaborator, not test-coupled, so it kept the private-resolver shape
+ * instead -- see currentConfig() below) and ZipExtractor::extract()/
+ * CoverageCollector::registerIfActive()'s own shutdown closure/
+ * ErrorCollector::writeTestErrorsLog(), each fixed via its own most
+ * proportional mechanism (see each file's own docblock).
  */
 final class FilesystemHelper
 {
@@ -129,6 +136,33 @@ final class FilesystemHelper
     }
 
     /**
+     * Singleton/service-locator elimination campaign, Phase 12 sub-phase
+     * 12F-12: mkgetdir()/getFsDirectories() themselves now take
+     * CurrentConfig as a real, explicit param (this class's own docblock
+     * above explains why -- a real test depends on the exact shared
+     * instance a private-static-resolver-with-its-own-fallback couldn't
+     * reproduce). deltree()'s own internal trash_path mkgetdir() call
+     * below is different: no test depends on a specific CurrentConfig
+     * value reaching it, and threading a param through deltree()'s own
+     * public signature would ripple into every one of ITS real callers,
+     * not just mkgetdir()'s -- same "internal collaborator, no
+     * caller-facing shim to track" shape as lang()/fatalError() above.
+     */
+    private static function currentConfig(): CurrentConfig
+    {
+        if (Kernel::isBooted()) {
+            $currentConfig = Kernel::container()->get(CurrentConfig::class);
+            if (! $currentConfig instanceof CurrentConfig) {
+                throw new RuntimeException('Container returned an unexpected type for ' . CurrentConfig::class);
+            }
+
+            return $currentConfig;
+        }
+
+        return new CurrentConfig();
+    }
+
+    /**
      * Walks up from $dir to the nearest ancestor that already exists, so
      * callers can check write access before attempting a recursive mkdir()
      * whose immediate parent may not exist yet.
@@ -150,14 +184,14 @@ final class FilesystemHelper
      *
      * @param int $flags combination of self::MKGETDIR_xxx
      */
-    public static function mkgetdir(string $dir, int $flags = self::MKGETDIR_DEFAULT): bool
+    public static function mkgetdir(string $dir, CurrentConfig $currentConfig, int $flags = self::MKGETDIR_DEFAULT): bool
     {
         if (! is_dir($dir)) {
             if (str_starts_with(PHP_OS, 'WIN')) {
                 $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
             }
             $umask = umask(0);
-            $chmod_value = CurrentConfig::current()->chmodValue();
+            $chmod_value = $currentConfig->chmodValue();
             // Checking the nearest existing ancestor's write access before
             // calling mkdir() avoids a PHP-level warning on the deterministic
             // permission-denied case; a concurrent creation of the same
@@ -212,13 +246,13 @@ final class FilesystemHelper
      *
      * @return string[]
      */
-    public static function getFsDirectories(string $path, bool $recursive = true): array
+    public static function getFsDirectories(string $path, CurrentConfig $currentConfig, bool $recursive = true): array
     {
 
         $dirs = [];
         $path = rtrim($path, '/');
 
-        $sync_exclude_folders = CurrentConfig::current()->syncExcludeFolders();
+        $sync_exclude_folders = $currentConfig->syncExcludeFolders();
 
         $exclude_folders = array_merge(
             $sync_exclude_folders,
@@ -237,7 +271,7 @@ final class FilesystemHelper
                     if (is_dir($path . '/' . $node) and ! isset($exclude_folders[$node])) {
                         $dirs[] = $path . '/' . $node;
                         if ($recursive) {
-                            $dirs = array_merge($dirs, self::getFsDirectories($path . '/' . $node));
+                            $dirs = array_merge($dirs, self::getFsDirectories($path . '/' . $node, $currentConfig));
                         }
                     }
                 }
@@ -303,7 +337,7 @@ final class FilesystemHelper
             }
             if ($trash_path !== null && $trash_path !== '') {
                 if (! is_dir($trash_path)) {
-                    @self::mkgetdir($trash_path, self::MKGETDIR_RECURSIVE | self::MKGETDIR_DIE_ON_ERROR | self::MKGETDIR_PROTECT_HTACCESS);
+                    @self::mkgetdir($trash_path, self::currentConfig(), self::MKGETDIR_RECURSIVE | self::MKGETDIR_DIE_ON_ERROR | self::MKGETDIR_PROTECT_HTACCESS);
                 }
                 while ((bool) ($r = $trash_path . '/' . md5(uniqid((string) mt_rand(), true)))) {
                     if (! is_dir($r)) {

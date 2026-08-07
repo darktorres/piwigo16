@@ -236,7 +236,10 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
 
     $shimAllowedFiles = [
         '/src/Piwigo/Admin/Upload/UploadService.php',
+        '/src/Piwigo/Admin/Image/PwgImage.php',
         '/src/Piwigo/Core/FilesystemHelper.php',
+        '/src/Piwigo/Core/CoverageCollector.php',
+        '/src/Piwigo/Core/ErrorCollector.php',
         '/src/Piwigo/Core/UniqueExecLock.php',
         '/src/Piwigo/Db/DbConnection.php',
         '/src/Piwigo/Db/EntityManagerFactory.php',
@@ -255,7 +258,6 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Auth/AccessControl.php',
-        '/src/Piwigo/Config/CurrentConfig.php',
         '/src/Piwigo/Users/UserService.php',
         '/src/Piwigo/Category/CategoryService.php',
         '/src/Piwigo/Tag/TagService.php',
@@ -357,184 +359,32 @@ test('CurrentConfig::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('CurrentConfig::current() transitional bridge has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 9: current()
-    // kept its original name (no `Static` suffix, matching CurrentUser/
-    // CurrentTemplate/Lang's own precedent -- no competing real instance
-    // method to disambiguate from). Every Ws/Pwg*.php file (8 files) +
-    // WsDefaultMethods.php took real constructor injection during their
-    // own Phase 10 sub-batches -- this shim's own Ws-layer portion is now
-    // fully empty. Every other entry below is a PERMANENT exception, individually
-    // verified (not assumed from a Workflow agent's own choice) against
-    // one of 3 categories:
-    //
-    // (a) Purely static utility classes/methods with no instance/`$this`
-    // to receive CurrentConfig via constructor injection through --
-    // Admin/Upload/UploadService.php's 9 static uploadFileXxx()
-    // event handlers (matches this file's own former
-    // CurrentLogger::getStatic() precedent -- closed via a private static
-    // resolver in sub-phase 12F-1, see UploadService::currentLogger()).
-    // Phase 12 sub-phase 12A:
-    // Comment/CommentService.php removed -- its own getNbAvailableComments()
-    // static method (the sole reason it was here) was extracted into its
-    // own class, Comment/AvailableCommentsCounter.php, which takes
-    // CurrentConfig via real constructor injection instead (it and its one
-    // real caller, Menu/MenubarRenderer.php, never needed CommentService's
-    // other 10 collaborators in the first place). Sub-phase 12B:
-    // Admin/Install/InstallService.php removed too -- its 4 static methods
-    // now take Lang/CurrentUser/CurrentConfigService/CurrentConfig/Paths as
-    // real explicit params instead, threaded from their sole real caller,
-    // InstallWizard, which already held every one of them (closes this
-    // file's entries on 5 different shims at once, same shape as
-    // AvailableCommentsCounter's own extraction just above). Sub-phase
-    // 12D: Core/PageFilterHelper.php closed too -- scriptBasename()/
-    // getFilterPageValue() were genuinely static (no instance of their
-    // own to construct-inject through, matching FilesystemHelper's own
-    // precedent) but that doesn't mean the shim call inside them was
-    // unavoidable: both now take CurrentConfig as an explicit param
-    // (NOCTOR shape) instead, rippled through all 13 real production
-    // callers (most already held CurrentConfig; Activity/ActivityService.php
-    // gained a new private lazy currentConfig() resolver matching its own
-    // already-established currentUser() sibling exactly, for the same
-    // "too many construction sites" reason that shim stays lazy-resolved
-    // there too). Core/ThemeCatalog.php closed too -- same NOCTOR shape:
-    // getPwgThemes()/checkThemeInstalled() take CurrentConfig/Lang as
-    // explicit params, rippled through its 3 real callers
-    // (UserListPageRenderer.php/UserService.php/ProfileFormHandler.php,
-    // all of which already held both).
-    // Http/HttpClientService.php closed too -- fetch()/fetchToFile()/
-    // guardedFetch() now take CurrentConfig as an explicit param (NOCTOR
-    // shape), rippled through every real production caller (mostly via
-    // Admin/Extensions/PemCatalog.php, which gained CurrentConfig as a
-    // real constructor param). Permission/PermissionService.php closed
-    // too -- getPrivacyLevelOptions() takes CurrentConfig/Lang as explicit
-    // params instead (NOCTOR shape), rippled through its 6 real callers,
-    // all of which already held both.
-    // Admin/Extensions/ExtensionType.php closed too --
-    // pemCategoryId()/scanDirectory() take CurrentConfig as an explicit
-    // param now (a real `enum` can't hold constructor state at all, so
-    // this is the NOCTOR shape rather than an exception to it), rippled
-    // through its 2 real callers (Admin/Extensions/ExtensionScanner.php/
-    // Admin/Extensions/PemCatalog.php, both of which already held it).
-    // Admin/Image/PwgImage.php's own entry was RE-VERIFIED
-    // (not converted) during 12D -- get_ext_imagick_command()/
-    // get_library() are called directly, with a fixed `UploadFile $event`
-    // signature and no `CurrentConfig` to pass through, from 5 of
-    // Admin/Upload/UploadService.php's own uploadFileXxx() static event
-    // handlers (uploadFilePdf/Heic/Tiff/Psd/Eps -- the same permanent
-    // EventDispatcher-dedup-sensitive handlers documented above and in
-    // the CurrentUserTestFactory::get() allow-list's own comments, and formerly
-    // in this file's own CurrentLogger::getStatic() allow-list before it
-    // closed in sub-phase 12F-1); is_ext_imagick() is called internally by
-    // get_library() with no arguments, so it must keep the identical
-    // no-param/shimmed shape to stay callable from there;
-    // get_graphics_library() calls both of the above internally too. A
-    // partial NOCTOR conversion (e.g. only get_graphics_library()'s own
-    // direct call site, since it alone isn't reached from UploadService)
-    // would just relocate one shim call while the other 3 stay -- not a
-    // real closure, so the whole file stays a genuine, structurally
-    // permanent exception, matching UploadService.php's own established
-    // reasoning exactly (the plan document's own "3 ext-imagick statics"
-    // count undercounted -- get_library() itself, not literally
-    // "ext-imagick"-named, is the actual blocking one of the 4).
-    // Core/FilesystemHelper.php's own entry was RE-VERIFIED (not
-    // converted) during 12D too -- its t()/Lang::current() call closed
-    // for real (that shim itself closed outright in sub-phase 12F-8), but
-    // mkgetdir()/getFsDirectories()'s CurrentConfig::current() calls did
-    // not: CurrentConfig's own pre-boot fallback is memoized behind a
-    // `private static ?self $fallback` only the shim itself can reach,
-    // and a real test (FilesystemHelperTest.php's "mkgetdir returns
-    // false when a freshly-created directory ends up non-writable" case)
-    // configures state via CurrentConfig::current()->setChmodValue() and
-    // expects mkgetdir() to read that exact same shared instance back --
-    // confirmed live: an independent, un-shared fallback here breaks
-    // that test for real (not a hypothetical), so this stays open, not
-    // "no wrapper needed" as this comment's own category (a) used to
-    // imply. Config/ConfigLoader.php closed too -- validateRequired()
-    // takes CurrentConfig as an explicit param now (NOCTOR shape); it has
-    // zero real production callers (its own docblock explains it's
-    // deliberately not wired into the live boot sequence yet -- no
-    // resolvable secretKey source exists until a future per-install
-    // secret-generation step or env-var convention lands), only its own
-    // dedicated test, which now passes CurrentConfig::current() through
-    // explicitly. Core/DeviceHelper.php closed its own remaining
-    // CurrentConfig::current() call too -- mobileTheme()'s 2 real callers
-    // (Page\PageTailRenderer.php, Bootstrap\RequestBootstrap.php) already
-    // had a real CurrentConfig in scope right next to their own
-    // mobileTheme() call site, so it now takes one as an explicit param
-    // too (same NOCTOR pass as the SessionService::get() closure above).
-    // Found live while fixing this: tests/Unit/Core/DeviceHelperTest.php
-    // and tests/Integration/PageTailRendererTest.php's own
-    // `new PageTailRenderer(...)` call were BOTH already broken
-    // (ArgumentCountError) by the earlier SessionService::get() closure's
-    // own call-site ripple -- a real, previously-missed test gap, not new
-    // debt from this pass; both fixed in the same commit. Image/
-    // LoungeMaintenance.php closed too -- needsEmptying() takes
-    // CurrentConfig as an explicit param now (NOCTOR shape); its one real
-    // caller, Bootstrap\RequestBootstrap.php, already had one via its own
-    // self::currentConfig() accessor right next to this call site.
-    //
-    // (b) Too many real raw `new X(...)` construction sites, no DI
-    // involved, matching the established HtmlService/Template
-    // precedent from every prior phase.
-    // Mail/MailService.php, Url/UrlService.php, Template/Template.php,
-    // and Html/HtmlService.php itself all closed this shim in Phase 11
-    // sub-phase 11E -- real constructor injection now that the "too many
-    // manual construction sites" reasoning no longer holds. Image/
-    // SrcImage.php/DerivativeImage.php, Template/CssLoader.php/
-    // ScriptLoader.php/FileCombiner.php closed it in Phase 11 sub-phase
-    // 11F -- each resolves CurrentConfig via its own private static
-    // container-resolve helper (matching each file's own pre-existing
-    // urlService()-shaped idiom) instead of the shim, from both static
-    // factory methods and instance context alike. Template/
-    // PwgTemplateAdapter.php closed it in Phase 11 sub-phase 11G -- its
-    // one real call site (Template.php) already resolves everything else
-    // it needs, so PwgTemplateAdapter took CurrentConfig/Translator as
-    // real required constructor params instead (only 1 real construction
-    // site + 1 test, a small enough blast radius).
-    //
-    // (c) Structural exceptions -- Auth/AccessControl.php's one site used
-    // to be inside currentForCaching()'s own designed degraded-fallback
-    // object graph; Phase 12 sub-phase 12A deleted that method entirely
-    // (AccessLevelChecker, extracted from AccessControl to break its own
-    // circular dependency on HtmlRenderingInterface/
-    // RedirectServiceInterface, has no Doctrine dependency of its own, so
-    // the eager-connect risk that fallback existed to survive no longer
-    // applies) -- AccessControl.php no longer calls this shim at all.
-    // Phase 11 sub-phase 11B: Category/CategoryRepository.php removed from
-    // this allow-list --
-    // like Users/UserRepository.php before it, no longer a Doctrine
-    // repository with an ORM-fixed constructor, it now takes CurrentConfig
-    // via real constructor injection like everything else in this
-    // campaign (its own 3 sites, findImageIdsForCategories()/
-    // resolveDqlOrderBy(), were a real, newly-found gap this branch's own
-    // later pgsql-portability commits introduced, landing after Phase 11's
-    // own inventory/audit pass already ran -- fixed in the same pass as
-    // UserRepository.php, just its own dedicated commit given its real
-    // ~60-site blast radius). Sub-phase 12E: Csrf/CsrfService.php closed
-    // too -- 148 real construction sites re-counted fresh (not the stale
-    // "~50" estimate), all threaded with a real, constructor-injected
-    // CurrentConfig instead (either an already-held $this->currentConfig/
-    // method-param $currentConfig, or, for the ~20 files that didn't
-    // already have one, a newly-added constructor/method param, threaded
-    // to every real caller in turn).
-    $repoRoot = __DIR__ . '/../..';
+// Singleton/service-locator elimination campaign: CurrentConfig::current()
+// itself is fully deleted (Phase 12 sub-phase 12F-12, the campaign's final
+// shim closure) -- its former "transitional bridge has a shrinking, known
+// allow-list" test lived here, tracking the last 3 permanent-exception
+// files (Admin/Image/PwgImage.php, Admin/Upload/UploadService.php,
+// Core/FilesystemHelper.php) through the rest of the campaign after every
+// other real caller converted to constructor injection or an explicit
+// NOCTOR param across Phases 9-12. All 3 finally closed in 12F-12 too:
+// UploadService.php/PwgImage.php gained a 3rd/1st private static
+// currentConfig() resolver respectively (matching UploadService's own
+// established currentLogger()/imageStdParams() shape -- no test depends
+// on a shared pre-boot fallback identity for either); FilesystemHelper.php
+// took the opposite approach -- mkgetdir()/getFsDirectories() now take
+// CurrentConfig as a real, explicit NOCTOR param (the one genuine
+// exception a private resolver couldn't satisfy: FilesystemHelperTest.php
+// mutates a shared pre-boot instance and expects it read back, so a
+// resolver's own separate fallback would have silently broken that test)
+// -- rippled through all 16 real calling files, plus 3 further static
+// utilities (ZipExtractor::extract()/CoverageCollector's own shutdown
+// closure/ErrorCollector::writeTestErrorsLog()) each fixed via its own
+// most-proportional mechanism rather than one uniform pattern. The class
+// itself survives (every getter/setter and reset() are still real, live
+// instance methods) -- only the static shim accessor is gone. 1,382 real
+// test call sites across 116 files migrated to a new
+// CurrentConfigTestFactory in tests/Support/.
 
-    $allowedFiles = [
-        '/src/Piwigo/Admin/Image/PwgImage.php',
-        '/src/Piwigo/Admin/Upload/UploadService.php',
-        '/src/Piwigo/Core/FilesystemHelper.php',
-    ];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentConfig::current(');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
 
 test('SessionService::reset() is only called from tests/', function (): void {
     // Same test-isolation rationale as CurrentConfig::reset() above.

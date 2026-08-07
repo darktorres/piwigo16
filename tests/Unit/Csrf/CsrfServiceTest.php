@@ -3,15 +3,16 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Csrf\CsrfService;
 
 beforeEach(function (): void {
-    CurrentConfig::current()->setSecretKey('test-secret-key');
+    CurrentConfigTestFactory::get()->setSecretKey('test-secret-key');
     unset($_REQUEST['pwg_token']);
 });
 
 afterEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
 });
 
 // getToken()'s `session_id() === false` guard is preserved from the
@@ -29,7 +30,7 @@ afterEach(function (): void {
 
 test('getToken is stable for the same session id and secret key', function (): void {
     session_id('fixed-test-session-id');
-    $service = new CsrfService(CurrentConfig::current());
+    $service = new CsrfService(CurrentConfigTestFactory::get());
 
     expect($service->getToken())->toBe($service->getToken());
 });
@@ -40,19 +41,19 @@ test('getToken is stable for the same session id and secret key', function (): v
 // SEC-27/SEC-28 fix.
 test('getToken uses sha256, not md5', function (): void {
     session_id('fixed-test-session-id');
-    CurrentConfig::current()->setSecretKey('test-secret-key');
+    CurrentConfigTestFactory::get()->setSecretKey('test-secret-key');
 
     $expected = hash_hmac('sha256', 'fixed-test-session-id', 'test-secret-key');
 
-    expect(new CsrfService(CurrentConfig::current())->getToken())->toBe($expected);
+    expect(new CsrfService(CurrentConfigTestFactory::get())->getToken())->toBe($expected);
 });
 
 test('getToken changes when the secret key changes', function (): void {
     session_id('fixed-test-session-id');
-    $service = new CsrfService(CurrentConfig::current());
+    $service = new CsrfService(CurrentConfigTestFactory::get());
     $first = $service->getToken();
 
-    CurrentConfig::current()->setSecretKey('a-different-secret');
+    CurrentConfigTestFactory::get()->setSecretKey('a-different-secret');
 
     expect($service->getToken())->not->toBe($first);
 });
@@ -61,12 +62,12 @@ test('check returns null when no token was submitted', function (): void {
     session_id('fixed-test-session-id');
     unset($_REQUEST['pwg_token']);
 
-    expect(new CsrfService(CurrentConfig::current())->check())->toBeNull();
+    expect(new CsrfService(CurrentConfigTestFactory::get())->check())->toBeNull();
 });
 
 test('check returns true when the submitted token matches', function (): void {
     session_id('fixed-test-session-id');
-    $service = new CsrfService(CurrentConfig::current());
+    $service = new CsrfService(CurrentConfigTestFactory::get());
     $_REQUEST['pwg_token'] = $service->getToken();
 
     expect($service->check())->toBeTrue();
@@ -76,5 +77,5 @@ test('check returns false when the submitted token does not match', function ():
     session_id('fixed-test-session-id');
     $_REQUEST['pwg_token'] = 'not-the-real-token';
 
-    expect(new CsrfService(CurrentConfig::current())->check())->toBeFalse();
+    expect(new CsrfService(CurrentConfigTestFactory::get())->check())->toBeFalse();
 });

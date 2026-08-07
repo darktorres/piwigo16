@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Override;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SchemaDumpService;
 
@@ -55,7 +56,7 @@ final class SchemaDumpServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::current()->reset();
+        CurrentConfigTestFactory::get()->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 

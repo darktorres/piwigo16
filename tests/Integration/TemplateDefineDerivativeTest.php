@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Override;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -51,7 +52,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
         ImageStdParamsTestFactory::get()->load_from_db();
         CurrentUserTestFactory::get()->attachGlobals();
 

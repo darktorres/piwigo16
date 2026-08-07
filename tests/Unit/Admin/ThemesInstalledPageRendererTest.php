@@ -31,6 +31,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -251,7 +252,7 @@ function fsThemeEntry(array $overrides = []): array
  * elimination campaign, Phase 12 sub-phase 12D: missingParentTheme()/
  * getChildrenThemes() now thread $this->currentConfig/$this->currentUser
  * into ExtensionScanner::scan()'s own NOCTOR-shaped params) -- both must
- * be the real, shared CurrentConfig::current()/CurrentUserTestFactory::get()
+ * be the real, shared CurrentConfigTestFactory::get()/CurrentUserTestFactory::get()
  * instances (not a fresh, disconnected one) so scan()'s directory lookup
  * actually sees this file's own beforeEach()-configured fixture
  * setThemesDir(), not CurrentConfig's own unrelated default. Found live:
@@ -277,7 +278,7 @@ function themesInstalledLifecycle(): ExtensionLifecycle
         throw new LogicException('Container returned an unexpected type');
     }
 
-    return new ExtensionLifecycle(LangTestFactory::get(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, new CurrentUser(new CurrentConfig()), CurrentPathsTestFactory::get(), new CurrentConfig()), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), CurrentConfig::current(), $wsContext, $accessControl, CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), new EventDispatcher());
+    return new ExtensionLifecycle(LangTestFactory::get(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, new CurrentUser(new CurrentConfig()), CurrentPathsTestFactory::get(), new CurrentConfig()), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), $wsContext, $accessControl, CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), new EventDispatcher());
 }
 
 /**
@@ -337,15 +338,15 @@ function writeThemesInstalledFixtureTheme(string $fixtureRoot, string $id, array
 $themesInstalledFixtureRoot = null;
 
 beforeEach(function () use (&$themesInstalledFixtureRoot): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     $themesInstalledFixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-page-renderer-test-' . bin2hex(random_bytes(4)) . '/';
     mkdir($themesInstalledFixtureRoot . 'themes', 0o777, true);
     Kernel::boot(Paths::fromRoot($themesInstalledFixtureRoot));
-    CurrentConfig::current()->setThemesDir(rtrim($themesInstalledFixtureRoot, '/') . '/themes');
+    CurrentConfigTestFactory::get()->setThemesDir(rtrim($themesInstalledFixtureRoot, '/') . '/themes');
 });
 
 afterEach(function () use (&$themesInstalledFixtureRoot): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     Kernel::reset();
     if (is_string($themesInstalledFixtureRoot) && is_dir($themesInstalledFixtureRoot)) {
         FilesystemHelper::deltree($themesInstalledFixtureRoot);

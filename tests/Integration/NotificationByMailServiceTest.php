@@ -10,6 +10,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\EntityManagerFactory;
     use Doctrine\DBAL\Connection;
     use Piwigo\Config\CurrentConfig;
+    use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Notification\NotificationByMailService;
@@ -49,7 +50,7 @@ final class NotificationByMailServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->service = new NotificationByMailService(EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()));
+        $this->service = new NotificationByMailService(EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()));
     }
 
     public function test_find_available_check_key_matches_the_expected_shape(): void

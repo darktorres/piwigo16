@@ -5,10 +5,13 @@ declare(strict_types=1);
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Admin\Image\ImageInterface;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Event\Lifecycle\LoadImageLibrary;
 
 /**
@@ -741,17 +744,30 @@ test('get_rotation_angle maps EXIF orientation 8 to a 90-degree rotation', funct
 });
 
 test('is_ext_imagick returns false when the configured binary directory has no real ImageMagick binary', function (): void {
-    $original = CurrentConfig::current()->extImagickDir();
+    // PwgImage's own private currentConfig() resolver (singleton/
+    // service-locator elimination campaign, Phase 12 sub-phase 12F-12)
+    // is a fresh, unmemoized instance pre-boot -- unlike FilesystemHelper's
+    // mkgetdir()/getFsDirectories() (which take CurrentConfig as a real,
+    // explicit param specifically because of this exact coupling), is_
+    // ext_imagick()/get_library()/get_graphics_library()/
+    // get_ext_imagick_command() have too many real callers across too many
+    // files for that to be proportional here -- so this test boots Kernel
+    // instead, so this call's own CurrentConfigTestFactory::get() mutation
+    // and PwgImage's internal resolve both reach the same real,
+    // container-shared instance.
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
+    $original = CurrentConfigTestFactory::get()->extImagickDir();
     // Concatenated adjacent to the (memoized, real) command name via
     // escapeshellarg() -- see get_ext_imagick_command()'s own [SEC-16]
     // comment -- so this genuinely points `exec()` at a nonexistent path
     // regardless of which real binary this environment already resolved.
-    CurrentConfig::current()->setExtImagickDir('/totally/nonexistent/dir/');
+    CurrentConfigTestFactory::get()->setExtImagickDir('/totally/nonexistent/dir/');
 
     try {
         expect(PwgImage::is_ext_imagick())->toBeFalse();
     } finally {
-        CurrentConfig::current()->setExtImagickDir($original);
+        CurrentConfigTestFactory::get()->setExtImagickDir($original);
+        Kernel::reset();
     }
 });
 
@@ -770,8 +786,13 @@ test('is_ext_imagick detects the real, installed magick binary and parses its ve
 });
 
 test('get_graphics_library reports a real ImageMagick PHP-extension version when ext_imagick itself is unavailable', function (): void {
-    $original = CurrentConfig::current()->extImagickDir();
-    CurrentConfig::current()->setExtImagickDir('/totally/nonexistent/dir/');
+    // Same "boot Kernel so this test's own CurrentConfigTestFactory::get()
+    // mutation and PwgImage's internal currentConfig() resolve reach the
+    // same real, container-shared instance" reasoning as the
+    // is_ext_imagick() test above.
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
+    $original = CurrentConfigTestFactory::get()->extImagickDir();
+    CurrentConfigTestFactory::get()->setExtImagickDir('/totally/nonexistent/dir/');
 
     try {
         // is_ext_imagick() forced false above; the 'imagick' PHP extension
@@ -782,7 +803,8 @@ test('get_graphics_library reports a real ImageMagick PHP-extension version when
         expect($library)->toBeString();
         expect($library)->toStartWith('imagick/');
     } finally {
-        CurrentConfig::current()->setExtImagickDir($original);
+        CurrentConfigTestFactory::get()->setExtImagickDir($original);
+        Kernel::reset();
     }
 });
 
@@ -850,7 +872,13 @@ test('is_ext_imagick returns false when exec() itself is unavailable, without ev
 });
 
 test('get_graphics_library resolves through the gd case and appends a real GD version string', function (): void {
-    $script = '\Piwigo\Config\CurrentConfig::current()->setExtImagickDir("/totally/nonexistent/dir/");'
+    // Boots Kernel inside the subprocess itself (rather than calling
+    // CurrentConfigTestFactory::get(), which shares no state with this
+    // isolated process either way) so PwgImage's own internal
+    // currentConfig() resolve reaches this exact mutated instance --
+    // same reasoning as the is_ext_imagick() test above's own doc.
+    $script = '\Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));'
+        . '\Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class)->setExtImagickDir("/totally/nonexistent/dir/");'
         . 'echo json_encode(['
         . '"imagick_extension_loaded" => extension_loaded("imagick"), '
         . '"result" => \Piwigo\Admin\Image\PwgImage::get_graphics_library(),'

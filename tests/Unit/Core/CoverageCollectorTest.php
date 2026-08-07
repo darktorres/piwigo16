@@ -337,20 +337,22 @@ test('the real deferred shutdown handler writes a genuine per-request pcov dump 
         }
 
         // CoverageCollector.php is always its own minimum \pcov\waiting()
-        // entry (see this file's top docblock) -- and its lines 46/47 (the
+        // entry (see this file's top docblock) -- and its lines 74/75 (the
         // $dumpDir assignment and the register_shutdown_function() call,
         // both executed for real between \pcov\start() and \pcov\stop() in
         // THIS subprocess) prove real, non-fabricated pcov data, not an
         // empty/placeholder array. Confirmed live via the exact same
         // subprocess technique run standalone (not assumed from reading
         // the source): pcov's own inclusive-mode report for this file
-        // shows hit=1 on lines 46/47/48/61/62 and -1 (non-instrumented,
-        // since \pcov\stop() at line 48 ends this collection window before
-        // they run) on everything from line 49 onward -- these line
+        // shows hit=1 on lines 74/75/76/89/90 and -1 (non-instrumented,
+        // since \pcov\stop() at line 76 ends this collection window before
+        // they run) on everything from line 77 onward -- these line
         // numbers must be re-verified the same way (not re-counted by eye)
         // if CoverageCollector.php's own source ever shifts again; this
-        // exact pair (39/40) was itself stale, left over from before the
-        // `! extension_loaded('pcov')` guard clause was added above them.
+        // exact pair (was 46/47, before sub-phase 12F-12 added a new
+        // currentConfig() resolver method ahead of registerIfActive())
+        // has already gone stale once, confirming the risk is real, not
+        // hypothetical.
         //
         // Resolved via Reflection rather than hardcoded: the subprocess
         // above requires ITS OWN vendor/autoload.php (line 273's
@@ -363,8 +365,8 @@ test('the real deferred shutdown handler writes a genuine per-request pcov dump 
         expect($collectorFile)->toBeString();
         assert(is_string($collectorFile));
         expect($raw)->toHaveKey($collectorFile);
-        expect($raw[$collectorFile][46] ?? null)->toBe(1);
-        expect($raw[$collectorFile][47] ?? null)->toBe(1);
+        expect($raw[$collectorFile][74] ?? null)->toBe(1);
+        expect($raw[$collectorFile][75] ?? null)->toBe(1);
     } finally {
         exec('rm -rf ' . escapeshellarg($tmpRoot));
     }

@@ -15,6 +15,7 @@ use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Common\ValueObject\UserId;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
@@ -71,7 +72,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class);
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
         CurrentTemplate::current()->set(TemplateTestFactory::build());
 
         // The fixture itself seeds rate rows for element_id=1 (real
@@ -87,7 +88,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         if (! $accessControl instanceof AccessControl) {
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
-        $this->renderer = new PictureRateRenderer($accessControl, $this->repo, CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current());
+        $this->renderer = new PictureRateRenderer($accessControl, $this->repo, CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
     }
 
     #[Override]

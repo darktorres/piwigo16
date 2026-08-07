@@ -32,6 +32,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -86,14 +87,14 @@ final class FilterResolverTest extends IntegrationTestCase
         $em = EntityManagerFactory::build($this->conn);
         $paths = Kernel::container()->get(Paths::class);
         self::assertInstanceOf(Paths::class, $paths);
-        $sessionService = new SessionService($em->getRepository(SessionEntity::class),CurrentConfig::current());
+        $sessionService = new SessionService($em->getRepository(SessionEntity::class),CurrentConfigTestFactory::get());
         $imageService = new ImageService(
             LangTestFactory::get(),
             $em->getRepository(ImageEntity::class),
             new ActivityService($em->getRepository(ActivityEntity::class)),
             $sessionService,
             new EventDispatcher(),
-            CurrentConfig::current(),
+            CurrentConfigTestFactory::get(),
             TranslatorTestFactory::get(),
             $paths,
         );
@@ -101,19 +102,19 @@ final class FilterResolverTest extends IntegrationTestCase
         if (! $filterState instanceof FilterState) {
             throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
-        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
+        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
         $categoryService = new CategoryService(
             LangTestFactory::get(),
-            new CategoryRepository($em, CurrentConfig::current()),
+            new CategoryRepository($em, CurrentConfigTestFactory::get()),
             new PermissionService(
                 new PermissionRepository($em),
                 $em->getRepository(GroupEntity::class),
-                new CategoryRepository($em, CurrentConfig::current()),
+                new CategoryRepository($em, CurrentConfigTestFactory::get()),
                 CurrentUserTestFactory::get(),
                 $filterState,
                 $accessLevelChecker,
             ),
-            CurrentConfig::current(),
+            CurrentConfigTestFactory::get(),
             new EventDispatcher(),
             TranslatorTestFactory::get(),
             $accessLevelChecker,
@@ -123,7 +124,7 @@ final class FilterResolverTest extends IntegrationTestCase
         self::assertInstanceOf(MailService::class, $mailer);
         $userService = new UserService(
             LangTestFactory::get(),
-            new UserRepository($em, new EventDispatcher(), CurrentConfig::current()),
+            new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()),
             $em->getRepository(GroupEntity::class),
             $mailer,
             new ActivityService($em->getRepository(ActivityEntity::class)),
@@ -133,7 +134,7 @@ final class FilterResolverTest extends IntegrationTestCase
             new EventDispatcher(),
             new DeploymentPolicy(),
             CurrentUserTestFactory::get(),
-            CurrentConfig::current(),
+            CurrentConfigTestFactory::get(),
             new InstallationFlag(),
             new ProcessCache(),
             $paths,

@@ -346,7 +346,7 @@ final readonly class PemCatalog
                         $extractPath = $scanDirectory . $extensionId;
                         $logger->debug(__FUNCTION__ . ', $extract_path = ' . $extractPath);
 
-                        $result = $this->zipExtractor->extract($archive, $extractPath, $root);
+                        $result = $this->zipExtractor->extract($archive, $extractPath, $root, $this->currentConfig);
                         if ($result !== null) {
                             $status = 'ok';
                             foreach ($result as $file) {

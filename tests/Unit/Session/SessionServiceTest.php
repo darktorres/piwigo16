@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
@@ -21,13 +22,13 @@ use Piwigo\Tests\Support\SessionServiceTestFactory;
 // Optional $currentConfig lets a test build (and keep a reference to) its
 // own CurrentConfig instance *before* handing it to the SessionService
 // under test -- SessionService is constructor-injected with this
-// collaborator (not the CurrentConfig::current() bridge), so a test that
+// collaborator (not the CurrentConfigTestFactory::get() bridge), so a test that
 // needs to control e.g. sessionUseIpAddress() must set it on the exact
 // same instance the service reads, not on some unrelated bridge-resolved
 // object.
 function makeSessionService(?CurrentConfig $currentConfig = null): SessionService
 {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     ConfigLoader::applyDefaults();
     putenv('PIWIGO_DB_HOST=unit-test-should-never-connect.invalid');
 

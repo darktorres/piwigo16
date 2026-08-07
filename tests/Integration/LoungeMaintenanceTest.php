@@ -9,6 +9,7 @@ use Piwigo\Core\Kernel;
 use LogicException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Env;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -84,14 +85,14 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
 
     public function test_needsEmptying_is_false_when_lounge_active_is_disabled(): void
     {
-        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfig::current()));
+        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));
     }
 
     public function test_needsEmptying_is_false_when_the_lounge_is_empty(): void
     {
         $this->currentConfig()->setLoungeActive(true);
 
-        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfig::current()));
+        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));
     }
 
     public function test_needsEmptying_is_true_once_the_oldest_lounge_photo_exceeds_the_max_duration(): void
@@ -110,7 +111,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         );
         $this->conn->executeStatement('INSERT INTO ' . Tables::lounge() . ' (image_id, category_id) VALUES (1, 1)');
 
-        self::assertTrue(LoungeMaintenance::needsEmptying(CurrentConfig::current()));
+        self::assertTrue(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));
     }
 
     public function test_needsEmptying_is_false_when_the_oldest_lounge_photo_is_still_within_the_max_duration(): void
@@ -122,7 +123,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         );
         $this->conn->executeStatement('INSERT INTO ' . Tables::lounge() . ' (image_id, category_id) VALUES (1, 1)');
 
-        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfig::current()));
+        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));
     }
 
     public function test_needsEmptying_skips_the_check_during_an_active_upload_request(): void
@@ -136,9 +137,9 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         $this->conn->executeStatement('INSERT INTO ' . Tables::lounge() . ' (image_id, category_id) VALUES (1, 1)');
 
         $_REQUEST['method'] = 'pwg.images.upload';
-        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfig::current()));
+        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));
 
         $_REQUEST['method'] = 'pwg.images.uploadAsync';
-        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfig::current()));
+        self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));
     }
 }

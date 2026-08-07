@@ -25,6 +25,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Category\CategoryService;
     use Piwigo\Config\ConfigService;
     use Piwigo\Config\CurrentConfig;
+    use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\CurrentConfigService;
     use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -246,7 +247,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             LangTestFactory::get(),
             $this->repo,
             new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)),
-            CurrentConfig::current(),
+            CurrentConfigTestFactory::get(),
             EventDispatcherTestFactory::get(),
             TranslatorTestFactory::get(),
             new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)
@@ -263,7 +264,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // explicit wiring needed here anymore, same reasoning as
         // NotificationByMailSenderTest's own identical setUp.
         // ImageStdParams::load_from_db() itself needs CurrentConfigService.
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
         ImageStdParamsTestFactory::get()->load_from_db();
     }
 
@@ -794,7 +795,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // image.
         $this->conn->executeStatement("INSERT INTO " . Tables::imageCategory() . " (image_id, category_id) VALUES (1, {$tempId})");
 
-        $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcherTestFactory::get(), 'delete_orphans');
+        $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), 'delete_orphans');
 
         self::assertNull($this->repo->findById($tempId));
         $stillLinked = $this->conn->createQueryBuilder()
@@ -842,7 +843,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         EventDispatcherTestFactory::get()->addTypedHandler(DeleteSite::class, $handler);
 
         try {
-            $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcherTestFactory::get());
+            $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get());
 
             self::assertNull($this->repo->findById((int) $categoryId));
             self::assertNull($siteRepo->findGalleriesUrlById($siteId));

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -40,7 +41,7 @@ function generate_derivative_handler_test_current_config(): CurrentConfig
 }
 
 beforeEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     $root = sys_get_temp_dir() . '/piwigo-generate-derivative-handler-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
@@ -51,7 +52,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     generate_derivative_handler_test_rrmdir(CurrentPathsTestFactory::get()->root);
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     Kernel::reset();
 });
 

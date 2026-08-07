@@ -907,14 +907,14 @@ final class UploadService
             return $event;
         }
 
-        $ext = CurrentConfig::current()->pdfRepresentativeExt();
-        $jpg_quality = CurrentConfig::current()->pdfJpgQuality();
+        $ext = self::currentConfig()->pdfRepresentativeExt();
+        $jpg_quality = self::currentConfig()->pdfJpgQuality();
 
         // move the uploaded file to pwg_representative sub-directory
         $representative_file_path = ImagePathHelper::originalToRepresentative($file_path, $ext);
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        $ext_imagick_dir = CurrentConfig::current()->extImagickDir();
+        $ext_imagick_dir = self::currentConfig()->extImagickDir();
         // [SEC-16] escapeshellarg() on the dir prefix and both real paths
         // below -- same pattern P19 established in PwgImage.php/
         // ImageExtImagick.php; the original never escaped an embedded
@@ -977,7 +977,7 @@ final class UploadService
 
         [$w, $h] = self::getOptimalDimensionsForRepresentative();
 
-        $ext_imagick_dir = CurrentConfig::current()->extImagickDir();
+        $ext_imagick_dir = self::currentConfig()->extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
@@ -1029,13 +1029,13 @@ final class UploadService
         $representative_file_path = dirname($file_path) . '/pwg_representative/';
         $representative_file_path .= StringHelper::getFilenameWoExtension(basename($file_path)) . '.';
 
-        $conf_tiff_representative_ext = CurrentConfig::current()->tiffRepresentativeExt();
+        $conf_tiff_representative_ext = self::currentConfig()->tiffRepresentativeExt();
         $representative_ext = $conf_tiff_representative_ext;
         $representative_file_path .= $representative_ext;
 
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        $ext_imagick_dir = CurrentConfig::current()->extImagickDir();
+        $ext_imagick_dir = self::currentConfig()->extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
         // (string) is redundant under `.` concatenation -- see uploadFilePdf()'s
@@ -1132,7 +1132,7 @@ final class UploadService
         $logger->info(__METHOD__ . ', Poster at ' . (string) $second . 's');
 
         // Generate poster, see https://trac.ffmpeg.org/wiki/Seeking
-        $ffmpeg_dir = CurrentConfig::current()->ffmpegDir();
+        $ffmpeg_dir = self::currentConfig()->ffmpegDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above (same
         // dir-prefix pattern applied to the ffmpeg/avconv binaries here).
         $ffmpeg = escapeshellarg($ffmpeg_dir) . 'ffmpeg';
@@ -1208,7 +1208,7 @@ final class UploadService
 
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        $ext_imagick_dir = CurrentConfig::current()->extImagickDir();
+        $ext_imagick_dir = self::currentConfig()->extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
 
@@ -1287,7 +1287,7 @@ final class UploadService
 
         // convert -density 300 image.eps -resize 2048x2048 image.png
 
-        $ext_imagick_dir = CurrentConfig::current()->extImagickDir();
+        $ext_imagick_dir = self::currentConfig()->extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
         // (string) is redundant under `.` concatenation -- see uploadFilePdf()'s
@@ -1422,6 +1422,32 @@ final class UploadService
         }
 
         return self::$imageStdParamsFallback;
+    }
+
+    /**
+     * Singleton/service-locator elimination campaign, Phase 12 sub-phase
+     * 12F-12: same "must stay static" reasoning as currentLogger()/
+     * imageStdParams() above -- the `uploadFileXxx()` event handlers'
+     * remaining CurrentConfig::current() reads (pdfRepresentativeExt()/
+     * pdfJpgQuality()/extImagickDir()/tiffRepresentativeExt()/ffmpegDir())
+     * can't read the constructor-injected `$this->currentConfig`
+     * needResize() uses below. Cheap, fresh-per-call fallback pre-boot
+     * (unlike imageStdParams()'s eager DB-hit fallback) -- CurrentConfig's
+     * own former pre-boot fallback was just `new self()`, no DB read at
+     * all, so there's no shared state to lose between calls.
+     */
+    private static function currentConfig(): CurrentConfig
+    {
+        if (Kernel::isBooted()) {
+            $instance = Kernel::container()->get(CurrentConfig::class);
+            if (! $instance instanceof CurrentConfig) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+            }
+
+            return $instance;
+        }
+
+        return new CurrentConfig();
     }
 
     private function needResize(string $image_filepath, int $max_width, int $max_height): bool

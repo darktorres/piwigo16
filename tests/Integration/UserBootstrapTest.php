@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Override;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Users\UserService;
 use LogicException;
 use Piwigo\Auth\AccessLevelChecker;
@@ -109,7 +110,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot();
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
 
         $this->conn = DbConnection::build();
 
@@ -160,7 +161,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         // exit() and is deliberately left uncovered here (see this class's
         // own docblock) -- never actually read, so a fresh, never-set()
         // instance is fine.
-        return new UserBootstrap(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
+        return new UserBootstrap(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
     }
 
     public function test_initialize_auto_registers_a_new_local_account_for_an_unknown_apache_remote_user(): void
@@ -217,7 +218,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         // key never resolves to a real user.
         $this->bootstrap()->initialize();
 
-        self::assertSame(CurrentConfig::current()->guestId(), CurrentUserTestFactory::get()->get()->id->value);
+        self::assertSame(CurrentConfigTestFactory::get()->guestId(), CurrentUserTestFactory::get()->get()->id->value);
     }
 
     public function test_initialize_logs_in_via_ws_uploadAsync_and_marks_the_session_connected_with(): void
@@ -242,11 +243,11 @@ final class UserBootstrapTest extends IntegrationTestCase
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
             new CookieService(),
             EntityManagerFactory::build($this->conn)->getRepository(UserFailedLoginEntity::class),
-            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()),
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
             EventDispatcherTestFactory::get(),
             PageStateTestFactory::get(),
             CurrentUserTestFactory::get(),
-            CurrentConfig::current(),
+            CurrentConfigTestFactory::get(),
             CurrentPathsTestFactory::get(),
         )->pwgLogin(...));
 

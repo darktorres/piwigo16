@@ -16,6 +16,7 @@ use Imagick;
 use LogicException;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Event\Lifecycle\LoadImageLibrary;
@@ -429,6 +430,31 @@ final class PwgImage
         return extension_loaded('imagick') and class_exists('Imagick');
     }
 
+    /**
+     * Singleton/service-locator elimination campaign, Phase 12 sub-phase
+     * 12F-12: get_ext_imagick_command()/is_ext_imagick()/get_library()/
+     * get_graphics_library() below are all `public static`, no instance
+     * available for real constructor injection -- resolves the
+     * container-shared instance directly instead, same "container
+     * resolve, not a constructor property" shape as
+     * Upload\UploadService::currentConfig(). Cheap, fresh-per-call
+     * fallback pre-boot -- CurrentConfig's own former pre-boot fallback
+     * was just `new self()`, no DB read at all.
+     */
+    private static function currentConfig(): CurrentConfig
+    {
+        if (Kernel::isBooted()) {
+            $instance = Kernel::container()->get(CurrentConfig::class);
+            if (! $instance instanceof CurrentConfig) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+            }
+
+            return $instance;
+        }
+
+        return new CurrentConfig();
+    }
+
     public static function get_ext_imagick_command(): string
     {
         // Per-process memoization of an exec() probe -- a static local
@@ -439,13 +465,7 @@ final class PwgImage
         if (! is_string($command)) {
             $retval = null;
             $cmd_out = null;
-            // Static method, no instance available for real constructor
-            // injection (singleton/DI elimination campaign, Phase 9) -- see
-            // this class's own is_ext_imagick()/get_library()/
-            // get_graphics_library() for the same constraint. Same
-            // transitional shim already used by every Ws/ static-dispatch
-            // caller for exactly this "no instance in scope" shape.
-            $imagick_dir = CurrentConfig::current()->extImagickDir();
+            $imagick_dir = self::currentConfig()->extImagickDir();
             // check if magick is in path
             // [SEC-16] escapeshellarg() quotes the dir prefix; the adjacent
             // quoted+unquoted shell tokens still concatenate into one word
@@ -464,9 +484,7 @@ final class PwgImage
             return false;
         }
 
-        // Static method, no instance available for real constructor
-        // injection -- see get_ext_imagick_command()'s own comment above.
-        $imagick_dir = CurrentConfig::current()->extImagickDir();
+        $imagick_dir = self::currentConfig()->extImagickDir();
         // [SEC-16] see the escapeshellarg() note above.
         $returnarray = [];
         @exec(escapeshellarg($imagick_dir) . self::get_ext_imagick_command() . ' -version', $returnarray);
@@ -488,9 +506,7 @@ final class PwgImage
     {
 
         if ($library === null) {
-            // Static method, no instance available for real constructor
-            // injection -- see get_ext_imagick_command()'s own comment above.
-            $conf_library = CurrentConfig::current()->graphicsLibrary();
+            $conf_library = self::currentConfig()->graphicsLibrary();
             $library = $conf_library;
         }
 
@@ -535,9 +551,7 @@ final class PwgImage
 
         switch ($library) {
             case 'ext_imagick':
-                // Static method, no instance available for real constructor
-                // injection -- see get_ext_imagick_command()'s own comment above.
-                $ext_imagick_dir = CurrentConfig::current()->extImagickDir();
+                $ext_imagick_dir = self::currentConfig()->extImagickDir();
                 $returnarray = [];
                 exec($ext_imagick_dir . self::get_ext_imagick_command() . ' -version', $returnarray);
                 if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0] ?? '', $match)) {

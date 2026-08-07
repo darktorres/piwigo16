@@ -31,6 +31,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentLogger;
@@ -137,24 +138,24 @@ final class SectionPopulatorTest extends IntegrationTestCase
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
         LangTestFactory::get()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
-        CurrentConfig::current()->setSendPiwigoInfos(false);
-        CurrentConfig::current()->setQuestionMarkInUrls(false);
+        CurrentConfigTestFactory::get()->setSendPiwigoInfos(false);
+        CurrentConfigTestFactory::get()->setQuestionMarkInUrls(false);
 
         $this->conn = DbConnection::build();
         $em = EntityManagerFactory::build($this->conn);
-        $categoryRepo = new CategoryRepository($em, CurrentConfig::current());
+        $categoryRepo = new CategoryRepository($em, CurrentConfigTestFactory::get());
         $this->filterState = new FilterState();
-        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
+        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
         $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo, CurrentUserTestFactory::get(), $this->filterState, $accessLevelChecker);
-        $this->categoryService = new CategoryService(LangTestFactory::get(), $categoryRepo, $this->permissionService, CurrentConfig::current(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker);
-        $this->sessionService = new SessionService($em->getRepository(SessionEntity::class),CurrentConfig::current());
-        $this->tagService = new TagService(LangTestFactory::get(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfig::current(), new CurrentLogger(), $this->sessionService);
+        $this->categoryService = new CategoryService(LangTestFactory::get(), $categoryRepo, $this->permissionService, CurrentConfigTestFactory::get(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker);
+        $this->sessionService = new SessionService($em->getRepository(SessionEntity::class),CurrentConfigTestFactory::get());
+        $this->tagService = new TagService(LangTestFactory::get(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new CurrentLogger(), $this->sessionService);
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
-        $this->userService = new UserService(LangTestFactory::get(), new UserRepository($em, new EventDispatcher(), CurrentConfig::current()), $em->getRepository(GroupEntity::class), $mailer, new ActivityService($em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, $this->sessionService, new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPathsTestFactory::get());
-        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get()), $this->sessionService, new EventDispatcher(), CurrentUserTestFactory::get(), LangTestFactory::get(), CurrentConfig::current(), new CurrentLogger(), new DeploymentPolicy(), CurrentPathsTestFactory::get(), $this->tagService);
+        $this->userService = new UserService(LangTestFactory::get(), new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()), $em->getRepository(GroupEntity::class), $mailer, new ActivityService($em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, $this->sessionService, new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new InstallationFlag(), new ProcessCache(), CurrentPathsTestFactory::get());
+        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get()), $this->sessionService, new EventDispatcher(), CurrentUserTestFactory::get(), LangTestFactory::get(), CurrentConfigTestFactory::get(), new CurrentLogger(), new DeploymentPolicy(), CurrentPathsTestFactory::get(), $this->tagService);
         $this->sectionRepo = new SectionRepository($em);
         $this->currentLogger = new CurrentLogger();
         $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
@@ -201,7 +202,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
     {
         return new SectionPopulator(
             LangTestFactory::get(),
-            new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()),
+            new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()),
             HtmlServiceTestFactory::build(),
             CurrentTemplate::current()->get(),
             $this->sectionRepo,
@@ -220,7 +221,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             new EventDispatcher(),
             PageStateTestFactory::get(),
             CurrentUserTestFactory::get(),
-            CurrentConfig::current(),
+            CurrentConfigTestFactory::get(),
             TranslatorTestFactory::get(),
             ImageStdParamsTestFactory::get(),
         );
@@ -268,7 +269,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     public function test_populate_redirects_when_index_has_a_matching_random_redirect_candidate(): void
     {
-        CurrentConfig::current()->setRandomIndexRedirect(['random.php' => '']);
+        CurrentConfigTestFactory::get()->setRandomIndexRedirect(['random.php' => '']);
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/';
 
@@ -517,7 +518,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     public function test_populate_redirects_permanently_on_a_permalink_mismatch(): void
     {
-        CurrentConfig::current()->setCategoryUrlStyle('id-name');
+        CurrentConfigTestFactory::get()->setCategoryUrlStyle('id-name');
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         // Category 1 has no real permalink row -- categoryUrlStyle
         // 'id-name' + a URL name that doesn't match str2url('Sample Album')

@@ -14,6 +14,7 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\FilterState;
 use Piwigo\Cache\CachePools;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\PageState;
@@ -190,7 +191,7 @@ abstract class IntegrationTestCase extends TestCase
         // ran, not a previous test. _data/logs/ isn't guaranteed to exist
         // yet on a fresh checkout (see ErrorCollector::writeTestErrorsLog()'s
         // own identical guard) -- ensure it before truncating.
-        FilesystemHelper::mkgetdir(dirname(__DIR__, 2) . '/_data/logs', FilesystemHelper::MKGETDIR_RECURSIVE);
+        FilesystemHelper::mkgetdir(dirname(__DIR__, 2) . '/_data/logs', CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_RECURSIVE);
         file_put_contents(dirname(__DIR__, 2) . '/_data/logs/test_errors.log', '');
         // ConfigService::allRowsFromCacheOrDb()'s cache is real,
         // cross-process-persistent storage in this environment -- ext-apcu
@@ -222,7 +223,7 @@ abstract class IntegrationTestCase extends TestCase
                 $currentLogger->reset();
             }
         }
-        CurrentConfig::current()->reset();
+        CurrentConfigTestFactory::get()->reset();
         // Harmless even for test classes that never call
         // buildConfigRepository()/wire CurrentConfigServiceTestFactory::get()->set() at
         // all -- reset() on an already-unset registry is a no-op.

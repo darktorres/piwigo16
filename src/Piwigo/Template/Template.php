@@ -173,7 +173,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
         if ($this->currentConfig->dataDirChecked() === null) {
             $dir = $this->paths->root . $conf_data_location;
-            FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
+            FilesystemHelper::mkgetdir($dir, $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
             if (! is_writable($dir)) {
                 $this->lang->load('admin.lang');
                 $this->htmlRenderer()
@@ -243,7 +243,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
 
         $compile_dir = $this->paths->root . $conf_data_location . 'templates_c';
-        FilesystemHelper::mkgetdir($compile_dir);
+        FilesystemHelper::mkgetdir($compile_dir, $this->currentConfig);
 
         $this->smarty->setCompileDir($compile_dir);
 
@@ -381,6 +381,31 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
 
         return $lang;
+    }
+
+    /**
+     * `public` and referenced by its fully-qualified name, same reasoning
+     * as lang() above -- singleton/service-locator elimination campaign,
+     * Phase 12 sub-phase 12F-12: replaces the former
+     * `\Piwigo\Config\CurrentConfig::current()` shim call inside
+     * themes/standard_pages/themeconf.inc.php. Unlike lang()'s own compiled-
+     * cache-codegen use case, this file is a real, direct PHP `include`
+     * from load_themeconf() below -- `$this` genuinely IS the including
+     * Template instance there (confirmed live: an `include`d file shares
+     * its including method's `$this` binding, including private-property
+     * access) -- but PHPStan analyses every file independently and can't
+     * trace that inherited scope, so `$this->currentConfig` there reports
+     * as undefined. A real, ordinary static method call sidesteps that
+     * analysis gap instead of suppressing it.
+     */
+    public static function currentConfig(): CurrentConfig
+    {
+        $currentConfig = Kernel::container()->get(CurrentConfig::class);
+        if (! $currentConfig instanceof CurrentConfig) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+        }
+
+        return $currentConfig;
     }
 
     /**

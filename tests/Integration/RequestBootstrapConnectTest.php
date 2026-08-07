@@ -11,6 +11,7 @@ use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentLogger;
@@ -108,7 +109,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
         // config state before each real connect() call -- connect() itself
         // always resolves its own ConfigService from the container (see
         // its own body), never this instance.
-        $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
+        $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
 
         unset($_REQUEST['method']);
     }
@@ -231,8 +232,8 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
             );
             self::assertIsString($storedVersion);
             self::assertSame(AppInfo::VERSION, json_decode($storedVersion, true));
-            self::assertNotNull(CurrentConfig::current()->lastMajorUpdate());
-            self::assertSame('ORDER BY id DESC', CurrentConfig::current()->orderByInsideCategory());
+            self::assertNotNull(CurrentConfigTestFactory::get()->lastMajorUpdate());
+            self::assertSame('ORDER BY id DESC', CurrentConfigTestFactory::get()->orderByInsideCategory());
             // The real, definitive proof LoungeMaintenance::needsEmptying()
             // -> ImageService::emptyLounge() actually ran: the lounge row
             // deleteLoungeUpTo() removes is gone.

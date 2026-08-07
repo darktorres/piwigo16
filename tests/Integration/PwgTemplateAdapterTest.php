@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Override;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Core\Lang;
@@ -60,12 +61,12 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
 
         $conn = DbConnection::build();
         $repo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        $configService = new ConfigService($repo, new EventDispatcher(), CurrentConfig::current());
+        $configService = new ConfigService($repo, new EventDispatcher(), CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         $configService->loadConfFromDb();
         ImageStdParamsTestFactory::get()->load_from_db();
 
-        $this->adapter = new PwgTemplateAdapter(LangTestFactory::get(), TranslatorTestFactory::get(), CurrentConfig::current());
+        $this->adapter = new PwgTemplateAdapter(LangTestFactory::get(), TranslatorTestFactory::get(), CurrentConfigTestFactory::get());
     }
 
     #[Override]

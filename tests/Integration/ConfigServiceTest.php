@@ -10,6 +10,7 @@ use LogicException;
 use Piwigo\PluginConfig\EventDispatcher;
 use RuntimeException;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 
@@ -60,7 +61,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         // Real fixture rows: 'true' (a bare JSON bool literal) for
         // activate_comments, and a JSON-quoted string for both secret_key
         // and gallery_title.
-        $currentConfig = CurrentConfig::current();
+        $currentConfig = CurrentConfigTestFactory::get();
         self::assertTrue($currentConfig->activateComments());
         self::assertNotSame('', $currentConfig->secretKey());
         self::assertSame('Fixture Gallery', $currentConfig->galleryTitle());
@@ -75,7 +76,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         // fixture's actual DB value ('Fixture Gallery').
         $this->service->loadConfFromDb('secret_key');
 
-        $currentConfig = CurrentConfig::current();
+        $currentConfig = CurrentConfigTestFactory::get();
         self::assertNotSame('', $currentConfig->secretKey());
         self::assertSame('Piwigo', $currentConfig->galleryTitle());
     }
@@ -118,7 +119,7 @@ final class ConfigServiceTest extends IntegrationTestCase
 
         // Prime the cache with the fixture's own value.
         $this->service->loadConfFromDb();
-        self::assertSame('Fixture Gallery', CurrentConfig::current()->galleryTitle());
+        self::assertSame('Fixture Gallery', CurrentConfigTestFactory::get()->galleryTitle());
 
         // Write directly through the repository, bypassing ConfigService's
         // own cache-clearing (and its encode() -- json_encode() the value
@@ -183,7 +184,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         // it, no restore needed.
         $this->service->confUpdateParam('session_length', 9999);
         $this->service->loadConfFromDb('session_length');
-        $currentConfig = CurrentConfig::current();
+        $currentConfig = CurrentConfigTestFactory::get();
         self::assertSame(9999, $currentConfig->sessionLength());
 
         $this->service->confDeleteParam('session_length');
@@ -249,7 +250,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         // not just ConfigService's own generic bool-encoding mechanism
         // (already covered above).
         try {
-            $currentConfig = CurrentConfig::current();
+            $currentConfig = CurrentConfigTestFactory::get();
             $this->service->confUpdateParam('gallery_locked', true);
             $this->service->loadConfFromDb('gallery_locked');
             self::assertTrue($currentConfig->galleryLocked());
@@ -272,7 +273,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         try {
             $this->service->confUpdateParam('data_dir_checked', '1');
             $this->service->loadConfFromDb('data_dir_checked');
-            self::assertSame('1', CurrentConfig::current()->dataDirChecked());
+            self::assertSame('1', CurrentConfigTestFactory::get()->dataDirChecked());
         } finally {
             $this->service->confDeleteParam('data_dir_checked');
         }

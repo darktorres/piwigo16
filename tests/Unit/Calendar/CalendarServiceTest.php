@@ -6,6 +6,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
@@ -57,11 +58,11 @@ function makeCalendarService(): CalendarService
     if (! $filterState instanceof FilterState) {
         throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
     }
-    $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
+    $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
     $permissionService = new PermissionService(
         new PermissionRepository(EntityManagerFactory::build($conn)),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-        new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()),
+        new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()),
         CurrentUserTestFactory::get(),
         $filterState,
         $accessLevelChecker,
@@ -69,7 +70,7 @@ function makeCalendarService(): CalendarService
 
     return new CalendarService(
         $permissionService,
-        new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()), $permissionService, CurrentConfig::current(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker),
+        new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()), $permissionService, CurrentConfigTestFactory::get(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker),
     );
 }
 

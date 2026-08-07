@@ -15,6 +15,7 @@ use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -129,7 +130,7 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
     // locator elimination campaign, Phase 12 sub-phase 12D):
     // getMissingExtensions() threads both into
     // ExtensionScanner::scan()'s own NOCTOR-shaped params, which need the
-    // real, shared CurrentConfig::current() (reflecting this file's own
+    // real, shared CurrentConfigTestFactory::get() (reflecting this file's own
     // beforeEach()-booted fixture Paths) and CurrentUserTestFactory::get() --
     // not a fresh, disconnected instance -- for scan()'s own themesDir()
     // lookup and PreferencesService::getParam() admin_theme fallback to
@@ -150,14 +151,14 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
         CurrentPathsTestFactory::get(),
         CurrentUserTestFactory::get(),
         new EventDispatcher(),
-        CurrentConfig::current(),
+        CurrentConfigTestFactory::get(),
     );
 }
 
 $fixtureRoot = null;
 
 beforeEach(function () use (&$fixtureRoot): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     ConfigLoader::applyDefaults();
 
     $fixtureRoot = sys_get_temp_dir() . '/piwigo-extension-update-checker-test-' . bin2hex(random_bytes(4)) . '/';
@@ -175,13 +176,13 @@ beforeEach(function () use (&$fixtureRoot): void {
     mkdir($fixtureRoot . 'plugins', 0o777, true);
     mkdir($fixtureRoot . 'themes', 0o777, true);
     mkdir($fixtureRoot . 'language', 0o777, true);
-    CurrentConfig::current()->setThemesDir(rtrim($fixtureRoot, '/') . '/themes');
+    CurrentConfigTestFactory::get()->setThemesDir(rtrim($fixtureRoot, '/') . '/themes');
 
     unset($_SESSION['extensions_need_update']);
 });
 
 afterEach(function () use (&$fixtureRoot): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     Kernel::reset();
     unset($_SESSION['extensions_need_update']);
     if (is_string($fixtureRoot) && is_dir($fixtureRoot)) {

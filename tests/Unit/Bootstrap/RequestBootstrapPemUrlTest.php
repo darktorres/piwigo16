@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 
@@ -17,12 +18,12 @@ use Piwigo\Core\Kernel;
  * pemUrl() reads through self::currentConfig(), which resolves
  * CurrentConfig straight from Kernel::container() (singleton/
  * service-locator elimination campaign, Phase 9) with no not-booted
- * fallback of its own -- unlike the CurrentConfig::current() shim, so
+ * fallback of its own -- unlike the CurrentConfigTestFactory::get() shim, so
  * each test below boots the Kernel first and writes onto that same
  * container-shared instance.
  */
 afterEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     Kernel::reset();
 });
 

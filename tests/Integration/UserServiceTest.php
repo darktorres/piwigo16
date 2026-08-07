@@ -29,6 +29,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigEntry;
     use Piwigo\Config\ConfigService;
     use Piwigo\Config\CurrentConfig;
+    use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\CurrentConfigService;
     use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -120,7 +121,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
-            $this->service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfig::current()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfig::current(), $installationFlag, $this->processCache, CurrentPathsTestFactory::get());
+            $this->service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, $this->processCache, CurrentPathsTestFactory::get());
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
@@ -809,7 +810,7 @@ namespace Piwigo\Tests\Integration {
             // fixture user (1, fixture_admin) just for this one call.
             // setUp() re-applies the fake default before every other
             // test, so no restore is needed.
-            $currentConfig = CurrentConfig::current();
+            $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->setEmailAdminOnNewUser('all');
             $currentConfig->setWebmasterId(1);
             $currentConfig->setSmtpHost('127.0.0.1:1');
@@ -852,7 +853,7 @@ namespace Piwigo\Tests\Integration {
             // above, but with the 'group:N' form of email_admin_on_new_user
             // -- exercises notifyAdminsOfNewRegistration()'s own
             // preg_match('/^group:(\d+)$/', ...) capture into $groupId.
-            $currentConfig = CurrentConfig::current();
+            $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->setEmailAdminOnNewUser('group:5');
             $currentConfig->setWebmasterId(1);
             $currentConfig->setSmtpHost('127.0.0.1:1');
@@ -941,7 +942,7 @@ namespace Piwigo\Tests\Integration {
             // does. Reuses 'guest' specifically because it has no email on
             // file (same determinism reasoning as the existing
             // test_register_user_sets_duplicate_username_without_revealing_it_in_errors).
-            CurrentConfig::current()->setInsensitiveCaseLogon(true);
+            CurrentConfigTestFactory::get()->setInsensitiveCaseLogon(true);
 
             $result = $this->service->registerUser('GUEST', 'password123', null, UrlServiceTestFactory::build());
 
@@ -965,7 +966,7 @@ namespace Piwigo\Tests\Integration {
                 "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('temp-webmaster-target', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
-            CurrentConfig::current()->setWebmasterId($tempId);
+            CurrentConfigTestFactory::get()->setWebmasterId($tempId);
 
             try {
                 $this->service->createUserInfos([UserId::from($tempId)]);
@@ -986,7 +987,7 @@ namespace Piwigo\Tests\Integration {
                 "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('temp-webmaster-target-2', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
-            $currentConfig = CurrentConfig::current();
+            $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->setWebmasterId($tempId);
             // setAvailablePermissionLevels([]) itself treats an empty array
             // as "reset to the built-in default" ([0,1,2,4,8]) -- confirmed
@@ -1108,7 +1109,7 @@ namespace Piwigo\Tests\Integration {
             if (! $installationFlag instanceof InstallationFlag) {
                 throw new LogicException('Container returned an unexpected type for ' . InstallationFlag::class);
             }
-            $service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfig::current()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), new EventDispatcher(), new DeploymentPolicy(externalAuthentification: true), CurrentUserTestFactory::get(), CurrentConfig::current(), $installationFlag, new ProcessCache(), CurrentPathsTestFactory::get());
+            $service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(externalAuthentification: true), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, new ProcessCache(), CurrentPathsTestFactory::get());
 
             try {
                 self::assertSame(0, $this->fetchOneInt(

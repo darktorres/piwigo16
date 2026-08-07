@@ -22,6 +22,7 @@ use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentLogger;
@@ -97,7 +98,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
 
         EventDispatcherTestFactory::get()->reset();
 
-        $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
+        $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
         // Template::__construct()'s own data_dir_checked first-time-setup
         // flow reaches CurrentConfigServiceTestFactory::get()->get() -- same wiring every
         // other Integration test constructing a real Template directly
@@ -127,7 +128,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         if (! $accessControl instanceof AccessControl) {
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
-        $this->renderer = new ThemesInstalledPageRenderer(LangTestFactory::get(), $accessControl, new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), PageStateTestFactory::get()), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfig::current(), $wsContext, CurrentUserTestFactory::get(), CurrentPathsTestFactory::get());
+        $this->renderer = new ThemesInstalledPageRenderer(LangTestFactory::get(), $accessControl, new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), PageStateTestFactory::get()), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), $wsContext, CurrentUserTestFactory::get(), CurrentPathsTestFactory::get());
 
         $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);

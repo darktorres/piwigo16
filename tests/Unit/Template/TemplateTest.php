@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Smarty\Smarty;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -51,13 +52,13 @@ use Piwigo\Template\Template;
 
 beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    CurrentConfig::current()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
 });
 
 afterEach(function (): void {
     LangTestFactory::get()->reset();
     TranslatorTestFactory::get()->reset();
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     Kernel::reset();
 });
 
@@ -94,7 +95,7 @@ test('get_php_str_val checks the first character for a matching double-quote, no
 });
 
 test('modcompiler_translate returns a cached lang lookup when compiled_template_cache_language is on', function (): void {
-    CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
+    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(true);
     LangTestFactory::get()->loadArray(['Comment' => 'Commentaire']);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'Comment'"]);
@@ -103,7 +104,7 @@ test('modcompiler_translate returns a cached lang lookup when compiled_template_
 });
 
 test('modcompiler_translate falls back to a runtime Template::lang()->t() call when caching is off', function (): void {
-    CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
+    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(false);
     LangTestFactory::get()->loadArray(['Comment' => 'Commentaire']);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'Comment'"]);
@@ -112,7 +113,7 @@ test('modcompiler_translate falls back to a runtime Template::lang()->t() call w
 });
 
 test('modcompiler_translate falls back to a runtime Template::lang()->t() call when the key is not in the cached lang table', function (): void {
-    CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
+    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(true);
     LangTestFactory::get()->loadArray([]);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'Unknown'"]);
@@ -121,7 +122,7 @@ test('modcompiler_translate falls back to a runtime Template::lang()->t() call w
 });
 
 test('modcompiler_translate wraps a runtime Template::lang()->t() call in sprintf when extra params are given', function (): void {
-    CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
+    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(false);
     LangTestFactory::get()->loadArray([]);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'%d comments'", '$count']);
@@ -130,7 +131,7 @@ test('modcompiler_translate wraps a runtime Template::lang()->t() call in sprint
 });
 
 test('modcompiler_translate_dec falls back to a runtime Template::lang()->plural() call when caching is off', function (): void {
-    CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
+    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(false);
 
     $result = TemplateTestFactory::build()->modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
 
@@ -138,7 +139,7 @@ test('modcompiler_translate_dec falls back to a runtime Template::lang()->plural
 });
 
 test('modcompiler_translate wraps a cached lang lookup in sprintf when extra params are given and caching is on', function (): void {
-    CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
+    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(true);
     LangTestFactory::get()->loadArray(['%d comments' => '%d commentaires']);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'%d comments'", '$count']);
@@ -147,7 +148,7 @@ test('modcompiler_translate wraps a cached lang lookup in sprintf when extra par
 });
 
 test('modcompiler_translate_dec builds a plain >1 ternary from cached lang lookups when caching is on and zero is not plural', function (): void {
-    CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
+    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(true);
     LangTestFactory::get()->setLangInfo(['zero_plural' => false]);
     LangTestFactory::get()->loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
 
@@ -157,7 +158,7 @@ test('modcompiler_translate_dec builds a plain >1 ternary from cached lang looku
 });
 
 test('modcompiler_translate_dec also treats zero as plural when zero_plural is set', function (): void {
-    CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
+    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(true);
     LangTestFactory::get()->setLangInfo(['zero_plural' => true]);
     LangTestFactory::get()->loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
 

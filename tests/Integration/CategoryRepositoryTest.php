@@ -16,6 +16,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\Projection\Category;
     use Piwigo\Config\CurrentConfig;
+    use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
@@ -268,7 +269,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // Item 16J: the real DQL path -- a single bounded-vocabulary field,
         // not sorted before comparing, to prove the parsed order is what
         // actually reaches the query rather than incidental id order.
-        CurrentConfig::current()->setOrderBy('ORDER BY id DESC');
+        CurrentConfigTestFactory::get()->setOrderBy('ORDER BY id DESC');
 
         $ids = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
 
@@ -289,7 +290,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // this raw config string never round-trips through column()'s own
         // (now driver-aware) quoted output, so a bare, unquoted field name
         // parses identically on both platforms.
-        CurrentConfig::current()->setOrderBy('ORDER BY rank ASC');
+        CurrentConfigTestFactory::get()->setOrderBy('ORDER BY rank ASC');
 
         $ids = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
 
@@ -301,8 +302,8 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // A sysadmin-local-config override -- RequestBootstrap.php's own
         // real bootstrap-time behavior copies its value into orderBy() too;
         // mirrored here since this test bypasses that bootstrap step.
-        CurrentConfig::current()->setOrderByCustom('ORDER BY RAND()');
-        CurrentConfig::current()->setOrderBy('ORDER BY RAND()');
+        CurrentConfigTestFactory::get()->setOrderByCustom('ORDER BY RAND()');
+        CurrentConfigTestFactory::get()->setOrderBy('ORDER BY RAND()');
 
         $ids = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
         sort($ids);
@@ -315,7 +316,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // Not one of $sort_fields's own bounded tokens -- the parser must
         // reject it and this must still return the right members via the
         // original raw-DBAL path, not throw.
-        CurrentConfig::current()->setOrderBy('ORDER BY comment ASC');
+        CurrentConfigTestFactory::get()->setOrderBy('ORDER BY comment ASC');
 
         $ids = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
         sort($ids);

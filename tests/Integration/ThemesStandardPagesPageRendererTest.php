@@ -24,6 +24,7 @@ use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -221,7 +222,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // setUp().
         LangTestFactory::get()->load('admin.lang');
 
-        $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
+        $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($this->configService);
 
         // themes_standard_pages.tpl's own {combine_script}/{footer_script}
@@ -297,7 +298,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // once for the whole test) specifically so overrideSiteLocal()'s
         // own Kernel::boot() below is reflected in the 'local' disk
         // it builds -- config/storage.php's own 'local' factory closure
-        // captures whichever CurrentPathsTestFactory::get()/CurrentConfig::current()
+        // captures whichever CurrentPathsTestFactory::get()/CurrentConfigTestFactory::get()
         // instance is passed in explicitly at fromConfig()-call time
         // (singleton/service-locator elimination campaign, Phase 12
         // sub-phase 12F-10), same "must be rebuilt after CurrentPaths
@@ -309,11 +310,11 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
             UrlServiceTestFactory::build(),
             $this->configService,
-            StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php', CurrentPathsTestFactory::get(), CurrentConfig::current()),
+            StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php', CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()),
             PageStateTestFactory::get(),
             CurrentTemplate::current(),
             HtmlServiceTestFactory::build(),
-            CurrentConfig::current(),
+            CurrentConfigTestFactory::get(),
             CurrentPathsTestFactory::get(),
             CurrentUserTestFactory::get(),
             EventDispatcherTestFactory::get(),

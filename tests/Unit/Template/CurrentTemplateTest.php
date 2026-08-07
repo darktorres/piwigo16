@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -51,7 +52,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     current_template_test_rrmdir(CurrentPathsTestFactory::get()->root);
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     Kernel::reset();
 });
 

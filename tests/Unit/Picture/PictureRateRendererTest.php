@@ -10,6 +10,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -45,8 +46,8 @@ beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-picture-rate-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::current()->setDataLocation('data/');
-    CurrentConfig::current()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->setDataLocation('data/');
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
     CurrentTemplate::current()->set(TemplateTestFactory::build());
 });
 
@@ -54,16 +55,16 @@ afterEach(function (): void {
     picture_rate_test_rrmdir(CurrentPathsTestFactory::get()->root);
     CurrentTemplate::current()->reset();
     Kernel::reset();
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
 });
 
 test('render does nothing when rating is disabled', function (): void {
-    CurrentConfig::current()->setRateEnabled(false);
+    CurrentConfigTestFactory::get()->setRateEnabled(false);
     $accessControl = Kernel::container()->get(AccessControl::class);
     if (! $accessControl instanceof AccessControl) {
         throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
     }
-    $renderer = new PictureRateRenderer($accessControl, EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current());
+    $renderer = new PictureRateRenderer($accessControl, EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
 
     $renderer->render(42, UrlServiceTestFactory::build(), [], '/picture.php');
 

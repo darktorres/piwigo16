@@ -441,14 +441,9 @@ final readonly class CategoryCatsRenderer
             // navigation bar
             $catsNavigationBar = [];
             if ($totalCategories > $nbCategoriesPage) {
-                // \Piwigo\Config\CurrentConfig::current() shim: this file's own
-                // CurrentConfig call sites (nbCategoriesPage()/displayFromto()/
-                // etc., elsewhere in this method) haven't been converted to
-                // constructor injection yet -- PaginationService's own DI
-                // needs an instance now that its constructor is real, so
-                // it's bridged via the documented transitional shim rather
-                // than expanding this batch's scope into a full, unrelated
-                // conversion of this file.
+                // PaginationService takes this file's own constructor-injected
+                // $currentConfig directly (same instance nbCategoriesPage()/
+                // displayFromto()/etc. read elsewhere in this method).
                 $catsNavigationBar = new PaginationService($this->currentConfig)
                     ->createNavigationBar($this->urlService->duplicateIndexUrl([], ['startcat']), $totalCategories, $startcat, $nbCategoriesPage, true, 'startcat');
             }

@@ -13,6 +13,7 @@ namespace Piwigo\Core;
 
 use DateTime;
 use LogicException;
+use Piwigo\Config\CurrentConfig;
 use RuntimeException;
 
 /**
@@ -148,7 +149,7 @@ final class Logger
             $directory = is_string($directory) ? $directory : '';
 
             if (! file_exists($directory)) {
-                FilesystemHelper::mkgetdir($directory, FilesystemHelper::MKGETDIR_DEFAULT | FilesystemHelper::MKGETDIR_PROTECT_HTACCESS);
+                FilesystemHelper::mkgetdir($directory, $this->currentConfig(), FilesystemHelper::MKGETDIR_DEFAULT | FilesystemHelper::MKGETDIR_PROTECT_HTACCESS);
             }
 
             $filePath = $this->options['filePath'] ?? null;
@@ -408,6 +409,28 @@ final class Logger
         }
 
         return new PageState();
+    }
+
+    /**
+     * Same "container resolve, not a constructor property" reasoning as
+     * pageState() above -- used only inside open()'s own mkgetdir() call
+     * below (singleton/service-locator elimination campaign, Phase 12
+     * sub-phase 12F-12). CurrentConfig's own former pre-boot fallback was
+     * just `new self()`, no DB read at all, so a fresh, unmemoized
+     * instance here is safe.
+     */
+    private function currentConfig(): CurrentConfig
+    {
+        if (Kernel::isBooted()) {
+            $currentConfig = Kernel::container()->get(CurrentConfig::class);
+            if (! $currentConfig instanceof CurrentConfig) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+            }
+
+            return $currentConfig;
+        }
+
+        return new CurrentConfig();
     }
 
     /**

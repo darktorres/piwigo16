@@ -13,6 +13,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\Kernel;
@@ -43,7 +44,7 @@ use Sentry\SentrySdk;
  */
 beforeEach(function (): void {
     Kernel::reset();
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     CurrentUserTestFactory::get()->reset();
     // Legacy Coupling Retirement Phase 8, 8d: bootConfigOnly() now reuses
     // an already-set CurrentConfigService instead of always resolving+
@@ -66,7 +67,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     CurrentUserTestFactory::get()->reset();
     CurrentConfigServiceTestFactory::get()->reset();
     // LangTestFactory::get() has no memoized pre-boot fallback (see beforeEach's
@@ -114,7 +115,7 @@ test('bootConfigOnly seeds CurrentConfig from its own property defaults (P13)', 
     // since a real config-table row (this test's own DB connection, shared
     // with whatever fixture state other suites left behind) can legitimately
     // override it.
-    expect(CurrentConfig::current()->galleryTitle())->not->toBe('');
+    expect(CurrentConfigTestFactory::get()->galleryTitle())->not->toBe('');
 });
 
 test('bootConfigOnly merges DB-persisted config overrides into CurrentConfig (P23 batch 1)', function (): void {
@@ -123,7 +124,7 @@ test('bootConfigOnly merges DB-persisted config overrides into CurrentConfig (P2
     // ran, not just that the property exists.
     RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
 
-    expect(CurrentConfig::current()->galleryTitle())->toBe('Fixture Gallery');
+    expect(CurrentConfigTestFactory::get()->galleryTitle())->toBe('Fixture Gallery');
 });
 
 test('bootConfigOnly attaches a guest CurrentUser', function (): void {
@@ -205,7 +206,7 @@ test('bootConfigOnly reuses an already-set CurrentConfigService instead of resol
     $ormConfig->enableNativeLazyObjects(true);
     $em = new EntityManager($conn, $ormConfig);
     $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentialsTestFactory::get()));
-    $preSetService = new ConfigService($em->getRepository(ConfigEntry::class), new EventDispatcher(), CurrentConfig::current());
+    $preSetService = new ConfigService($em->getRepository(ConfigEntry::class), new EventDispatcher(), CurrentConfigTestFactory::get());
     CurrentConfigServiceTestFactory::get()->set($preSetService);
 
     RequestBootstrap::bootConfigOnly($paths);

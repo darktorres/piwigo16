@@ -20,6 +20,7 @@ use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -98,7 +99,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // loadConfFromDb() below is unrelated to ImageStdParams -- it's
         // this test's own way of seeding every other real config-backed
         // display flag CategoryDefaultRenderer/thumbnails.tpl reads.
-        $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
+        $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
         $configService->loadConfFromDb();
         ImageStdParamsTestFactory::get()->load_from_db();
 
@@ -128,7 +129,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
         }
 
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcherTestFactory::get(), ImageStdParamsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfig::current(), LangTestFactory::get(), $processCache, PageStateTestFactory::get());
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), ImageStdParamsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), $processCache, PageStateTestFactory::get());
     }
 
     #[Override]

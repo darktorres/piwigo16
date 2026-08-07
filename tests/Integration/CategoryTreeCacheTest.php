@@ -23,6 +23,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryTreeCache;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -88,7 +89,7 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
                 LangTestFactory::get(),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
                 new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)),
-                CurrentConfig::current(),
+                CurrentConfigTestFactory::get(),
                 new EventDispatcher(),
                 TranslatorTestFactory::get(),
                 new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)

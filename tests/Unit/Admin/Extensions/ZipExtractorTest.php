@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Config\CurrentConfig;
 
 // Marker-based filesystem safety: this suite writes and extracts real zip
 // archives, so every path must be scoped to a unique temp subdirectory it
@@ -81,7 +82,7 @@ test('extract writes files under destPath with the prefix stripped', function ()
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id');
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
     expect($result)->not->toBeNull();
     expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // main');
@@ -101,7 +102,7 @@ test('extract rejects a zip-slip entry that would escape destPath', function ():
         unlink($escapePath);
     }
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id');
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
     expect($result)->toBeNull();
     expect(file_exists($escapePath))->toBeFalse();
@@ -118,7 +119,7 @@ test('extract rejects an entry with an absolute path', function (): void {
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id');
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
     expect($result)->toBeNull();
 });
@@ -128,6 +129,7 @@ test('extract returns null for an archive that does not exist', function (): voi
         zip_extractor_test_marker() . '/does-not-exist.zip',
         zip_extractor_test_marker() . '/extracted',
         'plugin_id',
+        new CurrentConfig(),
     );
 
     expect($result)->toBeNull();
@@ -141,7 +143,7 @@ test('extract with onlyStoredName extracts just that one entry', function (): vo
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', null, 'plugin_id/lib/helper.php');
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig(), null, 'plugin_id/lib/helper.php');
 
     expect($result)->not->toBeNull();
     expect(file_exists($dest . '/main.inc.php'))->toBeFalse();
@@ -155,7 +157,7 @@ test('extract with a bare "." removePrefix does not strip anything', function ()
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, '.');
+    $result = new ZipExtractor()->extract($archive, $dest, '.', new CurrentConfig());
 
     expect($result)->not->toBeNull();
     expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // main');
@@ -173,7 +175,7 @@ test('extract marks the directory entry that exactly matches removePrefix as fil
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id');
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
     expect($result)->toBe([
         [
@@ -199,7 +201,7 @@ test('extract recursively creates a nested directory entry and lists it with ok 
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id');
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
     expect($result)->toBe([
         [
@@ -228,7 +230,7 @@ test('extract marks a file entry as already_a_directory when its target path was
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id');
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
     expect($result)->toBe([
         [
@@ -255,7 +257,7 @@ test('extract overwrites an existing destination file with the archive contents'
     mkdir($dest, 0o777, true);
     file_put_contents($dest . '/main.inc.php', '<?php // old');
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id');
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
     expect($result)->toBe([
         [
@@ -284,7 +286,7 @@ test('extract records a write_error result and leaves the file unwritten when th
     // status instead of a PHPUnit\Framework\Error\Warning.
     set_error_handler(static fn (): bool => true, E_WARNING);
     try {
-        $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id');
+        $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
     } finally {
         restore_error_handler();
     }
@@ -306,7 +308,7 @@ test('extract applies the given chmod mode to each extracted file', function ():
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', 0o640);
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig(), 0o640);
 
     expect($result)->not->toBeNull();
     expect(fileperms($dest . '/main.inc.php') & 0o777)->toBe(0o640);
@@ -317,7 +319,7 @@ test('extract returns null for a corrupt (non-zip) archive file', function (): v
     file_put_contents($corrupt, 'this is not a zip file');
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($corrupt, $dest, 'plugin_id');
+    $result = new ZipExtractor()->extract($corrupt, $dest, 'plugin_id', new CurrentConfig());
 
     expect($result)->toBeNull();
 });
@@ -336,7 +338,7 @@ test('extract returns null when the archive has more than MAX_ENTRIES entries', 
     $zip->close();
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, '.');
+    $result = new ZipExtractor()->extract($archive, $dest, '.', new CurrentConfig());
 
     expect($result)->toBeNull();
     expect(is_dir($dest))->toBeFalse();
@@ -356,7 +358,7 @@ test('extract accepts an archive with exactly MAX_ENTRIES entries', function ():
     $zip->close();
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, '.');
+    $result = new ZipExtractor()->extract($archive, $dest, '.', new CurrentConfig());
 
     expect($result)->not->toBeNull();
     expect(is_dir($dest))->toBeTrue();
@@ -393,7 +395,7 @@ test('extract returns null when the archive\'s total uncompressed size exceeds M
     unlink($bigFile);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, '.');
+    $result = new ZipExtractor()->extract($archive, $dest, '.', new CurrentConfig());
 
     expect($result)->toBeNull();
     expect(is_dir($dest))->toBeFalse();
@@ -422,7 +424,7 @@ test('extract accepts an archive whose total uncompressed size is exactly MAX_UN
     unlink($bigFile);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, '.');
+    $result = new ZipExtractor()->extract($archive, $dest, '.', new CurrentConfig());
 
     expect($result)->not->toBeNull();
     expect(is_dir($dest))->toBeTrue();
@@ -438,7 +440,7 @@ test('extract strips a leading "./" from destPath before writing', function (): 
     // path would carry a literal "./" segment).
     $dest = './' . zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id');
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
     expect($result)->not->toBeNull();
     expect(file_get_contents(zip_extractor_test_marker() . '/extracted/main.inc.php'))->toBe('<?php // main');

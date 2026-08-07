@@ -15,6 +15,7 @@ use Piwigo\Core\FilterState;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentLogger;
@@ -177,7 +178,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
     public function test_render_appends_exif_metadata_with_direct_and_nested_field_tokens(): void
     {
-        $currentConfig = CurrentConfig::current();
+        $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->setShowExif(true);
         $currentConfig->setShowIptc(false);
         // 'COMPUTED;Height' is a real nested key exif_read_data() always
@@ -218,7 +219,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
     public function test_render_translates_a_composite_exif_field_when_a_translation_exists_for_its_second_token(): void
     {
-        $currentConfig = CurrentConfig::current();
+        $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->setShowExif(true);
         $currentConfig->setShowIptc(false);
         // 'COMPUTED;Height' is a real nested key exif_read_data() always
@@ -251,7 +252,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
     public function test_render_appends_nothing_for_exif_when_no_configured_field_matches(): void
     {
-        $currentConfig = CurrentConfig::current();
+        $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->setShowExif(true);
         $currentConfig->setShowIptc(false);
         $currentConfig->setShowExifFields(['ThisFieldDoesNotExistAnywhere']);
@@ -266,7 +267,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
     public function test_render_appends_iptc_metadata_translating_known_fields(): void
     {
-        $currentConfig = CurrentConfig::current();
+        $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->setShowExif(false);
         $currentConfig->setShowIptc(true);
         $currentConfig->setShowIptcMapping(['title' => '2#005', 'author' => '2#080']);
@@ -303,7 +304,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
     public function test_render_appends_both_exif_and_iptc_metadata_as_2_separate_entries(): void
     {
-        $currentConfig = CurrentConfig::current();
+        $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->setShowExif(true);
         $currentConfig->setShowIptc(true);
         $currentConfig->setShowExifFields(['Artist']);

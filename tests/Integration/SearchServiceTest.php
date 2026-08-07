@@ -32,6 +32,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\CategoryService;
     use Piwigo\Config\CurrentConfig;
+    use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Core\HtmlRenderingInterface;
     use Piwigo\Core\RedirectServiceInterface;
@@ -317,16 +318,16 @@ final class SearchServiceTest extends IntegrationTestCase
         $currentConfig->setQuickSearchIncludeSubAlbums(false);
         $currentConfig->setRateEnabled(true);
 
-        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
+        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
         $this->service = new SearchService(
             $accessLevelChecker,
             $this->repo,
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUserTestFactory::get(), $this->filterState(), $accessLevelChecker),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $this->filterState(), $accessLevelChecker),
             new CategoryService(
                 LangTestFactory::get(),
-                new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUserTestFactory::get(), $this->filterState(), $accessLevelChecker),
-                CurrentConfig::current(),
+                new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $this->filterState(), $accessLevelChecker),
+                CurrentConfigTestFactory::get(),
                 new EventDispatcher(),
                 TranslatorTestFactory::get(),
                 $accessLevelChecker
@@ -334,10 +335,10 @@ final class SearchServiceTest extends IntegrationTestCase
             $this->mailService(),
             HtmlServiceTestFactory::build(),
             new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
-            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcherTestFactory::get(),
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(),
             CurrentUserTestFactory::get(),
             LangTestFactory::get(),
-            CurrentConfig::current(),
+            CurrentConfigTestFactory::get(),
             new CurrentLogger(),
             new DeploymentPolicy(),
             CurrentPathsTestFactory::get(),
@@ -385,17 +386,17 @@ final class SearchServiceTest extends IntegrationTestCase
      */
     private function makeService(SearchRepository $repo, HtmlRenderingInterface $htmlRenderer): SearchService
     {
-        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
+        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
         return new SearchService(
             $accessLevelChecker,
             $repo,
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUserTestFactory::get(), $this->filterState(), $accessLevelChecker),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $this->filterState(), $accessLevelChecker),
             new CategoryService(
                 LangTestFactory::get(),
-                new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUserTestFactory::get(), $this->filterState(), $accessLevelChecker),
-                CurrentConfig::current(),
+                new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $this->filterState(), $accessLevelChecker),
+                CurrentConfigTestFactory::get(),
                 new EventDispatcher(),
                 TranslatorTestFactory::get(),
                 $accessLevelChecker
@@ -403,10 +404,10 @@ final class SearchServiceTest extends IntegrationTestCase
             $this->mailService(),
             $htmlRenderer,
             new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
-            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcherTestFactory::get(),
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(),
             CurrentUserTestFactory::get(),
             LangTestFactory::get(),
-            CurrentConfig::current(),
+            CurrentConfigTestFactory::get(),
             new CurrentLogger(),
             new DeploymentPolicy(),
             CurrentPathsTestFactory::get(),
@@ -1338,7 +1339,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
     public function test_get_quick_search_results_no_cache_expands_to_subalbums_when_enabled(): void
     {
-        CurrentConfig::current()->setQuickSearchIncludeSubAlbums(true);
+        CurrentConfigTestFactory::get()->setQuickSearchIncludeSubAlbums(true);
 
         // "Sample" matches category 1 ("Sample Album") only, by name --
         // with sub-album inclusion enabled this expands to include
@@ -1363,7 +1364,7 @@ final class SearchServiceTest extends IntegrationTestCase
         // genuinely return [], exercising qsearchGetCategories()'s own
         // "$subcatIds === []" ternary branch -- as opposed to the sibling
         // test above, whose category 1 always DOES have a real child.
-        CurrentConfig::current()->setQuickSearchIncludeSubAlbums(true);
+        CurrentConfigTestFactory::get()->setQuickSearchIncludeSubAlbums(true);
         $originalUppercats = $this->conn->fetchOne('SELECT uppercats FROM ' . Tables::categories() . ' WHERE id = 2');
         self::assertIsString($originalUppercats);
         $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET uppercats = '999' WHERE id = 2");
@@ -1486,7 +1487,7 @@ final class SearchServiceTest extends IntegrationTestCase
         // appending 'date' to $postedDateAliases instead of
         // $createdDateAliases -- proves the scope list still builds and the
         // search still functions correctly either way.
-        CurrentConfig::current()->setCalendarDatefield('date_available');
+        CurrentConfigTestFactory::get()->setCalendarDatefield('date_available');
 
         $results = $this->service->getQuickSearchResultsNoCache('family', []);
 

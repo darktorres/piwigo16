@@ -9,6 +9,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Env;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -73,13 +74,13 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::current()->reset();
+        CurrentConfigTestFactory::get()->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
         $em = EntityManagerFactory::build($this->conn);
-        $this->categoryRepo = new CategoryRepository($em, CurrentConfig::current());
+        $this->categoryRepo = new CategoryRepository($em, CurrentConfigTestFactory::get());
         $this->tagRepo = $em->getRepository(TagEntity::class);
     }
 

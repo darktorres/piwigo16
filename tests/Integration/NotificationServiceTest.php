@@ -23,6 +23,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Cache\CachePools;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Config\CurrentConfig;
+    use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
@@ -110,7 +111,7 @@ final class NotificationServiceTest extends IntegrationTestCase
             new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)),
             HtmlServiceTestFactory::build(),
             UrlServiceTestFactory::build(),
-            new Translator(CurrentConfig::current()),
+            new Translator(CurrentConfigTestFactory::get()),
             CurrentUserTestFactory::get(),
         );
     }

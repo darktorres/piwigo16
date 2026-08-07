@@ -17,6 +17,7 @@ use Piwigo\Tests\Unit\Template\TemplateInstanceTestFakeStatStreamWrapper;
 use Smarty\Extension\BCPluginsAdapter;
 use Piwigo\Template\Css;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\AppInfo;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\ErrorCollector;
@@ -236,20 +237,20 @@ beforeEach(function (): void {
     // (Phase 3) is itself a pure shim reading Paths::class straight out of
     // that same container, so this one Kernel::boot() call establishes both.
     Kernel::boot(Paths::fromRoot($root));
-    // Booted first (above) -- CurrentConfig::current()/CurrentUserTestFactory::get()
+    // Booted first (above) -- CurrentConfigTestFactory::get()/CurrentUserTestFactory::get()
     // must resolve the container-shared instance, not the memoized pre-boot
     // fallback, or these seeds are invisible to every later current()->get()
     // call (Phase 5 execution finding, same pitfall Translator/EventDispatcher
     // already hit).
-    CurrentConfig::current()->setDataLocation('data/');
-    CurrentConfig::current()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->setDataLocation('data/');
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
     CurrentUserTestFactory::get()->attachGlobals();
 });
 
 afterEach(function (): void {
     template_instance_test_rrmdir(is_string($this->root) ? $this->root : '');
     CurrentUserTestFactory::get()->reset();
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     EventDispatcherTestFactory::get()->reset();
     Kernel::reset();
 });
@@ -263,7 +264,7 @@ test('constructor disables Smarty html escaping', function (): void {
 });
 
 test('constructor lowers error_reporting to exclude E_NOTICE when template debugging is off', function (): void {
-    CurrentConfig::current()->setDebugTemplate(false);
+    CurrentConfigTestFactory::get()->setDebugTemplate(false);
 
     $t = TemplateTestFactory::build();
 
@@ -271,7 +272,7 @@ test('constructor lowers error_reporting to exclude E_NOTICE when template debug
 });
 
 test('constructor leaves error_reporting untouched when template debugging is on', function (): void {
-    CurrentConfig::current()->setDebugTemplate(true);
+    CurrentConfigTestFactory::get()->setDebugTemplate(true);
 
     $t = TemplateTestFactory::build();
 
@@ -279,7 +280,7 @@ test('constructor leaves error_reporting untouched when template debugging is on
 });
 
 test('constructor casts compile_check to an int', function (): void {
-    CurrentConfig::current()->setTemplateCompileCheck(true);
+    CurrentConfigTestFactory::get()->setTemplateCompileCheck(true);
 
     $t = TemplateTestFactory::build();
 
@@ -290,8 +291,8 @@ test('constructor casts compile_check to an int', function (): void {
 
 test('constructor fatal-errors when the data directory cannot be made writable', function (): void {
     chmod(CurrentPathsTestFactory::get()->root, 0o555);
-    CurrentConfig::current()->reset();
-    CurrentConfig::current()->setDataLocation('data/');
+    CurrentConfigTestFactory::get()->reset();
+    CurrentConfigTestFactory::get()->setDataLocation('data/');
 
     set_error_handler(static fn (): bool => true);
     try {
@@ -304,8 +305,8 @@ test('constructor fatal-errors when the data directory cannot be made writable',
 
 test('constructor requests no backtrace when reporting the data-dir-not-writable error', function (): void {
     chmod(CurrentPathsTestFactory::get()->root, 0o555);
-    CurrentConfig::current()->reset();
-    CurrentConfig::current()->setDataLocation('data/');
+    CurrentConfigTestFactory::get()->reset();
+    CurrentConfigTestFactory::get()->setDataLocation('data/');
 
     $body = null;
     set_error_handler(static fn (): bool => true);
@@ -343,8 +344,8 @@ test('constructor loads admin.lang before rendering the data-dir-not-writable er
         "msgid \"\"\nmsgstr \"\"\n\"Content-Type: text/plain; charset=UTF-8\\n\"\n\"Language: en_UK\\n\"\n\nmsgid \"an error happened\"\nmsgstr \"CUSTOM-ADMIN-LANG-TITLE\"\n",
     );
     chmod(CurrentPathsTestFactory::get()->root, 0o555);
-    CurrentConfig::current()->reset();
-    CurrentConfig::current()->setDataLocation('data/');
+    CurrentConfigTestFactory::get()->reset();
+    CurrentConfigTestFactory::get()->setDataLocation('data/');
 
     $body = null;
     set_error_handler(static fn (): bool => true);
@@ -364,8 +365,8 @@ test('constructor loads admin.lang before rendering the data-dir-not-writable er
 });
 
 test('constructor creates the configured data-location directory when data_dir_checked is unset', function (): void {
-    CurrentConfig::current()->setDataLocation('mydata/');
-    CurrentConfig::current()->setDataDirChecked(null);
+    CurrentConfigTestFactory::get()->setDataLocation('mydata/');
+    CurrentConfigTestFactory::get()->setDataDirChecked(null);
 
     try {
         TemplateTestFactory::build();
@@ -387,8 +388,8 @@ test('constructor actually reaches CurrentConfigService::confUpdateParam() when 
     // confUpdateParam() call site is genuinely still reached; removing it
     // entirely would let construction finish without throwing anything.
     CurrentConfigServiceTestFactory::get()->reset();
-    CurrentConfig::current()->setDataLocation('mydata3/');
-    CurrentConfig::current()->setDataDirChecked(null);
+    CurrentConfigTestFactory::get()->setDataLocation('mydata3/');
+    CurrentConfigTestFactory::get()->setDataDirChecked(null);
 
     expect(static fn (): Template => TemplateTestFactory::build())
         ->toThrow(LogicException::class, 'CurrentConfigService not initialised');
@@ -438,7 +439,7 @@ test('constructor registers every expected Smarty plugin', function (): void {
 });
 
 test('constructor registers the language postfilter only when cache-by-language is on', function (): void {
-    CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
+    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(true);
 
     $t = TemplateTestFactory::build();
 
@@ -446,7 +447,7 @@ test('constructor registers the language postfilter only when cache-by-language 
 });
 
 test('constructor does not register the language postfilter when cache-by-language is off', function (): void {
-    CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
+    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(false);
 
     $t = TemplateTestFactory::build();
 
@@ -478,7 +479,7 @@ test('constructor registers template-extension extents when not in admin context
     mkdir(CurrentPathsTestFactory::get()->root . '/template-extension/', 0o777, true);
     file_put_contents(CurrentPathsTestFactory::get()->root . '/template-extension/first.tpl', 'a');
     file_put_contents(CurrentPathsTestFactory::get()->root . '/template-extension/second.tpl', 'b');
-    CurrentConfig::current()->setExtentsForTemplates([
+    CurrentConfigTestFactory::get()->setExtentsForTemplates([
         'first.tpl' => ['dup-handle', 'N/A', 'N/A'],
         'second.tpl' => ['dup-handle', 'N/A', 'N/A'],
     ]);
@@ -512,7 +513,7 @@ test('constructor does not register the local-css header prefilter for a themed 
     // instance keeps Template's constructor from re-reaching the (in this
     // fresh container, uninitialised) CurrentConfigService.
     $paths = CurrentPathsTestFactory::get();
-    $currentConfig = CurrentConfig::current();
+    $currentConfig = CurrentConfigTestFactory::get();
     KernelContainerOverride::with(
         [
             AdminContext::class => new AdminContext(true),
@@ -543,7 +544,7 @@ test('set_theme recognizes every whitelisted auth-page basename for the standard
     $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/wl-theme', ['marker' => 'not-swapped']);
     template_instance_test_write_themeconf($root . '/standard_pages', ['marker' => 'swapped']);
-    CurrentConfig::current()->setUseStandardPages(true);
+    CurrentConfigTestFactory::get()->setUseStandardPages(true);
     $saved = template_instance_test_save_server_keys();
 
     try {
@@ -565,7 +566,7 @@ test('set_theme does not swap themes when the current page is not a whitelisted 
     $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/not-auth-theme', ['marker' => 'not-swapped']);
     template_instance_test_write_themeconf($root . '/standard_pages', ['marker' => 'swapped']);
-    CurrentConfig::current()->setUseStandardPages(true);
+    CurrentConfigTestFactory::get()->setUseStandardPages(true);
     $saved = template_instance_test_save_server_keys();
     $_SERVER['SCRIPT_NAME'] = '/index.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
@@ -588,7 +589,7 @@ test('set_theme never swaps away from the "default" theme itself even on a white
     $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/default', ['marker' => 'default-marker']);
     template_instance_test_write_themeconf($root . '/standard_pages', ['marker' => 'swapped']);
-    CurrentConfig::current()->setUseStandardPages(true);
+    CurrentConfigTestFactory::get()->setUseStandardPages(true);
     $saved = template_instance_test_save_server_keys();
     $_SERVER['SCRIPT_NAME'] = '/identification.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
@@ -607,7 +608,7 @@ test('set_theme swaps themes when the theme itself opts into standard pages, eve
     $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/opt-in-theme', ['marker' => 'not-swapped', 'use_standard_pages' => true]);
     template_instance_test_write_themeconf($root . '/standard_pages', ['marker' => 'swapped']);
-    CurrentConfig::current()->setUseStandardPages(false);
+    CurrentConfigTestFactory::get()->setUseStandardPages(false);
     $saved = template_instance_test_save_server_keys();
     $_SERVER['SCRIPT_NAME'] = '/identification.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
@@ -626,7 +627,7 @@ test('set_theme does not swap themes when neither the theme nor the global confi
     $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
     template_instance_test_write_themeconf($root . '/opt-out-theme', ['marker' => 'not-swapped']);
     template_instance_test_write_themeconf($root . '/standard_pages', ['marker' => 'swapped']);
-    CurrentConfig::current()->setUseStandardPages(false);
+    CurrentConfigTestFactory::get()->setUseStandardPages(false);
     $saved = template_instance_test_save_server_keys();
     $_SERVER['SCRIPT_NAME'] = '/identification.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
@@ -1044,7 +1045,7 @@ test('p flushes the output buffer, then appends a working Smarty debug console w
     // Smarty\Smarty::getSource()`, since only Smarty\Template implements
     // that method. See p()'s own updated call site for the minimal fix
     // (a throwaway 'string:' resource template instead of the bare engine).
-    CurrentConfig::current()->setDebugTemplate(true);
+    CurrentConfigTestFactory::get()->setDebugTemplate(true);
     $t = TemplateTestFactory::build();
     $t->output = 'body-output';
 
@@ -1058,7 +1059,7 @@ test('p flushes the output buffer, then appends a working Smarty debug console w
 });
 
 test('p does not attempt to build a debug console when template debugging is off', function (): void {
-    CurrentConfig::current()->setDebugTemplate(false);
+    CurrentConfigTestFactory::get()->setDebugTemplate(false);
     $t = TemplateTestFactory::build();
     $t->output = 'body-output';
 
@@ -1078,7 +1079,7 @@ test('p passes full=true to display_debug so the console targets the shared __Sm
     // `$debugging === 2` is always false here), or a per-call md5 hash
     // when $full is false -- debug.tpl renders it straight into
     // `window.open("", "console{$targetWindow}", ...)`.
-    CurrentConfig::current()->setDebugTemplate(true);
+    CurrentConfigTestFactory::get()->setDebugTemplate(true);
     $t = TemplateTestFactory::build();
     $t->output = 'body-output';
 
@@ -1121,7 +1122,7 @@ test('parse registers external filters before compiling (so they run) and unregi
 });
 
 test('parse salts compile_id with the current lang code during compilation when cache-by-language is on', function (): void {
-    CurrentConfig::current()->setCompiledTemplateCacheLanguage(true);
+    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(true);
     LangTestFactory::get()->setLangInfo(['code' => 'fr_FR']);
     $t = TemplateTestFactory::build();
     $tplDir = CurrentPathsTestFactory::get()->root . '/tpl/';
@@ -1148,7 +1149,7 @@ test('parse salts compile_id with the current lang code during compilation when 
 });
 
 test('parse does not salt compile_id with a lang code when cache-by-language is off', function (): void {
-    CurrentConfig::current()->setCompiledTemplateCacheLanguage(false);
+    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(false);
     LangTestFactory::get()->setLangInfo(['code' => 'fr_FR']);
     $t = TemplateTestFactory::build();
     $tplDir = CurrentPathsTestFactory::get()->root . '/tpl/';
@@ -1972,7 +1973,7 @@ test('finalizeOutput clears the CSS loader so a second call does not re-emit alr
 
 test('finalizeOutput does not reprocess the combined-scripts tag once did_head is already true', function (): void {
     $t = TemplateTestFactory::build();
-    $t->scriptLoader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
+    $t->scriptLoader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
     $t->output = Template::COMBINED_SCRIPTS_TAG;
 
     $result = $t->fetchOutput();

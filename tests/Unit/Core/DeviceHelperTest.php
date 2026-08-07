@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\DeviceHelper;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -24,7 +25,7 @@ use Piwigo\Session\SessionService;
  */
 function deviceHelperTestSessionService(): SessionService
 {
-    return new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfig::current());
+    return new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get());
 }
 
 beforeEach(function (): void {
@@ -49,40 +50,40 @@ test('getDevice returns an existing session value as-is', function (): void {
 });
 
 test('mobileTheme is false when the mobile_theme config is empty or "0", without touching the session', function (): void {
-    CurrentConfig::current()->setMobilTheme('');
-    expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfig::current()))->toBeFalse();
+    CurrentConfigTestFactory::get()->setMobilTheme('');
+    expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfigTestFactory::get()))->toBeFalse();
     expect($_SESSION)->toBe([]);
 
-    CurrentConfig::current()->setMobilTheme('0');
-    expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfig::current()))->toBeFalse();
+    CurrentConfigTestFactory::get()->setMobilTheme('0');
+    expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfigTestFactory::get()))->toBeFalse();
     expect($_SESSION)->toBe([]);
 });
 
 test('mobileTheme falls back to getDevice() === "mobile" when no GET override or session value exists', function (): void {
-    CurrentConfig::current()->setMobilTheme('mobile');
+    CurrentConfigTestFactory::get()->setMobilTheme('mobile');
 
     // getDevice() itself defaults to "desktop" with an empty session.
-    expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfig::current()))->toBeFalse();
+    expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfigTestFactory::get()))->toBeFalse();
     expect($_SESSION['pwg_mobile_theme'])->toBeFalse();
 });
 
 test('mobileTheme returns an existing session value directly, without calling getDevice()', function (): void {
-    CurrentConfig::current()->setMobilTheme('mobile');
+    CurrentConfigTestFactory::get()->setMobilTheme('mobile');
     $_SESSION['pwg_mobile_theme'] = true;
 
-    expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfig::current()))->toBeTrue();
+    expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfigTestFactory::get()))->toBeTrue();
     // getDevice() was never called -- no 'pwg_device' session key was written.
     expect(isset($_SESSION['pwg_device']))->toBeFalse();
 });
 
 test('mobileTheme honors a ?mobile= GET override, persisting it to the session', function (): void {
-    CurrentConfig::current()->setMobilTheme('mobile');
+    CurrentConfigTestFactory::get()->setMobilTheme('mobile');
 
     $_GET['mobile'] = '1';
-    expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfig::current()))->toBeTrue();
+    expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfigTestFactory::get()))->toBeTrue();
     expect($_SESSION['pwg_mobile_theme'])->toBeTrue();
 
     $_SESSION = [];
     $_GET['mobile'] = '0';
-    expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfig::current()))->toBeFalse();
+    expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfigTestFactory::get()))->toBeFalse();
 });

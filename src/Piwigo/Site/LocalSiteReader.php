@@ -158,7 +158,7 @@ final class LocalSiteReader
      */
     public function get_full_directories(string $basedir): array
     {
-        $fs_fulldirs = FilesystemHelper::getFsDirectories($basedir);
+        $fs_fulldirs = FilesystemHelper::getFsDirectories($basedir, $this->currentConfig);
         return $fs_fulldirs;
     }
 

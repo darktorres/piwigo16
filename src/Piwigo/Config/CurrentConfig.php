@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
-use LogicException;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
-use Piwigo\Core\Kernel;
 use ReflectionClass;
 use ReflectionProperty;
 
@@ -34,18 +32,10 @@ use ReflectionProperty;
  * constructor-injected Paths.)
  *
  * Singleton/service-locator elimination campaign, Phase 9: converted from
- * a static-property bag to a real, container-shared instance -- no
- * constructor collaborators needed at all (every property already carries
- * its own real, sensible hardcoded default at declaration), so `current()`
- * is a memoized `@deprecated` transitional bridge for callers not yet
- * converted to constructor injection, same "load once via
- * ConfigService::loadConfFromDb(), read/write many times per request"
- * reasoning as `Translator`/`EventDispatcher`/`CurrentUser`/
- * `CurrentTemplate` -- the not-booted fallback is memoized
- * (`self::$fallback ??= new self()`), not fresh-per-call, and is safe to
- * memoize here (unlike a class with required collaborators) because every
- * property's own declared default is already the correct value to read
- * before the real config table has loaded.
+ * a static-property bag to a real, container-shared instance. Sub-phase
+ * 12F-12 (the campaign's final shim closure) deleted the transitional
+ * `current()` bridge outright -- every real caller now takes a real,
+ * constructor-injected instance or an explicit NOCTOR param instead.
  *
  * DB credentials (db_host/db_port/db_driver/db_base/db_user/db_password/
  * db_prefix) and the handful of sysadmin-lockable settings
@@ -63,27 +53,6 @@ use ReflectionProperty;
  */
 final class CurrentConfig
 {
-    private static ?self $fallback = null;
-
-    /**
-     * @deprecated transitional bridge for callers not yet converted to
-     * constructor injection -- see the class docblock above. Delete once
-     * `grep -rn "CurrentConfig::current("` outside tests/ returns nothing.
-     */
-    public static function current(): self
-    {
-        if (Kernel::isBooted()) {
-            $instance = Kernel::container()->get(self::class);
-            if (! $instance instanceof self) {
-                throw new LogicException('Container returned an unexpected type for ' . self::class);
-            }
-
-            return $instance;
-        }
-
-        return self::$fallback ??= new self();
-    }
-
     // === activate_comments ===
     /**
      * Enable or disable user comments on photos gallery-wide.

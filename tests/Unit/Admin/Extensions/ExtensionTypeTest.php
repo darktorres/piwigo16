@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
@@ -12,12 +13,12 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
 
 beforeEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     Kernel::boot(Paths::fromRoot('/tmp/piwigo-extension-type-test'));
 });
 
 afterEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     Kernel::reset();
 });
 
@@ -28,9 +29,9 @@ test('table returns each type\'s own table', function (): void {
 });
 
 test('pemCategoryId returns each type\'s own pem category id', function (): void {
-    expect(ExtensionType::Plugin->pemCategoryId(CurrentConfig::current()))->toBe(CurrentConfig::current()->pemPluginsCategory())
-        ->and(ExtensionType::Theme->pemCategoryId(CurrentConfig::current()))->toBe(CurrentConfig::current()->pemThemesCategory())
-        ->and(ExtensionType::Language->pemCategoryId(CurrentConfig::current()))->toBe(CurrentConfig::current()->pemLanguagesCategory());
+    expect(ExtensionType::Plugin->pemCategoryId(CurrentConfigTestFactory::get()))->toBe(CurrentConfigTestFactory::get()->pemPluginsCategory())
+        ->and(ExtensionType::Theme->pemCategoryId(CurrentConfigTestFactory::get()))->toBe(CurrentConfigTestFactory::get()->pemThemesCategory())
+        ->and(ExtensionType::Language->pemCategoryId(CurrentConfigTestFactory::get()))->toBe(CurrentConfigTestFactory::get()->pemLanguagesCategory());
 });
 
 test('fromPluralWsParam maps each type\'s plural pwg.extensions.ignoreUpdate wire value back to its enum case', function (): void {
@@ -48,9 +49,9 @@ test('fromPluralWsParam returns null for an unrecognized string', function (): v
 test('scanDirectory returns each type\'s own filesystem root', function (): void {
     // P23 batch 8f-4: the PHPWG_PLUGINS_PATH define is gone --
     // Piwigo\Admin\PluginLoader::pluginsPath() is the canonical value now.
-    expect(ExtensionType::Plugin->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfig::current()))->toBe(PluginLoader::pluginsPath(CurrentPathsTestFactory::get()))
-        ->and(ExtensionType::Theme->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfig::current()))->toBe(CurrentConfig::current()->themesPath())
-        ->and(ExtensionType::Language->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfig::current()))->toBe(CurrentPathsTestFactory::get()->root . 'language/');
+    expect(ExtensionType::Plugin->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()))->toBe(PluginLoader::pluginsPath(CurrentPathsTestFactory::get()))
+        ->and(ExtensionType::Theme->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()))->toBe(CurrentConfigTestFactory::get()->themesPath())
+        ->and(ExtensionType::Language->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()))->toBe(CurrentPathsTestFactory::get()->root . 'language/');
 });
 
 test('markerFilename returns each type\'s own extension marker file', function (): void {

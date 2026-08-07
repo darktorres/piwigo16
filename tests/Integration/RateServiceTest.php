@@ -21,6 +21,7 @@ namespace Piwigo\Tests\Integration {
     use Doctrine\DBAL\Connection;
     use Piwigo\Auth\CookieService;
     use Piwigo\Config\CurrentConfig;
+    use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
@@ -73,7 +74,7 @@ namespace Piwigo\Tests\Integration {
             if (! $accessControl instanceof AccessControl) {
                 throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
             }
-            $this->service = new RateService($accessControl, EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class), new CookieService(), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfig::current());
+            $this->service = new RateService($accessControl, EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class), new CookieService(), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
         }
 
         public function test_rate_returns_false_for_a_null_rate(): void

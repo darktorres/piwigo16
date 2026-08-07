@@ -17,6 +17,7 @@ use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
@@ -97,7 +98,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentConfig::current()->reset();
+        CurrentConfigTestFactory::get()->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
@@ -113,8 +114,8 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
             UrlServiceTestFactory::build(),
-            new SessionService($this->em->getRepository(SessionEntity::class),CurrentConfig::current()),
-            CurrentConfig::current(),
+            new SessionService($this->em->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
+            CurrentConfigTestFactory::get(),
         );
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
@@ -214,8 +215,8 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
             UrlServiceTestFactory::build(),
-            new SessionService($this->em->getRepository(SessionEntity::class),CurrentConfig::current()),
-            CurrentConfig::current(),
+            new SessionService($this->em->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
+            CurrentConfigTestFactory::get(),
         );
 
         $result = $service->notifyExpiration('fixture_admin', 'fixture_admin@example.test', 5);
@@ -238,8 +239,8 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
             UrlServiceTestFactory::build(),
-            new SessionService($this->em->getRepository(SessionEntity::class),CurrentConfig::current()),
-            CurrentConfig::current(),
+            new SessionService($this->em->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
+            CurrentConfigTestFactory::get(),
         );
 
         $result = $service->notifyExpiration('fixture_admin', 'fixture_admin@example.test', 1);

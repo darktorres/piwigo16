@@ -21,6 +21,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Category\CategoryService;
     use Piwigo\Calendar\CalendarService;
     use Piwigo\Config\CurrentConfig;
+    use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Permission\PermissionRepository;
@@ -75,7 +76,7 @@ final class CalendarServiceTest extends IntegrationTestCase
                 LangTestFactory::get(),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
                 new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker),
-                CurrentConfig::current(),
+                CurrentConfigTestFactory::get(),
                 new EventDispatcher(),
                 TranslatorTestFactory::get(),
                 $accessLevelChecker

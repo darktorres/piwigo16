@@ -21,6 +21,7 @@ use Piwigo\Users\UserStatus;
 use Piwigo\Http\ResponseReadyException;
 use RuntimeException;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Event\Picture\GetElementUrl;
@@ -59,14 +60,14 @@ beforeEach(function (): void {
     }
     CurrentUserTestFactory::get()->reset();
     CurrentTemplate::current()->reset();
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
 });
 
 afterEach(function (): void {
     Kernel::reset();
     CurrentUserTestFactory::get()->reset();
     CurrentTemplate::current()->reset();
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
 });
 
 function htmlServiceTestRenderCommentContent(HtmlService $service, string $content): string
@@ -1060,8 +1061,8 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
     // its constructor-injected $this->currentConfigService->get() (never
     // set() in this Unit test) and throws.
     KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($root): void {
-        CurrentConfig::current()->setDataLocation('data/');
-        CurrentConfig::current()->setDataDirChecked('1');
+        CurrentConfigTestFactory::get()->setDataLocation('data/');
+        CurrentConfigTestFactory::get()->setDataDirChecked('1');
 
         $template = TemplateTestFactory::build();
         $template->assign('themeconf', ['icon_dir' => '/my-theme/icons']);
@@ -1234,7 +1235,7 @@ test('setStatusHeader keeps the given text unchanged when it is genuinely non-em
 
 test('registerDefaultMenubarBlocks does nothing for a BlockManager whose id is not "menubar"', function (): void {
     $service = HtmlServiceTestFactory::build();
-    $menu = new BlockManager('sidebar', new EventDispatcher(), CurrentTemplate::current(), CurrentConfig::current());
+    $menu = new BlockManager('sidebar', new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
 
     $service->registerDefaultMenubarBlocks(new BlockManagerRegisterBlocks($menu));
 
@@ -1269,7 +1270,7 @@ test('getSrcImageUrlProtectionHandler uses "e" for an original image and "r" for
 });
 
 test('getElementUrlProtectionHandler passes a non-image extension through unchanged when protection is scoped to images', function (): void {
-    CurrentConfig::current()->setOriginalUrlProtection('images');
+    CurrentConfigTestFactory::get()->setOriginalUrlProtection('images');
     $service = HtmlServiceTestFactory::build();
 
     $result = htmlServiceTestElementUrlProtection($service, 'original-url-unchanged', ['id' => 3, 'path' => 'upload/video.mp4']);
@@ -1278,7 +1279,7 @@ test('getElementUrlProtectionHandler passes a non-image extension through unchan
 });
 
 test('getElementUrlProtectionHandler builds an action url for an image extension when protection is scoped to images', function (): void {
-    CurrentConfig::current()->setOriginalUrlProtection('images');
+    CurrentConfigTestFactory::get()->setOriginalUrlProtection('images');
     $service = HtmlServiceTestFactory::build();
 
     $result = htmlServiceTestElementUrlProtection($service, 'ignored', ['id' => 3, 'path' => 'upload/photo.jpg']);

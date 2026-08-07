@@ -5,6 +5,7 @@ declare(strict_types=1);
 use PHPUnit\Framework\Assert;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Mail\NotificationByMailSender;
@@ -42,7 +43,7 @@ function nbm_sender_with_timeout_inputs(string $maxExecutionTime, float $percent
     // Must be resolved (and written to) *after* boot -- PresentationAccessor::
     // notificationByMailSender() constructor-injects the container-shared
     // CurrentConfig instance, which only exists once Kernel::boot() has built
-    // the container; the pre-boot memoized fallback (CurrentConfig::current()
+    // the container; the pre-boot memoized fallback (CurrentConfigTestFactory::get()
     // before boot) is a distinct object never seen by the sender under
     // construction below.
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
@@ -65,7 +66,7 @@ function nbm_sendmail_timeout(NotificationByMailSender $sender): float
 
 afterEach(function (): void {
     Kernel::reset();
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     ini_set('max_execution_time', '0');
 });
 

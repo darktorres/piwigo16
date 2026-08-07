@@ -1223,7 +1223,7 @@ final class MailService implements MailerInterface
         $dataLocation = $this->currentConfig->dataLocation();
 
         $dir = $this->paths->root . $dataLocation . 'tmp';
-        if (FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
+        if (FilesystemHelper::mkgetdir($dir, $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             $username = $this->currentUser->get()
                 ->username;
             $langCode = $this->lang->langInfo()['code'] ?? null;

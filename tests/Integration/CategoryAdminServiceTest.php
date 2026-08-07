@@ -29,6 +29,7 @@ use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Kernel;
@@ -169,20 +170,20 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
-        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
+        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
         $permissionService = new PermissionService(
             new PermissionRepository(EntityManagerFactory::build($this->conn)),
             EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
-            new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
+            new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()),
             CurrentUserTestFactory::get(),
             $filterState,
             $accessLevelChecker
         );
         $categoryService = new CategoryService(
             LangTestFactory::get(),
-            new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
+            new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()),
             $permissionService,
-            CurrentConfig::current(),
+            CurrentConfigTestFactory::get(),
             new EventDispatcher(),
             TranslatorTestFactory::get(),
             $accessLevelChecker

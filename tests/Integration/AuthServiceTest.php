@@ -36,6 +36,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\PasswordService;
     use Piwigo\Common\ValueObject\UserId;
     use Piwigo\Config\CurrentConfig;
+    use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
@@ -143,11 +144,11 @@ namespace Piwigo\Tests\Integration {
                 new PasswordService(new PasswordRepository(EntityManagerFactory::build(DbConnection::build())), new DeploymentPolicy()),
                 new CookieService(),
                 $this->failedLoginRepo,
-                new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()),
+                new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
                 EventDispatcherTestFactory::get(),
                 PageStateTestFactory::get(),
                 CurrentUserTestFactory::get(),
-                CurrentConfig::current(),
+                CurrentConfigTestFactory::get(),
                 CurrentPathsTestFactory::get(),
             );
         }
@@ -198,7 +199,7 @@ namespace Piwigo\Tests\Integration {
         {
             $first = $this->service->calculateAutoLoginKey(1, 1000);
 
-            CurrentConfig::current()->setSecretKey('a-different-secret');
+            CurrentConfigTestFactory::get()->setSecretKey('a-different-secret');
 
             $second = $this->service->calculateAutoLoginKey(1, 1000);
 
@@ -373,7 +374,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_auto_login_succeeds_for_a_valid_remember_me_cookie_and_marks_the_session_ui_context(): void
         {
-            $remember_me_name = CurrentConfig::current()->rememberMeName();
+            $remember_me_name = CurrentConfigTestFactory::get()->rememberMeName();
             $time = time();
             $calculated = $this->service->calculateAutoLoginKey(1, $time);
             self::assertIsString($calculated['key']);
@@ -428,7 +429,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_auto_login_clears_the_cookie_and_returns_false_for_a_malformed_remember_me_cookie(): void
         {
-            $remember_me_name = CurrentConfig::current()->rememberMeName();
+            $remember_me_name = CurrentConfigTestFactory::get()->rememberMeName();
             // 5 dash-separated parts -- is_string() passes and explode()
             // runs, but count($cookie) === 3 fails immediately,
             // short-circuiting the rest of the compound condition. Exercises
@@ -509,7 +510,7 @@ namespace Piwigo\Tests\Integration {
             // Empty $_SERVER['REMOTE_ADDR'] in this CLI test process means
             // pwgLogin()'s ip-scoped check never fires (its own '$ip !== ""'
             // guard), so this exercises the username-scoped lockout alone.
-            CurrentConfig::current()->setLoginLockoutMaxAttempts(3);
+            CurrentConfigTestFactory::get()->setLoginLockoutMaxAttempts(3);
 
             try {
                 for ($i = 0; $i < 3; $i++) {
@@ -574,7 +575,7 @@ namespace Piwigo\Tests\Integration {
             $originalRemoteAddr = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
             $_SERVER['REMOTE_ADDR'] = '';
             $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
-            CurrentConfig::current()->setLoginLockoutMaxAttempts(1);
+            CurrentConfigTestFactory::get()->setLoginLockoutMaxAttempts(1);
 
             $countFailedLoginsForFixtureAdmin = function (): int {
                 $count = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
@@ -609,7 +610,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_pwg_login_locks_out_by_ip_even_for_an_unknown_username(): void
         {
-            CurrentConfig::current()->setLoginLockoutMaxAttempts(3);
+            CurrentConfigTestFactory::get()->setLoginLockoutMaxAttempts(3);
             $originalRemoteAddr = $_SERVER['REMOTE_ADDR'] ?? null;
             $_SERVER['REMOTE_ADDR'] = '203.0.113.55';
 
@@ -701,8 +702,8 @@ namespace Piwigo\Tests\Integration {
                 new ApiKeyRepository(EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
                 UrlServiceTestFactory::build(),
-                new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()),
-                CurrentConfig::current(),
+                new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
+                CurrentConfigTestFactory::get(),
             );
             $created = $apiKeyService->create(4, 30, 'Wrong Secret Test Key');
 
@@ -728,8 +729,8 @@ namespace Piwigo\Tests\Integration {
                 new ApiKeyRepository(EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
                 UrlServiceTestFactory::build(),
-                new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()),
-                CurrentConfig::current(),
+                new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
+                CurrentConfigTestFactory::get(),
             );
             $created = $apiKeyService->create(4, 30, 'Revoked Test Key');
             $revoked = $apiKeyService->revoke(4, $created['auth_key']);
@@ -744,7 +745,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_create_user_auth_key_returns_false_when_auth_key_duration_is_disabled(): void
         {
-            CurrentConfig::current()->setAuthKeyDuration(0);
+            CurrentConfigTestFactory::get()->setAuthKeyDuration(0);
 
             self::assertFalse($this->service->createUserAuthKey(4, 'normal'));
         }
@@ -767,7 +768,7 @@ namespace Piwigo\Tests\Integration {
             // generatePasswordLink() is the password-reset escape hatch --
             // it never routes through pwgLogin()/tryLogUser()/logUser(), so
             // a username-scoped lockout on user 4 must not affect it.
-            CurrentConfig::current()->setLoginLockoutMaxAttempts(3);
+            CurrentConfigTestFactory::get()->setLoginLockoutMaxAttempts(3);
 
             for ($i = 0; $i < 3; $i++) {
                 self::assertFalse($this->pwgLoginResult(false, 'power_user', 'definitely-wrong-password', false));

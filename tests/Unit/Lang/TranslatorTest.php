@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Gettext\Translation;
 use Gettext\Translations;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Lang\Translator;
 
 beforeEach(function (): void {
@@ -13,12 +14,12 @@ beforeEach(function (): void {
     // (singleton/service-locator elimination campaign, Phase 4; same
     // "category 1" test-isolation shape as CoreTabsTest/
     // SectionContextRegistryTest's own precedent).
-    $this->translator = new Translator(CurrentConfig::current());
+    $this->translator = new Translator(CurrentConfigTestFactory::get());
     $this->poFile = sys_get_temp_dir() . '/piwigo-po-test-' . bin2hex(random_bytes(8)) . '.po';
 });
 
 afterEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     if (file_exists((is_string($this->poFile) ? $this->poFile : ''))) {
         unlink((is_string($this->poFile) ? $this->poFile : ''));
     }
@@ -164,7 +165,7 @@ test('load on an unreadable file is a silent no-op', function (): void {
 });
 
 test('translate warns about a missing key when debug_l10n is enabled', function (): void {
-    CurrentConfig::current()->setDebugL10n(true);
+    CurrentConfigTestFactory::get()->setDebugL10n(true);
 
     $triggered = null;
     set_error_handler(function (int $errno, string $errstr) use (&$triggered): bool {
@@ -180,7 +181,7 @@ test('translate warns about a missing key when debug_l10n is enabled', function 
 });
 
 test('translate does not warn about a missing key when debug_l10n is disabled', function (): void {
-    CurrentConfig::current()->setDebugL10n(false);
+    CurrentConfigTestFactory::get()->setDebugL10n(false);
 
     $triggered = false;
     set_error_handler(function () use (&$triggered): bool {
@@ -196,7 +197,7 @@ test('translate does not warn about a missing key when debug_l10n is disabled', 
 });
 
 test('translate does not warn about a resolved key even when debug_l10n is enabled', function (): void {
-    CurrentConfig::current()->setDebugL10n(true);
+    CurrentConfigTestFactory::get()->setDebugL10n(true);
     $this->translator->loadArray(['known_key' => 'known value']);
 
     $triggered = false;
@@ -222,7 +223,7 @@ test('restoreFrom() copies a snapshot instance\'s translation state onto this in
     // whatever the live instance already happened to hold.
     $this->translator->loadArray(['later_key' => 'later value']);
 
-    $restored = new Translator(CurrentConfig::current());
+    $restored = new Translator(CurrentConfigTestFactory::get());
     $restored->restoreFrom($snapshot);
 
     expect($restored->translate('original_key'))->toBe('original value')
@@ -296,7 +297,7 @@ test('load skips a context-tagged entry whose msgid is empty', function (): void
 });
 
 test('translate does not warn about a missing key when the key itself is empty', function (): void {
-    CurrentConfig::current()->setDebugL10n(true);
+    CurrentConfigTestFactory::get()->setDebugL10n(true);
 
     $triggered = false;
     set_error_handler(function () use (&$triggered): bool {
@@ -396,7 +397,7 @@ test('toDictionaryEntry skips only the empty-original entry, not the rest of the
     $translations->add($normal);
 
     $method = new ReflectionMethod(Translator::class, 'toDictionaryEntry');
-    $result = $method->invoke(new Translator(CurrentConfig::current()), $translations);
+    $result = $method->invoke(new Translator(CurrentConfigTestFactory::get()), $translations);
     if (! is_array($result)) {
         throw new RuntimeException('expected toDictionaryEntry() to return an array');
     }
@@ -412,7 +413,7 @@ test('toDictionaryEntry skips only the empty-original entry, not the rest of the
 // toDictionaryEntry()'s own return shape via Reflection instead.
 test('toDictionaryEntry defaults the domain entry to an empty string when the PO file declares none', function (): void {
     $method = new ReflectionMethod(Translator::class, 'toDictionaryEntry');
-    $result = $method->invoke(new Translator(CurrentConfig::current()), Translations::create());
+    $result = $method->invoke(new Translator(CurrentConfigTestFactory::get()), Translations::create());
     if (! is_array($result)) {
         throw new RuntimeException('expected toDictionaryEntry() to return an array');
     }

@@ -1296,7 +1296,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             } else {
                 $paths = $this->paths;
                 $upload_dir = $paths->siteLocal . 'watermarks';
-                if (FilesystemHelper::mkgetdir($upload_dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
+                if (FilesystemHelper::mkgetdir($upload_dir, $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
                     // file name may include exotic chars like single quote, we need a safe name
                     $new_name = StringHelper::str2url(StringHelper::getFilenameWoExtension($watermark_upload_name ?? ''));
 

@@ -26,6 +26,7 @@ use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivityLoggerInterface;
@@ -154,7 +155,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
 
-        $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
+        $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
         $configService->loadConfFromDb();
         ImageStdParamsTestFactory::get()->load_from_db();
 
@@ -176,7 +177,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
 
-        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
+        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
         $permissionService = new PermissionService(
             new PermissionRepository($em),
             $em->getRepository(GroupEntity::class),
@@ -185,7 +186,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $filterState,
             $accessLevelChecker
         );
-        $this->categoryService = new CategoryService(LangTestFactory::get(), $categoryRepo, $permissionService, CurrentConfig::current(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker);
+        $this->categoryService = new CategoryService(LangTestFactory::get(), $categoryRepo, $permissionService, CurrentConfigTestFactory::get(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker);
 
         $htmlService = HtmlServiceTestFactory::build();
         // mainpage_categories.tpl's own {assign var=derivative
@@ -225,7 +226,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             EventDispatcherTestFactory::get(),
             ImageStdParamsTestFactory::get(),
             CurrentUserTestFactory::get(),
-            CurrentConfig::current(),
+            CurrentConfigTestFactory::get(),
             LangTestFactory::get(),
             $processCache,
             PageStateTestFactory::get(),

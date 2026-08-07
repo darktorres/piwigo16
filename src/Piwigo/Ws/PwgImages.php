@@ -1158,7 +1158,7 @@ final class PwgImages
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
-        if (! FilesystemHelper::mkgetdir($upload_dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
+        if (! FilesystemHelper::mkgetdir($upload_dir, $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
 
@@ -1620,7 +1620,7 @@ final class PwgImages
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
-        if (! FilesystemHelper::mkgetdir($upload_dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
+        if (! FilesystemHelper::mkgetdir($upload_dir, $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
 
@@ -1805,7 +1805,7 @@ final class PwgImages
         $chunkfile_path = sprintf($chunkfile_path_pattern, $params['chunk'] + 1, $params['chunks']);
 
         // create the upload directory tree if not exists
-        if (! FilesystemHelper::mkgetdir(dirname($chunkfile_path), FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
+        if (! FilesystemHelper::mkgetdir(dirname($chunkfile_path), $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
         FilesystemHelper::secureDirectory(dirname($chunkfile_path));

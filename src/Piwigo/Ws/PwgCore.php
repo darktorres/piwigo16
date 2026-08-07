@@ -1361,7 +1361,7 @@ final class PwgCore
 
             // we delete the "guest" from the $username_of hash so that it is
             // avoided in next steps
-            // CurrentConfig::current()->guestId() is SCHEMA-typed 'int' only.
+            // guestId() is SCHEMA-typed 'int' only.
             $guest_id_key = (string) $this->currentConfig->guestId();
             $username_of = array_diff_key($username_of, [
                 $guest_id_key => true,

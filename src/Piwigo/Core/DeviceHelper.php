@@ -16,9 +16,10 @@ use Piwigo\Session\SessionService;
  *
  * Singleton/service-locator elimination campaign, Phase 9: purely static,
  * no instance/constructor to receive CurrentConfig via constructor
- * injection through -- getDevice()/mobileTheme() still read via the
+ * injection through -- getDevice()/mobileTheme() originally read via the
  * CurrentConfig::current() transitional bridge, matching FilesystemHelper's
- * own "no wrapper needed" precedent.
+ * own former "no wrapper needed" precedent (see Phase 12D below for why
+ * that no longer holds here).
  *
  * Phase 12 sub-phase 12D: SessionService::get() closed -- the "outside
  * this campaign's own scope" classification (Phase 4) turned out to be

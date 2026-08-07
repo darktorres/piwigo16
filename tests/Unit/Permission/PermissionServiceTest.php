@@ -12,6 +12,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -46,10 +47,10 @@ function makePermissionService(): PermissionService
     return new PermissionService(
         new PermissionRepository(EntityManagerFactory::build($conn)),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-        new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()),
+        new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()),
         CurrentUserTestFactory::get(),
         $filterState,
-        new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()),
+        new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()),
     );
 }
 
@@ -129,7 +130,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     CurrentUserTestFactory::get()->reset();
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
     LangTestFactory::get()->reset();
     TranslatorTestFactory::get()->reset();
     Kernel::reset();
@@ -401,7 +402,7 @@ test('getPermissionCriteria suppresses maxLevel/imageAccessIds together when acc
 });
 
 test('getPrivacyLevelOptions labels level 0 as Everybody and stacks the rest', function (): void {
-    $options = PermissionService::getPrivacyLevelOptions(CurrentConfig::current(), LangTestFactory::get());
+    $options = PermissionService::getPrivacyLevelOptions(CurrentConfigTestFactory::get(), LangTestFactory::get());
 
     // The shared $label accumulator walks levels high-to-low and keeps
     // growing until it hits 0, which resets it to "Everybody" instead of
@@ -416,9 +417,9 @@ test('getPrivacyLevelOptions labels level 0 as Everybody and stacks the rest', f
 });
 
 test('getPrivacyLevelOptions follows CurrentConfig::availablePermissionLevels when overridden', function (): void {
-    CurrentConfig::current()->setAvailablePermissionLevels([0, 5]);
+    CurrentConfigTestFactory::get()->setAvailablePermissionLevels([0, 5]);
 
-    $options = PermissionService::getPrivacyLevelOptions(CurrentConfig::current(), LangTestFactory::get());
+    $options = PermissionService::getPrivacyLevelOptions(CurrentConfigTestFactory::get(), LangTestFactory::get());
 
     expect($options)->toBe([
         5 => 'Level 5',
@@ -435,10 +436,10 @@ test('getPrivacyLevelOptions does not prepend a stray separator before the very 
     // exactly 1 character can. `Lang::loadArray()` targets a translator
     // *output* key, so it maps the already-`sprintf()`-formatted 'Level 2'
     // string, not the 'Level %d' format string itself.
-    CurrentConfig::current()->setAvailablePermissionLevels([0, 1, 2]);
+    CurrentConfigTestFactory::get()->setAvailablePermissionLevels([0, 1, 2]);
     LangTestFactory::get()->loadArray(['Level 2' => 'X']);
 
-    $options = PermissionService::getPrivacyLevelOptions(CurrentConfig::current(), LangTestFactory::get());
+    $options = PermissionService::getPrivacyLevelOptions(CurrentConfigTestFactory::get(), LangTestFactory::get());
 
     // Level 2 (processed first, array_reverse()'d) seeds $label = 'X' (1
     // char). Level 1 (processed next) must see strlen('X') === 1 > 0 and

@@ -32,6 +32,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Album\EmptyLounge;
 use Piwigo\Event\Picture\BeginDeleteElements;
@@ -41,18 +42,18 @@ use Piwigo\Image\ImageService;
 use RuntimeException;
 
 beforeEach(function (): void {
-    CurrentConfig::current()->setSlideshowPeriod(4);
-    CurrentConfig::current()->setSlideshowPeriodMin(1);
-    CurrentConfig::current()->setSlideshowPeriodMax(10);
-    CurrentConfig::current()->setSlideshowRepeat(true);
+    CurrentConfigTestFactory::get()->setSlideshowPeriod(4);
+    CurrentConfigTestFactory::get()->setSlideshowPeriodMin(1);
+    CurrentConfigTestFactory::get()->setSlideshowPeriodMax(10);
+    CurrentConfigTestFactory::get()->setSlideshowRepeat(true);
 });
 
 afterEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
 });
 
 test('getDefaultSlideshowParams reads conf', function (): void {
-    $params = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->getDefaultSlideshowParams();
+    $params = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->getDefaultSlideshowParams();
 
     expect($params['period'])->toBe(4)
         ->and($params['repeat'])->toBeTrue()
@@ -60,38 +61,38 @@ test('getDefaultSlideshowParams reads conf', function (): void {
 });
 
 test('correctSlideshowParams clamps below the minimum', function (): void {
-    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams(['period' => 0]);
+    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams(['period' => 0]);
 
     expect($corrected['period'])->toBe(1);
 });
 
 test('correctSlideshowParams clamps above the maximum', function (): void {
-    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams(['period' => 99]);
+    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams(['period' => 99]);
 
     expect($corrected['period'])->toBe(10);
 });
 
 test('correctSlideshowParams leaves an in-range value untouched', function (): void {
-    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams(['period' => 5]);
+    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams(['period' => 5]);
 
     expect($corrected['period'])->toBe(5);
 });
 
 test('decodeSlideshowParams with a numeric string sets period', function (): void {
-    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('7');
+    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('7');
 
     expect($decoded['period'])->toBe('7');
 });
 
 test('decodeSlideshowParams parses key-value tokens', function (): void {
-    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('period-6+repeat-false');
+    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('period-6+repeat-false');
 
     expect($decoded['period'])->toBe('6')
         ->and($decoded['repeat'])->toBeFalse();
 });
 
 test('decodeSlideshowParams with null input returns the defaults', function (): void {
-    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams(null);
+    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams(null);
 
     expect($decoded['period'])->toBe(4)
         ->and($decoded['repeat'])->toBeTrue()
@@ -99,13 +100,13 @@ test('decodeSlideshowParams with null input returns the defaults', function (): 
 });
 
 test('decodeSlideshowParams clamps an out-of-range period', function (): void {
-    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('period-99');
+    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('period-99');
 
     expect($decoded['period'])->toBe(10);
 });
 
 test('encodeSlideshowParams round-trips a non-default period', function (): void {
-    $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
+    $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
     $encoded = $service->encodeSlideshowParams(['period' => 6, 'repeat' => true, 'play' => true]);
 
     expect($encoded)->toBe('+period-6');
@@ -115,13 +116,13 @@ test('encodeSlideshowParams round-trips a non-default period', function (): void
 });
 
 test('encodeSlideshowParams omits default values', function (): void {
-    $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
+    $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
 
     expect($service->encodeSlideshowParams($service->getDefaultSlideshowParams()))->toBe('');
 });
 
 test('encodeSlideshowParams encodes a changed boolean', function (): void {
-    $encoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->encodeSlideshowParams(['period' => 4, 'repeat' => false, 'play' => true]);
+    $encoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->encodeSlideshowParams(['period' => 4, 'repeat' => false, 'play' => true]);
 
     expect($encoded)->toBe('+repeat-false');
 });
@@ -149,7 +150,7 @@ test('correctSlideshowParams defaults an absent period to 0, not -1, before clam
     // is NOT < 0 and not > the max either, so 'period' is left absent;
     // the mutant's `?? -1` default IS < 0, so it clamps 'period' up to
     // 0, a real, observable key the real code never adds here.
-    CurrentConfig::current()->setSlideshowPeriodMin(0);
+    CurrentConfigTestFactory::get()->setSlideshowPeriodMin(0);
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $corrected = imageServiceTestNewService($repo, $conn)->correctSlideshowParams([]);
 
@@ -206,7 +207,7 @@ test('correctSlideshowParams treats a period exactly equal to the maximum as alr
  * against the full suite too.
  */
 test('decodeSlideshowParams parses more than one key-value token from the same string', function (): void {
-    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('period-6+repeat-false+play-false');
+    $decoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->decodeSlideshowParams('period-6+repeat-false+play-false');
 
     expect($decoded['period'])->toBe('6')
         ->and($decoded['repeat'])->toBeFalse()
@@ -285,13 +286,13 @@ test('countPdfPages counts page markers', function (): void {
     }
     file_put_contents($tmp, "%PDF-1.4\n1 0 obj\n<< /Type /Page >>\nendobj\n2 0 obj\n<< /Type /Page >>\nendobj\n");
 
-    expect(new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->countPdfPages($tmp))->toBe(2);
+    expect(new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->countPdfPages($tmp))->toBe(2);
 
     unlink($tmp);
 });
 
 test('countPdfPages returns false for a missing file', function (): void {
-    expect(new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->countPdfPages('/no/such/file.pdf'))->toBeFalse();
+    expect(new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->countPdfPages('/no/such/file.pdf'))->toBeFalse();
 });
 
 test('countPdfPages returns false when the path is readable but reading it produces no content (not a regular file)', function (): void {
@@ -309,7 +310,7 @@ test('countPdfPages returns false when the path is readable but reading it produ
     }
     socket_bind($socket, $sockPath);
 
-    $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
+    $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
 
     try {
         expect($service->countPdfPages($sockPath))->toBeFalse();
@@ -384,7 +385,7 @@ function imageServiceTestLang(): Lang
 
 function imageServiceTestNewService(ImageRepository $repo, Connection $conn, ?Paths $paths = null): ImageService
 {
-    return new ImageService(imageServiceTestLang(), $repo, new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), $paths ?? Paths::fromRoot(sys_get_temp_dir()));
+    return new ImageService(imageServiceTestLang(), $repo, new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), $paths ?? Paths::fromRoot(sys_get_temp_dir()));
 }
 
 /**
@@ -413,7 +414,7 @@ test('deleteElementFiles deletes the original, its representative, and its forma
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::current()->setNeverDeleteOriginals(false);
+    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
 
     mkdir($root . '/upload/2026/07/pwg_representative', 0o777, true);
     mkdir($root . '/upload/2026/07/pwg_format', 0o777, true);
@@ -468,7 +469,7 @@ test('deleteElementFiles deletes the original, its representative, and its forma
         $conn->executeStatement('DELETE FROM ' . Tables::imageFormat() . ' WHERE image_id = ?', [$formatId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
-        CurrentConfig::current()->reset();
+        CurrentConfigTestFactory::get()->reset();
     }
 });
 
@@ -483,7 +484,7 @@ test('deleteElementFiles accumulates every registered format for an id, not just
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::current()->setNeverDeleteOriginals(false);
+    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
 
     mkdir($root . '/upload/2026/07/pwg_format', 0o777, true);
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/multiformat.jpg');
@@ -511,7 +512,7 @@ test('deleteElementFiles accumulates every registered format for an id, not just
         $conn->executeStatement('DELETE FROM ' . Tables::imageFormat() . ' WHERE image_id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
-        CurrentConfig::current()->reset();
+        CurrentConfigTestFactory::get()->reset();
     }
 });
 
@@ -526,7 +527,7 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::current()->setNeverDeleteOriginals(false);
+    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
 
     mkdir($root . '/upload/2026/07', 0o777, true);
     file_put_contents($root . '/upload/2026/07/afterremote.jpg', 'x');
@@ -547,7 +548,7 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
         $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id IN (760001, 760002)');
         imageServiceTestRrmdir($root);
         Kernel::reset();
-        CurrentConfig::current()->reset();
+        CurrentConfigTestFactory::get()->reset();
     }
 });
 
@@ -562,7 +563,7 @@ test('deleteElementFiles treats an explicitly-empty-string representative_ext th
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::current()->setNeverDeleteOriginals(false);
+    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
 
     mkdir($root . '/upload/2026/07/pwg_representative', 0o777, true);
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/emptyrepext.jpg', '');
@@ -586,7 +587,7 @@ test('deleteElementFiles treats an explicitly-empty-string representative_ext th
         $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
-        CurrentConfig::current()->reset();
+        CurrentConfigTestFactory::get()->reset();
     }
 });
 
@@ -598,7 +599,7 @@ test('deleteElementFiles stops removing a row\'s remaining files (`break`, not `
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::current()->setNeverDeleteOriginals(false);
+    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
 
     mkdir($root . '/upload/2026/07/lockedwithrep/pwg_representative', 0o777, true);
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/lockedwithrep/original.jpg', 'jpg');
@@ -637,7 +638,7 @@ test('deleteElementFiles stops removing a row\'s remaining files (`break`, not `
         $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
-        CurrentConfig::current()->reset();
+        CurrentConfigTestFactory::get()->reset();
     }
 });
 
@@ -654,14 +655,14 @@ test('deleteElementFiles adds representative_ext to the derivative-cache lookup 
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::current()->setDataLocation('data/');
+    CurrentConfigTestFactory::get()->setDataLocation('data/');
     // Skips the real original/representative file unlink block
     // entirely, keeping this test focused purely on the derivative
     // cache side effect line 245/248 actually control.
-    CurrentConfig::current()->setNeverDeleteOriginals(true);
+    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(true);
 
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/repextderiv.jpg', 'jpg');
-    $derivRoot = $root . '/' . CurrentConfig::current()->derivativeDir();
+    $derivRoot = $root . '/' . CurrentConfigTestFactory::get()->derivativeDir();
     mkdir($derivRoot . 'upload/2026/07/pwg_representative', 0o777, true);
     $representativePatternDecoy = $derivRoot . 'upload/2026/07/pwg_representative/repextderiv-th.jpg';
     $originalPatternDecoy = $derivRoot . 'upload/2026/07/repextderiv-th.jpg';
@@ -681,7 +682,7 @@ test('deleteElementFiles adds representative_ext to the derivative-cache lookup 
         $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
-        CurrentConfig::current()->reset();
+        CurrentConfigTestFactory::get()->reset();
     }
 });
 
@@ -689,7 +690,7 @@ test('deleteElementFiles stops at the first file it cannot remove and does not r
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::current()->setNeverDeleteOriginals(false);
+    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
 
     mkdir($root . '/upload/2026/07/locked', 0o777, true);
     $blockedId = imageServiceTestInsertImage($conn, 'upload/2026/07/locked/blocked.jpg');
@@ -727,7 +728,7 @@ test('deleteElementFiles stops at the first file it cannot remove and does not r
         $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id IN (?, ?)', [$blockedId, $afterId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
-        CurrentConfig::current()->reset();
+        CurrentConfigTestFactory::get()->reset();
     }
 });
 
@@ -735,7 +736,7 @@ test('deleteElements() returns 0 without touching the database when physical del
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfig::current()->setNeverDeleteOriginals(false);
+    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
 
     mkdir($root . '/upload/2026/07/locked', 0o777, true);
     $blockedId = imageServiceTestInsertImage($conn, 'upload/2026/07/locked/blocked.jpg');
@@ -761,7 +762,7 @@ test('deleteElements() returns 0 without touching the database when physical del
         $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$blockedId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
-        CurrentConfig::current()->reset();
+        CurrentConfigTestFactory::get()->reset();
     }
 });
 
@@ -791,7 +792,7 @@ test('deleteElements() fires begin_delete_elements and delete_elements with the 
     EventDispatcherTestFactory::get()->addTypedHandler(DeleteElements::class, $deleteHandler);
 
     try {
-        $service = new ImageService(imageServiceTestLang(), $repo, $activityService, SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
+        $service = new ImageService(imageServiceTestLang(), $repo, $activityService, SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
 
         $count = $service->deleteElements([$imageId], $urlService, physicalDeletion: false);
 
@@ -1251,10 +1252,10 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         // hyphen) -- explode('-', ...) must split into exactly [execId,
         // startTime] for the (int) cast below to read the real timestamp,
         // not an unrelated string.
-        CurrentConfig::current()->setEmptyLoungeRunning('staleexecid-' . (time() - 100));
+        CurrentConfigTestFactory::get()->setEmptyLoungeRunning('staleexecid-' . (time() - 100));
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
         // invalidateUserCache: false below -- this must survive untouched,
         // proving line 383's IfNegated does not wrongly invoke
         // PermissionCacheInvalidator::invalidate() (whose own real,
@@ -1355,7 +1356,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
             $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
-            CurrentConfig::current()->reset();
+            CurrentConfigTestFactory::get()->reset();
             imageServiceTestRrmdir($logDir);
         }
     } finally {
@@ -1381,7 +1382,7 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
         $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
         $conn->executeStatement(
             "INSERT INTO " . Tables::config() . " (param, value) VALUES ('count_orphans', ?)",
             [json_encode(3)]
@@ -1397,7 +1398,7 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
             $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
-            CurrentConfig::current()->reset();
+            CurrentConfigTestFactory::get()->reset();
         }
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
@@ -1427,10 +1428,10 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
             "INSERT INTO " . Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($staleValue)]
         );
-        CurrentConfig::current()->setEmptyLoungeRunning($staleValue);
+        CurrentConfigTestFactory::get()->setEmptyLoungeRunning($staleValue);
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
 
         try {
             $service = imageServiceTestNewService($repo, $conn);
@@ -1442,7 +1443,7 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
             $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
-            CurrentConfig::current()->reset();
+            CurrentConfigTestFactory::get()->reset();
         }
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
@@ -1481,10 +1482,10 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
             "INSERT INTO " . Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($freshLockValue)]
         );
-        CurrentConfig::current()->setEmptyLoungeRunning($freshLockValue);
+        CurrentConfigTestFactory::get()->setEmptyLoungeRunning($freshLockValue);
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
 
         $originalRequest = $_REQUEST;
         unset($_REQUEST['method']);
@@ -1517,7 +1518,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
             $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
-            CurrentConfig::current()->reset();
+            CurrentConfigTestFactory::get()->reset();
             imageServiceTestRrmdir($logDir);
         }
     } finally {
@@ -1591,10 +1592,10 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
             "INSERT INTO " . Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($lockValue)]
         );
-        CurrentConfig::current()->setEmptyLoungeRunning($lockValue);
+        CurrentConfigTestFactory::get()->setEmptyLoungeRunning($lockValue);
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
 
         try {
             $service = imageServiceTestNewService($repo, $conn);
@@ -1619,7 +1620,7 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
             $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
-            CurrentConfig::current()->reset();
+            CurrentConfigTestFactory::get()->reset();
             imageServiceTestRrmdir($logDir);
         }
     } finally {
@@ -1649,10 +1650,10 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
             "INSERT INTO " . Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($staleValue)]
         );
-        CurrentConfig::current()->setEmptyLoungeRunning($staleValue);
+        CurrentConfigTestFactory::get()->setEmptyLoungeRunning($staleValue);
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
 
         try {
             $service = imageServiceTestNewService($repo, $conn);
@@ -1664,7 +1665,7 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
             $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
-            CurrentConfig::current()->reset();
+            CurrentConfigTestFactory::get()->reset();
         }
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
@@ -1685,7 +1686,7 @@ test('emptyLounge() returns null when a different, still-fresh execution already
         // Not stale (CurrentConfig::emptyLoungeRunning() defaults to null),
         // so the staleness check is skipped entirely and tryAcquireLoungeLock()
         // -- a real INSERT IGNORE -- finds the row above already taken.
-        CurrentConfig::current()->setEmptyLoungeRunning(null);
+        CurrentConfigTestFactory::get()->setEmptyLoungeRunning(null);
 
         try {
             $service = imageServiceTestNewService($repo, $conn);
@@ -1693,7 +1694,7 @@ test('emptyLounge() returns null when a different, still-fresh execution already
             expect($service->emptyLounge())->toBeNull();
         } finally {
             $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
-            CurrentConfig::current()->reset();
+            CurrentConfigTestFactory::get()->reset();
         }
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
@@ -1722,7 +1723,7 @@ test('countPdfPages() returns false when the path passes is_file()/is_readable()
     try {
         set_error_handler(static fn (): bool => true);
         try {
-            $result = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->countPdfPages($scheme . '://fake.pdf');
+            $result = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->countPdfPages($scheme . '://fake.pdf');
         } finally {
             restore_error_handler();
         }

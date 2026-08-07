@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Section\RandomIndexRedirectResolver;
 use Piwigo\Users\CurrentUser;
@@ -39,7 +40,7 @@ function seedCurrentUserStatus(UserStatus $status): void
  */
 function randomIndexRedirectResolverTestAccessLevelChecker(): AccessLevelChecker
 {
-    return new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
+    return new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 }
 
 beforeEach(function (): void {

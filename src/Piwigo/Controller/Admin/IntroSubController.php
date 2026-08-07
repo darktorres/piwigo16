@@ -636,7 +636,7 @@ final class IntroSubController implements AdminSubControllerInterface
                     ];
                 }
 
-                if (FilesystemHelper::mkgetdir(dirname($cache_path))) {
+                if (FilesystemHelper::mkgetdir(dirname($cache_path), $currentConfig)) {
                     file_put_contents($cache_path, serialize($news));
                 }
             } else {

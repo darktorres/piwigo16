@@ -45,6 +45,7 @@ use Piwigo\Admin\PiwigoInfosSender;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
@@ -67,7 +68,7 @@ use Piwigo\Lang\Translator;
 // seeded first.
 
 afterEach(function (): void {
-    CurrentConfig::current()->setSendPiwigoInfos(true);
+    CurrentConfigTestFactory::get()->setSendPiwigoInfos(true);
 });
 
 // PiwigoInfosSender/UserService/ImageService/CategoryService/TagService

@@ -270,6 +270,7 @@ final class ImageDerivativeController implements ControllerInterface
         // failure response must be ierror()'s own 500, not a fatal).
         if (! FilesystemHelper::mkgetdir(
             dirname($this->derivativePath),
+            $this->currentConfig,
             FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR
         )) {
             $this->ierror('dir create error', 500);

@@ -35,6 +35,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Admin\Extensions\PluginMigrationRepository;
     use Piwigo\Admin\Extensions\ZipExtractor;
     use Piwigo\Config\CurrentConfig;
+    use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\ConfigService;
     use Piwigo\Core\Kernel;
@@ -316,7 +317,7 @@ namespace Piwigo\Tests\Integration {
             // leak into every later test in this shared process, same
             // reasoning as MaintenanceActionDispatcherTest's identical
             // local handler).
-            CurrentConfig::current()->setEnableExtensionsInstall(false);
+            CurrentConfigTestFactory::get()->setEnableExtensionsInstall(false);
 
             set_error_handler(static fn (): bool => true);
             try {
@@ -396,7 +397,7 @@ namespace Piwigo\Tests\Integration {
                 'name' => 'Mobile One',
                 'mobile' => true,
             ]);
-            $currentConfig = CurrentConfig::current();
+            $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->setEnableExtensionsInstall(true);
             $currentConfig->setPhpExtensionInUrls(false);
             $currentConfig->setMobilTheme($first);
@@ -718,7 +719,7 @@ namespace Piwigo\Tests\Integration {
             // to 127.0.0.1 -- is what actually produces the failure.
             $previousHttpHost = $_SERVER['HTTP_HOST'] ?? null;
             $_SERVER['HTTP_HOST'] = 'extension-lifecycle-test.invalid';
-            $currentConfig = CurrentConfig::current();
+            $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->setAlternativePemUrl('https://127.0.0.1/pem-unreachable');
 
             try {
@@ -1007,7 +1008,7 @@ PHP);
             $mobile = $this->themeId();
             $other = $this->themeId();
             $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $mobile, ['version' => '1.0', 'name' => 'Mobile', 'mobile' => true]);
-            $currentConfig = CurrentConfig::current();
+            $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->setEnableExtensionsInstall(true);
             $currentConfig->setPhpExtensionInUrls(false);
             $currentConfig->setMobilTheme($mobile);
@@ -1052,7 +1053,7 @@ PHP);
             // flow) tolerates the relative value fine either way: a failed
             // file_exists() there just falls back to DummyThemeMaintain, a
             // real, already-exercised no-op path elsewhere in this suite.
-            $currentConfig = CurrentConfig::current();
+            $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->setThemesDir('themes');
 
             $default = $this->themeId();

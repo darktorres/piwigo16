@@ -21,6 +21,7 @@ use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -88,15 +89,15 @@ final class GroupServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class);
         $auditRepo = EntityManagerFactory::build()->getRepository(AuditLogEntity::class);
-        $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
-        $this->service = new GroupService($this->repo, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), new AuditService($auditRepo), $this->configService, new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfig::current());
+        $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get());
+        $this->service = new GroupService($this->repo, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), new AuditService($auditRepo), $this->configService, new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
         // Only addAccess()/duplicate()/merge() need this (see class docblock)
         // -- PermissionCacheInvalidator::invalidate() -> its own private
         // currentConfigService()->get()
         // would otherwise throw "not initialised" the moment any of their
         // real success paths run.
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new EventDispatcher(), CurrentConfig::current()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new EventDispatcher(), CurrentConfigTestFactory::get()));
     }
 
     public function test_create_rejects_an_already_used_name(): void
@@ -239,7 +240,7 @@ final class GroupServiceTest extends IntegrationTestCase
             $result = $this->service->delete([GroupId::from(999999)]);
 
             self::assertSame([], $result);
-            self::assertSame('all', CurrentConfig::current()->emailAdminOnNewUser());
+            self::assertSame('all', CurrentConfigTestFactory::get()->emailAdminOnNewUser());
         } finally {
             $this->configService->confUpdateParam('email_admin_on_new_user', 'none', true);
         }
@@ -253,7 +254,7 @@ final class GroupServiceTest extends IntegrationTestCase
             $result = $this->service->delete([GroupId::from(999999)]);
 
             self::assertSame([], $result);
-            self::assertSame('group:555555', CurrentConfig::current()->emailAdminOnNewUser());
+            self::assertSame('group:555555', CurrentConfigTestFactory::get()->emailAdminOnNewUser());
         } finally {
             $this->configService->confUpdateParam('email_admin_on_new_user', 'none', true);
         }

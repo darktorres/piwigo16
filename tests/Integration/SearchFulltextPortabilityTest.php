@@ -10,6 +10,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Users\UserRepository;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Activity\ActivityEntity;
@@ -92,23 +93,23 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
 
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
-        $userService = new UserService(LangTestFactory::get(), new UserRepository($this->em, EventDispatcherTestFactory::get(), CurrentConfig::current()), $this->em->getRepository(GroupEntity::class), $mailer, new ActivityService($this->em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcherTestFactory::get(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPathsTestFactory::get());
+        $userService = new UserService(LangTestFactory::get(), new UserRepository($this->em, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()), $this->em->getRepository(GroupEntity::class), $mailer, new ActivityService($this->em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new InstallationFlag(), new ProcessCache(), CurrentPathsTestFactory::get());
 
         $filterState = Kernel::container()->get(FilterState::class);
         if (! $filterState instanceof FilterState) {
             throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
 
-        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
+        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
         $this->service = new SearchService(
             $accessLevelChecker,
             $repo,
-            new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfig::current()), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker),
+            new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker),
             new CategoryService(
                 LangTestFactory::get(),
-                new CategoryRepository($this->em, CurrentConfig::current()),
-                new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfig::current()), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker),
-                CurrentConfig::current(),
+                new CategoryRepository($this->em, CurrentConfigTestFactory::get()),
+                new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker),
+                CurrentConfigTestFactory::get(),
                 new EventDispatcher(),
                 TranslatorTestFactory::get(),
                 $accessLevelChecker,
@@ -116,11 +117,11 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             $mailer,
             HtmlServiceTestFactory::build(),
             new RedirectService(LangTestFactory::get(), $userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
-            new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()),
+            new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
             EventDispatcherTestFactory::get(),
             CurrentUserTestFactory::get(),
             LangTestFactory::get(),
-            CurrentConfig::current(),
+            CurrentConfigTestFactory::get(),
             new CurrentLogger(),
             new DeploymentPolicy(),
             CurrentPathsTestFactory::get(),

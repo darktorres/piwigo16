@@ -658,7 +658,7 @@ final class WsDefaultMethods
                 'original_sum' => [],
                 'original_filename' => [
                     'default' => null,
-                    'Provide it if "check_uniqueness" is true and \Piwigo\Config\CurrentConfig::current()->uniquenessMode() is "filename".',
+                    'Provide it if "check_uniqueness" is true and the gallery\'s configured uniqueness mode is "filename".',
                 ],
                 'name' => [
                     'default' => null,

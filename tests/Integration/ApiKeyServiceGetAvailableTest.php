@@ -12,6 +12,7 @@ use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\ApiKeyRepository;
 use Piwigo\Auth\ApiKeyService;
@@ -72,8 +73,8 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
             UrlServiceTestFactory::build(),
-            new SessionService($this->em->getRepository(SessionEntity::class),CurrentConfig::current()),
-            CurrentConfig::current(),
+            new SessionService($this->em->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
+            CurrentConfigTestFactory::get(),
         );
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);

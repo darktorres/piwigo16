@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use LogicException;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 
 /**
@@ -203,9 +205,36 @@ final class ErrorCollector
             // createDir(), but this bare file_put_contents() doesn't; a
             // fresh checkout with no prior HTTP traffic hits this on the
             // very first test-mode error.
-            FilesystemHelper::mkgetdir(dirname($path), FilesystemHelper::MKGETDIR_RECURSIVE);
+            FilesystemHelper::mkgetdir(dirname($path), self::currentConfig(), FilesystemHelper::MKGETDIR_RECURSIVE);
             file_put_contents($path, $entry . "\n", FILE_APPEND);
         }
+    }
+
+    /**
+     * Same "container resolve, not a constructor property" reasoning as
+     * every other static utility in this campaign -- writeTestErrorsLog()
+     * is deliberately kept a pure, `private static` function of its own
+     * params (see this class's own docblock), and this rare fallback
+     * mkgetdir() call (only reached on a fresh checkout's very first
+     * test-mode error, before _data/logs/ exists) is its sole reason to
+     * need CurrentConfig at all -- not worth rippling into this class's
+     * own constructor and its ~13 real construction sites for one
+     * defensive path. CurrentConfig's own former pre-boot fallback was
+     * just `new self()`, no DB read at all, so a fresh, unmemoized
+     * instance here is safe.
+     */
+    private static function currentConfig(): CurrentConfig
+    {
+        if (Kernel::isBooted()) {
+            $instance = Kernel::container()->get(CurrentConfig::class);
+            if (! $instance instanceof CurrentConfig) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+            }
+
+            return $instance;
+        }
+
+        return new CurrentConfig();
     }
 
     /**

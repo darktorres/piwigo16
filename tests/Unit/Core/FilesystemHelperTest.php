@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\Paths;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -149,12 +150,12 @@ function filesystemHelperTestMakeFatalRenderer(stdClass $capture): HtmlRendering
 beforeEach(function (): void {
     $this->root = sys_get_temp_dir() . '/piwigo-filesystemhelper-test-' . bin2hex(random_bytes(8));
     mkdir($this->root, 0o777, true);
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
 });
 
 afterEach(function (): void {
     filesystemHelperTestRrmdir(is_string($this->root) ? $this->root : '');
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
 });
 
 test('mkgetdir applies the requested mode exactly, via a real umask(0) during creation', function (): void {
@@ -162,10 +163,10 @@ test('mkgetdir applies the requested mode exactly, via a real umask(0) during cr
     // non-zero process umask strips bits from the requested mode during
     // mkdir() -- a chmod value with every bit set is the only way to
     // observe ANY stripped bit, regardless of which specific one.
-    CurrentConfig::current()->setChmodValue(0o777);
+    CurrentConfigTestFactory::get()->setChmodValue(0o777);
     $dir = $this->root . '/full-perms';
 
-    FilesystemHelper::mkgetdir($dir);
+    FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get());
 
     expect(fileperms($dir) & 0o777)->toBe(0o777);
 });
@@ -185,7 +186,7 @@ test('mkgetdir restores the process umask after creating a directory, not leavin
     $dir = $this->root . '/umask-restore-check';
 
     try {
-        FilesystemHelper::mkgetdir($dir);
+        FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get());
 
         expect(umask())->toBe(0o022);
     } finally {
@@ -204,7 +205,7 @@ test('mkgetdir does not create a missing parent when the recursive flag is unset
     // is a real PHP warning, not `@`-suppressed at the source call site.
     set_error_handler(static fn (): bool => true);
     try {
-        $result = FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_NONE);
+        $result = FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_NONE);
     } finally {
         restore_error_handler();
     }
@@ -216,7 +217,7 @@ test('mkgetdir does not create a missing parent when the recursive flag is unset
 test('mkgetdir creates a new directory and protects it with index.htm under the default flags', function (): void {
     $dir = $this->root . '/gallery';
 
-    expect(FilesystemHelper::mkgetdir($dir))->toBeTrue();
+    expect(FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get()))->toBeTrue();
 
     expect(is_dir($dir))->toBeTrue()
         ->and(file_get_contents($dir . '/index.htm'))->toBe('Not allowed!')
@@ -228,6 +229,7 @@ test('mkgetdir with MKGETDIR_PROTECT_HTACCESS writes a deny-from-all .htaccess i
 
     $result = FilesystemHelper::mkgetdir(
         $dir,
+        CurrentConfigTestFactory::get(),
         FilesystemHelper::MKGETDIR_RECURSIVE | FilesystemHelper::MKGETDIR_PROTECT_HTACCESS,
     );
 
@@ -243,7 +245,7 @@ test('mkgetdir returns false without throwing when the target cannot be created 
     chmod($parent, 0o555);
     $dir = $parent . '/child';
 
-    expect(FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_NONE))->toBeFalse();
+    expect(FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_NONE))->toBeFalse();
     expect(is_dir($dir))->toBeFalse();
 });
 
@@ -253,7 +255,7 @@ test('mkgetdir throws a RuntimeException carrying the untranslated message when 
     chmod($parent, 0o555);
     $dir = $parent . '/child';
 
-    expect(fn () => FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
+    expect(fn () => FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
         ->toThrow(RuntimeException::class, $dir . ' no write access');
 });
 
@@ -281,7 +283,7 @@ test('mkgetdir delegates the fatal message to the installed HtmlRenderingInterfa
             Paths::class => Paths::fromRoot(sys_get_temp_dir()),
         ],
         function () use ($dir): void {
-            expect(fn () => FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
+            expect(fn () => FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
                 ->toThrow(RuntimeException::class, 'renderer-fatal:' . $dir . ' no write access');
         }
     );
@@ -290,10 +292,10 @@ test('mkgetdir delegates the fatal message to the installed HtmlRenderingInterfa
 });
 
 test('mkgetdir returns false when a freshly-created directory ends up non-writable and MKGETDIR_DIE_ON_ERROR is not set', function (): void {
-    CurrentConfig::current()->setChmodValue(0o500);
+    CurrentConfigTestFactory::get()->setChmodValue(0o500);
     $dir = $this->root . '/read-only-new';
 
-    $result = FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_RECURSIVE);
+    $result = FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_RECURSIVE);
 
     expect(is_dir($dir))->toBeTrue()
         ->and(is_writable($dir))->toBeFalse()
@@ -305,7 +307,7 @@ test('mkgetdir throws when an already-existing directory has lost its write perm
     mkdir($dir);
     chmod($dir, 0o500);
 
-    expect(fn () => FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
+    expect(fn () => FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
         ->toThrow(RuntimeException::class, $dir . ' no write access');
 });
 

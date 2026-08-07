@@ -146,7 +146,7 @@ final class ThemesStandardPagesPageRenderer
                 );
             } else {
                 $upload_dir = $this->paths->siteLocal . 'logo';
-                if (FilesystemHelper::mkgetdir($upload_dir, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
+                if (FilesystemHelper::mkgetdir($upload_dir, $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
                     $pathinfo = pathinfo($stdPagesSubmit->logoName);
 
                     $logo_filename = StringHelper::str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];

@@ -578,7 +578,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
         // if the request is made with an API key (via header or session API key),
         // we check whether the requested method is on the
-        // list of prohibited methods (\Piwigo\Config\CurrentConfig::current()->apiKeyForbiddenMethods()) for API keys
+        // list of prohibited methods ($this->currentConfig->apiKeyForbiddenMethods()) for API keys
         // if it is, access is refused (false)
         if (
             $this->apiKeyRequestFlag->isActive()

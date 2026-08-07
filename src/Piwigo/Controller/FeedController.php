@@ -230,7 +230,7 @@ final class FeedController implements ControllerInterface
         $data_location = $this->currentConfig->dataLocation();
 
         $fileName = $this->paths->root . $data_location . 'tmp';
-        FilesystemHelper::mkgetdir($fileName); // just in case
+        FilesystemHelper::mkgetdir($fileName, $this->currentConfig); // just in case
         $fileName .= '/feed.xml';
         file_put_contents($fileName, $feed_content);
 

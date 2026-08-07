@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Doctrine\DBAL\DriverManager;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Db\EntityManagerFactory;
@@ -51,19 +52,19 @@ function unconnectedConfigService(): ConfigService
     ]);
     $repo = EntityManagerFactory::build($connection)->getRepository(ConfigEntry::class);
 
-    return new ConfigService($repo, new EventDispatcher(), CurrentConfig::current());
+    return new ConfigService($repo, new EventDispatcher(), CurrentConfigTestFactory::get());
 }
 
 beforeEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
 });
 
 afterEach(function (): void {
-    CurrentConfig::current()->reset();
+    CurrentConfigTestFactory::get()->reset();
 });
 
 test('confGetParam reads a property-backed key via its own typed getter', function (): void {
-    CurrentConfig::current()->setBlkMenubar(['menu' => 50]);
+    CurrentConfigTestFactory::get()->setBlkMenubar(['menu' => 50]);
 
     $service = unconnectedConfigService();
 
@@ -88,9 +89,9 @@ test('confGetParam reads a property-backed key via its own typed getter', functi
  * service-locator elimination campaign, Phase 9 -- ConfigService now reads/
  * writes CurrentConfig through a constructor-injected instance, not a
  * static call), so it can no longer be invoked with a null $object --
- * unconnectedConfigService() itself resolves CurrentConfig::current(),
+ * unconnectedConfigService() itself resolves CurrentConfigTestFactory::get(),
  * matching every test below that also reads/writes through
- * CurrentConfig::current() directly.
+ * CurrentConfigTestFactory::get() directly.
  */
 function invokeConfigServiceHydrate(string $param, ?string $raw): void
 {
@@ -107,44 +108,44 @@ function jsonEncodeForHydrateTest(mixed $value): string
 }
 
 test('hydrate falls back to false for a non-bool decoded value on a bool-typed property', function (): void {
-    CurrentConfig::current()->setGalleryLocked(true);
+    CurrentConfigTestFactory::get()->setGalleryLocked(true);
 
     invokeConfigServiceHydrate('gallery_locked', jsonEncodeForHydrateTest('not-a-bool'));
 
-    expect(CurrentConfig::current()->galleryLocked())->toBeFalse();
+    expect(CurrentConfigTestFactory::get()->galleryLocked())->toBeFalse();
 });
 
 test('hydrate falls back to exactly 0 for a non-int decoded value on an int-typed property', function (): void {
-    CurrentConfig::current()->setSessionLength(999);
+    CurrentConfigTestFactory::get()->setSessionLength(999);
 
     invokeConfigServiceHydrate('session_length', jsonEncodeForHydrateTest('not-an-int'));
 
-    expect(CurrentConfig::current()->sessionLength())->toBe(0);
+    expect(CurrentConfigTestFactory::get()->sessionLength())->toBe(0);
 });
 
 test('hydrate falls back to exactly 0.0 for a non-numeric decoded value on a float-typed property', function (): void {
-    CurrentConfig::current()->setNbmMaxTreatmentTimeoutPercent(99.9);
+    CurrentConfigTestFactory::get()->setNbmMaxTreatmentTimeoutPercent(99.9);
 
     invokeConfigServiceHydrate('nbm_max_treatment_timeout_percent', jsonEncodeForHydrateTest('not-a-float'));
 
-    expect(CurrentConfig::current()->nbmMaxTreatmentTimeoutPercent())->toBe(0.0);
+    expect(CurrentConfigTestFactory::get()->nbmMaxTreatmentTimeoutPercent())->toBe(0.0);
 });
 
 test('hydrate falls back to an empty string for a non-string decoded value on a string-typed property', function (): void {
     // Same real bug this class's own docblock references (data_dir_checked):
     // jsonEncodeForHydrateTest(123) decodes to a real int, which the 'string' match arm
     // must not silently accept.
-    CurrentConfig::current()->setGalleryTitle('Something Real');
+    CurrentConfigTestFactory::get()->setGalleryTitle('Something Real');
 
     invokeConfigServiceHydrate('gallery_title', jsonEncodeForHydrateTest(123));
 
-    expect(CurrentConfig::current()->galleryTitle())->toBe('');
+    expect(CurrentConfigTestFactory::get()->galleryTitle())->toBe('');
 });
 
 test('hydrate invokes the setter with null for a nullable property when raw is null', function (): void {
-    CurrentConfig::current()->setCountOrphans(5);
+    CurrentConfigTestFactory::get()->setCountOrphans(5);
 
     invokeConfigServiceHydrate('count_orphans', null);
 
-    expect(CurrentConfig::current()->countOrphans())->toBeNull();
+    expect(CurrentConfigTestFactory::get()->countOrphans())->toBeNull();
 });

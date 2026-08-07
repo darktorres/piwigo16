@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Controller\Admin\IntroSubController;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
@@ -29,7 +30,7 @@ function intronewsCachePath(): string
     $langCode = LangTestFactory::get()->langInfo()['code'] ?? null;
     $langCode = is_string($langCode) ? $langCode : '';
 
-    return CurrentPathsTestFactory::get()->root . CurrentConfig::current()->dataLocation()
+    return CurrentPathsTestFactory::get()->root . CurrentConfigTestFactory::get()->dataLocation()
         . 'cache/piwigo_latest_news-' . $langCode . '.cache.php';
 }
 
@@ -37,7 +38,7 @@ function intronewsInvoke(): mixed
 {
     $method = new ReflectionMethod(IntroSubController::class, 'getLatestNews');
 
-    return $method->invoke(null, LangTestFactory::get(), CurrentConfig::current(), CurrentPathsTestFactory::get());
+    return $method->invoke(null, LangTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get());
 }
 
 beforeEach(function (): void {

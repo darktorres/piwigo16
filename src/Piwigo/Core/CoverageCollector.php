@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use LogicException;
+use Piwigo\Config\CurrentConfig;
 use function pcov\clear;
 use function pcov\collect;
 use function pcov\start;
@@ -27,6 +29,32 @@ use const pcov\inclusive;
  */
 final class CoverageCollector
 {
+    /**
+     * Singleton/service-locator elimination campaign, Phase 12 sub-phase
+     * 12F-12: registerIfActive() itself runs pre-boot (RequestBootstrap::
+     * bootEntryPoint() calls it before Kernel::boot()), but the shutdown
+     * closure it registers only executes at actual PHP process shutdown,
+     * long after boot has completed on any real request -- resolved lazily
+     * inside the closure, not captured at registration time, so it reflects
+     * Kernel's real state at that later point rather than the (always
+     * not-booted) state when registerIfActive() itself ran. CurrentConfig's
+     * own former pre-boot fallback was just `new self()`, no DB read at
+     * all, so a fresh, unmemoized instance here is safe.
+     */
+    private static function currentConfig(): CurrentConfig
+    {
+        if (Kernel::isBooted()) {
+            $instance = Kernel::container()->get(CurrentConfig::class);
+            if (! $instance instanceof CurrentConfig) {
+                throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
+            }
+
+            return $instance;
+        }
+
+        return new CurrentConfig();
+    }
+
     public static function registerIfActive(Paths $paths): void
     {
         if (! Env::testModeIsActive()) {
@@ -54,7 +82,7 @@ final class CoverageCollector
             $collected = collect(inclusive, $waiting);
             clear();
 
-            FilesystemHelper::mkgetdir($dumpDir, FilesystemHelper::MKGETDIR_RECURSIVE);
+            FilesystemHelper::mkgetdir($dumpDir, self::currentConfig(), FilesystemHelper::MKGETDIR_RECURSIVE);
             $tmp = $dumpDir . uniqid('cov_', true) . '.tmp';
             file_put_contents($tmp, serialize($collected));
             rename($tmp, substr($tmp, 0, -4) . '.raw');

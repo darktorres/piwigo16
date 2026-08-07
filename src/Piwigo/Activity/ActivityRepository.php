@@ -13,6 +13,7 @@ use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
 use Piwigo\Auth\LoginActivityLookupInterface;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Users\UserEntity;
 
@@ -43,7 +44,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             ->from(ActivityEntity::class, 'a')
             ->where("a.action = 'login'")
             ->andWhere('a.performedBy = :userId')
-            ->setParameter('userId', $userId)
+            ->setParameter('userId', UserId::from($userId))
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -51,6 +52,11 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
     }
 
     /**
+     * performedBy uses UserId::tryFrom(), not from() -- ActivityService::
+     * record()'s own logout branch reads it back from $_SESSION['pwg_uid'],
+     * a session round-trip only defensively is_int()/is_string()-checked,
+     * not guaranteed positive.
+     *
      * @param list<array{
      *   object: string,
      *   objectId: int|string,
@@ -75,7 +81,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
                 object: $row['object'],
                 objectId: is_numeric($row['objectId']) ? (int) $row['objectId'] : 0,
                 action: $row['action'],
-                performedBy: $row['performedBy'],
+                performedBy: $row['performedBy'] !== null ? UserId::tryFrom($row['performedBy']) : null,
                 sessionIdx: $row['sessionIdx'],
                 ipAddress: $row['ipAddress'],
                 occuredOn: $row['occuredOn'],
@@ -111,11 +117,11 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
 
         $counts = [];
         foreach ($rows as $row) {
-            if (! is_numeric($row['performed_by'])) {
+            if (! $row['performed_by'] instanceof UserId) {
                 continue;
             }
 
-            $counts[$row['performed_by']] = $row['counter'];
+            $counts[$row['performed_by']->value] = $row['counter'];
         }
 
         return $counts;
@@ -332,7 +338,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
         $criteriaObj = Criteria::create();
 
         if ($criteria->performedBy !== null) {
-            $criteriaObj->andWhere($expr->eq('performedBy', $criteria->performedBy));
+            $criteriaObj->andWhere($expr->eq('performedBy', UserId::from($criteria->performedBy)));
         }
 
         if ($criteria->action !== null) {

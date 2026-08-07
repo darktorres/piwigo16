@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
+use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Piwigo\Activity\Projection\UserActivityLogEntry/SystemActivityLogEntry
@@ -15,7 +16,10 @@ use Piwigo\Activity\Projection\UserActivityLogEntry;
 test('UserActivityLogEntry::fromRow narrows a real joined row, including a valid ip_address', function (): void {
     $entry = UserActivityLogEntry::fromRow([
         'activity_id' => '10',
-        'performed_by' => '5',
+        // A real row's `performed_by` is a UserId instance
+        // (ActivityEntity::$performedBy is UserId-typed, DQL array
+        // hydration applies the custom Type), not a raw scalar.
+        'performed_by' => UserId::from(5),
         'object' => 'user',
         'object_id' => '5',
         'action' => 'login',
@@ -59,7 +63,7 @@ test('UserActivityLogEntry::fromRow falls back to safe defaults for a fully empt
 test('UserActivityLogEntry::toArray unwraps the IpAddress value object back to a raw string', function (): void {
     $entry = UserActivityLogEntry::fromRow([
         'activity_id' => 10,
-        'performed_by' => 5,
+        'performed_by' => UserId::from(5),
         'object' => 'user',
         'object_id' => 5,
         'action' => 'login',

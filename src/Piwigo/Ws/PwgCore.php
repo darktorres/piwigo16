@@ -630,7 +630,7 @@ final class PwgCore
                     $row_action = is_scalar($row['action']) ? (string) $row['action'] : '';
                     $row_object_id = is_scalar($row['object_id']) ? (string) $row['object_id'] : null;
                     $row_ip_address = $row['ip_address'] instanceof IpAddress ? $row['ip_address']->value : null;
-                    $row_performed_by = is_scalar($row['performed_by']) ? (string) $row['performed_by'] : null;
+                    $row_performed_by = $row['performed_by'] instanceof UserId ? (string) $row['performed_by']->value : null;
                     $row_details = is_array($row['details'] ?? null) ? $row['details'] : [];
                     $row_occured_on = is_scalar($row['occured_on']) ? (string) $row['occured_on'] : '';
 
@@ -710,7 +710,7 @@ final class PwgCore
         $username_of = [];
         $user_id_list = [];
         if (count($user_ids) > 0) {
-            $username_of = $this->userService->getUsernamesByIds(array_keys($user_ids));
+            $username_of = $this->userService->getUsernamesByIds(array_map(strval(...), array_keys($user_ids)));
         }
 
         foreach ($output_lines as $idx => $output_line) {

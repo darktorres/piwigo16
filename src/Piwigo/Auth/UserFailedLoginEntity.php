@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Maps the `user_failed_logins` table (`piwigo_user_failed_logins` once
@@ -26,8 +27,8 @@ final class UserFailedLoginEntity
     public ?int $id = null;
 
     public function __construct(
-        #[ORM\Column(name: 'user_id', type: 'integer', nullable: true)]
-        public ?int $userId,
+        #[ORM\Column(name: 'user_id', type: 'user_id', nullable: true)]
+        public ?UserId $userId,
         #[ORM\Column(type: 'string', length: 45)]
         public string $ip,
         #[ORM\Column(name: 'attempted_at', type: 'string', length: 19)]

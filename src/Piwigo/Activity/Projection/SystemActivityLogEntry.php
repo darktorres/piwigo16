@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity\Projection;
 
+use Piwigo\Common\ValueObject\UserId;
+
 /**
  * Typed row shape for
  * {@see \Piwigo\Activity\ActivityRepository::findSystemObjectLogWithUsernames()}
@@ -18,6 +20,10 @@ namespace Piwigo\Activity\Projection;
  * this and nothing more. `details` is decoded to `?array` here (unlike
  * {@see UserActivityLogEntry}'s own raw string) -- that consumer does
  * structured `$details['key']` access.
+ *
+ * ActivityEntity::$performedBy is UserId-typed -- `performedBy` here
+ * stays plain `?int` (Projection convention), `fromRow()` narrows via
+ * `instanceof UserId`, not `is_numeric()`.
  */
 final readonly class SystemActivityLogEntry
 {
@@ -41,7 +47,7 @@ final readonly class SystemActivityLogEntry
     {
         return new self(
             activityId: is_numeric($row['activity_id'] ?? null) ? (int) $row['activity_id'] : 0,
-            performedBy: is_numeric($row['performed_by'] ?? null) ? (int) $row['performed_by'] : null,
+            performedBy: ($row['performed_by'] ?? null) instanceof UserId ? $row['performed_by']->value : null,
             objectId: is_numeric($row['object_id'] ?? null) ? (int) $row['object_id'] : 0,
             action: is_string($row['action'] ?? null) ? $row['action'] : '',
             occuredOn: is_string($row['occured_on'] ?? null) ? $row['occured_on'] : '',

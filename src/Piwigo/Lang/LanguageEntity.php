@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Lang;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\LangCode;
 
 /**
  * Maps the `languages` table (`piwigo_languages` once
@@ -18,8 +19,8 @@ final class LanguageEntity
 {
     public function __construct(
         #[ORM\Id]
-        #[ORM\Column(type: 'string', length: 64)]
-        public string $id,
+        #[ORM\Column(type: 'lang_code', length: 64)]
+        public LangCode $id,
         #[ORM\Column(type: 'string', length: 64)]
         public string $version = '0',
         #[ORM\Column(type: 'string', length: 64, nullable: true)]

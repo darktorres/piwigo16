@@ -35,7 +35,7 @@ final class LangRepository extends EntityRepository
             // no name was never surfaced to callers.
             if ($entity->name !== null) {
                 $result[] = [
-                    'id' => $entity->id,
+                    'id' => $entity->id->value,
                     'name' => $entity->name,
                 ];
             }

@@ -53,7 +53,7 @@ final class LangRepositoryTest extends IntegrationTestCase
     public function test_find_all_rows_excludes_a_row_with_a_null_name(): void
     {
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::languages() . " (id, version, name) VALUES ('ct_no_name', '1.0.0', NULL)"
+            "INSERT INTO " . Tables::languages() . " (id, version, name) VALUES ('zz_NM', '1.0.0', NULL)"
         );
 
         try {
@@ -61,25 +61,25 @@ final class LangRepositoryTest extends IntegrationTestCase
 
             self::assertSame([['id' => 'en_UK', 'name' => 'English (Great Britain)']], $rows);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::languages() . " WHERE id = 'ct_no_name'");
+            $this->conn->executeStatement("DELETE FROM " . Tables::languages() . " WHERE id = 'zz_NM'");
         }
     }
 
     public function test_find_all_rows_orders_by_name(): void
     {
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::languages() . " (id, version, name) VALUES ('ct_aaa', '1.0.0', 'AAA First')"
+            "INSERT INTO " . Tables::languages() . " (id, version, name) VALUES ('zz_AA', '1.0.0', 'AAA First')"
         );
 
         try {
             $rows = $this->repo->findAllRows();
 
             self::assertSame(
-                [['id' => 'ct_aaa', 'name' => 'AAA First'], ['id' => 'en_UK', 'name' => 'English (Great Britain)']],
+                [['id' => 'zz_AA', 'name' => 'AAA First'], ['id' => 'en_UK', 'name' => 'English (Great Britain)']],
                 $rows
             );
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::languages() . " WHERE id = 'ct_aaa'");
+            $this->conn->executeStatement("DELETE FROM " . Tables::languages() . " WHERE id = 'zz_AA'");
         }
     }
 }

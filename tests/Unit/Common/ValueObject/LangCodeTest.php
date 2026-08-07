@@ -37,11 +37,23 @@ final class LangCodeTest extends StringVoContract
         yield 'lowercase region'  => ['en_us'];
         yield 'uppercase language' => ['EN_US'];
         yield 'too short language' => ['e_US'];
-        yield 'too long language'  => ['eng_US'];
+        yield 'too long language'  => ['engl_US'];
         yield 'hyphen separator'   => ['en-US'];
         yield 'no separator'       => ['enUS'];
         yield 'empty'              => [''];
         yield 'trailing whitespace' => ['en_US '];
         yield 'leading whitespace'  => [' en_US'];
+    }
+
+    /**
+     * `kok_IN` (Konkani) is a real, currently-shipped `language/` pack --
+     * its ISO code has no 639-1 (2-letter) form, only 639-2/3 (3-letter),
+     * the one real exception to every other shipped pack's 2-letter
+     * prefix.
+     */
+    public function testFromAcceptsTheThreeLetterKonkaniException(): void
+    {
+        $vo = LangCode::from('kok_IN');
+        self::assertSame('kok_IN', (string) $vo);
     }
 }

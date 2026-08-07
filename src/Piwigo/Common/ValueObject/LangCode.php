@@ -8,16 +8,20 @@ use InvalidArgumentException;
 use Override;
 
 /**
- * Piwigo language code in `ll_RR` form (e.g. `en_US`, `fr_FR`, `pt_BR`).
+ * Piwigo language code in `ll_RR`/`lll_RR` form (e.g. `en_US`, `fr_FR`,
+ * `pt_BR`, `kok_IN`).
  *
- * Matches every subdirectory under `language/` — two lowercase ISO 639-1
- * letters, an underscore, and two uppercase ISO 3166-1 letters. Used as a
- * filesystem path component for `language/<code>/*.po`, so the shape
- * constraint doubles as a directory-traversal guard.
+ * Matches every subdirectory under `language/` — two or three lowercase
+ * letters (ISO 639-1 for almost every shipped pack, except `kok_IN`
+ * (Konkani), which has no 639-1 code and ships under its 639-2/3 code —
+ * confirmed by listing every real directory under `language/`), an
+ * underscore, and two uppercase ISO 3166-1 letters. Used as a filesystem
+ * path component for `language/<code>/*.po`, so the shape constraint
+ * doubles as a directory-traversal guard.
  */
 final readonly class LangCode implements StringVo
 {
-    private const PATTERN = '/^[a-z]{2}_[A-Z]{2}$/';
+    private const PATTERN = '/^[a-z]{2,3}_[A-Z]{2}$/';
 
     private function __construct(
         public string $value

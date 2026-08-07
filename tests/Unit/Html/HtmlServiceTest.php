@@ -181,6 +181,7 @@ test('fatalError uses the given title, falling back to the default only when nul
     // side of the ||), BooleanOrToBooleanAnd (&& can never be true for
     // both null and '' simultaneously, so neither would ever fall back),
     // and EmptyStringToNotEmpty.
+    $this->expectErrorLog();
     $service = HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
@@ -199,6 +200,7 @@ test('fatalError omits the backtrace entirely when showTrace is false', function
     // building block is skipped, so $btrace_msg must still read back as
     // the real initial value for the final <pre> block to render with
     // nothing extra after the message.
+    $this->expectErrorLog();
     $service = HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
@@ -217,6 +219,7 @@ test('fatalError formats each real backtrace frame exactly as "#N\\t{class}::{fu
     // CALL SITE of frame N's own function, so frame #1's file/line
     // point at THIS call, not at HtmlServiceTestFatalErrorCaller.php
     // itself.
+    $this->expectErrorLog();
     $service = HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
@@ -241,6 +244,7 @@ test('fatalError\'s backtrace loop covers frames 1 through the real stack depth,
     // level above fatalError()'s own debug_backtrace() call, so the
     // real last valid frame number is always exactly preCallDepth,
     // regardless of how deep the actual Pest/PHPUnit call stack is.
+    $this->expectErrorLog();
     $service = HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
@@ -258,6 +262,7 @@ test('fatalError falls back to an empty class prefix, not a placeholder, for a r
     // genuine plain-function frame (call_user_func_array, no enclosing
     // class) a few levels above this call -- confirmed live via a
     // throwaway debug_backtrace() dump of this exact call path.
+    $this->expectErrorLog();
     $service = HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
@@ -277,6 +282,7 @@ test('fatalError renders an empty, not placeholder, file/line for a real frame w
     // placeholder text before or inside them) for that one frame; no
     // other frame in this exact call chain has both file and line
     // empty, so this pattern can only appear here.
+    $this->expectErrorLog();
     $service = HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
@@ -294,6 +300,7 @@ test('fatalError joins the backtrace immediately after the message, with no stra
     // exact-match test alone can't tell them apart. What differs is the
     // very first frame: real code has nothing before "#1", while the
     // mutant prepends a stray ")\n" there instead.
+    $this->expectErrorLog();
     $service = HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
@@ -309,6 +316,7 @@ test('fatalError trims the trailing newline off the backtrace before it reaches 
     // produce a double newline -- the same double-newline shape the
     // showTrace=false test already pins down for the *empty*
     // $btrace_msg case, but here with a genuinely non-empty trace.
+    $this->expectErrorLog();
     $service = HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
@@ -323,6 +331,7 @@ test('fatalError pads the display with exactly 300 trailing spaces', function ()
     // just the padding, discarding the whole page built above),
     // DecrementInteger/IncrementInteger (299/301 spaces), and
     // UnwrapStrRepeat (str_repeat() removed, leaving a single space).
+    $this->expectErrorLog();
     $service = HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
@@ -347,6 +356,7 @@ test('fatalError actually disables display_errors and raises error_reporting to 
     ini_set('display_errors', '1');
     error_reporting(0);
 
+    $this->expectErrorLog();
     $service = HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
@@ -364,6 +374,7 @@ test('fatalError actually disables display_errors and raises error_reporting to 
 test('fatalError passes trigger_error() the tag-stripped message plus the backtrace, not the raw HTML message', function (): void {
     // Kills line 492's UnwrapStripTags (passing the raw, unstripped
     // $msg through instead).
+    $this->expectErrorLog();
     $service = HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
@@ -378,6 +389,7 @@ test('fatalError passes trigger_error() the backtrace too, not just the stripped
     // sibling test above with showTrace=false: $btrace_msg is '' in
     // that case, so concatenating it or not is unobservable. Requires
     // showTrace=true to actually exercise a non-empty $btrace_msg.
+    $this->expectErrorLog();
     $service = HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 
@@ -390,6 +402,7 @@ test('fatalError passes trigger_error() the backtrace too, not just the stripped
 test('fatalError throws a 500 response, not a neighboring status code', function (): void {
     // Kills line 500's DecrementInteger/IncrementInteger
     // (ResponseFactory::html($display, 499|501) instead of 500).
+    $this->expectErrorLog();
     $service = HtmlServiceTestFactory::build();
     $caller = new HtmlServiceTestFatalErrorCaller();
 

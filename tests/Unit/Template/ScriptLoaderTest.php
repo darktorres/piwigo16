@@ -1005,6 +1005,8 @@ test('compute_script_topological_order succeeds at exactly the recursion limit b
 });
 
 test('compute_script_topological_order fatal-errors exactly one level past the recursion limit', function (): void {
+    $this->expectErrorLog();
+
     // a0..a5 (5 dependency hops): resolving a5 recurses down to a0 with
     // recursion_limiter reaching exactly 5, past the `< 5` limit.
     $loader = new ScriptLoader();

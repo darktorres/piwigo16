@@ -282,6 +282,7 @@ test('constructor casts compile_check to an int', function (): void {
 // --- constructor: data dir not writable -------------------------------
 
 test('constructor fatal-errors when the data directory cannot be made writable', function (): void {
+    $this->expectErrorLog();
     chmod(CurrentPathsTestFactory::get()->root, 0o555);
     CurrentConfigTestFactory::get()->reset();
     CurrentConfigTestFactory::get()->setDataLocation('data/');
@@ -296,6 +297,7 @@ test('constructor fatal-errors when the data directory cannot be made writable',
 })->throws(ResponseReadyException::class);
 
 test('constructor requests no backtrace when reporting the data-dir-not-writable error', function (): void {
+    $this->expectErrorLog();
     chmod(CurrentPathsTestFactory::get()->root, 0o555);
     CurrentConfigTestFactory::get()->reset();
     CurrentConfigTestFactory::get()->setDataLocation('data/');
@@ -330,6 +332,7 @@ test('constructor loads admin.lang before rendering the data-dir-not-writable er
     // form is "admin.lang.php", whose po sibling is "admin.po" (matching
     // this repo's own real ./language/*/admin.po naming), not
     // "admin.lang.po".
+    $this->expectErrorLog();
     mkdir(CurrentPathsTestFactory::get()->root . 'language/en_UK', 0o777, true);
     file_put_contents(
         CurrentPathsTestFactory::get()->root . 'language/en_UK/admin.po',
@@ -1323,6 +1326,7 @@ test('unload_external_filters unregisters every filter across every registered w
 // --- parse(): missing handle ------------------------------------------------
 
 test('parse fatal-errors for a handle with no registered filename', function (): void {
+    $this->expectErrorLog();
     $t = TemplateTestFactory::build();
 
     set_error_handler(static fn (): bool => true);
@@ -1359,6 +1363,7 @@ test('func_combine_script trigger_errors when id is missing', function (): void 
     // HtmlService::fatalError()'s own docblock) and simply returns, no
     // exception thrown -- checked directly via drain() instead of a
     // throwaway set_error_handler().
+    $this->expectErrorLog();
     $t = TemplateTestFactory::build();
     templateInstanceTestErrorCollector()->drain();
 
@@ -1369,6 +1374,7 @@ test('func_combine_script trigger_errors when id is missing', function (): void 
 });
 
 test('func_combine_script requires id to be a string even when the key is set', function (): void {
+    $this->expectErrorLog();
     $t = TemplateTestFactory::build();
     templateInstanceTestErrorCollector()->drain();
 
@@ -1379,6 +1385,7 @@ test('func_combine_script requires id to be a string even when the key is set', 
 });
 
 test('func_combine_script trigger_errors for an invalid load value', function (): void {
+    $this->expectErrorLog();
     $t = TemplateTestFactory::build();
     templateInstanceTestErrorCollector()->drain();
 
@@ -1546,6 +1553,7 @@ test('func_combine_script casts a non-bool truthy template value to a real bool 
 });
 
 test('func_get_combined_scripts trigger_errors when load is missing', function (): void {
+    $this->expectErrorLog();
     $t = TemplateTestFactory::build();
     templateInstanceTestErrorCollector()->drain();
 
@@ -1714,6 +1722,7 @@ test('block_footer_script casts a non-string scalar require to a string before l
 });
 
 test('block_footer_script actually reads the require param (fatal-errors for an unknown required script)', function (): void {
+    $this->expectErrorLog();
     $t = TemplateTestFactory::build();
 
     set_error_handler(static fn (): bool => true);
@@ -1727,6 +1736,7 @@ test('block_footer_script actually reads the require param (fatal-errors for an 
 // --- func_combine_css / finalizeOutput (via fetchOutput) --------------------
 
 test('func_combine_css fatal-errors when path is missing', function (): void {
+    $this->expectErrorLog();
     $t = TemplateTestFactory::build();
 
     set_error_handler(static fn (): bool => true);
@@ -1738,6 +1748,7 @@ test('func_combine_css fatal-errors when path is missing', function (): void {
 })->throws(ResponseReadyException::class);
 
 test('func_combine_css fatal-errors for every path sentinel value (false, 0, "0", "", [])', function (): void {
+    $this->expectErrorLog();
     $t = TemplateTestFactory::build();
 
     $caughtCount = 0;
@@ -1758,6 +1769,7 @@ test('func_combine_css fatal-errors for every path sentinel value (false, 0, "0"
 });
 
 test('func_combine_css fatal-errors when path is a non-string, non-sentinel value', function (): void {
+    $this->expectErrorLog();
     $t = TemplateTestFactory::build();
 
     set_error_handler(static fn (): bool => true);

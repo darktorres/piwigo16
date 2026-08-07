@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Event\User;
 
+use Piwigo\Common\ValueObject\UserId;
+
 /**
  * Typed event for the legacy `delete_user` notification. No handler is
  * registered for it anywhere today.
@@ -11,6 +13,6 @@ namespace Piwigo\Event\User;
 final readonly class DeleteUser
 {
     public function __construct(
-        public int $userId,
+        public UserId $userId,
     ) {}
 }

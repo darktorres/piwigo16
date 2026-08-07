@@ -215,7 +215,7 @@ final readonly class AuthService
         // already document).
         $pwgUid = $_SESSION['pwg_uid'];
 
-        $this->eventDispatcher->dispatchNotify(new UserLogin($pwgUid));
+        $this->eventDispatcher->dispatchNotify(new UserLogin(UserId::from($pwgUid)));
         $this->activityLogger->record('user', $pwgUid, 'login');
     }
 
@@ -289,7 +289,7 @@ final readonly class AuthService
     {
 
         $pwg_uid = $_SESSION['pwg_uid'] ?? null;
-        $this->eventDispatcher->dispatchNotify(new UserLogout(is_int($pwg_uid) ? $pwg_uid : null));
+        $this->eventDispatcher->dispatchNotify(new UserLogout(is_int($pwg_uid) ? UserId::tryFrom($pwg_uid) : null));
         if (is_int($pwg_uid) || is_string($pwg_uid)) {
             $this->activityLogger->record('user', $pwg_uid, 'logout');
         }

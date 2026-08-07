@@ -293,7 +293,7 @@ final class ProfileFormHandler
 
                 $activity_details_tables[] = 'user_infos';
             }
-            $this->eventDispatcher->dispatchNotify(new SaveProfileFromPost($user_id));
+            $this->eventDispatcher->dispatchNotify(new SaveProfileFromPost(UserId::from($user_id)));
             $this->activityService->record('user', $user_id, 'edit', [
                 'function' => __METHOD__,
                 'tables' => implode(',', $activity_details_tables),

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Event\User;
 
+use Piwigo\Common\ValueObject\UserId;
+
 /**
  * Typed event for the legacy `user_logout` filter (notify). No handler is
  * registered for it anywhere today. `$userId` is nullable -- diverges
@@ -15,6 +17,6 @@ namespace Piwigo\Event\User;
 final readonly class UserLogout
 {
     public function __construct(
-        public ?int $userId,
+        public ?UserId $userId,
     ) {}
 }

@@ -303,7 +303,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
         $this->repo->deleteUser($userId);
         $this->sessionService->deleteUserSessions($userId->value);
-        $this->eventDispatcher->dispatchNotify(new DeleteUser($userId->value));
+        $this->eventDispatcher->dispatchNotify(new DeleteUser($userId));
         $this->activityLogger->record('user', $userId->value, 'delete');
     }
 

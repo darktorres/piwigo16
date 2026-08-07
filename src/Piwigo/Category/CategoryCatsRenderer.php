@@ -6,6 +6,7 @@ namespace Piwigo\Category;
 
 use DateTimeImmutable;
 use Piwigo\Cache\CachePools;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\DateHelper;
@@ -99,7 +100,7 @@ final readonly class CategoryCatsRenderer
         $treeCache = new CategoryTreeCache($categoryService, $categoryRepo, $reprPool);
 
         $user = $this->currentUser->get();
-        $userId = $user->id->value;
+        $userId = $user->id;
         $isRecentCats = $section === 'recent_cats';
 
         $tree = $treeCache->getForUser($user->rawAttributes);
@@ -443,9 +444,9 @@ final readonly class CategoryCatsRenderer
         TimingHelper::debug('end CategoryCatsRenderer::render()', $this->pageState);
     }
 
-    private function getCachedRepresentative(CacheItemPoolInterface $pool, int $userId, int $catId): ?string
+    private function getCachedRepresentative(CacheItemPoolInterface $pool, UserId $userId, int $catId): ?string
     {
-        $item = $pool->getItem('repr_' . $userId . '_' . $catId);
+        $item = $pool->getItem('repr_' . $userId->value . '_' . $catId);
         if (! $item->isHit()) {
             return null;
         }
@@ -455,9 +456,9 @@ final readonly class CategoryCatsRenderer
         return is_string($value) ? $value : null;
     }
 
-    private function setCachedRepresentative(CacheItemPoolInterface $pool, int $userId, int $catId, ?string $imageId): void
+    private function setCachedRepresentative(CacheItemPoolInterface $pool, UserId $userId, int $catId, ?string $imageId): void
     {
-        $item = $pool->getItem('repr_' . $userId . '_' . $catId);
+        $item = $pool->getItem('repr_' . $userId->value . '_' . $catId);
         $item->set($imageId);
         $pool->save($item);
     }

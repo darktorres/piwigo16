@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Override;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
@@ -175,7 +176,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
 
     private function fakeUser(): UserMailNotification
     {
-        return new UserMailNotification(1, 'ck12345', 'fixture_admin', 'admin@example.test', '1', null, 'normal');
+        return new UserMailNotification(UserId::from(1), 'ck12345', 'fixture_admin', 'admin@example.test', true, null, 'normal');
     }
 
     /**

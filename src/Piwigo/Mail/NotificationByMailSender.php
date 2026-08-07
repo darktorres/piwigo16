@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Mail;
 
 use Piwigo\Auth\AuthService;
-use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
@@ -211,7 +210,7 @@ final class NotificationByMailSender
 
     public function setUserOnEnv(UserMailNotification $nbmUser, bool $isActionSend): void
     {
-        $user = $this->userService->buildUser(UserId::from($nbmUser->userId));
+        $user = $this->userService->buildUser($nbmUser->userId);
         $this->currentUser->set(User::fromUserArray($user));
 
         $currentUserLanguage = $this->currentUser->get()
@@ -520,7 +519,7 @@ final class NotificationByMailSender
                             $auth = null;
                             $addUrlParams = [];
 
-                            $authKey = $this->authService->createUserAuthKey($nbmUser->userId, $nbmUser->status);
+                            $authKey = $this->authService->createUserAuthKey($nbmUser->userId->value, $nbmUser->status);
 
                             if ($authKey !== false) {
                                 $auth = $authKey['auth_key'];
@@ -654,7 +653,7 @@ final class NotificationByMailSender
                                     $this->incMailSentSuccess($nbmUser);
 
                                     $datas[] = [
-                                        'user_id' => $nbmUser->userId,
+                                        'user_id' => $nbmUser->userId->value,
                                         'last_send' => $dbnow,
                                     ];
                                 } else {

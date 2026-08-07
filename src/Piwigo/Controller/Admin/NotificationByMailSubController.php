@@ -23,7 +23,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Lifecycle\NbmEventHandlerAdded;
 use Piwigo\Event\Mail\NbmRenderGlobalCustomizeMailContent;
 use Piwigo\Lang\Translator;
@@ -281,7 +280,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 $opt_false = [];
                 $opt_false_selected = [];
                 foreach ($data_users as $nbm_user) {
-                    if (SqlDialect::getBoolean($nbm_user->enabled)) {
+                    if ($nbm_user->enabled) {
                         $opt_true[$nbm_user->checkKey] = stripslashes($nbm_user->username) . '[' . $nbm_user->mailAddress . ']';
                         if (isset($post['falsify']) and isset($post['cat_true']) and is_array($post['cat_true']) and in_array($nbm_user->checkKey, $post['cat_true'], true)) {
                             $opt_true_selected[] = $nbm_user->checkKey;

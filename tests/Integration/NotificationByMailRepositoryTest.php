@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Override;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
@@ -97,15 +98,15 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         self::assertSame('regular_user', $rows[0]->username);
     }
 
-    public function test_find_user_notifications_narrows_user_id_to_a_real_int(): void
+    public function test_find_user_notifications_narrows_user_id_to_a_real_user_id(): void
     {
         $rows = $this->repo->findUserNotifications('subscribe', [], '');
 
-        // UserMailNotification::fromRow() narrows user_id to a real int
-        // (P17-23 Stage 1b), replacing the legacy \Piwigo\Db\MysqliDb::fetchAssoc()-style
+        // UserMailNotification::fromRow() narrows user_id to a real UserId
+        // (Phase 4), replacing the legacy \Piwigo\Db\MysqliDb::fetchAssoc()-style
         // "everything comes back as string|null" convention every other
         // domain's own Projection has already moved away from.
-        self::assertSame(1, $rows[0]->userId);
+        self::assertEquals(UserId::from(1), $rows[0]->userId);
     }
 
     public function test_delete_by_check_keys_is_a_no_op_for_an_empty_list(): void

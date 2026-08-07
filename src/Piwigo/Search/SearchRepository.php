@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Piwigo\Category\CategoryEntity;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
@@ -337,6 +338,10 @@ final class SearchRepository
      * `SearchFilterRenderer`'s `cat`/album-lookup block: a single-table
      * `CategoryEntity` query (`id`/`uppercats`), no image join.
      *
+     * `c.id` is custom-Typed (`category_id`), so `getArrayResult()`
+     * (Gotcha #1) returns a real `CategoryId` instance for it, unwrapped
+     * below -- see `CategoryEntity`'s own docblock.
+     *
      * @return list<array{id: int, uppercats: string}>
      */
     public function findCategoryIdsAndUppercats(SqlCondition $condition): array
@@ -351,12 +356,12 @@ final class SearchRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row) || ! is_numeric($row['id'] ?? null) || ! is_string($row['uppercats'] ?? null)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId || ! is_string($row['uppercats'] ?? null)) {
                 continue;
             }
 
             $result[] = [
-                'id' => (int) $row['id'],
+                'id' => $row['id']->value,
                 'uppercats' => $row['uppercats'],
             ];
         }

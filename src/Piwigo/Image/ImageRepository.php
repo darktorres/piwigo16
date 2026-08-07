@@ -16,6 +16,7 @@ use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
+use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
@@ -2528,7 +2529,9 @@ final class ImageRepository extends EntityRepository
      * `commentable` hydrates as a real `bool` -- safe because the one
      * real caller ({@see \Piwigo\Ws\PwgImages::getInfo()}) already
      * `(bool)`-casts it and `unset()`s the key immediately after, before
-     * the row ever reaches its own JSON response.
+     * the row ever reaches its own JSON response. `c.id`/`c.permalink`
+     * are custom-Typed (`category_id`/`permalink`), so `getArrayResult()`
+     * (Gotcha #1) returns real VO instances for them, unwrapped below.
      *
      * @return list<array<string, mixed>>
      */
@@ -2550,10 +2553,12 @@ final class ImageRepository extends EntityRepository
                 continue;
             }
 
+            $id = $row['id'] ?? null;
+            $permalink = $row['permalink'] ?? null;
             $result[] = [
-                'id' => $row['id'] ?? null,
+                'id' => $id instanceof CategoryId ? $id->value : $id,
                 'name' => $row['name'] ?? null,
-                'permalink' => $row['permalink'] ?? null,
+                'permalink' => $permalink instanceof Permalink ? $permalink->value : $permalink,
                 'uppercats' => $row['uppercats'] ?? null,
                 'global_rank' => $row['global_rank'] ?? null,
                 'commentable' => $row['commentable'] ?? null,
@@ -2605,7 +2610,9 @@ final class ImageRepository extends EntityRepository
      * `commentable` read already `(bool)`-casts it, and `visible` has no
      * strict-typed reader in either real consumer
      * ({@see \Piwigo\Controller\PictureController}/
-     * `PictureCommentRenderer`).
+     * `PictureCommentRenderer`). `c.id` is custom-Typed (`category_id`) --
+     * {@see \Piwigo\Controller\PictureController}'s own `is_numeric()`
+     * read of `$related_categories[0]['id']` needs the unwrapped int.
      *
      * @return list<array<string, mixed>>
      */
@@ -2631,8 +2638,9 @@ final class ImageRepository extends EntityRepository
                 continue;
             }
 
+            $id = $row['id'] ?? null;
             $result[] = [
-                'id' => $row['id'] ?? null,
+                'id' => $id instanceof CategoryId ? $id->value : $id,
                 'uppercats' => $row['uppercats'] ?? null,
                 'commentable' => $row['commentable'] ?? null,
                 'visible' => $row['visible'] ?? null,

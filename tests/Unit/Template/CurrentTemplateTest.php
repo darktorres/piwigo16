@@ -6,6 +6,7 @@ use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Template\CurrentTemplate;
@@ -117,3 +118,34 @@ test('current() resolves the container-shared instance once Kernel is booted', f
 
     expect(CurrentTemplate::current())->toBe($instance);
 });
+
+test('current() throws when the container returns an unexpected type', function (): void {
+    // Kills line 49's InstanceOfToTrue (`if (!true)`, never taking the
+    // throw branch): the mutant's guard can never fire regardless of
+    // what the container actually resolved, silently returning the
+    // wrong-typed value instead of throwing. The real container,
+    // correctly wired, never legitimately resolves CurrentTemplate::class
+    // to anything but a CurrentTemplate -- this branch is otherwise
+    // unreachable through the public API. KernelContainerOverride rebinds
+    // CurrentTemplate::class to a plain stdClass (see its own docblock),
+    // matching the same pattern used throughout
+    // tests/Unit/Bootstrap/*AccessorTest.php and
+    // CurrentThemeConfProviderTest.php's own identical "current() throws"
+    // test for this exact guard shape.
+    // KernelContainerOverride::with()'s own finally leaves Kernel reset
+    // (not booted) once the override callback returns -- restore this
+    // file's own beforeEach() boot afterward, same as the "falls back to
+    // a memoized instance" test above, so afterEach()'s
+    // CurrentPathsTestFactory::get() call doesn't throw against an
+    // un-booted Kernel.
+    $root = CurrentPathsTestFactory::get()->root;
+
+    try {
+        KernelContainerOverride::withWrongTypeFor(
+            CurrentTemplate::class,
+            static fn () => CurrentTemplate::current(),
+        );
+    } finally {
+        Kernel::boot(Paths::fromRoot($root));
+    }
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentTemplate::class);

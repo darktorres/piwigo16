@@ -7,6 +7,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
@@ -283,6 +284,60 @@ test('mkgetdir delegates the fatal message to the installed HtmlRenderingInterfa
     );
 
     expect($capture->lastMessage)->toBe($dir . ' no write access');
+});
+
+test('fatalError falls through to the plain RuntimeException when the container returns a value that is not an HtmlRenderingInterface', function (): void {
+    // Kills line 68's InstanceOfToTrue. With a real, correctly-configured
+    // container this instanceof check is always true in practice, so the
+    // only way to observe it actually running is to break the binding on
+    // purpose -- same KernelContainerOverride pattern as e.g.
+    // AdminAccessorTest's "throws when the container returns an
+    // unexpected type" tests. Under the mutation (`if (true)`),
+    // $htmlRenderer (here a plain stdClass) would still get
+    // ->fatalError($msg) called on it: a fatal \Error for an undefined
+    // method, not the \RuntimeException this test asserts on.
+    //
+    // Unlike the "delegates to the installed renderer" test above, this
+    // can't go through the public mkgetdir() API: its error message
+    // builds via self::t('no write access') first, which autowires a
+    // fresh Lang -- and Lang's own constructor *also* takes an
+    // HtmlRenderingInterface collaborator, so the same stdClass override
+    // would surface as a hard TypeError there, before mkgetdir() ever
+    // reaches fatalError()'s own guard. Calling the private static method
+    // directly isolates the guard from that unrelated collaborator
+    // construction (no setAccessible() call -- a deprecated no-op since
+    // PHP 8.1).
+    $dir = $this->root . '/locked-parent-broken-renderer/child';
+    $fatalErrorMethod = new ReflectionMethod(FilesystemHelper::class, 'fatalError');
+
+    KernelContainerOverride::with(
+        [HtmlRenderingInterface::class => new stdClass()],
+        function () use ($fatalErrorMethod, $dir): void {
+            expect(static fn (): mixed => $fatalErrorMethod->invoke(null, $dir . ' no write access'))
+                ->toThrow(RuntimeException::class, $dir . ' no write access');
+        }
+    );
+});
+
+test('lang() throws a RuntimeException carrying the container-type message when the Lang container binding is broken', function (): void {
+    // Kills line 95's InstanceOfToTrue. Mirrors AdminAccessorTest's own
+    // withWrongTypeFor() pattern. Even under the mutation
+    // (`if (! true)`, i.e. never), PHP's own `: Lang` return-type
+    // declaration on lang() would still reject returning the stdClass --
+    // but as a \TypeError, not this \RuntimeException with this exact
+    // message, so the two remain distinguishable.
+    $parent = $this->root . '/locked-parent-broken-lang';
+    mkdir($parent);
+    chmod($parent, 0o555);
+    $dir = $parent . '/child';
+
+    KernelContainerOverride::withWrongTypeFor(
+        Lang::class,
+        function () use ($dir): void {
+            expect(fn () => FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
+                ->toThrow(RuntimeException::class, 'Container returned an unexpected type for ' . Lang::class);
+        }
+    );
 });
 
 test('mkgetdir returns false when a freshly-created directory ends up non-writable and MKGETDIR_DIE_ON_ERROR is not set', function (): void {

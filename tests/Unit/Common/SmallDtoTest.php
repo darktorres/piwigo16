@@ -35,6 +35,27 @@ test('UserGroupPair::fromRow throws for a missing/malformed row', function (): v
     UserGroupPair::fromRow([]);
 })->throws(InvalidArgumentException::class);
 
+test('UserGroupPair::fromRow throws with the exact invalid value when user_id is missing, not masked by group_id', function (): void {
+    // Isolates the userId fallback from the groupId one by giving a
+    // valid group_id: GroupId::from() never gets a chance to throw
+    // first, so this can only pass if UserId::from() itself throws with
+    // the real 0 fallback embedded in its message. Kills the userId
+    // fallback's DecrementInteger (-1 instead of 0: UserId::from(-1)
+    // also throws, but with "got -1", not "got 0") and IncrementInteger
+    // (1 instead of 0: UserId::from(1) is valid and does NOT throw at
+    // all, letting the whole call succeed instead) -- confirmed live,
+    // same technique as GroupTest.php's own "throws when id is null"
+    // test for the identical fallback shape.
+    UserGroupPair::fromRow(['group_id' => 5]);
+})->throws(InvalidArgumentException::class, 'UserId must be a positive integer, got 0');
+
+test('UserGroupPair::fromRow throws with the exact invalid value when group_id is missing, not masked by user_id', function (): void {
+    // Mirror of the test above, isolating the groupId fallback: kills
+    // the same DecrementInteger/IncrementInteger pair on the groupId
+    // side.
+    UserGroupPair::fromRow(['user_id' => 5]);
+})->throws(InvalidArgumentException::class, 'GroupId must be a positive integer, got 0');
+
 test('CreateCategoryResult::failure carries the error message with no category id', function (): void {
     $result = CreateCategoryResult::failure('This name already exists');
 

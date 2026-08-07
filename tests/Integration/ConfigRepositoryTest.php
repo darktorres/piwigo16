@@ -163,6 +163,34 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         self::assertNull($fresh->find($param));
     }
 
+    /**
+     * `param` is massUpdateValues()'s own BatchWriter::massUpdate() primary
+     * key -- without it, the generated UPDATE would carry no WHERE clause
+     * at all and overwrite every row's value, not just the targeted one.
+     */
+    public function test_mass_update_values_updates_only_the_matching_param_row(): void
+    {
+        $paramA = 'p14_test_mass_update_a_' . bin2hex(random_bytes(4));
+        $paramB = 'p14_test_mass_update_b_' . bin2hex(random_bytes(4));
+        $this->repo->upsert($paramA, self::jsonValue('original-a'));
+        $this->repo->upsert($paramB, self::jsonValue('original-b'));
+
+        $this->repo->massUpdateValues([
+            ['param' => $paramA, 'value' => self::jsonValue('updated-a')],
+        ]);
+
+        $fresh = $this->freshRepo();
+        $entryA = $fresh->find($paramA);
+        $entryB = $fresh->find($paramB);
+        self::assertNotNull($entryA);
+        self::assertSame(self::jsonValue('updated-a'), $entryA->value);
+        self::assertNotNull($entryB);
+        self::assertSame(self::jsonValue('original-b'), $entryB->value);
+
+        $fresh->deleteByParam($paramA);
+        $fresh->deleteByParam($paramB);
+    }
+
     public function test_insert_ignore_raw_value_creates_a_row_then_is_a_silent_noop_on_a_second_call(): void
     {
         $param = 'p14_test_insert_ignore_' . bin2hex(random_bytes(4));
@@ -198,6 +226,22 @@ final class ConfigRepositoryTest extends IntegrationTestCase
     public function test_find_raw_value_returns_false_for_a_missing_param(): void
     {
         self::assertFalse($this->repo->findRawValue('this_param_does_not_exist_anywhere'));
+    }
+
+    /**
+     * `value` is a plain `text` column (see ConfigEntry's own docblock),
+     * so upsert() can store a raw JSON-number literal that
+     * insertIgnoreRawValue()'s own json_encode(string) path never would --
+     * exercising findRawValue()'s "decoded value isn't a string" fallback.
+     */
+    public function test_find_raw_value_returns_false_when_the_stored_value_does_not_decode_to_a_string(): void
+    {
+        $param = 'p14_test_non_string_decode_' . bin2hex(random_bytes(4));
+        $this->repo->upsert($param, '123');
+
+        self::assertFalse($this->repo->findRawValue($param));
+
+        $this->repo->deleteByParam($param);
     }
 
     public function test_count_by_param_reflects_presence_and_absence(): void

@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Db\DbCredentials;
 use Piwigo\Db\Tables;
+use Piwigo\Tests\Support\KernelContainerOverride;
 
 // tests/bootstrap.php loads real PIWIGO_DB_* vars for the whole Pest
 // process (see tests/Unit/Db/DbCredentialsTest.php's own comment) --
@@ -51,4 +53,45 @@ test('table names respect a custom db prefix', function (): void {
 
     expect(Tables::images())->toBe('custom_images')
         ->and(Tables::userInfos())->toBe('custom_user_infos');
+});
+
+test('dbCredentials resolves the container-shared instance once Kernel is booted, not a fresh env read', function (): void {
+    // Kills line 39's IfNegated/InstanceOfToFalse and line 40's
+    // RemoveEarlyReturn: any of those three skip this return entirely,
+    // falling through to a bare DbCredentials::fromEnv() read instead --
+    // which would see this test's real (untouched) PIWIGO_DB_PREFIX env
+    // var, not this container-bound instance's own prefix.
+    $shared = new DbCredentials(
+        host: 'h',
+        user: 'u',
+        password: 'p',
+        database: 'd',
+        prefix: 'container_shared_',
+    );
+
+    KernelContainerOverride::with(
+        [DbCredentials::class => $shared],
+        function (): void {
+            expect(Tables::images())->toBe('container_shared_images');
+        }
+    );
+});
+
+test('dbCredentials falls back to a fresh env read when the container binding resolves to the wrong type', function (): void {
+    // Kills line 39's InstanceOfToTrue. With the real, correctly-configured
+    // container this instanceof check is always true in practice, so the
+    // only way to observe it actually running is to break the binding on
+    // purpose -- same KernelContainerOverride::withWrongTypeFor() pattern
+    // as FilesystemHelperTest's own InstanceOfToTrue-killing tests. Under
+    // the mutation (`if (true)`), Tables::dbCredentials()'s own `: DbCredentials`
+    // return type would reject returning the stdClass with a \TypeError
+    // instead of quietly falling through to fromEnv() here.
+    putenv('PIWIGO_DB_PREFIX=wrong_type_fallback_');
+
+    KernelContainerOverride::withWrongTypeFor(
+        DbCredentials::class,
+        function (): void {
+            expect(Tables::images())->toBe('wrong_type_fallback_images');
+        }
+    );
 });

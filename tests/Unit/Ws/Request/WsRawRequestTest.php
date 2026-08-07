@@ -54,3 +54,40 @@ test('fromArrays coerces non-string parameter keys to string', function (): void
 
     expect($request->params)->toBe(['0' => 'positional']);
 });
+
+test('fromArrays continues past the format key instead of stopping the loop', function (): void {
+    $request = WsRawRequest::fromArrays(['format' => 'json', 'foo' => 'bar', 'method' => 'pwg.session.login'], [], true);
+
+    expect($request->method)->toBe('pwg.session.login')
+        ->and($request->params)->toBe(['foo' => 'bar']);
+});
+
+test('fromArrays keeps a valid POST method even when GET also carries a method key', function (): void {
+    $request = WsRawRequest::fromArrays(
+        ['method' => 'pwg.session.login'],
+        ['method' => 'pwg.session.getStatus'],
+        true,
+    );
+
+    expect($request->method)->toBe('pwg.session.login');
+});
+
+test('fromArrays falls back to GET method when the POST method is an empty string', function (): void {
+    $request = WsRawRequest::fromArrays(
+        ['method' => ''],
+        ['method' => 'pwg.session.login'],
+        true,
+    );
+
+    expect($request->method)->toBe('pwg.session.login');
+});
+
+test('fromArrays falls back to GET method when the POST method is "0"', function (): void {
+    $request = WsRawRequest::fromArrays(
+        ['method' => '0'],
+        ['method' => 'pwg.session.login'],
+        true,
+    );
+
+    expect($request->method)->toBe('pwg.session.login');
+});

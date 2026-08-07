@@ -49,19 +49,30 @@ test('stop records a duration in milliseconds close to the real elapsed wall-clo
         ->toBeLessThan(1000.0);
 });
 
-/**
- * Confirmed NOT reliably testable (not the same as equivalent): line
- * 36's DecrementFloat (999.0) and IncrementFloat (1001.0) instead of
- * 1000.0 scale the computed duration by +/-0.1%. Measured live across
- * 5 runs of a 200ms sleep each for both real code (1000.0: range
- * 200.30-201.20) and the 999.0 mutant (range 200.14-200.97): the two
- * ranges substantially OVERLAP, meaning ordinary OS scheduling jitter
- * for a sleep this short already exceeds the 0.1% signal the mutation
- * introduces. A test tight enough to reliably catch it would need
- * either an impractically long sleep (seconds, not milliseconds, to
- * make the absolute drift exceed jitter) or mocking the system clock,
- * which isn't available for this class's own bare microtime() calls.
- */
+test('stop() scales elapsed seconds to milliseconds by exactly 1000, not a nearby multiplier', function (): void {
+    // The sibling "close to the real elapsed wall-clock time" test above
+    // uses a real usleep(50_000) -- OS scheduling jitter for a sleep that
+    // short already dwarfs the 0.1% signal a 999.0/1001.0 multiplier
+    // mutant introduces (measured live across 5 runs of a 200ms sleep:
+    // real code's 1000.0 range and the 999.0 mutant's range substantially
+    // overlapped). Backdating start()'s own $at parameter instead of
+    // actually sleeping sidesteps that entirely: the gap between capturing
+    // $capturedAt and calling stop() a line later is genuine microseconds
+    // of interpreter overhead (no real wait happens), while the *measured*
+    // elapsed time is a full 120 seconds -- turning the mutant's 0.1%
+    // scale error into a ~120ms absolute gap, comfortably outside any
+    // realistic interpreter/scheduling overhead for two back-to-back
+    // method calls.
+    $timing = new ServerTiming();
+    $capturedAt = microtime(true) - 120.0;
+    $timing->start('op', $capturedAt);
+    $timing->stop('op');
+
+    $duration = $timing->all()['op'];
+
+    expect($duration)->toBeGreaterThanOrEqual(120_000.0)
+        ->and($duration)->toBeLessThan(120_100.0);
+});
 
 test('stop on a name that was never started is a no-op', function (): void {
     $timing = new ServerTiming();

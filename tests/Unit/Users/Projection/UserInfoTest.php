@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Users\Projection\UserInfo;
 
 /**
@@ -73,6 +74,23 @@ test('fromRow falls back to safe defaults for every field except user_id', funct
     expect($info->lastVisitFromHistory)->toBeFalse();
     expect($info->lastmodified)->toBe('');
     expect($info->preferences)->toBeNull();
+});
+
+test('fromRow unwraps a real LangCode instance for language into its plain string value', function (): void {
+    // Kills line 85's CoalesceRemoveLeft (`($row['language'] ?? null)
+    // instanceof LangCode` -> `null instanceof LangCode`) and
+    // InstanceOfToFalse (the same expression -> literal `false`): both
+    // mutants make the instanceof check unconditionally false, so a real
+    // LangCode row value would wrongly fall through to the is_string()
+    // branch (false, since it's an object) and default to '' instead of
+    // the LangCode's own value. Every other fixture in this file passes a
+    // plain string for 'language', so nothing else exercises this branch.
+    $info = UserInfo::fromRow([
+        'user_id' => 1,
+        'language' => LangCode::from('fr_FR'),
+    ]);
+
+    expect($info->language)->toBe('fr_FR');
 });
 
 test('fromRow reads a truthy show_nb_comments value, not just the coalesce fallback', function (): void {

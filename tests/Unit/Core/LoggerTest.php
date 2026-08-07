@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Piwigo\Core\Logger;
+use Piwigo\Core\PageState;
+use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
  * No prior LoggerTest.php existed -- everything below targets the
@@ -337,6 +339,59 @@ test('formatMessage builds the line with a leading bracket, a newline-prefixed i
         ->and(str_contains($content, '[exec=unkonwn]'))->toBeTrue()
         ->and(str_contains($content, "test message\n  key1: 'value1'"))->toBeTrue()
         ->and(str_ends_with($content, "\n"))->toBeTrue();
+});
+
+test('pageState() throws when the container returns an unexpected type for PageState', function (): void {
+    // Kills line 404's InstanceOfToTrue (`!true` instead of
+    // `!$pageState instanceof PageState`): the mutant's guard can never
+    // fire regardless of what the container actually resolved, silently
+    // returning the wrong-typed value instead of throwing. The real
+    // container, correctly wired, never legitimately resolves
+    // PageState::class to anything but a PageState -- this branch is
+    // otherwise unreachable through the public API.
+    // KernelContainerOverride rebinds PageState::class to a plain
+    // stdClass (see its own docblock), matching the same pattern used
+    // throughout tests/Unit/Bootstrap/*AccessorTest.php for the
+    // identical guard shape.
+    $dir = $this->root . '/pagestate-wrong-type-dir';
+
+    KernelContainerOverride::withWrongTypeFor(
+        PageState::class,
+        function () use ($dir): void {
+            $logger = new Logger(['directory' => $dir, 'filename' => 'unreachable.txt']);
+            $logger->info('anything');
+        }
+    );
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . PageState::class);
+
+test('pageState() reuses the container-shared instance once booted, not a fresh unmemoized one', function (): void {
+    // Kills line 408's RemoveEarlyReturn (dropping `return $pageState;`):
+    // execution would fall out of the `if (Kernel::isBooted())` block
+    // and hit the final `return new PageState();` instead, silently
+    // discarding the real, container-shared instance just resolved (and
+    // validated by the instanceof check right above) in favor of a
+    // brand-new, empty one. Binding a container-shared PageState with a
+    // distinguishing executionUuid proves which instance formatMessage()
+    // actually consumed: real code echoes the marker back in the log
+    // line; the mutant's fresh instance has an empty executionUuid,
+    // which formatMessage()'s own '' -> 'unkonwn' fallback would replace
+    // instead (confirmed by the "unkonwn" case already covered above).
+    $sharedPageState = new PageState();
+    $sharedPageState->executionUuid = 'shared-marker-uuid';
+    $dir = $this->root . '/pagestate-shared-dir';
+
+    KernelContainerOverride::with(
+        [PageState::class => $sharedPageState],
+        function () use ($dir): void {
+            $logger = new Logger(['directory' => $dir, 'filename' => 'shared.txt']);
+            $logger->info('hello');
+
+            $content = file_get_contents($dir . '/shared.txt');
+            expect($content)->not->toBeFalse();
+            assert(is_string($content));
+            expect($content)->toContain('[exec=shared-marker-uuid]');
+        }
+    );
 });
 
 test('getTimestamp computes a real, current sub-second microsecond value, not a garbage one', function (): void {

@@ -579,6 +579,26 @@ test('dispatchChange include_once-s a handler\'s includePath before calling it',
     }
 });
 
+test('dispatchChange skips include_once for a handler registered with an empty-string includePath', function (): void {
+    // Kills dispatchChange()'s own EmptyStringToNotEmpty mutation on the
+    // `!== ''` guard -- same reasoning as triggerChange's own copy of
+    // this test above: if the guard stopped treating '' as "no path",
+    // include_once('') would run and (per phpunit.xml.dist's
+    // failOnWarning="true") fail this test on the resulting "Filename
+    // cannot be empty"-style warning.
+    $dispatcher = new EventDispatcher();
+    $dispatcher->addEventHandler(TestChangeEvent::class, static function (TestChangeEvent $e): TestChangeEvent {
+        $e->value = strtoupper($e->value);
+
+        return $e;
+    }, 50, '');
+    $event = new TestChangeEvent('hi');
+
+    $dispatcher->dispatchChange($event);
+
+    expect($event->value)->toBe('HI');
+});
+
 test('dispatchChange notifies a registered "trigger" meta-handler with the event object as data', function (): void {
     $dispatcher = new EventDispatcher();
     $metaCalls = [];
@@ -646,6 +666,21 @@ test('dispatchNotify include_once-s a handler\'s includePath before calling it',
         unlink($path);
         unset($GLOBALS['event_dispatcher_test_included_dispatch_notify']);
     }
+});
+
+test('dispatchNotify skips include_once for a handler registered with an empty-string includePath', function (): void {
+    // Kills dispatchNotify()'s own EmptyStringToNotEmpty mutation on the
+    // `!== ''` guard -- same reasoning as triggerNotify's own copy of
+    // this test above.
+    $dispatcher = new EventDispatcher();
+    $calls = [];
+    $dispatcher->addEventHandler(TestNotifyEvent::class, static function () use (&$calls): void {
+        $calls[] = true;
+    }, 50, '');
+
+    $dispatcher->dispatchNotify(new TestNotifyEvent('hi'));
+
+    expect($calls)->toBe([true]);
 });
 
 test('dispatchNotify notifies a registered "trigger" meta-handler with type "action" and the event object as data', function (): void {

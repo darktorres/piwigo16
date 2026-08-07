@@ -58,3 +58,17 @@ test('fromArray coerces non-string selection elements to strings', function (): 
 
     expect($request->selection)->toBe(['ok', '']);
 });
+
+test('fromArray re-indexes a non-sequential selection into a plain 0-based list', function (): void {
+    // Kills the array_values() UnwrapArrayValues mutant: a checkbox-style
+    // POST submission (only the checked boxes present) leaves gaps in
+    // c13y_selection's own keys -- array_map() alone would preserve those
+    // original keys (3, 7), violating this class's own `list<string>`
+    // contract on $selection.
+    $request = C13yTreatmentRequest::fromArray([
+        'c13y_submit_correction' => '1',
+        'c13y_selection' => [3 => 'abc123', 7 => 'def456'],
+    ]);
+
+    expect($request->selection)->toBe(['abc123', 'def456']);
+});

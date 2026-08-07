@@ -102,6 +102,18 @@ test('fromArrays rejects a non-numeric dbport', function (): void {
         ->toThrow(RuntimeException::class);
 });
 
+test('fromArrays leaves dbport null when submitted as a non-string numeric value', function (): void {
+    // Real gap, found via mutation testing: is_string($dbport_raw) is
+    // the guard requiring dbport to have arrived as a string (as real
+    // $_POST values always do). Passing a genuinely numeric, non-string
+    // value distinguishes the real all-AND condition from either
+    // BooleanAndToBooleanOr mutant, both of which loosen it with an ||
+    // and would wrongly accept this value via is_numeric() alone.
+    $request = InstallWizardRequest::fromArrays([], ['dbport' => 5432], new InputValidator());
+
+    expect($request->dbport)->toBeNull();
+});
+
 test('fromArrays parses admin credentials from POST', function (): void {
     $request = InstallWizardRequest::fromArrays([], [
         'admin_name' => 'webmaster',

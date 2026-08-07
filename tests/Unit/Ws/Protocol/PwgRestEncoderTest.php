@@ -215,6 +215,25 @@ test('encode_struct pulls a later xml_attributes-designated key out even after a
         ->and($result)->not->toContain('ignored-numeric');
 });
 
+test('encode_struct casts an integer attribute key to string before writing it', function (): void {
+    // Kills line 104 RemoveStringCast: write_attribute()'s own $name
+    // parameter is declared `string $name`, and this file's own
+    // strict_types=1 means passing a genuine int array key without the
+    // (string) cast throws a real TypeError rather than PHP silently
+    // coercing it. An int array key inside the ATTRIBUTES_KEY value is a
+    // genuinely valid PHP array shape ("attributes" aren't required to be
+    // string-keyed) -- every existing ATTRIBUTES_KEY/xml_attributes test
+    // in this file uses only string keys ('id'), so none of them force
+    // this cast to actually do anything.
+    $encoder = new PwgRestEncoder();
+    $response = ['group' => [PwgResponseEncoder::ATTRIBUTES_KEY => [0 => 'attr-value'], 'label' => 'Public']];
+
+    $result = $encoder->encodeResponse($response);
+
+    expect($result)->toContain('<group 0="attr-value">')
+        ->and($result)->toContain('<label>Public</label>');
+});
+
 test('encode_struct (skip_underscore path) still special-cases a non-underscore ATTRIBUTES_KEY property as an xml attribute source', function (): void {
     // skip_underscore=true is only ever reached via encode()'s generic
     // get_object_vars() object fallback, which never threads a non-empty
@@ -402,4 +421,23 @@ test('encode() routes a PwgNamedStruct through encode_struct()/its own _content,
     $result = $encoder->encodeResponse($response);
 
     expect($result)->toContain('<title>Hello</title>');
+});
+
+test('encode() encodes a PwgNamedStruct without skipping its own underscore-prefixed keys', function (): void {
+    // Kills line 167 FalseToTrue: the PwgNamedStruct branch's own
+    // encode_struct() call hardcodes skip_underscore=false (only the
+    // generic get_object_vars() object fallback a few lines below passes
+    // true) -- a leading-underscore _content key must still be written as
+    // a normal element for a PwgNamedStruct, unlike the object-fallback
+    // path this file's own 'skips a leading-underscore key' test near the
+    // top covers. The sibling 'routes a PwgNamedStruct...' test right
+    // above has no underscore-prefixed _content key, so it can't
+    // distinguish this mutant on its own.
+    $encoder = new PwgRestEncoder();
+    $response = new PwgNamedStruct(['_hidden' => 'should-appear', 'label' => 'Public'], []);
+
+    $result = $encoder->encodeResponse($response);
+
+    expect($result)->toContain('<_hidden>should-appear</_hidden>')
+        ->and($result)->toContain('<label>Public</label>');
 });

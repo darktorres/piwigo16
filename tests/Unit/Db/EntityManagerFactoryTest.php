@@ -98,3 +98,57 @@ test('build() uses the given connection, not a freshly built one', function (): 
  * ArrayAdapter choice. Confirmed live: getConfiguration()->getMetadataCache()
  * returns the identical adapter class either way.
  */
+
+/**
+ * entityMtimeHash() (private, memoized) has no public seam to observe
+ * short of recomputing its own intended algorithm against the real
+ * composer classmap/filesystem and comparing exact values via
+ * reflection -- the same technique this method's own docblock describes
+ * it replacing (a RecursiveDirectoryIterator walk), just run once here
+ * as a correctness oracle instead of on every request.
+ */
+test('entityMtimeHash() hashes only Piwigo *Entity.php mtimes, filtered and sorted', function (): void {
+    // Kills: ForeachEmptyIterable (`foreach ([] as ...)` instead of
+    // `foreach ($classMap as ...)`) and RemoveFunctionCall (dropping
+    // `sort($mtimes);`) directly -- both would only match this
+    // independently-recomputed expected hash by coincidence.
+    // Kills: IfNegated and BooleanAndToBooleanOr on the
+    // `str_starts_with(...) && str_ends_with(...)` filter, plus
+    // StrStartsWithToStrEndsWith / StrEndsWithToStrStartsWith swaps on
+    // its two operands -- confirmed live the real classmap has ~840
+    // `Piwigo\` classes and only ~39 end in `Entity.php`, so AND vs OR
+    // (or swapping which function checks which operand) selects a wildly
+    // different file set and therefore a different hash.
+    // Kills: IfNegated and NotIdenticalToIdentical on
+    // `if ($mtime !== false)` -- both invert the guard to "only keep
+    // entries where filemtime() failed", which for the real, existing
+    // entity files on disk is always empty.
+    $sourceFile = (new ReflectionClass(EntityManagerFactory::class))->getFileName();
+    expect($sourceFile)->not->toBeFalse();
+
+    /** @var array<string, string> $classMap */
+    $classMap = require dirname((string) $sourceFile, 4) . '/vendor/composer/autoload_classmap.php';
+
+    $expectedMtimes = [];
+    foreach ($classMap as $class => $file) {
+        if (str_starts_with($class, 'Piwigo\\') && str_ends_with($file, 'Entity.php')) {
+            $mtime = filemtime($file);
+            if ($mtime !== false) {
+                $expectedMtimes[] = $mtime;
+            }
+        }
+    }
+    sort($expectedMtimes);
+
+    // Sanity check on the test's own fixture data, not the mutation
+    // target: if this ever goes empty the test below would trivially
+    // pass against md5(''), so assert real entity files really matched.
+    expect($expectedMtimes)->not->toBeEmpty();
+
+    $expectedHash = md5(implode(',', $expectedMtimes));
+
+    $method = new ReflectionMethod(EntityManagerFactory::class, 'entityMtimeHash');
+    $actualHash = $method->invoke(null);
+
+    expect($actualHash)->toBe($expectedHash);
+});

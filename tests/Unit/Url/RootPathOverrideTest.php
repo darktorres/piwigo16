@@ -61,6 +61,22 @@ test('reset clears an active override', function (): void {
     expect($rootPathOverride->current())->toBeNull();
 });
 
+test('a fresh push after reset behaves like the very first push, not a nested one', function (): void {
+    // Kills reset()'s own $this->count = 0 DecrementInteger/IncrementInteger
+    // mutants (-1/1): push()'s `if ($this->count === 0)` guard only sets
+    // $path from a genuinely zeroed count. A stray -1 or 1 left over from a
+    // mutated reset() would make this push() skip setting $path (count
+    // isn't exactly 0), so current() would wrongly stay null instead of
+    // returning the freshly pushed path.
+    $rootPathOverride = new RootPathOverride();
+    $rootPathOverride->push('/gallery/');
+    $rootPathOverride->reset();
+
+    $rootPathOverride->push('/after-reset/');
+
+    expect($rootPathOverride->current())->toBe('/after-reset/');
+});
+
 test('pop() back to an empty stack clears the stored path, not just the ref count', function (): void {
     // current() already hides $path once $count is back to 0, so this
     // reads the instance property directly via reflection -- otherwise the

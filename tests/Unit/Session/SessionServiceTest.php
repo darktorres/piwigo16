@@ -10,6 +10,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Tests\Support\SessionServiceTestFactory;
 
 // Doctrine ORM EntityManagers/repositories are lazy -- they don't actually
@@ -86,6 +87,31 @@ test('generateKey never contains + or /', function (): void {
     for ($i = 0; $i < 20; $i++) {
         $key = $service->generateKey(32);
         expect($key)->not->toContain('+')->not->toContain('/');
+    }
+});
+
+test('generateKey only ever contains alphanumeric characters', function (): void {
+    // Kills line 55's EmptyStringToNotEmpty (str_replace(['+', '/'], '',
+    // ...) -> str_replace(['+', '/'], 'PEST Mutator was here!', ...)):
+    // that mutant never leaves a literal '+' or '/' in the output either
+    // (its replacement text contains neither character), so the sibling
+    // "never contains + or /" test above cannot distinguish it -- but the
+    // replacement text itself ("PEST Mutator was here!") introduces
+    // spaces and an '!', which fall outside this method's documented
+    // charset ("Characters used are a-z A-Z and numerical values").
+    // random_bytes() isn't injectable, so this can't be forced
+    // deterministically, but with 100 iterations at size=64 (pre-substr
+    // string length 4*ceil(74/3) = 100 base64 characters, each with a
+    // ~3.1% independent chance of being '+' or '/'), the chance that
+    // every single iteration happens to produce zero '+'/'/' occurrences
+    // at all (the only way the mutant's replacement is never triggered)
+    // is astronomically small: (1 - (62/64)^100)^100 is indistinguishable
+    // from 1.
+    $service = makeSessionService();
+
+    for ($i = 0; $i < 100; $i++) {
+        $key = $service->generateKey(64);
+        expect(ctype_alnum($key))->toBeTrue();
     }
 });
 
@@ -278,6 +304,30 @@ test('sessionWrite short-circuits to true without touching the repository when t
 
     expect($service->sessionWrite('some-session-id', 'some-data'))->toBeTrue();
 });
+
+test('sessionWrite throws when the container returns an unexpected type for ApiKeyRequestFlag', function (): void {
+    // Kills line 33's InstanceOfToTrue (`!true` instead of
+    // `!$apiKeyRequestFlag instanceof ApiKeyRequestFlag`) in the private
+    // apiKeyRequestFlag() helper: the mutant's guard can never fire
+    // regardless of what the container actually resolved, silently
+    // returning the wrong-typed value instead of throwing. The real
+    // container, correctly wired, never legitimately resolves
+    // ApiKeyRequestFlag::class to anything but an ApiKeyRequestFlag --
+    // this branch is otherwise unreachable through the public API.
+    // KernelContainerOverride rebinds ApiKeyRequestFlag::class to a plain
+    // stdClass (see its own docblock), matching the same pattern used
+    // throughout tests/Unit/Bootstrap/*AccessorTest.php and
+    // tests/Unit/Core/LoggerTest.php's pageState() test for the identical
+    // guard shape.
+    $service = makeSessionService();
+
+    KernelContainerOverride::withWrongTypeFor(
+        ApiKeyRequestFlag::class,
+        function () use ($service): void {
+            $service->sessionWrite('some-session-id', 'some-data');
+        }
+    );
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . ApiKeyRequestFlag::class);
 
 test('SessionServiceTestFactory::get returns a fresh read on every call when Kernel is not booted', function (): void {
     $first = SessionServiceTestFactory::get();

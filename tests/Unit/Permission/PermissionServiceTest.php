@@ -22,6 +22,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
+use ReflectionMethod;
 
 /**
  * PermissionRepository/GroupRepository/CategoryRepository are only ever
@@ -184,8 +185,10 @@ test('getPermissionCriteria computes visibleCategoryIds/visibleImageIds from Fil
 
     expect($catCondition->sql)->toBe('category_id IN (:permVisibleCategoryIds)')
         ->and($catCondition->parameters)->toBe(['permVisibleCategoryIds' => [1, 2]])
+        ->and($catCondition->types)->toBe(['permVisibleCategoryIds' => ArrayParameterType::INTEGER])
         ->and($imgCondition->sql)->toBe('id IN (:permVisibleImageIds)')
-        ->and($imgCondition->parameters)->toBe(['permVisibleImageIds' => [10, 11]]);
+        ->and($imgCondition->parameters)->toBe(['permVisibleImageIds' => [10, 11]])
+        ->and($imgCondition->types)->toBe(['permVisibleImageIds' => ArrayParameterType::INTEGER]);
 });
 
 test('getPermissionCriteria always computes maxLevel alongside visibleImageIds, not one gating the other', function (): void {
@@ -389,6 +392,26 @@ test('getPermissionCriteria suppresses maxLevel/imageAccessIds together when acc
     expect($criteria->maxLevel)->toBeNull()
         ->and($criteria->imageAccessIds)->toBeNull()
         ->and($criteria->imageAccessIsAllowlist)->toBeNull();
+});
+
+test('csvToIntList returns an empty list for an empty string', function (): void {
+    // Kills line 182's EmptyStringToNotEmpty ('' -> 'PEST Mutator was
+    // here!'): every one of csvToIntList()'s 4 real call sites inside
+    // getPermissionCriteria() already guards `$x !== ''` before calling
+    // it, so this internal branch is unreachable through the public API
+    // -- exercised directly via reflection instead, matching this
+    // project's established convention for testing private static
+    // helpers (e.g. Piwigo\Section\SectionPopulatorEmptyValueTest's
+    // emptyValue(), Piwigo\Core\LangTest's getParentLanguage()).
+    $method = new ReflectionMethod(PermissionService::class, 'csvToIntList');
+
+    expect($method->invoke(null, ''))->toBe([]);
+});
+
+test('csvToIntList parses a real comma-separated list into ints', function (): void {
+    $method = new ReflectionMethod(PermissionService::class, 'csvToIntList');
+
+    expect($method->invoke(null, '3,7,12'))->toBe([3, 7, 12]);
 });
 
 test('getPrivacyLevelOptions labels level 0 as Everybody and stacks the rest', function (): void {

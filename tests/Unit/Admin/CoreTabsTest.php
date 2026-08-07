@@ -13,6 +13,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Lang\Translator;
+use Piwigo\Url\RootPathOverride;
 
 /**
  * Piwigo\Admin\CoreTabs::addCoreTabs() -- the pure 'tabsheet_before_select'
@@ -406,6 +407,33 @@ test('rating needs no context and adds rating/rating_user', function (): void {
     expect($sheets['rating_user']['url'])->toBe('admin.php?page=rating_user');
     expect($sheets['rating']['caption'])->toBe(coreTabsLang()->t('Photos'));
     expect($sheets['rating_user']['caption'])->toBe(coreTabsLang()->t('Users'));
+});
+
+test('rating prefixes each url with the resolved root url from UrlService', function (): void {
+    // The sibling 'rating needs no context...' test above builds its
+    // UrlService via coreTabsUrlService() -> UrlServiceTestFactory::build()
+    // with no active RootPathOverride, whose getRootUrl() resolves to ''
+    // (RequestMountDepth defaults to 0, so str_repeat('../', 0) === '') --
+    // that test's expected 'admin.php?page=rating' is identical whether or
+    // not the '. $this->urlService->getRootUrl()' concatenation runs at
+    // all, so it can't distinguish a mutant that drops/reorders it. A
+    // pushed RootPathOverride gives getRootUrl() a real, distinctive,
+    // non-empty value the concatenation's presence/position/direction can
+    // actually be observed through.
+    $rootPathOverride = new RootPathOverride();
+    $rootPathOverride->push('/piwigo-root/');
+
+    try {
+        $urlService = UrlServiceTestFactory::build(rootPathOverride: $rootPathOverride);
+        $coreTabs = new CoreTabs(coreTabsLang(), $urlService, coreTabsCurrentConfig());
+
+        $sheets = coreTabsTestAddCoreTabs($coreTabs, [], 'rating');
+
+        expect($sheets['rating']['url'])->toBe('/piwigo-root/admin.php?page=rating');
+        expect($sheets['rating_user']['url'])->toBe('/piwigo-root/admin.php?page=rating_user');
+    } finally {
+        $rootPathOverride->reset();
+    }
 });
 
 test('themes always adds installed/standard_pages, plus update/new only when extension installs are enabled', function (): void {

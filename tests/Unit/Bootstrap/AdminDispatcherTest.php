@@ -36,6 +36,19 @@ test('dispatch throws for a page slug not registered in config/admin_pages.php',
         ->toThrow(LogicException::class, "Admin page 'not-a-real-registered-slug' is not registered in config/admin_pages.php.");
 });
 
+test('dispatch throws when the container returns an unexpected type for Paths', function (): void {
+    // paths()'s own `! $paths instanceof Paths` guard -- map() (called
+    // before dispatch() ever reaches the isset()/instanceof checks above)
+    // is the only real caller, so this is reachable from the same public
+    // entry point.
+    KernelContainerOverride::withWrongTypeFor(
+        Paths::class,
+        static function (): void {
+            AdminDispatcher::dispatch('photos_add', new ServerRequest('GET', '/admin.php'));
+        }
+    );
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . Paths::class);
+
 test('dispatch throws when a mapped page resolves to a class that does not implement AdminSubControllerInterface', function (): void {
     // 'photos_add' is a real, registered slug in config/admin_pages.php,
     // mapped to PhotosAddSubController -- KernelContainerOverride rebinds

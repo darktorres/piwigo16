@@ -191,6 +191,38 @@ final class ConfigServiceTest extends IntegrationTestCase
         self::assertSame(3600, $currentConfig->sessionLength());
     }
 
+    /**
+     * Distinct from the reset-to-default test above: that one reads
+     * currentConfig directly and never touches allRowsFromCacheOrDb()'s
+     * own bulk-load cache (loadConfFromDb('session_length') is a
+     * single-param, uncached lookup). This one primes that cache via a
+     * null-param bulk loadConfFromDb() first, so it can only pass if
+     * confDeleteParam() itself also clears CachePools::config() -- same
+     * mechanism as test_loadConfFromDb_caches_the_bulk_load_until_a_write_invalidates_it(),
+     * but for the delete path instead of a write.
+     */
+    public function test_confDeleteParam_invalidates_the_bulk_load_cache(): void
+    {
+        $currentConfig = CurrentConfigTestFactory::get();
+
+        $this->service->confUpdateParam('session_length', 9999);
+        $this->service->loadConfFromDb();
+        self::assertSame(9999, $currentConfig->sessionLength());
+
+        $this->service->confDeleteParam('session_length');
+
+        // Rebuild currentConfig to its compiled-in defaults, then reload
+        // the bulk cache: if confDeleteParam() failed to clear it, the
+        // stale cached map still carries session_length => "9999" and
+        // this reload would put it right back instead of leaving the
+        // property at its declared default.
+        $currentConfig->reset();
+        ConfigLoader::applyDefaults();
+        $this->service->loadConfFromDb();
+
+        self::assertSame(3600, $currentConfig->sessionLength());
+    }
+
     public function test_confUpdateParam_encodes_arrays_via_json(): void
     {
         $param = 'p14_service_array_' . bin2hex(random_bytes(4));

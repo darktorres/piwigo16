@@ -25,10 +25,15 @@ use Piwigo\Auth\PwgBase32;
  * - `strlen($binaryString) % 40) !== 0` (line 88): $x is always a
  *   multiple of 8 (0/8/16/24/32) by construction, so `!== -1`/`!== 1`
  *   behave identically to `!== 0` for every reachable value.
- * - decode()'s final `max(0, min(255, ...))` clamp (line 142): the value
- *   being clamped comes from `base_convert()` of an exactly-8-character
- *   binary string, which can only ever represent 0-255 -- the clamp
- *   bounds are unreachable in either direction.
+ * - decode()'s final `max(0, min(255, ...))` clamp (line 142): relaxing
+ *   either bound outward (`max(-1, ...)` or `min(256, ...)`) is inert --
+ *   the value comes from `base_convert()` of an exactly-8-character
+ *   binary string, which can only ever represent 0-255, so a wider
+ *   bound is never actually reached. Tightening either bound inward
+ *   (`min(254, ...)` or `max(1, ...)`) is NOT inert: codepoints 0 and
+ *   255 are both reachable (an all-zero-bits or all-one-bits base32
+ *   character produces them) and get silently corrupted -- see the
+ *   boundary round-trip test below.
  */
 test('encode returns an empty string for empty input', function (): void {
     expect(PwgBase32::encode(''))->toBe('');
@@ -140,6 +145,17 @@ test('encode/decode round-trips for every input length from 1 to 8 bytes', funct
     foreach (['a', 'ab', 'abc', 'abcd', 'abcde', 'abcdef', 'abcdefg', 'abcdefgh'] as $plaintext) {
         expect(PwgBase32::decode(PwgBase32::encode($plaintext)))->toBe($plaintext);
     }
+});
+
+test('encode/decode round-trips the byte value boundaries 0x00 and 0xFF', function (): void {
+    // decode()'s per-byte clamp `max(0, min(255, ...))` has reachable
+    // bounds at both ends: base32 char 'A' contributes an all-zero
+    // 5-bit chunk (can yield codepoint 0), and base32 char '7'
+    // contributes an all-one 5-bit chunk (can yield codepoint 255).
+    // Tightening either clamp bound (0->1 or 255->254) would silently
+    // corrupt exactly these two byte values.
+    expect(PwgBase32::decode(PwgBase32::encode("\x00")))->toBe("\x00")
+        ->and(PwgBase32::decode(PwgBase32::encode("\xFF")))->toBe("\xFF");
 });
 
 test('encode/decode round-trips without padding too', function (): void {

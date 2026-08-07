@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\Projection\AuthUser;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Users\UserStatus;
 
 /**
@@ -68,6 +69,23 @@ test('fromRow casts a non-string scalar id (e.g. a real DBAL int) to string', fu
     $user = AuthUser::fromRow($row);
 
     expect($user->id)->toBe('1');
+});
+
+test('fromRow unwraps a UserId value object id to its string value', function (): void {
+    // AuthRepository::findByUsernameOrEmail() hydrates `id` as a real
+    // UserId VO under DQL array hydration (not a raw scalar) -- the
+    // `instanceof UserId` branch of the match() must be taken explicitly,
+    // not fall through to the generic is_scalar() check (a UserId object
+    // is not scalar, so it would otherwise silently default to '').
+    // UserId::$value is `int`, so the `(string)` cast is also load-bearing:
+    // AuthUser::$id is `string` under strict_types=1, and passing a bare
+    // int through would TypeError instead of coercing.
+    $row = fullAuthUserRow();
+    $row['id'] = UserId::from(42);
+
+    $user = AuthUser::fromRow($row);
+
+    expect($user->id)->toBe('42');
 });
 
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {

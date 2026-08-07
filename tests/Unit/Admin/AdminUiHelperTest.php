@@ -141,6 +141,36 @@ test('numberFormatHumanReadable formats small numbers with no suffix and no deci
     expect(AdminUiHelper::numberFormatHumanReadable(999))->toBe('999');
 });
 
+test('numberFormatHumanReadable leaves a genuinely non-zero int/float value untouched by the zero-normalization ternary', function (): void {
+    // Kills 4 separate mutations on the zero-normalization ternary
+    // (`$numbers === 0 || $numbers === 0.0 ? 0 : $numbers`), each
+    // changing ONE of its two literals to a neighboring value -- each
+    // needs an input of the matching type (int vs float) and sign to
+    // distinguish it, since strict === never matches across int/float:
+    // - DecrementInteger (0 -> -1 on the int check): int -1 wrongly
+    //   matches the mutant's first disjunct and gets zeroed out, real
+    //   code leaves it as -1 (number_format(-1, 0) is '-1', not '0').
+    // - IncrementInteger (0 -> 1 on the int check): int 1 wrongly
+    //   matches and gets zeroed the same way.
+    // - DecrementFloat (0.0 -> -1.0 on the float check): float -1.0
+    //   wrongly matches the mutant's second disjunct.
+    // - IncrementFloat (0.0 -> 1.0 on the float check): float 1.0
+    //   wrongly matches the same way.
+    // (The 5th mutation on this line, BooleanOrToBooleanAnd, is
+    // confirmed-equivalent, NOT covered here: `$numbers === 0 &&
+    // $numbers === 0.0` can never be true for any value -- a single
+    // scalar can't strictly equal both an int and a float literal at
+    // once -- so the mutant's ternary always keeps $numbers unchanged;
+    // the only value where real code would have actually behaved
+    // differently (float 0.0, coerced by real code to int 0) still
+    // renders identically via number_format(), which coerces both to
+    // the same internal float representation regardless.)
+    expect(AdminUiHelper::numberFormatHumanReadable(-1))->toBe('-1');
+    expect(AdminUiHelper::numberFormatHumanReadable(1))->toBe('1');
+    expect(AdminUiHelper::numberFormatHumanReadable(-1.0))->toBe('-1');
+    expect(AdminUiHelper::numberFormatHumanReadable(1.0))->toBe('1');
+});
+
 test('numberFormatHumanReadable formats thousands with a "k" suffix and 1 decimal', function (): void {
     expect(AdminUiHelper::numberFormatHumanReadable(1000))->toBe('1.0k');
     expect(AdminUiHelper::numberFormatHumanReadable(1500))->toBe('1.5k');

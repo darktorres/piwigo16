@@ -32,6 +32,7 @@ afterEach(function (): void {
         foreach ([
             CachePools::config(),
             CachePools::permissions(),
+            CachePools::effectivePermissions(),
             CachePools::categoryTree(),
             CachePools::tagCloud(),
             CachePools::general(),
@@ -65,13 +66,14 @@ test('a value saved in one pool is retrievable from a fresh call to the same met
     expect(CachePools::categoryTree()->getItem('tree_key')->get())->toBe(['album_1' => 42]);
 });
 
-test('permissions/categoryTree/tagCloud pools carry their own documented TTL, not a neighboring value', function (): void {
+test('permissions/effectivePermissions/categoryTree/tagCloud pools carry their own documented TTL, not a neighboring value', function (): void {
     // Namespace isolation (proven above) already kills a mutated
     // namespace literal, but nothing asserted the actual configured
     // defaultLifetime -- a mutated 30<->29/31 or 300<->299/301 on these
     // lines would still build a distinctly-namespaced, fully functional
     // pool, indistinguishable from the namespace tests' own assertions.
     expect(cachePoolsTestDefaultLifetime(CachePools::permissions()))->toBe(30)
+        ->and(cachePoolsTestDefaultLifetime(CachePools::effectivePermissions()))->toBe(30)
         ->and(cachePoolsTestDefaultLifetime(CachePools::categoryTree()))->toBe(300)
         ->and(cachePoolsTestDefaultLifetime(CachePools::tagCloud()))->toBe(300);
 });

@@ -8,8 +8,10 @@ use Piwigo\Users\UserStatus;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Bootstrap\CliBootstrap;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Users\CurrentUser;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 
@@ -106,6 +108,20 @@ test('buildApplication throws when the container returns an unexpected type for 
         static fn () => CliBootstrap::buildApplication()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . ConfigService::class);
+
+test('buildApplication throws when the container returns an unexpected type for CurrentUser', function (): void {
+    KernelContainerOverride::withWrongTypeFor(
+        CurrentUser::class,
+        static fn () => CliBootstrap::buildApplication()
+    );
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentUser::class);
+
+test('buildApplication throws when the container returns an unexpected type for CurrentConfigService', function (): void {
+    KernelContainerOverride::withWrongTypeFor(
+        CurrentConfigService::class,
+        static fn () => CliBootstrap::buildApplication()
+    );
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentConfigService::class);
 
 test('buildApplication throws when the commands file does not return an array', function (): void {
     $commandsFile = sys_get_temp_dir() . '/piwigo-commands-not-array-' . bin2hex(random_bytes(8)) . '.php';

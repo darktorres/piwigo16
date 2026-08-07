@@ -181,16 +181,18 @@ final readonly class CommentService
      * Tries to insert a user comment and returns the action to perform.
      *
      * @param array{author: string, content: string, image_id: int, website_url?: string, email?: string} $comm in: caller-supplied fields
-     * @param-out array{author: string, content: string, image_id: int, website_url?: string, email?: string, ip?: string, agent?: string, author_id?: int, id?: int} $comm out: augmented with ip/agent/author_id and (on success) id
+     * @param-out array{author: string, content: string, image_id: int, website_url?: string, email?: string, ip: string, agent: string, author_id?: int, id?: int} $comm out: augmented with ip/agent (always) and author_id/(on success) id
      * @param list<string> $infos out: user-facing validation messages
      * @return string validate, moderate, reject
      */
     public function insertComment(array &$comm, string $key, array &$infos): string
     {
 
-        $comm['ip'] = IpAddress::fromRemoteAddr()->value ?? '';
         $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
-        $comm['agent'] = is_string($http_user_agent) ? $http_user_agent : '';
+        $comm = [
+            'ip' => IpAddress::fromRemoteAddr()->value ?? '',
+            'agent' => is_string($http_user_agent) ? $http_user_agent : '',
+        ] + $comm;
 
         $infos = [];
         $commentAction = (! $this->currentConfig->commentsValidation() || $this->accessLevelChecker->isAdmin()) ? 'validate' : 'moderate';

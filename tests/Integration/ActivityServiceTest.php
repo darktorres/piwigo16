@@ -140,6 +140,21 @@ final class ActivityServiceTest extends IntegrationTestCase
         self::assertSame('admin/user_activity', $details['script']);
     }
 
+    public function test_record_uses_bare_admin_script_when_no_page_param_is_present(): void
+    {
+        // Distinguishes the `&&` from a `||` mutant on this condition:
+        // script==='admin' is true but pageParam is null, so the concat
+        // branch must NOT be taken -- a `||` mutant would wrongly
+        // concatenate an empty page param onto the script.
+        $_SERVER['SCRIPT_NAME'] = '/admin.php';
+
+        $this->service->record('test-admin-no-page', 1, 'add');
+
+        $details = $this->fetchDetails('test-admin-no-page', 1, 'add');
+        self::assertIsArray($details);
+        self::assertSame('admin', $details['script']);
+    }
+
     public function test_record_unsets_method_and_script_on_autoupdate(): void
     {
         $_REQUEST['method'] = 'pwg.plugins.performAction';
@@ -193,6 +208,115 @@ final class ActivityServiceTest extends IntegrationTestCase
         self::assertNull($userAgent);
     }
 
+    public function test_record_does_not_capture_user_agent_when_object_is_user_but_action_is_not_login(): void
+    {
+        // Distinguishes the object/action `&&` from a `||` mutant:
+        // object==='user' alone (action isn't 'login') must not be enough
+        // to capture the user agent.
+        $_SERVER['HTTP_USER_AGENT'] = 'TestAgent/1.0';
+
+        try {
+            $this->service->record('user', 778, 'add');
+
+            $userAgent = $this->conn->createQueryBuilder()
+                ->select('user_agent')
+                ->from(Tables::activity())
+                ->where('object_id = 778')
+                ->executeQuery()
+                ->fetchOne();
+
+            self::assertNull($userAgent);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 778');
+        }
+    }
+
+    public function test_record_marks_api_key_authentication_when_session_indicates_it(): void
+    {
+        $_SESSION['connected_with'] = 'api_key';
+        $_SERVER['HTTP_USER_AGENT'] = 'TestAgent/1.0';
+
+        try {
+            $this->service->record('test-api-key', 1, 'add');
+
+            $details = $this->fetchDetails('test-api-key', 1, 'add');
+            self::assertIsArray($details);
+            self::assertSame('api_key', $details['connected_with']);
+        } finally {
+            unset($_SESSION['connected_with']);
+        }
+    }
+
+    public function test_record_does_not_mark_api_key_authentication_without_a_user_agent(): void
+    {
+        // Distinguishes the `&&` from a `||` mutant on this condition:
+        // connected_with==='api_key' is true but there's no user agent, so
+        // the block must not run at all.
+        $_SESSION['connected_with'] = 'api_key';
+        unset($_SERVER['HTTP_USER_AGENT']);
+
+        try {
+            $this->service->record('test-api-key-no-ua', 1, 'add');
+
+            $details = $this->fetchDetails('test-api-key-no-ua', 1, 'add');
+            self::assertIsArray($details);
+            self::assertArrayNotHasKey('connected_with', $details);
+        } finally {
+            unset($_SESSION['connected_with']);
+        }
+    }
+
+    public function test_record_marks_sync_for_a_photo_delete_via_site_update(): void
+    {
+        $_GET['page'] = 'site_update';
+
+        try {
+            $this->service->record('photo', 888885, 'delete');
+
+            $details = $this->fetchDetails('photo', 888885, 'delete');
+            self::assertIsArray($details);
+            self::assertTrue($details['sync']);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 888885');
+        }
+    }
+
+    public function test_record_marks_sync_for_an_album_delete_via_site_update(): void
+    {
+        // Distinguishes in_array()'s ['album', 'photo'] haystack from a
+        // mutant that drops 'album' -- object='photo' alone (see the test
+        // above) can't catch that specific truncation.
+        $_GET['page'] = 'site_update';
+
+        try {
+            $this->service->record('album', 888884, 'delete');
+
+            $details = $this->fetchDetails('album', 888884, 'delete');
+            self::assertIsArray($details);
+            self::assertTrue($details['sync']);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 888884');
+        }
+    }
+
+    public function test_record_does_not_mark_sync_for_a_photo_add_even_with_site_update_page(): void
+    {
+        // Distinguishes the leading `&&` from a `||` mutant: object is a
+        // sync-eligible type and pageParam is 'site_update', but action
+        // isn't 'delete', so sync must not be set.
+        $_GET['page'] = 'site_update';
+
+        try {
+            $this->service->record('photo', 888883, 'add');
+
+            $details = $this->fetchDetails('photo', 888883, 'add');
+            self::assertIsArray($details);
+            self::assertArrayNotHasKey('sync', $details);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 888883');
+        }
+    }
+
     public function test_record_detects_a_tag_merge(): void
     {
         // merge detection is hardcoded to the literal object 'tag', so
@@ -213,11 +337,66 @@ final class ActivityServiceTest extends IntegrationTestCase
         }
     }
 
+    public function test_record_does_not_detect_a_tag_merge_for_a_non_delete_action(): void
+    {
+        // Distinguishes the trailing `&&` from a `||` mutant: object is
+        // 'tag' and destination_tag is present, but action isn't 'delete',
+        // so merge detection must not fire.
+        $_POST['destination_tag'] = '5';
+
+        try {
+            $this->service->record('tag', 780, 'add');
+
+            $details = $this->fetchDetails('tag', 780, 'add');
+            self::assertIsArray($details);
+            self::assertArrayNotHasKey('action', $details);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 780');
+        }
+    }
+
     public function test_record_fans_out_over_multiple_object_ids(): void
     {
         $this->service->record('test-multi', [10, 20, 30], 'add');
 
         self::assertSame(3, $this->countRows('test-multi', null, 'add'));
+    }
+
+    public function test_record_uses_the_real_session_id_as_the_session_index_when_a_session_id_is_set(): void
+    {
+        // session_id() as a pure getter never returns bool in real PHP
+        // usage (see tests/Unit/Csrf/CsrfServiceTest.php's own identical
+        // precedent for session_id()) -- only its '' vs a real id string
+        // distinction is observable, exercised here and by the sibling
+        // "no session id" test below.
+        session_id('activityservicetest-fixed-session-id');
+
+        $this->service->record('test-session-idx', 1, 'add');
+
+        $sessionIdx = $this->conn->createQueryBuilder()
+            ->select('session_idx')
+            ->from(Tables::activity())
+            ->where("object = 'test-session-idx'")
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame('activityservicetest-fixed-session-id', $sessionIdx);
+    }
+
+    public function test_record_uses_none_for_the_session_index_when_no_session_id_is_set(): void
+    {
+        session_id('');
+
+        $this->service->record('test-no-session-idx', 1, 'add');
+
+        $sessionIdx = $this->conn->createQueryBuilder()
+            ->select('session_idx')
+            ->from(Tables::activity())
+            ->where("object = 'test-no-session-idx'")
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame('none', $sessionIdx);
     }
 
     public function test_record_uses_the_object_id_as_performed_by_on_logout(): void
@@ -286,6 +465,22 @@ final class ActivityServiceTest extends IntegrationTestCase
         }
     }
 
+    public function test_record_does_not_detect_auth_function_for_a_non_login_action(): void
+    {
+        // Distinguishes the `&&` from a `||` mutant: object is 'user' and
+        // the call stack literally contains auto_login(), but the action
+        // isn't 'login', so auth_function detection must not run at all.
+        try {
+            $this->auto_login('add', 779);
+
+            $details = $this->fetchDetails('user', 779, 'add');
+            self::assertIsArray($details);
+            self::assertArrayNotHasKey('auth_function', $details);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 779');
+        }
+    }
+
     public function test_record_marks_a_photo_add_as_browser_added_when_the_referer_is_the_admin_photos_add_page(): void
     {
         // added_with detection is hardcoded to the literal object 'photo'
@@ -303,6 +498,24 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::assertSame('browser', $details['added_with']);
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 888887');
+        }
+    }
+
+    public function test_record_does_not_mark_added_with_for_a_photo_delete(): void
+    {
+        // Distinguishes both `&&`s from `||` mutants: object is 'photo'
+        // and sync isn't set, but action isn't 'add', so added_with
+        // detection must not run at all.
+        unset($_SERVER['HTTP_REFERER']);
+
+        try {
+            $this->service->record('photo', 888886, 'delete');
+
+            $details = $this->fetchDetails('photo', 888886, 'delete');
+            self::assertIsArray($details);
+            self::assertArrayNotHasKey('added_with', $details);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 888886');
         }
     }
 
@@ -416,10 +629,14 @@ final class ActivityServiceTest extends IntegrationTestCase
     // Named literally auto_login()/auth_key_login() on purpose -- see the
     // two test methods above; ActivityService::record() matches on the
     // bare function/method name from debug_backtrace(), not this class's
-    // own naming convention.
-    private function auto_login(): void
+    // own naming convention. $action/$objectId are overridable so
+    // test_record_does_not_detect_auth_function_for_a_non_login_action()
+    // can reuse this same literally-named call site with a non-'login'
+    // action, rather than needing its own identically-named sibling method
+    // (PHP allows only one method per name).
+    private function auto_login(string $action = 'login', int $objectId = 555): void
     {
-        $this->service->record('user', 555, 'login');
+        $this->service->record('user', $objectId, $action);
     }
 
     private function auth_key_login(): void

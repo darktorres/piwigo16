@@ -350,6 +350,114 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(0, $this->fetchValidated($this->insertedId($comm)));
         }
 
+        /**
+         * $comm['ip'] is a by-ref out-param (insertComment() writes it
+         * back into the caller's array) -- asserted directly here since
+         * no existing helper fetches the `anonymous_id` column. A real,
+         * valid REMOTE_ADDR
+         * (rather than baseComm()'s ambient empty/unset one) is what
+         * actually exercises IpAddress::fromRemoteAddr()'s non-null path,
+         * distinct from the `?? ''` fallback covered separately below.
+         */
+        public function test_insert_comment_records_the_remote_address_as_ip(): void
+        {
+            $originalRemoteAddr = $_SERVER['REMOTE_ADDR'] ?? null;
+            $_SERVER['REMOTE_ADDR'] = '203.0.113.42';
+
+            try {
+                $comm = $this->baseComm();
+                $infos = [];
+
+                $this->service->insertComment($comm, $this->validKey(), $infos);
+
+                self::assertSame('203.0.113.42', $comm['ip']);
+            } finally {
+                if ($originalRemoteAddr === null) {
+                    unset($_SERVER['REMOTE_ADDR']);
+                } else {
+                    $_SERVER['REMOTE_ADDR'] = $originalRemoteAddr;
+                }
+            }
+        }
+
+        /**
+         * The `?? ''` fallback only matters when IpAddress::
+         * fromRemoteAddr() itself returns null (no REMOTE_ADDR) --
+         * distinct from the "records a real address" case above, which
+         * never reaches the fallback at all.
+         */
+        public function test_insert_comment_defaults_ip_to_empty_string_without_a_remote_address(): void
+        {
+            $originalRemoteAddr = $_SERVER['REMOTE_ADDR'] ?? null;
+            unset($_SERVER['REMOTE_ADDR']);
+
+            try {
+                $comm = $this->baseComm();
+                $infos = [];
+
+                $this->service->insertComment($comm, $this->validKey(), $infos);
+
+                self::assertSame('', $comm['ip']);
+            } finally {
+                if ($originalRemoteAddr !== null) {
+                    $_SERVER['REMOTE_ADDR'] = $originalRemoteAddr;
+                }
+            }
+        }
+
+        /**
+         * $comm['agent'] is a by-ref out-param -- HTTP_USER_AGENT only
+         * reaches it via the `?? null` coalesce and the is_string()
+         * ternary just below it, both otherwise unexercised since no
+         * other test in this file ever sets
+         * $_SERVER['HTTP_USER_AGENT'].
+         */
+        public function test_insert_comment_records_the_user_agent_when_present(): void
+        {
+            $originalUserAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+            $_SERVER['HTTP_USER_AGENT'] = 'PiwigoTestClient/1.0';
+
+            try {
+                $comm = $this->baseComm();
+                $infos = [];
+
+                $this->service->insertComment($comm, $this->validKey(), $infos);
+
+                self::assertSame('PiwigoTestClient/1.0', $comm['agent']);
+            } finally {
+                if ($originalUserAgent === null) {
+                    unset($_SERVER['HTTP_USER_AGENT']);
+                } else {
+                    $_SERVER['HTTP_USER_AGENT'] = $originalUserAgent;
+                }
+            }
+        }
+
+        /**
+         * Without HTTP_USER_AGENT at all (the ambient state every other
+         * test in this file already relies on), $http_user_agent is
+         * null -- is_string(null) is false, so $comm['agent'] falls to
+         * the ternary's own '' branch, not $http_user_agent itself.
+         */
+        public function test_insert_comment_defaults_agent_to_empty_string_without_a_user_agent(): void
+        {
+            $originalUserAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+            unset($_SERVER['HTTP_USER_AGENT']);
+
+            try {
+                $comm = $this->baseComm();
+                $infos = [];
+
+                $this->service->insertComment($comm, $this->validKey(), $infos);
+
+                self::assertSame('', $comm['agent']);
+            } finally {
+                if ($originalUserAgent !== null) {
+                    $_SERVER['HTTP_USER_AGENT'] = $originalUserAgent;
+                }
+            }
+        }
+
         public function test_insert_comment_rejects_empty_content(): void
         {
             $comm = $this->baseComm();
@@ -441,6 +549,123 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
+         * antiFloodTime=1 (rather than the 3600 used above) is what
+         * actually exercises the `> 0` boundary itself: any
+         * antiFloodTime > 0 still enters the anti-flood block either
+         * way, but the frozen PIWIGO_TEST_NOW clock (see .env.test)
+         * makes every freshly-inserted comment's own `date` exactly
+         * equal to "now", so a window of at least 1 second is what's
+         * needed for `c.date > DATE_SUB(now, window, 'second')` to
+         * genuinely evaluate true and trigger the rejection.
+         */
+        public function test_insert_comment_anti_flood_triggers_with_a_one_second_window(): void
+        {
+            CurrentConfigTestFactory::get()->setCommentsValidation(false);
+            CurrentConfigTestFactory::get()->setAntiFloodTime(1);
+            CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 3, 'status' => 'normal', 'username' => 'regular_user']));
+
+            $first = $this->baseComm();
+            $infos = [];
+            $this->service->insertComment($first, $this->validKey(), $infos);
+
+            $second = $this->baseComm();
+            $infos = [];
+            $action = $this->service->insertComment($second, $this->validKey(), $infos);
+
+            self::assertSame('reject', $action);
+            self::assertContains('flood_time', $this->postCr());
+        }
+
+        /**
+         * The anti-flood block's own `$commentAction !== 'reject'`
+         * guard means a comment already rejected for another reason
+         * (an invalid key here) must never also pick up a spurious
+         * 'flood_time' rejection reason, even when an
+         * antiFloodTime-eligible recent comment from the same author
+         * genuinely exists.
+         */
+        public function test_insert_comment_skips_the_anti_flood_check_when_already_rejected_for_another_reason(): void
+        {
+            CurrentConfigTestFactory::get()->setCommentsValidation(false);
+            CurrentConfigTestFactory::get()->setAntiFloodTime(3600);
+            // Deliberately id 2, not the more obviously-named 3 ("regular_
+            // user") the sibling anti-flood tests above use: countRecentComments()
+            // (CommentRepository) only filters by author_id (and, for
+            // guests, an IP prefix) -- it does NOT scope by image_id at
+            // all -- so ANY existing comment for an author counts as
+            // "recent" against a 3600s window, including the real fixture
+            // comment already seeded for author_id 3 (id 2). Confirmed
+            // live: an author_id-only DELETE to clear that row broke an
+            // unrelated later test that depends on it
+            // (test_update_comment_moderates_when_validation_required),
+            // and narrowing the DELETE to this test's own image_id didn't
+            // help since the fixture row's image_id differs but still
+            // counts. Id 2 is a real, FK-valid piwigo_users row (needed --
+            // insertComment()'s own INSERT fails fk_comments_author_id
+            // otherwise) that starts with zero comments in the fixture and
+            // is never reused as a comment author anywhere else in this
+            // file -- confirmed via `id' => 2` appearing nowhere else as a
+            // CurrentUser override. (It happens to be this file's own
+            // configured guestId(), but insertComment() only ever *writes*
+            // guestId() into $comm['author_id'] for a real guest poster,
+            // never *compares* against it, so status: 'normal' here takes
+            // the classic-user branch cleanly regardless.)
+            CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 2, 'status' => 'normal', 'username' => 'flood-skip-test-user']));
+
+            $first = $this->baseComm();
+            $infos = [];
+            $this->service->insertComment($first, $this->validKey(), $infos);
+
+            $second = $this->baseComm();
+            $infos = [];
+            $action = $this->service->insertComment($second, 'not-a-real-key', $infos);
+
+            self::assertSame('reject', $action);
+            self::assertContains('key', $this->postCr());
+            self::assertNotContains('flood_time', $this->postCr());
+        }
+
+        /**
+         * Anti-flood's own IP-prefix trimming (dropping the last octet
+         * before building the LIKE '<prefix>.%' pattern) only matters
+         * for a non-classic (guest) poster -- countRecentComments()'s
+         * $authorId alone can't distinguish two different anonymous
+         * posters sharing the same configured guestId, so the flood
+         * check narrows by anonymous_id too. Needs a real, 4-octet
+         * REMOTE_ADDR (rather than baseComm()'s ambient empty/unset
+         * one) to actually exercise explode('.', ...)'s count() > 3
+         * branch and its last-octet pop.
+         */
+        public function test_insert_comment_anti_flood_matches_a_guest_by_trimmed_ip_prefix(): void
+        {
+            CurrentConfigTestFactory::get()->setCommentsValidation(false);
+            CurrentConfigTestFactory::get()->setAntiFloodTime(3600);
+            CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 6, 'status' => 'guest', 'username' => 'flood_guest']));
+
+            $originalRemoteAddr = $_SERVER['REMOTE_ADDR'] ?? null;
+            $_SERVER['REMOTE_ADDR'] = '198.51.100.7';
+
+            try {
+                $first = $this->baseComm();
+                $infos = [];
+                $this->service->insertComment($first, $this->validKey(), $infos);
+
+                $second = $this->baseComm();
+                $infos = [];
+                $action = $this->service->insertComment($second, $this->validKey(), $infos);
+
+                self::assertSame('reject', $action);
+                self::assertContains('flood_time', $this->postCr());
+            } finally {
+                if ($originalRemoteAddr === null) {
+                    unset($_SERVER['REMOTE_ADDR']);
+                } else {
+                    $_SERVER['REMOTE_ADDR'] = $originalRemoteAddr;
+                }
+            }
+        }
+
+        /**
          * Non-classic (guest) poster, empty author, comment_author_mandatory
          * on: rejected with the exact "Username is mandatory" message, and
          * (by-ref) $comm['author'] is still defaulted to 'guest' even
@@ -520,6 +745,29 @@ namespace Piwigo\Tests\Integration {
 
             self::assertSame('reject', $action);
             self::assertContains('Your website URL is invalid', $infos);
+        }
+
+        /**
+         * `?? null` only matters for an omitted key (`website_url?:
+         * string` in this method's own @param) -- baseComm() always
+         * sets it to '', which already exercises
+         * self::emptyValue('') but never the null branch this coalesce
+         * actually guards. Without a real key, emptyValue() must still
+         * treat this as empty (matching empty()'s own null semantics)
+         * and skip the honeypot/URL-validation block entirely.
+         */
+        public function test_insert_comment_treats_a_missing_website_url_key_as_empty(): void
+        {
+            CurrentConfigTestFactory::get()->setCommentsValidation(false);
+
+            $comm = $this->baseComm();
+            unset($comm['website_url']);
+            $infos = [];
+
+            $action = $this->service->insertComment($comm, $this->validKey(), $infos);
+
+            self::assertSame('validate', $action);
+            self::assertSame([], $infos);
         }
 
         /**

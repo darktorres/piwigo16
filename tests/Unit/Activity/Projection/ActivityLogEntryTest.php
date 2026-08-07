@@ -54,8 +54,16 @@ test('UserActivityLogEntry::fromRow falls back to safe defaults for a fully empt
     expect($entry->activityId)->toBe(0);
     expect($entry->performedBy)->toBeNull();
     expect($entry->object)->toBe('');
+    // Kills line 50's DecrementInteger/IncrementInteger (0 -> -1/1): the
+    // objectId fallback for a missing/non-numeric object_id must be
+    // exactly 0, not any other sentinel.
+    expect($entry->objectId)->toBe(0);
     expect($entry->action)->toBe('');
     expect($entry->ipAddress)->toBeNull();
+    // Kills line 53's EmptyStringToNotEmpty ('' -> 'PEST Mutator was
+    // here!'): the occuredOn fallback for a missing/non-string
+    // occured_on must be exactly '', not some placeholder text.
+    expect($entry->occuredOn)->toBe('');
     expect($entry->details)->toBeNull();
     expect($entry->username)->toBe('');
 });
@@ -86,6 +94,36 @@ test('UserActivityLogEntry::toArray unwraps the IpAddress value object back to a
     ]);
 });
 
+test('UserActivityLogEntry::toArray null-safes a null ipAddress instead of fataling', function (): void {
+    // Kills line 72's RemoveNullSafeOperator (`$this->ipAddress?->value`
+    // -> `$this->ipAddress->value`): with no/invalid ip_address in the
+    // source row, fromRow() leaves $ipAddress null, so a plain `->value`
+    // property access on null would throw a fatal "Attempt to read
+    // property 'value' on null" instead of toArray() succeeding with a
+    // null 'ip_address' entry.
+    $entry = UserActivityLogEntry::fromRow([
+        'activity_id' => 10,
+        'object' => 'user',
+        'object_id' => 5,
+        'action' => 'login',
+        'occured_on' => '2024-01-01 12:00:00',
+        'username' => 'fixture_admin',
+    ]);
+
+    expect($entry->ipAddress)->toBeNull()
+        ->and($entry->toArray())->toBe([
+            'activity_id' => 10,
+            'performed_by' => null,
+            'object' => 'user',
+            'object_id' => 5,
+            'action' => 'login',
+            'ip_address' => null,
+            'occured_on' => '2024-01-01 12:00:00',
+            'details' => null,
+            'username' => 'fixture_admin',
+        ]);
+});
+
 test('SystemActivityLogEntry::fromRow narrows a real row, keeping the already-decoded details array', function (): void {
     $entry = SystemActivityLogEntry::fromRow([
         'activity_id' => '20',
@@ -111,8 +149,42 @@ test('SystemActivityLogEntry::fromRow falls back to safe defaults for a fully em
 
     expect($entry->activityId)->toBe(0);
     expect($entry->performedBy)->toBeNull();
+    expect($entry->objectId)->toBe(0);
+    expect($entry->action)->toBe('');
+    expect($entry->occuredOn)->toBe('');
     expect($entry->details)->toBeNull();
     expect($entry->username)->toBeNull();
+});
+
+test('SystemActivityLogEntry::fromRow narrows a real performed_by UserId instance', function (): void {
+    // Real gap, found via mutation testing: every other SystemActivityLogEntry
+    // fixture in this file passes performed_by: null, so nothing exercised
+    // the `instanceof UserId` branch that unwraps a real UserId into its
+    // plain int value.
+    $entry = SystemActivityLogEntry::fromRow([
+        'performed_by' => UserId::from(7),
+    ]);
+
+    expect($entry->performedBy)->toBe(7);
+});
+
+test('SystemActivityLogEntry::fromRow narrows a real username string', function (): void {
+    // Real gap, found via mutation testing: every other SystemActivityLogEntry
+    // fixture in this file passes username: null, so nothing exercised the
+    // is_string() branch that keeps a real username string as-is.
+    $entry = SystemActivityLogEntry::fromRow([
+        'username' => 'fixture_admin',
+    ]);
+
+    expect($entry->username)->toBe('fixture_admin');
+});
+
+test('SystemActivityLogEntry::fromRow filters non-string keys out of the details array', function (): void {
+    $entry = SystemActivityLogEntry::fromRow([
+        'details' => ['from_version' => '16.0', 0 => 'stray', 'to_version' => '17.0'],
+    ]);
+
+    expect($entry->details)->toBe(['from_version' => '16.0', 'to_version' => '17.0']);
 });
 
 test('SystemActivityLogEntry::toArray round-trips the decoded details array as-is', function (): void {

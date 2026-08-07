@@ -124,6 +124,90 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         self::assertSame($countBefore, $countAfter);
     }
 
+    public function test_insert_many_casts_a_numeric_string_object_id_to_int(): void
+    {
+        try {
+            $this->repo->insertMany([[
+                'object' => 'disposable',
+                'objectId' => '777',
+                'action' => 'test',
+                'performedBy' => 1,
+                'sessionIdx' => 'sess-1',
+                'ipAddress' => null,
+                'occuredOn' => '2026-07-12 00:00:00',
+                'details' => [],
+                'userAgent' => null,
+            ]]);
+
+            $objectId = $this->conn->createQueryBuilder()
+                ->select('object_id')
+                ->from(Tables::activity())
+                ->where("object = 'disposable'")
+                ->executeQuery()
+                ->fetchOne();
+
+            self::assertSame(777, $objectId);
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'disposable'");
+        }
+    }
+
+    public function test_insert_many_defaults_a_non_numeric_object_id_to_zero(): void
+    {
+        try {
+            $this->repo->insertMany([[
+                'object' => 'disposable',
+                'objectId' => 'not-a-number',
+                'action' => 'test',
+                'performedBy' => 1,
+                'sessionIdx' => 'sess-1',
+                'ipAddress' => null,
+                'occuredOn' => '2026-07-12 00:00:00',
+                'details' => [],
+                'userAgent' => null,
+            ]]);
+
+            $objectId = $this->conn->createQueryBuilder()
+                ->select('object_id')
+                ->from(Tables::activity())
+                ->where("object = 'disposable'")
+                ->executeQuery()
+                ->fetchOne();
+
+            self::assertSame(0, $objectId);
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'disposable'");
+        }
+    }
+
+    public function test_insert_many_stores_a_non_null_performed_by_as_the_user_id(): void
+    {
+        try {
+            $this->repo->insertMany([[
+                'object' => 'disposable',
+                'objectId' => 1,
+                'action' => 'test',
+                'performedBy' => 1,
+                'sessionIdx' => 'sess-1',
+                'ipAddress' => null,
+                'occuredOn' => '2026-07-12 00:00:00',
+                'details' => [],
+                'userAgent' => null,
+            ]]);
+
+            $performedBy = $this->conn->createQueryBuilder()
+                ->select('performed_by')
+                ->from(Tables::activity())
+                ->where("object = 'disposable'")
+                ->executeQuery()
+                ->fetchOne();
+
+            self::assertSame(1, $performedBy);
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'disposable'");
+        }
+    }
+
     public function test_count_by_user_matches_the_fixture(): void
     {
         $counts = $this->repo->countByUser();
@@ -201,6 +285,41 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         self::assertLessThan($this->repo->findMaxOccuredOn(), $this->repo->findMinOccuredOn());
         self::assertStringStartsWith('2026-07-07', $this->repo->findMinOccuredOn() ?? '');
         self::assertStringStartsWith('2026-08-01', $this->repo->findMaxOccuredOn() ?? '');
+    }
+
+    public function test_find_occured_on_for_object_matches_by_object_id_object_and_action(): void
+    {
+        $this->repo->insertMany([[
+            'object' => 'disposable',
+            'objectId' => 4242,
+            'action' => 'find-test',
+            'performedBy' => null,
+            'sessionIdx' => 'sess-1',
+            'ipAddress' => null,
+            'occuredOn' => '2026-07-15 00:00:00',
+            'details' => [],
+            'userAgent' => null,
+        ]]);
+
+        try {
+            self::assertSame(
+                '2026-07-15 00:00:00',
+                $this->repo->findOccuredOnForObject(4242, 'disposable', 'find-test')
+            );
+
+            // A mismatch on any one of the three criteria must not match
+            // this row -- each assertion below isolates one criterion
+            // (objectId, object, action), catching a mutant that drops
+            // that criterion from the findOneBy() filter (matching too
+            // broadly) as well as one that replaces the null-safe operator
+            // with a plain one (crashing on the resulting null instead of
+            // returning it).
+            self::assertNull($this->repo->findOccuredOnForObject(9999, 'disposable', 'find-test'), 'a non-matching objectId must not match');
+            self::assertNull($this->repo->findOccuredOnForObject(4242, 'other-object', 'find-test'), 'a non-matching object must not match');
+            self::assertNull($this->repo->findOccuredOnForObject(4242, 'disposable', 'other-action'), 'a non-matching action must not match');
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'disposable' AND action = 'find-test'");
+        }
     }
 
     public function test_find_action_counts_without_a_filter(): void

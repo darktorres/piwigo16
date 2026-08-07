@@ -33,6 +33,8 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Lifecycle\LoadingLang;
+use Piwigo\Event\Mail\BeforeParseMailTemplate;
+use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Mail\MailRecipientRepository;
 use Piwigo\Mail\MailRecipientRepositoryInterface;
@@ -41,11 +43,14 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
+use RuntimeException;
+use Symfony\Component\Mime\Email;
 
 /**
  * Piwigo\Mail\MailService::mailNotificationAdmins()/mailAdmins()/
@@ -230,6 +235,45 @@ final class MailServiceTest extends IntegrationTestCase
         } finally {
             restore_error_handler();
         }
+    }
+
+    /**
+     * Same real-event-hook-interception technique as this class's own
+     * Unit-suite sibling (Unit/Mail/MailServiceTest.php's own
+     * mail_service_capture_send()) -- captures the fully-built Email one
+     * line before the real Transport::send() and aborts the send (via
+     * BeforeSendMail's own $shouldSend flag), so these assertions read
+     * the real Symfony\Component\Mime\Email's own decoded
+     * getHtmlBody()/getTextBody() (MIME-transfer-encoding-safe) rather
+     * than needing suppressMailerWarning()'s closed-port trick or
+     * sendMailTest()'s own raw dumped-file content.
+     *
+     * @param string|array<int|string, mixed> $to
+     * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
+     * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl
+     * @return array{email: Email}
+     */
+    private function mailCaptureBeforeSend(string|array $to, array $args = [], array $tpl = []): array
+    {
+        $capturedEmail = null;
+        $handler = function (BeforeSendMail $event) use (&$capturedEmail): BeforeSendMail {
+            $capturedEmail = $event->email;
+
+            return new BeforeSendMail(false, $event->to, $event->args, $event->email);
+        };
+        EventDispatcherTestFactory::get()->addTypedHandler(BeforeSendMail::class, $handler);
+
+        try {
+            $this->mailer->mail($to, $args, $tpl);
+        } finally {
+            EventDispatcherTestFactory::get()->removeEventHandler(BeforeSendMail::class, $handler);
+        }
+
+        if (! $capturedEmail instanceof Email) {
+            throw new RuntimeException('expected the before_send_mail handler to have captured a real Email');
+        }
+
+        return ['email' => $capturedEmail];
     }
 
     public function test_mailNotificationAdmins_returns_false_for_an_empty_subject(): void
@@ -682,5 +726,250 @@ final class MailServiceTest extends IntegrationTestCase
         ));
 
         self::assertFalse($result);
+    }
+
+    public function test_formatEmail_strips_newlines_from_the_email_itself_not_just_the_name(): void
+    {
+        // Real gap found via mutation testing: the sibling "strips
+        // newlines from both name and email" Unit test (Unit/Mail/
+        // MailServiceTest.php) only puts the newline in $name -- $email
+        // there is already clean, so it never actually exercises
+        // $cvtEmail's own preg_replace() call.
+        self::assertSame(
+            '"Name" <abc@example.test>',
+            $this->mailer->formatEmail('Name', "abc@example.test\r\n")
+        );
+    }
+
+    public function test_getCleanRecipientsList_returns_an_empty_list_for_a_literal_bool_false(): void
+    {
+        // Real gap found via mutation testing: the sibling "returns an
+        // empty list for a literal int 0..." Unit test names false in
+        // its own title ("matching its own null/""/[]/false peers") but
+        // never actually passes it.
+        self::assertSame([], $this->mailer->getCleanRecipientsList(false));
+    }
+
+    public function test_switchLangTo_loads_admin_lang_translations_for_a_language_not_yet_cached(): void
+    {
+        // "Access type" is translated in language/fr_FR/admin.po ("Type
+        // d'accès") but never appears anywhere in language/fr_FR/
+        // common.po (confirmed via grep) -- only actually calling
+        // $this->lang->load('admin.lang', ...) for the real 'fr_FR'
+        // language (not just common.lang, and not some other language
+        // reached via a corrupted dirname/options array) makes it
+        // translate; an untranslated lookup returns the raw key back
+        // unchanged.
+        try {
+            $this->mailer->switchLangTo('fr_FR');
+
+            self::assertSame("Type d'accès", TranslatorTestFactory::get()->translate('Access type'));
+        } finally {
+            $this->mailer->switchLangBack();
+        }
+    }
+
+    public function test_switchLangTo_restores_the_cached_languages_own_data_and_translator_dictionary_when_reusing_it(): void
+    {
+        // First pass genuinely populates the switchLangLanguages cache
+        // entry for 'fr_FR' (the real re-init branch, exercised by the
+        // sibling test above).
+        $this->mailer->switchLangTo('fr_FR');
+        $this->mailer->switchLangBack();
+
+        // Corrupt BOTH the Lang::snapshot()-backed data array and the
+        // real Translator dictionary with a marker that was never part
+        // of the 'fr_FR' cache entry captured above -- Lang::loadArray()
+        // writes both at once (its own docblock).
+        LangTestFactory::get()->loadArray(['switch_lang_to_cached_restore_marker' => 'CORRUPTED']);
+
+        try {
+            // Second switchLangTo('fr_FR') call hits the ELSE/cached
+            // branch this time (the entry populated above is already
+            // there) -- must overwrite $data/translator FROM that real
+            // cached snapshot, not leave the marker injected right above
+            // in place.
+            $this->mailer->switchLangTo('fr_FR');
+
+            self::assertArrayNotHasKey('switch_lang_to_cached_restore_marker', LangTestFactory::get()->snapshot());
+            self::assertSame(
+                'switch_lang_to_cached_restore_marker',
+                TranslatorTestFactory::get()->translate('switch_lang_to_cached_restore_marker')
+            );
+        } finally {
+            $this->mailer->switchLangBack();
+        }
+    }
+
+    public function test_switchLangBack_restores_the_saved_languages_own_data_and_translator_dictionary_not_just_langInfo(): void
+    {
+        // Populates $switchLangLanguages[originalLanguage] with the
+        // CURRENT (pre-switch) Lang::snapshot()/Translator dictionary
+        // state -- "considered OK on first call" (switchLangTo()'s own
+        // comment).
+        LangTestFactory::get()->loadArray(['switch_lang_back_restore_marker' => 'ORIGINAL']);
+
+        $this->mailer->switchLangTo('fr_FR');
+
+        // Corrupt the CURRENT (now fr_FR) data/dictionary --
+        // switchLangBack() must overwrite these FROM the snapshot
+        // captured above, not leave this corruption in place.
+        LangTestFactory::get()->loadArray(['switch_lang_back_restore_marker' => 'CORRUPTED']);
+
+        $this->mailer->switchLangBack();
+
+        self::assertSame(['switch_lang_back_restore_marker' => 'ORIGINAL'], LangTestFactory::get()->snapshot());
+        self::assertSame('ORIGINAL', TranslatorTestFactory::get()->translate('switch_lang_back_restore_marker'));
+    }
+
+    public function test_mail_falls_back_the_cache_keys_lang_code_segment_to_an_empty_string_when_lang_info_has_no_code(): void
+    {
+        // BeforeParseMailTemplate's own real, observable cacheKey payload
+        // is the only way to inspect $cacheKey from outside -- it's
+        // otherwise a fully internal, opaque string (see this class's
+        // own "cache key... only its UNIQUENESS" reasoning, Unit/Mail/
+        // MailServiceTest.php). Forcing langInfo() to have no 'code' key
+        // at all (rather than trusting whatever this shared process
+        // happens to have left it at) exercises $langCode's own
+        // is_string()-guarded fallback. The handler is never removed
+        // between the html/plain iterations, so $capturedCacheKey ends
+        // up holding the LAST dispatch -- 'text/plain' is always
+        // processed last (unconditionally appended after the optional
+        // 'text/html' entry), so this assertion holds regardless of
+        // mail_allow_html's own current value.
+        LangTestFactory::get()->setLangInfo([]);
+        $capturedCacheKey = null;
+        $handler = function (BeforeParseMailTemplate $event) use (&$capturedCacheKey): void {
+            $capturedCacheKey = $event->cacheKey;
+        };
+        EventDispatcherTestFactory::get()->addTypedHandler(BeforeParseMailTemplate::class, $handler);
+
+        try {
+            $this->mailCaptureBeforeSend(
+                ['name' => 'Someone', 'email' => 'someone@example.test'],
+                ['subject' => 'x', 'content' => 'y', 'theme' => 'clear']
+            );
+        } finally {
+            EventDispatcherTestFactory::get()->removeEventHandler(BeforeParseMailTemplate::class, $handler);
+        }
+
+        self::assertSame('text/plain--clear', $capturedCacheKey);
+    }
+
+    public function test_mail_leaves_plain_text_content_untouched_when_both_content_format_and_content_type_are_plain(): void
+    {
+        // content_format defaults to 'text/plain' (unset here) and
+        // mail_allow_html is forced false (contentType list is ONLY
+        // ['text/plain']) -- content_format and contentType end up the
+        // SAME format, the one combination neither conversion branch's
+        // own `&&` condition (content_format==='text/plain' &&
+        // contentType==='text/html', or the mirrored elseif) is written
+        // to match, so this is the only way to reach the final
+        // passthrough `else`. Kills BOTH branches' own
+        // BooleanAndToBooleanOr mutation: either turned into `||` would
+        // make ITS OWN condition true here too (content_format===
+        // 'text/plain' is true; contentType==='text/plain' is true),
+        // wrongly converting this content (htmlspecialchars+wrap, or
+        // strip_tags) instead of leaving it untouched.
+        CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+
+        $result = $this->mailCaptureBeforeSend(
+            ['name' => 'Someone', 'email' => 'someone@example.test'],
+            ['subject' => 'x', 'content' => 'Keep <this> tag as-is']
+        );
+
+        $textBody = $result['email']->getTextBody();
+        self::assertIsString($textBody);
+        self::assertStringContainsString('Keep <this> tag as-is', $textBody);
+    }
+
+    public function test_mail_wraps_the_converted_html_part_in_an_opening_and_closing_paragraph_tag(): void
+    {
+        // content_format defaults to 'text/plain' and mail_allow_html is
+        // forced true (contentType list includes 'text/html') -- for
+        // that html iteration, content_format==='text/plain' &&
+        // contentType==='text/html' is the ONLY real branch that
+        // matches, converting the raw content into
+        // '<p>' . nl2br(...) . '</p>'. Uses a regex (not an exact `<p>`
+        // substring match) because moveCssToBody()'s own Emogrifier pass
+        // adds a real "style=..." attribute onto that same <p> tag (see
+        // the sibling Unit test's own docblock) -- the tag itself is
+        // never removed or reordered by that pass, only decorated.
+        CurrentConfigTestFactory::get()->setMailAllowHtml(true);
+        LangTestFactory::get()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
+
+        $result = $this->mailCaptureBeforeSend(
+            ['name' => 'Someone', 'email' => 'someone@example.test'],
+            ['subject' => 'x', 'content' => 'MarkerContentXYZ']
+        );
+
+        $htmlBody = $result['email']->getHtmlBody();
+        self::assertIsString($htmlBody);
+        self::assertMatchesRegularExpression('/<p[^>]*>\s*MarkerContentXYZ\s*<\/p>/', $htmlBody);
+    }
+
+    public function test_mail_turns_off_full_url_mode_before_returning(): void
+    {
+        $urlService = Kernel::container()->get(UrlServiceInterface::class);
+        self::assertInstanceOf(UrlServiceInterface::class, $urlService);
+        $before = $urlService->getRootUrl();
+        CurrentConfigTestFactory::get()->setSmtpHost('127.0.0.1:1');
+
+        $this->suppressMailerWarning(fn () => $this->mailer->mail(
+            ['name' => 'Someone', 'email' => 'someone@example.test'],
+            ['content' => 'hi']
+        ));
+
+        self::assertSame($before, $urlService->getRootUrl());
+    }
+
+    public function test_mail_builds_a_still_parseable_smtp_dsn_when_both_smtp_user_and_host_are_configured(): void
+    {
+        // Confirmed via a direct parse_url() check: reordering dsnAuth
+        // ('user:pass@') BEFORE the 'smtp://' scheme instead of after it
+        // (as a concatenation bug would) makes parse_url() find no
+        // 'scheme'/'host' key at all, so Symfony\Component\Mailer\
+        // Transport\Dsn::fromString() throws InvalidArgumentException
+        // ('The mailer DSN must contain a scheme.') the moment
+        // buildMailer() parses it -- BEFORE the real connection attempt
+        // below, and OUTSIDE the try/catch that normally turns a failed
+        // send into a plain `false` return, so it would propagate
+        // uncaught out of this test instead. A real, non-empty
+        // smtp_user/password is required to make dsnAuth non-empty in
+        // the first place -- an empty dsnAuth reorders to nothing
+        // observably different.
+        $currentConfig = CurrentConfigTestFactory::get();
+        $currentConfig->setSmtpHost('127.0.0.1:1');
+        $currentConfig->setSmtpUser('mail user');
+        $currentConfig->setSmtpPassword('p@ss w/ord');
+
+        $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
+            ['name' => 'Someone', 'email' => 'someone@example.test'],
+            ['content' => 'hi']
+        ));
+
+        self::assertFalse($result);
+    }
+
+    public function test_generateSuccessResetPasswordMail_turns_off_full_url_mode_before_returning(): void
+    {
+        // Unlike generateResetPasswordMail/generateSetPasswordMail/
+        // generateCodeVerificationMail (see Unit/Mail/MailServiceTest.php's
+        // own docblock: their setMakeFullUrl()/unsetMakeFullUrl() pairs
+        // are confirmed-equivalent since neither method calls urlService()
+        // for anything else), this method's own trailing
+        // unsetMakeFullUrl() call genuinely matters: $profileUrl is
+        // computed while full-url mode is active, but the flag itself is
+        // real, LIFO-stacked, request-scoped state (UrlService::
+        // setMakeFullUrl()/unsetMakeFullUrl() push/pop a stack) that
+        // leaks into every LATER urlService call in the same request if
+        // never popped back off.
+        $urlService = Kernel::container()->get(UrlServiceInterface::class);
+        self::assertInstanceOf(UrlServiceInterface::class, $urlService);
+        $before = $urlService->getRootUrl();
+
+        $this->mailer->generateSuccessResetPasswordMail('jane', 0);
+
+        self::assertSame($before, $urlService->getRootUrl());
     }
 }

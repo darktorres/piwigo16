@@ -29,10 +29,15 @@ use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Template\SetStatusHeader;
+use Piwigo\Event\User\UserCommentInsertion;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Picture\PictureCommentRenderer;
+use Piwigo\Section\SectionContext;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\SessionServiceTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Url\UrlService;
@@ -377,6 +382,466 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         self::assertArrayHasKey('U_DELETE', $adminRow);
     }
 
+    public function test_render_shows_unvalidated_comments_only_to_an_admin(): void
+    {
+        // imageId 5: shared with the two comment-count-boundary tests
+        // below (all three clean up their own inserted rows, so image 5
+        // is back to its real fixture baseline of zero comments between
+        // tests regardless of execution order).
+        $imageId = 5;
+        $this->commentRepo->insert(['author' => 'onlyvalidated_a', 'authorId' => 1, 'anonymousId' => '10.40.0.1', 'content' => 'Validated onlyValidated check.', 'validated' => true, 'imageId' => $imageId, 'websiteUrl' => null, 'email' => null]);
+        $this->commentRepo->insert(['author' => 'onlyvalidated_b', 'authorId' => 1, 'anonymousId' => '10.40.0.2', 'content' => 'Unvalidated onlyValidated check.', 'validated' => false, 'imageId' => $imageId, 'websiteUrl' => null, 'email' => null]);
+
+        try {
+            $this->seedUser(1, UserStatus::Admin);
+            $this->renderComments($imageId);
+            $adminCount = CurrentTemplate::current()->get()->get_template_vars('COMMENT_COUNT');
+
+            $this->seedUser(3, UserStatus::Normal);
+            $this->renderComments($imageId);
+            $normalCount = CurrentTemplate::current()->get()->get_template_vars('COMMENT_COUNT');
+
+            self::assertSame(2, $adminCount);
+            self::assertSame(1, $normalCount);
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content IN ('Validated onlyValidated check.', 'Unvalidated onlyValidated check.')");
+        }
+    }
+
+    public function test_render_leaves_the_comments_order_url_unset_when_the_image_has_no_comments(): void
+    {
+        // imageId 5: the only fixture image with zero real comment rows
+        // (fixture comments exist on images 1 x2, 2, 3 and 4 -- see
+        // Fixtures/piwigo-17.0.sql). Shared with
+        // test_render_shows_unvalidated_comments_only_to_an_admin below,
+        // which restores it to zero via its own finally-block cleanup, so
+        // reuse here is safe regardless of test execution order.
+        $imageId = 5;
+        $this->seedUser(3, UserStatus::Normal);
+
+        $this->renderComments($imageId);
+
+        self::assertSame(0, CurrentTemplate::current()->get()->get_template_vars('COMMENT_COUNT'));
+        self::assertNull(CurrentTemplate::current()->get()->get_template_vars('COMMENTS_ORDER_URL'));
+    }
+
+    public function test_render_sets_the_comments_order_url_when_the_image_has_exactly_one_comment(): void
+    {
+        // imageId 5: see the zero-comments test above -- the only fixture
+        // image with no pre-existing comment rows, so inserting exactly
+        // one here really does yield a total of one.
+        $imageId = 5;
+        $commentId = $this->insertComment($imageId, 3, 'Single comment boundary check.');
+        $this->seedUser(3, UserStatus::Normal);
+
+        try {
+            $this->renderComments($imageId);
+
+            self::assertSame(1, CurrentTemplate::current()->get()->get_template_vars('COMMENT_COUNT'));
+            self::assertIsString(CurrentTemplate::current()->get()->get_template_vars('COMMENTS_ORDER_URL'));
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::comments() . ' WHERE id = ?', [$commentId->value]);
+        }
+    }
+
+    public function test_render_builds_a_clean_url_navigation_bar_and_strips_the_current_start_param(): void
+    {
+        // imageId 4: exclusive to this test within this file.
+        $imageId = 4;
+        CurrentConfigTestFactory::get()->setNbCommentPage(2);
+        $sectionRegistry = Kernel::container()->get(SectionContextRegistry::class);
+        if (! $sectionRegistry instanceof SectionContextRegistry) {
+            throw new LogicException('Container returned an unexpected type for ' . SectionContextRegistry::class);
+        }
+        // A nonzero current `start` must already be present on the
+        // section context for paramsForDuplication()'s own $removed=['start']
+        // to have anything real to strip.
+        $sectionRegistry->set(new SectionContext(start: 42));
+
+        $commentIds = [
+            $this->insertComment($imageId, 3, 'Pagination comment 1.'),
+            $this->insertComment($imageId, 3, 'Pagination comment 2.'),
+            $this->insertComment($imageId, 3, 'Pagination comment 3.'),
+        ];
+        $this->seedUser(3, UserStatus::Normal);
+
+        try {
+            $this->renderComments($imageId);
+
+            self::assertSame(3, CurrentTemplate::current()->get()->get_template_vars('COMMENT_COUNT'));
+            $navbar = CurrentTemplate::current()->get()->get_template_vars('navbar');
+            self::assertIsArray($navbar);
+            self::assertArrayHasKey('URL_NEXT', $navbar);
+            self::assertIsString($navbar['URL_NEXT']);
+            // cleanUrl=true (real 5th arg) -- '/start-N', not '?start=N'.
+            self::assertStringContainsString('/start-', $navbar['URL_NEXT']);
+            // The stale start=42 from the current section context must
+            // have been stripped before the nav bar appended its own.
+            self::assertStringNotContainsString('start-42', $navbar['URL_NEXT']);
+        } finally {
+            $this->conn->executeStatement(
+                'DELETE FROM ' . Tables::comments() . ' WHERE id IN (?, ?, ?)',
+                array_map(static fn (CommentId $id): int => $id->value, $commentIds)
+            );
+            CurrentConfigTestFactory::get()->setNbCommentPage(10);
+            $sectionRegistry->reset();
+        }
+    }
+
+    public function test_render_shows_the_add_comment_form_with_its_full_default_field_set(): void
+    {
+        CurrentConfigTestFactory::get()->setCommentsForall(false);
+        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(true);
+        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(true);
+        CurrentConfigTestFactory::get()->setCommentsEnableWebsite(true);
+        $imageId = 3;
+        // A classic (Normal) user with a blank registered email -- not a
+        // guest, so line 285's hide-guard never fires regardless of
+        // CommentsForall (set false above specifically to also prove
+        // that: LogicalAndToLogicalOr would wrongly hide the form here
+        // if `!commentsForall()` alone could trip the guard for a
+        // non-guest).
+        $this->seedUser(3, UserStatus::Normal);
+
+        $this->renderComments($imageId);
+
+        $commentAdd = CurrentTemplate::current()->get()->get_template_vars('comment_add');
+        self::assertIsArray($commentAdd);
+        self::assertArrayHasKey('KEY', $commentAdd);
+        self::assertIsString($commentAdd['KEY']);
+        $keyParts = explode(':', $commentAdd['KEY']);
+        self::assertCount(3, $keyParts);
+        // generate()'s own $validAfterSeconds argument (3).
+        self::assertSame('3', $keyParts[1]);
+
+        unset($commentAdd['KEY']);
+        self::assertSame(
+            [
+                'F_ACTION' => '/picture.php',
+                'CONTENT' => '',
+                'SHOW_AUTHOR' => false,
+                'AUTHOR_MANDATORY' => true,
+                'AUTHOR' => '',
+                'WEBSITE_URL' => '',
+                'SHOW_EMAIL' => true,
+                'EMAIL_MANDATORY' => true,
+                'EMAIL' => '',
+                'SHOW_WEBSITE' => true,
+            ],
+            $commentAdd
+        );
+    }
+
+    public function test_render_hides_the_add_comment_form_while_editing_an_existing_comment(): void
+    {
+        $imageId = 3;
+        $ownerId = 3;
+        $commentId = $this->insertComment($imageId, $ownerId, 'Being edited right now.');
+        $this->seedUser($ownerId, UserStatus::Normal);
+        CurrentConfigTestFactory::get()->setUserCanEditComment(true);
+
+        try {
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $commentId, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+
+            self::assertNull(CurrentTemplate::current()->get()->get_template_vars('comment_add'));
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::comments() . ' WHERE id = ?', [$commentId->value]);
+        }
+    }
+
+    public function test_render_hides_the_add_comment_form_for_a_guest_when_comments_for_all_is_disabled(): void
+    {
+        CurrentConfigTestFactory::get()->setCommentsForall(false);
+        $imageId = 3;
+        // No seedUser() call -- the default CurrentUser is a guest.
+
+        $this->renderComments($imageId);
+
+        self::assertNull(CurrentTemplate::current()->get()->get_template_vars('comment_add'));
+    }
+
+    public function test_render_hides_the_email_prompt_for_a_classic_user_with_a_real_registered_email(): void
+    {
+        $imageId = 3;
+        $this->seedUser(3, UserStatus::Normal, 'real-email-check@example.test');
+
+        $this->renderComments($imageId);
+
+        $commentAdd = CurrentTemplate::current()->get()->get_template_vars('comment_add');
+        self::assertIsArray($commentAdd);
+        self::assertFalse($commentAdd['SHOW_EMAIL']);
+    }
+
+    public function test_render_shows_the_author_and_email_prompts_for_a_non_classic_non_guest_viewer_with_a_real_email(): void
+    {
+        $imageId = 3;
+        // 'generic' status: not classic (isClassicUser() === false), but
+        // also not literally 'guest' (isAGuest() === false) -- the one
+        // status combination that lets !isClassicUser() and a non-empty
+        // email coexist for a viewer that line 285's guest-guard never
+        // hides the form for.
+        $this->seedUser(3, UserStatus::Generic, 'generic-email-check@example.test');
+
+        $this->renderComments($imageId);
+
+        $commentAdd = CurrentTemplate::current()->get()->get_template_vars('comment_add');
+        self::assertIsArray($commentAdd);
+        self::assertTrue($commentAdd['SHOW_AUTHOR']);
+        self::assertTrue($commentAdd['SHOW_EMAIL']);
+    }
+
+    public function test_render_repopulates_website_url_and_email_after_a_rejected_submission_with_no_author(): void
+    {
+        CurrentConfigTestFactory::get()->setCommentsForall(true);
+        $imageId = 3;
+        $_POST['content'] = 'Reject me for repopulation check.';
+        $_POST['website_url'] = 'mutation-check.example.test';
+        $_POST['email'] = 'mutation-check@example.test';
+        // Deliberately no $_POST['author'] at all -- exercises the
+        // postValue === null branch of the repopulation loop.
+        // Not a real ephemeral key -- forces a 'reject' outcome.
+        $_POST['key'] = 'totally-invalid-key';
+
+        try {
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+
+            $commentAdd = CurrentTemplate::current()->get()->get_template_vars('comment_add');
+            self::assertIsArray($commentAdd);
+            self::assertSame('', $commentAdd['AUTHOR']);
+            self::assertSame('mutation-check.example.test', $commentAdd['WEBSITE_URL']);
+            self::assertSame('mutation-check@example.test', $commentAdd['EMAIL']);
+        } finally {
+            unset($_POST['content'], $_POST['website_url'], $_POST['email'], $_POST['key']);
+        }
+    }
+
+    public function test_render_sets_a_403_status_header_when_a_submission_is_rejected(): void
+    {
+        CurrentConfigTestFactory::get()->setCommentsForall(true);
+        $imageId = 3;
+        $_POST['content'] = 'Rejected for status header check.';
+        $_POST['key'] = 'totally-invalid-key';
+
+        // header() is a real no-op under CLI SAPI -- setStatusHeader()'s
+        // own SetStatusHeader notify event is the real side channel
+        // (same technique as HtmlServiceTest's own setStatusHeader
+        // coverage). HtmlService (PresentationAccessor::htmlService())
+        // dispatches through the container-shared EventDispatcher, not
+        // the throwaway instance passed as render()'s own $eventDispatcher
+        // param.
+        $captured = [];
+        $handler = static function (SetStatusHeader $event) use (&$captured): void {
+            $captured[] = [$event->code, $event->text];
+        };
+        EventDispatcherTestFactory::get()->addTypedHandler(SetStatusHeader::class, $handler);
+
+        try {
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+
+            self::assertSame([[403, 'Forbidden']], $captured);
+        } finally {
+            EventDispatcherTestFactory::get()->removeEventHandler(SetStatusHeader::class, $handler);
+            unset($_POST['content'], $_POST['key']);
+        }
+    }
+
+    public function test_render_notifies_plugins_with_the_persisted_comm_array_and_the_resulting_action(): void
+    {
+        CurrentConfigTestFactory::get()->setCommentsForall(true);
+        CurrentConfigTestFactory::get()->setCommentsValidation(false);
+        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
+        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
+        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        $imageId = 3;
+        $_POST['content'] = 'Notify plugins comment.';
+        $_POST['key'] = new EphemeralKeyService(CurrentConfigTestFactory::get())->generate(0, (string) $imageId);
+
+        // render()'s own $eventDispatcher param (not the container-shared
+        // one) is what dispatchNotify(UserCommentInsertion) actually uses.
+        $eventDispatcher = new EventDispatcher();
+        $captured = null;
+        $handler = static function (UserCommentInsertion $event) use (&$captured): void {
+            $captured = $event->comm;
+        };
+        $eventDispatcher->addTypedHandler(UserCommentInsertion::class, $handler);
+
+        try {
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), $eventDispatcher, PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+
+            self::assertIsArray($captured);
+            self::assertArrayHasKey('action', $captured);
+            self::assertSame('validate', $captured['action']);
+            self::assertSame('Notify plugins comment.', $captured['content']);
+        } finally {
+            unset($_POST['content'], $_POST['key']);
+            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'Notify plugins comment.'");
+        }
+    }
+
+    public function test_render_persists_trimmed_non_sentinel_author_and_content_from_a_valid_guest_submission(): void
+    {
+        CurrentConfigTestFactory::get()->setCommentsForall(true);
+        CurrentConfigTestFactory::get()->setCommentsValidation(false);
+        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
+        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
+        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        $imageId = 3;
+        $_POST['author'] = '  MutationTestAuthor  ';
+        $_POST['content'] = '  Trimmed mutation content check.  ';
+        $_POST['key'] = new EphemeralKeyService(CurrentConfigTestFactory::get())->generate(0, (string) $imageId);
+
+        try {
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+
+            $row = $this->findCommentRowByContent('Trimmed mutation content check.');
+            self::assertSame('MutationTestAuthor', $row['author']);
+        } finally {
+            unset($_POST['author'], $_POST['content'], $_POST['key']);
+            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'Trimmed mutation content check.'");
+        }
+    }
+
+    public function test_render_treats_a_literal_zero_author_as_absent_and_falls_back_to_guest(): void
+    {
+        CurrentConfigTestFactory::get()->setCommentsForall(true);
+        CurrentConfigTestFactory::get()->setCommentsValidation(false);
+        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
+        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
+        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        $imageId = 3;
+        $_POST['author'] = '0';
+        $_POST['content'] = 'Zero author fallback check.';
+        $_POST['key'] = new EphemeralKeyService(CurrentConfigTestFactory::get())->generate(0, (string) $imageId);
+
+        try {
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+
+            $row = $this->findCommentRowByContent('Zero author fallback check.');
+            self::assertSame('guest', $row['author']);
+        } finally {
+            unset($_POST['author'], $_POST['content'], $_POST['key']);
+            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'Zero author fallback check.'");
+        }
+    }
+
+    public function test_render_rejects_a_submission_whose_content_is_a_literal_zero(): void
+    {
+        CurrentConfigTestFactory::get()->setCommentsForall(true);
+        CurrentConfigTestFactory::get()->setCommentsValidation(false);
+        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
+        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
+        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        $imageId = 3;
+        $_POST['content'] = '0';
+        $_POST['key'] = new EphemeralKeyService(CurrentConfigTestFactory::get())->generate(0, (string) $imageId);
+
+        try {
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+
+            self::assertSame(
+                ['Your comment has NOT been registered because it did not pass the validation rules'],
+                PageStateTestFactory::get()->errors
+            );
+        } finally {
+            unset($_POST['content'], $_POST['key']);
+        }
+    }
+
+    public function test_render_persists_a_trimmed_scheme_prefixed_website_url_from_a_valid_guest_submission(): void
+    {
+        CurrentConfigTestFactory::get()->setCommentsForall(true);
+        CurrentConfigTestFactory::get()->setCommentsValidation(false);
+        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
+        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
+        CurrentConfigTestFactory::get()->setCommentsEnableWebsite(true);
+        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        $imageId = 3;
+        $_POST['content'] = 'Website url trim check.';
+        $_POST['website_url'] = '  mutation-check.example.test  ';
+        $_POST['key'] = new EphemeralKeyService(CurrentConfigTestFactory::get())->generate(0, (string) $imageId);
+
+        try {
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+
+            $row = $this->findCommentRowByContent('Website url trim check.');
+            self::assertSame('http://mutation-check.example.test', $row['website_url']);
+        } finally {
+            unset($_POST['content'], $_POST['website_url'], $_POST['key']);
+            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'Website url trim check.'");
+        }
+    }
+
+    public function test_render_treats_a_literal_zero_website_url_as_absent_without_rejecting(): void
+    {
+        CurrentConfigTestFactory::get()->setCommentsForall(true);
+        CurrentConfigTestFactory::get()->setCommentsValidation(false);
+        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
+        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
+        // Disabled deliberately: if '0' were wrongly treated as a real,
+        // non-empty website_url, the honeypot check below would reject
+        // regardless of URL format.
+        CurrentConfigTestFactory::get()->setCommentsEnableWebsite(false);
+        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        $imageId = 3;
+        $_POST['content'] = 'Zero website url no reject check.';
+        $_POST['website_url'] = '0';
+        $_POST['key'] = new EphemeralKeyService(CurrentConfigTestFactory::get())->generate(0, (string) $imageId);
+
+        try {
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+
+            self::assertSame(['Your comment has been registered'], PageStateTestFactory::get()->infos);
+        } finally {
+            unset($_POST['content'], $_POST['website_url'], $_POST['key']);
+            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'Zero website url no reject check.'");
+        }
+    }
+
+    public function test_render_persists_a_trimmed_email_from_a_valid_guest_submission(): void
+    {
+        CurrentConfigTestFactory::get()->setCommentsForall(true);
+        CurrentConfigTestFactory::get()->setCommentsValidation(false);
+        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
+        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
+        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        $imageId = 3;
+        $_POST['content'] = 'Email trim check.';
+        $_POST['email'] = '  mutation-check@example.test  ';
+        $_POST['key'] = new EphemeralKeyService(CurrentConfigTestFactory::get())->generate(0, (string) $imageId);
+
+        try {
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+
+            $row = $this->findCommentRowByContent('Email trim check.');
+            self::assertSame('mutation-check@example.test', $row['email']);
+        } finally {
+            unset($_POST['content'], $_POST['email'], $_POST['key']);
+            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'Email trim check.'");
+        }
+    }
+
+    public function test_render_treats_a_literal_zero_email_as_absent_without_rejecting(): void
+    {
+        CurrentConfigTestFactory::get()->setCommentsForall(true);
+        CurrentConfigTestFactory::get()->setCommentsValidation(false);
+        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
+        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
+        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        $imageId = 3;
+        $_POST['content'] = 'Zero email no reject check.';
+        $_POST['email'] = '0';
+        $_POST['key'] = new EphemeralKeyService(CurrentConfigTestFactory::get())->generate(0, (string) $imageId);
+
+        try {
+            $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
+
+            self::assertSame(['Your comment has been registered'], PageStateTestFactory::get()->infos);
+        } finally {
+            unset($_POST['content'], $_POST['email'], $_POST['key']);
+            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'Zero email no reject check.'");
+        }
+    }
+
     /**
      * @return list<mixed>
      */
@@ -420,12 +885,12 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         return [['commentable' => true]];
     }
 
-    private function seedUser(int $id, UserStatus $status): void
+    private function seedUser(int $id, UserStatus $status, string $email = ''): void
     {
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from($id),
             username: 'fixture_user_' . $id,
-            email: '',
+            email: $email,
             language: '',
             theme: '',
             status: $status,
@@ -470,5 +935,25 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         }
 
         self::fail("no rendered row found for comment id {$commentId->value}");
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function findCommentRowByContent(string $content): array
+    {
+        $row = $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from(Tables::comments())
+            ->where('content = :content')
+            ->setParameter('content', $content)
+            ->executeQuery()
+            ->fetchAssociative();
+
+        if (! is_array($row)) {
+            self::fail("no persisted comment row found with content '{$content}'");
+        }
+
+        return $row;
     }
 }

@@ -8,8 +8,10 @@ use Override;
 use RuntimeException;
 use PharData;
 use ReflectionMethod;
+use ReflectionProperty;
 use InvalidArgumentException;
 use Phar;
+use Throwable;
 use Piwigo\Backup\BackupService;
 use Piwigo\Core\ShutdownHandler;
 use Piwigo\Db\DbCredentials;
@@ -75,6 +77,34 @@ final class BackupServiceTest extends IntegrationTestCase
         parent::tearDown();
     }
 
+    public function test_constructor_computes_repo_root_and_backups_dir_from_the_real_source_location(): void
+    {
+        // Neither value is otherwise observable through the public API in
+        // a way that pins its EXACT value (create()/restore() both still
+        // "work" even if repoRoot pointed one level too shallow or too
+        // deep, as long as whatever it resolves to happens to be
+        // writable) -- reflection on both private readonly properties is
+        // the only way to confirm dirname(__DIR__, 3) really lands on the
+        // real repo root (not one level either side of it) and that
+        // backupsDir is built by concatenating, in the right order, onto
+        // that exact value.
+        $service = new BackupService();
+
+        $repoRootProperty = new ReflectionProperty(BackupService::class, 'repoRoot');
+        $repoRoot = $repoRootProperty->getValue($service);
+
+        $backupsDirProperty = new ReflectionProperty(BackupService::class, 'backupsDir');
+        $backupsDir = $backupsDirProperty->getValue($service);
+
+        // dirname(__DIR__, 2) from THIS file (tests/Integration/) lands on
+        // the same repo root as BackupService's own dirname(__DIR__, 3)
+        // from src/Piwigo/Backup/ -- same technique already used by
+        // test_create_recreates_the_backups_directory_when_it_is_missing
+        // below.
+        self::assertSame(dirname(__DIR__, 2), $repoRoot);
+        self::assertSame($repoRoot . '/_data/backups', $backupsDir);
+    }
+
     public function test_create_then_restore_round_trips_real_data(): void
     {
         $service = new BackupService();
@@ -124,6 +154,36 @@ final class BackupServiceTest extends IntegrationTestCase
         } finally {
             unlink($badArchive);
         }
+    }
+
+    public function test_run_process_failure_message_includes_the_description_and_the_real_error_output(): void
+    {
+        // Distinct from test_restore_rejects_a_corrupt_archive above
+        // (which only asserts the exception TYPE): this pins the exact
+        // message SHAPE the shared runProcess() helper builds --
+        // "{$description} failed: " followed by the real
+        // $process->getErrorOutput() -- reached here via restore()'s own
+        // tar extraction step against a genuinely corrupt (non-gzip)
+        // archive, so getErrorOutput() is real tar/gzip stderr, not a
+        // canned string.
+        $badArchive = tempnam(sys_get_temp_dir(), 'piwigo-bad-backup-message-');
+        self::assertIsString($badArchive);
+        file_put_contents($badArchive, 'not a real archive');
+
+        $service = new BackupService();
+        $threw = null;
+
+        try {
+            $service->restore($badArchive, $this->scratchDb);
+        } catch (RuntimeException $e) {
+            $threw = $e;
+        } finally {
+            unlink($badArchive);
+        }
+
+        self::assertNotNull($threw);
+        self::assertStringStartsWith('extract backup archive failed: ', $threw->getMessage());
+        self::assertGreaterThan(strlen('extract backup archive failed: '), strlen($threw->getMessage()));
     }
 
     public function test_create_recreates_the_backups_directory_when_it_is_missing(): void
@@ -191,6 +251,98 @@ final class BackupServiceTest extends IntegrationTestCase
         }
     }
 
+    public function test_create_writes_a_real_database_dump_using_the_expected_mysqldump_invocation(): void
+    {
+        // Distinct from test_create_then_restore_round_trips_real_data
+        // above (which only proves the round trip as a whole works): this
+        // pins the exact CONTENT dumpDatabase() produces, closing several
+        // distinct gaps at once --
+        //   - dumpDatabase() must actually be called at all (create()
+        //     would otherwise tar a db.sql that was never written and
+        //     throw before ever reaching this point);
+        //   - its output path argument must be exactly $workDir.'/db.sql'
+        //     (any other value makes mysqldump fail to open that path for
+        //     writing, or makes tar fail to find it afterward);
+        //   - the mysqldump command array itself must be exactly
+        //     ['mysqldump', ...credentials, '--skip-comments',
+        //     '--result-file='.$outputPath, $database] -- confirmed
+        //     empirically that --skip-comments is what suppresses
+        //     mysqldump's own "-- MySQL dump ..." header comment, so its
+        //     absence here proves that flag really made it into the real
+        //     command line, not just that *some* dump happened to work.
+        $service = new BackupService();
+        $this->archivePath = $service->create();
+        self::assertFileExists($this->archivePath);
+
+        $extractDir = sys_get_temp_dir() . '/piwigo-backup-dump-check-' . bin2hex(random_bytes(8));
+        mkdir($extractDir);
+
+        try {
+            new PharData($this->archivePath)->extractTo($extractDir);
+
+            self::assertFileExists($extractDir . '/db.sql');
+            $dump = (string) file_get_contents($extractDir . '/db.sql');
+
+            self::assertNotSame('', $dump);
+            self::assertStringContainsString('CREATE TABLE', $dump);
+            self::assertStringContainsString($this->dbPrefix . 'images', $dump);
+
+            if ($this->dbDriver !== 'pgsql') {
+                self::assertStringNotContainsString('-- MySQL dump', $dump);
+            }
+        } finally {
+            $extractedPaths = glob($extractDir . '/*');
+            foreach ($extractedPaths !== false ? $extractedPaths : [] as $path) {
+                if (is_file($path)) {
+                    unlink($path);
+                }
+            }
+            rmdir($extractDir);
+        }
+    }
+
+    public function test_create_registers_a_shutdown_cleanup_closure(): void
+    {
+        // Distinct from test_creates_shutdown_cleanup_closure_is_a_no_op_
+        // after_normal_completion() below, which only proves running an
+        // already-registered closure doesn't crash -- that test would
+        // pass identically whether create() ever registered a closure at
+        // all. Reflection on ShutdownHandler's own private $callbacks
+        // registry is the only way to confirm the registration call
+        // itself really happened.
+        ShutdownHandler::reset();
+
+        $service = new BackupService();
+        $this->archivePath = $service->create();
+
+        $callbacks = new ReflectionProperty(ShutdownHandler::class, 'callbacks');
+        /** @var list<callable(): void> $callbackValues */
+        $callbackValues = $callbacks->getValue();
+        self::assertCount(1, $callbackValues);
+    }
+
+    public function test_create_removes_its_own_work_dir_after_a_successful_run(): void
+    {
+        // create()'s own workDir is always named with the
+        // 'piwigo-backup-create-' prefix (see makeTempDir()'s own call
+        // site above) -- confirming none of that shape survives under
+        // sys_get_temp_dir() after a normal, successful create() call
+        // proves the `finally` block's removeDir($workDir) call really
+        // ran, distinct from create()'s own returned archive simply
+        // existing (which says nothing about whether the intermediate
+        // workDir was ever cleaned up).
+        $beforeGlob = glob(sys_get_temp_dir() . '/piwigo-backup-create-*');
+        $before = $beforeGlob !== false ? $beforeGlob : [];
+
+        $service = new BackupService();
+        $this->archivePath = $service->create();
+
+        $afterGlob = glob(sys_get_temp_dir() . '/piwigo-backup-create-*');
+        $after = $afterGlob !== false ? $afterGlob : [];
+
+        self::assertSame($before, $after, 'create() should remove its own temp work dir on success');
+    }
+
     public function test_creates_shutdown_cleanup_closure_is_a_no_op_after_normal_completion(): void
     {
         // create()'s own `finally` block already removes its workDir by
@@ -213,6 +365,71 @@ final class BackupServiceTest extends IntegrationTestCase
         // Reaching this line means the already-registered closure ran
         // without throwing.
         self::assertFileExists($this->archivePath);
+    }
+
+    public function test_restore_registers_a_shutdown_cleanup_closure(): void
+    {
+        // Same reasoning as test_create_registers_a_shutdown_cleanup_
+        // closure() above, for restore()'s own registration call --
+        // exercised here via the same minimal hand-built archive the
+        // malformed-manifest tests below use, so this stays fast rather
+        // than repeating a full create()-then-restore() round trip.
+        $archivePath = $this->makeTestArchive([
+            'manifest.json' => json_encode([
+                'created_at' => '2026-01-01T00:00:00Z',
+                'db_prefix' => $this->dbPrefix,
+                'included' => ['db.sql'],
+            ], JSON_THROW_ON_ERROR),
+            'db.sql' => "SELECT 1;\n",
+        ]);
+        $this->dropAndCreateDatabase($this->scratchDb);
+
+        ShutdownHandler::reset();
+
+        $service = new BackupService();
+        try {
+            $service->restore($archivePath, $this->scratchDb);
+        } finally {
+            unlink($archivePath);
+        }
+
+        $callbacks = new ReflectionProperty(ShutdownHandler::class, 'callbacks');
+        /** @var list<callable(): void> $callbackValues */
+        $callbackValues = $callbacks->getValue();
+        self::assertCount(1, $callbackValues);
+    }
+
+    public function test_restore_removes_its_own_work_dir_after_a_successful_run(): void
+    {
+        // Same reasoning as test_create_removes_its_own_work_dir_after_a_
+        // successful_run() above, for restore()'s own
+        // 'piwigo-backup-restore-' workDir -- uses the same minimal
+        // hand-built archive as test_restore_registers_a_shutdown_
+        // cleanup_closure() above to stay fast.
+        $archivePath = $this->makeTestArchive([
+            'manifest.json' => json_encode([
+                'created_at' => '2026-01-01T00:00:00Z',
+                'db_prefix' => $this->dbPrefix,
+                'included' => ['db.sql'],
+            ], JSON_THROW_ON_ERROR),
+            'db.sql' => "SELECT 1;\n",
+        ]);
+        $this->dropAndCreateDatabase($this->scratchDb);
+
+        $beforeGlob = glob(sys_get_temp_dir() . '/piwigo-backup-restore-*');
+        $before = $beforeGlob !== false ? $beforeGlob : [];
+
+        $service = new BackupService();
+        try {
+            $service->restore($archivePath, $this->scratchDb);
+        } finally {
+            unlink($archivePath);
+        }
+
+        $afterGlob = glob(sys_get_temp_dir() . '/piwigo-backup-restore-*');
+        $after = $afterGlob !== false ? $afterGlob : [];
+
+        self::assertSame($before, $after, 'restore() should remove its own temp work dir on success');
     }
 
     public function test_restores_shutdown_cleanup_closure_is_a_no_op_after_normal_completion(): void
@@ -266,12 +483,64 @@ final class BackupServiceTest extends IntegrationTestCase
 
         try {
             $service->restore($missingPath, $this->scratchDb);
-        } catch (InvalidArgumentException $e) {
+        } catch (Throwable $e) {
+            // Catches ANY throwable, not just InvalidArgumentException: if
+            // the is_file() guard were ever skipped, execution would fall
+            // through to a real tar extraction attempt against a
+            // genuinely missing file, which fails with a RuntimeException
+            // instead -- a plain catch(InvalidArgumentException) would let
+            // that propagate uncaught rather than surfacing here as a
+            // precise, wrong-exception-type assertion failure.
             $threw = $e;
         }
 
-        self::assertNotNull($threw);
+        self::assertInstanceOf(InvalidArgumentException::class, $threw);
         self::assertSame("Backup archive not found: {$missingPath}", $threw->getMessage());
+    }
+
+    public function test_restore_extracts_the_archive_using_the_expected_tar_invocation(): void
+    {
+        // Uses a minimal hand-built archive (same makeTestArchive() helper
+        // as the malformed-manifest tests below) instead of the full DB
+        // fixture round trip, so this stays fast while still exercising
+        // restore()'s real tar extraction end-to-end. Confirmed
+        // empirically (real `tar` invocations, not guessed): dropping any
+        // single element from ['tar', 'xzf', $archivePath, '-C', $workDir]
+        // makes the real tar binary exit non-zero -- missing 'tar' tries
+        // to execute "xzf" as a command (not found); missing 'xzf' leaves
+        // tar with no action flag; missing $archivePath makes '-C' get
+        // consumed as the (nonexistent) archive filename; missing '-C'
+        // makes $workDir get treated as a member-name filter that never
+        // matches; missing $workDir leaves '-C' without its required
+        // argument; and dropping the whole runProcess() call leaves
+        // workDir empty, so readManifest() itself throws next. So
+        // reaching the mysql restore step below at all already proves
+        // every element of that array -- and the call itself -- survived
+        // intact.
+        $archivePath = $this->makeTestArchive([
+            'manifest.json' => json_encode([
+                'created_at' => '2026-01-01T00:00:00Z',
+                'db_prefix' => $this->dbPrefix,
+                'included' => ['db.sql'],
+            ], JSON_THROW_ON_ERROR),
+            'db.sql' => "SELECT 1;\n",
+        ]);
+
+        $this->dropAndCreateDatabase($this->scratchDb);
+
+        $service = new BackupService();
+
+        try {
+            $service->restore($archivePath, $this->scratchDb);
+        } finally {
+            unlink($archivePath);
+        }
+
+        // Reaching this line without an exception already means tar
+        // genuinely extracted manifest.json + db.sql into restore()'s own
+        // workDir (readManifest() and the db.sql is_file() check both
+        // passed) -- this also confirms the trivial dump applied cleanly.
+        self::assertSame('1', $this->queryScalarFromDatabase($this->scratchDb, 'SELECT 1'));
     }
 
     public function test_restore_rejects_an_archive_missing_db_sql(): void
@@ -423,6 +692,150 @@ final class BackupServiceTest extends IntegrationTestCase
             $this->dbDriver === 'pgsql' ? 'does not exist' : 'Unknown database',
             $threw->getMessage()
         );
+    }
+
+    public function test_make_temp_dir_builds_its_path_under_the_system_temp_dir_with_extra_entropy(): void
+    {
+        // uniqid($prefix, true) (more_entropy=true) appends a '.' plus 8
+        // extra random digits after the 13-hex-character timestamp
+        // portion -- uniqid($prefix, false) never includes that '.' at
+        // all, so its presence is a reliable, format-level signal that
+        // more_entropy was really passed. Checking the directory's
+        // location itself (must start with sys_get_temp_dir() . '/')
+        // separately confirms the concatenation order/completeness, not
+        // just the uniqid() call in isolation.
+        $service = new BackupService();
+        $method = new ReflectionMethod(BackupService::class, 'makeTempDir');
+
+        /** @var string $dir */
+        $dir = $method->invoke($service, 'piwigo-backup-entropy-test-');
+
+        try {
+            self::assertStringStartsWith(sys_get_temp_dir() . '/', $dir);
+            self::assertStringContainsString('.', basename($dir));
+        } finally {
+            rmdir($dir);
+        }
+    }
+
+    public function test_make_temp_dir_creates_a_real_directory_with_exactly_0775_permissions(): void
+    {
+        // umask(0) around the call (same established technique as
+        // tests/Unit/Core/FilesystemHelperTest.php's own umask tests)
+        // removes the ambient umask's own bit-stripping, so the resulting
+        // fileperms() exactly reflects the literal mode mkdir() was
+        // called with -- otherwise this environment's default umask would
+        // mask away the exact bit(s) that distinguish 0775 from its
+        // DecrementInteger/IncrementInteger mutants (0774/0776), since
+        // both happen to collapse to the identical masked result here.
+        $service = new BackupService();
+        $method = new ReflectionMethod(BackupService::class, 'makeTempDir');
+
+        $previousUmask = umask(0);
+        try {
+            /** @var string $dir */
+            $dir = $method->invoke($service, 'piwigo-backup-perm-test-');
+        } finally {
+            umask($previousUmask);
+        }
+
+        try {
+            self::assertDirectoryExists($dir, 'makeTempDir() should have created a real directory');
+            self::assertSame(0775, fileperms($dir) & 0777);
+        } finally {
+            rmdir($dir);
+        }
+    }
+
+    public function test_remove_dir_is_a_no_op_when_the_directory_does_not_exist(): void
+    {
+        // Distinct from the shutdown-cleanup-closure tests above (which
+        // also exercise this same guard indirectly, but can't tell an
+        // early return apart from a fallthrough that happens to still be
+        // silent) -- this reaches removeDir() directly via reflection with
+        // a path that never existed at all, and deliberately does NOT
+        // suppress warnings, so a skipped guard here (falling through to
+        // scandir() on a nonexistent path) surfaces as a real E_WARNING
+        // this project's phpunit.xml.dist (failOnWarning) converts into a
+        // test failure.
+        $missingDir = sys_get_temp_dir() . '/piwigo-removedir-missing-' . bin2hex(random_bytes(8));
+        self::assertDirectoryDoesNotExist($missingDir);
+
+        $service = new BackupService();
+        $method = new ReflectionMethod(BackupService::class, 'removeDir');
+        $method->invoke($service, $missingDir);
+
+        self::assertDirectoryDoesNotExist($missingDir);
+    }
+
+    public function test_remove_dir_returns_early_when_scandir_fails_on_an_empty_directory(): void
+    {
+        // Distinct from test_remove_dir_returns_early_when_scandir_fails
+        // below (which uses a NON-empty directory, so its own two
+        // assertions can't tell an early return apart from a fallthrough:
+        // rmdir() on a non-empty directory fails just as silently whether
+        // or not it's ever even called). An EMPTY chmod(0000) directory
+        // breaks that symmetry: confirmed empirically that rmdir() on
+        // Linux only needs write+execute permission on the PARENT
+        // directory (not the target itself) and only requires the target
+        // be empty -- so if execution ever reaches the `rmdir($dir)` call
+        // below the `$items === false` guard, it actually succeeds and
+        // removes $dir, whereas the real early-return path never calls
+        // rmdir() at all and leaves $dir in place.
+        $dir = sys_get_temp_dir() . '/piwigo-unreadable-empty-dir-' . bin2hex(random_bytes(8));
+        mkdir($dir);
+        chmod($dir, 0000);
+
+        $service = new BackupService();
+        $method = new ReflectionMethod(BackupService::class, 'removeDir');
+
+        set_error_handler(static fn (): bool => true, E_WARNING);
+
+        try {
+            $method->invoke($service, $dir);
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertDirectoryExists($dir, 'removeDir() should return early (never reach rmdir()) when scandir() fails');
+
+        chmod($dir, 0755);
+        rmdir($dir);
+    }
+
+    public function test_remove_dir_unlinks_a_directory_symlink_without_following_it(): void
+    {
+        // Distinct from test_remove_dir_recurses_into_subdirectories
+        // below: that test only proves recursion happens for a REAL
+        // subdirectory. A directory *symlink* must take the opposite
+        // path -- is_dir() alone would say true for it too (is_dir()
+        // follows symlinks), so the `! is_link($path)` half of the guard
+        // is what keeps removeDir() from following it into some unrelated
+        // real directory and deleting that target's own contents.
+        // Confirmed empirically: following the symlink really does
+        // unlink() the real file on the other side, and rmdir() on the
+        // symlink path itself then fails ("Not a directory", since
+        // rmdir() never follows a trailing symlink) -- so a real,
+        // separate target directory with its own file proves this
+        // precisely, not just "no exception was thrown".
+        $target = sys_get_temp_dir() . '/piwigo-removedir-symlink-target-' . bin2hex(random_bytes(8));
+        mkdir($target);
+        file_put_contents($target . '/keep-me.txt', 'must survive');
+
+        $root = sys_get_temp_dir() . '/piwigo-removedir-symlink-root-' . bin2hex(random_bytes(8));
+        mkdir($root);
+        symlink($target, $root . '/link-to-target');
+
+        $service = new BackupService();
+        $method = new ReflectionMethod(BackupService::class, 'removeDir');
+        $method->invoke($service, $root);
+
+        self::assertDirectoryDoesNotExist($root);
+        self::assertDirectoryExists($target, 'removeDir() must not follow the symlink into the target directory');
+        self::assertFileExists($target . '/keep-me.txt');
+
+        unlink($target . '/keep-me.txt');
+        rmdir($target);
     }
 
     public function test_remove_dir_recurses_into_subdirectories(): void

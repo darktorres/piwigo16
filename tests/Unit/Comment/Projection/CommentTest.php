@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Comment\Projection\Comment;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Common\ValueObject\ImageId;
 
 /**
  * @return array<string, mixed>
@@ -63,6 +64,19 @@ test('fromRow defaults every nullable column to null when absent, and validated 
     // "throws when id is invalid" test below.
 });
 
+test('fromRow accepts an already-hydrated CommentId instance for id, not just a raw scalar', function (): void {
+    // `id` is `com.id`, a custom-Typed CommentId under DQL array
+    // hydration (fromRow()'s own "gotcha #4" comment) -- DQL can hand
+    // back the VO directly rather than a raw scalar. CommentId::tryFrom()
+    // itself can't accept a CommentId instance (only int|numeric-string,
+    // falling through to null for anything else), so this branch must
+    // short-circuit before ever reaching tryFrom().
+    $row = fullCommentRow();
+    $row['id'] = CommentId::from(7);
+
+    expect(Comment::fromRow($row)->id)->toEqual(CommentId::from(7));
+});
+
 test('fromRow throws when id is missing', function (): void {
     // Behavior change, deliberate: id is a CommentId now, and
     // CommentId::from(0) always throws (0 was never a valid id) -- the
@@ -103,6 +117,18 @@ test('fromRow defaults imageId to 0 when image_id is missing', function (): void
     $row['image_id'] = null;
 
     expect(Comment::fromRow($row)->imageId)->toBe(0);
+});
+
+test('fromRow accepts an already-hydrated ImageId instance for image_id, not just a raw scalar', function (): void {
+    // Same DQL-array-hydration acceptance as id's own instance branch
+    // above, applied to image_id: is_numeric() on an ImageId object is
+    // false, so a mutant that never takes the instanceof branch would
+    // fall through to the is_numeric()/0-default path and silently lose
+    // the real value.
+    $row = fullCommentRow();
+    $row['image_id'] = ImageId::from(9);
+
+    expect(Comment::fromRow($row)->imageId)->toBe(9);
 });
 
 test('fromRow casts a numeric-but-falsy-as-int validated string correctly via the int cast', function (): void {

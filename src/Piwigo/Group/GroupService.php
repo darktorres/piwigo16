@@ -15,6 +15,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Event\User\DeleteGroup;
 use Piwigo\Group\Projection\Group;
+use Piwigo\Group\Projection\GroupListing;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 
@@ -107,7 +108,7 @@ final readonly class GroupService
 
     /**
      * @param list<GroupId> $groupIds
-     * @return list<array{id: int, name: string, is_default: bool, lastmodified: string, nb_users: int}>
+     * @return list<GroupListing>
      */
     public function getListWithMemberCounts(
         array $groupIds = [],

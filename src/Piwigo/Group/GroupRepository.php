@@ -17,6 +17,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
 use Piwigo\Db\Tables;
 use Piwigo\Group\Projection\Group;
+use Piwigo\Group\Projection\GroupListing;
 use Piwigo\Users\UserEntity;
 
 /**
@@ -151,7 +152,7 @@ final class GroupRepository extends EntityRepository
      * exclusion stands.
      *
      * @param list<GroupId> $groupIds when non-empty, restricts to these ids
-     * @return list<array{id: int, name: string, is_default: bool, lastmodified: string, nb_users: int}>
+     * @return list<GroupListing>
      */
     public function findWithMemberCounts(
         array $groupIds,
@@ -191,16 +192,7 @@ final class GroupRepository extends EntityRepository
         // string|boolean, not the raw int a tinyint fetch would otherwise
         // produce. Normalized to real bool here, once, matching every
         // other domain's own retype convention.
-        return array_map(
-            static fn (array $row): array => [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
-                'name' => is_string($row['name']) ? $row['name'] : '',
-                'is_default' => (bool) $row['is_default'],
-                'lastmodified' => is_string($row['lastmodified']) ? $row['lastmodified'] : '',
-                'nb_users' => is_numeric($row['nb_users']) ? (int) $row['nb_users'] : 0,
-            ],
-            $rows
-        );
+        return array_map(GroupListing::fromRow(...), $rows);
     }
 
     public function nameExists(string $name, ?GroupId $excludeGroupId = null): bool

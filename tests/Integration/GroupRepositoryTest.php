@@ -371,7 +371,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
 
         $byName = [];
         foreach ($rows as $row) {
-            $byName[$row['name']] = $row['nb_users'];
+            $byName[$row->name] = $row->nbUsers;
         }
 
         self::assertSame(2, $byName['Editors']);
@@ -384,7 +384,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findWithMemberCounts([GroupId::from(1)], null, 'name ASC', 10, 0);
 
         self::assertCount(1, $rows);
-        self::assertSame('Editors', $rows[0]['name']);
+        self::assertSame('Editors', $rows[0]->name);
     }
 
     public function test_find_with_member_counts_filters_by_name_like(): void
@@ -392,7 +392,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findWithMemberCounts([], 'editors', 'name ASC', 10, 0);
 
         self::assertCount(1, $rows);
-        self::assertSame('Editors', $rows[0]['name']);
+        self::assertSame('Editors', $rows[0]->name);
     }
 
     public function test_find_with_member_counts_respects_per_page_and_page(): void
@@ -400,7 +400,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findWithMemberCounts([], null, 'name ASC', 1, 1);
 
         self::assertCount(1, $rows);
-        self::assertSame('Guests', $rows[0]['name']);
+        self::assertSame('Guests', $rows[0]->name);
     }
 
     public function test_find_ids_by_name_like_matches_a_wildcard_pattern(): void

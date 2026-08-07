@@ -24,6 +24,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupService;
+use Piwigo\Group\Projection\GroupListing;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -72,7 +73,10 @@ final class PwgGroups
                 'per_page' => $params['per_page'],
                 'count' => count($groups),
             ]),
-            'groups' => new PwgNamedArray($groups, 'group'),
+            'groups' => new PwgNamedArray(array_map(
+                static fn (GroupListing $g): array => $g->toArray(),
+                $groups
+            ), 'group'),
         ];
     }
 

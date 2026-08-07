@@ -49,11 +49,11 @@ final class UserListPageRenderer
         $groups_for_filter = [];
 
         foreach ($groupService->getListWithMemberCounts() as $row) {
-            $groups[$row['id']] = $row['name'];
+            $groups[$row->id->value] = $row->name;
             $groups_for_filter[] = [
-                'id' => $row['id'],
-                'name' => $row['name'],
-                'counter' => $row['nb_users'],
+                'id' => $row->id->value,
+                'name' => $row->name,
+                'counter' => $row->nbUsers,
             ];
         }
 

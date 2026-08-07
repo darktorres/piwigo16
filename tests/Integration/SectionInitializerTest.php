@@ -10,6 +10,7 @@ namespace Piwigo\Tests\Integration {
 
 use Override;
 use LogicException;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Users\UserService;
 use Piwigo\Core\Logger;
@@ -195,7 +196,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $context = new SectionInitializer(HtmlServiceTestFactory::build(), $this->repo, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new RequestMountDepth(), CurrentConfigTestFactory::get())
             ->parse();
 
-        self::assertSame('most_visited', $context->parsed['section'] ?? null);
+        self::assertSame(Section::MostVisited, $context->parsed['section'] ?? null);
     }
 
     public function test_parse_calls_bad_request_for_a_purely_zero_picture_id(): void

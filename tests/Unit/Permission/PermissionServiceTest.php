@@ -22,7 +22,6 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use ReflectionMethod;
 
 /**
  * PermissionRepository/GroupRepository/CategoryRepository are only ever

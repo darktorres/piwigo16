@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Search\Projection;
 
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Core\ArrayHelper;
 
 /**
@@ -18,6 +19,11 @@ use Piwigo\Core\ArrayHelper;
  * repository's deliberately generic findRowsByClause()/findIdsByClause(),
  * whose `$fromSql` varies per caller and can't be represented by a single
  * table's projection).
+ *
+ * `createdOn` stays `?string` here (this Projection's own convention) --
+ * `SavedSearchEntity::$createdOn` itself is `SqlDateTime`-typed (Phase 5),
+ * so `fromRow()` accepts either a real instance (a `getArrayResult()`
+ * -hydrated row) or a raw string.
  *
  * `rules` is `?array`, decoded here via `json_decode()` -- the column is
  * JSON (gap-closure Stage 1a-bis item 2), so every real consumer reads an
@@ -52,7 +58,9 @@ final readonly class Search
         return new self(
             id: is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
             searchUuid: is_string($row['search_uuid'] ?? null) ? $row['search_uuid'] : null,
-            createdOn: is_string($row['created_on'] ?? null) ? $row['created_on'] : null,
+            createdOn: ($row['created_on'] ?? null) instanceof SqlDateTime
+                ? $row['created_on']->value
+                : (is_string($row['created_on'] ?? null) ? $row['created_on'] : null),
             createdBy: is_numeric($row['created_by'] ?? null) ? (int) $row['created_by'] : null,
             forkedFrom: is_numeric($row['forked_from'] ?? null) ? (int) $row['forked_from'] : null,
             rules: self::decodeRules($row['rules'] ?? null),

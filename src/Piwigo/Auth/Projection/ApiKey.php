@@ -43,7 +43,7 @@ final readonly class ApiKey
             authKey: $entity->authKey,
             apikeySecret: $entity->apikeySecret,
             apikeyName: $entity->apikeyName,
-            userId: $entity->userId,
+            userId: $entity->userId->value,
             createdOn: $entity->createdOn,
             duration: $entity->duration,
             expiredOn: $entity->expiredOn,

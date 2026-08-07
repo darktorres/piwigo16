@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Maps the `user_auth_keys` table (`piwigo_user_auth_keys` once
@@ -35,8 +36,8 @@ final class UserAuthKeyEntity
         public string $authKey,
         #[ORM\Column(name: 'apikey_secret', type: 'string', length: 255, nullable: true)]
         public ?string $apikeySecret,
-        #[ORM\Column(name: 'user_id', type: 'integer')]
-        public int $userId,
+        #[ORM\Column(name: 'user_id', type: 'user_id')]
+        public UserId $userId,
         #[ORM\Column(name: 'created_on', type: 'string', length: 19)]
         public string $createdOn,
         #[ORM\Column(type: 'integer', nullable: true)]

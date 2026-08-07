@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth\Projection;
 
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Users\UserStatus;
 
 /**
@@ -19,6 +20,12 @@ use Piwigo\Users\UserStatus;
  * numeric-string param contract) -- not upgraded to `int` here, since doing
  * so would just move that same narrowing to a different call site instead
  * of removing it.
+ *
+ * UserAuthKeyEntity::$userId is UserId-typed -- `uak.userId AS user_id`
+ * array-hydrates as a UserId instance, not a scalar, so `fromRow()`'s own
+ * `userId` narrowing checks `instanceof UserId` rather than `is_scalar()`
+ * (which would always be false and silently break every real login
+ * through this security-sensitive path).
  */
 final readonly class AuthKeyDetails
 {
@@ -48,7 +55,7 @@ final readonly class AuthKeyDetails
     {
         return new self(
             authKeyId: is_scalar($row['auth_key_id'] ?? null) ? (string) $row['auth_key_id'] : '',
-            userId: is_scalar($row['user_id'] ?? null) ? (string) $row['user_id'] : '',
+            userId: ($row['user_id'] ?? null) instanceof UserId ? (string) $row['user_id']->value : '',
             authKey: is_scalar($row['auth_key'] ?? null) ? (string) $row['auth_key'] : '',
             expiredOn: is_scalar($row['expired_on'] ?? null) ? (string) $row['expired_on'] : '',
             revokedOn: is_scalar($row['revoked_on'] ?? null) ? (string) $row['revoked_on'] : null,

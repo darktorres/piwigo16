@@ -151,7 +151,7 @@ final readonly class AuthRepository
             ->where('uak.userId = :userId')
             ->andWhere('uak.authKey = :authKey')
             ->setParameter('lastUsedOn', $lastUsedOn->format(self::DATETIME_FORMAT))
-            ->setParameter('userId', $userId)
+            ->setParameter('userId', UserId::from((int) $userId))
             ->setParameter('authKey', $authKey)
             ->getQuery()
             ->execute();
@@ -194,7 +194,7 @@ final readonly class AuthRepository
         $entity = new UserAuthKeyEntity(
             authKey: $key['auth_key'],
             apikeySecret: null,
-            userId: $key['user_id'],
+            userId: UserId::from($key['user_id']),
             createdOn: $key['created_on'],
             duration: $key['duration'],
             expiredOn: $key['expired_on'],
@@ -221,7 +221,7 @@ final readonly class AuthRepository
             ->andWhere('uak.expiredOn > :nowCompare')
             ->andWhere("uak.keyType = 'auth_key'")
             ->setParameter('now', $nowStr)
-            ->setParameter('userId', $userId)
+            ->setParameter('userId', UserId::from($userId))
             ->setParameter('nowCompare', $nowStr)
             ->getQuery()
             ->execute();

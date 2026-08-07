@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Auth\Projection\ApiKey;
 use Piwigo\Auth\UserAuthKeyEntity;
+use Piwigo\Common\ValueObject\UserId;
 
 test('fromRow narrows a full real row', function (): void {
     // revoked_on is a real, non-null string here so the test can
@@ -62,7 +63,7 @@ test('fromEntity copies every field from a real UserAuthKeyEntity', function ():
     $entity = new UserAuthKeyEntity(
         authKey: 'ck98765',
         apikeySecret: 'ent-secret',
-        userId: 7,
+        userId: UserId::from(7),
         createdOn: '2026-06-01 00:00:00',
         duration: 60,
         expiredOn: '2026-08-01 00:00:00',
@@ -89,7 +90,7 @@ test('fromEntity defaults authKeyId to 0 when the entity has none yet', function
     $entity = new UserAuthKeyEntity(
         authKey: 'ck00000',
         apikeySecret: null,
-        userId: 1,
+        userId: UserId::from(1),
         createdOn: '2026-06-01 00:00:00',
         duration: null,
         expiredOn: '2026-08-01 00:00:00',

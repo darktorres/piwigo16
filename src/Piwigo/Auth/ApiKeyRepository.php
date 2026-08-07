@@ -7,6 +7,7 @@ namespace Piwigo\Auth;
 use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\Projection\ApiKey;
+use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Persistence layer for the personal API key ("pkid-...") lifecycle --
@@ -37,7 +38,7 @@ final readonly class ApiKeyRepository
         $entity = new UserAuthKeyEntity(
             authKey: $key['auth_key'],
             apikeySecret: $key['apikey_secret'],
-            userId: $key['user_id'],
+            userId: UserId::from($key['user_id']),
             createdOn: $key['created_on'],
             duration: $key['duration'],
             expiredOn: $key['expired_on'],
@@ -57,7 +58,7 @@ final readonly class ApiKeyRepository
             ->where('uak.authKey = :authKey')
             ->andWhere('uak.userId = :userId')
             ->setParameter('authKey', $authKey)
-            ->setParameter('userId', $userId)
+            ->setParameter('userId', UserId::from($userId))
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -73,7 +74,7 @@ final readonly class ApiKeyRepository
             ->andWhere('uak.userId = :userId')
             ->setParameter('revokedOn', $revokedOn->format('Y-m-d H:i:s'))
             ->setParameter('authKey', $authKey)
-            ->setParameter('userId', $userId)
+            ->setParameter('userId', UserId::from($userId))
             ->getQuery()
             ->execute();
 
@@ -89,7 +90,7 @@ final readonly class ApiKeyRepository
             ->andWhere('uak.userId = :userId')
             ->setParameter('apikeyName', $apiName)
             ->setParameter('authKey', $authKey)
-            ->setParameter('userId', $userId)
+            ->setParameter('userId', UserId::from($userId))
             ->getQuery()
             ->execute();
 
@@ -109,7 +110,7 @@ final readonly class ApiKeyRepository
             ->andWhere('uak.userId = :userId')
             ->setParameter('lastNotifiedOn', $lastNotifiedOn)
             ->setParameter('authKey', $authKey)
-            ->setParameter('userId', $userId)
+            ->setParameter('userId', UserId::from($userId))
             ->getQuery()
             ->execute();
 
@@ -126,7 +127,7 @@ final readonly class ApiKeyRepository
             ->from(UserAuthKeyEntity::class, 'uak')
             ->where('uak.userId = :userId')
             ->andWhere("uak.keyType = 'api_key'")
-            ->setParameter('userId', $userId)
+            ->setParameter('userId', UserId::from($userId))
             ->getQuery()
             ->getResult();
 

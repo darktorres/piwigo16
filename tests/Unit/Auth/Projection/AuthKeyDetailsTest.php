@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\Projection\AuthKeyDetails;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Users\UserStatus;
 
 /**
@@ -12,7 +13,11 @@ function fullAuthKeyDetailsRow(): array
 {
     return [
         'auth_key_id' => '5',
-        'user_id' => '1',
+        // A real row's `user_id` is a UserId instance (UserAuthKeyEntity::$userId
+        // is UserId-typed, DQL array hydration applies the custom Type), not a raw
+        // scalar -- matches what fromRow()'s real caller actually passes, same reasoning
+        // as `status` below.
+        'user_id' => UserId::from(1),
         'auth_key' => str_repeat('a', 30),
         'expired_on' => '2026-08-01 00:00:00',
         // Real, non-null values (a genuine revoked/notified/apikey row
@@ -57,9 +62,12 @@ test('fromRow casts a non-string scalar (e.g. a real DBAL int/float) to string f
     // (as a DBAL driver can hand back for a numeric column) exercises
     // the cast for real, since AuthKeyDetails's own properties are
     // `string`/`?string` and this file has strict_types=1.
+    //
+    // user_id is deliberately left untouched -- it's instanceof-guarded,
+    // not scalar-guarded (see fullAuthKeyDetailsRow()'s own comment), so
+    // it isn't part of this scalar-cast group.
     $row = fullAuthKeyDetailsRow();
     $row['auth_key_id'] = 5;
-    $row['user_id'] = 1;
     $row['auth_key'] = 999888777;
     $row['expired_on'] = 20260801;
     $row['revoked_on'] = 20260701;

@@ -8,7 +8,6 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use Override;
-use Stringable;
 
 /**
  * MySQL DATE value in canonical `Y-m-d` form (no time component).
@@ -20,7 +19,7 @@ use Stringable;
  * Pairs with `MysqlDateTime` for columns typed `DATE` rather than
  * `DATETIME` (e.g. `images.date_metadata_update`).
  */
-final readonly class MysqlDate implements Stringable
+final readonly class MysqlDate implements StringVo
 {
     private function __construct(
         public string $value
@@ -29,6 +28,7 @@ final readonly class MysqlDate implements Stringable
     /**
      * @throws InvalidArgumentException when $value is not a valid `Y-m-d`
      */
+    #[Override]
     public static function from(string $value): self
     {
         $dt = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
@@ -38,6 +38,7 @@ final readonly class MysqlDate implements Stringable
         return new self($value);
     }
 
+    #[Override]
     public static function tryFrom(mixed $value): ?self
     {
         if (! is_string($value)) {
@@ -62,9 +63,10 @@ final readonly class MysqlDate implements Stringable
         return $dt;
     }
 
-    public function equals(self $other): bool
+    #[Override]
+    public function equals(StringVo $other): bool
     {
-        return $this->value === $other->value;
+        return $other instanceof self && $other->value === $this->value;
     }
 
     #[Override]

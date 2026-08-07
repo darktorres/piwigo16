@@ -8,7 +8,6 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use Override;
-use Stringable;
 
 /**
  * MySQL DATETIME value in canonical `Y-m-d H:i:s` form.
@@ -22,7 +21,7 @@ use Stringable;
  * always meaningful. Conversion to a `\DateTimeImmutable` is available via
  * `toDateTimeImmutable()` for arithmetic; round-trips are lossless.
  */
-final readonly class MysqlDateTime implements Stringable
+final readonly class MysqlDateTime implements StringVo
 {
     private function __construct(
         public string $value
@@ -31,6 +30,7 @@ final readonly class MysqlDateTime implements Stringable
     /**
      * @throws InvalidArgumentException when $value is not a valid `Y-m-d H:i:s`
      */
+    #[Override]
     public static function from(string $value): self
     {
         // The `!` resets all unspecified fields so partial inputs (e.g. just a date) fail.
@@ -42,6 +42,7 @@ final readonly class MysqlDateTime implements Stringable
         return new self($value);
     }
 
+    #[Override]
     public static function tryFrom(mixed $value): ?self
     {
         if (! is_string($value)) {
@@ -72,9 +73,10 @@ final readonly class MysqlDateTime implements Stringable
         return $dt;
     }
 
-    public function equals(self $other): bool
+    #[Override]
+    public function equals(StringVo $other): bool
     {
-        return $this->value === $other->value;
+        return $other instanceof self && $other->value === $this->value;
     }
 
     #[Override]

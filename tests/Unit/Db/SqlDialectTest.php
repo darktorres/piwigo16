@@ -47,6 +47,8 @@ test('booleanToInt converts a real bool to 1/0, and passes everything else throu
 });
 
 test('getHour wraps a date expression in HOUR()', function (): void {
+    putenv('PIWIGO_DB_DRIVER=mysqli');
+
     expect(SqlDialect::getHour('images.date_available'))->toBe('HOUR(images.date_available)');
 });
 
@@ -57,6 +59,8 @@ test('getHour wraps a date expression in EXTRACT(HOUR FROM ...) on pgsql', funct
 });
 
 test('dateToTs wraps a date expression in UNIX_TIMESTAMP()', function (): void {
+    putenv('PIWIGO_DB_DRIVER=mysqli');
+
     expect(SqlDialect::dateToTs('d'))->toBe('UNIX_TIMESTAMP(d)');
 });
 
@@ -72,6 +76,8 @@ test('dateToTs wraps a date expression in EXTRACT(EPOCH FROM ...) on pgsql', fun
  * spliced into the returned expression unquoted.
  */
 test('getRecentPeriodExpression builds a SUBDATE(...) fragment for a caller-supplied bound-parameter placeholder', function (): void {
+    putenv('PIWIGO_DB_DRIVER=mysqli');
+
     expect(SqlDialect::getRecentPeriodExpression(7, ':lastDate'))->toBe('SUBDATE(:lastDate,INTERVAL 7 DAY)');
 });
 

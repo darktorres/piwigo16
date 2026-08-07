@@ -28,6 +28,7 @@ use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -227,7 +228,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             id: UserId::from(3),
             username: Username::from('regular_user'),
             email: Email::from('regular@example.test'),
-            language: 'en_UK',
+            language: LangCode::from('en_UK'),
             theme: 'default',
             status: UserStatus::Normal,
             enabledHigh: true,
@@ -240,7 +241,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             id: UserId::from(1),
             username: Username::from('fixture_admin'),
             email: Email::from('fixture_admin@example.test'),
-            language: 'en_UK',
+            language: LangCode::from('en_UK'),
             theme: 'default',
             status: UserStatus::Admin,
             enabledHigh: true,

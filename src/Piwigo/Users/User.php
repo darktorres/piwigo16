@@ -6,8 +6,10 @@ namespace Piwigo\Users;
 
 use InvalidArgumentException;
 use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
+use Piwigo\Core\AppInfo;
 
 /**
  * Typed user entity. `rawAttributes` carries the full legacy `$user`
@@ -40,7 +42,7 @@ final readonly class User
         public UserId $id,
         public ?Username $username,
         public ?Email $email,
-        public string $language,
+        public LangCode $language,
         public string $theme,
         public UserStatus $status,
         public bool $enabledHigh,
@@ -68,7 +70,7 @@ final readonly class User
             id: $id,
             username: Username::tryFrom($row['username'] ?? null),
             email: Email::tryFrom($row['email'] ?? null),
-            language: is_string($row['language'] ?? null) ? $row['language'] : '',
+            language: LangCode::tryFrom($row['language'] ?? null) ?? LangCode::from(AppInfo::DEFAULT_LANGUAGE),
             theme: is_string($row['theme'] ?? null) ? $row['theme'] : '',
             status: is_string($status) ? (UserStatus::tryFrom($status) ?? UserStatus::Guest) : UserStatus::Guest,
             enabledHigh: (bool) ($row['enabled_high'] ?? false),
@@ -94,7 +96,7 @@ final readonly class User
             'id' => $this->id->value,
             'username' => $this->username?->value,
             'email' => $this->email?->value,
-            'language' => $this->language,
+            'language' => $this->language->value,
             'theme' => $this->theme,
             'status' => $this->status->value,
             'enabled_high' => $this->enabledHigh,
@@ -104,10 +106,10 @@ final readonly class User
         ]);
     }
 
-    public function withLanguage(string $language): self
+    public function withLanguage(LangCode $language): self
     {
         $rawAttributes = $this->rawAttributes;
-        $rawAttributes['language'] = $language;
+        $rawAttributes['language'] = $language->value;
 
         return new self(
             id: $this->id,

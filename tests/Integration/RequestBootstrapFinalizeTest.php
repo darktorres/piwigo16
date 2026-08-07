@@ -10,6 +10,7 @@ use LogicException;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigLoader;
@@ -75,7 +76,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
             id: UserId::from(3),
             username: Username::from('regular_user'),
             email: Email::from('regular@example.test'),
-            language: 'en_UK',
+            language: LangCode::from('en_UK'),
             theme: 'default',
             status: UserStatus::Normal,
             enabledHigh: true,
@@ -167,7 +168,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
             id: UserId::from(2),
             username: Username::from('guest'),
             email: null,
-            language: 'en_UK',
+            language: LangCode::from('en_UK'),
             theme: 'default',
             status: UserStatus::Guest,
             enabledHigh: false,

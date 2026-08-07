@@ -14,6 +14,7 @@ use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
@@ -268,13 +269,13 @@ final class PasswordController implements ControllerInterface
         // Load language if cookie is set from login/register/password
         // pages
         $cookie_lang = $_COOKIE['lang'] ?? null;
-        if (is_string($cookie_lang) and $this->currentUser->get()->language !== $cookie_lang) {
+        if (is_string($cookie_lang) and $this->currentUser->get()->language->value !== $cookie_lang) {
             if (! array_key_exists($cookie_lang, LangService::getLanguages($this->paths))) {
                 $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
 
-            $this->currentUser->updateLanguage($cookie_lang);
+            $this->currentUser->updateLanguage(LangCode::from($cookie_lang));
             $this->lang->load('common.lang', '', [
                 'language' => $cookie_lang,
             ]);
@@ -288,10 +289,10 @@ final class PasswordController implements ControllerInterface
         $template->assign([
             'language_options' => $language_options,
             'current_language' => $this->currentUser->get()
-                ->language,
+                ->language->value,
         ]);
 
-        if (str_starts_with($this->currentUser->get()->language, 'fr')) {
+        if (str_starts_with($this->currentUser->get()->language->value, 'fr')) {
             $help_link = 'https://upstream.example.invalid/help/fr/';
         } else {
             $help_link = 'https://upstream.example.invalid/help/';
@@ -526,7 +527,7 @@ final class PasswordController implements ControllerInterface
             'user_id' => $user_id->value,
             'username' => $targetUser->username?->value,
             'email' => $targetUser->email?->value,
-            'language' => $targetUser->language,
+            'language' => $targetUser->language->value,
         ];
         $status = $targetUser->status->value;
         $has_no_email = $targetUser->email === null;

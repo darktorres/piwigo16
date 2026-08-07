@@ -15,6 +15,7 @@ use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Bootstrap\Request\UserBootstrapRequest;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
@@ -287,7 +288,7 @@ final class UserBootstrap
 
         if (RequestBootstrap::currentConfig()->browserLanguage() and ($this->accessLevelChecker->isAGuest() or $this->accessLevelChecker->isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
             $user['language'] = $language;
-            $currentUser->updateLanguage($language);
+            $currentUser->updateLanguage(LangCode::from($language));
         }
         $eventDispatcher->dispatchNotify(new UserInit($user));
     }

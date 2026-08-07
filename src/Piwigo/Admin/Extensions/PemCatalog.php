@@ -136,7 +136,7 @@ final readonly class PemCatalog
         $pemBaseUrl = RequestBootstrap::pemUrl();
         $url = $pemBaseUrl . '/api/get_revision_list-next.php';
         $userLanguage = $this->currentUser->get()
-            ->language;
+            ->language->value;
         $getData = [
             'category_id' => $type->pemCategoryId($this->currentConfig),
             'format' => 'php',

@@ -12,6 +12,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Bootstrap\PageTail;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Request\ProfileActionRequest;
@@ -116,7 +117,7 @@ final class ProfileController implements ControllerInterface
         // 'language' field) consistently reflects the just-switched
         // language.
         $cookie_lang = $_COOKIE['lang'] ?? null;
-        if ($cookie_lang !== null and (! is_string($cookie_lang) or $this->currentUser->get()->language !== $cookie_lang)) {
+        if ($cookie_lang !== null and (! is_string($cookie_lang) or $this->currentUser->get()->language->value !== $cookie_lang)) {
             if (! is_string($cookie_lang)) {
                 $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
@@ -126,7 +127,7 @@ final class ProfileController implements ControllerInterface
                     ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
 
-            $this->currentUser->updateLanguage($cookie_lang);
+            $this->currentUser->updateLanguage(LangCode::from($cookie_lang));
             $this->userService->updateInfosForUser($this->currentUser->get()->id, [
                 'language' => $cookie_lang,
             ]);
@@ -225,11 +226,11 @@ final class ProfileController implements ControllerInterface
         $template->assign([
             'language_options' => $language_options,
             'language_selection' => $this->currentUser->get()
-                ->language,
+                ->language->value,
         ]);
 
         // Get link to doc
-        if (str_starts_with($this->currentUser->get()->language, 'fr')) {
+        if (str_starts_with($this->currentUser->get()->language->value, 'fr')) {
             $help_link = 'https://upstream.example.invalid/help/fr/';
         } else {
             $help_link = 'https://upstream.example.invalid/help/';

@@ -10,6 +10,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Bootstrap\PageTail;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Request\IdentificationSubmitRequest;
@@ -201,7 +202,7 @@ final class IdentificationController implements ControllerInterface
         // Load language if cookie is set from login/register/password
         // pages
         $lang_cookie = $_COOKIE['lang'] ?? null;
-        if ($lang_cookie !== null and (! is_string($lang_cookie) or $this->currentUser->get()->language !== $lang_cookie)) {
+        if ($lang_cookie !== null and (! is_string($lang_cookie) or $this->currentUser->get()->language->value !== $lang_cookie)) {
             if (! is_string($lang_cookie)) {
                 $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
@@ -211,7 +212,7 @@ final class IdentificationController implements ControllerInterface
                     ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
             }
 
-            $this->currentUser->updateLanguage($lang_cookie);
+            $this->currentUser->updateLanguage(LangCode::from($lang_cookie));
             $this->lang->load('common.lang', '', [
                 'language' => $lang_cookie,
             ]);
@@ -225,10 +226,10 @@ final class IdentificationController implements ControllerInterface
         $template->assign([
             'language_options' => $language_options,
             'current_language' => $this->currentUser->get()
-                ->language,
+                ->language->value,
         ]);
 
-        if (str_starts_with($this->currentUser->get()->language, 'fr')) {
+        if (str_starts_with($this->currentUser->get()->language->value, 'fr')) {
             $help_link = 'https://upstream.example.invalid/help/fr/';
         } else {
             $help_link = 'https://upstream.example.invalid/help/';

@@ -154,9 +154,9 @@ final class NotificationByMailSender
     public function beginUsersEnv(bool $isToSendMail = false): void
     {
         $this->saveCurrentUser = $this->currentUser->get();
-        $userLanguage = $this->saveCurrentUser->language;
+        $userLanguage = $this->saveCurrentUser->language->value;
         $this->mailer
-            ->switchLangTo($userLanguage !== '' ? $userLanguage : $this->userService->getDefaultLanguage());
+            ->switchLangTo($userLanguage);
 
         $this->isToSendMail = $isToSendMail;
 
@@ -215,9 +215,9 @@ final class NotificationByMailSender
         $this->currentUser->set(User::fromUserArray($user));
 
         $currentUserLanguage = $this->currentUser->get()
-            ->language;
+            ->language->value;
         $this->mailer
-            ->switchLangTo($currentUserLanguage !== '' ? $currentUserLanguage : $this->userService->getDefaultLanguage());
+            ->switchLangTo($currentUserLanguage);
 
         if ($isActionSend) {
             $emailFormat = $this->emailFormat ?? $this->mailer

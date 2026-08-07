@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Unit\Auth;
 use LogicException;
 use InvalidArgumentException;
 use Piwigo\Auth\PwgTOTP;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -201,7 +202,7 @@ test('getOtpAuthUrl builds an otpauth:// url from the current user and a scheme-
         id: UserId::from(9),
         username: Username::from('totp_user'),
         email: null,
-        language: '',
+        language: LangCode::from('en_UK'),
         theme: '',
         status: UserStatus::Normal,
         enabledHigh: false,
@@ -223,7 +224,7 @@ test('getQrCode returns a base64 PNG data uri encoding the same otpauth url as g
         id: UserId::from(9),
         username: Username::from('totp_user'),
         email: null,
-        language: '',
+        language: LangCode::from('en_UK'),
         theme: '',
         status: UserStatus::Normal,
         enabledHigh: false,

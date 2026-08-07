@@ -36,6 +36,7 @@ use Piwigo\Core\FilterState;
 use Piwigo\Category\CategoryService;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\User;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Users\UserStatus;
@@ -226,7 +227,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             id: UserId::from(2),
             username: Username::from('maintenance-action-dispatcher-test-tag-service-user'),
             email: null,
-            language: '',
+            language: LangCode::from('en_UK'),
             theme: '',
             status: UserStatus::Normal,
             enabledHigh: false,

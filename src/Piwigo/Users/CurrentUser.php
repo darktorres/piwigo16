@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use LogicException;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
@@ -51,7 +52,7 @@ final class CurrentUser
             id: UserId::from($this->currentConfig->guestId()),
             username: null,
             email: null,
-            language: AppInfo::DEFAULT_LANGUAGE,
+            language: LangCode::from(AppInfo::DEFAULT_LANGUAGE),
             theme: AppInfo::DEFAULT_TEMPLATE,
             status: UserStatus::Guest,
             enabledHigh: false,
@@ -77,7 +78,7 @@ final class CurrentUser
         $this->user = $user;
     }
 
-    public function updateLanguage(string $language): void
+    public function updateLanguage(LangCode $language): void
     {
         $this->user = $this->get()
             ->withLanguage($language);

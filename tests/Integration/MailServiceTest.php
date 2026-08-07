@@ -19,6 +19,7 @@ use LogicException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigEntry;
@@ -445,7 +446,7 @@ final class MailServiceTest extends IntegrationTestCase
             id: UserId::from(1),
             username: Username::from('nonexistent-subdir/evil'),
             email: null,
-            language: 'en_UK',
+            language: LangCode::from('en_UK'),
             theme: '',
             status: UserStatus::Normal,
             enabledHigh: false,

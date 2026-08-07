@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\Paths;
@@ -73,7 +74,7 @@ function seedPermissionUser(string $forbiddenCategories = '', int $level = 0, st
         id: UserId::from(1),
         username: Username::from('torres'),
         email: null,
-        language: '',
+        language: LangCode::from('en_UK'),
         theme: '',
         status: UserStatus::Normal,
         enabledHigh: false,
@@ -105,7 +106,7 @@ function seedPermissionUserRaw(array $rawAttributes): void
         id: UserId::from(1),
         username: Username::from('torres'),
         email: null,
-        language: '',
+        language: LangCode::from('en_UK'),
         theme: '',
         status: UserStatus::Normal,
         enabledHigh: false,

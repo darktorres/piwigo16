@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Auth;
 
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\AccessLevel;
 use Throwable;
@@ -37,7 +38,7 @@ function seedAccessControlUser(UserStatus $status, int $id = 1): CurrentUser
         id: UserId::from($id),
         username: null,
         email: null,
-        language: '',
+        language: LangCode::from('en_UK'),
         theme: '',
         status: $status,
         enabledHigh: false,

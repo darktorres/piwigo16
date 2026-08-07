@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Auth\AccessLevelChecker;
@@ -19,7 +20,7 @@ function seedCurrentUserStatus(UserStatus $status): void
         id: UserId::from(1),
         username: null,
         email: null,
-        language: '',
+        language: LangCode::from('en_UK'),
         theme: '',
         status: $status,
         enabledHigh: false,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\Kernel;
@@ -53,7 +54,7 @@ function pluginMaintainSetUserStatus(UserStatus $status): void
         id: UserId::from(1),
         username: Username::from('plugin-maintain-test-user'),
         email: null,
-        language: '',
+        language: LangCode::from('en_UK'),
         theme: '',
         status: $status,
         enabledHigh: false,

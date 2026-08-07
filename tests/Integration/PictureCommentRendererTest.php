@@ -18,6 +18,7 @@ use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Mail\MailService;
 use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Doctrine\DBAL\Connection;
@@ -893,7 +894,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             id: UserId::from($id),
             username: Username::from('fixture_user_' . $id),
             email: Email::tryFrom($email),
-            language: '',
+            language: LangCode::from('en_UK'),
             theme: '',
             status: $status,
             enabledHigh: false,

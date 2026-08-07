@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\AuthService;
+use Piwigo\Common\ValueObject\LangCode;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mailer\Mailer;
 use Piwigo\Mail\BoundedSendmailTransport;
@@ -1496,7 +1497,7 @@ test('switchLangTo pushes the current language and translations, switchLangBack 
     $service = mail_service_test_build();
 
     $service->switchLangTo('fr_FR');
-    expect(CurrentUserTestFactory::get()->get()->language)->toBe('fr_FR');
+    expect(CurrentUserTestFactory::get()->get()->language)->toEqual(LangCode::from('fr_FR'));
     expect(LangTestFactory::get()->langInfo()['code'] ?? null)->toBe('fr');
 
     $service->switchLangBack();
@@ -1506,7 +1507,7 @@ test('switchLangTo pushes the current language and translations, switchLangBack 
     // call above would skip saving *this* test's own original lang_info
     // snapshot (considering it "already initialised"), so switchLangBack()
     // would have nothing real to restore it from.
-    expect(CurrentUserTestFactory::get()->get()->language)->toBe('en_UK');
+    expect(CurrentUserTestFactory::get()->get()->language)->toEqual(LangCode::from('en_UK'));
     expect(LangTestFactory::get()->langInfo()['code'] ?? null)->toBe('en_UK_marker');
 });
 
@@ -1556,13 +1557,13 @@ test('switchLangTo/switchLangBack nest in real LIFO order across more than one p
 
     $service->switchLangTo('fr_FR');
     $service->switchLangTo('de_DE');
-    expect(CurrentUserTestFactory::get()->get()->language)->toBe('de_DE');
+    expect(CurrentUserTestFactory::get()->get()->language)->toEqual(LangCode::from('de_DE'));
 
     $service->switchLangBack();
-    expect(CurrentUserTestFactory::get()->get()->language)->toBe('fr_FR');
+    expect(CurrentUserTestFactory::get()->get()->language)->toEqual(LangCode::from('fr_FR'));
 
     $service->switchLangBack();
-    expect(CurrentUserTestFactory::get()->get()->language)->toBe('en_UK');
+    expect(CurrentUserTestFactory::get()->get()->language)->toEqual(LangCode::from('en_UK'));
 });
 
 test('switchLangTo reuses its own cache for a language already switched to once, without reloading language files again', function (): void {
@@ -1605,13 +1606,13 @@ test('switchLangTo only ever snapshots the ORIGINAL starting language once per r
     $service->switchLangTo('fr_FR');
     $service->switchLangBack();
 
-    CurrentUserTestFactory::get()->updateLanguage('de_DE');
+    CurrentUserTestFactory::get()->updateLanguage(LangCode::from('de_DE'));
     LangTestFactory::get()->setLangInfo(['code' => 'marker-de']);
     $service->switchLangTo('es_ES');
     $service->switchLangBack();
 
     expect(LangTestFactory::get()->langInfo()['code'] ?? null)->not->toBe('marker-de');
-    expect(CurrentUserTestFactory::get()->get()->language)->toBe('de_DE');
+    expect(CurrentUserTestFactory::get()->get()->language)->toEqual(LangCode::from('de_DE'));
 });
 
 test('switchLangTo replays every plugin language file already loaded this request, in the newly-switched-to language', function (): void {

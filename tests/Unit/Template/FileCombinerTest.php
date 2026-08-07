@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -76,7 +77,7 @@ function setAdminUser(): void
         id: UserId::from(2),
         username: Username::from('admin'),
         email: null,
-        language: 'en_UK',
+        language: LangCode::from('en_UK'),
         theme: 'modus',
         status: UserStatus::Admin,
         enabledHigh: false,

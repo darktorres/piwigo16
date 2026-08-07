@@ -32,6 +32,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\Event\FinalizeLogin;
     use Piwigo\Auth\PasswordRepository;
     use Piwigo\Auth\PasswordService;
+    use Piwigo\Common\ValueObject\LangCode;
     use Piwigo\Common\ValueObject\UserId;
     use Piwigo\Common\ValueObject\Username;
     use Piwigo\Config\CurrentConfig;
@@ -243,7 +244,7 @@ namespace Piwigo\Tests\Integration {
                 id: UserId::from(1),
                 username: Username::from('fixture_admin'),
                 email: null,
-                language: 'en_UK',
+                language: LangCode::from('en_UK'),
                 theme: '',
                 status: UserStatus::Webmaster,
                 enabledHigh: false,
@@ -282,7 +283,7 @@ namespace Piwigo\Tests\Integration {
                 id: UserId::from(1),
                 username: Username::from('fixture_admin'),
                 email: null,
-                language: 'en_UK',
+                language: LangCode::from('en_UK'),
                 theme: '',
                 status: UserStatus::Webmaster,
                 enabledHigh: false,
@@ -323,7 +324,7 @@ namespace Piwigo\Tests\Integration {
                 id: UserId::from(1),
                 username: Username::from('fixture_admin'),
                 email: null,
-                language: 'en_UK',
+                language: LangCode::from('en_UK'),
                 theme: '',
                 status: UserStatus::Webmaster,
                 enabledHigh: false,

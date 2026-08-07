@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Users\User;
@@ -25,7 +26,7 @@ test('fromUserArray coerces a real legacy $user row', function (): void {
     expect($user->id->value)->toBe(7)
         ->and($user->username)->toEqual(Username::from('alice'))
         ->and($user->email)->toEqual(Email::from('alice@example.com'))
-        ->and($user->language)->toBe('en_UK')
+        ->and($user->language)->toEqual(LangCode::from('en_UK'))
         ->and($user->theme)->toBe('modus')
         ->and($user->status)->toBe(UserStatus::Admin)
         ->and($user->enabledHigh)->toBeTrue()
@@ -45,7 +46,7 @@ test('fromUserArray degrades safely on a missing/malformed non-id field', functi
     expect($user->id->value)->toBe(7)
         ->and($user->username)->toBeNull()
         ->and($user->email)->toBeNull()
-        ->and($user->language)->toBe('')
+        ->and($user->language)->toEqual(LangCode::from('en_UK'))
         ->and($user->theme)->toBe('')
         ->and($user->status)->toBe(UserStatus::Guest)
         ->and($user->enabledHigh)->toBeFalse()
@@ -65,16 +66,16 @@ test('withLanguage returns a new immutable instance, original is untouched', fun
         id: UserId::from(1),
         username: Username::from('bob'),
         email: null,
-        language: 'en_UK',
+        language: LangCode::from('en_UK'),
         theme: 'modus',
         status: UserStatus::Normal,
         enabledHigh: false,
     );
 
-    $updated = $original->withLanguage('fr_FR');
+    $updated = $original->withLanguage(LangCode::from('fr_FR'));
 
-    expect($updated->language)->toBe('fr_FR')
-        ->and($original->language)->toBe('en_UK')
+    expect($updated->language)->toEqual(LangCode::from('fr_FR'))
+        ->and($original->language)->toEqual(LangCode::from('en_UK'))
         ->and($updated)->not->toBe($original);
 });
 
@@ -83,7 +84,7 @@ test('withUsername returns a new immutable instance', function (): void {
         id: UserId::from(1),
         username: Username::from('bob'),
         email: null,
-        language: 'en_UK',
+        language: LangCode::from('en_UK'),
         theme: 'modus',
         status: UserStatus::Normal,
         enabledHigh: false,
@@ -100,7 +101,7 @@ test('withLevel returns a new immutable instance and syncs rawAttributes', funct
         id: UserId::from(1),
         username: Username::from('bob'),
         email: null,
-        language: 'en_UK',
+        language: LangCode::from('en_UK'),
         theme: 'modus',
         status: UserStatus::Normal,
         enabledHigh: false,
@@ -122,7 +123,7 @@ test('withEnabledHigh returns a new immutable instance and syncs rawAttributes',
         id: UserId::from(1),
         username: Username::from('bob'),
         email: null,
-        language: 'en_UK',
+        language: LangCode::from('en_UK'),
         theme: 'modus',
         status: UserStatus::Normal,
         enabledHigh: false,
@@ -142,7 +143,7 @@ test('withRawAttribute adds a key without disturbing the rest of the array', fun
         id: UserId::from(1),
         username: Username::from('bob'),
         email: null,
-        language: 'en_UK',
+        language: LangCode::from('en_UK'),
         theme: 'modus',
         status: UserStatus::Normal,
         enabledHigh: false,

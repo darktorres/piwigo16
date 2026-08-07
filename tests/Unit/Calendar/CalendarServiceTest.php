@@ -8,6 +8,7 @@ use Piwigo\Group\GroupEntity;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Calendar\CalendarService;
@@ -97,7 +98,7 @@ beforeEach(function (): void {
         id: UserId::from(1),
         username: null,
         email: null,
-        language: '',
+        language: LangCode::from('en_UK'),
         theme: '',
         status: UserStatus::Normal,
         enabledHigh: false,
@@ -203,7 +204,7 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
         id: UserId::from(1),
         username: null,
         email: null,
-        language: '',
+        language: LangCode::from('en_UK'),
         theme: '',
         status: UserStatus::Normal,
         enabledHigh: false,
@@ -231,7 +232,7 @@ test('buildInnerSql composes forbidden/visible categories and images into the WH
         id: UserId::from(1),
         username: null,
         email: null,
-        language: '',
+        language: LangCode::from('en_UK'),
         theme: '',
         status: UserStatus::Normal,
         enabledHigh: false,

@@ -135,7 +135,7 @@ final class StatsPageRenderer
             'lastMonths' => $last_months,
             'lastYears' => $last_years,
             'langCode' => $currentUser->get()
-                ->language,
+                ->language->value,
             'month_labels' => join('~', array_filter($lang_month, is_string(...))),
             'ADMIN_PAGE_TITLE' => $lang->t('History'),
         ]);

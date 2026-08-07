@@ -16,6 +16,7 @@ use RecursiveDirectoryIterator;
 use FilesystemIterator;
 use SplFileInfo;
 use Piwigo\Users\User;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Users\UserStatus;
@@ -1397,7 +1398,7 @@ test('accessDenied renders a 401 page instead of redirecting when a real (non-gu
         id: UserId::from(1),
         username: Username::from('alice'),
         email: null,
-        language: '',
+        language: LangCode::from('en_UK'),
         theme: '',
         status: UserStatus::Normal,
         enabledHigh: false,

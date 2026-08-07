@@ -151,7 +151,7 @@ final readonly class AuthService
         // New default login and register pages, if users changes languages
         // and succesfully logs in we want to update the userpref language
         // stored in a cookie
-        if (isset($_COOKIE['lang']) && $this->currentUser->get()->language !== $_COOKIE['lang']) {
+        if (isset($_COOKIE['lang']) && $this->currentUser->get()->language->value !== $_COOKIE['lang']) {
             $lang_cookie = $_COOKIE['lang'];
             if (! is_string($lang_cookie)) {
                 $this->htmlRenderer->fatalError('[Hacking attempt] the input parameter "lang" is not valid');

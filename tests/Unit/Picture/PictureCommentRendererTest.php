@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -83,7 +84,7 @@ beforeEach(function (): void {
         id: UserId::from(1),
         username: Username::from('torres'),
         email: null,
-        language: '',
+        language: LangCode::from('en_UK'),
         theme: '',
         status: UserStatus::Normal,
         enabledHigh: false,
@@ -177,7 +178,7 @@ test('render only counts the first commentable related category then stops (`bre
         id: UserId::from(1),
         username: null,
         email: null,
-        language: '',
+        language: LangCode::from('en_UK'),
         theme: '',
         status: UserStatus::Guest,
         enabledHigh: false,
@@ -242,7 +243,7 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
         id: UserId::from(1),
         username: null,
         email: null,
-        language: '',
+        language: LangCode::from('en_UK'),
         theme: '',
         status: UserStatus::Guest,
         enabledHigh: false,
@@ -274,7 +275,7 @@ test('render lets a guest post a comment when comments_forall is on', function (
         id: UserId::from(1),
         username: null,
         email: null,
-        language: '',
+        language: LangCode::from('en_UK'),
         theme: '',
         status: UserStatus::Guest,
         enabledHigh: false,

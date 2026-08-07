@@ -20,6 +20,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Session\SessionEntity;
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
     use Piwigo\Common\ValueObject\ImageId;
+    use Piwigo\Common\ValueObject\LangCode;
     use Piwigo\Common\ValueObject\UserId;
     use Piwigo\Tag\Projection\TagBrief;
     use Error;
@@ -186,7 +187,7 @@ namespace Piwigo\Tests\Integration {
                 id: UserId::from(2),
                 username: Username::from('fixture_guest'),
                 email: null,
-                language: '',
+                language: LangCode::from('en_UK'),
                 theme: '',
                 status: UserStatus::Guest,
                 enabledHigh: false,
@@ -381,7 +382,7 @@ namespace Piwigo\Tests\Integration {
                 id: UserId::from(2),
                 username: Username::from('fixture_guest'),
                 email: null,
-                language: '',
+                language: LangCode::from('en_UK'),
                 theme: '',
                 status: UserStatus::Guest,
                 enabledHigh: false,

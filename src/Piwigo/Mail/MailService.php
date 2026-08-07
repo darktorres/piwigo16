@@ -19,6 +19,7 @@ use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\DeploymentPolicy;
@@ -538,7 +539,7 @@ final class MailService implements MailerInterface
     public function switchLangTo(string $language): void
     {
         $currentUserLanguage = $this->currentUser->get()
-            ->language;
+            ->language->value;
 
         // Language of the current user is saved (considered OK on first call).
         if (! $this->switchLangInitialised && ! isset($this->switchLangLanguages[$currentUserLanguage])) {
@@ -558,7 +559,7 @@ final class MailService implements MailerInterface
         }
 
         $this->switchLangStack[] = $currentUserLanguage;
-        $this->currentUser->updateLanguage($language);
+        $this->currentUser->updateLanguage(LangCode::tryFrom($language) ?? LangCode::from(AppInfo::DEFAULT_LANGUAGE));
 
         if (! isset($this->switchLangLanguages[$language])) {
             // Re-init language arrays.
@@ -624,7 +625,7 @@ final class MailService implements MailerInterface
             $this->lang->restore($entry['lang']);
             $this->translator->restoreFrom($entry['translator']);
         }
-        $this->currentUser->updateLanguage($language);
+        $this->currentUser->updateLanguage(LangCode::tryFrom($language) ?? LangCode::from(AppInfo::DEFAULT_LANGUAGE));
     }
 
     /**

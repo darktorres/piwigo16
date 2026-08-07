@@ -1018,7 +1018,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     public function getCurrentLanguage(): ?string
     {
         return $this->currentUser->isInitialized() ? $this->currentUser->get()
-            ->language : null;
+            ->language->value : null;
     }
 
     /**

@@ -12,6 +12,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Doctrine\DBAL\Connection;
@@ -126,7 +127,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
             id: UserId::from(3),
             username: Username::from('fixture_user_3'),
             email: null,
-            language: '',
+            language: LangCode::from('en_UK'),
             theme: '',
             status: UserStatus::Normal,
             enabledHigh: false,
@@ -163,7 +164,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
             id: UserId::from(2),
             username: Username::from('guest'),
             email: null,
-            language: '',
+            language: LangCode::from('en_UK'),
             theme: '',
             status: UserStatus::Guest,
             enabledHigh: false,

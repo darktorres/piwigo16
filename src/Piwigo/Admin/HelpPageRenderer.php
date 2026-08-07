@@ -56,7 +56,7 @@ final class HelpPageRenderer
         );
 
         $user_language = $currentUser->get()
-            ->language;
+            ->language->value;
         $language_prefix = substr($user_language, 0, 3);
         if ($language_prefix === 'en_') {
             $pageState->addMessage(sprintf(

@@ -198,7 +198,7 @@ final class IntroSubController implements AdminSubControllerInterface
 
             if (strtotime($register_date_str) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30) {
                 $user = $this->currentUser->get();
-                $user_language = $user->language !== '' ? $user->language : 'en_UK';
+                $user_language = $user->language->value;
 
                 $template->assign(
                     [

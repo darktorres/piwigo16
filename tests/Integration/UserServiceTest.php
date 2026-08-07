@@ -24,6 +24,7 @@ namespace Piwigo\Tests\Integration {
     use Exception;
     use Doctrine\DBAL\Connection;
     use Piwigo\Activity\ActivityService;
+    use Piwigo\Common\ValueObject\LangCode;
     use Piwigo\Common\ValueObject\UserId;
     use Piwigo\Config\ConfigEntry;
     use Piwigo\Config\ConfigService;
@@ -703,7 +704,7 @@ namespace Piwigo\Tests\Integration {
                 id: UserId::from(1),
                 username: Username::from('torres'),
                 email: null,
-                language: '',
+                language: LangCode::from('en_UK'),
                 theme: '',
                 status: UserStatus::Normal,
                 enabledHigh: false,

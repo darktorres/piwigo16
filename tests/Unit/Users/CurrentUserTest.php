@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
@@ -47,7 +48,7 @@ test('attachGlobals seeds a guest user', function (): void {
         ->and($user->username)->toBeNull()
         ->and($user->email)->toBeNull()
         ->and($user->enabledHigh)->toBeFalse()
-        ->and($user->language)->toBe(AppInfo::DEFAULT_LANGUAGE)
+        ->and($user->language)->toEqual(LangCode::from(AppInfo::DEFAULT_LANGUAGE))
         ->and($user->theme)->toBe(AppInfo::DEFAULT_TEMPLATE)
         ->and($user->id->value)->toBe(new CurrentConfig()->guestId());
 });
@@ -57,7 +58,7 @@ test('attachGlobals is idempotent -- does not clobber a real set() user', functi
         id: UserId::from(42),
         username: Username::from('alice'),
         email: null,
-        language: 'fr_FR',
+        language: LangCode::from('fr_FR'),
         theme: 'modus',
         status: UserStatus::Admin,
         enabledHigh: true,
@@ -74,9 +75,9 @@ test('updateLanguage replaces the instance with a language-updated copy', functi
     $currentUser = new CurrentUser(new CurrentConfig());
     $currentUser->attachGlobals();
 
-    $currentUser->updateLanguage('fr_FR');
+    $currentUser->updateLanguage(LangCode::from('fr_FR'));
 
-    expect($currentUser->get()->language)->toBe('fr_FR');
+    expect($currentUser->get()->language)->toEqual(LangCode::from('fr_FR'));
 });
 
 test('reset clears the real-user-resolved flag back to false', function (): void {

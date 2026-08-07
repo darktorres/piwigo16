@@ -126,7 +126,7 @@ final class UserRepositoryTest extends IntegrationTestCase
     {
         $username = 'p18-test-' . bin2hex(random_bytes(4));
 
-        $id = $this->repo->insertUser($username, 'irrelevant-hash', null);
+        $id = $this->repo->insertUser(Username::from($username), 'irrelevant-hash', null);
 
         self::assertEquals($id, $this->repo->findIdByUsername(Username::from($username)));
 
@@ -136,7 +136,7 @@ final class UserRepositoryTest extends IntegrationTestCase
     public function test_insert_user_infos_then_find_default_user_info_row_round_trips(): void
     {
         $username = 'p18-test-' . bin2hex(random_bytes(4));
-        $id = $this->repo->insertUser($username, 'irrelevant-hash', null);
+        $id = $this->repo->insertUser(Username::from($username), 'irrelevant-hash', null);
 
         $this->repo->insertUserInfos([$id], [
             'status' => 'normal',
@@ -168,7 +168,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         // is '1', a valid numeric string, so only the `false` case ever
         // surfaced this.
         $username = 'p18-test-' . bin2hex(random_bytes(4));
-        $id = $this->repo->insertUser($username, 'irrelevant-hash', null);
+        $id = $this->repo->insertUser(Username::from($username), 'irrelevant-hash', null);
 
         $this->repo->insertUserInfos([$id], [
             'status' => 'normal',
@@ -361,7 +361,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         // different code paths (plain scalar bind vs. explicit bool
         // cast, see UserInfoField::dqlPropertyAndIsBoolean()).
         $username = 'p18-test-' . bin2hex(random_bytes(4));
-        $id = $this->repo->insertUser($username, 'irrelevant-hash', null);
+        $id = $this->repo->insertUser(Username::from($username), 'irrelevant-hash', null);
         $this->repo->insertUserInfos([$id], ['status' => 'normal']);
 
         try {
@@ -399,7 +399,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         $username = 'p18-test-' . bin2hex(random_bytes(4));
         $theme = 'p18-test-theme-' . bin2hex(random_bytes(4));
 
-        $id = $this->repo->insertUser($username, 'irrelevant-hash', null);
+        $id = $this->repo->insertUser(Username::from($username), 'irrelevant-hash', null);
         $this->repo->insertUserInfos([$id], [
             'status' => 'normal',
             'theme' => $theme,
@@ -422,7 +422,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         $username = 'p18-test-' . bin2hex(random_bytes(4));
         $language = chr(random_int(97, 122)) . chr(random_int(97, 122)) . '_' . chr(random_int(65, 90)) . chr(random_int(65, 90));
 
-        $id = $this->repo->insertUser($username, 'irrelevant-hash', null);
+        $id = $this->repo->insertUser(Username::from($username), 'irrelevant-hash', null);
         $this->repo->insertUserInfos([$id], [
             'status' => 'normal',
             'language' => $language,

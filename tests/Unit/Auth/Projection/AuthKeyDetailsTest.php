@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\Projection\AuthKeyDetails;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Users\UserStatus;
 
 /**
@@ -33,8 +35,12 @@ function fullAuthKeyDetailsRow(): array
         // hydration of an enumType-mapped field), not a raw string --
         // matches what fromRow()'s real caller actually passes.
         'status' => UserStatus::Normal,
-        'username' => 'fixture_admin',
-        'email' => 'fixture_admin@example.test',
+        // A real row's `username`/`email` are Username/Email instances
+        // (UserEntity::$username/$mailAddress are VO-typed, DQL array
+        // hydration applies the custom Type), not raw strings -- same
+        // reasoning as `user_id`/`status` above.
+        'username' => Username::from('fixture_admin'),
+        'email' => Email::from('fixture_admin@example.test'),
     ];
 }
 

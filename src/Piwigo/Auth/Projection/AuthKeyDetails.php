@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth\Projection;
 
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Users\UserStatus;
 
 /**
@@ -65,8 +67,8 @@ final readonly class AuthKeyDetails
             // `ui.status` array-hydrates as a UserStatus instance, not a
             // raw string -- see \Piwigo\Auth\Projection\AuthUser::fromRow().
             status: ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : '',
-            username: is_string($row['username'] ?? null) ? $row['username'] : '',
-            email: is_string($row['email'] ?? null) ? $row['email'] : '',
+            username: ($row['username'] ?? null) instanceof Username ? $row['username']->value : '',
+            email: ($row['email'] ?? null) instanceof Email ? $row['email']->value : '',
         );
     }
 

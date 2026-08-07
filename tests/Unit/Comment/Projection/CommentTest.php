@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Comment\Projection\Comment;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\ImageId;
 
 /**
@@ -15,7 +16,11 @@ function fullCommentRow(): array
         'id' => '2',
         'author' => 'regular_user',
         'author_id' => '3',
-        'user_email' => 'regular@example.test',
+        // A real row's `user_email` (u.mailAddress, the joined UserEntity
+        // column) is an Email instance -- DQL array hydration applies the
+        // custom Type. `email` below is com.email, CommentEntity's own
+        // plain-string column, unaffected.
+        'user_email' => Email::from('regular@example.test'),
         'date' => '2026-08-01 00:00:00',
         'image_id' => '2',
         'website_url' => 'http://example.test',

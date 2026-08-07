@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth\Projection;
 
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Users\UserStatus;
 
 /**
@@ -50,8 +52,8 @@ final readonly class AuthUser
                 is_scalar($row['id'] ?? null) => (string) $row['id'],
                 default => '',
             },
-            username: is_string($row['username'] ?? null) ? $row['username'] : '',
-            email: is_string($row['email'] ?? null) ? $row['email'] : '',
+            username: ($row['username'] ?? null) instanceof Username ? $row['username']->value : '',
+            email: ($row['email'] ?? null) instanceof Email ? $row['email']->value : '',
             password: is_string($row['password'] ?? null) ? $row['password'] : '',
             // The user may not exist in user_infos, so default to 'normal'.
             // `ui.status` (UserInfoEntity::$status) is enumType-mapped, so

@@ -249,11 +249,13 @@ final class UserRepository implements WebmasterMailProviderInterface
         }
 
         $id = $row['id'] ?? null;
+        $username = $row['username'] ?? null;
+        $email = $row['email'] ?? null;
 
         return [
             'id' => $id instanceof UserId ? (string) $id->value : '',
-            'username' => is_string($row['username'] ?? null) ? $row['username'] : '',
-            'email' => is_string($row['email'] ?? null) ? $row['email'] : '',
+            'username' => $username instanceof Username ? $username->value : '',
+            'email' => $email instanceof Email ? $email->value : '',
         ];
     }
 
@@ -380,7 +382,8 @@ final class UserRepository implements WebmasterMailProviderInterface
                 continue;
             }
 
-            $byId[$id->value] = $row['username'] ?? null;
+            $username = $row['username'] ?? null;
+            $byId[$id->value] = $username instanceof Username ? $username->value : null;
         }
 
         return $byId;
@@ -397,7 +400,7 @@ final class UserRepository implements WebmasterMailProviderInterface
      * multi-auth indirection this class's own docblock explains), now
      * typed params directly.
      */
-    public function insertUser(string $username, ?string $password, ?string $mailAddress): UserId
+    public function insertUser(Username $username, ?string $password, ?Email $mailAddress): UserId
     {
         $entity = new UserEntity($username, $password, $mailAddress);
         $em = $this->em;
@@ -423,7 +426,7 @@ final class UserRepository implements WebmasterMailProviderInterface
      * exact id" the way a raw INSERT can; not a multi-auth-column
      * question anymore, a real ORM limitation for this one caller's shape.
      */
-    public function insertUserWithId(UserId $id, string $username, ?string $password): UserId
+    public function insertUserWithId(UserId $id, Username $username, ?string $password): UserId
     {
         $this->em
             ->getConnection()
@@ -435,7 +438,7 @@ final class UserRepository implements WebmasterMailProviderInterface
                 'password' => ':password',
             ])
             ->setParameter('id', $id->value)
-            ->setParameter('username', $username)
+            ->setParameter('username', $username->value)
             ->setParameter('password', $password)
             ->executeStatement();
 
@@ -811,11 +814,14 @@ final class UserRepository implements WebmasterMailProviderInterface
             return false;
         }
 
+        $username = $row['username'] ?? null;
+        $email = $row['email'] ?? null;
+
         return [
             'id' => $userId->value,
-            'username' => is_string($row['username'] ?? null) ? $row['username'] : '',
+            'username' => $username instanceof Username ? $username->value : '',
             'password' => is_string($row['password'] ?? null) ? $row['password'] : null,
-            'email' => is_string($row['email'] ?? null) ? $row['email'] : null,
+            'email' => $email instanceof Email ? $email->value : null,
         ];
     }
 
@@ -1357,7 +1363,7 @@ final class UserRepository implements WebmasterMailProviderInterface
      * dynamic column-name-and-value pairs (see this class's own
      * docblock).
      */
-    public function updateAccountFields(UserId $userId, ?string $username, ?string $password, ?string $mailAddress): void
+    public function updateAccountFields(UserId $userId, ?Username $username, ?string $password, ?Email $mailAddress): void
     {
         if ($username === null && $password === null && $mailAddress === null) {
             return;
@@ -1883,8 +1889,8 @@ final class UserRepository implements WebmasterMailProviderInterface
                 // a real instance, unwrapped to `.value` here, same
                 // reasoning as `status`.
                 'language' => ($row['language'] ?? null) instanceof LangCode ? $row['language']->value : null,
-                'email' => $row['email'] ?? null,
-                'username' => $row['username'] ?? null,
+                'email' => ($row['email'] ?? null) instanceof Email ? $row['email']->value : null,
+                'username' => ($row['username'] ?? null) instanceof Username ? $row['username']->value : null,
             ];
         }
 
@@ -1927,9 +1933,10 @@ final class UserRepository implements WebmasterMailProviderInterface
             }
 
             $id = $row['id'] ?? null;
+            $username = $row['username'] ?? null;
 
             $result[] = [
-                'username' => $row['username'] ?? null,
+                'username' => $username instanceof Username ? $username->value : null,
                 'id' => $id instanceof UserId ? $id->value : null,
             ];
         }

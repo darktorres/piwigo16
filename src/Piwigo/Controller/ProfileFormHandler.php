@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
@@ -210,11 +211,14 @@ final class ProfileFormHandler
                 if (is_string($username_for_update) and $username_for_update !== '' and $username_for_update !== '0') {
                     $username = $username_for_update;
                     $usernameVo = Username::tryFrom($username);
-                    if ($username !== $userdata['username'] and $usernameVo !== null and $this->userService->getUserId($usernameVo) !== null) {
+                    if ($usernameVo === null) {
+                        $this->pageState->addError($this->lang->t('invalid login format'));
+                        unset($post['redirect']);
+                    } elseif ($username !== $userdata['username'] and $this->userService->getUserId($usernameVo) !== null) {
                         $this->pageState->addError($this->lang->t('this login is already used'));
                         unset($post['redirect']);
                     } else {
-                        $username_update = $username;
+                        $username_update = $usernameVo;
 
                         // send email to the user
                         if ($username !== $userdata['username']) {
@@ -244,7 +248,7 @@ final class ProfileFormHandler
                     }
                 }
 
-                $this->userService->updateAccountFields(UserId::from($user_id), $username_update, $password_update, $mail_address);
+                $this->userService->updateAccountFields(UserId::from($user_id), $username_update, $password_update, Email::tryFrom($mail_address));
 
                 if ($mail_address !== $userdata['email']) {
                     $this->authService->deactivatePasswordResetKey($user_id);

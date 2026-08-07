@@ -14,6 +14,7 @@ use Piwigo\Activity\Projection\UserActivityLogEntry;
 use Piwigo\Auth\LoginActivityLookupInterface;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Users\UserEntity;
 
@@ -229,6 +230,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             $ipAddress = $row['ip_address'] ?? null;
             $details = $row['details'] ?? null;
             $encodedDetails = is_array($details) ? json_encode($details) : null;
+            $username = $row['username'] ?? null;
 
             $result[] = UserActivityLogEntry::fromRow([
                 'activity_id' => $row['activity_id'] ?? null,
@@ -239,7 +241,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
                 'ip_address' => $ipAddress instanceof IpAddress ? $ipAddress->value : null,
                 'occured_on' => $row['occured_on'] ?? null,
                 'details' => $encodedDetails !== false ? $encodedDetails : null,
-                'username' => $row['username'] ?? null,
+                'username' => $username instanceof Username ? $username->value : null,
             ]);
         }
 

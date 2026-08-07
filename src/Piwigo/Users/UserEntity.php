@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 
 /**
  * Maps the `users` table (`piwigo_users` once
@@ -34,11 +36,11 @@ final class UserEntity
     public ?UserId $id = null;
 
     public function __construct(
-        #[ORM\Column(type: 'string', length: 100)]
-        public string $username,
+        #[ORM\Column(type: 'username', length: 100)]
+        public Username $username,
         #[ORM\Column(type: 'string', length: 255, nullable: true)]
         public ?string $password,
-        #[ORM\Column(name: 'mail_address', type: 'string', length: 255, nullable: true)]
-        public ?string $mailAddress,
+        #[ORM\Column(name: 'mail_address', type: 'email', length: 255, nullable: true)]
+        public ?Email $mailAddress,
     ) {}
 }

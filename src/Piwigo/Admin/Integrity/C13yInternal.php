@@ -235,7 +235,7 @@ final class C13yInternal
 
                         $this->userService->insertUserRow(
                             UserId::from($id),
-                            addslashes($name),
+                            Username::from(addslashes($name)),
                             $password,
                         );
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Activity\Projection;
 
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 
 /**
  * Typed row shape for
@@ -54,7 +55,18 @@ final readonly class SystemActivityLogEntry
             details: is_array($row['details'] ?? null)
                 ? array_filter($row['details'], is_string(...), ARRAY_FILTER_USE_KEY)
                 : null,
-            username: is_string($row['username'] ?? null) ? $row['username'] : null,
+            // `username` is a CASE WHEN ... THEN 'System' ELSE u.username
+            // END expression -- unlike a bare u.username reference, it's
+            // uncertain whether Doctrine's array hydration attributes
+            // u.username's custom Type to a computed/conditional SELECT
+            // expression the same way, so this handles both a raw string
+            // (the 'System' literal branch, or an un-Typed hydration) and
+            // a real Username instance (the u.username branch, Typed).
+            username: match (true) {
+                ($row['username'] ?? null) instanceof Username => $row['username']->value,
+                is_string($row['username'] ?? null) => $row['username'],
+                default => null,
+            },
         );
     }
 

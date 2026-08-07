@@ -7,9 +7,11 @@ namespace Piwigo\Mail;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Override;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Mail\Projection\MailRecipient;
 use Piwigo\Users\UserEntity;
@@ -145,10 +147,12 @@ final readonly class MailRecipientRepository implements MailRecipientRepositoryI
             }
 
             $userId = $row['user_id'] ?? null;
+            $name = $row['name'] ?? null;
+            $email = $row['email'] ?? null;
             $recipients[] = MailRecipient::fromRow([
                 'user_id' => $userId instanceof UserId ? $userId->value : $userId,
-                'name' => $row['name'] ?? null,
-                'email' => $row['email'] ?? null,
+                'name' => $name instanceof Username ? $name->value : $name,
+                'email' => $email instanceof Email ? $email->value : $email,
                 'status' => $includeStatus ? ($row['status'] ?? null) : null,
             ]);
         }

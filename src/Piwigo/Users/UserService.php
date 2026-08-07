@@ -347,6 +347,15 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $errors[] = $this->lang->t('login mustn\'t start with a space character');
         }
         $loginUsername = Username::tryFrom($login);
+        // The 3 checks above catch empty/leading-space/trailing-space, but
+        // Username::from() also rejects >100 chars and embedded control
+        // characters -- neither has a dedicated check here, so a login
+        // passing all 3 above could still fail Username::from() once
+        // UserEntity::$username is VO-typed. Report it the same way as the
+        // other format violations rather than let it through silently.
+        if ($loginUsername === null && $login !== '' && $login === trim($login)) {
+            $errors[] = $this->lang->t('invalid login format');
+        }
         if ($loginUsername !== null && $this->getUserId($loginUsername) !== null) {
             $duplicateUsername = true;
         }
@@ -387,11 +396,19 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             ];
         }
 
+        // $errors is empty here, so $loginUsername is guaranteed non-null --
+        // either it was already valid, or the format checks above would
+        // have added an error and returned before this point.
+        assert($loginUsername !== null);
+        // tryFrom(), not from(): validateMailAddress() above already
+        // allows a genuinely empty (not just null) $mailAddress when the
+        // config doesn't make it obligatory -- Email::from('') would
+        // throw on that already-accepted case.
         $userId = $this->repo->insertUser(
-            $login,
+            $loginUsername,
             $this->passwordService()
                 ->hash($password),
-            $mailAddress,
+            Email::tryFrom($mailAddress),
         );
 
         // Real bug fixed here: this used to call
@@ -883,7 +900,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * Admin\Integrity\C13yInternal's own "recreate a missing guest/
      * default/webmaster user row, with its exact known id" repair step.
      */
-    public function insertUserRow(UserId $id, string $username, ?string $password): UserId
+    public function insertUserRow(UserId $id, Username $username, ?string $password): UserId
     {
         return $this->repo->insertUserWithId($id, $username, $password);
     }
@@ -1023,7 +1040,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * Controller\ProfileFormHandler's own profile form save
      * (username/email/password, whichever changed).
      */
-    public function updateAccountFields(UserId $userId, ?string $username, ?string $password, ?string $mailAddress): void
+    public function updateAccountFields(UserId $userId, ?Username $username, ?string $password, ?Email $mailAddress): void
     {
         $this->repo->updateAccountFields($userId, $username, $password, $mailAddress);
     }
@@ -1275,7 +1292,15 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                 $username_param = $params['username'];
                 assert(is_string($username_param));
                 $username_param_vo = Username::tryFrom($username_param);
-                $user_id = $username_param_vo === null ? null : $this->getUserId($username_param_vo);
+                if ($username_param_vo === null) {
+                    return [
+                        'error' => [
+                            'code' => WsError::INVALID_PARAM,
+                            'message' => $this->lang->t('invalid login format'),
+                        ],
+                    ];
+                }
+                $user_id = $this->getUserId($username_param_vo);
                 if ($user_id !== null and $user_id->value !== $user_ids[0]) {
                     return [
                         'error' => [
@@ -1292,7 +1317,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                         ],
                     ];
                 }
-                $username_update = $username_param;
+                $username_update = $username_param_vo;
             }
 
             if (! self::emptyValue($params['email'] ?? null)) {
@@ -1306,7 +1331,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                         ],
                     ];
                 }
-                $email_update = $email_param;
+                $email_update = Email::from($email_param);
             }
 
             if (! self::emptyValue($params['password'] ?? null)) {
@@ -1540,9 +1565,9 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $this->activityLogger->record('user', $user_ids, 'edit');
 
         $account_updates = array_filter([
-            'username' => $username_update,
+            'username' => $username_update?->value,
             'password' => $password_update,
-            'mail_address' => $email_update,
+            'mail_address' => $email_update?->value,
         ], static fn (?string $v): bool => $v !== null);
 
         return [

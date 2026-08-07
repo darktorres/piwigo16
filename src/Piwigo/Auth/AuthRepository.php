@@ -10,8 +10,10 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Auth\Projection\AuthKeyDetails;
 use Piwigo\Auth\Projection\AuthUser;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Users\UserEntity;
 use Piwigo\Users\UserInfoEntity;
 
@@ -63,8 +65,10 @@ final readonly class AuthRepository
             return null;
         }
 
+        $username = $row['username'] ?? null;
+
         return [
-            'username' => is_string($row['username'] ?? null) ? $row['username'] : '',
+            'username' => $username instanceof Username ? $username->value : '',
             'password' => is_string($row['password'] ?? null) ? $row['password'] : '',
         ];
     }
@@ -83,6 +87,16 @@ final readonly class AuthRepository
     /**
      * Finds a user by username first, falling back to email, via two
      * separate queries in that order rather than a single OR'd query.
+     *
+     * `u.username`/`u.mailAddress` are Username/Email-typed columns --
+     * binding a raw string against either comparison would either fail
+     * AbstractStringVoType::convertToDatabaseValue()'s own strict
+     * VO-only check or (depending on how Doctrine infers the bind type)
+     * silently never match. Parsed into the real VO for each specific
+     * comparison instead, skipping a query entirely when
+     * $usernameOrEmail can't even be that shape -- same "skip the query
+     * for an unparseable shape" pattern already established for
+     * PasswordController's own dual username-or-email lookup.
      */
     public function findByUsernameOrEmail(string $usernameOrEmail): ?AuthUser
     {
@@ -95,17 +109,26 @@ final readonly class AuthRepository
                 'i.status AS status',
             )
             ->from(UserEntity::class, 'u')
-            ->leftJoin(UserInfoEntity::class, 'i', Join::WITH, 'u.id = i.userId')
-            ->setParameter('value', $usernameOrEmail);
+            ->leftJoin(UserInfoEntity::class, 'i', Join::WITH, 'u.id = i.userId');
 
-        $row = (clone $qb)->where('u.username = :value')
-            ->getQuery()
-            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
+        $row = null;
 
-        if (! is_array($row)) {
-            $row = $qb->where('u.mailAddress = :value')
+        $usernameVo = Username::tryFrom($usernameOrEmail);
+        if ($usernameVo !== null) {
+            $row = (clone $qb)->where('u.username = :value')
+                ->setParameter('value', $usernameVo)
                 ->getQuery()
                 ->getOneOrNullResult(Query::HYDRATE_ARRAY);
+        }
+
+        if (! is_array($row)) {
+            $emailVo = Email::tryFrom($usernameOrEmail);
+            if ($emailVo !== null) {
+                $row = $qb->where('u.mailAddress = :value')
+                    ->setParameter('value', $emailVo)
+                    ->getQuery()
+                    ->getOneOrNullResult(Query::HYDRATE_ARRAY);
+            }
         }
 
         return is_array($row) ? AuthUser::fromRow($row) : null;

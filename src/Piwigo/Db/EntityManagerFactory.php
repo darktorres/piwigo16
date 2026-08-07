@@ -27,6 +27,7 @@ use Piwigo\Db\DqlFunction\WeekFunction;
 use Piwigo\Db\DqlFunction\YearFunction;
 use Piwigo\Db\Type\CategoryIdType;
 use Piwigo\Db\Type\CommentIdType;
+use Piwigo\Db\Type\EmailType;
 use Piwigo\Db\Type\GroupIdType;
 use Piwigo\Db\Type\ImageIdType;
 use Piwigo\Db\Type\IpAddressType;
@@ -37,6 +38,7 @@ use Piwigo\Db\Type\PluginIdType;
 use Piwigo\Db\Type\TagIdType;
 use Piwigo\Db\Type\ThemeIdType;
 use Piwigo\Db\Type\UserIdType;
+use Piwigo\Db\Type\UsernameType;
 
 /**
  * Factory for a Doctrine ORM EntityManager -- the ORM counterpart to
@@ -91,6 +93,8 @@ final class EntityManagerFactory
             'theme_id' => ThemeIdType::class,
             'plugin_id' => PluginIdType::class,
             'lang_code' => LangCodeType::class,
+            'email' => EmailType::class,
+            'username' => UsernameType::class,
         ] as $name => $class) {
             if (! Type::hasType($name)) {
                 Type::addType($name, $class);

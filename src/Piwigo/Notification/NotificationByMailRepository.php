@@ -7,7 +7,9 @@ namespace Piwigo\Notification;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 use Piwigo\Notification\Projection\UserMailNotification;
@@ -111,11 +113,13 @@ final class NotificationByMailRepository extends EntityRepository
             }
 
             $userId = $row['user_id'] ?? null;
+            $username = $row['username'] ?? null;
+            $mailAddress = $row['mail_address'] ?? null;
             $notifications[] = UserMailNotification::fromRow([
                 'user_id' => $userId instanceof UserId ? $userId->value : $userId,
                 'check_key' => $row['check_key'] ?? null,
-                'username' => $row['username'] ?? null,
-                'mail_address' => $row['mail_address'] ?? null,
+                'username' => $username instanceof Username ? $username->value : null,
+                'mail_address' => $mailAddress instanceof Email ? $mailAddress->value : null,
                 'enabled' => $row['enabled'] ?? null,
                 'last_send' => $row['last_send'] ?? null,
                 'status' => $row['status'] ?? null,
@@ -191,10 +195,12 @@ final class NotificationByMailRepository extends EntityRepository
             }
 
             $userId = $row['user_id'] ?? null;
+            $username = $row['username'] ?? null;
+            $mailAddress = $row['mail_address'] ?? null;
             $result[] = [
                 'user_id' => $userId instanceof UserId ? $userId->value : $userId,
-                'username' => $row['username'] ?? null,
-                'mail_address' => $row['mail_address'] ?? null,
+                'username' => $username instanceof Username ? $username->value : null,
+                'mail_address' => $mailAddress instanceof Email ? $mailAddress->value : null,
             ];
         }
 

@@ -10,6 +10,7 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\Env;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
@@ -255,8 +256,9 @@ final class RateRepository extends EntityRepository
             }
 
             $id = $row['id'] ?? null;
+            $username = $row['username'] ?? null;
             if ($id instanceof UserId) {
-                $result[$id->value] = is_string($row['username'] ?? null) ? $row['username'] : '';
+                $result[$id->value] = $username instanceof Username ? $username->value : '';
             }
         }
 
@@ -504,9 +506,11 @@ final class RateRepository extends EntityRepository
                 continue;
             }
 
+            $name = $row['name'] ?? null;
+
             $result[] = [
                 'id' => $row['id']->value,
-                'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
+                'name' => $name instanceof Username ? $name->value : '',
                 // `ui.status` (UserInfoEntity::$status) is enumType-mapped
                 // -- array hydration returns a real UserStatus instance for
                 // it, not a raw string.

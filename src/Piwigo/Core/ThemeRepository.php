@@ -6,6 +6,7 @@ namespace Piwigo\Core;
 
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Core\Projection\ThemeListing;
 
 /**
  * Persistence layer for the `themes` table's own id/name listing below.
@@ -28,7 +29,7 @@ final class ThemeRepository extends EntityRepository
      * nullable in the schema; rows with a null name are dropped, matching
      * the original raw query's own `is_string()` filter.
      *
-     * @return list<array{id: string, name: string}>
+     * @return list<ThemeListing>
      *
      * `t.id` maps through the `theme_id` custom Doctrine Type, so
      * getArrayResult() hydrates it as a ThemeId value object -- unwrapped
@@ -58,10 +59,7 @@ final class ThemeRepository extends EntityRepository
                 continue;
             }
 
-            $themes[] = [
-                'id' => $id,
-                'name' => $name,
-            ];
+            $themes[] = new ThemeListing($id, $name);
         }
 
         return $themes;

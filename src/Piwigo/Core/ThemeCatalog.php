@@ -35,8 +35,8 @@ final class ThemeCatalog
         $conn = DbConnection::build();
         $rows = EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class)->findAllIdsAndNames();
         foreach ($rows as $row) {
-            $id = $row['id'];
-            $name = $row['name'];
+            $id = $row->id;
+            $name = $row->name;
 
             $mobile_theme = $currentConfig->mobilTheme();
             if ($id === $mobile_theme) {

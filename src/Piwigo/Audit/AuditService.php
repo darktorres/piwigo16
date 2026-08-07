@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Audit;
 
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Core\Env;
 
 /**
@@ -64,7 +65,7 @@ final readonly class AuditService
         $prevHash = $this->repo->findLatestRowHash();
         $rowHash = self::computeHash($prevHash, $actorId, $action, $entityType, $entityId, $beforeJson, $afterJson, $ipAddress?->value, $createdAt);
 
-        return $this->repo->insert($actorId, $action, $entityType, $entityId, $beforeJson, $afterJson, $ipAddress, $createdAt, $prevHash, $rowHash);
+        return $this->repo->insert($actorId, $action, $entityType, $entityId, $beforeJson, $afterJson, $ipAddress, SqlDateTime::from($createdAt), $prevHash, $rowHash);
     }
 
     /**

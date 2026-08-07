@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use Piwigo\Audit\Projection\AuditLogEntry;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
  * Persistence layer for the audit domain: `audit_log` [SEC-57]. Only ever
@@ -26,7 +27,7 @@ final class AuditRepository extends EntityRepository
         ?string $beforeJson,
         ?string $afterJson,
         ?IpAddress $ipAddress,
-        string $createdAt,
+        SqlDateTime $createdAt,
         ?string $prevHash,
         string $rowHash,
     ): int {
@@ -107,7 +108,7 @@ final class AuditRepository extends EntityRepository
                     beforeJson: $entity->beforeJson,
                     afterJson: $entity->afterJson,
                     ipAddress: $entity->ipAddress,
-                    createdAt: $entity->createdAt,
+                    createdAt: $entity->createdAt->value,
                     prevHash: $entity->prevHash,
                     rowHash: $entity->rowHash,
                 );

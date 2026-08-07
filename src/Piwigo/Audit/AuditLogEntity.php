@@ -6,6 +6,7 @@ namespace Piwigo\Audit;
 
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
  * Maps the `audit_log` table (`piwigo_audit_log` once
@@ -16,9 +17,12 @@ use Piwigo\Common\ValueObject\IpAddress;
  * MySQL's JSON column gives back, see AuditService::canonicalJson()'s own
  * docblock); Doctrine's `json` type would decode on read and re-encode a
  * PHP value on write, corrupting an already-encoded string handed to it.
- * `created_at` stays a plain string (`Y-m-d H:i:s`, `Env::now()`-derived)
- * for the same reason `Config\ConfigEntry::$value` stays raw -- retyping
- * a column is its own decision, out of scope for this migration.
+ * `created_at` is `SqlDateTime`-typed (Phase 5) -- the one real write
+ * path traces to an `Env::now()`-derived value. This is orthogonal to the
+ * hash chain: `AuditService::computeHash()` hashes the plain `Y-m-d H:i:s`
+ * string directly (never re-reads it off this entity), and `SqlDateTime`'s
+ * own `__toString()`/`->value` round-trip byte-identically to that same
+ * string, so the chain's content is unaffected either way.
  * Insert-only (only `Audit\Projection\AuditLogEntry`, a separate readonly
  * DTO, is used for reads) -- no update method needed on the entity.
  */
@@ -46,8 +50,8 @@ final class AuditLogEntity
         public ?string $afterJson,
         #[ORM\Column(name: 'ip_address', type: 'ip_address', length: 45, nullable: true)]
         public ?IpAddress $ipAddress,
-        #[ORM\Column(name: 'created_at', type: 'string', length: 19)]
-        public string $createdAt,
+        #[ORM\Column(name: 'created_at', type: 'sql_datetime', length: 19)]
+        public SqlDateTime $createdAt,
         #[ORM\Column(name: 'prev_hash', type: 'string', length: 64, nullable: true)]
         public ?string $prevHash,
         #[ORM\Column(name: 'row_hash', type: 'string', length: 64)]

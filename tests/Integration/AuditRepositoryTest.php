@@ -11,6 +11,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -79,7 +80,7 @@ final class AuditRepositoryTest extends IntegrationTestCase
             null,
             '{"username":"alice"}',
             IpAddress::from('10.0.0.1'),
-            '2026-07-12 10:00:00',
+            SqlDateTime::from('2026-07-12 10:00:00'),
             null,
             str_repeat('a', 64),
         );
@@ -121,7 +122,7 @@ final class AuditRepositoryTest extends IntegrationTestCase
             null,
             null,
             null,
-            '2026-07-12 10:00:00',
+            SqlDateTime::from('2026-07-12 10:00:00'),
             null,
             str_repeat('b', 64),
         );
@@ -139,16 +140,16 @@ final class AuditRepositoryTest extends IntegrationTestCase
 
     public function test_find_latest_row_hash_returns_the_most_recently_inserted(): void
     {
-        $this->repo->insert(1, 'create', 'user', 1, null, null, null, '2026-07-12 10:00:00', null, str_repeat('a', 64));
-        $this->repo->insert(1, 'create', 'user', 2, null, null, null, '2026-07-12 10:00:01', str_repeat('a', 64), str_repeat('b', 64));
+        $this->repo->insert(1, 'create', 'user', 1, null, null, null, SqlDateTime::from('2026-07-12 10:00:00'), null, str_repeat('a', 64));
+        $this->repo->insert(1, 'create', 'user', 2, null, null, null, SqlDateTime::from('2026-07-12 10:00:01'), str_repeat('a', 64), str_repeat('b', 64));
 
         self::assertSame(str_repeat('b', 64), $this->repo->findLatestRowHash());
     }
 
     public function test_find_all_in_order_returns_rows_oldest_first_with_the_chain_linked(): void
     {
-        $this->repo->insert(1, 'create', 'user', 1, null, null, null, '2026-07-12 10:00:00', null, str_repeat('a', 64));
-        $this->repo->insert(1, 'delete', 'group', 2, '{"name":"x"}', null, null, '2026-07-12 10:00:01', str_repeat('a', 64), str_repeat('b', 64));
+        $this->repo->insert(1, 'create', 'user', 1, null, null, null, SqlDateTime::from('2026-07-12 10:00:00'), null, str_repeat('a', 64));
+        $this->repo->insert(1, 'delete', 'group', 2, '{"name":"x"}', null, null, SqlDateTime::from('2026-07-12 10:00:01'), str_repeat('a', 64), str_repeat('b', 64));
 
         $rows = $this->repo->findAllInOrder();
 

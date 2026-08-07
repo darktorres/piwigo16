@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Piwigo\Common\ValueObject\UserId;
+
 /**
  * Further SQL-modernization audit, Item 13: replaces the ad hoc
  * `list<string> $whereClauses` (each fragment glued via `implode(' AND ',
@@ -31,7 +33,7 @@ namespace Piwigo\Users;
 final readonly class UserListCriteria
 {
     /**
-     * @param list<int>|null $userId
+     * @param list<UserId>|null $userId
      * @param list<int>|null $filteredGroupIds
      * @param list<string>|null $status
      * @param list<int>|null $groupId

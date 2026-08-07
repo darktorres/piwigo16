@@ -640,7 +640,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_find_list_for_ws_filters_by_user_id(): void
     {
-        self::assertSame([1, 3], $this->findListForWsIds(new UserListCriteria(userId: [1, 3])));
+        self::assertSame([1, 3], $this->findListForWsIds(new UserListCriteria(userId: [UserId::from(1), UserId::from(3)])));
     }
 
     public function test_find_list_for_ws_filters_by_username(): void

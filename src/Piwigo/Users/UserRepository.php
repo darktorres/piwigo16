@@ -1592,7 +1592,7 @@ final class UserRepository implements WebmasterMailProviderInterface
 
         if ($criteria->userId !== null) {
             $conditions[] = new SqlCondition('u.id IN (:userId)', [
-                'userId' => $criteria->userId,
+                'userId' => array_map(static fn (UserId $userId): int => $userId->value, $criteria->userId),
             ], [
                 'userId' => ArrayParameterType::INTEGER,
             ]);

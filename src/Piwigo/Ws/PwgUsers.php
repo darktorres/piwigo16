@@ -118,7 +118,16 @@ final class PwgUsers
         // "regardless of exploitability" stance). Each is null when its
         // filter wasn't requested -- UserRepository::findListForWs() (via
         // UserListCriteria) decides for itself which condition to add.
-        $userId = (isset($params['user_id']) && $params['user_id'] !== []) ? array_values($params['user_id']) : null;
+        $userId = null;
+        if (isset($params['user_id']) && $params['user_id'] !== []) {
+            $userId = [];
+            foreach ($params['user_id'] as $rawUserId) {
+                $userIdVo = UserId::tryFrom($rawUserId);
+                if ($userIdVo !== null) {
+                    $userId[] = $userIdVo;
+                }
+            }
+        }
         $username = (isset($params['username']) && $params['username'] !== '') ? $params['username'] : null;
 
         $filter = null;

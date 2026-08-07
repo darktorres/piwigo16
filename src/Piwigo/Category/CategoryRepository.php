@@ -14,7 +14,6 @@ use Piwigo\Category\Projection\Category;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
-use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\BatchWriter;
@@ -25,7 +24,6 @@ use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\PhotoSortField;
-use Piwigo\Permalink\OldPermalinkEntity;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 
@@ -39,10 +37,13 @@ use Piwigo\Permission\SqlCondition;
  * permission condition string" shape as RateRepository/CommentRepository.
  *
  * Owns `categories` ({@see CategoryEntity}); `old_permalinks` is owned by
- * the Permalink domain ({@see \Piwigo\Permalink\OldPermalinkEntity}, see
- * its own docblock -- this repository is one of its 3 real consumers,
- * queried directly rather than via `$em->getRepository()`, same shape as
- * the shared tables below), and shares `user_access` ({@see UserAccessEntity})/
+ * the Permalink domain ({@see \Piwigo\Permalink\OldPermalinkEntity}).
+ * Queries against it go through {@see \Piwigo\Permalink\PermalinkRepository}
+ * (behind {@see OldPermalinkLookupInterface}, an explicit method
+ * parameter, not constructor-injected -- see that interface's own
+ * docblock): `Category` is `L2aCoreDomain`, `Permalink` is
+ * `L2bExtendedDomain`, and a direct dependency the other way is a real
+ * deptrac violation. This repository shares `user_access` ({@see UserAccessEntity})/
  * `group_access` ({@see \Piwigo\Group\GroupAccessEntity}, created during
  * the Group batch)/`image_category` ({@see \Piwigo\Image\ImageCategoryEntity},
  * placed in the Image domain, its heaviest real consumer -- Item 14
@@ -263,125 +264,6 @@ final class CategoryRepository
             static fn (mixed $id): int => (int) $id,
             array_filter($matchedIds, is_numeric(...))
         ));
-    }
-
-    /**
-     * Matches $permalinks against both the current `categories.permalink`
-     * column and the `old_permalinks` redirect table, keyed by the
-     * permalink string. `is_old` distinguishes which table matched (a
-     * match in `old_permalinks` needs its hit counter touched by the
-     * caller via {@see touchOldPermalinkHit()}).
-     *
-     * @param  list<string>  $permalinks
-     * @return array<string, array{id: int, permalink: string, is_old: int}>
-     *
-     * Item 14 DQL audit, re-corrected: `old_permalinks` is now mapped ({@see
-     * \Piwigo\Permalink\OldPermalinkEntity}). Converted to real DQL -- still
-     * two single-table selects unioned in PHP (DQL itself has no UNION),
-     * one against OldPermalinkEntity and one against this repository's own
-     * CategoryEntity. `op.catId` maps through the `category_id` custom
-     * Doctrine Type, so getArrayResult() hydrates it as a CategoryId value
-     * object (Gotcha #1 shape) -- read via instanceof, unlike the plain-int
-     * `c.id` from the categories side.
-     *
-     * `op.permalink` maps through the `permalink` custom Doctrine Type
-     * too, so it hydrates as a Permalink value object for old-rows --
-     * `c.permalink` (from the still-untyped CategoryEntity side) stays a
-     * plain string in the same merged result set, so both shapes are
-     * unwrapped before the merge.
-     */
-    public function findPermalinkMatches(array $permalinks): array
-    {
-        if ($permalinks === []) {
-            return [];
-        }
-
-        $em = $this->em;
-
-        $oldRows = $em->createQueryBuilder()
-            ->select('op.catId AS id', 'op.permalink AS permalink', '1 AS is_old')
-            ->from(OldPermalinkEntity::class, 'op')
-            ->where('op.permalink IN (:permalinks)')
-            ->setParameter('permalinks', $permalinks, ArrayParameterType::STRING)
-            ->getQuery()
-            ->getArrayResult();
-
-        $categoryRows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
-            ->select('c.id AS id', 'c.permalink AS permalink', '0 AS is_old')
-            ->where('c.permalink IN (:permalinks)')
-            ->setParameter('permalinks', $permalinks, ArrayParameterType::STRING)
-            ->getQuery()
-            ->getArrayResult();
-
-        $byPermalink = [];
-        foreach ([...$oldRows, ...$categoryRows] as $row) {
-            if (! is_array($row)) {
-                continue;
-            }
-
-            $id = $row['id'] ?? null;
-            $idValue = $id instanceof CategoryId ? $id->value : (is_numeric($id) ? (int) $id : null);
-            $permalink = $row['permalink'] ?? null;
-            $permalink = $permalink instanceof Permalink ? $permalink->value : $permalink;
-            $isOld = $row['is_old'] ?? null;
-
-            if ($idValue === null || ! is_string($permalink) || ! is_numeric($isOld)) {
-                continue;
-            }
-
-            $byPermalink[$permalink] = [
-                'id' => $idValue,
-                'permalink' => $permalink,
-                'is_old' => (int) $isOld,
-            ];
-        }
-
-        return $byPermalink;
-    }
-
-    /**
-     * Item 14 DQL audit, re-corrected: `old_permalinks` is now mapped
-     * ({@see OldPermalinkEntity}). Converted to real DQL -- the original
-     * "a mapped entity property write can't express `hit = hit + 1`"
-     * reasoning only ruled out a fetch-mutate-flush() round trip; a DQL
-     * bulk UPDATE's own SET clause allows a self-referential arithmetic
-     * expression directly (`op.hit = op.hit + 1`, confirmed against the
-     * installed doctrine/orm QueryBuilder -- same shape as `rank = rank +
-     * 1` elsewhere in this codebase), and `NOW()` becomes DQL's own
-     * `CURRENT_TIMESTAMP()` (same {@see \Piwigo\Users\UserRepository::
-     * findPendingActivationKeyRows()} precedent, compiles to MySQL's
-     * `NOW()` via `MySQLPlatform::getCurrentTimestampSQL()`). No `LIMIT`
-     * clause -- ORM's QueryBuilder rejects `setMaxResults()` on an
-     * UPDATE/DELETE DQL statement outright, but `permalink` is
-     * OldPermalinkEntity's own single-column PK, so `WHERE op.permalink =
-     * :permalink` alone is already at most one row; `cat_id` stays as a
-     * defensive extra condition, matching the original. No full
-     * OldPermalinkEntity object is ever hydrated anywhere in this
-     * repository (only array/scalar reads), so there's no identity map
-     * entry for this bulk UPDATE to leave stale -- $em->clear() would be a
-     * no-op here.
-     *
-     * `$permalink` stays a raw `string` param -- unlike this method's own
-     * `$catId`, its only real caller ({@see \Piwigo\Category\CategoryService::
-     * findCategoryIdFromPermalinks()}) reaches it exclusively through a
-     * value already round-tripped out of {@see findPermalinkMatches()}'s
-     * own `old_permalinks` rows (its `is_old` branch), so it's guaranteed
-     * to already satisfy `Permalink::from()`'s constraints -- wrapped
-     * internally, right at the bind.
-     */
-    public function touchOldPermalinkHit(string $permalink, int $catId): void
-    {
-        $this->em
-            ->createQueryBuilder()
-            ->update(OldPermalinkEntity::class, 'op')
-            ->set('op.lastHit', 'CURRENT_TIMESTAMP()')
-            ->set('op.hit', 'op.hit + 1')
-            ->where('op.permalink = :permalink')
-            ->andWhere('op.catId = :catId')
-            ->setParameter('permalink', Permalink::from($permalink))
-            ->setParameter('catId', CategoryId::from($catId))
-            ->getQuery()
-            ->execute();
     }
 
     /**
@@ -1166,35 +1048,6 @@ final class CategoryRepository
             ->delete(CategoryEntity::class, 'c')
             ->where('c.id IN (:ids)')
             ->setParameter('ids', $ids)
-            ->getQuery()
-            ->execute();
-        $em->clear();
-    }
-
-    /**
-     * @param  list<int>  $ids
-     *
-     * Item 14 DQL audit, re-corrected: `old_permalinks` is now mapped
-     * ({@see OldPermalinkEntity}). Converted to real DQL -- single-table
-     * bulk DELETE, same "delete-by-ids clears the identity map afterward"
-     * contract as {@see deleteUserAccessForCategories()}/
-     * {@see deleteGroupAccessForCategories()} above (even though no full
-     * OldPermalinkEntity object is ever hydrated anywhere in this
-     * repository today, so this particular clear() is currently a no-op --
-     * kept for consistency with every other entity-targeted bulk delete in
-     * this class).
-     */
-    public function deleteOldPermalinksForCategories(array $ids): void
-    {
-        if ($ids === []) {
-            return;
-        }
-
-        $em = $this->em;
-        $em->createQueryBuilder()
-            ->delete(OldPermalinkEntity::class, 'op')
-            ->where('op.catId IN (:ids)')
-            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();

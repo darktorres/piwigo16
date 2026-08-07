@@ -30,6 +30,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
+use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -744,7 +745,7 @@ final class UrlService implements UrlServiceInterface
                     }
 
                     if ((bool) count($maybe_permalinks)) {
-                        $cat_id = $categoryService->findCategoryIdFromPermalinks($maybe_permalinks, $perma_index);
+                        $cat_id = $categoryService->findCategoryIdFromPermalinks($maybe_permalinks, $perma_index, new PermalinkRepository(EntityManagerFactory::build($categoryConn)));
                         // get_cat_id_from_permalinks() always sets $perma_index
                         // whenever it returns non-null (see its own docblock) --
                         // PHPStan can't correlate a by-ref out-param with the

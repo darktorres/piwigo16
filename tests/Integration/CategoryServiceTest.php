@@ -21,6 +21,7 @@ namespace Piwigo\Tests\Integration {
     use Doctrine\DBAL\Connection;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\CategoryService;
+    use Piwigo\Permalink\PermalinkRepository;
     use Piwigo\Common\ValueObject\CategoryId;
     use Piwigo\Config\ConfigService;
     use Piwigo\Config\CurrentConfig;
@@ -364,7 +365,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET permalink = 'sample-album' WHERE id = 1");
 
         $idx = null;
-        $catId = $this->service->findCategoryIdFromPermalinks(['no-match', 'sample-album'], $idx);
+        $catId = $this->service->findCategoryIdFromPermalinks(['no-match', 'sample-album'], $idx, new PermalinkRepository(EntityManagerFactory::build($this->conn)));
 
         self::assertSame(1, $catId);
         self::assertSame(1, $idx);
@@ -375,7 +376,7 @@ final class CategoryServiceTest extends IntegrationTestCase
     public function test_find_category_id_from_permalinks_returns_null_when_nothing_matches(): void
     {
         $idx = null;
-        $catId = $this->service->findCategoryIdFromPermalinks(['no-such-permalink'], $idx);
+        $catId = $this->service->findCategoryIdFromPermalinks(['no-such-permalink'], $idx, new PermalinkRepository(EntityManagerFactory::build($this->conn)));
 
         self::assertNull($catId);
     }
@@ -591,7 +592,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // old_permalinks row, cat_id=1) matches -- also proves the is_old
         // branch touches touchOldPermalinkHit()'s hit counter.
         $idx = null;
-        $catId = $this->service->findCategoryIdFromPermalinks(['old-sample-album', 'no-such-permalink'], $idx);
+        $catId = $this->service->findCategoryIdFromPermalinks(['old-sample-album', 'no-such-permalink'], $idx, new PermalinkRepository(EntityManagerFactory::build($this->conn)));
 
         self::assertSame(1, $catId);
         self::assertSame(0, $idx);
@@ -617,7 +618,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // isset() lookup against the very padded string it queried with.
         // The real, narrow gap this defensive tail return guards.
         $idx = null;
-        $catId = $this->service->findCategoryIdFromPermalinks(['old-sample-album '], $idx);
+        $catId = $this->service->findCategoryIdFromPermalinks(['old-sample-album '], $idx, new PermalinkRepository(EntityManagerFactory::build($this->conn)));
 
         self::assertNull($catId);
         self::assertNull($idx);
@@ -788,7 +789,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // image.
         $this->conn->executeStatement("INSERT INTO " . Tables::imageCategory() . " (image_id, category_id) VALUES (1, {$tempId})");
 
-        $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), 'delete_orphans');
+        $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($this->conn)), 'delete_orphans');
 
         self::assertNull($this->repo->findById($tempId));
         $stillLinked = $this->conn->createQueryBuilder()
@@ -836,7 +837,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         EventDispatcherTestFactory::get()->addTypedHandler(DeleteSite::class, $handler);
 
         try {
-            $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get());
+            $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($this->conn)));
 
             self::assertNull($this->repo->findById((int) $categoryId));
             self::assertNull($siteRepo->findGalleriesUrlById($siteId));

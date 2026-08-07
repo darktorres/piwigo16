@@ -15,10 +15,13 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocBeginCatList;
 use Piwigo\Event\Location\LocEndCatList;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Html\HtmlService;
+use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
@@ -125,6 +128,7 @@ final class CatListPageRenderer
                 $this->urlService,
                 $this->sessionService,
                 $this->eventDispatcher,
+                new PermalinkRepository(EntityManagerFactory::build(DbConnection::build())),
                 $catListRequest->photoDeletionMode
             );
 

@@ -122,37 +122,6 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->findSubcategoryIds([]));
     }
 
-    public function test_find_permalink_matches_finds_old_and_current_permalinks(): void
-    {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET permalink = 'sample-album' WHERE id = 1");
-
-        $matches = $this->repo->findPermalinkMatches(['old-sample-album', 'sample-album']);
-
-        // id/is_old come back as native int under this project's mysqli
-        // driver config (unlike varchar columns like 'permalink').
-        self::assertSame(1, $matches['old-sample-album']['id']);
-        self::assertSame(1, $matches['old-sample-album']['is_old']);
-        self::assertSame(1, $matches['sample-album']['id']);
-        self::assertSame(0, $matches['sample-album']['is_old']);
-
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET permalink = NULL WHERE id = 1');
-    }
-
-    public function test_touch_old_permalink_hit_increments_the_counter(): void
-    {
-        $this->repo->touchOldPermalinkHit('old-sample-album', 1);
-
-        $hit = $this->conn->createQueryBuilder()
-            ->select('hit')
-            ->from(Tables::oldPermalinks())
-            ->where('permalink = :permalink')
-            ->setParameter('permalink', 'old-sample-album')
-            ->executeQuery()
-            ->fetchOne();
-
-        self::assertSame(43, is_numeric($hit) ? (int) $hit : null);
-    }
-
     public function test_find_random_image_id_returns_an_image_from_the_category(): void
     {
         $imageId = $this->repo->findRandomImageId(1, '1', false, self::noPermissionRestriction());
@@ -384,11 +353,6 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->findFullCategoriesByIds([]));
     }
 
-    public function test_find_permalink_matches_returns_empty_for_no_permalinks(): void
-    {
-        self::assertSame([], $this->repo->findPermalinkMatches([]));
-    }
-
     public function test_find_categories_by_ids_returns_empty_for_no_ids(): void
     {
         self::assertSame([], $this->repo->findCategoriesByIds([]));
@@ -507,14 +471,6 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         $this->repo->deleteCategoriesByIds([]);
 
         self::assertNotNull($this->repo->findById(1));
-    }
-
-    public function test_delete_old_permalinks_for_categories_is_a_no_op_for_no_ids(): void
-    {
-        $this->repo->deleteOldPermalinksForCategories([]);
-
-        $count = $this->countRows(Tables::oldPermalinks());
-        self::assertSame(1, $count);
     }
 
     public function test_clear_representative_picture_ids_is_a_no_op_for_no_ids(): void

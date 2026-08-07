@@ -341,11 +341,18 @@ final readonly class CategoryService
     }
 
     /**
+     * $oldPermalinkRepo is an explicit parameter, not constructor-injected
+     * -- Category is L2aCoreDomain, its real implementation
+     * (Permalink\PermalinkRepository) is L2bExtendedDomain, and
+     * constructor-injecting it would just relocate the deptrac violation to
+     * whichever of this method's own many call sites constructs
+     * CategoryService (see OldPermalinkLookupInterface's own docblock).
+     *
      * @param  list<string>  $permalinks
      */
-    public function findCategoryIdFromPermalinks(array $permalinks, ?int &$idx): ?int
+    public function findCategoryIdFromPermalinks(array $permalinks, ?int &$idx, OldPermalinkLookupInterface $oldPermalinkRepo): ?int
     {
-        $permaHash = $this->repo->findPermalinkMatches($permalinks);
+        $permaHash = $oldPermalinkRepo->findPermalinkMatches($permalinks);
 
         if ($permaHash === []) {
             return null;
@@ -360,7 +367,7 @@ final readonly class CategoryService
             $match = $permaHash[$permalinks[$i]];
             $catId = $match['id'];
             if ((bool) $match['is_old']) {
-                $this->repo->touchOldPermalinkHit($permalinks[$i], $catId);
+                $oldPermalinkRepo->touchOldPermalinkHit($permalinks[$i], $catId);
             }
 
             return $catId;
@@ -1033,10 +1040,10 @@ final readonly class CategoryService
      * first regardless, so this stays synchronous rather than a fire-
      * and-forget notification.
      */
-    public function deleteSite(int $id, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService, EventDispatcher $eventDispatcher): void
+    public function deleteSite(int $id, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService, EventDispatcher $eventDispatcher, OldPermalinkLookupInterface $oldPermalinkRepo): void
     {
         $categoryIds = $this->repo->findCategoryIdsBySite($id);
-        $this->deleteCategories($categoryIds, $activityLogger, $urlService, $sessionService, $eventDispatcher);
+        $this->deleteCategories($categoryIds, $activityLogger, $urlService, $sessionService, $eventDispatcher, oldPermalinkRepo: $oldPermalinkRepo);
 
         $this->eventDispatcher->dispatchNotify(new DeleteSite($id));
     }
@@ -1048,13 +1055,16 @@ final readonly class CategoryService
      *    - all the links between elements and this category
      *    - all the restrictions linked to the category
      *
+     * $oldPermalinkRepo is an explicit parameter, not constructor-injected
+     * -- same reasoning as findCategoryIdFromPermalinks()'s own docblock.
+     *
      * @param array<int, int> $ids
      * @param string $photoDeletionMode
      *    - no_delete: delete no photo, may create orphans
      *    - delete_orphans: delete photos that are no longer linked to any category
      *    - force_delete: delete photos even if they are linked to another category
      */
-    public function deleteCategories(array $ids, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService, EventDispatcher $eventDispatcher, string $photoDeletionMode = 'no_delete'): void
+    public function deleteCategories(array $ids, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService, EventDispatcher $eventDispatcher, OldPermalinkLookupInterface $oldPermalinkRepo, string $photoDeletionMode = 'no_delete'): void
     {
         if (count($ids) === 0) {
             return;
@@ -1096,7 +1106,7 @@ final readonly class CategoryService
         // destruction of the category
         $this->repo->deleteCategoriesByIds($ids);
 
-        $this->repo->deleteOldPermalinksForCategories($ids);
+        $oldPermalinkRepo->deleteOldPermalinksForCategories($ids);
 
         $eventDispatcher->dispatchNotify(new DeleteCategories($ids));
         $activityLogger->record('album', $ids, 'delete', [

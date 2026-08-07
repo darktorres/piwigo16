@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Core\Kernel;
 use LogicException;
@@ -11,6 +12,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Permalink\OldPermalinkSortField;
 use Piwigo\Permalink\PermalinkRepository;
 
@@ -19,6 +21,8 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
     private static bool $fixtureReady = false;
 
     private PermalinkRepository $repo;
+
+    private Connection $conn;
 
     #[Override]
     protected function setUp(): void
@@ -40,7 +44,17 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->repo = new PermalinkRepository(EntityManagerFactory::build(DbConnection::build()));
+        $this->conn = DbConnection::build();
+        $this->repo = new PermalinkRepository(EntityManagerFactory::build($this->conn));
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        // Resets the fixture's own seeded baseline (piwigo-17.0.sql:
+        // hit=42, last_hit='2026-08-01 00:00:00') after any test that
+        // mutates it.
+        $this->conn->executeStatement("UPDATE " . Tables::oldPermalinks() . " SET hit = 42, last_hit = '2026-08-01 00:00:00' WHERE permalink = 'old-sample-album'");
     }
 
     public function test_set_then_find_category_id_by_permalink_round_trips(): void
@@ -170,5 +184,49 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
             $this->repo->deleteOldPermalink(1, $lowSlug);
             $this->repo->deleteOldPermalink(1, $highSlug);
         }
+    }
+
+    public function test_find_permalink_matches_finds_old_and_current_permalinks(): void
+    {
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET permalink = 'sample-album' WHERE id = 1");
+
+        $matches = $this->repo->findPermalinkMatches(['old-sample-album', 'sample-album']);
+
+        // id/is_old come back as native int under this project's mysqli
+        // driver config (unlike varchar columns like 'permalink').
+        self::assertSame(1, $matches['old-sample-album']['id']);
+        self::assertSame(1, $matches['old-sample-album']['is_old']);
+        self::assertSame(1, $matches['sample-album']['id']);
+        self::assertSame(0, $matches['sample-album']['is_old']);
+
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET permalink = NULL WHERE id = 1');
+    }
+
+    public function test_find_permalink_matches_returns_empty_for_no_permalinks(): void
+    {
+        self::assertSame([], $this->repo->findPermalinkMatches([]));
+    }
+
+    public function test_touch_old_permalink_hit_increments_the_counter(): void
+    {
+        $this->repo->touchOldPermalinkHit('old-sample-album', 1);
+
+        $hit = $this->conn->createQueryBuilder()
+            ->select('hit')
+            ->from(Tables::oldPermalinks())
+            ->where('permalink = :permalink')
+            ->setParameter('permalink', 'old-sample-album')
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame(43, is_numeric($hit) ? (int) $hit : null);
+    }
+
+    public function test_delete_old_permalinks_for_categories_is_a_no_op_for_no_ids(): void
+    {
+        $this->repo->deleteOldPermalinksForCategories([]);
+
+        $count = $this->conn->createQueryBuilder()->select('COUNT(*) AS c')->from(Tables::oldPermalinks())->executeQuery()->fetchOne();
+        self::assertSame(1, is_numeric($count) ? (int) $count : 0);
     }
 }

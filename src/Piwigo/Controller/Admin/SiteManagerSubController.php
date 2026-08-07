@@ -22,6 +22,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Album\GetAdminsSiteLinks;
+use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\SiteEntity;
@@ -152,7 +153,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             switch ($siteManagerRequest->action) {
                 case 'delete':
 
-                    $this->categoryService->deleteSite($site_id, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher);
+                    $this->categoryService->deleteSite($site_id, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher, new PermalinkRepository(EntityManagerFactory::build($conn)));
                     $this->pageState->addInfo($galleries_url . ' ' . $this->lang->t('deleted'));
                     break;
 

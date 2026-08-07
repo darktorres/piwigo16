@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Permalink;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
+use Override;
 use Piwigo\Category\CategoryEntity;
+use Piwigo\Category\OldPermalinkLookupInterface;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Core\Env;
@@ -23,7 +26,7 @@ use Piwigo\Permalink\Projection\OldPermalink;
  *
  * Every method runs as real DQL.
  */
-final readonly class PermalinkRepository
+final readonly class PermalinkRepository implements OldPermalinkLookupInterface
 {
     public function __construct(
         private EntityManagerInterface $em,
@@ -251,5 +254,113 @@ final readonly class PermalinkRepository
             ->getResult();
 
         return array_map(static fn (OldPermalinkEntity $op): OldPermalink => OldPermalink::fromEntity($op), $entities);
+    }
+
+    /**
+     * {@see OldPermalinkLookupInterface} implementation. Category is
+     * L2aCoreDomain, this file's own OldPermalinkEntity is
+     * L2bExtendedDomain, so a direct dependency the other way would
+     * violate the layering ruleset. `op.catId` maps through the
+     * `category_id` custom Doctrine Type, so getArrayResult() hydrates it
+     * as a CategoryId value object (Gotcha #1 shape) -- read via
+     * instanceof, unlike the plain-int `c.id` from the categories side.
+     * `c.permalink` (CategoryEntity's own still-untyped column) stays a
+     * plain string in the same merged result set, so both shapes are
+     * unwrapped before the merge.
+     */
+    #[Override]
+    public function findPermalinkMatches(array $permalinks): array
+    {
+        if ($permalinks === []) {
+            return [];
+        }
+
+        $em = $this->em;
+
+        $oldRows = $em->createQueryBuilder()
+            ->select('op.catId AS id', 'op.permalink AS permalink', '1 AS is_old')
+            ->from(OldPermalinkEntity::class, 'op')
+            ->where('op.permalink IN (:permalinks)')
+            ->setParameter('permalinks', $permalinks, ArrayParameterType::STRING)
+            ->getQuery()
+            ->getArrayResult();
+
+        $categoryRows = $em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
+            ->select('c.id AS id', 'c.permalink AS permalink', '0 AS is_old')
+            ->where('c.permalink IN (:permalinks)')
+            ->setParameter('permalinks', $permalinks, ArrayParameterType::STRING)
+            ->getQuery()
+            ->getArrayResult();
+
+        $byPermalink = [];
+        foreach ([...$oldRows, ...$categoryRows] as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = $row['id'] ?? null;
+            $idValue = $id instanceof CategoryId ? $id->value : (is_numeric($id) ? (int) $id : null);
+            $permalink = $row['permalink'] ?? null;
+            $permalink = $permalink instanceof Permalink ? $permalink->value : $permalink;
+            $isOld = $row['is_old'] ?? null;
+
+            if ($idValue === null || ! is_string($permalink) || ! is_numeric($isOld)) {
+                continue;
+            }
+
+            $byPermalink[$permalink] = [
+                'id' => $idValue,
+                'permalink' => $permalink,
+                'is_old' => (int) $isOld,
+            ];
+        }
+
+        return $byPermalink;
+    }
+
+    /**
+     * {@see OldPermalinkLookupInterface} implementation. No `LIMIT`
+     * clause -- ORM's QueryBuilder rejects `setMaxResults()` on an
+     * UPDATE/DELETE DQL statement outright, but `permalink` is
+     * OldPermalinkEntity's own single-column PK, so `WHERE op.permalink =
+     * :permalink` alone is already at most one row; `cat_id` stays as a
+     * defensive extra condition.
+     */
+    #[Override]
+    public function touchOldPermalinkHit(string $permalink, int $catId): void
+    {
+        $this->em
+            ->createQueryBuilder()
+            ->update(OldPermalinkEntity::class, 'op')
+            ->set('op.lastHit', 'CURRENT_TIMESTAMP()')
+            ->set('op.hit', 'op.hit + 1')
+            ->where('op.permalink = :permalink')
+            ->andWhere('op.catId = :catId')
+            ->setParameter('permalink', Permalink::from($permalink))
+            ->setParameter('catId', CategoryId::from($catId))
+            ->getQuery()
+            ->execute();
+    }
+
+    /**
+     * {@see OldPermalinkLookupInterface} implementation.
+     *
+     * @param  list<int>  $catIds
+     */
+    #[Override]
+    public function deleteOldPermalinksForCategories(array $catIds): void
+    {
+        if ($catIds === []) {
+            return;
+        }
+
+        $em = $this->em;
+        $em->createQueryBuilder()
+            ->delete(OldPermalinkEntity::class, 'op')
+            ->where('op.catId IN (:ids)')
+            ->setParameter('ids', $catIds, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 }

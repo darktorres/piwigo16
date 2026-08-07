@@ -37,6 +37,7 @@ use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -512,7 +513,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
             if (count($to_delete) > 0) {
                 if (! $simulate) {
-                    $this->categoryService->deleteCategories($to_delete, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher);
+                    $this->categoryService->deleteCategories($to_delete, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher, new PermalinkRepository(EntityManagerFactory::build($conn)));
                     foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                         if (is_dir($to_delete_dir)) {
                             new DerivativeCacheService($this->currentConfig, $this->paths)

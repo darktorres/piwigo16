@@ -1,0 +1,11 @@
+--- a/src/TemplateBase.php
++++ b/src/TemplateBase.php
+@@ -27,7 +27,7 @@
+ 	 * Set this if you want different sets of compiled files for the same
+ 	 * templates.
+ 	 *
+-	 * @var string
++	 * @var string|null
+ 	 */
+ 	public $compile_id = null;
+ 

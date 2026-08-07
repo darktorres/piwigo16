@@ -156,6 +156,10 @@
       },
       "pestphp/pest-plugin-mutate": {
         "Bound the composed --filter argument length in MutationTest::start() -- a mutation covered by hundreds/thousands of tests can build a --filter regex past Linux's 128 KiB MAX_ARG_STRLEN, crashing proc_open() with ProcessStartFailedException (\"Argument list too long\") and killing the entire test:mutate run; falls back to running the full testsuite for that one mutant instead, which is always correctness-preserving": "patches/pest-plugin-mutate-5.0.1-bound-filter-argument-length.patch"
+      },
+      "smarty/smarty": {
+        "Fix TemplateBase::$compile_id's @var docblock (string) contradicting its own `= null` default and setCompileId()'s real usage -- confirmed by reading the class itself; no native property type declared, so PHPStan trusts the wrong docblock": "patches/smarty-smarty-5.8.4-compile-id-nullable-docblock.patch",
+        "Fix Smarty::unregisterFilter()'s @param docblock typo `callback|string` (not a real PHP/PHPStan type -- resolves to the unrelated class Smarty\\callback) to the real accepted type `callable|string`, matching its own _getFilterName() implementation": "patches/smarty-smarty-5.8.4-unregisterfilter-callable-docblock.patch"
       }
     },
     "phpstan/extension-installer": {

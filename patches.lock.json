@@ -1,49 +1,71 @@
 {
-  "_hash": "c72c9a2d7545a1f3f7e35f21891e60a1edd785bb723d25e32a6d498ea693a7b7",
-  "patches": {
-    "pestphp/pest-plugin-browser": [
-      {
-        "package": "pestphp/pest-plugin-browser",
-        "description": "Fix expectScreenshot() unconditionally failing when the tolerant threshold comparison actually passes (missing return after Page.php's foreach loop)",
-        "url": "patches/pest-plugin-browser-5.0.0-expect-screenshot-success-path.patch",
-        "sha256": "6a627675d0ef2aa8736eabddf68e7ebdf6c4b0b749aed01de39fd6cd43cce27a",
-        "depth": 1,
-        "extra": {
-          "provenance": "root"
-        }
-      },
-      {
-        "package": "pestphp/pest-plugin-browser",
-        "description": "Add Chromium launch flags for deterministic screenshot rendering on Linux (font hinting/LCD text/color profile) -- the plugin's own maintainers don't trust screenshot assertions on Linux/CI without this class of mitigation, see PR pestphp/pest-plugin-browser#175",
-        "url": "patches/pest-plugin-browser-5.0.0-deterministic-screenshot-flags.patch",
-        "sha256": "e689bb2a394cfd1831f18ac30d13efeea83a874c9af03fa598afeae598c5d3d3",
-        "depth": 1,
-        "extra": {
-          "provenance": "root"
-        }
-      },
-      {
-        "package": "pestphp/pest-plugin-browser",
-        "description": "Fix Execution::resetAssertions() passing Assert::class instead of null as ReflectionProperty::setValue()'s first argument for a static property (PHP 8.1 deprecation)",
-        "url": "patches/pest-plugin-browser-5.0.0-reset-assertions-static-property.patch",
-        "sha256": "19bad60c52344ddfa334413daf0656919632f56df48f7d5896407c97f846f4e5",
-        "depth": 1,
-        "extra": {
-          "provenance": "root"
-        }
-      }
-    ],
-    "pestphp/pest-plugin-mutate": [
-      {
-        "package": "pestphp/pest-plugin-mutate",
-        "description": "Bound the composed --filter argument length in MutationTest::start() -- a mutation covered by hundreds/thousands of tests can build a --filter regex past Linux's 128 KiB MAX_ARG_STRLEN, crashing proc_open() with ProcessStartFailedException (\"Argument list too long\") and killing the entire test:mutate run; falls back to running the full testsuite for that one mutant instead, which is always correctness-preserving",
-        "url": "patches/pest-plugin-mutate-5.0.1-bound-filter-argument-length.patch",
-        "sha256": "de97dde126381265b371d6a66c9bfe32b6edd25f5bf8ff3fe8e15b46903a2f22",
-        "depth": 1,
-        "extra": {
-          "provenance": "root"
-        }
-      }
-    ]
-  }
+    "_hash": "e52e2871723ef742cce72b41724f93ccf0c74e78d44b529c55f5b9fb8f4d4ba4",
+    "patches": {
+        "pestphp/pest-plugin-browser": [
+            {
+                "package": "pestphp/pest-plugin-browser",
+                "description": "Fix expectScreenshot() unconditionally failing when the tolerant threshold comparison actually passes (missing return after Page.php's foreach loop)",
+                "url": "patches/pest-plugin-browser-5.0.0-expect-screenshot-success-path.patch",
+                "sha256": "6a627675d0ef2aa8736eabddf68e7ebdf6c4b0b749aed01de39fd6cd43cce27a",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            },
+            {
+                "package": "pestphp/pest-plugin-browser",
+                "description": "Add Chromium launch flags for deterministic screenshot rendering on Linux (font hinting/LCD text/color profile) -- the plugin's own maintainers don't trust screenshot assertions on Linux/CI without this class of mitigation, see PR pestphp/pest-plugin-browser#175",
+                "url": "patches/pest-plugin-browser-5.0.0-deterministic-screenshot-flags.patch",
+                "sha256": "e689bb2a394cfd1831f18ac30d13efeea83a874c9af03fa598afeae598c5d3d3",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            },
+            {
+                "package": "pestphp/pest-plugin-browser",
+                "description": "Fix Execution::resetAssertions() passing Assert::class instead of null as ReflectionProperty::setValue()'s first argument for a static property (PHP 8.1 deprecation)",
+                "url": "patches/pest-plugin-browser-5.0.0-reset-assertions-static-property.patch",
+                "sha256": "19bad60c52344ddfa334413daf0656919632f56df48f7d5896407c97f846f4e5",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ],
+        "pestphp/pest-plugin-mutate": [
+            {
+                "package": "pestphp/pest-plugin-mutate",
+                "description": "Bound the composed --filter argument length in MutationTest::start() -- a mutation covered by hundreds/thousands of tests can build a --filter regex past Linux's 128 KiB MAX_ARG_STRLEN, crashing proc_open() with ProcessStartFailedException (\"Argument list too long\") and killing the entire test:mutate run; falls back to running the full testsuite for that one mutant instead, which is always correctness-preserving",
+                "url": "patches/pest-plugin-mutate-5.0.1-bound-filter-argument-length.patch",
+                "sha256": "de97dde126381265b371d6a66c9bfe32b6edd25f5bf8ff3fe8e15b46903a2f22",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ],
+        "smarty/smarty": [
+            {
+                "package": "smarty/smarty",
+                "description": "Fix TemplateBase::$compile_id's @var docblock (string) contradicting its own `= null` default and setCompileId()'s real usage -- confirmed by reading the class itself; no native property type declared, so PHPStan trusts the wrong docblock",
+                "url": "patches/smarty-smarty-5.8.4-compile-id-nullable-docblock.patch",
+                "sha256": "34bd4509a77d52a7f1f18055b89f0d078e5262112ba45e478776a982724a7cc2",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            },
+            {
+                "package": "smarty/smarty",
+                "description": "Fix Smarty::unregisterFilter()'s @param docblock typo `callback|string` (not a real PHP/PHPStan type -- resolves to the unrelated class Smarty\\callback) to the real accepted type `callable|string`, matching its own _getFilterName() implementation",
+                "url": "patches/smarty-smarty-5.8.4-unregisterfilter-callable-docblock.patch",
+                "sha256": "e66da71b52acf578048c05c54bcedbcdf75bd84c6827a64dd23fa395cd1983ba",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ]
+    }
 }

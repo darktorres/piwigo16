@@ -526,10 +526,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     {
         $this->smarty->addTemplateDir($dir);
 
-        // Smarty's own @var string on $compile_id contradicts its own
-        // `= null` default (vendor/smarty/smarty/src/TemplateBase.php) —
-        // not a native type, and not ours to fix.
-        // @phpstan-ignore isset.property
         if (! isset($this->smarty->compile_id)) {
             $compile_id = '1';
             $compile_id .= ($real_dir = realpath($dir)) === false ? $dir : $real_dir;
@@ -552,10 +548,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function delete_compiled_templates(): void
     {
         $save_compile_id = $this->smarty->compile_id;
-        // Smarty's own @var string on $compile_id contradicts its own
-        // `= null` default (vendor/smarty/smarty/src/TemplateBase.php) —
-        // not a native type, and not ours to fix.
-        // @phpstan-ignore assign.propertyType
         $this->smarty->compile_id = null;
         $this->smarty->clearCompiledTemplate();
         $this->smarty->compile_id = $save_compile_id;
@@ -962,11 +954,13 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         if (strlen($str) > 1) {
             if (($str[0] === '\'' && $str[strlen($str) - 1] === '\'')
               || ($str[0] === '"' && $str[strlen($str) - 1] === '"')) {
+                // $tmp is always really reassigned by the eval() below --
+                // this initializer exists only to give PHPStan a definite
+                // assignment to trace, since it can't see into eval()'s
+                // string content (same blind spot as prefilter_white_space()
+                // below).
+                $tmp = null;
                 eval('$tmp=' . $str . ';');
-                // Same eval() blind spot as prefilter_white_space() below:
-                // PHPStan treats variables only ever assigned inside eval()
-                // as undefined in the enclosing scope.
-                // @phpstan-ignore variable.undefined
                 return $tmp;
             }
         }
@@ -1493,16 +1487,6 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             foreach ($this->external_filters[$handle] as $filters) {
                 foreach ($filters as $filter) {
                     [$type, $callback] = $filter;
-                    // Smarty\Smarty::unregisterFilter()'s own docblock types
-                    // its 2nd param as `callback|string` -- `callback` (no
-                    // trailing e) isn't a recognized PHPStan pseudo-type, so
-                    // it resolves as the unrelated class Smarty\callback
-                    // instead of PHP's native `callable`. The implementation
-                    // (vendor/smarty/smarty/src/Smarty.php) itself accepts
-                    // any real callable via is_string()/_getFilterName()
-                    // fallback -- this is a vendor docblock typo, not a bug
-                    // in our code.
-                    // @phpstan-ignore argument.type
                     $this->smarty->unregisterFilter($type, $callback);
                 }
             }

@@ -227,9 +227,6 @@ final class UserListPageRenderer
         $template->assign_var_from_handle('ADMIN_CONTENT', 'user_list');
     }
 
-    // PHPStan can't see the @include below mutating $conf, so it thinks
-    // this never returns true.
-    // @phpstan-ignore return.tooWideBool
     private static function webmasterIdIsLocal(Paths $paths): bool
     {
         // A presence check ("did the site owner override webmaster_id in
@@ -252,14 +249,14 @@ final class UserListPageRenderer
         // populates from scratch, never the real DB-synced global.
         $conf = [];
         @include $paths->local . 'config/config.inc.php';
-        // @phpstan-ignore isset.offset
+        // PHPStan can't see the @include above mutating $conf -- it's a
+        // site owner's own arbitrary, user-editable file -- so the real
+        // runtime shape has to be told explicitly rather than inferred.
+        /** @var array<string, mixed> $conf */
         if (isset($conf['local_dir_site'])) {
             @include $paths->siteLocal . 'config/config.inc.php';
         }
-        // PHPStan can't see the @include above mutating $conf, so it thinks
-        // this is always false/never true -- both ignores are that same
-        // blind spot, not a real narrowing bug.
-        // @phpstan-ignore nullCoalesce.offset, cast.useless
+        /** @var array<string, mixed> $conf */
         return (bool) ($conf['webmaster_id'] ?? false);
     }
 }

@@ -20,9 +20,9 @@ final class DummyPluginMaintain extends PluginMaintain
 {
     // Each is_callable() here checks for a bare function dynamically defined
     // by a plugin's own maintain.inc.php (include_once'd in
-    // plugins::build_maintain_class(), outside this codebase, not
-    // statically knowable) — genuinely undecidable until real PluginMaintain
-    // contracts (P28) replace this pre-2.7 procedural fallback entirely.
+    // ExtensionLifecycle, outside this codebase, only known at runtime --
+    // see phpstan.neon's function.impossibleType/function.notFound entry for
+    // why PHPStan can't be told about this instead of suppressing here).
     /**
      * @param string $plugin_version
      * @param array<int, string> $errors - not natively typed: PluginMaintain's
@@ -33,9 +33,7 @@ final class DummyPluginMaintain extends PluginMaintain
     #[Override]
     public function install($plugin_version, &$errors = []): mixed
     {
-        // @phpstan-ignore function.impossibleType
         if (is_callable('plugin_install')) {
-            // @phpstan-ignore function.notFound
             return plugin_install($this->plugin_id, $plugin_version, $errors);
         }
 
@@ -49,9 +47,7 @@ final class DummyPluginMaintain extends PluginMaintain
     #[Override]
     public function activate($plugin_version, &$errors = []): mixed
     {
-        // @phpstan-ignore function.impossibleType
         if (is_callable('plugin_activate')) {
-            // @phpstan-ignore function.notFound
             return plugin_activate($this->plugin_id, $plugin_version, $errors);
         }
 
@@ -61,9 +57,7 @@ final class DummyPluginMaintain extends PluginMaintain
     #[Override]
     public function deactivate(): mixed
     {
-        // @phpstan-ignore function.impossibleType
         if (is_callable('plugin_deactivate')) {
-            // @phpstan-ignore function.notFound
             return plugin_deactivate($this->plugin_id);
         }
 
@@ -73,9 +67,7 @@ final class DummyPluginMaintain extends PluginMaintain
     #[Override]
     public function uninstall(): mixed
     {
-        // @phpstan-ignore function.impossibleType
         if (is_callable('plugin_uninstall')) {
-            // @phpstan-ignore function.notFound
             return plugin_uninstall($this->plugin_id);
         }
 

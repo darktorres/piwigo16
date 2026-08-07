@@ -48,3 +48,14 @@ test('getElementPath leaves a remote (http/https) path untouched', function (): 
     expect(ImagePathHelper::getElementPath(['path' => 'http://cdn.example.test/photo.jpg'], $urlService, Paths::fromRoot('/var/www/piwigo')))
         ->toBe('http://cdn.example.test/photo.jpg');
 });
+
+test('getElementPath leaves an already-absolute local path untouched, not doubled up', function (): void {
+    // images.path is absolute for locally site-synced photos (galleries_url
+    // is seeded absolute by InstallWizard) -- prepending the root a second
+    // time here produced an unreadable, doubled-up path for every such
+    // photo (real bug, found live).
+    $urlService = UrlServiceTestFactory::build();
+
+    expect(ImagePathHelper::getElementPath(['path' => '/var/www/piwigo/galleries/external/photo.jpg'], $urlService, Paths::fromRoot('/var/www/piwigo')))
+        ->toBe('/var/www/piwigo/galleries/external/photo.jpg');
+});

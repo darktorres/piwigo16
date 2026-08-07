@@ -62,7 +62,13 @@ final class ImagePathHelper
         // row for this element always carries a string here.
         assert(is_string($path));
 
-        if (! $urlService->urlIsRemote($path)) {
+        // `path` is root-relative for uploaded photos, but already
+        // absolute for locally site-synced photos (see ImageEntity::$path's
+        // own docblock) -- same guard MetadataService::getSyncMetadata()
+        // already uses, needed here too or a synced photo's path gets the
+        // root prepended a second time, producing an unreadable, doubled-up
+        // path.
+        if (! $urlService->urlIsRemote($path) && ! str_starts_with($path, '/')) {
             $path = $paths->root . $path;
         }
         return $path;

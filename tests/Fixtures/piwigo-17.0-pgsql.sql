@@ -477,7 +477,7 @@ CREATE TABLE public.piwigo_categories (
     global_rank character varying(255) DEFAULT NULL::character varying,
     image_order character varying(128) DEFAULT NULL::character varying,
     permalink character varying(64) DEFAULT NULL::character varying COLLATE pg_catalog."C",
-    lastmodified timestamp without time zone DEFAULT now() NOT NULL,
+    lastmodified timestamp(0) without time zone DEFAULT now() NOT NULL,
     tsv_search tsvector GENERATED ALWAYS AS (to_tsvector('simple'::regconfig, (((COALESCE(name, ''::character varying))::text || ' '::text) || COALESCE(comment, ''::text)))) STORED,
     CONSTRAINT piwigo_categories_status_check CHECK (((status)::text = ANY ((ARRAY['public'::character varying, 'private'::character varying])::text[])))
 );
@@ -1031,7 +1031,7 @@ CREATE TABLE public.piwigo_groups (
     id integer NOT NULL,
     name character varying(255) DEFAULT ''::character varying NOT NULL,
     is_default boolean DEFAULT false NOT NULL,
-    lastmodified timestamp without time zone DEFAULT now() NOT NULL
+    lastmodified timestamp(0) without time zone DEFAULT now() NOT NULL
 );
 
 
@@ -1482,7 +1482,7 @@ CREATE TABLE public.piwigo_images (
     rotation smallint,
     latitude double precision,
     longitude double precision,
-    lastmodified timestamp without time zone DEFAULT now() NOT NULL,
+    lastmodified timestamp(0) without time zone DEFAULT now() NOT NULL,
     tsv_search tsvector GENERATED ALWAYS AS (to_tsvector('simple'::regconfig, (((COALESCE(name, ''::character varying))::text || ' '::text) || COALESCE(comment, ''::text)))) STORED,
     tsv_author tsvector GENERATED ALWAYS AS (to_tsvector('simple'::regconfig, (COALESCE(author, ''::character varying))::text)) STORED
 );
@@ -2207,7 +2207,7 @@ CREATE TABLE public.piwigo_tags (
     id integer NOT NULL,
     name character varying(255) DEFAULT ''::character varying NOT NULL,
     url_name character varying(255) DEFAULT ''::character varying NOT NULL COLLATE pg_catalog."C",
-    lastmodified timestamp without time zone DEFAULT now() NOT NULL,
+    lastmodified timestamp(0) without time zone DEFAULT now() NOT NULL,
     tsv_search tsvector GENERATED ALWAYS AS (to_tsvector('simple'::regconfig, (COALESCE(name, ''::character varying))::text)) STORED
 );
 
@@ -2622,7 +2622,7 @@ CREATE TABLE public.piwigo_user_infos (
     activation_key_expire timestamp without time zone,
     last_visit timestamp without time zone,
     last_visit_from_history boolean DEFAULT false NOT NULL,
-    lastmodified timestamp without time zone DEFAULT now() NOT NULL,
+    lastmodified timestamp(0) without time zone DEFAULT now() NOT NULL,
     preferences jsonb,
     CONSTRAINT piwigo_user_infos_status_check CHECK (((status)::text = ANY ((ARRAY['webmaster'::character varying, 'admin'::character varying, 'normal'::character varying, 'generic'::character varying, 'guest'::character varying])::text[])))
 );

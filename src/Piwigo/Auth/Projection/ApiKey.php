@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth\Projection;
 
+use InvalidArgumentException;
 use Piwigo\Auth\UserAuthKeyEntity;
+use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Typed row shape for `piwigo_user_auth_keys` (P17-23 Stage 1b, Auth
@@ -18,6 +20,12 @@ use Piwigo\Auth\UserAuthKeyEntity;
  * `NOT NULL` columns (unlike most other domains' own now-nullable
  * timestamp columns), so `fromRow()`'s own fallback default is a
  * defensive floor, not an expected real value.
+ *
+ * `userId` is `UserId`, not `?UserId` -- `user_auth_keys.user_id` is
+ * `NOT NULL` with a real `fk_user_auth_keys_user_id` FOREIGN KEY onto
+ * `piwigo_users.id` (`ON DELETE CASCADE`), so a real fetched row can't
+ * carry a missing/invalid value, same reasoning as
+ * {@see \Piwigo\Rate\Projection\Rate}'s `userId`/`elementId`.
  */
 final readonly class ApiKey
 {
@@ -26,7 +34,7 @@ final readonly class ApiKey
         public string $authKey,
         public ?string $apikeySecret,
         public ?string $apikeyName,
-        public int $userId,
+        public UserId $userId,
         public string $createdOn,
         public ?int $duration,
         public string $expiredOn,
@@ -43,7 +51,7 @@ final readonly class ApiKey
             authKey: $entity->authKey,
             apikeySecret: $entity->apikeySecret,
             apikeyName: $entity->apikeyName,
-            userId: $entity->userId->value,
+            userId: $entity->userId,
             createdOn: $entity->createdOn,
             duration: $entity->duration,
             expiredOn: $entity->expiredOn,
@@ -59,12 +67,18 @@ final readonly class ApiKey
      */
     public static function fromRow(array $row): self
     {
+        $userIdValue = $row['user_id'] ?? null;
+        $userId = $userIdValue instanceof UserId ? $userIdValue : UserId::tryFrom($userIdValue);
+        if ($userId === null) {
+            throw new InvalidArgumentException(sprintf('Expected a positive user id, got %s', get_debug_type($userIdValue)));
+        }
+
         return new self(
             authKeyId: is_numeric($row['auth_key_id'] ?? null) ? (int) $row['auth_key_id'] : 0,
             authKey: is_string($row['auth_key'] ?? null) ? $row['auth_key'] : '',
             apikeySecret: is_string($row['apikey_secret'] ?? null) ? $row['apikey_secret'] : null,
             apikeyName: is_string($row['apikey_name'] ?? null) ? $row['apikey_name'] : null,
-            userId: is_numeric($row['user_id'] ?? null) ? (int) $row['user_id'] : 0,
+            userId: $userId,
             createdOn: is_string($row['created_on'] ?? null) ? $row['created_on'] : '',
             duration: is_numeric($row['duration'] ?? null) ? (int) $row['duration'] : null,
             expiredOn: is_string($row['expired_on'] ?? null) ? $row['expired_on'] : '',
@@ -88,7 +102,7 @@ final readonly class ApiKey
             'auth_key' => $this->authKey,
             'apikey_secret' => $this->apikeySecret,
             'apikey_name' => $this->apikeyName,
-            'user_id' => $this->userId,
+            'user_id' => $this->userId->value,
             'created_on' => $this->createdOn,
             'duration' => $this->duration,
             'expired_on' => $this->expiredOn,

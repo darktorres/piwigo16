@@ -32,7 +32,7 @@ test('fromRow narrows a full real row', function (): void {
     expect($apiKey->authKey)->toBe('ck12345');
     expect($apiKey->apikeySecret)->toBe('secret-value');
     expect($apiKey->apikeyName)->toBe('My Key');
-    expect($apiKey->userId)->toBe(3);
+    expect($apiKey->userId)->toEqual(UserId::from(3));
     expect($apiKey->createdOn)->toBe('2026-07-01 10:00:00');
     expect($apiKey->duration)->toBe(30);
     expect($apiKey->expiredOn)->toBe('2026-08-01 10:00:00');
@@ -42,14 +42,15 @@ test('fromRow narrows a full real row', function (): void {
     expect($apiKey->lastNotifiedOn)->toBe('2026-07-20 12:00:00');
 });
 
-test('fromRow falls back to defaults for a missing/malformed row', function (): void {
-    $apiKey = ApiKey::fromRow([]);
+test('fromRow falls back to defaults for a missing/malformed row, except user_id', function (): void {
+    // user_id is UserId now and can't silently default to 0 -- see the
+    // dedicated "throws" tests below, same pattern as Comment/Rate.
+    $apiKey = ApiKey::fromRow(['user_id' => 9]);
 
     expect($apiKey->authKeyId)->toBe(0);
     expect($apiKey->authKey)->toBe('');
     expect($apiKey->apikeySecret)->toBeNull();
     expect($apiKey->apikeyName)->toBeNull();
-    expect($apiKey->userId)->toBe(0);
     expect($apiKey->createdOn)->toBe('');
     expect($apiKey->duration)->toBeNull();
     expect($apiKey->expiredOn)->toBe('');
@@ -57,6 +58,20 @@ test('fromRow falls back to defaults for a missing/malformed row', function (): 
     expect($apiKey->revokedOn)->toBeNull();
     expect($apiKey->lastUsedOn)->toBeNull();
     expect($apiKey->lastNotifiedOn)->toBeNull();
+});
+
+test('fromRow throws when user_id is missing', function (): void {
+    expect(fn () => ApiKey::fromRow([]))
+        ->toThrow(InvalidArgumentException::class, 'Expected a positive user id, got null');
+});
+
+test('fromRow throws with the real debug type of a non-null but invalid user_id', function (): void {
+    expect(fn () => ApiKey::fromRow(['user_id' => 'not-a-number']))
+        ->toThrow(InvalidArgumentException::class, 'Expected a positive user id, got string');
+});
+
+test('fromRow keeps an already-hydrated UserId instance as-is', function (): void {
+    expect(ApiKey::fromRow(['user_id' => UserId::from(4)])->userId)->toEqual(UserId::from(4));
 });
 
 test('fromEntity copies every field from a real UserAuthKeyEntity', function (): void {
@@ -80,7 +95,7 @@ test('fromEntity copies every field from a real UserAuthKeyEntity', function ():
     expect($apiKey->authKeyId)->toBe(9);
     expect($apiKey->authKey)->toBe('ck98765');
     expect($apiKey->apikeySecret)->toBe('ent-secret');
-    expect($apiKey->userId)->toBe(7);
+    expect($apiKey->userId)->toEqual(UserId::from(7));
     expect($apiKey->duration)->toBe(60);
     expect($apiKey->keyType)->toBe('session');
     expect($apiKey->revokedOn)->toBe('2026-07-10 00:00:00');
@@ -107,7 +122,7 @@ test('toArray round-trips every field', function (): void {
         authKey: 'ck1',
         apikeySecret: 'sec',
         apikeyName: 'name',
-        userId: 2,
+        userId: UserId::from(2),
         createdOn: '2026-01-01 00:00:00',
         duration: 10,
         expiredOn: '2026-02-01 00:00:00',
